@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Brain, 
   Target, 
@@ -10,7 +11,9 @@ import {
   BarChart, 
   BookOpen,
   Menu,
-  X
+  X,
+  LogOut,
+  User
 } from "lucide-react";
 
 const navItems = [
@@ -26,6 +29,22 @@ const navItems = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  // Show auth page without layout if not authenticated and not on auth page
+  if (!user && location.pathname !== '/auth') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Welcome to IDEA Brand Coach</h1>
+          <p className="text-muted-foreground mb-6">Please sign in to access your brand coaching tools.</p>
+          <Link to="/auth">
+            <Button>Sign In / Sign Up</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,26 +64,45 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                      isActive
-                        ? "bg-secondary text-secondary-foreground shadow-brand"
-                        : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20"
-                    }`}
+            <div className="hidden md:flex items-center space-x-4">
+              <nav className="flex space-x-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                        isActive
+                          ? "bg-secondary text-secondary-foreground shadow-brand"
+                          : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+              
+              {user && (
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 text-primary-foreground/80">
+                    <User className="w-4 h-4" />
+                    <span className="text-sm">{user.email}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={signOut}
+                    className="text-primary-foreground/80 hover:text-primary-foreground"
                   >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </nav>
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* Mobile menu button */}
             <Button
