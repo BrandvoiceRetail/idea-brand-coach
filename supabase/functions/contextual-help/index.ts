@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -31,13 +32,33 @@ The IDEA framework stands for:
 - Empathy: Connecting with customer emotions and fears
 - Authenticity: Genuine and consistent brand voice
 
-Provide helpful, actionable guidance in 2-3 sentences. Be encouraging and specific. Focus on the category being assessed.`;
+Your role is to provide SPECIFIC, ACTIONABLE guidance that helps users:
+1. Understand what the question is really asking
+2. Know exactly what to consider when answering
+3. Get concrete next steps they can take immediately
+
+Format your response with:
+- A brief explanation of what to focus on
+- 2-3 specific things to consider or evaluate
+- One concrete action they can take right now to improve this area
+
+Be encouraging but practical. Avoid generic advice - make it specific to the category and question.`;
+
+    const categoryGuidance = {
+      insight: "Focus on understanding the emotional and psychological drivers behind customer behavior. Look beyond demographics to psychographics.",
+      distinctiveness: "Identify your unique brand positioning and how customers perceive you differently from competitors in their minds.",
+      empathy: "Address the specific fears, anxieties, and emotional needs that your customers experience in relation to your industry/product.",
+      authenticity: "Ensure your brand voice genuinely reflects your values and maintains consistency across all customer touchpoints."
+    };
 
     const userPrompt = `Category: ${category}
-Question: ${question}
-${context ? `Additional context: ${context}` : ''}
+Category Focus: ${categoryGuidance[category as keyof typeof categoryGuidance]}
 
-Provide contextual help to guide the user in answering this question effectively.`;
+Question: "${question}"
+
+${context ? `Context: ${context}` : ''}
+
+Provide specific, actionable guidance that helps the user answer this question effectively. Include concrete next steps they can take.`;
 
     console.log('Sending request with:', { question, category, context });
     console.log('Full user prompt:', userPrompt);
@@ -52,7 +73,7 @@ Provide contextual help to guide the user in answering this question effectively
       },
       body: JSON.stringify({
         model: 'claude-3-haiku-20240307',
-        max_tokens: 200,
+        max_tokens: 300,
         messages: [
           {
             role: 'user',
@@ -74,6 +95,8 @@ Provide contextual help to guide the user in answering this question effectively
 
     const data = await response.json();
     const helpText = data.content[0].text;
+
+    console.log('AI Response received:', helpText);
 
     return new Response(JSON.stringify({ helpText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
