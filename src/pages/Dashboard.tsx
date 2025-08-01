@@ -2,6 +2,7 @@ import { ModuleCard } from "@/components/ModuleCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Link } from "react-router-dom";
 import { 
   Brain, 
   Target, 
@@ -12,29 +13,79 @@ import {
   BookOpen,
   TrendingUp,
   CheckCircle,
-  Clock
+  Clock,
+  Heart,
+  Star,
+  Shield,
+  Lightbulb,
+  Users
 } from "lucide-react";
 
-const modules = [
+const coreModules = [
   {
     title: "IDEA Diagnostic",
-    description: "Get your complete brand health score and identify emotional blockers",
+    description: "Complete brand health assessment using the IDEA Strategic Framework",
     icon: Brain,
     href: "/diagnostic",
     status: "available" as const
   },
   {
     title: "Avatar 2.0 Builder", 
-    description: "Create behavioral avatars with emotional triggers and subconscious motivators",
-    icon: Target,
+    description: "Build behavioral customer profiles with emotional triggers and motivations",
+    icon: Users,
     href: "/avatar",
     status: "available" as const
   },
   {
     title: "ValueLens Generator",
-    description: "AI-powered copy generator for emotionally resonant product descriptions",
+    description: "AI-powered copy generator for emotionally resonant messaging",
     icon: Zap,
     href: "/valuelens",
+    status: "available" as const
+  }
+];
+
+const ideaModules = [
+  {
+    title: "Insight Driven",
+    description: "Gather deep insights about customer motivations and emotional triggers",
+    icon: Lightbulb,
+    href: "/idea/insight",
+    status: "available" as const,
+    color: "from-yellow-500 to-orange-500"
+  },
+  {
+    title: "Distinctive/Different",
+    description: "Stand out at both product and brand level with distinctive assets",
+    icon: Star,
+    href: "/idea/distinctiveness",
+    status: "available" as const,
+    color: "from-green-500 to-emerald-500"
+  },
+  {
+    title: "Emotionally Intelligent", 
+    description: "Connect with audience through understanding emotional cues",
+    icon: Heart,
+    href: "/idea/empathy",
+    status: "available" as const,
+    color: "from-pink-500 to-rose-500"
+  },
+  {
+    title: "Authoritative & Authentic",
+    description: "Be genuine, transparent and create an attractive brand persona",
+    icon: Shield,
+    href: "/idea/authenticity", 
+    status: "available" as const,
+    color: "from-blue-500 to-indigo-500"
+  }
+];
+
+const additionalModules = [
+  {
+    title: "IDEA Framework Hub",
+    description: "Complete guide to the IDEA Strategic Brand Framework methodology",
+    icon: BookOpen,
+    href: "/idea",
     status: "available" as const
   },
   {
@@ -49,13 +100,6 @@ const modules = [
     description: "Analyze and optimize your product listings for emotional triggers",
     icon: Search,
     href: "/optimizer",
-    status: "coming-soon" as const
-  },
-  {
-    title: "Resources & Library",
-    description: "Templates, checklists, and swipe files for brand building",
-    icon: BookOpen,
-    href: "/resources",
     status: "coming-soon" as const
   }
 ];
@@ -87,11 +131,11 @@ export default function Dashboard() {
           Welcome to IDEA Brand Coach™
         </h1>
         <p className="text-lg text-primary-foreground/90 mb-6 max-w-2xl mx-auto">
-          Build emotionally resonant, high-trust brands using behavioral science. 
-          Transform struggling sellers into confident brand owners.
+          Build trust-driven, emotionally resonant brands using the IDEA Strategic Framework. 
+          Transform from guessing to knowing your customers.
         </p>
         <Button variant="coach" size="lg" className="shadow-glow">
-          Start Your Brand Journey
+          Explore IDEA Framework
         </Button>
       </div>
 
@@ -136,20 +180,76 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Modules */}
-        <div className="lg:col-span-2">
-          <h2 className="text-2xl font-bold mb-6">Core Modules</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {modules.map((module) => (
-              <ModuleCard
-                key={module.title}
-                title={module.title}
-                description={module.description}
-                icon={module.icon}
-                href={module.href}
-                status={module.status}
-              />
-            ))}
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Core Tools */}
+          <div>
+            <h2 className="text-2xl font-bold mb-6">Essential Tools</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {coreModules.map((module) => (
+                <ModuleCard
+                  key={module.title}
+                  title={module.title}
+                  description={module.description}
+                  icon={module.icon}
+                  href={module.href}
+                  status={module.status}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* IDEA Framework Modules */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">IDEA Strategic Framework</h2>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/idea">Learn Framework</Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {ideaModules.map((module) => (
+                <Card key={module.title} className={`bg-gradient-to-br ${module.color} text-white shadow-card hover:shadow-brand transition-all duration-300 border-0`}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="p-2 bg-white/20 rounded-lg">
+                        <module.icon className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg mb-2">{module.title}</h3>
+                        <p className="text-white/90 text-sm leading-relaxed">{module.description}</p>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="mt-3 text-white hover:bg-white/20"
+                          asChild
+                        >
+                          <Link to={module.href}>Explore →</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Additional Modules */}
+          <div>
+            <h2 className="text-2xl font-bold mb-6">Additional Tools</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {additionalModules.map((module) => (
+                <ModuleCard
+                  key={module.title}
+                  title={module.title}
+                  description={module.description}
+                  icon={module.icon}
+                  href={module.href}
+                  status={module.status}
+                />
+              ))}
+            </div>
           </div>
         </div>
 

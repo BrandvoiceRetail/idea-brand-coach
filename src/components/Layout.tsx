@@ -18,12 +18,10 @@ import {
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: BarChart },
-  { name: "IDEA Diagnostic", href: "/diagnostic", icon: Brain },
-  { name: "Avatar Builder", href: "/avatar", icon: Target },
+  { name: "IDEA Framework", href: "/idea", icon: BookOpen },
+  { name: "Brand Diagnostic", href: "/diagnostic", icon: Brain },
+  { name: "Avatar 2.0", href: "/avatar", icon: Target },
   { name: "ValueLens", href: "/valuelens", icon: Zap },
-  { name: "Brand Canvas", href: "/canvas", icon: MessageSquare },
-  { name: "Listing Optimizer", href: "/optimizer", icon: Search },
-  { name: "Resources", href: "/resources", icon: BookOpen },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
