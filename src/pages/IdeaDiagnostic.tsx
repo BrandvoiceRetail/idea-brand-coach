@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Brain, ChevronRight, RotateCcw, Download } from "lucide-react";
+import { Brain, ChevronRight, RotateCcw, Download, Users, ArrowRight } from "lucide-react";
 import { ContextualHelp } from "@/components/ContextualHelp";
+import { Link } from "react-router-dom";
 
 interface Question {
   id: string;
@@ -186,27 +187,52 @@ export default function IdeaDiagnostic() {
             <CardDescription>Priority actions to improve your brand health</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {scores.overall < 60 && (
-              <div className="p-4 bg-secondary/10 rounded-lg">
-                <h4 className="font-semibold mb-2">🎯 Start with Avatar 2.0 Builder</h4>
-                <p className="text-sm text-muted-foreground">
-                  Build a deep understanding of your customer's emotional drivers and motivations.
-                </p>
-              </div>
+            {(scores.categories.insight.percentage < 60 || scores.overall < 60) && (
+              <Link to="/avatar" className="block">
+                <div className="p-4 bg-secondary/10 rounded-lg hover:bg-secondary/20 transition-colors border border-secondary/20 hover:border-secondary/40">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold mb-2 flex items-center">
+                        <Users className="w-4 h-4 mr-2" />
+                        🎯 Start with Avatar 2.0 Builder
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Build a deep understanding of your customer's emotional drivers, motivations, and triggers.
+                      </p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-secondary" />
+                  </div>
+                </div>
+              </Link>
             )}
             {scores.categories.empathy.percentage < 60 && (
-              <div className="p-4 bg-secondary/10 rounded-lg">
-                <h4 className="font-semibold mb-2">💝 Improve Emotional Connection</h4>
-                <p className="text-sm text-muted-foreground">
-                  Use ValueLens to create copy that addresses customer fears and desires.
-                </p>
-              </div>
+              <Link to="/valuelens" className="block">
+                <div className="p-4 bg-secondary/10 rounded-lg hover:bg-secondary/20 transition-colors border border-secondary/20 hover:border-secondary/40">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold mb-2">💝 Improve Emotional Connection</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Use ValueLens to create copy that addresses customer fears and desires.
+                      </p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-secondary" />
+                  </div>
+                </div>
+              </Link>
             )}
             {scores.categories.distinctiveness.percentage < 60 && (
               <div className="p-4 bg-secondary/10 rounded-lg">
                 <h4 className="font-semibold mb-2">⭐ Develop Brand Differentiation</h4>
                 <p className="text-sm text-muted-foreground">
-                  Create a unique brand story and positioning that sets you apart.
+                  Create a unique brand story and positioning that sets you apart through the IDEA Framework.
+                </p>
+              </div>
+            )}
+            {scores.categories.authenticity.percentage < 60 && (
+              <div className="p-4 bg-secondary/10 rounded-lg">
+                <h4 className="font-semibold mb-2">🎭 Build Authentic Brand Voice</h4>
+                <p className="text-sm text-muted-foreground">
+                  Develop consistent, genuine messaging that reflects your true brand values.
                 </p>
               </div>
             )}
@@ -263,6 +289,22 @@ export default function IdeaDiagnostic() {
               <CardDescription className="text-lg font-medium text-foreground">
                 {currentQ.question}
               </CardDescription>
+              {/* Avatar 2.0 Suggestion for Insight Questions */}
+              {currentQ.category === "insight" && (
+                <div className="mt-3 p-3 bg-secondary/10 rounded-lg border border-secondary/20">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    💡 Need deeper customer insights?
+                  </p>
+                  <Link 
+                    to="/avatar" 
+                    className="inline-flex items-center text-sm font-medium text-secondary hover:text-secondary/80 transition-colors"
+                  >
+                    <Users className="w-4 h-4 mr-1" />
+                    Build Avatar 2.0 first
+                    <ArrowRight className="w-3 h-3 ml-1" />
+                  </Link>
+                </div>
+              )}
             </div>
             <ContextualHelp 
               question={currentQ.question}

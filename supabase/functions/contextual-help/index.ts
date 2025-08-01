@@ -45,7 +45,7 @@ Format your response with:
 Be encouraging but practical. Avoid generic advice - make it specific to the category and question.`;
 
     const categoryGuidance = {
-      insight: "Focus on understanding the emotional and psychological drivers behind customer behavior. Look beyond demographics to psychographics.",
+      insight: "Focus on understanding the emotional and psychological drivers behind customer behavior. Look beyond demographics to psychographics. If you lack deep customer insights, consider building Avatar 2.0 first.",
       distinctiveness: "Identify your unique brand positioning and how customers perceive you differently from competitors in their minds.",
       empathy: "Address the specific fears, anxieties, and emotional needs that your customers experience in relation to your industry/product.",
       authenticity: "Ensure your brand voice genuinely reflects your values and maintains consistency across all customer touchpoints."
