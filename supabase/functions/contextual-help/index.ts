@@ -39,6 +39,9 @@ ${context ? `Additional context: ${context}` : ''}
 
 Provide contextual help to guide the user in answering this question effectively.`;
 
+    console.log('Sending request with:', { question, category, context });
+    console.log('Full user prompt:', userPrompt);
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
