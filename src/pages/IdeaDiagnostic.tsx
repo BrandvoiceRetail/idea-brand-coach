@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Brain, ChevronRight, RotateCcw, Download } from "lucide-react";
+import { ContextualHelp } from "@/components/ContextualHelp";
 
 interface Question {
   id: string;
@@ -254,12 +255,21 @@ export default function IdeaDiagnostic() {
       {/* Question */}
       <Card className="bg-gradient-card shadow-card">
         <CardHeader>
-          <CardTitle className="capitalize text-secondary">
-            {currentQ.category}
-          </CardTitle>
-          <CardDescription className="text-lg font-medium text-foreground">
-            {currentQ.question}
-          </CardDescription>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <CardTitle className="capitalize text-secondary">
+                {currentQ.category}
+              </CardTitle>
+              <CardDescription className="text-lg font-medium text-foreground">
+                {currentQ.question}
+              </CardDescription>
+            </div>
+            <ContextualHelp 
+              question={currentQ.question}
+              category={currentQ.category}
+              context={`This is question ${currentQuestion + 1} of ${questions.length} in the IDEA Brand Diagnostic.`}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <RadioGroup
