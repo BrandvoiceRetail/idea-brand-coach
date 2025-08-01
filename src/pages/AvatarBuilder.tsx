@@ -11,6 +11,7 @@ import { Target, Save, Share, Plus, X, Sparkles, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { AIAssistant } from "@/components/AIAssistant";
+import { AvatarPDFExport } from "@/components/AvatarPDFExport";
 
 interface Avatar {
   name: string;
@@ -723,31 +724,9 @@ export default function AvatarBuilder() {
           <Save className="w-4 h-4" />
           <span>Save Avatar</span>
         </Button>
-        <Button 
-          variant="outline" 
-          size="lg" 
-          className="flex items-center space-x-2"
-          onClick={() => {
-            const avatarData = JSON.stringify(avatar, null, 2);
-            const blob = new Blob([avatarData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${avatar.name || 'avatar'}-profile.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            toast({
-              title: "Profile Exported",
-              description: "Avatar profile has been downloaded as JSON file."
-            });
-          }}
-        >
-          <Share className="w-4 h-4" />
-          <span>Export Profile</span>
-        </Button>
+        <div className="w-full">
+          <AvatarPDFExport avatar={avatar} analysisResults={analysisResults} />
+        </div>
       </div>
     </div>
   );
