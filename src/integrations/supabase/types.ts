@@ -43,7 +43,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      handle_ai_insight_guidance: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      handle_buyer_intent_analysis: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
