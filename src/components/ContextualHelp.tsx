@@ -15,10 +15,12 @@ export function ContextualHelp({ question, category, context }: ContextualHelpPr
   const [isOpen, setIsOpen] = useState(false);
   const [helpText, setHelpText] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [cachedQuestion, setCachedQuestion] = useState<string | null>(null);
   const { toast } = useToast();
 
   const getHelp = async () => {
-    if (helpText) {
+    // Check if we have cached help for this specific question
+    if (helpText && cachedQuestion === question) {
       setIsOpen(true);
       return;
     }
@@ -32,6 +34,7 @@ export function ContextualHelp({ question, category, context }: ContextualHelpPr
       if (error) throw error;
 
       setHelpText(data.helpText);
+      setCachedQuestion(question);
       setIsOpen(true);
     } catch (error) {
       console.error('Error getting contextual help:', error);
