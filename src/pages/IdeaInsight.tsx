@@ -155,13 +155,13 @@ export default function IdeaInsight() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Four distinct shopping behavior patterns that drive different decision-making processes.
+                Four research-backed shopping personas from Shopify's 2024 Commerce Report.
               </p>
               <ul className="text-xs space-y-2 text-muted-foreground">
-                <li>• Type 1: Research-Driven</li>
-                <li>• Type 2: Impulse-Oriented</li>
-                <li>• Type 3: Value-Conscious</li>
-                <li>• Type 4: Experience-Focused</li>
+                <li>• Cost Sensitive (50%): Price-focused</li>
+                <li>• Quality Focused (39%): Quality over price</li>
+                <li>• Conscious (9%): Sustainability-driven</li>
+                <li>• Connected (2%): Social commerce ready</li>
               </ul>
             </CardContent>
           </Card>
