@@ -36,25 +36,51 @@ ${context ? `Additional context: ${context}` : ''}
 
 Provide contextual help to guide the user in answering this question effectively.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 200,
-      }),
-    });
+    // Retry logic with exponential backoff for rate limiting
+    let response;
+    let retries = 0;
+    const maxRetries = 3;
+    
+    while (retries < maxRetries) {
+      try {
+        response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 200,
+          }),
+        });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+        if (response.ok) {
+          break;
+        } else if (response.status === 429 && retries < maxRetries - 1) {
+          // Rate limited, wait and retry
+          const waitTime = Math.pow(2, retries) * 1000; // Exponential backoff
+          console.log(`Rate limited, waiting ${waitTime}ms before retry ${retries + 1}`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          retries++;
+          continue;
+        } else {
+          throw new Error(`OpenAI API error: ${response.status}`);
+        }
+      } catch (error) {
+        if (retries < maxRetries - 1) {
+          retries++;
+          const waitTime = Math.pow(2, retries) * 1000;
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+        throw error;
+      }
     }
 
     const data = await response.json();
