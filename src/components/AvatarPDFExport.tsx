@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, Building2, Target, MessageSquare, TrendingUp, Users, Heart, ShoppingCart, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
 
 interface Avatar {
   name: string;
@@ -45,27 +46,237 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
   const contentRef = useRef<HTMLDivElement>(null);
 
   const handleExport = async () => {
-    // For now, we'll create a comprehensive HTML version that can be printed to PDF
-    // In a real implementation, you'd use a library like react-pdf or puppeteer
-    
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const lineHeight = 6;
+      let yPosition = margin;
 
-    const htmlContent = generatePDFContent();
-    
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.focus();
-    
-    // Auto-trigger print dialog
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
+      // Header with logo placeholder
+      pdf.setFillColor(59, 130, 246);
+      pdf.rect(pageWidth / 2 - 30, yPosition, 60, 15, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(10);
+      pdf.text('YOUR LOGO', pageWidth / 2, yPosition + 10, { align: 'center' });
+      
+      yPosition += 25;
 
-    toast({
-      title: "Export Ready",
-      description: "Print dialog opened. Save as PDF or print directly."
-    });
+      // Title
+      pdf.setTextColor(30, 64, 175);
+      pdf.setFontSize(24);
+      pdf.text('Customer Avatar Report', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 10;
+
+      pdf.setFontSize(14);
+      pdf.setTextColor(107, 114, 128);
+      pdf.text(avatar.name || 'Complete Customer Profile', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 5;
+
+      pdf.setFontSize(10);
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 15;
+
+      // Executive Summary
+      pdf.setTextColor(30, 64, 175);
+      pdf.setFontSize(16);
+      pdf.text('Executive Summary', margin, yPosition);
+      yPosition += 10;
+
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(10);
+      pdf.text(`Avatar Name: ${avatar.name || 'Unnamed Avatar'}`, margin, yPosition);
+      yPosition += lineHeight;
+
+      const demographics = [
+        `Age Group: ${avatar.demographics.age || 'Not specified'}`,
+        `Income Level: ${avatar.demographics.income || 'Not specified'}`,
+        `Location: ${avatar.demographics.location || 'Not specified'}`,
+        `Lifestyle: ${avatar.demographics.lifestyle || 'Not specified'}`
+      ];
+
+      demographics.forEach(demo => {
+        pdf.text(demo, margin, yPosition);
+        yPosition += lineHeight;
+      });
+
+      yPosition += 10;
+
+      // Marketing Strategy Guidelines
+      pdf.setTextColor(30, 64, 175);
+      pdf.setFontSize(16);
+      pdf.text('Marketing Strategy Guidelines', margin, yPosition);
+      yPosition += 10;
+
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(12);
+      pdf.text('Core Values & Motivations:', margin, yPosition);
+      yPosition += lineHeight;
+
+      pdf.setFontSize(10);
+      avatar.psychographics.values.forEach(value => {
+        pdf.text(`• ${value}`, margin + 5, yPosition);
+        yPosition += lineHeight;
+      });
+
+      yPosition += 5;
+      pdf.setFontSize(12);
+      pdf.text('Pain Points to Address:', margin, yPosition);
+      yPosition += lineHeight;
+
+      pdf.setFontSize(10);
+      avatar.psychographics.fears.forEach(fear => {
+        pdf.text(`• ${fear}`, margin + 5, yPosition);
+        yPosition += lineHeight;
+      });
+
+      yPosition += 5;
+      pdf.setFontSize(12);
+      pdf.text('Desires & Aspirations:', margin, yPosition);
+      yPosition += lineHeight;
+
+      pdf.setFontSize(10);
+      avatar.psychographics.desires.forEach(desire => {
+        pdf.text(`• ${desire}`, margin + 5, yPosition);
+        yPosition += lineHeight;
+      });
+
+      // Check if we need a new page
+      if (yPosition > pageHeight - 40) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      yPosition += 10;
+
+      // Buying Behavior Insights
+      pdf.setTextColor(30, 64, 175);
+      pdf.setFontSize(16);
+      pdf.text('Buying Behavior Insights', margin, yPosition);
+      yPosition += 10;
+
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(10);
+      const buyingBehavior = [
+        `Purchase Intent: ${avatar.buyingBehavior.intent || 'Not specified'}`,
+        `Shopping Style: ${avatar.buyingBehavior.shoppingStyle || 'Not specified'}`,
+        `Price Consciousness: ${avatar.buyingBehavior.priceConsciousness || 'Not specified'}`
+      ];
+
+      buyingBehavior.forEach(behavior => {
+        pdf.text(behavior, margin, yPosition);
+        yPosition += lineHeight;
+      });
+
+      yPosition += 5;
+      pdf.setFontSize(12);
+      pdf.text('Key Decision Factors:', margin, yPosition);
+      yPosition += lineHeight;
+
+      pdf.setFontSize(10);
+      avatar.buyingBehavior.decisionFactors.forEach(factor => {
+        pdf.text(`• ${factor}`, margin + 5, yPosition);
+        yPosition += lineHeight;
+      });
+
+      // Voice of Customer Analysis (if available)
+      if (analysisResults) {
+        yPosition += 10;
+        pdf.setTextColor(30, 64, 175);
+        pdf.setFontSize(16);
+        pdf.text('Voice of Customer Analysis', margin, yPosition);
+        yPosition += 10;
+
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(12);
+        pdf.text('Sentiment Breakdown:', margin, yPosition);
+        yPosition += lineHeight;
+
+        pdf.setFontSize(10);
+        pdf.text(`Positive: ${analysisResults.sentiment.positive}%`, margin + 5, yPosition);
+        yPosition += lineHeight;
+        pdf.text(`Negative: ${analysisResults.sentiment.negative}%`, margin + 5, yPosition);
+        yPosition += lineHeight;
+        pdf.text(`Neutral: ${analysisResults.sentiment.neutral}%`, margin + 5, yPosition);
+        yPosition += lineHeight;
+
+        if (analysisResults.insights.length > 0) {
+          yPosition += 5;
+          pdf.setFontSize(12);
+          pdf.text('Strategic Insights:', margin, yPosition);
+          yPosition += lineHeight;
+
+          pdf.setFontSize(10);
+          analysisResults.insights.forEach(insight => {
+            pdf.text(`• ${insight}`, margin + 5, yPosition);
+            yPosition += lineHeight;
+          });
+        }
+      }
+
+      // Check if we need a new page for recommendations
+      if (yPosition > pageHeight - 60) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      yPosition += 10;
+
+      // Actionable Recommendations
+      pdf.setTextColor(30, 64, 175);
+      pdf.setFontSize(16);
+      pdf.text('Actionable Recommendations', margin, yPosition);
+      yPosition += 10;
+
+      const recommendations = [
+        'Content Strategy:',
+        `• Create content addressing: ${avatar.psychographics.fears.slice(0, 2).join(', ')}`,
+        `• Highlight outcomes: ${avatar.psychographics.desires.slice(0, 2).join(', ')}`,
+        `• Use messaging that resonates with: ${avatar.psychographics.values.slice(0, 3).join(', ')}`,
+        '',
+        'Channel Recommendations:',
+        `• Focus on channels where ${avatar.demographics.age} ${avatar.demographics.lifestyle} consumers are active`,
+        `• Tailor messaging for ${avatar.buyingBehavior.shoppingStyle} shopping behavior`,
+        `• Consider ${avatar.buyingBehavior.priceConsciousness} pricing strategies`,
+        '',
+        'Optimization Tips:',
+        '• A/B test messaging focused on top decision factors',
+        '• Monitor engagement with content addressing key pain points',
+        '• Track conversion rates by emphasizing core desires'
+      ];
+
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(10);
+      recommendations.forEach(rec => {
+        if (rec === '') {
+          yPosition += 3;
+        } else if (rec.endsWith(':')) {
+          pdf.setFontSize(12);
+          pdf.text(rec, margin, yPosition);
+          pdf.setFontSize(10);
+          yPosition += lineHeight;
+        } else {
+          pdf.text(rec, margin + 5, yPosition);
+          yPosition += lineHeight;
+        }
+      });
+
+      // Save the PDF
+      pdf.save(`${avatar.name || 'avatar'}-report.pdf`);
+
+      toast({
+        title: "PDF Generated Successfully",
+        description: "Your customer avatar report has been downloaded as a PDF file."
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Export Error",
+        description: "There was an error generating the PDF. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const generatePDFContent = () => {
