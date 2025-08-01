@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Target, Save, Share, Plus, X, Sparkles, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useBrand } from "@/contexts/BrandContext";
+import { AIAssistant } from "@/components/AIAssistant";
 
 interface Avatar {
   name: string;
@@ -35,6 +37,7 @@ interface Avatar {
 
 export default function AvatarBuilder() {
   const { toast } = useToast();
+  const { brandData, updateBrandData } = useBrand();
   const [avatar, setAvatar] = useState<Avatar>({
     name: "",
     demographics: {
@@ -685,11 +688,63 @@ export default function AvatarBuilder() {
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button variant="coach" size="lg" className="flex items-center space-x-2">
+        <Button 
+          variant="coach" 
+          size="lg" 
+          className="flex items-center space-x-2"
+          onClick={() => {
+            // Save to BrandContext
+            updateBrandData('avatar', {
+              demographics: {
+                age: avatar.demographics.age,
+                gender: '',
+                income: avatar.demographics.income,
+                location: avatar.demographics.location,
+                occupation: ''
+              },
+              psychographics: {
+                interests: [],
+                values: avatar.psychographics.values,
+                lifestyle: avatar.demographics.lifestyle,
+                personality: []
+              },
+              painPoints: avatar.psychographics.fears,
+              goals: avatar.psychographics.desires,
+              preferredChannels: [],
+              completed: true
+            });
+            
+            toast({
+              title: "Avatar Saved",
+              description: "Your avatar profile has been saved and integrated with your brand data."
+            });
+          }}
+        >
           <Save className="w-4 h-4" />
           <span>Save Avatar</span>
         </Button>
-        <Button variant="outline" size="lg" className="flex items-center space-x-2">
+        <Button 
+          variant="outline" 
+          size="lg" 
+          className="flex items-center space-x-2"
+          onClick={() => {
+            const avatarData = JSON.stringify(avatar, null, 2);
+            const blob = new Blob([avatarData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${avatar.name || 'avatar'}-profile.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            toast({
+              title: "Profile Exported",
+              description: "Avatar profile has been downloaded as JSON file."
+            });
+          }}
+        >
           <Share className="w-4 h-4" />
           <span>Export Profile</span>
         </Button>

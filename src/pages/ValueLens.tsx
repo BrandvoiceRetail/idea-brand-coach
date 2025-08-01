@@ -1,20 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Copy, Download, RefreshCw, Sparkles } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Zap, Copy, RefreshCw, Sparkles, Lock, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useBrand } from "@/contexts/BrandContext";
+import { PaywallModal } from "@/components/PaywallModal";
 
 interface ValueLensInput {
   productName: string;
   category: string;
   features: string[];
-  targetAvatar: string;
+  targetAudience: string;
   emotionalPayoff: string;
   tone: string;
   format: string;
@@ -54,11 +56,14 @@ const toneOptions = [
 
 export default function ValueLens() {
   const { toast } = useToast();
-  const [input, setInput] = useState<ValueLensInput>({
+  const { brandData, isToolUnlocked } = useBrand();
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [formData, setFormData] = useState<ValueLensInput>({
     productName: "",
     category: "",
     features: [],
-    targetAvatar: "",
+    targetAudience: "",
     emotionalPayoff: "",
     tone: "",
     format: "",
@@ -69,27 +74,20 @@ export default function ValueLens() {
   const [generatedCopy, setGeneratedCopy] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const addFeature = () => {
-    if (!newFeature.trim()) return;
-    setInput(prev => ({
-      ...prev,
-      features: [...prev.features, newFeature.trim()]
-    }));
-    setNewFeature("");
-  };
+  useEffect(() => {
+    setIsUnlocked(isToolUnlocked('valuelens'));
+  }, [brandData, isToolUnlocked]);
 
-  const removeFeature = (index: number) => {
-    setInput(prev => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index)
-    }));
-  };
+  const handleGenerate = async () => {
+    if (!isUnlocked) {
+      setShowPaywall(true);
+      return;
+    }
 
-  const generateCopy = async () => {
-    if (!input.productName || !input.format) {
+    if (!formData.productName || !formData.targetAudience) {
       toast({
         title: "Missing Information",
-        description: "Please fill in at least the product name and format.",
+        description: "Please fill in the product name and target audience.",
         variant: "destructive"
       });
       return;
@@ -97,7 +95,7 @@ export default function ValueLens() {
 
     setIsGenerating(true);
     
-    // Simulate AI generation (in real implementation, this would call GPT-4)
+    // Simulate AI generation
     setTimeout(() => {
       const sampleCopy = generateSampleCopy();
       setGeneratedCopy(sampleCopy);
@@ -109,38 +107,52 @@ export default function ValueLens() {
     }, 2000);
   };
 
+  const addFeature = () => {
+    if (!newFeature.trim()) return;
+    setFormData(prev => ({
+      ...prev,
+      features: [...prev.features, newFeature.trim()]
+    }));
+    setNewFeature("");
+  };
+
+  const removeFeature = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index)
+    }));
+  };
+
   const generateSampleCopy = () => {
-    const formatType = copyFormats.find(f => f.value === input.format)?.label || "Copy";
-    
-    if (input.format === "amazon-bullet") {
-      return `• TRANSFORM YOUR ${input.category.toUpperCase()} EXPERIENCE - ${input.productName} delivers the ${input.emotionalPayoff.toLowerCase()} you've been searching for
+    if (formData.format === "amazon-bullet") {
+      return `• TRANSFORM YOUR ${formData.category.toUpperCase()} EXPERIENCE - ${formData.productName} delivers the ${formData.emotionalPayoff.toLowerCase()} you've been searching for
 • PREMIUM QUALITY THAT SHOWS - Built with superior materials that not only perform better but make you feel confident in your choice
 • INSTANT RESULTS YOU'LL LOVE - See immediate improvements that justify every penny and give you that satisfaction of making the right decision
 • TRUSTED BY THOUSANDS - Join customers who've discovered the difference quality makes in their daily routine
-• 100% SATISFACTION PROMISE - We're so confident you'll love ${input.productName}, we guarantee your complete satisfaction or your money back`;
+• 100% SATISFACTION PROMISE - We're so confident you'll love ${formData.productName}, we guarantee your complete satisfaction or your money back`;
     }
     
-    if (input.format === "ad-headline") {
-      return `Finally! The ${input.category} That Delivers Real ${input.emotionalPayoff} (Without The Premium Price Tag)`;
+    if (formData.format === "ad-headline") {
+      return `Finally! The ${formData.category} That Delivers Real ${formData.emotionalPayoff} (Without The Premium Price Tag)`;
     }
     
-    if (input.format === "social-caption") {
-      return `POV: You just discovered the ${input.category} that actually works 🤯
+    if (formData.format === "social-caption") {
+      return `POV: You just discovered the ${formData.category} that actually works 🤯
 
-I was skeptical too... but ${input.productName} has completely changed how I feel about ${input.category.toLowerCase()}.
+I was skeptical too... but ${formData.productName} has completely changed how I feel about ${formData.category.toLowerCase()}.
 
-The ${input.emotionalPayoff.toLowerCase()} I get from this is unmatched. Finally something that delivers on its promises!
+The ${formData.emotionalPayoff.toLowerCase()} I get from this is unmatched. Finally something that delivers on its promises!
 
 Who else is tired of products that overpromise and underdeliver? 👇
 
-#${input.category.replace(/\s+/g, '')} #ProductReview #WorthIt`;
+#${formData.category.replace(/\s+/g, '')} #ProductReview #WorthIt`;
     }
 
-    return `Transform your ${input.category.toLowerCase()} experience with ${input.productName}. 
+    return `Transform your ${formData.category.toLowerCase()} experience with ${formData.productName}. 
 
-Designed for people who value ${input.emotionalPayoff.toLowerCase()}, this isn't just another product - it's your solution to finally getting the results you deserve.
+Designed for people who value ${formData.emotionalPayoff.toLowerCase()}, this isn't just another product - it's your solution to finally getting the results you deserve.
 
-${input.features.length > 0 ? `✓ ${input.features.join('\n✓ ')}` : ''}
+${formData.features.length > 0 ? `✓ ${formData.features.join('\n✓ ')}` : ''}
 
 Ready to experience the difference? Your future self will thank you.`;
   };
@@ -157,12 +169,25 @@ Ready to experience the difference? Your future self will thank you.`;
     <div className="max-w-6xl mx-auto space-y-8">
       <div className="text-center">
         <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-          <Zap className="w-8 h-8 text-secondary-foreground" />
+          {isUnlocked ? (
+            <Zap className="w-8 h-8 text-secondary-foreground" />
+          ) : (
+            <Crown className="w-8 h-8 text-secondary-foreground" />
+          )}
         </div>
-        <h1 className="text-3xl font-bold mb-2">ValueLens™ AI Copy Generator</h1>
+        <h1 className="text-3xl font-bold mb-2">ValueLens AI Copy Generator</h1>
         <p className="text-muted-foreground">
-          Transform product features into emotionally resonant copy that converts
+          {isUnlocked 
+            ? "Generate emotionally resonant copy using your brand data and customer insights"
+            : "Unlock AI-powered copy generation with your completed brand strategy"
+          }
         </p>
+        {!isUnlocked && (
+          <Badge variant="outline" className="mt-4">
+            <Lock className="w-4 h-4 mr-2" />
+            Premium Feature
+          </Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -185,8 +210,8 @@ Ready to experience the difference? Your future self will thank you.`;
                   <Input
                     id="productName"
                     placeholder="e.g., UltraGrip Phone Case"
-                    value={input.productName}
-                    onChange={(e) => setInput(prev => ({ ...prev, productName: e.target.value }))}
+                    value={formData.productName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, productName: e.target.value }))}
                   />
                 </div>
 
@@ -195,8 +220,8 @@ Ready to experience the difference? Your future self will thank you.`;
                   <Input
                     id="category"
                     placeholder="e.g., Phone Accessories"
-                    value={input.category}
-                    onChange={(e) => setInput(prev => ({ ...prev, category: e.target.value }))}
+                    value={formData.category}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                   />
                 </div>
               </div>
@@ -204,7 +229,7 @@ Ready to experience the difference? Your future self will thank you.`;
               <div className="space-y-2">
                 <Label>Key Features</Label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {input.features.map((feature, index) => (
+                  {formData.features.map((feature, index) => (
                     <Badge key={index} variant="secondary" className="flex items-center gap-1">
                       {feature}
                       <button
@@ -230,12 +255,12 @@ Ready to experience the difference? Your future self will thank you.`;
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="targetAvatar">Target Avatar</Label>
+                <Label htmlFor="targetAudience">Target Audience *</Label>
                 <Textarea
-                  id="targetAvatar"
-                  placeholder="Describe your ideal customer (or select from saved avatars)..."
-                  value={input.targetAvatar}
-                  onChange={(e) => setInput(prev => ({ ...prev, targetAvatar: e.target.value }))}
+                  id="targetAudience"
+                  placeholder="Describe your ideal customer..."
+                  value={formData.targetAudience}
+                  onChange={(e) => setFormData(prev => ({ ...prev, targetAudience: e.target.value }))}
                   rows={3}
                 />
               </div>
@@ -253,8 +278,8 @@ Ready to experience the difference? Your future self will thank you.`;
               <div className="space-y-2">
                 <Label htmlFor="emotionalPayoff">Emotional Payoff *</Label>
                 <Select
-                  value={input.emotionalPayoff}
-                  onValueChange={(value) => setInput(prev => ({ ...prev, emotionalPayoff: value }))}
+                  value={formData.emotionalPayoff}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, emotionalPayoff: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select emotional benefit" />
@@ -270,29 +295,10 @@ Ready to experience the difference? Your future self will thank you.`;
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tone">Brand Tone</Label>
-                <Select
-                  value={input.tone}
-                  onValueChange={(value) => setInput(prev => ({ ...prev, tone: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select tone of voice" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {toneOptions.map((tone) => (
-                      <SelectItem key={tone} value={tone}>
-                        {tone}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="format">Copy Format *</Label>
                 <Select
-                  value={input.format}
-                  onValueChange={(value) => setInput(prev => ({ ...prev, format: value }))}
+                  value={formData.format}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, format: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select copy format" />
@@ -307,27 +313,21 @@ Ready to experience the difference? Your future self will thank you.`;
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="additionalContext">Additional Context</Label>
-                <Textarea
-                  id="additionalContext"
-                  placeholder="Any specific requirements, competitor info, or brand guidelines..."
-                  value={input.additionalContext}
-                  onChange={(e) => setInput(prev => ({ ...prev, additionalContext: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-
               <Button 
-                onClick={generateCopy}
+                onClick={handleGenerate}
                 className="w-full"
                 variant="coach"
-                disabled={isGenerating}
+                disabled={isGenerating || !isUnlocked}
               >
                 {isGenerating ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                     Generating...
+                  </>
+                ) : !isUnlocked ? (
+                  <>
+                    <Lock className="w-4 h-4 mr-2" />
+                    Unlock to Generate
                   </>
                 ) : (
                   <>
@@ -347,21 +347,15 @@ Ready to experience the difference? Your future self will thank you.`;
               <CardTitle className="flex items-center justify-between">
                 <span>Generated Copy</span>
                 {generatedCopy && (
-                  <div className="flex gap-2">
-                    <Button onClick={copyCopy} size="sm" variant="outline">
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copy
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Download className="w-4 h-4 mr-2" />
-                      Save
-                    </Button>
-                  </div>
+                  <Button onClick={copyCopy} size="sm" variant="outline">
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy
+                  </Button>
                 )}
               </CardTitle>
               <CardDescription>
                 {generatedCopy 
-                  ? `${copyFormats.find(f => f.value === input.format)?.label || "Copy"} generated with emotional resonance`
+                  ? `${copyFormats.find(f => f.value === formData.format)?.label || "Copy"} generated with emotional resonance`
                   : "Your AI-generated copy will appear here"
                 }
               </CardDescription>
@@ -385,67 +379,19 @@ Ready to experience the difference? Your future self will thank you.`;
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Zap className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Fill in the details and click "Generate" to see your copy</p>
+                  <p>{isUnlocked ? "Fill in the details and click \"Generate\" to see your copy" : "Complete your brand strategy to unlock AI copy generation"}</p>
                 </div>
               )}
             </CardContent>
           </Card>
-
-          {generatedCopy && (
-            <Card className="bg-gradient-card shadow-card">
-              <CardHeader>
-                <CardTitle>Copy Analysis</CardTitle>
-                <CardDescription>
-                  How this copy leverages behavioral triggers
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-secondary rounded-full mt-2"></div>
-                    <div>
-                      <p className="font-medium">Emotional Positioning</p>
-                      <p className="text-sm text-muted-foreground">
-                        Leads with the desired emotional outcome rather than features
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-secondary rounded-full mt-2"></div>
-                    <div>
-                      <p className="font-medium">Social Proof Integration</p>
-                      <p className="text-sm text-muted-foreground">
-                        Includes trust signals and community validation
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-secondary rounded-full mt-2"></div>
-                    <div>
-                      <p className="font-medium">Risk Reversal</p>
-                      <p className="text-sm text-muted-foreground">
-                        Addresses purchase anxiety with guarantees or assurances
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-secondary rounded-full mt-2"></div>
-                    <div>
-                      <p className="font-medium">Future Self Appeal</p>
-                      <p className="text-sm text-muted-foreground">
-                        Helps customer visualize their improved future state
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
+
+      <PaywallModal 
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        feature="ValueLens AI Copy Generator"
+      />
     </div>
   );
 }
