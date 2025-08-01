@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+import { ContextualHelp } from "@/components/ContextualHelp";
 import { 
   Lightbulb, 
   Search, 
@@ -15,7 +16,9 @@ import {
   Brain,
   Eye,
   MessageSquare,
-  BarChart
+  BarChart,
+  FileText,
+  Download
 } from "lucide-react";
 
 export default function IdeaInsight() {
@@ -254,121 +257,203 @@ export default function IdeaInsight() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <p className="text-muted-foreground mb-6">
+            As Martin Lindstrom explains in Buyology, emotion outweighs logic in most purchasing decisions. Research by Gerald Zaltman shows emotions drive 95% of decisions. Understanding these seven triggers helps create lasting connections with customers.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            <div className="p-4 border rounded-lg hover:shadow-md transition-all">
-              <h4 className="font-semibold text-yellow-600 mb-2">🌟 Hope</h4>
-              <p className="text-sm text-muted-foreground">
-                The promise of a brighter future. Not just seeing an object, but imagining transformation.
+            <div className="p-6 border rounded-lg hover:shadow-md transition-all">
+              <h4 className="font-semibold text-yellow-600 mb-3 flex items-center gap-2">
+                🌟 Hope
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Hope is one of the most compelling emotional drivers. When a shopper encounters a product, they're imagining what it could do for them.
               </p>
+              <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Example:</strong> A skincare line isn't just bottles—it's the promise of brighter, smoother skin and feeling youthful again.
+                </p>
+              </div>
             </div>
 
-            <div className="p-4 border rounded-lg hover:shadow-md transition-all">
-              <h4 className="font-semibold text-blue-600 mb-2">🤝 Belonging</h4>
-              <p className="text-sm text-muted-foreground">
-                Being part of something bigger. Reflecting identity and shared values.
+            <div className="p-6 border rounded-lg hover:shadow-md transition-all">
+              <h4 className="font-semibold text-blue-600 mb-3 flex items-center gap-2">
+                🤝 Belonging
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Shopping is often about identity. People want to buy from brands that reflect who they are and what they value.
               </p>
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Example:</strong> A toy brand celebrating modern parenting or skincare highlighting diverse beauty sends the message "We see you."
+                </p>
+              </div>
             </div>
 
-            <div className="p-4 border rounded-lg hover:shadow-md transition-all">
-              <h4 className="font-semibold text-green-600 mb-2">✅ Validation</h4>
-              <p className="text-sm text-muted-foreground">
-                Acknowledgment of smart choices and experiences. Being seen and understood.
+            <div className="p-6 border rounded-lg hover:shadow-md transition-all">
+              <h4 className="font-semibold text-green-600 mb-3 flex items-center gap-2">
+                ✅ Validation
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Everyone seeks validation—assurance of smart choices and acknowledgment of their experiences and challenges.
               </p>
+              <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Example:</strong> A brand targeting parents who want screen-free toys affirms their desire to nurture development meaningfully.
+                </p>
+              </div>
             </div>
 
-            <div className="p-4 border rounded-lg hover:shadow-md transition-all">
-              <h4 className="font-semibold text-indigo-600 mb-2">🛡️ Trust</h4>
-              <p className="text-sm text-muted-foreground">
-                Foundation of relationships. Confidence that products deliver on promises.
+            <div className="p-6 border rounded-lg hover:shadow-md transition-all">
+              <h4 className="font-semibold text-indigo-600 mb-3 flex items-center gap-2">
+                🛡️ Trust
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Trust is the foundation of every successful brand-customer relationship. Shoppers need confidence that products will deliver.
               </p>
+              <div className="p-3 bg-indigo-50 dark:bg-indigo-950/20 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Example:</strong> Transparency in sourcing sustainable materials or demonstrating effective features builds confidence.
+                </p>
+              </div>
             </div>
 
-            <div className="p-4 border rounded-lg hover:shadow-md transition-all">
-              <h4 className="font-semibold text-purple-600 mb-2">😌 Relief</h4>
-              <p className="text-sm text-muted-foreground">
-                Making life easier. Solving problems and lifting emotional burdens.
+            <div className="p-6 border rounded-lg hover:shadow-md transition-all">
+              <h4 className="font-semibold text-purple-600 mb-3 flex items-center gap-2">
+                😌 Relief
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                In a world of stress and overwhelm, relief is powerful. Shoppers want brands that make life easier and solve problems.
               </p>
+              <div className="p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Example:</strong> Hair serum combating thinning or face cream smoothing lines provides emotional weight-lifting relief.
+                </p>
+              </div>
             </div>
 
-            <div className="p-4 border rounded-lg hover:shadow-md transition-all">
-              <h4 className="font-semibold text-pink-600 mb-2">🚀 Aspiration</h4>
-              <p className="text-sm text-muted-foreground">
-                Investment in ideal self. Aligning purchases with future vision.
+            <div className="p-6 border rounded-lg hover:shadow-md transition-all">
+              <h4 className="font-semibold text-pink-600 mb-3 flex items-center gap-2">
+                🚀 Aspiration
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Every shopper has a vision of their ideal self. They're investing in that vision, aligning purchases with the future they want.
               </p>
+              <div className="p-3 bg-pink-50 dark:bg-pink-950/20 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Example:</strong> Gender-neutral face cream embraces individuality; a play kitchen nurtures creativity and builds memories.
+                </p>
+              </div>
             </div>
 
-            <div className="p-4 border rounded-lg hover:shadow-md transition-all md:col-span-2 lg:col-span-1">
-              <h4 className="font-semibold text-orange-600 mb-2">💪 Empowerment</h4>
-              <p className="text-sm text-muted-foreground">
-                Feeling capable and in control. Making confident decisions aligned with values.
+            <div className="p-6 border rounded-lg hover:shadow-md transition-all md:col-span-2 lg:col-span-1">
+              <h4 className="font-semibold text-orange-600 mb-3 flex items-center gap-2">
+                💪 Empowerment
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Consumers want to feel in control of their choices, confident in decisions that align with their values and goals.
               </p>
+              <div className="p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Example:</strong> Brands positioning as partners offering tools rather than pushing products create empowerment and loyalty.
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tools & Next Steps */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Avatar 2.0 Integration */}
-        <Card className="hover:shadow-brand transition-all duration-300">
-          <CardHeader>
-            <div className="flex items-center space-x-3">
-              <Users className="w-6 h-6 text-secondary" />
-              <div>
-                <CardTitle>Build Your Avatar 2.0</CardTitle>
-                <CardDescription>Put insights into practice</CardDescription>
-              </div>
+      {/* Practical Tools & Worksheets */}
+      <div className="space-y-8">
+        <h2 className="text-3xl font-bold text-center">Practical Tools & Worksheets</h2>
+        <div className="grid md:grid-cols-2 gap-8">
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <FileText className="h-8 w-8 text-primary" />
+              <h3 className="text-xl font-semibold">IDEA Brand Canvas</h3>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Transform these insights into actionable customer profiles using our Avatar 2.0 Builder.
+            <p className="text-muted-foreground mb-4">
+              A comprehensive worksheet to capture customer insights and translate them into powerful brand statements using the IDEA framework.
             </p>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Customer Understanding</span>
-                <span className="text-sm font-medium">65%</span>
+            <div className="space-y-3 mb-4">
+              <div className="text-sm">
+                <strong>Includes:</strong>
+                <ul className="text-xs text-muted-foreground mt-1 space-y-1">
+                  <li>• Customer Avatar 2.0 template</li>
+                  <li>• Emotional trigger identification</li>
+                  <li>• Brand purpose & vision statements</li>
+                  <li>• Distinctive positioning framework</li>
+                </ul>
               </div>
-              <Progress value={65} className="h-2" />
             </div>
-            <Button className="w-full" asChild>
-              <Link to="/avatar">
-                Start Avatar 2.0 Builder <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
+            <Button asChild variant="outline" className="w-full">
+              <a href="https://storage.googleapis.com/msgsndr/PRr8SFqs3PfSKaJPAtE1/media/688cd4e06bfb1c80bc7fdfdf.pdf" target="_blank" rel="noopener noreferrer">
+                <Download className="w-4 h-4 mr-2" />
+                Download Brand Canvas
+              </a>
             </Button>
-          </CardContent>
-        </Card>
+          </Card>
+          
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Brain className="h-8 w-8 text-primary" />
+              <h3 className="text-xl font-semibold">AI-Powered Insight Research</h3>
+            </div>
+            <p className="text-muted-foreground mb-4">
+              Use AI to conduct deep dive research on your customer's emotional triggers and decision patterns using the Avatar 2.0 structure.
+            </p>
+            <ContextualHelp 
+              question="Help me identify which emotional triggers influence my customer's purchase decisions using the Avatar 2.0 Deep Dive Forensic Structure"
+              category="customer-research"
+              context="Use the IDEA framework to analyze buyer intent, motivation, emotional triggers, pre/post-purchase emotional states, shopper types, and relevant demographics. Focus on the 7 core emotional triggers: Hope, Belonging, Validation, Trust, Relief, Aspiration, and Empowerment."
+            />
+          </Card>
+        </div>
+      </div>
 
-        {/* Diagnostic Integration */}
-        <Card className="hover:shadow-brand transition-all duration-300">
-          <CardHeader>
-            <div className="flex items-center space-x-3">
-              <Brain className="w-6 h-6 text-secondary" />
-              <div>
-                <CardTitle>Assess Your Insights</CardTitle>
-                <CardDescription>Measure current understanding</CardDescription>
+      {/* Tools & Next Steps */}
+      <div className="bg-muted/30 p-8 rounded-lg">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold mb-6 text-center">Ready to Apply These Insights?</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Users className="h-8 w-8 text-primary" />
+                <h3 className="text-xl font-semibold">Build Your Avatar 2.0</h3>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Take our IDEA Diagnostic to understand how well you currently know your customers.
-            </p>
-            <div className="p-3 bg-secondary/10 rounded-lg">
-              <div className="flex items-center space-x-2 text-sm">
-                <Eye className="w-4 h-4 text-secondary" />
-                <span>Insight Score: Needs Assessment</span>
+              <p className="text-muted-foreground mb-4">
+                Transform your customer understanding by creating a comprehensive avatar that integrates behavioral insights and emotional triggers.
+              </p>
+              <div className="flex items-center gap-2 mb-4">
+                <Progress value={85} className="flex-1" />
+                <span className="text-sm text-muted-foreground">5 min setup</span>
               </div>
-            </div>
-            <Button variant="outline" className="w-full" asChild>
-              <Link to="/diagnostic">
-                Take Brand Diagnostic <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+              <Button className="w-full" asChild>
+                <Link to="/avatar">
+                  Start Avatar Builder <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            </Card>
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Target className="h-8 w-8 text-primary" />
+                <h3 className="text-xl font-semibold">Assess Your Insights</h3>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Take our Brand Diagnostic to evaluate how well you understand your customers using the IDEA framework.
+              </p>
+              <div className="flex items-center gap-2 mb-4">
+                <Progress value={70} className="flex-1" />
+                <span className="text-sm text-muted-foreground">10 min assessment</span>
+              </div>
+              <Button variant="outline" className="w-full" asChild>
+                <Link to="/diagnostic">
+                  Take Diagnostic <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* Call to Action */}
