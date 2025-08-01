@@ -54,14 +54,25 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
       const lineHeight = 6;
       let yPosition = margin;
 
-      // Header with logo placeholder
+      const checkPageBreak = (additionalSpace = 15) => {
+        if (yPosition > pageHeight - margin - additionalSpace) {
+          pdf.addPage();
+          yPosition = margin;
+          return true;
+        }
+        return false;
+      };
+
+      // Header with logo placeholder (configurable dimensions)
+      const logoWidth = 80;
+      const logoHeight = 20;
       pdf.setFillColor(59, 130, 246);
-      pdf.rect(pageWidth / 2 - 30, yPosition, 60, 15, 'F');
+      pdf.rect(pageWidth / 2 - logoWidth/2, yPosition, logoWidth, logoHeight, 'F');
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(10);
-      pdf.text('YOUR LOGO', pageWidth / 2, yPosition + 10, { align: 'center' });
+      pdf.setFontSize(12);
+      pdf.text('YOUR LOGO', pageWidth / 2, yPosition + logoHeight/2 + 2, { align: 'center' });
       
-      yPosition += 25;
+      yPosition += 30;
 
       // Title
       pdf.setTextColor(30, 64, 175);
@@ -76,7 +87,7 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
 
       pdf.setFontSize(10);
       pdf.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 15;
+      yPosition += 20;
 
       // Executive Summary
       pdf.setTextColor(30, 64, 175);
@@ -116,41 +127,41 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
 
       pdf.setFontSize(10);
       avatar.psychographics.values.forEach(value => {
+        checkPageBreak();
         pdf.text(`• ${value}`, margin + 5, yPosition);
         yPosition += lineHeight;
       });
 
       yPosition += 5;
+      checkPageBreak();
       pdf.setFontSize(12);
       pdf.text('Pain Points to Address:', margin, yPosition);
       yPosition += lineHeight;
 
       pdf.setFontSize(10);
       avatar.psychographics.fears.forEach(fear => {
+        checkPageBreak();
         pdf.text(`• ${fear}`, margin + 5, yPosition);
         yPosition += lineHeight;
       });
 
       yPosition += 5;
+      checkPageBreak();
       pdf.setFontSize(12);
       pdf.text('Desires & Aspirations:', margin, yPosition);
       yPosition += lineHeight;
 
       pdf.setFontSize(10);
       avatar.psychographics.desires.forEach(desire => {
+        checkPageBreak();
         pdf.text(`• ${desire}`, margin + 5, yPosition);
         yPosition += lineHeight;
       });
 
-      // Check if we need a new page
-      if (yPosition > pageHeight - 40) {
-        pdf.addPage();
-        yPosition = margin;
-      }
-
       yPosition += 10;
 
       // Buying Behavior Insights
+      checkPageBreak(30);
       pdf.setTextColor(30, 64, 175);
       pdf.setFontSize(16);
       pdf.text('Buying Behavior Insights', margin, yPosition);
@@ -165,17 +176,20 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
       ];
 
       buyingBehavior.forEach(behavior => {
+        checkPageBreak();
         pdf.text(behavior, margin, yPosition);
         yPosition += lineHeight;
       });
 
       yPosition += 5;
+      checkPageBreak();
       pdf.setFontSize(12);
       pdf.text('Key Decision Factors:', margin, yPosition);
       yPosition += lineHeight;
 
       pdf.setFontSize(10);
       avatar.buyingBehavior.decisionFactors.forEach(factor => {
+        checkPageBreak();
         pdf.text(`• ${factor}`, margin + 5, yPosition);
         yPosition += lineHeight;
       });
@@ -183,6 +197,7 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
       // Voice of Customer Analysis (if available)
       if (analysisResults) {
         yPosition += 10;
+        checkPageBreak(40);
         pdf.setTextColor(30, 64, 175);
         pdf.setFontSize(16);
         pdf.text('Voice of Customer Analysis', margin, yPosition);
@@ -194,36 +209,36 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
         yPosition += lineHeight;
 
         pdf.setFontSize(10);
+        checkPageBreak();
         pdf.text(`Positive: ${analysisResults.sentiment.positive}%`, margin + 5, yPosition);
         yPosition += lineHeight;
+        checkPageBreak();
         pdf.text(`Negative: ${analysisResults.sentiment.negative}%`, margin + 5, yPosition);
         yPosition += lineHeight;
+        checkPageBreak();
         pdf.text(`Neutral: ${analysisResults.sentiment.neutral}%`, margin + 5, yPosition);
         yPosition += lineHeight;
 
         if (analysisResults.insights.length > 0) {
           yPosition += 5;
+          checkPageBreak();
           pdf.setFontSize(12);
           pdf.text('Strategic Insights:', margin, yPosition);
           yPosition += lineHeight;
 
           pdf.setFontSize(10);
           analysisResults.insights.forEach(insight => {
+            checkPageBreak();
             pdf.text(`• ${insight}`, margin + 5, yPosition);
             yPosition += lineHeight;
           });
         }
       }
 
-      // Check if we need a new page for recommendations
-      if (yPosition > pageHeight - 60) {
-        pdf.addPage();
-        yPosition = margin;
-      }
-
       yPosition += 10;
 
       // Actionable Recommendations
+      checkPageBreak(50);
       pdf.setTextColor(30, 64, 175);
       pdf.setFontSize(16);
       pdf.text('Actionable Recommendations', margin, yPosition);
@@ -252,11 +267,13 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
         if (rec === '') {
           yPosition += 3;
         } else if (rec.endsWith(':')) {
+          checkPageBreak(20);
           pdf.setFontSize(12);
           pdf.text(rec, margin, yPosition);
           pdf.setFontSize(10);
           yPosition += lineHeight;
         } else {
+          checkPageBreak();
           pdf.text(rec, margin + 5, yPosition);
           yPosition += lineHeight;
         }
