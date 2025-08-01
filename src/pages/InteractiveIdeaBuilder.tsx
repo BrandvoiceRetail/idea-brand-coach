@@ -1,689 +1,724 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ContextualHelp } from "@/components/ContextualHelp";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Lightbulb, 
-  Star, 
-  Heart, 
-  Shield, 
-  CheckCircle,
-  ArrowRight,
-  ArrowLeft,
-  Save,
-  Sparkles,
-  Target,
-  Users,
-  TrendingUp,
-  Award
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Lightbulb, Target, Heart, Shield, ChevronRight, ChevronLeft, CheckCircle, Sparkles, Users, Trophy, Lock, Unlock } from 'lucide-react';
+import { useBrand } from '@/contexts/BrandContext';
+import { useToast } from '@/hooks/use-toast';
+import { AIAssistant } from '@/components/AIAssistant';
+import { ContextualHelp } from '@/components/ContextualHelp';
 
-interface IdeaFrameworkData {
-  // Insight Driven
-  targetAudience: string;
-  customerPains: string[];
-  emotionalTriggers: string[];
-  buyingMotivations: string;
-  
-  // Distinctive/Different
-  uniqueValue: string;
-  brandPersonality: string[];
-  competitiveDifference: string;
-  brandAssets: string[];
-  
-  // Emotionally Intelligent
-  empathyStatements: string[];
-  emotionalBenefits: string;
-  brandTone: string;
-  customerFeelings: string;
-  
-  // Authoritative & Authentic
-  brandValues: string[];
-  brandStory: string;
-  brandPromise: string;
-  transparencyCommitment: string;
-}
-
-const initialData: IdeaFrameworkData = {
-  targetAudience: "",
-  customerPains: [],
-  emotionalTriggers: [],
-  buyingMotivations: "",
-  uniqueValue: "",
-  brandPersonality: [],
-  competitiveDifference: "",
-  brandAssets: [],
-  empathyStatements: [],
-  emotionalBenefits: "",
-  brandTone: "",
-  customerFeelings: "",
-  brandValues: [],
-  brandStory: "",
-  brandPromise: "",
-  transparencyCommitment: ""
+const realWorldExamples = {
+  insight: {
+    nike: {
+      brand: "Nike",
+      example: "Nike identified that athletes (professional and amateur) don't just want performance gear—they want to feel empowered and capable of achieving greatness.",
+      marketInsight: "Athletic performance is as much about mental confidence as physical capability",
+      consumerInsight: "People buy Nike to feel like they can 'Just Do It'—not just perform better"
+    },
+    patagonia: {
+      brand: "Patagonia", 
+      example: "Patagonia understood that outdoor enthusiasts care deeply about preserving the environments they love to explore.",
+      marketInsight: "Environmental consciousness drives purchasing decisions in outdoor gear",
+      consumerInsight: "Customers want brands that align with their values of environmental stewardship"
+    }
+  },
+  distinctive: {
+    apple: {
+      brand: "Apple",
+      example: "Apple's distinctive positioning: 'Think Different' - premium, minimalist design that makes technology personal and intuitive.",
+      uniqueValue: "Seamless integration between all devices and services",
+      positioning: "Premium technology that's beautifully simple"
+    },
+    tesla: {
+      brand: "Tesla",
+      example: "Tesla positioned itself not as a car company, but as a sustainable energy company that happens to make cars.",
+      uniqueValue: "Sustainable transportation with cutting-edge technology",
+      positioning: "Accelerating the world's transition to sustainable energy"
+    }
+  },
+  empathy: {
+    dove: {
+      brand: "Dove",
+      example: "Dove's 'Real Beauty' campaign showed genuine empathy for women who felt pressure from unrealistic beauty standards.",
+      emotionalConnection: "Every woman deserves to feel beautiful in her own skin",
+      customerNeeds: ["Self-acceptance", "Confidence", "Authentic representation"]
+    },
+    airbnb: {
+      brand: "Airbnb",
+      example: "Airbnb empathizes with travelers who want authentic, local experiences rather than sterile hotel stays.",
+      emotionalConnection: "Belong anywhere - experience places like a local",
+      customerNeeds: ["Authentic experiences", "Connection", "Feeling at home"]
+    }
+  },
+  authentic: {
+    patagonia_values: {
+      brand: "Patagonia",
+      example: "Patagonia's authentic commitment to environmental causes - they donate profits and encourage customers to buy less.",
+      brandValues: ["Environmental responsibility", "Quality over quantity", "Activism"],
+      brandPromise: "Build the best product, cause no unnecessary harm, use business to inspire solutions to environmental crisis"
+    },
+    ben_jerrys: {
+      brand: "Ben & Jerry's",
+      example: "Ben & Jerry's authentic social activism - they take real stands on social issues, even when controversial.",
+      brandValues: ["Social justice", "Environmental sustainability", "Quality ingredients"],
+      brandPromise: "Make the best ice cream while making the world a better place"
+    }
+  }
 };
 
 export default function InteractiveIdeaBuilder() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [frameworkData, setFrameworkData] = useState<IdeaFrameworkData>(initialData);
-  const [completedSections, setCompletedSections] = useState<number[]>([]);
-  const [newItem, setNewItem] = useState("");
+  const [expandedExample, setExpandedExample] = useState<string | null>(null);
+  const { brandData, updateBrandData, getCompletionPercentage, isToolUnlocked } = useBrand();
   const { toast } = useToast();
 
   const steps = [
     { 
       id: "insight", 
-      title: "Insight Driven", 
+      title: "Insight", 
       icon: <Lightbulb className="w-5 h-5" />,
       color: "from-yellow-500 to-orange-500",
-      description: "Understand your customers deeply"
+      description: "Deep customer understanding"
     },
     { 
       id: "distinctive", 
-      title: "Distinctive/Different", 
-      icon: <Star className="w-5 h-5" />,
+      title: "Distinctive", 
+      icon: <Target className="w-5 h-5" />,
       color: "from-green-500 to-emerald-500",
-      description: "Stand out from the competition"
+      description: "What makes you unique"
     },
     { 
-      id: "emotional", 
-      title: "Emotionally Intelligent", 
+      id: "empathy", 
+      title: "Empathy", 
       icon: <Heart className="w-5 h-5" />,
       color: "from-pink-500 to-rose-500",
-      description: "Connect on an emotional level"
+      description: "Emotional connection"
     },
     { 
       id: "authentic", 
-      title: "Authoritative & Authentic", 
+      title: "Authentic", 
       icon: <Shield className="w-5 h-5" />,
       color: "from-blue-500 to-indigo-500",
-      description: "Build trust and credibility"
+      description: "Genuine values & promise"
     }
   ];
 
-  const progress = ((completedSections.length) / steps.length) * 100;
+  const updateCurrentStepData = (field: string, value: any) => {
+    const stepKey = steps[currentStep].id as keyof typeof brandData;
+    updateBrandData(stepKey, { [field]: value });
+  };
 
-  const addToArray = (field: keyof IdeaFrameworkData, value: string) => {
-    if (!value.trim()) return;
+  const markStepComplete = () => {
+    const stepKey = steps[currentStep].id as keyof typeof brandData;
+    updateBrandData(stepKey, { completed: true });
     
-    setFrameworkData(prev => ({
-      ...prev,
-      [field]: [...(prev[field] as string[]), value.trim()]
-    }));
-    setNewItem("");
-  };
-
-  const removeFromArray = (field: keyof IdeaFrameworkData, index: number) => {
-    setFrameworkData(prev => ({
-      ...prev,
-      [field]: (prev[field] as string[]).filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateField = (field: keyof IdeaFrameworkData, value: string) => {
-    setFrameworkData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const saveProgress = () => {
-    localStorage.setItem('ideaFrameworkData', JSON.stringify(frameworkData));
-    localStorage.setItem('ideaCompletedSections', JSON.stringify(completedSections));
     toast({
-      title: "Progress Saved",
-      description: "Your IDEA Framework progress has been saved."
+      title: "Section Completed! 🎉",
+      description: `${steps[currentStep].title} section is now complete.`,
     });
-  };
 
-  const markSectionComplete = (stepIndex: number) => {
-    if (!completedSections.includes(stepIndex)) {
-      setCompletedSections(prev => [...prev, stepIndex]);
-      toast({
-        title: "Section Completed! 🎉",
-        description: `Great work on the ${steps[stepIndex].title} section!`,
-      });
-    }
-  };
-
-  useEffect(() => {
-    // Load saved progress
-    const savedData = localStorage.getItem('ideaFrameworkData');
-    const savedSections = localStorage.getItem('ideaCompletedSections');
-    
-    if (savedData) setFrameworkData(JSON.parse(savedData));
-    if (savedSections) setCompletedSections(JSON.parse(savedSections));
-  }, []);
-
-  const nextStep = () => {
+    // Auto-advance to next step if not on last step
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      setTimeout(() => setCurrentStep(currentStep + 1), 1000);
     }
   };
 
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+  const isStepComplete = () => {
+    const stepKey = steps[currentStep].id as 'insight' | 'distinctive' | 'empathy' | 'authentic';
+    const stepData = brandData[stepKey];
+    return 'completed' in stepData ? stepData.completed : false;
+  };
+
+  const canCompleteStep = () => {
+    switch (currentStep) {
+      case 0: // Insight
+        return brandData.insight.marketInsight && brandData.insight.consumerInsight && brandData.insight.brandPurpose;
+      case 1: // Distinctive
+        return brandData.distinctive.uniqueValue && brandData.distinctive.positioning && brandData.distinctive.differentiators.length > 0;
+      case 2: // Empathy
+        return brandData.empathy.emotionalConnection && brandData.empathy.customerNeeds.length > 0 && brandData.empathy.brandPersonality;
+      case 3: // Authentic
+        return brandData.authentic.brandValues.length > 0 && brandData.authentic.brandStory && brandData.authentic.brandPromise;
+      default:
+        return false;
     }
   };
 
-  const emotionalTriggerSuggestions = [
-    "Hope", "Belonging", "Validation", "Trust", "Relief", "Aspiration", "Empowerment"
-  ];
+  const addToArray = (field: string, value: string) => {
+    if (!value.trim()) return;
+    const stepKey = steps[currentStep].id as keyof typeof brandData;
+    const currentArray = brandData[stepKey][field] as string[] || [];
+    updateBrandData(stepKey, { [field]: [...currentArray, value.trim()] });
+  };
 
-  const personalityTraits = [
-    "Innovative", "Trustworthy", "Fun", "Sophisticated", "Caring", "Bold", "Reliable", "Creative"
-  ];
+  const removeFromArray = (field: string, index: number) => {
+    const stepKey = steps[currentStep].id as keyof typeof brandData;
+    const currentArray = brandData[stepKey][field] as string[];
+    updateBrandData(stepKey, { [field]: currentArray.filter((_, i) => i !== index) });
+  };
 
-  const coreValues = [
-    "Quality", "Innovation", "Sustainability", "Customer-First", "Transparency", "Excellence", "Community", "Growth"
-  ];
+  const ExampleCard = ({ example, title }: { example: any, title: string }) => (
+    <Card className="border-primary/20 bg-primary/5">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-primary/10">{example.brand}</Badge>
+          <span className="text-sm font-medium">{title}</span>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <p className="text-sm text-muted-foreground">{example.example}</p>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-2 h-auto p-0 text-primary"
+          onClick={() => setExpandedExample(expandedExample === example.brand ? null : example.brand)}
+        >
+          {expandedExample === example.brand ? 'Show less' : 'See breakdown'}
+        </Button>
+        {expandedExample === example.brand && (
+          <div className="mt-3 space-y-2 text-sm">
+            {Object.entries(example).map(([key, value]) => {
+              if (key === 'brand' || key === 'example') return null;
+              return (
+                <div key={key} className="border-l-2 border-primary/20 pl-3">
+                  <span className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}: </span>
+                  <span className="text-muted-foreground">
+                    {Array.isArray(value) ? value.join(', ') : String(value)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
       <div className="text-center">
         <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center mx-auto mb-6">
           <Sparkles className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-4xl font-bold mb-4">Interactive IDEA Framework Builder</h1>
+        <h1 className="text-4xl font-bold mb-4">Interactive IDEA Framework</h1>
         <p className="text-xl text-muted-foreground mb-6">
-          Build your strategic brand framework step-by-step with AI-powered guidance
+          Build your strategic brand foundation with AI guidance and real-world examples
         </p>
         
         {/* Progress */}
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md mx-auto mb-6">
           <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Progress</span>
-            <span>{Math.round(progress)}% Complete</span>
+            <span>Framework Progress</span>
+            <span>{getCompletionPercentage()}% Complete</span>
           </div>
-          <Progress value={progress} className="h-3" />
+          <Progress value={getCompletionPercentage()} className="h-3" />
+        </div>
+
+        {/* Unlock Status */}
+        <div className="flex items-center justify-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            {isToolUnlocked('avatar') ? <Unlock className="w-4 h-4 text-green-500" /> : <Lock className="w-4 h-4 text-gray-400" />}
+            <span className={isToolUnlocked('avatar') ? 'text-green-600' : 'text-gray-400'}>Avatar Builder</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {isToolUnlocked('canvas') ? <Unlock className="w-4 h-4 text-green-500" /> : <Lock className="w-4 h-4 text-gray-400" />}
+            <span className={isToolUnlocked('canvas') ? 'text-green-600' : 'text-gray-400'}>Brand Canvas</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {isToolUnlocked('valuelens') ? <Unlock className="w-4 h-4 text-green-500" /> : <Lock className="w-4 h-4 text-gray-400" />}
+            <span className={isToolUnlocked('valuelens') ? 'text-green-600' : 'text-gray-400'}>ValueLens AI</span>
+          </div>
         </div>
       </div>
 
       {/* Step Navigation */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {steps.map((step, index) => (
-          <Card 
-            key={step.id} 
-            className={`cursor-pointer transition-all duration-300 ${
-              index === currentStep 
-                ? 'ring-2 ring-primary shadow-lg' 
-                : completedSections.includes(index)
-                ? 'bg-secondary/50'
-                : 'hover:shadow-md'
-            }`}
-            onClick={() => setCurrentStep(index)}
-          >
-            <CardContent className="p-4 text-center">
-              <div className={`w-12 h-12 bg-gradient-to-br ${step.color} rounded-lg flex items-center justify-center mx-auto mb-3`}>
-                {completedSections.includes(index) ? (
-                  <CheckCircle className="w-6 h-6 text-white" />
-                ) : (
-                  <div className="text-white">{step.icon}</div>
+        {steps.map((step, index) => {
+          const stepId = step.id as 'insight' | 'distinctive' | 'empathy' | 'authentic';
+          const stepData = brandData[stepId];
+          const isCompleted = 'completed' in stepData ? stepData.completed : false;
+          return (
+            <Card 
+              key={step.id} 
+              className={`cursor-pointer transition-all duration-300 ${
+                index === currentStep 
+                  ? 'ring-2 ring-primary shadow-lg' 
+                  : isCompleted
+                  ? 'bg-green-50 border-green-200'
+                  : 'hover:shadow-md'
+              }`}
+              onClick={() => setCurrentStep(index)}
+            >
+              <CardContent className="p-4 text-center">
+                <div className={`w-12 h-12 bg-gradient-to-br ${step.color} rounded-lg flex items-center justify-center mx-auto mb-3`}>
+                  {isCompleted ? (
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  ) : (
+                    <div className="text-white">{step.icon}</div>
+                  )}
+                </div>
+                <h3 className="font-semibold text-sm">{step.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
+                {index === currentStep && (
+                  <Badge variant="default" className="mt-2">Current</Badge>
                 )}
+                {isCompleted && (
+                  <Badge variant="secondary" className="mt-2 bg-green-100 text-green-700">Complete</Badge>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          <Card className="shadow-xl">
+            <CardHeader className={`bg-gradient-to-r ${steps[currentStep].color} text-white`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {steps[currentStep].icon}
+                  <div>
+                    <CardTitle className="text-white">{steps[currentStep].title}</CardTitle>
+                    <CardDescription className="text-white/90">
+                      {steps[currentStep].description}
+                    </CardDescription>
+                  </div>
+                </div>
+                <ContextualHelp 
+                  question={`How do I build the ${steps[currentStep].title} section?`}
+                  category="idea-framework" 
+                  context={`Building ${steps[currentStep].title} section of IDEA Framework`}
+                />
               </div>
-              <h3 className="font-semibold text-sm">{step.title}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
-              {index === currentStep && (
-                <Badge variant="default" className="mt-2">Current</Badge>
+            </CardHeader>
+
+            <CardContent className="p-8">
+              {/* Insight Step */}
+              {currentStep === 0 && (
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="marketInsight" className="text-base font-semibold">
+                      Market Insight: What key trend or shift do you see in your market?
+                    </Label>
+                    <Textarea
+                      id="marketInsight"
+                      placeholder="e.g., 'Consumers are increasingly seeking authentic, transparent brands that align with their values...'"
+                      value={brandData.insight.marketInsight}
+                      onChange={(e) => updateCurrentStepData('marketInsight', e.target.value)}
+                      className="mt-2"
+                      rows={3}
+                    />
+                    <AIAssistant
+                      prompt="market insight"
+                      currentValue={brandData.insight.marketInsight}
+                      onSuggestion={(suggestion) => updateCurrentStepData('marketInsight', suggestion)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="consumerInsight" className="text-base font-semibold">
+                      Consumer Insight: What emotional truth drives your customers?
+                    </Label>
+                    <Textarea
+                      id="consumerInsight"
+                      placeholder="e.g., 'Busy professionals want to feel competent and in control, but often feel overwhelmed by too many choices...'"
+                      value={brandData.insight.consumerInsight}
+                      onChange={(e) => updateCurrentStepData('consumerInsight', e.target.value)}
+                      className="mt-2"
+                      rows={3}
+                    />
+                    <AIAssistant
+                      prompt="consumer insight"
+                      currentValue={brandData.insight.consumerInsight}
+                      onSuggestion={(suggestion) => updateCurrentStepData('consumerInsight', suggestion)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="brandPurpose" className="text-base font-semibold">
+                      Brand Purpose: Why does your brand exist beyond profit?
+                    </Label>
+                    <Textarea
+                      id="brandPurpose"
+                      placeholder="e.g., 'To empower people to live their healthiest, most confident lives...'"
+                      value={brandData.insight.brandPurpose}
+                      onChange={(e) => updateCurrentStepData('brandPurpose', e.target.value)}
+                      className="mt-2"
+                      rows={3}
+                    />
+                    <AIAssistant
+                      prompt="brand purpose"
+                      currentValue={brandData.insight.brandPurpose}
+                      onSuggestion={(suggestion) => updateCurrentStepData('brandPurpose', suggestion)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Distinctive Step */}
+              {currentStep === 1 && (
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="uniqueValue" className="text-base font-semibold">
+                      Unique Value: What makes you truly different?
+                    </Label>
+                    <Textarea
+                      id="uniqueValue"
+                      placeholder="e.g., 'The only platform that combines AI-powered personalization with human expert guidance...'"
+                      value={brandData.distinctive.uniqueValue}
+                      onChange={(e) => updateCurrentStepData('uniqueValue', e.target.value)}
+                      className="mt-2"
+                      rows={3}
+                    />
+                    <AIAssistant
+                      prompt="unique value proposition"
+                      currentValue={brandData.distinctive.uniqueValue}
+                      onSuggestion={(suggestion) => updateCurrentStepData('uniqueValue', suggestion)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-base font-semibold">Key Differentiators</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        placeholder="Add a key differentiator..."
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            addToArray('differentiators', (e.target as HTMLInputElement).value);
+                            (e.target as HTMLInputElement).value = '';
+                          }
+                        }}
+                      />
+                      <Button onClick={(e) => {
+                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                        addToArray('differentiators', input.value);
+                        input.value = '';
+                      }}>Add</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {brandData.distinctive.differentiators.map((diff, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="cursor-pointer"
+                          onClick={() => removeFromArray('differentiators', index)}
+                        >
+                          {diff} ×
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="positioning" className="text-base font-semibold">
+                      Brand Positioning Statement
+                    </Label>
+                    <Textarea
+                      id="positioning"
+                      placeholder="For [target audience], [brand] is the [category] that [unique benefit] because [reasons to believe]"
+                      value={brandData.distinctive.positioning}
+                      onChange={(e) => updateCurrentStepData('positioning', e.target.value)}
+                      className="mt-2"
+                      rows={3}
+                    />
+                    <AIAssistant
+                      prompt="brand positioning"
+                      currentValue={brandData.distinctive.positioning}
+                      onSuggestion={(suggestion) => updateCurrentStepData('positioning', suggestion)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Empathy Step */}
+              {currentStep === 2 && (
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="emotionalConnection" className="text-base font-semibold">
+                      Emotional Connection: How do you want customers to feel?
+                    </Label>
+                    <Textarea
+                      id="emotionalConnection"
+                      placeholder="e.g., 'Confident, empowered, and understood - like they have a trusted partner on their journey...'"
+                      value={brandData.empathy.emotionalConnection}
+                      onChange={(e) => updateCurrentStepData('emotionalConnection', e.target.value)}
+                      className="mt-2"
+                      rows={3}
+                    />
+                    <AIAssistant
+                      prompt="emotional connection"
+                      currentValue={brandData.empathy.emotionalConnection}
+                      onSuggestion={(suggestion) => updateCurrentStepData('emotionalConnection', suggestion)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-base font-semibold">Customer Needs (Emotional & Functional)</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        placeholder="Add a customer need..."
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            addToArray('customerNeeds', (e.target as HTMLInputElement).value);
+                            (e.target as HTMLInputElement).value = '';
+                          }
+                        }}
+                      />
+                      <Button onClick={(e) => {
+                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                        addToArray('customerNeeds', input.value);
+                        input.value = '';
+                      }}>Add</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {brandData.empathy.customerNeeds.map((need, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="cursor-pointer"
+                          onClick={() => removeFromArray('customerNeeds', index)}
+                        >
+                          {need} ×
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="brandPersonality" className="text-base font-semibold">
+                      Brand Personality: If your brand were a person, how would you describe them?
+                    </Label>
+                    <Textarea
+                      id="brandPersonality"
+                      placeholder="e.g., 'A wise, encouraging mentor who is approachable yet knowledgeable, optimistic but realistic...'"
+                      value={brandData.empathy.brandPersonality}
+                      onChange={(e) => updateCurrentStepData('brandPersonality', e.target.value)}
+                      className="mt-2"
+                      rows={3}
+                    />
+                    <AIAssistant
+                      prompt="brand personality"
+                      currentValue={brandData.empathy.brandPersonality}
+                      onSuggestion={(suggestion) => updateCurrentStepData('brandPersonality', suggestion)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Authentic Step */}
+              {currentStep === 3 && (
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-base font-semibold">Core Brand Values</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        placeholder="Add a core value..."
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            addToArray('brandValues', (e.target as HTMLInputElement).value);
+                            (e.target as HTMLInputElement).value = '';
+                          }
+                        }}
+                      />
+                      <Button onClick={(e) => {
+                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                        addToArray('brandValues', input.value);
+                        input.value = '';
+                      }}>Add</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {brandData.authentic.brandValues.map((value, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="cursor-pointer"
+                          onClick={() => removeFromArray('brandValues', index)}
+                        >
+                          {value} ×
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="brandStory" className="text-base font-semibold">
+                      Brand Story: What's your authentic origin story?
+                    </Label>
+                    <Textarea
+                      id="brandStory"
+                      placeholder="Tell the story of why you started, what challenges you've overcome, and what drives you..."
+                      value={brandData.authentic.brandStory}
+                      onChange={(e) => updateCurrentStepData('brandStory', e.target.value)}
+                      className="mt-2"
+                      rows={4}
+                    />
+                    <AIAssistant
+                      prompt="brand story"
+                      currentValue={brandData.authentic.brandStory}
+                      onSuggestion={(suggestion) => updateCurrentStepData('brandStory', suggestion)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="brandPromise" className="text-base font-semibold">
+                      Brand Promise: What do you commit to deliver?
+                    </Label>
+                    <Textarea
+                      id="brandPromise"
+                      placeholder="e.g., 'We promise to always put our customers' success first, delivering solutions that actually work...'"
+                      value={brandData.authentic.brandPromise}
+                      onChange={(e) => updateCurrentStepData('brandPromise', e.target.value)}
+                      className="mt-2"
+                      rows={3}
+                    />
+                    <AIAssistant
+                      prompt="brand promise"
+                      currentValue={brandData.authentic.brandPromise}
+                      onSuggestion={(suggestion) => updateCurrentStepData('brandPromise', suggestion)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center mt-8 pt-6 border-t">
+                <Button
+                  onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                  variant="outline"
+                  disabled={currentStep === 0}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
+
+                <div className="flex gap-3">
+                  {canCompleteStep() && !isStepComplete() && (
+                    <Button onClick={markStepComplete} variant="default">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Complete Section
+                    </Button>
+                  )}
+
+                  <Button
+                    onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+                    disabled={currentStep === steps.length - 1}
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Examples Sidebar */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="w-5 h-5" />
+                Real-World Examples
+              </CardTitle>
+              <CardDescription>
+                Learn from successful brands who excel at {steps[currentStep].title.toLowerCase()}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {currentStep === 0 && (
+                <>
+                  <ExampleCard example={realWorldExamples.insight.nike} title="Consumer Insight" />
+                  <ExampleCard example={realWorldExamples.insight.patagonia} title="Market Insight" />
+                </>
+              )}
+              {currentStep === 1 && (
+                <>
+                  <ExampleCard example={realWorldExamples.distinctive.apple} title="Distinctive Positioning" />
+                  <ExampleCard example={realWorldExamples.distinctive.tesla} title="Unique Value Prop" />
+                </>
+              )}
+              {currentStep === 2 && (
+                <>
+                  <ExampleCard example={realWorldExamples.empathy.dove} title="Emotional Connection" />
+                  <ExampleCard example={realWorldExamples.empathy.airbnb} title="Customer Empathy" />
+                </>
+              )}
+              {currentStep === 3 && (
+                <>
+                  <ExampleCard example={realWorldExamples.authentic.patagonia_values} title="Authentic Values" />
+                  <ExampleCard example={realWorldExamples.authentic.ben_jerrys} title="Brand Promise" />
+                </>
               )}
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      {/* Content Area */}
-      <Card className="shadow-xl">
-        <CardHeader className={`bg-gradient-to-r ${steps[currentStep].color} text-white`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {steps[currentStep].icon}
-              <div>
-                <CardTitle className="text-white">{steps[currentStep].title}</CardTitle>
-                <CardDescription className="text-white/90">
-                  {steps[currentStep].description}
-                </CardDescription>
-              </div>
-            </div>
-            <ContextualHelp 
-              question="How do I complete this section effectively?"
-              category="idea-framework" 
-              context={`Building ${steps[currentStep].title} section of IDEA Framework`}
-            />
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-8">
-          {/* Step Content */}
-          {currentStep === 0 && (
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold mb-4">Insight Driven: Understanding Your Customers</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="targetAudience" className="text-base font-semibold">
-                    Who is your ideal customer? (Be specific)
-                  </Label>
-                  <Textarea
-                    id="targetAudience"
-                    placeholder="Describe your target audience in detail - demographics, psychographics, behaviors..."
-                    value={frameworkData.targetAudience}
-                    onChange={(e) => updateField('targetAudience', e.target.value)}
-                    className="mt-2"
-                    rows={3}
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Think beyond age and location. What drives them? What are their daily struggles?
-                  </p>
-                </div>
-
-                <div>
-                  <Label className="text-base font-semibold">Customer Pain Points</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      placeholder="Add a customer pain point..."
-                      value={newItem}
-                      onChange={(e) => setNewItem(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addToArray('customerPains', newItem)}
-                    />
-                    <Button onClick={() => addToArray('customerPains', newItem)}>Add</Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {frameworkData.customerPains.map((pain, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
-                        className="cursor-pointer"
-                        onClick={() => removeFromArray('customerPains', index)}
-                      >
-                        {pain} ×
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-base font-semibold">Emotional Triggers</Label>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Which emotional triggers resonate with your audience?
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {emotionalTriggerSuggestions.map(trigger => (
-                      <Badge 
-                        key={trigger}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-primary hover:text-white"
-                        onClick={() => addToArray('emotionalTriggers', trigger)}
-                      >
-                        {trigger}
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {frameworkData.emotionalTriggers.map((trigger, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="default"
-                        className="cursor-pointer"
-                        onClick={() => removeFromArray('emotionalTriggers', index)}
-                      >
-                        {trigger} ×
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="buyingMotivations" className="text-base font-semibold">
-                    What ultimately motivates them to buy?
-                  </Label>
-                  <Textarea
-                    id="buyingMotivations"
-                    placeholder="Describe the deeper motivations that drive purchase decisions..."
-                    value={frameworkData.buyingMotivations}
-                    onChange={(e) => updateField('buyingMotivations', e.target.value)}
-                    className="mt-2"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 1 && (
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold mb-4">Distinctive/Different: What Makes You Unique</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="uniqueValue" className="text-base font-semibold">
-                    What's your unique value proposition?
-                  </Label>
-                  <Textarea
-                    id="uniqueValue"
-                    placeholder="What makes your brand uniquely valuable to customers? What can't competitors replicate?"
-                    value={frameworkData.uniqueValue}
-                    onChange={(e) => updateField('uniqueValue', e.target.value)}
-                    className="mt-2"
-                    rows={3}
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Focus on what you do differently, not just better.
-                  </p>
-                </div>
-
-                <div>
-                  <Label className="text-base font-semibold">Brand Personality Traits</Label>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    How would you describe your brand's personality?
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {personalityTraits.map(trait => (
-                      <Badge 
-                        key={trait}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-primary hover:text-white"
-                        onClick={() => addToArray('brandPersonality', trait)}
-                      >
-                        {trait}
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {frameworkData.brandPersonality.map((trait, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="default"
-                        className="cursor-pointer"
-                        onClick={() => removeFromArray('brandPersonality', index)}
-                      >
-                        {trait} ×
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="competitiveDifference" className="text-base font-semibold">
-                    How do you differ from competitors?
-                  </Label>
-                  <Textarea
-                    id="competitiveDifference"
-                    placeholder="Specifically describe how you're different from your main competitors..."
-                    value={frameworkData.competitiveDifference}
-                    onChange={(e) => updateField('competitiveDifference', e.target.value)}
-                    className="mt-2"
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-base font-semibold">Distinctive Brand Assets</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      placeholder="Add a distinctive brand asset (colors, fonts, symbols, etc.)..."
-                      value={newItem}
-                      onChange={(e) => setNewItem(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addToArray('brandAssets', newItem)}
-                    />
-                    <Button onClick={() => addToArray('brandAssets', newItem)}>Add</Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {frameworkData.brandAssets.map((asset, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary"
-                        className="cursor-pointer"
-                        onClick={() => removeFromArray('brandAssets', index)}
-                      >
-                        {asset} ×
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 2 && (
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold mb-4">Emotionally Intelligent: Connect with Hearts</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-base font-semibold">Empathy Statements</Label>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Write statements that show you understand your customers' feelings
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      placeholder="We understand that you feel..."
-                      value={newItem}
-                      onChange={(e) => setNewItem(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addToArray('empathyStatements', newItem)}
-                    />
-                    <Button onClick={() => addToArray('empathyStatements', newItem)}>Add</Button>
-                  </div>
-                  <div className="space-y-2 mt-3">
-                    {frameworkData.empathyStatements.map((statement, index) => (
-                      <div 
-                        key={index} 
-                        className="p-3 bg-secondary/20 rounded-lg cursor-pointer hover:bg-secondary/30"
-                        onClick={() => removeFromArray('empathyStatements', index)}
-                      >
-                        "{statement}" <span className="text-xs text-muted-foreground ml-2">×</span>
+          {/* Progress Tracker */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Your Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {steps.map((step, index) => {
+                  const stepId = step.id as 'insight' | 'distinctive' | 'empathy' | 'authentic';
+                  const stepData = brandData[stepId];
+                  const isCompleted = 'completed' in stepData ? stepData.completed : false;
+                  return (
+                    <div key={step.id} className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                        isCompleted ? 'bg-green-100 text-green-700' : 
+                        index === currentStep ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {isCompleted ? <CheckCircle className="w-4 h-4" /> : index + 1}
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="emotionalBenefits" className="text-base font-semibold">
-                    What emotional benefits do you provide?
-                  </Label>
-                  <Textarea
-                    id="emotionalBenefits"
-                    placeholder="How does your brand make customers feel? What emotional outcomes do you deliver?"
-                    value={frameworkData.emotionalBenefits}
-                    onChange={(e) => updateField('emotionalBenefits', e.target.value)}
-                    className="mt-2"
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="brandTone" className="text-base font-semibold">
-                    What's your brand's communication tone?
-                  </Label>
-                  <Textarea
-                    id="brandTone"
-                    placeholder="Describe how your brand communicates - friendly, professional, playful, authoritative, etc."
-                    value={frameworkData.brandTone}
-                    onChange={(e) => updateField('brandTone', e.target.value)}
-                    className="mt-2"
-                    rows={2}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="customerFeelings" className="text-base font-semibold">
-                    How should customers feel after interacting with your brand?
-                  </Label>
-                  <Textarea
-                    id="customerFeelings"
-                    placeholder="Describe the emotional state customers should have after engaging with your brand..."
-                    value={frameworkData.customerFeelings}
-                    onChange={(e) => updateField('customerFeelings', e.target.value)}
-                    className="mt-2"
-                    rows={3}
-                  />
-                </div>
+                      <span className={`text-sm ${
+                        isCompleted ? 'text-green-700 font-medium' : 
+                        index === currentStep ? 'font-medium' : 'text-gray-500'
+                      }`}>
+                        {step.title}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          )}
 
-          {currentStep === 3 && (
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold mb-4">Authoritative & Authentic: Build Trust</h3>
+              <Separator className="my-4" />
               
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-base font-semibold">Core Brand Values</Label>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    What values does your brand stand for?
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {coreValues.map(value => (
-                      <Badge 
-                        key={value}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-primary hover:text-white"
-                        onClick={() => addToArray('brandValues', value)}
-                      >
-                        {value}
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {frameworkData.brandValues.map((value, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="default"
-                        className="cursor-pointer"
-                        onClick={() => removeFromArray('brandValues', index)}
-                      >
-                        {value} ×
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="brandStory" className="text-base font-semibold">
-                    What's your brand story?
-                  </Label>
-                  <Textarea
-                    id="brandStory"
-                    placeholder="Tell the story behind your brand - why it exists, what inspired it, and where it's going..."
-                    value={frameworkData.brandStory}
-                    onChange={(e) => updateField('brandStory', e.target.value)}
-                    className="mt-2"
-                    rows={4}
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Authentic stories build emotional connections and trust.
-                  </p>
-                </div>
-
-                <div>
-                  <Label htmlFor="brandPromise" className="text-base font-semibold">
-                    What's your brand promise?
-                  </Label>
-                  <Textarea
-                    id="brandPromise"
-                    placeholder="What do you consistently promise and deliver to every customer?"
-                    value={frameworkData.brandPromise}
-                    onChange={(e) => updateField('brandPromise', e.target.value)}
-                    className="mt-2"
-                    rows={2}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="transparencyCommitment" className="text-base font-semibold">
-                    How do you demonstrate transparency?
-                  </Label>
-                  <Textarea
-                    id="transparencyCommitment"
-                    placeholder="Describe how you're transparent with customers about your processes, values, and business practices..."
-                    value={frameworkData.transparencyCommitment}
-                    onChange={(e) => updateField('transparencyCommitment', e.target.value)}
-                    className="mt-2"
-                    rows={3}
-                  />
-                </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{getCompletionPercentage()}%</div>
+                <div className="text-sm text-muted-foreground">Framework Complete</div>
               </div>
-            </div>
-          )}
 
-          {/* Action Buttons */}
-          <div className="flex justify-between items-center pt-8 border-t">
-            <Button 
-              variant="outline" 
-              onClick={prevStep}
-              disabled={currentStep === 0}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Previous
-            </Button>
-
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={saveProgress} className="flex items-center gap-2">
-                <Save className="w-4 h-4" />
-                Save Progress
-              </Button>
-              
-              <Button 
-                onClick={() => markSectionComplete(currentStep)}
-                disabled={completedSections.includes(currentStep)}
-                variant={completedSections.includes(currentStep) ? "secondary" : "default"}
-                className="flex items-center gap-2"
-              >
-                {completedSections.includes(currentStep) ? (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Completed
-                  </>
-                ) : (
-                  <>
-                    <Award className="w-4 h-4" />
-                    Mark Complete
-                  </>
-                )}
-              </Button>
-            </div>
-
-            <Button 
-              onClick={nextStep}
-              disabled={currentStep === steps.length - 1}
-              className="flex items-center gap-2"
-            >
-              Next
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Completion Summary */}
-      {completedSections.length === steps.length && (
-        <Card className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
-          <CardContent className="p-8 text-center">
-            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Award className="w-10 h-10 text-white" />
-            </div>
-            <h2 className="text-3xl font-bold mb-4">IDEA Framework Complete! 🎉</h2>
-            <p className="text-white/90 mb-6 max-w-2xl mx-auto">
-              Congratulations! You've built a comprehensive strategic brand framework. 
-              Now it's time to bring these insights to life with customer avatars and messaging.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="secondary" size="lg" className="bg-white text-green-600 hover:bg-white/90">
-                Download Framework Summary
-              </Button>
-              <Button variant="outline" size="lg" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-                Build Avatar 2.0
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              {getCompletionPercentage() >= 25 && (
+                <div className="mt-4 space-y-2">
+                  <div className="text-sm font-medium">Unlocked Tools:</div>
+                  {isToolUnlocked('avatar') && (
+                    <Badge variant="outline" className="mr-2">Avatar Builder</Badge>
+                  )}
+                  {isToolUnlocked('canvas') && (
+                    <Badge variant="outline" className="mr-2">Brand Canvas</Badge>
+                  )}
+                  {isToolUnlocked('valuelens') && (
+                    <Badge variant="outline" className="mr-2">ValueLens AI</Badge>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
