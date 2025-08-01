@@ -279,6 +279,9 @@ export default function IdeaFramework() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="coach" size="lg" asChild>
+              <Link to="/idea/builder">Build Interactive Framework</Link>
+            </Button>
+            <Button variant="outline" size="lg" className="bg-white/10 text-primary-foreground border-primary-foreground/20 hover:bg-white/20" asChild>
               <Link to="/diagnostic">Take Brand Diagnostic</Link>
             </Button>
             <Button variant="outline" size="lg" className="bg-white/10 text-primary-foreground border-primary-foreground/20 hover:bg-white/20" asChild>

@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import BrandDiagnostic from "./pages/BrandDiagnostic";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
+import InteractiveIdeaBuilder from "./pages/InteractiveIdeaBuilder";
 import IdeaInsight from "./pages/IdeaInsight";
 import AvatarBuilder from "./pages/AvatarBuilder";
 import ValueLens from "./pages/ValueLens";
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/brand-diagnostic" element={<BrandDiagnostic />} />
               <Route path="/diagnostic" element={<IdeaDiagnostic />} />
               <Route path="/idea" element={<IdeaFramework />} />
+              <Route path="/idea/builder" element={<InteractiveIdeaBuilder />} />
               <Route path="/idea/insight" element={<IdeaInsight />} />
               <Route path="/avatar" element={<AvatarBuilder />} />
               <Route path="/valuelens" element={<ValueLens />} />
