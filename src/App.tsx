@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import Dashboard from "./pages/Dashboard";
+import BrandDiagnostic from "./pages/BrandDiagnostic";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
 import IdeaInsight from "./pages/IdeaInsight";
@@ -27,6 +28,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/brand-diagnostic" element={<BrandDiagnostic />} />
               <Route path="/diagnostic" element={<IdeaDiagnostic />} />
               <Route path="/idea" element={<IdeaFramework />} />
               <Route path="/idea/insight" element={<IdeaInsight />} />
