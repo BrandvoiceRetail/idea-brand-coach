@@ -16,6 +16,9 @@ serve(async (req) => {
     const { question, category, context } = await req.json();
 
     const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    console.log('API key exists:', !!anthropicApiKey);
+    console.log('API key length:', anthropicApiKey?.length || 0);
+    
     if (!anthropicApiKey) {
       throw new Error('Anthropic API key not configured');
     }
