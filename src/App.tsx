@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Dashboard from "./pages/Dashboard";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
+import IdeaInsight from "./pages/IdeaInsight";
 import AvatarBuilder from "./pages/AvatarBuilder";
 import ValueLens from "./pages/ValueLens";
 import Auth from "./pages/Auth";
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/diagnostic" element={<IdeaDiagnostic />} />
               <Route path="/idea" element={<IdeaFramework />} />
+              <Route path="/idea/insight" element={<IdeaInsight />} />
               <Route path="/avatar" element={<AvatarBuilder />} />
               <Route path="/valuelens" element={<ValueLens />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
