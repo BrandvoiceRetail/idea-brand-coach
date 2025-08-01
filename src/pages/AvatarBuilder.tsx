@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Target, Save, Share, Plus, X } from "lucide-react";
+import { Target, Save, Share, Plus, X, Sparkles, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Avatar {
   name: string;
@@ -33,6 +34,7 @@ interface Avatar {
 }
 
 export default function AvatarBuilder() {
+  const { toast } = useToast();
   const [avatar, setAvatar] = useState<Avatar>({
     name: "",
     demographics: {
@@ -58,6 +60,12 @@ export default function AvatarBuilder() {
 
   const [newTag, setNewTag] = useState("");
   const [currentSection, setCurrentSection] = useState<"values" | "fears" | "desires" | "triggers" | "decisionFactors">("values");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState<{
+    keyPhrases: string[];
+    sentiment: { positive: number; negative: number; neutral: number };
+    insights: string[];
+  } | null>(null);
 
   const addTag = (section: keyof Avatar["psychographics"] | "decisionFactors") => {
     if (!newTag.trim()) return;
@@ -105,6 +113,65 @@ export default function AvatarBuilder() {
   const suggestedValues = ["Family", "Success", "Health", "Freedom", "Security", "Adventure", "Growth", "Quality"];
   const suggestedFears = ["Wasting money", "Making wrong choice", "Looking foolish", "Missing out", "Not fitting in"];
   const suggestedDesires = ["Save time", "Feel confident", "Be admired", "Feel secure", "Transform lifestyle"];
+
+  const analyzeVoiceOfCustomer = async (type: 'phrases' | 'sentiment') => {
+    if (!avatar.voiceOfCustomer.trim()) {
+      toast({
+        title: "No content to analyze",
+        description: "Please paste some customer reviews or feedback first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      // Simulate AI analysis - replace with actual AI service
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const mockKeyPhrases = [
+        "excellent customer service",
+        "easy to use",
+        "great value for money",
+        "highly recommend",
+        "fast shipping",
+        "quality product"
+      ];
+
+      const mockSentiment = {
+        positive: 75,
+        negative: 15,
+        neutral: 10
+      };
+
+      const mockInsights = [
+        "Customers frequently mention ease of use as a key benefit",
+        "Customer service quality is a major differentiator",
+        "Value perception is strongly tied to product quality",
+        "Shipping speed significantly impacts satisfaction"
+      ];
+
+      setAnalysisResults({
+        keyPhrases: mockKeyPhrases,
+        sentiment: mockSentiment,
+        insights: mockInsights
+      });
+
+      toast({
+        title: "Analysis Complete",
+        description: `Successfully analyzed customer feedback for ${type === 'phrases' ? 'key phrases' : 'sentiment'}.`
+      });
+
+    } catch (error) {
+      toast({
+        title: "Analysis Failed",
+        description: "Unable to analyze the content. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -516,13 +583,101 @@ export default function AvatarBuilder() {
                 rows={10}
               />
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => analyzeVoiceOfCustomer('phrases')}
+                  disabled={isAnalyzing}
+                >
+                  {isAnalyzing ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 mr-2" />
+                  )}
                   Extract Key Phrases
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => analyzeVoiceOfCustomer('sentiment')}
+                  disabled={isAnalyzing}
+                >
+                  {isAnalyzing ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 mr-2" />
+                  )}
                   Analyze Sentiment
                 </Button>
               </div>
+
+              {analysisResults && (
+                <div className="space-y-4 mt-6 p-4 bg-muted/50 rounded-lg">
+                  <h4 className="font-semibold text-sm">Analysis Results</h4>
+                  
+                  {analysisResults.keyPhrases.length > 0 && (
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Key Phrases</h5>
+                      <div className="flex flex-wrap gap-2">
+                        {analysisResults.keyPhrases.map((phrase, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {phrase}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Sentiment Analysis</h5>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs w-16">Positive:</span>
+                        <div className="flex-1 bg-secondary/20 rounded-full h-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-full" 
+                            style={{ width: `${analysisResults.sentiment.positive}%` }}
+                          />
+                        </div>
+                        <span className="text-xs">{analysisResults.sentiment.positive}%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs w-16">Negative:</span>
+                        <div className="flex-1 bg-secondary/20 rounded-full h-2">
+                          <div 
+                            className="bg-red-500 h-2 rounded-full" 
+                            style={{ width: `${analysisResults.sentiment.negative}%` }}
+                          />
+                        </div>
+                        <span className="text-xs">{analysisResults.sentiment.negative}%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs w-16">Neutral:</span>
+                        <div className="flex-1 bg-secondary/20 rounded-full h-2">
+                          <div 
+                            className="bg-gray-500 h-2 rounded-full" 
+                            style={{ width: `${analysisResults.sentiment.neutral}%` }}
+                          />
+                        </div>
+                        <span className="text-xs">{analysisResults.sentiment.neutral}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {analysisResults.insights.length > 0 && (
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Key Insights</h5>
+                      <ul className="list-disc list-inside space-y-1">
+                        {analysisResults.insights.map((insight, index) => (
+                          <li key={index} className="text-xs text-muted-foreground">
+                            {insight}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
