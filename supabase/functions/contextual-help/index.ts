@@ -45,9 +45,10 @@ Provide contextual help to guide the user in answering this question effectively
         'Authorization': `Bearer ${anthropicApiKey}`,
         'Content-Type': 'application/json',
         'anthropic-version': '2023-06-01',
+        'x-api-key': anthropicApiKey,
       },
       body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 200,
         messages: [
           {
@@ -59,8 +60,13 @@ Provide contextual help to guide the user in answering this question effectively
       }),
     });
 
+    console.log('Anthropic response status:', response.status);
+    console.log('Anthropic response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      throw new Error(`Anthropic API error: ${response.status}`);
+      const errorText = await response.text();
+      console.log('Anthropic error response:', errorText);
+      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
