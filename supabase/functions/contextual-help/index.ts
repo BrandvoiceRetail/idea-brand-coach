@@ -15,9 +15,9 @@ serve(async (req) => {
   try {
     const { question, category, context } = await req.json();
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!anthropicApiKey) {
+      throw new Error('Anthropic API key not configured');
     }
 
     const systemPrompt = `You are an expert branding consultant providing contextual help for the IDEA Brand Diagnostic. 
@@ -36,55 +36,32 @@ ${context ? `Additional context: ${context}` : ''}
 
 Provide contextual help to guide the user in answering this question effectively.`;
 
-    // Retry logic with exponential backoff for rate limiting
-    let response;
-    let retries = 0;
-    const maxRetries = 3;
-    
-    while (retries < maxRetries) {
-      try {
-        response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt }
-            ],
-            temperature: 0.7,
-            max_tokens: 200,
-          }),
-        });
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${anthropicApiKey}`,
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 200,
+        messages: [
+          {
+            role: 'user',
+            content: `${systemPrompt}\n\n${userPrompt}`
+          }
+        ],
+        temperature: 0.7,
+      }),
+    });
 
-        if (response.ok) {
-          break;
-        } else if (response.status === 429 && retries < maxRetries - 1) {
-          // Rate limited, wait and retry
-          const waitTime = Math.pow(2, retries) * 1000; // Exponential backoff
-          console.log(`Rate limited, waiting ${waitTime}ms before retry ${retries + 1}`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-          retries++;
-          continue;
-        } else {
-          throw new Error(`OpenAI API error: ${response.status}`);
-        }
-      } catch (error) {
-        if (retries < maxRetries - 1) {
-          retries++;
-          const waitTime = Math.pow(2, retries) * 1000;
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-          continue;
-        }
-        throw error;
-      }
+    if (!response.ok) {
+      throw new Error(`Anthropic API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const helpText = data.choices[0].message.content;
+    const helpText = data.content[0].text;
 
     return new Response(JSON.stringify({ helpText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
