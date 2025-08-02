@@ -90,9 +90,11 @@ Always encourage iterative refinement and ask clarifying questions when input la
       ? `Context: ${context}\n\nQuestion: ${message}`
       : message;
 
-    try {
-      console.log('Making OpenAI API request...');
+    console.log('Making OpenAI API request with model: gpt-3.5-turbo');
+    console.log('API Key configured:', !!openAIApiKey);
+    console.log('API Key length:', openAIApiKey ? openAIApiKey.length : 0);
 
+    try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -106,7 +108,7 @@ Always encourage iterative refinement and ask clarifying questions when input la
             { role: 'user', content: userPrompt }
           ],
           temperature: 0.7,
-          max_tokens: 2000,
+          max_tokens: 1500,
         }),
       });
 
