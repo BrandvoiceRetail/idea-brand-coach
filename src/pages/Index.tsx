@@ -166,6 +166,22 @@ export default function Index() {
               </Card>
             ))}
           </div>
+          
+          {/* Research Module */}
+          <div className="mt-8 text-center">
+            <Card className="max-w-md mx-auto border-border/50 hover:shadow-lg transition-all duration-300 bg-gradient-card cursor-pointer" onClick={() => navigate('/research-learning')}>
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <Search className="h-8 w-8 text-primary mx-auto" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Strategic Brand Research</h3>
+                <p className="text-muted-foreground leading-relaxed mb-4">Learn comprehensive research methods to uncover customer insights and emotional drivers</p>
+                <Button variant="outline" className="w-full">
+                  Explore Research Guide
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Features Section */}
