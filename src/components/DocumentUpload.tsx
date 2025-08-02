@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, FileText, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, FileText, X, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface UploadedDocument {
@@ -224,6 +224,40 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
     }
   };
 
+  const handleDeleteAllDocuments = async () => {
+    if (!user || documents.length === 0) return;
+
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to delete all ${documents.length} documents? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('uploaded_documents')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "All Documents Deleted",
+        description: `Successfully deleted ${documents.length} documents`,
+      });
+
+      await loadUserDocuments();
+    } catch (error) {
+      console.error('Delete all error:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete all documents",
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -313,7 +347,19 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
       {documents.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Your Knowledge Documents</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Your Knowledge Documents</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDeleteAllDocuments}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                disabled={documents.length === 0}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete All Documents
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
