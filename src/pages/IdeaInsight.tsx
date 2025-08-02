@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 
 export default function IdeaInsight() {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("framework");
   const [completedInsights, setCompletedInsights] = useState<any>(null);
   const [researchData, setResearchData] = useState<any>(null);
   const [triggerResults, setTriggerResults] = useState<any>(null);
