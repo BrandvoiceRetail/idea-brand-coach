@@ -87,7 +87,7 @@ Always encourage iterative refinement and ask clarifying questions when input la
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -98,7 +98,9 @@ Always encourage iterative refinement and ask clarifying questions when input la
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorBody = await response.text();
+      console.error('OpenAI API error response:', errorBody);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`);
     }
 
     const data = await response.json();
