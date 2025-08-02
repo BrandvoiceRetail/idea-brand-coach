@@ -281,7 +281,10 @@ export default function Dashboard() {
                 <Card 
                   key={module.title} 
                   className={`bg-gradient-to-br ${module.color} text-white shadow-card hover:shadow-brand transition-all duration-300 border-0 cursor-pointer transform hover:scale-105`}
-                  onClick={() => navigate(module.href)}
+                  onClick={() => {
+                    console.log('Navigating to:', module.href);
+                    navigate(module.href);
+                  }}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
