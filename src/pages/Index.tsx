@@ -67,7 +67,7 @@ export default function Index() {
       description: "Build genuine, transparent brand relationships",
       color: "from-blue-500 to-indigo-500",
       icon: <Shield className="h-6 w-6" />,
-      href: "/idea/authenticity"
+      href: "/authenticity-learning"
     }
   ];
 

@@ -4,15 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
-  Heart, 
-  Users, 
   Shield, 
   CheckCircle, 
   ArrowRight, 
   ArrowLeft,
   Lightbulb,
   Eye,
-  Target
+  Target,
+  Compass,
+  HandHeart,
+  Eye as EyeIcon
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -30,55 +31,55 @@ interface Step {
 const steps: Step[] = [
   {
     id: 1,
-    title: "Understanding Emotional Triggers",
-    description: "Identify and leverage the emotional drivers that move customers toward purchase decisions",
-    content: "Empathetic brands understand the emotional and psychological needs of their customers—whether it's the need for security, belonging, validation, or self-expression. By identifying key emotional drivers like desire for status, need for security, or wish for connection, you can craft marketing messages that speak directly to the heart of the customer.",
-    example: "Airbnb taps into the deep human need for belonging and cultural connection through its 'Belong Anywhere' campaign, emphasizing authentic experiences over mere lodging. Spotify's Wrapped feature creates emotional connection by highlighting users' unique music tastes, creating nostalgia and personal connection. These brands understand that customers aren't just buying products—they're buying feelings and experiences.",
+    title: "Define Your Core Values",
+    description: "Establish clear values that guide your mission and business operations",
+    content: "What does your brand stand for? What are the values that drive your mission? Authentic brands have a clear set of values that guide not only their marketing efforts but their entire business model. Your values should be more than just words—they should reflect how you conduct business, treat customers, and produce your products.",
+    example: "Ben & Jerry's has built its brand on a foundation of social justice and environmental activism. From fighting for climate change to advocating for marriage equality, Ben & Jerry's doesn't just make ice cream; it uses its platform to champion important social causes. This authenticity strengthens its connection with socially conscious consumers.",
     actionSteps: [
-      "Survey your customers about their deeper motivations and fears",
-      "Identify the top 3 emotional needs your product/service fulfills",
-      "Map customer emotional journey from awareness to purchase",
-      "Craft messaging that speaks to these emotional triggers",
-      "Test emotional resonance through A/B testing of messaging"
+      "Identify 3-5 core values that define your brand's purpose",
+      "Ensure values reflect genuine beliefs, not market trends",
+      "Document how each value influences business decisions",
+      "Communicate values clearly across all brand materials",
+      "Regularly assess whether actions align with stated values"
     ],
-    icon: <Heart className="h-6 w-6" />,
-    color: "from-pink-500 to-rose-500"
-  },
-  {
-    id: 2,
-    title: "Creating Authentic Connections",
-    description: "Build genuine relationships through personalization and responsive customer care",
-    content: "Authentic brands deliver personalized experiences that make customers feel valued as individuals. This involves tailoring recommendations, offering personalized content, listening to feedback, and responding with empathy. Authenticity means being transparent, consistent, and true to your core values even under market pressure.",
-    example: "Zappos encourages employees to spend hours helping customers and even sends flowers to those going through difficult times. Ben & Jerry's aligns with social justice causes, using their platform for activism. These brands show that authenticity isn't just about products—it's about demonstrating genuine care and staying true to values in every interaction.",
-    actionSteps: [
-      "Define your brand's core values and mission clearly",
-      "Create personalized customer touchpoints and experiences",
-      "Establish feedback collection and response systems",
-      "Train team members in empathetic customer interaction",
-      "Align all business actions with stated brand values"
-    ],
-    icon: <Users className="h-6 w-6" />,
+    icon: <Compass className="h-6 w-6" />,
     color: "from-blue-500 to-indigo-500"
   },
   {
-    id: 3,
-    title: "Listening and Responding with Care",
-    description: "Build stronger relationships by actively listening to feedback and responding with empathy",
-    content: "Empathetic brands listen to customer feedback and use it to improve their offerings. This means being open to criticism, responding promptly to concerns, and continuously evolving based on the customer's needs. It's about making customers feel heard, valued, and cared for as individuals.",
-    example: "Zappos, known for its exceptional customer service, encourages employees to take the time needed to resolve customer issues with empathy. Whether it's spending hours on the phone to assist with an order or sending flowers to a customer going through a difficult time, Zappos ensures that customers feel cared for and understood.",
+    id: 2,
+    title: "Align Actions with Values",
+    description: "Ensure your brand's actions consistently reflect your stated values and promises",
+    content: "Your brand's actions should consistently reflect your values. If your brand promises sustainability, you need to ensure your supply chain, materials, and production processes all align with that promise. Authenticity is built on consistency, and customers will quickly lose trust if they see a disconnect between your messaging and actions.",
+    example: "Patagonia doesn't just talk about environmental responsibility—they actively donate profits to environmental causes, use recycled materials, and encourage customers to repair rather than replace their products. Their actions consistently demonstrate their commitment to environmental stewardship, building credibility and trust.",
     actionSteps: [
-      "Establish multiple feedback collection channels",
-      "Train team members in empathetic customer interaction",
-      "Create response protocols that prioritize understanding",
-      "Implement changes based on customer feedback",
-      "Follow up to ensure customer satisfaction and continued care"
+      "Audit all business operations for value alignment",
+      "Identify gaps between promises and current practices",
+      "Create action plans to close alignment gaps",
+      "Establish accountability measures for value-driven decisions",
+      "Regularly review and adjust practices to maintain consistency"
     ],
-    icon: <Shield className="h-6 w-6" />,
-    color: "from-emerald-500 to-teal-500"
+    icon: <HandHeart className="h-6 w-6" />,
+    color: "from-green-500 to-emerald-500"
+  },
+  {
+    id: 3,
+    title: "Be Transparent and Honest",
+    description: "Build trust through open communication and honest business practices",
+    content: "Transparency is a critical component of authenticity. In today's digital world, customers expect brands to be open about how they operate, especially when it comes to sensitive issues like data privacy, sourcing, and environmental impact. When you make mistakes, admit them. When you achieve milestones, celebrate them with your customers.",
+    example: "Buffer openly shares their salary formula, revenue metrics, and diversity statistics. When they face challenges or make mistakes, they publish detailed blog posts explaining what happened and how they're addressing it. This radical transparency has built a loyal community that trusts and advocates for the brand.",
+    actionSteps: [
+      "Identify areas where transparency can build trust",
+      "Create clear communication protocols for mistakes and successes",
+      "Share behind-the-scenes content that demonstrates values",
+      "Establish regular reporting on key commitments and progress",
+      "Respond openly and honestly to customer concerns and feedback"
+    ],
+    icon: <EyeIcon className="h-6 w-6" />,
+    color: "from-amber-500 to-orange-500"
   }
 ];
 
-export function EmotionallyIntelligentModule() {
+export function AuthenticityModule() {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
@@ -107,11 +108,11 @@ export function EmotionallyIntelligentModule() {
       {/* Header */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <Heart className="h-8 w-8 text-pink-500" />
-          <h1 className="text-3xl font-bold">Emotionally Intelligent Branding</h1>
+          <Shield className="h-8 w-8 text-blue-500" />
+          <h1 className="text-3xl font-bold">Authentic Branding</h1>
         </div>
         <p className="text-lg text-muted-foreground mb-6">
-          Build empathetic connections and authentic relationships that create lasting customer loyalty
+          Build trust and credibility by staying true to your core values and maintaining transparency
         </p>
         <div className="flex items-center justify-center gap-4 mb-6">
           <Progress value={progress} className="w-64" />
@@ -230,12 +231,12 @@ export function EmotionallyIntelligentModule() {
         /* Completion Summary */
         <Card className="text-center">
           <CardContent className="pt-8">
-            <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="h-8 w-8 text-pink-600" />
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="h-8 w-8 text-blue-600" />
             </div>
             <h2 className="text-2xl font-bold mb-4">Module Complete!</h2>
             <p className="text-muted-foreground mb-6">
-              You've mastered emotionally intelligent branding. You now understand how to build empathetic connections and maintain authentic relationships with your customers.
+              You've mastered authentic branding. You now understand how to define core values, align actions with values, and build trust through transparency.
             </p>
             
             <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -255,7 +256,7 @@ export function EmotionallyIntelligentModule() {
                 <Link to="/avatar">Build Customer Avatars</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/distinctive-learning">Previous Module</Link>
+                <Link to="/emotionally-intelligent-learning">Previous Module</Link>
               </Button>
             </div>
           </CardContent>
