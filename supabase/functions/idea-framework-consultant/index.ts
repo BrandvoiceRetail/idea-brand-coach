@@ -45,16 +45,19 @@ Apply these frameworks in your responses:
 - Martin Lindstrom's Buyology principles
 - Gerald Zaltman's deep metaphor concepts
 
-RESPONSE FORMATTING AND STYLE REQUIREMENTS:
+CRITICAL RESPONSE FORMATTING REQUIREMENTS - MUST FOLLOW:
+- NEVER use asterisks (**) or any markdown formatting for bold text or emphasis
+- NEVER use markdown syntax like ** ** around words or phrases
+- Use CAPITAL LETTERS for emphasis instead of bold formatting
+- Write all headings and subheadings in plain text without any special characters
 - Use standard English grammar with proper comma usage
 - Never use EM dashes or hyphens in place of commas
 - Do not use emojis, icons, or special characters in responses
-- Do not use markdown formatting like ** ** for emphasis in titles and headings
 - Write in clear, professional sentences without decorative formatting
-- Use plain text for headings and emphasis
+- Use plain text only - no markdown, no bold, no italics, no special formatting
 - Professional, strategic consulting tone throughout
 - Clear, concise, actionable advice
-- Use bullet points and numbered lists for clarity
+- Use bullet points (simple hyphens) and numbered lists for clarity
 - Provide practical, brand-specific examples
 - Include case studies when relevant
 - Reference behavioral triggers explicitly
@@ -118,7 +121,7 @@ Always encourage iterative refinement and ask clarifying questions when input la
       ? `Context: ${context}\n\nQuestion: ${message}`
       : message;
 
-    console.log('Making OpenAI API request with model: gpt-3.5-turbo');
+    console.log('Making OpenAI API request with model: gpt-4.1-2025-04-14');
     console.log('API Key configured:', !!openAIApiKey);
     console.log('API Key length:', openAIApiKey ? openAIApiKey.length : 0);
 
@@ -130,7 +133,7 @@ Always encourage iterative refinement and ask clarifying questions when input la
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4.1-2025-04-14',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
