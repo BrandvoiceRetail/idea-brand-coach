@@ -169,7 +169,7 @@ export default function Index() {
           
           {/* Research Module */}
           <div className="mt-8 text-center">
-            <Card className="max-w-md mx-auto border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105" style={{background: 'linear-gradient(135deg, #FFFF55, #FFED4A)'}} onClick={() => navigate('/research-learning')}>
+            <Card className="max-w-md mx-auto bg-gradient-to-br from-yellow-300 to-yellow-500 text-gray-800 border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105" onClick={() => navigate('/research-learning')}>
               <CardContent className="p-6">
                 <div className="mb-4">
                   <Search className="h-8 w-8 text-gray-800 mx-auto" />
