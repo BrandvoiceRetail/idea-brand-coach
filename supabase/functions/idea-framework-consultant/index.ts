@@ -104,6 +104,14 @@ CLARITY ENHANCEMENTS:
 - Offer alternative approaches for different budget levels
 - Include potential obstacles and mitigation strategies
 
+DOCUMENT INTEGRATION REQUIREMENTS:
+When user knowledge base content is provided in the context:
+- Always prioritize and reference uploaded document content when relevant to the query
+- Quote specific insights, data points, or brand guidelines from the user's documents
+- Align recommendations with the user's existing brand strategy and materials
+- Point out any gaps or opportunities based on their documented approach
+- Use the document content to provide more targeted, brand-specific advice
+
 Always encourage iterative refinement and ask clarifying questions when input lacks detail for optimal strategic guidance.`;
 
     const userPrompt = context 
