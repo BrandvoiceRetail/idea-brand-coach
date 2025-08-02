@@ -85,6 +85,13 @@ const ideaModules = [
 
 const additionalModules = [
   {
+    title: "Strategic Brand Research",
+    description: "Comprehensive research methods to uncover customer insights and emotional drivers",
+    icon: Search,
+    href: "/research-learning",
+    status: "available" as const
+  },
+  {
     title: "IDEA Strategic Brand Framework™ Hub",
     description: "Complete guide to the IDEA Strategic Brand Framework™ methodology",
     icon: BookOpen,
@@ -101,7 +108,7 @@ const additionalModules = [
   {
     title: "Listing Optimizer",
     description: "Analyze and optimize your product listings for emotional triggers",
-    icon: Search,
+    icon: BarChart,
     href: "/optimizer",
     status: "coming-soon" as const
   }
