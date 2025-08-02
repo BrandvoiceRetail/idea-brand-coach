@@ -227,21 +227,24 @@ export default function Index() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-6 w-6 text-primary" />
-                  Real Results
+                  About the Author
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">87%</div>
-                  <div className="text-sm text-muted-foreground">Improved customer engagement after using IDEA Strategic Brand Framework™</div>
+              <CardContent className="space-y-4">
+                <div className="text-center mb-4">
+                  <h3 className="text-xl font-bold text-primary mb-2">Trevor Bradford</h3>
+                  <p className="text-sm text-muted-foreground">Creator of the IDEA Strategic Brand Framework™</p>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">64%</div>
-                  <div className="text-sm text-muted-foreground">Increase in conversion rates with optimized messaging</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">92%</div>
-                  <div className="text-sm text-muted-foreground">Users report clearer brand positioning</div>
+                <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
+                  <p>
+                    Distinguished brand strategist, e-commerce expert, and serial entrepreneur with expertise rooted in behavioral sciences.
+                  </p>
+                  <p>
+                    Trevor has systematized how businesses approach branding by integrating customer behavioral triggers with e-commerce growth strategies that drive deeper engagement and conversion.
+                  </p>
+                  <p>
+                    His consultancy work has helped numerous private-label sellers, Amazon, and Shopify entrepreneurs elevate their branding and maximize sales conversions.
+                  </p>
                 </div>
               </CardContent>
             </Card>
