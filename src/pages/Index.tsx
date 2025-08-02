@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LogoProcessor } from "@/components/LogoProcessor";
 import { 
   Target, 
   Brain, 
@@ -314,6 +315,15 @@ export default function Index() {
           <p className="text-sm text-primary-foreground/80 mt-4">
             No credit card required • 5-minute assessment • Instant results
           </p>
+        </div>
+
+        {/* Logo Background Removal Tool - Temporary for processing */}
+        <div className="mb-20">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-4">Logo Background Removal Tool</h2>
+            <p className="text-muted-foreground">Click below to remove the white background from your logo</p>
+          </div>
+          <LogoProcessor />
         </div>
       </div>
     </div>
