@@ -8,20 +8,24 @@ import { Badge } from '@/components/ui/badge';
 import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DocumentUpload } from '@/components/DocumentUpload';
+import { useAuth } from '@/hooks/useAuth';
 
 const IdeaFrameworkConsultant = () => {
+  const { toast } = useToast();
+  const { user } = useAuth();
   const [message, setMessage] = useState('');
   const [context, setContext] = useState('');
-  const [response, setResponse] = useState('');
+  const [response, setResponse] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState<Array<{id: number, question: string, answer: string}>>([]);
-  const { toast } = useToast();
+  const [conversationHistory, setConversationHistory] = useState<Array<{ question: string; answer: string }>>([]);
+  const [userDocuments, setUserDocuments] = useState<any[]>([]);
 
   const handleConsultation = async () => {
     if (!message.trim()) {
       toast({
-        title: "Message required",
-        description: "Please enter your branding question or challenge.",
+        title: "Message Required",
+        description: "Please enter your question or challenge",
         variant: "destructive",
       });
       return;
@@ -29,24 +33,52 @@ const IdeaFrameworkConsultant = () => {
 
     setIsLoading(true);
     try {
+      // Prepare enhanced context with user documents
+      let enhancedContext = context.trim();
+      
+      if (userDocuments.length > 0) {
+        const documentContent = userDocuments
+          .filter(doc => doc.status === 'completed' && doc.extracted_content)
+          .map(doc => `### Document: ${doc.filename}\n${doc.extracted_content}`)
+          .join('\n\n');
+        
+        if (documentContent) {
+          enhancedContext = enhancedContext 
+            ? `${enhancedContext}\n\n### User Knowledge Base:\n${documentContent}`
+            : `### User Knowledge Base:\n${documentContent}`;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('idea-framework-consultant', {
-        body: { message, context }
+        body: { 
+          message: message.trim(),
+          context: enhancedContext || undefined
+        }
       });
 
       if (error) throw error;
 
-      setResponse(data.response);
-      setConversationHistory(prev => [
-        ...prev,
-        { id: Date.now(), question: message, answer: data.response }
-      ]);
+      const consultationResponse = data?.response || 'No response received';
+      setResponse(consultationResponse);
+      
+      // Add to conversation history
+      setConversationHistory(prev => [...prev, {
+        question: message.trim(),
+        answer: consultationResponse
+      }]);
+
+      // Clear the message input
       setMessage('');
-      setContext('');
-    } catch (error) {
-      console.error('Error getting consultation:', error);
+      
       toast({
-        title: "Consultation failed",
-        description: "Failed to get strategic guidance. Please try again.",
+        title: "Consultation Complete",
+        description: "Your strategic guidance is ready",
+      });
+    } catch (error) {
+      console.error('Consultation error:', error);
+      toast({
+        title: "Consultation Failed",
+        description: error instanceof Error ? error.message : "Failed to get consultation",
         variant: "destructive",
       });
     } finally {
@@ -227,54 +259,59 @@ const IdeaFrameworkConsultant = () => {
             </CardContent>
           </Card>
 
-          {/* Response Area */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Strategic Guidance</CardTitle>
-                {response && (
-                  <Button 
-                    onClick={downloadResponse}
-                    variant="outline" 
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {response ? (
-                <>
-                  <div className="prose prose-sm max-w-none mb-4">
-                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {response}
-                    </div>
-                  </div>
-                  
-                  {/* Privacy Notice */}
-                  <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border/50">
-                    <div className="flex items-start gap-2">
-                      <Info className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div className="text-xs text-muted-foreground">
-                        <p className="font-medium mb-1">Privacy Notice</p>
-                        <p>IDEA Framework Consultant does not save responses. All consultations are private and temporary. Use the download button to save your guidance locally.</p>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center text-muted-foreground py-12">
-                  <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Your strategic guidance will appear here</p>
-                  <p className="text-sm mt-2">Ask a question to get personalized IDEA Framework insights</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Knowledge Base Area */}
+          <div className="lg:col-span-1 space-y-6">
+            <DocumentUpload onDocumentsChange={setUserDocuments} />
+          </div>
         </div>
+
+        {/* Response Area - Full Width */}
+        <Card className="mt-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Strategic Guidance</CardTitle>
+              {response && (
+                <Button 
+                  onClick={downloadResponse}
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {response ? (
+              <>
+                <div className="prose prose-sm max-w-none mb-4">
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {response}
+                  </div>
+                </div>
+                
+                {/* Privacy Notice */}
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border/50">
+                  <div className="flex items-start gap-2">
+                    <Info className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-muted-foreground">
+                      <p className="font-medium mb-1">Privacy Notice</p>
+                      <p>IDEA Framework Consultant does not save responses. All consultations are private and temporary. Use the download button to save your guidance locally.</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="text-center text-muted-foreground py-12">
+                <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Your strategic guidance will appear here</p>
+                <p className="text-sm mt-2">Ask a question to get personalized IDEA Framework insights</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Conversation History */}
         {conversationHistory.length > 0 && (
@@ -283,8 +320,8 @@ const IdeaFrameworkConsultant = () => {
               <CardTitle>Consultation History</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {conversationHistory.slice().reverse().map((item) => (
-                <div key={item.id} className="border-l-4 border-primary pl-4 space-y-2">
+              {conversationHistory.slice().reverse().map((item, index) => (
+                <div key={index} className="border-l-4 border-primary pl-4 space-y-2">
                   <div className="font-medium text-sm">Q: {item.question}</div>
                   <div className="text-sm text-muted-foreground whitespace-pre-wrap">{item.answer}</div>
                 </div>
