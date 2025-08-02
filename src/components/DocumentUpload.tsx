@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -31,11 +31,11 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
   const [dragActive, setDragActive] = useState(false);
 
   // Load user documents on component mount
-  useState(() => {
+  useEffect(() => {
     if (user) {
       loadUserDocuments();
     }
-  });
+  }, [user]);
 
   const loadUserDocuments = async () => {
     if (!user) return;
