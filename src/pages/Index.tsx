@@ -233,7 +233,7 @@ export default function Index() {
               <CardContent className="space-y-4">
                 <div className="text-center mb-4">
                   <h3 className="text-xl font-bold text-primary mb-2">Trevor Bradford</h3>
-                  <p className="text-sm text-muted-foreground">Creator of the IDEA Strategic Brand Framework™</p>
+                  <p className="text-sm text-muted-foreground">Brand Strategist, Ecommerce Expert, Conversion Master, Author</p>
                 </div>
                 <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
                   <p>
@@ -255,16 +255,6 @@ export default function Index() {
             <Card className="bg-gradient-hero text-primary-foreground border-0 shadow-xl">
               <CardContent className="p-12">
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold mb-2">Trevor Bradford</h3>
-                  <p className="text-lg mb-4">
-                    Brand Strategist, Ecommerce Expert,<br />
-                    Conversion Master, Author
-                  </p>
-                  <p className="text-xl font-semibold mb-6">
-                    Creator of the<br />
-                    IDEA Strategic Brand Framework™
-                  </p>
-                  
                   <div className="bg-white/10 rounded-lg p-6 mb-8">
                     <h4 className="text-xl font-bold mb-4 text-primary-foreground">Request a FREE Consultation Today</h4>
                     <h5 className="text-lg font-semibold mb-4">Are You Ready To Transform Your Business?</h5>
