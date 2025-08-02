@@ -133,31 +133,7 @@ Always encourage iterative refinement and ask clarifying questions when input la
       });
     } catch (apiError) {
       console.error('OpenAI API error:', apiError);
-      
-      // Fallback response for any API errors
-      const fallbackResponse = `**IDEA Framework Analysis** *(Demo Mode - API Issue)*
-
-I'd be happy to provide strategic guidance using the IDEA Framework for your business question.
-
-**To get full AI-powered consultation:**
-• Ensure your OpenAI API key has paid credits
-• Check your OpenAI usage limits at platform.openai.com
-• The consultation feature requires GPT access
-
-**Meanwhile, here's the IDEA Framework approach:**
-
-**INSIGHT-DRIVEN**: Research customer motivations and emotional triggers
-**DISTINCTIVE**: Identify unique positioning opportunities  
-**EMPATHETIC**: Connect with audience psychology and behaviors
-**AUTHENTIC**: Build genuine brand narratives
-
-Please add paid credits to your OpenAI account and try again for detailed, personalized consultation.
-
-*Contact support if you continue having issues.*`;
-
-      return new Response(JSON.stringify({ response: fallbackResponse }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      throw apiError;
     }
   } catch (error) {
     console.error('Error in idea-framework-consultant function:', error);
