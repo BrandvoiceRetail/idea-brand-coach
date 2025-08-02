@@ -92,11 +92,14 @@ export default function Index() {
           </Badge>
           
           <div className="flex justify-center mb-8">
-            <img 
-              src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
-              alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
-              className="h-96 w-auto object-contain"
-            />
+            <div className="relative overflow-hidden">
+              <img 
+                src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
+                alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
+                className="h-80 w-auto object-contain object-center scale-110"
+                style={{ filter: 'brightness(0) saturate(100%)' }}
+              />
+            </div>
           </div>
           
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
