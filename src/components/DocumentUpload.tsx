@@ -286,7 +286,7 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
-            Upload Knowledge Documents
+            Share Your Knowledge Documents
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -317,7 +317,7 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
                   </button>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Supports PDF, DOC, DOCX, TXT files up to 10MB
+                  I can work with PDF, DOC, DOCX, and TXT files up to 10MB - whatever works best for you!
                 </p>
               </div>
               <input

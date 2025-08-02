@@ -60,7 +60,7 @@ export default function Auth() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder="What's your email address?"
                     required
                   />
                 </div>
@@ -71,12 +71,12 @@ export default function Auth() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder="Your password, please"
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Signing in...' : 'Sign In'}
+                  {isLoading ? "Getting you signed in..." : "Let's go!"}
                 </Button>
               </form>
             </TabsContent>
@@ -90,7 +90,7 @@ export default function Auth() {
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
+                    placeholder="What should we call you?"
                     required
                   />
                 </div>
@@ -101,7 +101,7 @@ export default function Auth() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder="Your email address here"
                     required
                   />
                 </div>
@@ -112,12 +112,12 @@ export default function Auth() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password"
+                    placeholder="Choose a secure password"
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Creating account...' : 'Sign Up'}
+                  {isLoading ? "Setting up your account..." : "Let's get started!"}
                 </Button>
               </form>
             </TabsContent>
