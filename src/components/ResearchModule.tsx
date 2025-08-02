@@ -4,15 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
-  Heart, 
-  Users, 
-  Shield, 
+  Search, 
   CheckCircle, 
   ArrowRight, 
   ArrowLeft,
   Lightbulb,
   Eye,
-  Target
+  Target,
+  MessageSquare,
+  BarChart3,
+  Users,
+  Bot,
+  TrendingUp
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -30,55 +33,71 @@ interface Step {
 const steps: Step[] = [
   {
     id: 1,
-    title: "Understanding Emotional Triggers",
-    description: "Identify and leverage the emotional drivers that move customers toward purchase decisions",
-    content: "Empathetic brands understand the emotional and psychological needs of their customers—whether it's the need for security, belonging, validation, or self-expression. By identifying key emotional drivers like desire for status, need for security, or wish for connection, you can craft marketing messages that speak directly to the heart of the customer.",
-    example: "Airbnb taps into the deep human need for belonging and cultural connection through its 'Belong Anywhere' campaign, emphasizing authentic experiences over mere lodging. Spotify's Wrapped feature creates emotional connection by highlighting users' unique music tastes, creating nostalgia and personal connection. These brands understand that customers aren't just buying products—they're buying feelings and experiences.",
+    title: "Customer Reviews & Feedback Analysis",
+    description: "Uncover emotional drivers through direct customer feedback across multiple platforms",
+    content: "Customer reviews reveal direct emotional responses—pain points, desires, and frustrations that traditional research often misses. Think like a detective and gather data from multiple sources to uncover hidden insights about what truly drives customer decisions.",
+    example: "Amazon reviews for skincare products often reveal emotional language like 'finally found confidence' or 'frustrated with breakouts.' These insights help brands understand that customers aren't just buying skincare—they're seeking emotional transformation and self-esteem.",
     actionSteps: [
-      "Analyze customer reviews and feedback (Amazon, Google, Yelp) to understand emotional language",
-      "Identify the top 3 emotional needs your product/service fulfills",
-      "Map customer emotional journey from awareness to purchase",
-      "Craft messaging that speaks to these emotional triggers",
-      "Test emotional resonance through A/B testing of messaging"
+      "Collect reviews from Amazon, Google, Yelp, Facebook, and Reddit",
+      "Identify recurring emotional language and pain points",
+      "Use AI tools like MonkeyLearn for sentiment analysis at scale",
+      "Document unmet needs for product or messaging refinement",
+      "Compare competitor reviews to find positioning opportunities"
     ],
-    icon: <Heart className="h-6 w-6" />,
-    color: "from-pink-500 to-rose-500"
-  },
-  {
-    id: 2,
-    title: "Creating Authentic Connections",
-    description: "Build genuine relationships through personalization and responsive customer care",
-    content: "Authentic brands deliver personalized experiences that make customers feel valued as individuals. This involves tailoring recommendations, offering personalized content, listening to feedback, and responding with empathy. Authenticity means being transparent, consistent, and true to your core values even under market pressure.",
-    example: "Zappos encourages employees to spend hours helping customers and even sends flowers to those going through difficult times. Ben & Jerry's aligns with social justice causes, using their platform for activism. These brands show that authenticity isn't just about products—it's about demonstrating genuine care and staying true to values in every interaction.",
-    actionSteps: [
-      "Define your brand's core values and mission clearly",
-      "Create personalized customer touchpoints and experiences",
-      "Establish feedback collection and response systems",
-      "Train team members in empathetic customer interaction",
-      "Align all business actions with stated brand values"
-    ],
-    icon: <Users className="h-6 w-6" />,
+    icon: <MessageSquare className="h-6 w-6" />,
     color: "from-blue-500 to-indigo-500"
   },
   {
-    id: 3,
-    title: "Listening and Responding with Care",
-    description: "Build stronger relationships by actively listening to feedback and responding with empathy",
-    content: "Empathetic brands listen to customer feedback and use it to improve their offerings. This means being open to criticism, responding promptly to concerns, and continuously evolving based on the customer's needs. It's about making customers feel heard, valued, and cared for as individuals.",
-    example: "Zappos, known for its exceptional customer service, encourages employees to take the time needed to resolve customer issues with empathy. Whether it's spending hours on the phone to assist with an order or sending flowers to a customer going through a difficult time, Zappos ensures that customers feel cared for and understood.",
+    id: 2,
+    title: "Amazon-Specific Research Methods",
+    description: "Leverage Amazon's data ecosystem for deep customer insights and competitive intelligence",
+    content: "Amazon provides unfiltered insights into customer expectations, pre-purchase hesitations, and buying behaviors. From reviews to Q&A sections to search data, Amazon is a goldmine for understanding customer psychology and decision-making processes.",
+    example: "Analyzing Amazon Q&A sections for fitness equipment reveals customers asking 'Will this work in small apartments?' and 'Is assembly difficult?' This shows emotional concerns about space anxiety and competence fears, not just product specifications.",
     actionSteps: [
-      "Establish multiple feedback collection channels",
-      "Train team members in empathetic customer interaction",
-      "Create response protocols that prioritize understanding",
-      "Implement changes based on customer feedback",
-      "Follow up to ensure customer satisfaction and continued care"
+      "Analyze Amazon customer reviews for emotional patterns",
+      "Study Q&A sections to understand pre-purchase concerns",
+      "Track Best Seller Rank trends to identify emotional triggers",
+      "Use search term reports to decode customer intent",
+      "Apply tools like Helium 10 and ReviewMeta for deeper analysis"
     ],
-    icon: <Shield className="h-6 w-6" />,
-    color: "from-emerald-500 to-teal-500"
+    icon: <BarChart3 className="h-6 w-6" />,
+    color: "from-orange-500 to-red-500"
+  },
+  {
+    id: 3,
+    title: "Social Media Listening & UGC",
+    description: "Capture authentic emotional reactions through social media conversations and user content",
+    content: "Social media conversations reflect authentic, real-time emotional reactions to brands and products. This research reveals how customers naturally describe products in their own words and uncovers emerging emotional trends that competitors may have overlooked.",
+    example: "TikTok videos about productivity apps often use phrases like 'finally organized my life' or 'reduced my anxiety.' This emotional language reveals that customers aren't just buying organization tools—they're seeking peace of mind and life control.",
+    actionSteps: [
+      "Monitor Twitter, Instagram, TikTok, Reddit, and Facebook Groups",
+      "Collect influencer and customer video reviews",
+      "Identify natural language patterns customers use",
+      "Spot emerging emotional trends and frustrations",
+      "Use tools like Sprout Social for automated sentiment analysis"
+    ],
+    icon: <Users className="h-6 w-6" />,
+    color: "from-purple-500 to-pink-500"
+  },
+  {
+    id: 4,
+    title: "AI-Powered Research & Automation",
+    description: "Scale your research efforts using AI tools to process massive amounts of customer data",
+    content: "AI tools enable brands to automate research and uncover customer insights at unprecedented scale. From sentiment analysis to trend detection, AI can process massive amounts of data faster and identify patterns that manual research might miss.",
+    example: "Using ChatGPT to analyze 10,000 customer service emails reveals that 60% of complaints contain emotional language about 'feeling ignored' rather than technical issues. This insight shifts customer service training from technical skills to empathy and emotional intelligence.",
+    actionSteps: [
+      "Use Google Trends and Exploding Topics for behavioral shifts",
+      "Apply ChatGPT/Claude for customer persona generation",
+      "Implement Lexalytics for AI-powered sentiment analysis",
+      "Deploy Hotjar for visual customer interaction tracking",
+      "Create automated research workflows for continuous insights"
+    ],
+    icon: <Bot className="h-6 w-6" />,
+    color: "from-green-500 to-teal-500"
   }
 ];
 
-export function EmotionallyIntelligentModule() {
+export function ResearchModule() {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
@@ -107,11 +126,11 @@ export function EmotionallyIntelligentModule() {
       {/* Header */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <Heart className="h-8 w-8 text-pink-500" />
-          <h1 className="text-3xl font-bold">Emotionally Intelligent Branding</h1>
+          <Search className="h-8 w-8 text-blue-500" />
+          <h1 className="text-3xl font-bold">Strategic Brand Research</h1>
         </div>
         <p className="text-lg text-muted-foreground mb-6">
-          Build empathetic connections and authentic relationships that create lasting customer loyalty
+          Uncover customer insights and emotional drivers through comprehensive research methods
         </p>
         <div className="flex items-center justify-center gap-4 mb-6">
           <Progress value={progress} className="w-64" />
@@ -230,12 +249,12 @@ export function EmotionallyIntelligentModule() {
         /* Completion Summary */
         <Card className="text-center">
           <CardContent className="pt-8">
-            <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="h-8 w-8 text-pink-600" />
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="h-8 w-8 text-blue-600" />
             </div>
-            <h2 className="text-2xl font-bold mb-4">Module Complete!</h2>
+            <h2 className="text-2xl font-bold mb-4">Research Module Complete!</h2>
             <p className="text-muted-foreground mb-6">
-              You've mastered emotionally intelligent branding. You now understand how to build empathetic connections and maintain authentic relationships with your customers.
+              You now have comprehensive research methods to uncover customer insights and emotional drivers for your brand strategy.
             </p>
             
             <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -252,10 +271,7 @@ export function EmotionallyIntelligentModule() {
                 <Link to="/dashboard">Back to Dashboard</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/avatar">Build Customer Avatars</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/distinctive-learning">Previous Module</Link>
+                <Link to="/brand-canvas">Apply to Brand Canvas</Link>
               </Button>
             </div>
           </CardContent>

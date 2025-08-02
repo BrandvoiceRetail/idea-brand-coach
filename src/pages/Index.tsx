@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Heart,
   Shield,
+  Search,
   Lightbulb
 } from "lucide-react";
 
