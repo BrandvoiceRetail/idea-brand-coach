@@ -109,8 +109,8 @@ export default function Index() {
             </Button>
             
             <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-              <Link to="/dashboard">
-                Explore Tools
+              <Link to="/idea/consultant">
+                AI Brand Consultant
               </Link>
             </Button>
           </div>
