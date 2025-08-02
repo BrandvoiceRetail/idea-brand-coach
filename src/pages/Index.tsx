@@ -86,6 +86,14 @@ export default function Index() {
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center max-w-4xl mx-auto mb-16">
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+              alt="IDEA Brand Coach Logo" 
+              className="w-24 h-24 object-contain"
+            />
+          </div>
+          
           <Badge variant="outline" className="mb-4 px-4 py-2">
             <TrendingUp className="h-4 w-4 mr-2" />
             AI-Powered Brand Strategy Platform

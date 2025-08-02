@@ -52,9 +52,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-secondary rounded-md flex items-center justify-center">
-                <Brain className="w-5 h-5 text-secondary-foreground" />
-              </div>
+              <img 
+                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+                alt="IDEA Brand Coach Logo" 
+                className="w-10 h-10 object-contain"
+              />
               <div>
                 <h1 className="text-xl font-bold text-primary-foreground">IDEA Brand Coach</h1>
                 <p className="text-sm text-primary-foreground/80">Build Emotionally Resonant Brands</p>
