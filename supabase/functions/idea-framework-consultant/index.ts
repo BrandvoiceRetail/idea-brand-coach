@@ -14,6 +14,16 @@ serve(async (req) => {
   }
 
   try {
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not found');
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key not configured. Please contact administrator.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { message, context } = await req.json();
 
     console.log('IDEA Framework Consultant request:', { message, context });
@@ -80,6 +90,8 @@ Always encourage iterative refinement and ask clarifying questions when input la
       ? `Context: ${context}\n\nQuestion: ${message}`
       : message;
 
+    console.log('Making OpenAI API request...');
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -97,13 +109,36 @@ Always encourage iterative refinement and ask clarifying questions when input la
       }),
     });
 
+    console.log('OpenAI API response status:', response.status);
+
     if (!response.ok) {
       const errorBody = await response.text();
       console.error('OpenAI API error response:', errorBody);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ 
+          error: 'OpenAI API rate limit exceeded. Your API key may need paid credits or you may be hitting usage limits. Please check your OpenAI dashboard.' 
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      if (response.status === 401) {
+        return new Response(JSON.stringify({ 
+          error: 'Invalid OpenAI API key. Please check your API key configuration.' 
+        }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`);
     }
 
     const data = await response.json();
+    console.log('OpenAI API response received successfully');
+    
     const consultantResponse = data.choices[0].message.content;
 
     console.log('IDEA Framework consultation completed successfully');
@@ -113,7 +148,9 @@ Always encourage iterative refinement and ask clarifying questions when input la
     });
   } catch (error) {
     console.error('Error in idea-framework-consultant function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: `Consultation failed: ${error.message}` 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
