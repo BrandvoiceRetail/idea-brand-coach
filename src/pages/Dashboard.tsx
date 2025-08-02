@@ -281,8 +281,10 @@ export default function Dashboard() {
                 <Card 
                   key={module.title} 
                   className={`bg-gradient-to-br ${module.color} text-white shadow-card hover:shadow-brand transition-all duration-300 border-0 cursor-pointer transform hover:scale-105`}
-                  onClick={() => {
-                    console.log('Navigating to:', module.href);
+                  onClick={(e) => {
+                    console.log('Card clicked!', module.title, module.href);
+                    e.preventDefault();
+                    e.stopPropagation();
                     navigate(module.href);
                   }}
                 >
