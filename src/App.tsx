@@ -15,6 +15,7 @@ import InteractiveIdeaBuilder from "./pages/InteractiveIdeaBuilder";
 import IdeaInsight from "./pages/IdeaInsight";
 import InsightDrivenLearning from "./pages/InsightDrivenLearning";
 import DistinctiveLearning from "./pages/DistinctiveLearning";
+import EmotionallyIntelligentLearning from "./pages/EmotionallyIntelligentLearning";
 import AvatarBuilder from "./pages/AvatarBuilder";
 import BrandCanvas from "./pages/BrandCanvas";
 import ValueLens from "./pages/ValueLens";
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/idea/insight" element={<IdeaInsight />} />
                <Route path="/insight-driven-learning" element={<InsightDrivenLearning />} />
                <Route path="/distinctive-learning" element={<DistinctiveLearning />} />
+               <Route path="/emotionally-intelligent-learning" element={<EmotionallyIntelligentLearning />} />
                 <Route path="/avatar" element={<AvatarBuilder />} />
                 <Route path="/canvas" element={<BrandCanvas />} />
                 <Route path="/valuelens" element={<ValueLens />} />

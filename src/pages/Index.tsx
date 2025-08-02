@@ -59,7 +59,7 @@ export default function Index() {
       description: "Connect emotionally with your audience",
       color: "from-pink-500 to-rose-500",
       icon: <Heart className="h-6 w-6" />,
-      href: "/idea/empathy"
+      href: "/emotionally-intelligent-learning"
     },
     {
       letter: "A",
