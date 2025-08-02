@@ -169,14 +169,14 @@ export default function Index() {
           
           {/* Research Module */}
           <div className="mt-8 text-center">
-            <Card className="max-w-md mx-auto bg-gradient-to-br from-yellow-400 to-yellow-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105" onClick={() => navigate('/research-learning')}>
+            <Card className="max-w-md mx-auto border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105" style={{background: 'linear-gradient(135deg, #FFFF55, #FFED4A)'}} onClick={() => navigate('/research-learning')}>
               <CardContent className="p-6">
                 <div className="mb-4">
-                  <Search className="h-8 w-8 text-white mx-auto" />
+                  <Search className="h-8 w-8 text-gray-800 mx-auto" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Strategic Brand Research</h3>
-                <p className="text-white/90 leading-relaxed mb-4">Learn comprehensive research methods to uncover customer insights and emotional drivers</p>
-                <div className="text-white/80 text-sm">
+                <h3 className="text-xl font-semibold mb-3 text-gray-800">Strategic Brand Research</h3>
+                <p className="text-gray-800/90 leading-relaxed mb-4">Learn comprehensive research methods to uncover customer insights and emotional drivers</p>
+                <div className="text-gray-800/80 text-sm">
                   Click to explore →
                 </div>
               </CardContent>
