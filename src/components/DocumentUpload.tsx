@@ -364,6 +364,23 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Privacy Statement */}
+      <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
+        <CardContent className="pt-6">
+          <div className="flex gap-3">
+            <div className="w-2 h-2 rounded-full bg-green-500 mt-2 flex-shrink-0" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                Privacy & Security
+              </p>
+              <p className="text-xs text-green-700 dark:text-green-200">
+                Your documents are stored securely and are only accessible to you. Document content is processed to enhance AI consultations but is never shared with other users or third parties. You can delete your documents at any time. All data is encrypted in transit and at rest.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
