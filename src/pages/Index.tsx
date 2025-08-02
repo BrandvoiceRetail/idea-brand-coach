@@ -245,7 +245,56 @@ export default function Index() {
                   <p>
                     His consultancy work has helped numerous private-label sellers, Amazon, and Shopify entrepreneurs elevate their branding and maximize sales conversions.
                   </p>
+        </div>
+
+        {/* Trevor Bradford Consultation Section */}
+        <div className="mb-20">
+          <div className="text-center max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-8">Need More Help?</h2>
+            
+            <Card className="bg-gradient-hero text-primary-foreground border-0 shadow-xl">
+              <CardContent className="p-12">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold mb-2">Trevor Bradford</h3>
+                  <p className="text-lg mb-4">
+                    Brand Strategist, Ecommerce Expert,<br />
+                    Conversion Master, Author
+                  </p>
+                  <p className="text-xl font-semibold mb-6">
+                    Creator of the<br />
+                    IDEA Strategic Brand Framework™
+                  </p>
+                  
+                  <div className="bg-white/10 rounded-lg p-6 mb-8">
+                    <h4 className="text-xl font-bold mb-4 text-primary-foreground">Request a FREE Consultation Today</h4>
+                    <h5 className="text-lg font-semibold mb-4">Are You Ready To Transform Your Business?</h5>
+                    
+                    <div className="text-left space-y-4 text-primary-foreground/90">
+                      <p>
+                        Trevor is an industry authority on branding and marketing and has helped hundreds of e-commerce entrepreneurs build trust-first strategies that drive sales conversions and reduce true advertising cost of sale (TACOS).
+                      </p>
+                      <p>
+                        As the creator of the IDEA Strategic Brand Framework™ and author of the book "What Captures The Heart Goes In The Cart" he combines behavioral science with strategic creativity and brand positioning to help Amazon, Shopify and DTC sellers stand out and scale up.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    asChild 
+                    size="lg" 
+                    variant="coach" 
+                    className="text-lg px-8 py-6 shadow-glow bg-white text-primary hover:bg-white/90"
+                  >
+                    <a href="https://ideabrandconsultancy.com/trevor-bradford-biog" target="_blank" rel="noopener noreferrer">
+                      Learn More About Trevor
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </a>
+                  </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
               </CardContent>
             </Card>
           </div>
