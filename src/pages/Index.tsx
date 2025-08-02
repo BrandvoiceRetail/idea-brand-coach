@@ -95,7 +95,7 @@ export default function Index() {
             <img 
               src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
               alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
-              className="h-48 w-auto object-contain"
+              className="h-96 w-auto object-contain"
             />
           </div>
           
