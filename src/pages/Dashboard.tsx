@@ -2,7 +2,8 @@ import { ModuleCard } from "@/components/ModuleCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useBrand } from "@/contexts/BrandContext";
 import { 
   Brain, 
   Target, 
@@ -18,7 +19,9 @@ import {
   Star,
   Shield,
   Lightbulb,
-  Users
+  Users,
+  ArrowRight,
+  PlayCircle
 } from "lucide-react";
 
 const coreModules = [
@@ -104,76 +107,115 @@ const additionalModules = [
   }
 ];
 
-const recentActivity = [
+// Quick Start Actions for first-time users
+const quickStartActions = [
   {
-    action: "Completed IDEA Diagnostic",
-    time: "2 hours ago",
-    status: "completed"
+    title: "Start with Brand Diagnostic",
+    description: "Get your brand health assessment in 5 minutes",
+    href: "/diagnostic",
+    icon: Brain,
+    primary: true
   },
   {
-    action: "Created new Avatar: Busy Professional Mom",
-    time: "1 day ago",
-    status: "completed"
+    title: "Build Your First Avatar",
+    description: "Create a detailed customer profile",
+    href: "/avatar",
+    icon: Users,
+    primary: false
   },
   {
-    action: "Generated ValueLens copy for Product A",
-    time: "3 days ago",
-    status: "completed"
+    title: "Explore IDEA Framework",
+    description: "Learn the methodology",
+    href: "/idea",
+    icon: BookOpen,
+    primary: false
   }
 ];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { brandData, getCompletionPercentage } = useBrand();
+  
+  // Calculate real completion percentages
+  const overallCompletion = getCompletionPercentage();
+  const hasStarted = overallCompletion > 0;
+  
+  // Calculate specific metrics from actual data
+  const avatarsCreated = brandData.avatar.completed ? 1 : 0;
+  const diagnosticCompleted = brandData.insight.completed;
+  
   return (
     <div className="space-y-8">
       {/* Hero Section */}
       <div className="bg-gradient-hero rounded-lg p-8 text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-          Welcome to IDEA Brand Coach™
+          {hasStarted ? `Welcome back to IDEA Brand Coach™` : 'Welcome to IDEA Brand Coach™'}
         </h1>
         <p className="text-lg text-primary-foreground/90 mb-6 max-w-2xl mx-auto">
-          Build trust-driven, emotionally resonant brands using the IDEA Strategic Framework. 
-          Transform from guessing to knowing your customers.
+          {hasStarted 
+            ? `Continue building your brand strategy. You're ${overallCompletion}% complete.`
+            : 'Build trust-driven, emotionally resonant brands using the IDEA Strategic Brand Framework™. Transform from guessing to knowing your customers.'
+          }
         </p>
-        <Button variant="coach" size="lg" className="shadow-glow">
-          Explore IDEA Framework
-        </Button>
+        {hasStarted ? (
+          <Button 
+            variant="coach" 
+            size="lg" 
+            className="shadow-glow"
+            onClick={() => navigate('/diagnostic')}
+          >
+            Continue Your Journey <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        ) : (
+          <Button 
+            variant="coach" 
+            size="lg" 
+            className="shadow-glow"
+            onClick={() => navigate('/diagnostic')}
+          >
+            Start Brand Diagnostic <PlayCircle className="w-4 h-4 ml-2" />
+          </Button>
+        )}
       </div>
 
-      {/* Stats Cards */}
+      {/* Dynamic Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-card shadow-card">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => navigate('/diagnostic')}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <TrendingUp className="w-8 h-8 text-secondary" />
               <div>
-                <p className="text-2xl font-bold">67%</p>
-                <p className="text-sm text-muted-foreground">Brand Health Score</p>
+                <p className="text-2xl font-bold">{overallCompletion}%</p>
+                <p className="text-sm text-muted-foreground">Brand Foundation Complete</p>
               </div>
             </div>
+            <div className="mt-3 text-xs text-muted-foreground">Click to {diagnosticCompleted ? 'review' : 'start'} diagnostic</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-card shadow-card">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => navigate('/avatar')}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <Target className="w-8 h-8 text-secondary" />
               <div>
-                <p className="text-2xl font-bold">3</p>
-                <p className="text-sm text-muted-foreground">Avatars Created</p>
+                <p className="text-2xl font-bold">{avatarsCreated}</p>
+                <p className="text-sm text-muted-foreground">Customer Avatars</p>
               </div>
             </div>
+            <div className="mt-3 text-xs text-muted-foreground">Click to {avatarsCreated > 0 ? 'edit' : 'create'} avatar</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-card shadow-card">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => navigate('/valuelens')}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <Zap className="w-8 h-8 text-secondary" />
               <div>
-                <p className="text-2xl font-bold">12</p>
-                <p className="text-sm text-muted-foreground">Copy Variants Generated</p>
+                <p className="text-2xl font-bold">-</p>
+                <p className="text-sm text-muted-foreground">Copy Variants</p>
               </div>
             </div>
+            <div className="mt-3 text-xs text-muted-foreground">Complete avatar to unlock</div>
           </CardContent>
         </Card>
       </div>
@@ -183,34 +225,64 @@ export default function Dashboard() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* Core Tools */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6">Essential Tools</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {coreModules.map((module) => (
-                <ModuleCard
-                  key={module.title}
-                  title={module.title}
-                  description={module.description}
-                  icon={module.icon}
-                  href={module.href}
-                  status={module.status}
-                />
-              ))}
+          {/* Quick Start or Continue Journey */}
+          {!hasStarted ? (
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Quick Start</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {quickStartActions.map((action) => (
+                  <Card 
+                    key={action.title}
+                    className={`hover:shadow-brand transition-all duration-300 cursor-pointer border-2 ${
+                      action.primary ? 'border-secondary bg-secondary/5' : 'border-border'
+                    }`}
+                    onClick={() => navigate(action.href)}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <action.icon className={`w-12 h-12 mx-auto mb-4 ${action.primary ? 'text-secondary' : 'text-muted-foreground'}`} />
+                      <h3 className="font-semibold text-lg mb-2">{action.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-4">{action.description}</p>
+                      <Button variant={action.primary ? "default" : "outline"} size="sm">
+                        {action.primary ? 'Start Now' : 'Learn More'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Your Tools</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {coreModules.map((module) => (
+                  <ModuleCard
+                    key={module.title}
+                    title={module.title}
+                    description={module.description}
+                    icon={module.icon}
+                    href={module.href}
+                    status={module.status}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* IDEA Framework Modules */}
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">IDEA Strategic Framework</h2>
+              <h2 className="text-2xl font-bold">IDEA Strategic Brand Framework™</h2>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/idea">Learn Framework</Link>
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {ideaModules.map((module) => (
-                <Card key={module.title} className={`bg-gradient-to-br ${module.color} text-white shadow-card hover:shadow-brand transition-all duration-300 border-0`}>
+                <Card 
+                  key={module.title} 
+                  className={`bg-gradient-to-br ${module.color} text-white shadow-card hover:shadow-brand transition-all duration-300 border-0 cursor-pointer transform hover:scale-105`}
+                  onClick={() => navigate(module.href)}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
                       <div className="p-2 bg-white/20 rounded-lg">
@@ -218,15 +290,11 @@ export default function Dashboard() {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg mb-2">{module.title}</h3>
-                        <p className="text-white/90 text-sm leading-relaxed">{module.description}</p>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="mt-3 text-white hover:bg-white/20"
-                          asChild
-                        >
-                          <Link to={module.href}>Explore →</Link>
-                        </Button>
+                        <p className="text-white/90 text-sm leading-relaxed mb-4">{module.description}</p>
+                        <div className="flex items-center text-white/80 text-sm">
+                          <span>Click to explore</span>
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -255,7 +323,7 @@ export default function Dashboard() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Progress */}
+          {/* Real Progress */}
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -267,46 +335,69 @@ export default function Dashboard() {
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Brand Foundation</span>
-                  <span>67%</span>
+                  <span>{overallCompletion}%</span>
                 </div>
-                <Progress value={67} className="h-2" />
+                <Progress value={overallCompletion} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Avatar Clarity</span>
-                  <span>85%</span>
+                  <span>Customer Avatar</span>
+                  <span>{avatarsCreated > 0 ? '100' : '0'}%</span>
                 </div>
-                <Progress value={85} className="h-2" />
+                <Progress value={avatarsCreated > 0 ? 100 : 0} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Message Resonance</span>
-                  <span>42%</span>
+                  <span>Message Clarity</span>
+                  <span>{brandData.brandCanvas.completed ? '100' : '0'}%</span>
                 </div>
-                <Progress value={42} className="h-2" />
+                <Progress value={brandData.brandCanvas.completed ? 100 : 0} className="h-2" />
               </div>
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
+          {/* Next Steps */}
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Clock className="w-5 h-5" />
-                <span>Recent Activity</span>
+                <span>Next Steps</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <CheckCircle className="w-4 h-4 text-secondary mt-1 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{activity.action}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
+                {!diagnosticCompleted ? (
+                  <div className="flex items-start space-x-3 p-3 bg-secondary/10 rounded-lg cursor-pointer hover:bg-secondary/20 transition-colors" onClick={() => navigate('/diagnostic')}>
+                    <PlayCircle className="w-4 h-4 text-secondary mt-1 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Start Brand Diagnostic</p>
+                      <p className="text-xs text-muted-foreground">Get your foundation assessment</p>
                     </div>
                   </div>
-                ))}
+                ) : avatarsCreated === 0 ? (
+                  <div className="flex items-start space-x-3 p-3 bg-secondary/10 rounded-lg cursor-pointer hover:bg-secondary/20 transition-colors" onClick={() => navigate('/avatar')}>
+                    <PlayCircle className="w-4 h-4 text-secondary mt-1 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Build Customer Avatar</p>
+                      <p className="text-xs text-muted-foreground">Define your ideal customer</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start space-x-3 p-3 bg-secondary/10 rounded-lg cursor-pointer hover:bg-secondary/20 transition-colors" onClick={() => navigate('/valuelens')}>
+                    <PlayCircle className="w-4 h-4 text-secondary mt-1 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Generate Copy Variants</p>
+                      <p className="text-xs text-muted-foreground">Create resonant messaging</p>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="text-xs text-muted-foreground mt-4 p-3 bg-muted/30 rounded-lg">
+                  <p className="font-medium mb-1">Complete your brand foundation:</p>
+                  <p>✓ {diagnosticCompleted ? 'Diagnostic completed' : 'Start with diagnostic'}</p>
+                  <p>✓ {avatarsCreated > 0 ? 'Avatar created' : 'Build customer avatar'}</p>
+                  <p>✓ Generate emotional copy variants</p>
+                </div>
               </div>
             </CardContent>
           </Card>
