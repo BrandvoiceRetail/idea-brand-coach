@@ -51,7 +51,7 @@ export default function Index() {
       description: "Stand out with unique brand assets and positioning",
       color: "from-green-500 to-emerald-500",
       icon: <Star className="h-6 w-6" />,
-      href: "/idea/distinctiveness"
+      href: "/distinctive-learning"
     },
     {
       letter: "E",
