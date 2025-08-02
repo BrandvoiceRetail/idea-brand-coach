@@ -49,18 +49,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Header */}
       <header className="bg-gradient-primary shadow-brand border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3">
+            <Link to="/" className="flex items-center">
               <img 
                 src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
-                alt="IDEA Brand Coach Logo" 
-                className="w-10 h-10 object-contain"
+                alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
+                className="h-14 w-auto object-contain"
               />
-              <div>
-                <h1 className="text-xl font-bold text-primary-foreground">IDEA Brand Coach</h1>
-                <p className="text-sm text-primary-foreground/80">Build Emotionally Resonant Brands</p>
-              </div>
             </Link>
 
             {/* Desktop Navigation */}
