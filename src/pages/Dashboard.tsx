@@ -51,9 +51,9 @@ const coreModules = [
 const ideaModules = [
   {
     title: "Insight Driven",
-    description: "Gather deep insights about customer motivations and emotional triggers",
+    description: "Interactive learning module: Deep customer insights and Avatar 2.0",
     icon: Lightbulb,
-    href: "/idea/insight",
+    href: "/insight-driven-learning",
     status: "available" as const,
     color: "from-yellow-500 to-orange-500"
   },
