@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 export default function Index() {
+  const navigate = useNavigate();
   const features = [
     {
       icon: <Brain className="h-8 w-8 text-primary" />,
@@ -41,28 +42,32 @@ export default function Index() {
       title: "Insight Driven",
       description: "Uncover deep customer motivations and emotional triggers",
       color: "from-yellow-500 to-orange-500",
-      icon: <Lightbulb className="h-6 w-6" />
+      icon: <Lightbulb className="h-6 w-6" />,
+      href: "/insight-driven-learning"
     },
     {
       letter: "D",
       title: "Distinctive",
       description: "Stand out with unique brand assets and positioning",
       color: "from-green-500 to-emerald-500",
-      icon: <Star className="h-6 w-6" />
+      icon: <Star className="h-6 w-6" />,
+      href: "/idea/distinctiveness"
     },
     {
       letter: "E",
       title: "Empathetic",
       description: "Connect emotionally with your audience",
       color: "from-pink-500 to-rose-500",
-      icon: <Heart className="h-6 w-6" />
+      icon: <Heart className="h-6 w-6" />,
+      href: "/idea/empathy"
     },
     {
       letter: "A",
       title: "Authentic",
       description: "Build genuine, transparent brand relationships",
       color: "from-blue-500 to-indigo-500",
-      icon: <Shield className="h-6 w-6" />
+      icon: <Shield className="h-6 w-6" />,
+      href: "/idea/authenticity"
     }
   ];
 
@@ -136,7 +141,14 @@ export default function Index() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {ideaPillars.map((pillar, index) => (
-              <Card key={index} className={`bg-gradient-to-br ${pillar.color} text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300`}>
+              <Card 
+                key={index} 
+                className={`bg-gradient-to-br ${pillar.color} text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105`}
+                onClick={() => {
+                  console.log('Pillar clicked:', pillar.title, pillar.href);
+                  navigate(pillar.href);
+                }}
+              >
                 <CardContent className="p-8 text-center">
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl font-bold">{pillar.letter}</span>
@@ -146,6 +158,9 @@ export default function Index() {
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{pillar.title}</h3>
                   <p className="text-white/90 text-sm">{pillar.description}</p>
+                  <div className="mt-4 text-white/80 text-xs">
+                    Click to explore →
+                  </div>
                 </CardContent>
               </Card>
             ))}
