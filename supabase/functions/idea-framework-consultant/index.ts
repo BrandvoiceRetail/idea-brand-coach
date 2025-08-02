@@ -118,55 +118,6 @@ Always encourage iterative refinement and ask clarifying questions when input la
         const errorBody = await response.text();
         console.error('OpenAI API error response:', errorBody);
         
-        if (response.status === 429) {
-          // Fallback response for rate limit
-          const fallbackResponse = `**IDEA Framework Analysis** *(Demo Mode - OpenAI API Rate Limited)*
-
-Based on your Plant-Based Stem Cell Face Cream in the Luxury Beauty/Mass Premium Amazon category:
-
-**INSIGHT-DRIVEN Market Analysis:**
-• Amazon beauty market is highly competitive with $15B+ annual sales
-• Plant-based/stem cell products represent fastest-growing segment (35% YoY growth)
-• Target customers: Health-conscious women 25-55, premium beauty buyers
-
-**DISTINCTIVE Positioning:**
-• Emphasize scientific innovation of plant stem cells
-• Position against synthetic alternatives
-• Highlight sustainability + efficacy combination
-
-**EMPATHETIC Emotional Triggers:**
-• **Authority**: Scientific backing, dermatologist recommendations
-• **Social Proof**: Before/after testimonials, ratings
-• **Scarcity**: Limited ingredient sourcing, exclusive formulation
-• **Consistency**: Daily routine commitment, visible results
-
-**AUTHENTIC Messaging:**
-• Focus on natural science story
-• Transparency in ingredient sourcing
-• Real customer transformation stories
-
-**Recommended Actions:**
-1. Create authority through ingredient education
-2. Use social proof in product images/reviews
-3. Emphasize premium but accessible positioning
-4. Develop scarcity through limited editions
-
-*Note: This is a demo response. Add paid OpenAI credits for full AI consultation.*`;
-          
-          return new Response(JSON.stringify({ response: fallbackResponse }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
-        if (response.status === 401) {
-          return new Response(JSON.stringify({ 
-            error: 'Invalid OpenAI API key. Please check your API key configuration.' 
-          }), {
-            status: 401,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
         throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`);
       }
 
