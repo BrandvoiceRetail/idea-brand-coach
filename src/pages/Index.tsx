@@ -131,12 +131,12 @@ export default function Index() {
           </div>
         </div>
 
-        {/* IDEA Framework Visual */}
+        {/* Learning Modules Section */}
         <div className="mb-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">The IDEA Strategic Brand Framework™</h2>
+            <h2 className="text-3xl font-bold mb-4">Interactive Learning Modules</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our proven methodology for building brands that resonate emotionally and drive business growth
+              Master the IDEA Strategic Brand Framework™ through hands-on, step-by-step learning experiences
             </p>
           </div>
           
@@ -169,16 +169,16 @@ export default function Index() {
           
           {/* Research Module */}
           <div className="mt-8 text-center">
-            <Card className="max-w-md mx-auto border-border/50 hover:shadow-lg transition-all duration-300 bg-gradient-card cursor-pointer" onClick={() => navigate('/research-learning')}>
+            <Card className="max-w-md mx-auto bg-gradient-to-br from-yellow-500 to-orange-500 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105" onClick={() => navigate('/research-learning')}>
               <CardContent className="p-6">
                 <div className="mb-4">
-                  <Search className="h-8 w-8 text-primary mx-auto" />
+                  <Search className="h-8 w-8 text-white mx-auto" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Strategic Brand Research</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">Learn comprehensive research methods to uncover customer insights and emotional drivers</p>
-                <Button variant="outline" className="w-full">
-                  Explore Research Guide
-                </Button>
+                <p className="text-white/90 leading-relaxed mb-4">Learn comprehensive research methods to uncover customer insights and emotional drivers</p>
+                <div className="text-white/80 text-sm">
+                  Click to explore →
+                </div>
               </CardContent>
             </Card>
           </div>
