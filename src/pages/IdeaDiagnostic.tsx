@@ -224,7 +224,7 @@ export default function IdeaDiagnostic() {
               <div className="p-4 bg-secondary/10 rounded-lg">
                 <h4 className="font-semibold mb-2">⭐ Develop Brand Differentiation</h4>
                 <p className="text-sm text-muted-foreground">
-                  Create a unique brand story and positioning that sets you apart through the IDEA Framework.
+                  Create a unique brand story and positioning that sets you apart through the IDEA Strategic Brand Framework™.
                 </p>
               </div>
             )}

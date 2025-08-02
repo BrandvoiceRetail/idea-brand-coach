@@ -27,7 +27,7 @@ import {
 const coreModules = [
   {
     title: "IDEA Diagnostic",
-    description: "Complete brand health assessment using the IDEA Strategic Framework",
+    description: "Complete brand health assessment using the IDEA Strategic Brand Framework™",
     icon: Brain,
     href: "/diagnostic",
     status: "available" as const
@@ -85,15 +85,15 @@ const ideaModules = [
 
 const additionalModules = [
   {
-    title: "IDEA Framework Hub",
-    description: "Complete guide to the IDEA Strategic Brand Framework methodology",
+    title: "IDEA Strategic Brand Framework™ Hub",
+    description: "Complete guide to the IDEA Strategic Brand Framework™ methodology",
     icon: BookOpen,
     href: "/idea",
     status: "available" as const
   },
   {
     title: "Brand Canvas",
-    description: "Visual drag-and-drop canvas for your IDEA framework strategy",
+    description: "Visual drag-and-drop canvas for your IDEA Strategic Brand Framework™ strategy",
     icon: MessageSquare,
     href: "/canvas",
     status: "coming-soon" as const
@@ -124,7 +124,7 @@ const quickStartActions = [
     primary: false
   },
   {
-    title: "Explore IDEA Framework",
+    title: "Explore IDEA Strategic Brand Framework™",
     description: "Learn the methodology",
     href: "/idea",
     icon: BookOpen,

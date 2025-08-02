@@ -121,7 +121,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
         body: { 
           stepId, 
           userInput, 
-          context: `User is working on ${currentStepData.title} step of the IDEA framework` 
+          context: `User is working on ${currentStepData.title} step of the IDEA Strategic Brand Framework™` 
         }
       });
 
@@ -193,7 +193,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center space-x-2">
           <Lightbulb className="w-5 h-5 text-primary" />
-          <h2 className="text-2xl font-bold">Interactive IDEA Framework</h2>
+          <h2 className="text-2xl font-bold">Interactive IDEA Strategic Brand Framework™</h2>
         </div>
         <Progress value={progress} className="w-full max-w-md mx-auto" />
         <p className="text-sm text-muted-foreground">

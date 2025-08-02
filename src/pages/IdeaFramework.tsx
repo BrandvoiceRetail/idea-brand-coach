@@ -22,7 +22,7 @@ export default function IdeaFramework() {
         <div className="w-20 h-20 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-6">
           <BookOpen className="w-10 h-10 text-secondary-foreground" />
         </div>
-        <h1 className="text-4xl font-bold mb-4">The IDEA Strategic Brand Framework</h1>
+        <h1 className="text-4xl font-bold mb-4">The IDEA Strategic Brand Framework™</h1>
         <p className="text-xl text-muted-foreground mb-6">
           A practical, step-by-step process to build trust, stand out in crowded markets, 
           and turn hesitant browsers into loyal buyers.

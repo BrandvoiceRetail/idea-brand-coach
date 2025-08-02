@@ -207,7 +207,7 @@ export default function InteractiveIdeaBuilder() {
         <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center mx-auto mb-6">
           <Sparkles className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-4xl font-bold mb-4">Interactive IDEA Framework</h1>
+        <h1 className="text-4xl font-bold mb-4">Interactive IDEA Strategic Brand Framework™</h1>
         <p className="text-xl text-muted-foreground mb-6">
           Build your strategic brand foundation with AI guidance and real-world examples
         </p>
@@ -296,7 +296,7 @@ export default function InteractiveIdeaBuilder() {
                 <ContextualHelp 
                   question={`How do I build the ${steps[currentStep].title} section?`}
                   category="idea-framework" 
-                  context={`Building ${steps[currentStep].title} section of IDEA Framework`}
+                  context={`Building ${steps[currentStep].title} section of IDEA Strategic Brand Framework™`}
                 />
               </div>
             </CardHeader>

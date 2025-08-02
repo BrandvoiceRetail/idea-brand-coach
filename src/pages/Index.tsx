@@ -20,7 +20,7 @@ export default function Index() {
   const features = [
     {
       icon: <Brain className="h-8 w-8 text-primary" />,
-      title: "IDEA Strategic Framework",
+      title: "IDEA Strategic Brand Framework™",
       description: "Build trust-driven, emotionally resonant brands with our proven methodology"
     },
     {
@@ -82,7 +82,7 @@ export default function Index() {
         <div className="text-center max-w-4xl mx-auto mb-16">
           <Badge variant="outline" className="mb-4 px-4 py-2">
             <TrendingUp className="h-4 w-4 mr-2" />
-            Trusted by 10,000+ Brand Builders
+            AI-Powered Brand Strategy Platform
           </Badge>
           
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent">
@@ -91,7 +91,7 @@ export default function Index() {
           
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
             Transform from guessing to knowing your customers. Build trust-driven, emotionally resonant brands 
-            using the IDEA Strategic Framework and AI-powered tools.
+            using the IDEA Strategic Brand Framework™ and AI-powered tools.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
@@ -128,7 +128,7 @@ export default function Index() {
         {/* IDEA Framework Visual */}
         <div className="mb-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">The IDEA Strategic Framework</h2>
+            <h2 className="text-3xl font-bold mb-4">The IDEA Strategic Brand Framework™</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Our proven methodology for building brands that resonate emotionally and drive business growth
             </p>
@@ -201,7 +201,7 @@ export default function Index() {
               <CardContent className="space-y-6">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary mb-2">87%</div>
-                  <div className="text-sm text-muted-foreground">Improved customer engagement after using IDEA Framework</div>
+                  <div className="text-sm text-muted-foreground">Improved customer engagement after using IDEA Strategic Brand Framework™</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary mb-2">64%</div>

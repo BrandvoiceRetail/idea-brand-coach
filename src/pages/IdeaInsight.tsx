@@ -105,7 +105,7 @@ export default function IdeaInsight() {
                   <div className="text-center">
                     <h2 className="text-2xl font-bold mb-4">From Guessing to Knowing</h2>
                     <p className="text-lg text-muted-foreground mb-6 max-w-3xl mx-auto">
-                      The IDEA Framework's adoption of behavioral insights marks a shift from outdated 
+                      The IDEA Strategic Brand Framework™'s adoption of behavioral insights marks a shift from outdated 
                       demographic segmentation to forensic, behavior-driven understanding of customers.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -144,7 +144,7 @@ export default function IdeaInsight() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Transform the static IDEA framework into an interactive journey with AI guidance and real-world examples.
+                      Transform the static IDEA Strategic Brand Framework™ into an interactive journey with AI guidance and real-world examples.
                     </p>
                     <div className="flex items-center gap-2 text-sm text-primary">
                       <Zap className="w-4 h-4" />
@@ -355,7 +355,7 @@ export default function IdeaInsight() {
                 <div className="p-4 border rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <h4 className="font-medium">IDEA Framework</h4>
+                    <h4 className="font-medium">IDEA Strategic Brand Framework™</h4>
                   </div>
                   <p className="text-sm text-muted-foreground">Interactive framework completed</p>
                 </div>

@@ -26,7 +26,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
       period: '/month',
       description: 'Perfect for solopreneurs and small businesses',
       features: [
-        'Complete IDEA Framework access',
+        'Complete IDEA Strategic Brand Framework™ access',
         'Avatar 2.0 Builder',
         'Basic AI copy generation',
         '50 AI suggestions/month',

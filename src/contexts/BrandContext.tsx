@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface BrandData {
-  // IDEA Framework Data
+  // IDEA Strategic Brand Framework™ Data
   insight: {
     marketInsight: string;
     consumerInsight: string;

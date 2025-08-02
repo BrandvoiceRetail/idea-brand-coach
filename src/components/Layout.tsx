@@ -18,7 +18,7 @@ import {
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: BarChart },
-  { name: "IDEA Framework", href: "/idea", icon: BookOpen },
+  { name: "IDEA Strategic Brand Framework™", href: "/idea", icon: BookOpen },
   { name: "Brand Diagnostic", href: "/diagnostic", icon: Brain },
   { name: "Avatar 2.0", href: "/avatar", icon: Target },
   { name: "ValueLens", href: "/valuelens", icon: Zap },

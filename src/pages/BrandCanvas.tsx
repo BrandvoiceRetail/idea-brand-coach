@@ -41,7 +41,7 @@ export default function BrandCanvas() {
           </div>
           <h1 className="text-3xl font-bold mb-2">Brand Canvas Builder</h1>
           <p className="text-muted-foreground mb-8">
-            Unlock this tool by completing the IDEA Framework and Avatar Builder
+            Unlock this tool by completing the IDEA Strategic Brand Framework™ and Avatar Builder
           </p>
         </div>
 
@@ -72,7 +72,7 @@ export default function BrandCanvas() {
                   <div className="w-5 h-5 rounded-full border-2 border-muted-foreground" />
                 )}
                 <span className={brandData.insight.completed ? "text-foreground" : "text-muted-foreground"}>
-                  Complete IDEA Framework - Insight Section
+                  Complete IDEA Strategic Brand Framework™ - Insight Section
                 </span>
               </div>
               
@@ -90,7 +90,7 @@ export default function BrandCanvas() {
 
             <div className="flex gap-4 pt-4">
               <Button asChild variant="outline">
-                <Link to="/idea/builder">Complete IDEA Framework</Link>
+                <Link to="/idea/builder">Complete IDEA Strategic Brand Framework™</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link to="/avatar">Complete Avatar Builder</Link>
@@ -110,7 +110,7 @@ export default function BrandCanvas() {
         </div>
         <h1 className="text-3xl font-bold mb-2">Brand Canvas Builder</h1>
         <p className="text-muted-foreground">
-          Consolidate your IDEA Framework and Avatar insights into a comprehensive brand strategy
+          Consolidate your IDEA Strategic Brand Framework™ and Avatar insights into a comprehensive brand strategy
         </p>
       </div>
 
@@ -134,7 +134,7 @@ export default function BrandCanvas() {
                   rows={3}
                 />
                 <AIAssistant
-                  prompt="Help improve this mission statement based on the IDEA framework"
+                  prompt="Help improve this mission statement based on the IDEA Strategic Brand Framework™"
                   currentValue={brandData.brandCanvas.missionStatement}
                   onSuggestion={(suggestion) => updateBrandData('brandCanvas', { missionStatement: suggestion })}
                 />
