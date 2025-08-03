@@ -1,6 +1,6 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 import { 
@@ -18,8 +18,7 @@ import {
   Lightbulb
 } from "lucide-react";
 
-export default function Index() {
-  const navigate = useNavigate();
+export default function Landing() {
   const features = [
     {
       icon: <Brain className="h-8 w-8 text-primary" />,
@@ -44,32 +43,28 @@ export default function Index() {
       title: "Insight Driven",
       description: "Uncover deep customer motivations and emotional triggers",
       color: "from-yellow-500 to-orange-500",
-      icon: <Lightbulb className="h-6 w-6" />,
-      href: "/insight-driven-learning"
+      icon: <Lightbulb className="h-6 w-6" />
     },
     {
       letter: "D",
       title: "Distinctive",
       description: "Stand out with unique brand assets and positioning",
       color: "from-green-500 to-emerald-500",
-      icon: <Star className="h-6 w-6" />,
-      href: "/distinctive-learning"
+      icon: <Star className="h-6 w-6" />
     },
     {
       letter: "E",
       title: "Empathetic",
       description: "Connect emotionally with your audience",
       color: "from-pink-500 to-rose-500",
-      icon: <Heart className="h-6 w-6" />,
-      href: "/emotionally-intelligent-learning"
+      icon: <Heart className="h-6 w-6" />
     },
     {
       letter: "A",
       title: "Authentic",
       description: "Build genuine, transparent brand relationships",
       color: "from-blue-500 to-indigo-500",
-      icon: <Shield className="h-6 w-6" />,
-      href: "/authenticity-learning"
+      icon: <Shield className="h-6 w-6" />
     }
   ];
 
@@ -84,6 +79,29 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
+      {/* Header */}
+      <header className="bg-gradient-primary shadow-brand border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+                alt="IDEA Brand Coach - Strategic Brand Framework Platform" 
+                className="h-28 w-auto object-contain"
+              />
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button asChild variant="ghost" className="text-primary-foreground">
+                <Link to="/auth">Sign In</Link>
+              </Button>
+              <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
+                <Link to="/diagnostic">Free Diagnostic</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center max-w-4xl mx-auto mb-16">
@@ -92,15 +110,9 @@ export default function Index() {
             AI-Powered Brand Strategy Platform
           </Badge>
           
-          <div className="flex justify-center mb-8">
-            <div className="relative overflow-hidden">
-              <img 
-                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
-                alt="IDEA Brand Coach - Strategic Brand Framework Platform" 
-                className="h-32 w-auto object-contain object-center"
-              />
-            </div>
-          </div>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            Build Brands That Resonate
+          </h1>
           
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
             Transform from guessing to knowing your customers. Master strategic brand building through our comprehensive learning modules and interactive tools powered by the proven IDEA Strategic Brand Framework™.
@@ -109,7 +121,7 @@ export default function Index() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-glow">
               <Link to="/diagnostic">
-                Start Free Brand Diagnostic
+                Take Your Free Brand Diagnostic
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -259,7 +271,7 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Benefits Section */}
+        {/* Benefits and Author Section */}
         <div className="mb-20">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -275,14 +287,9 @@ export default function Index() {
             </div>
             
             <Card className="bg-gradient-card shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-6 w-6 text-primary" />
-                  About the Author
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-8 space-y-4">
                 <div className="text-center mb-4">
+                  <Users className="h-12 w-12 text-primary mx-auto mb-4" />
                   <h3 className="text-xl font-bold text-primary mb-2">Trevor Bradford</h3>
                   <p className="text-sm text-muted-foreground">Brand Strategist, Ecommerce Expert, Conversion Master, Author</p>
                 </div>
@@ -291,51 +298,9 @@ export default function Index() {
                     Distinguished brand strategist, e-commerce expert, and serial entrepreneur with expertise rooted in behavioral sciences.
                   </p>
                   <p>
-                    Trevor has systematized how businesses approach branding by integrating customer behavioral triggers with e-commerce growth strategies that drive deeper engagement and conversion.
+                    Trevor has systematized how businesses approach branding by integrating customer behavioral triggers with e-commerce growth strategies.
                   </p>
-                  <p>
-                    His consultancy work has helped numerous private-label sellers, Amazon, and Shopify entrepreneurs elevate their branding and maximize sales conversions.
-                  </p>
-        </div>
-
-        {/* Trevor Bradford Consultation Section */}
-        <div className="mb-20">
-          <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold mb-8">Need More Help?</h2>
-            
-            <Card className="bg-gradient-hero text-primary-foreground border-0 shadow-xl">
-              <CardContent className="p-12">
-                <div className="text-center mb-8">
-                  <div className="bg-white/10 rounded-lg p-6 mb-8">
-                    <h4 className="text-xl font-bold mb-4 text-primary-foreground">Request a FREE Consultation Today</h4>
-                    <h5 className="text-lg font-semibold mb-4">Are You Ready To Transform Your Business?</h5>
-                    
-                    <div className="text-left space-y-4 text-primary-foreground/90">
-                      <p>
-                        Trevor is an industry authority on branding and marketing and has helped hundreds of e-commerce entrepreneurs build trust-first strategies that drive sales conversions and reduce true advertising cost of sale (TACOS).
-                      </p>
-                      <p>
-                        As the creator of the IDEA Strategic Brand Framework™ and author of the book "What Captures The Heart Goes In The Cart" he combines behavioral science with strategic creativity and brand positioning to help Amazon, Shopify and DTC sellers stand out and scale up.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    variant="coach" 
-                    className="text-lg px-8 py-6 shadow-glow bg-white text-primary hover:bg-white/90"
-                  >
-                    <a href="https://ideabrandconsultancy.com/trevor-bradford-biog" target="_blank" rel="noopener noreferrer">
-                      Learn More About Trevor
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </a>
-                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
               </CardContent>
             </Card>
           </div>
@@ -351,7 +316,7 @@ export default function Index() {
           </p>
           <Button asChild size="lg" variant="coach" className="text-lg px-8 py-6 shadow-glow">
             <Link to="/diagnostic">
-              Get Your Free Brand Diagnostic
+              Take Your Free Brand Diagnostic
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
@@ -359,7 +324,6 @@ export default function Index() {
             No credit card required • 5-minute assessment • Instant results
           </p>
         </div>
-
       </div>
     </div>
   );

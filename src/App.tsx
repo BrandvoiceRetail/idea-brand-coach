@@ -7,6 +7,7 @@ import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import BrandDiagnostic from "./pages/BrandDiagnostic";
 import FreeDiagnostic from "./pages/FreeDiagnostic";
@@ -37,32 +38,36 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/diagnostic" element={<FreeDiagnostic />} />
-                <Route path="/diagnostic/results" element={<DiagnosticResults />} />
-                <Route path="/brand-diagnostic" element={<BrandDiagnostic />} />
-                <Route path="/idea-diagnostic" element={<IdeaDiagnostic />} />
-              <Route path="/idea" element={<IdeaFramework />} />
-              <Route path="/idea/consultant" element={<IdeaFrameworkConsultant />} />
-              <Route path="/idea/builder" element={<InteractiveIdeaBuilder />} />
-              <Route path="/idea/insight" element={<IdeaInsight />} />
-               <Route path="/insight-driven-learning" element={<InsightDrivenLearning />} />
-               <Route path="/distinctive-learning" element={<DistinctiveLearning />} />
-        <Route path="/emotionally-intelligent-learning" element={<EmotionallyIntelligentLearning />} />
-          <Route path="/authenticity-learning" element={<AuthenticityLearning />} />
-          <Route path="/research-learning" element={<ResearchLearning />} />
-                <Route path="/avatar" element={<AvatarBuilder />} />
-                <Route path="/canvas" element={<BrandCanvas />} />
-                <Route path="/valuelens" element={<ValueLens />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/diagnostic" element={<FreeDiagnostic />} />
+              <Route path="/diagnostic/results" element={<DiagnosticResults />} />
+              <Route path="/*" element={
+                <Layout>
+                  <Routes>
+                    <Route path="/app" element={<Index />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/brand-diagnostic" element={<BrandDiagnostic />} />
+                    <Route path="/idea-diagnostic" element={<IdeaDiagnostic />} />
+                    <Route path="/idea" element={<IdeaFramework />} />
+                    <Route path="/idea/consultant" element={<IdeaFrameworkConsultant />} />
+                    <Route path="/idea/builder" element={<InteractiveIdeaBuilder />} />
+                    <Route path="/idea/insight" element={<IdeaInsight />} />
+                    <Route path="/insight-driven-learning" element={<InsightDrivenLearning />} />
+                    <Route path="/distinctive-learning" element={<DistinctiveLearning />} />
+                    <Route path="/emotionally-intelligent-learning" element={<EmotionallyIntelligentLearning />} />
+                    <Route path="/authenticity-learning" element={<AuthenticityLearning />} />
+                    <Route path="/research-learning" element={<ResearchLearning />} />
+                    <Route path="/avatar" element={<AvatarBuilder />} />
+                    <Route path="/canvas" element={<BrandCanvas />} />
+                    <Route path="/valuelens" element={<ValueLens />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Layout>
+              } />
             </Routes>
-          </Layout>
-        </BrowserRouter>
+          </BrowserRouter>
       </TooltipProvider>
     </BrandProvider>
   </AuthProvider>

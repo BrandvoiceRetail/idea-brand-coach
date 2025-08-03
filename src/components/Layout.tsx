@@ -18,8 +18,9 @@ import {
 
 const navItems = [
   { name: "Brand Diagnostic", href: "/diagnostic", icon: Brain },
-  { name: "Dashboard", href: "/", icon: BarChart },
+  { name: "Dashboard", href: "/app", icon: BarChart },
   { name: "IDEA Strategic Brand Framework™", href: "/idea", icon: BookOpen },
+  { name: "Interactive IDEA Framework™", href: "/idea/builder", icon: MessageSquare },
   { name: "Avatar 2.0", href: "/avatar", icon: Target },
   { name: "ValueLens", href: "/valuelens", icon: Zap },
 ];
@@ -51,7 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center">
+            <Link to="/app" className="flex items-center">
               <img 
                 src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
                 alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
