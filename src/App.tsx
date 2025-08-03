@@ -15,13 +15,12 @@ import DiagnosticResults from "./pages/DiagnosticResults";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
 import IdeaFrameworkConsultant from "./pages/IdeaFrameworkConsultant";
-import InteractiveIdeaBuilder from "./pages/InteractiveIdeaBuilder";
+
 import IdeaInsight from "./pages/IdeaInsight";
-import InsightDrivenLearning from "./pages/InsightDrivenLearning";
-import DistinctiveLearning from "./pages/DistinctiveLearning";
-import EmotionallyIntelligentLearning from "./pages/EmotionallyIntelligentLearning";
-import AuthenticityLearning from "./pages/AuthenticityLearning";
-import ResearchLearning from "./pages/ResearchLearning";
+import IdeaDistinctive from "./pages/IdeaDistinctive";
+import IdeaEmpathy from "./pages/IdeaEmpathy";
+import IdeaAuthenticity from "./pages/IdeaAuthenticity";
+
 import AvatarBuilder from "./pages/AvatarBuilder";
 import BrandCanvas from "./pages/BrandCanvas";
 import ValueLens from "./pages/ValueLens";
@@ -84,13 +83,6 @@ const App = () => (
                   </Layout>
                 </BrandProvider>
               } />
-              <Route path="/idea/builder" element={
-                <BrandProvider>
-                  <Layout>
-                    <InteractiveIdeaBuilder />
-                  </Layout>
-                </BrandProvider>
-              } />
               <Route path="/idea/insight" element={
                 <BrandProvider>
                   <Layout>
@@ -98,38 +90,24 @@ const App = () => (
                   </Layout>
                 </BrandProvider>
               } />
-              <Route path="/insight-driven-learning" element={
+              <Route path="/idea/distinctive" element={
                 <BrandProvider>
                   <Layout>
-                    <InsightDrivenLearning />
+                    <IdeaDistinctive />
                   </Layout>
                 </BrandProvider>
               } />
-              <Route path="/distinctive-learning" element={
+              <Route path="/idea/empathy" element={
                 <BrandProvider>
                   <Layout>
-                    <DistinctiveLearning />
+                    <IdeaEmpathy />
                   </Layout>
                 </BrandProvider>
               } />
-              <Route path="/emotionally-intelligent-learning" element={
+              <Route path="/idea/authenticity" element={
                 <BrandProvider>
                   <Layout>
-                    <EmotionallyIntelligentLearning />
-                  </Layout>
-                </BrandProvider>
-              } />
-              <Route path="/authenticity-learning" element={
-                <BrandProvider>
-                  <Layout>
-                    <AuthenticityLearning />
-                  </Layout>
-                </BrandProvider>
-              } />
-              <Route path="/research-learning" element={
-                <BrandProvider>
-                  <Layout>
-                    <ResearchLearning />
+                    <IdeaAuthenticity />
                   </Layout>
                 </BrandProvider>
               } />

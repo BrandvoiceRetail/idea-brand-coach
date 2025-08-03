@@ -184,7 +184,7 @@ export default function IdeaFramework() {
               </div>
             </div>
             <Button variant="outline" className="w-full" asChild>
-              <Link to="/idea/distinctiveness">
+              <Link to="/idea/distinctive">
                 Explore Distinctiveness <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
@@ -279,7 +279,7 @@ export default function IdeaFramework() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="coach" size="lg" asChild>
-              <Link to="/idea/builder">Build Interactive Framework</Link>
+              <Link to="/idea/insight">Start with Insights</Link>
             </Button>
             <Button variant="outline" size="lg" className="bg-white/10 text-primary-foreground border-primary-foreground/20 hover:bg-white/20" asChild>
               <Link to="/diagnostic">Take Brand Diagnostic</Link>
