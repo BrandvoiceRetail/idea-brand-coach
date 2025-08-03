@@ -1,23 +1,22 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Monitor, Smartphone } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent } from "@/components/ui/card";
+import { Monitor, Smartphone } from "lucide-react";
 
 interface DesktopOnlyFeatureProps {
-  children: React.ReactNode;
   featureName: string;
+  description?: string;
   mobileMessage?: string;
   mobileAlternative?: React.ReactNode;
-  showIcon?: boolean;
+  children: React.ReactNode;
 }
 
-export const DesktopOnlyFeature: React.FC<DesktopOnlyFeatureProps> = ({
-  children,
-  featureName,
+export function DesktopOnlyFeature({ 
+  featureName, 
+  description, 
   mobileMessage,
-  mobileAlternative,
-  showIcon = true
-}) => {
+  mobileAlternative, 
+  children 
+}: DesktopOnlyFeatureProps) {
   const isMobile = useIsMobile();
 
   if (!isMobile) {
@@ -25,30 +24,37 @@ export const DesktopOnlyFeature: React.FC<DesktopOnlyFeatureProps> = ({
   }
 
   return (
-    <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
-      <CardContent className="pt-6">
-        <div className="flex gap-3 items-start">
-          {showIcon && (
-            <div className="flex gap-2 mt-1 flex-shrink-0">
-              <Smartphone className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <Monitor className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            </div>
-          )}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-              {featureName} Available on Desktop
-            </p>
-            <p className="text-xs text-amber-700 dark:text-amber-200">
-              {mobileMessage || `${featureName} is optimized for desktop use. Please visit this page on your computer for the full experience.`}
-            </p>
-            {mobileAlternative && (
-              <div className="mt-3">
-                {mobileAlternative}
-              </div>
+    <Card className="border-primary/20 bg-gradient-to-br from-background to-secondary/10">
+      <CardContent className="p-6 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="relative">
+            <Monitor className="h-12 w-12 text-primary" />
+            <Smartphone className="h-6 w-6 text-muted-foreground absolute -bottom-1 -right-1" />
+          </div>
+        </div>
+        
+        <h3 className="text-lg font-semibold text-primary mb-2">{featureName}</h3>
+        {(description || mobileMessage) && (
+          <p className="text-muted-foreground mb-4">{description || mobileMessage}</p>
+        )}
+        
+        {mobileAlternative && (
+          <div className="bg-secondary/20 rounded-lg p-3 mb-4">
+            {typeof mobileAlternative === 'string' ? (
+              <p className="text-sm text-muted-foreground">
+                <strong>Mobile Alternative:</strong> {mobileAlternative}
+              </p>
+            ) : (
+              mobileAlternative
             )}
           </div>
+        )}
+        
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <Monitor className="h-4 w-4" />
+          <span>Optimized for desktop experience</span>
         </div>
       </CardContent>
     </Card>
   );
-};
+}

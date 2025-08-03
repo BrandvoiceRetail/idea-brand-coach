@@ -43,29 +43,87 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/diagnostic" element={<FreeDiagnostic />} />
               <Route path="/diagnostic/results" element={<DiagnosticResults />} />
-              <Route path="/*" element={
+              <Route path="/app" element={
                 <Layout>
-                  <Routes>
-                    <Route path="/app" element={<Index />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/brand-diagnostic" element={<BrandDiagnostic />} />
-                    <Route path="/idea-diagnostic" element={<IdeaDiagnostic />} />
-                    <Route path="/idea" element={<IdeaFramework />} />
-                    <Route path="/idea/consultant" element={<IdeaFrameworkConsultant />} />
-                    <Route path="/idea/builder" element={<InteractiveIdeaBuilder />} />
-                    <Route path="/idea/insight" element={<IdeaInsight />} />
-                    <Route path="/insight-driven-learning" element={<InsightDrivenLearning />} />
-                    <Route path="/distinctive-learning" element={<DistinctiveLearning />} />
-                    <Route path="/emotionally-intelligent-learning" element={<EmotionallyIntelligentLearning />} />
-                    <Route path="/authenticity-learning" element={<AuthenticityLearning />} />
-                    <Route path="/research-learning" element={<ResearchLearning />} />
-                    <Route path="/avatar" element={<AvatarBuilder />} />
-                    <Route path="/canvas" element={<BrandCanvas />} />
-                    <Route path="/valuelens" element={<ValueLens />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                  <Index />
                 </Layout>
               } />
+              <Route path="/dashboard" element={
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              } />
+              <Route path="/brand-diagnostic" element={
+                <Layout>
+                  <BrandDiagnostic />
+                </Layout>
+              } />
+              <Route path="/idea-diagnostic" element={
+                <Layout>
+                  <IdeaDiagnostic />
+                </Layout>
+              } />
+              <Route path="/idea" element={
+                <Layout>
+                  <IdeaFramework />
+                </Layout>
+              } />
+              <Route path="/idea/consultant" element={
+                <Layout>
+                  <IdeaFrameworkConsultant />
+                </Layout>
+              } />
+              <Route path="/idea/builder" element={
+                <Layout>
+                  <InteractiveIdeaBuilder />
+                </Layout>
+              } />
+              <Route path="/idea/insight" element={
+                <Layout>
+                  <IdeaInsight />
+                </Layout>
+              } />
+              <Route path="/insight-driven-learning" element={
+                <Layout>
+                  <InsightDrivenLearning />
+                </Layout>
+              } />
+              <Route path="/distinctive-learning" element={
+                <Layout>
+                  <DistinctiveLearning />
+                </Layout>
+              } />
+              <Route path="/emotionally-intelligent-learning" element={
+                <Layout>
+                  <EmotionallyIntelligentLearning />
+                </Layout>
+              } />
+              <Route path="/authenticity-learning" element={
+                <Layout>
+                  <AuthenticityLearning />
+                </Layout>
+              } />
+              <Route path="/research-learning" element={
+                <Layout>
+                  <ResearchLearning />
+                </Layout>
+              } />
+              <Route path="/avatar" element={
+                <Layout>
+                  <AvatarBuilder />
+                </Layout>
+              } />
+              <Route path="/canvas" element={
+                <Layout>
+                  <BrandCanvas />
+                </Layout>
+              } />
+              <Route path="/valuelens" element={
+                <Layout>
+                  <ValueLens />
+                </Layout>
+              } />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
       </TooltipProvider>
