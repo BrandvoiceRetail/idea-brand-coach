@@ -41,28 +41,28 @@ export default function Landing() {
     {
       letter: "I",
       title: "Insight Driven",
-      description: "Uncover deep customer motivations and emotional triggers",
+      description: "Unlock the emotional triggers that drive your customers' decisions and build strategies that speak to their hearts.",
       color: "from-yellow-500 to-orange-500",
       icon: <Lightbulb className="h-6 w-6" />
     },
     {
       letter: "D",
       title: "Distinctive",
-      description: "Stand out with unique brand assets and positioning",
+      description: "Craft a brand identity that stands out in a crowded market and leaves a lasting impression.",
       color: "from-green-500 to-emerald-500",
       icon: <Star className="h-6 w-6" />
     },
     {
       letter: "E",
       title: "Empathetic",
-      description: "Connect emotionally with your audience",
+      description: "Forge deep emotional connections with your audience by understanding their true needs.",
       color: "from-pink-500 to-rose-500",
       icon: <Heart className="h-6 w-6" />
     },
     {
       letter: "A",
       title: "Authentic",
-      description: "Build genuine, transparent brand relationships",
+      description: "Build trust and loyalty by creating a brand that's as real as the people you serve.",
       color: "from-blue-500 to-indigo-500",
       icon: <Shield className="h-6 w-6" />
     }
@@ -111,17 +111,17 @@ export default function Landing() {
           </Badge>
           
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Build Brands That Resonate
+            Turn Customers Into Lifelong Fans With Brands That Truly Resonate
           </h1>
           
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-            Transform from guessing to knowing your customers. Master strategic brand building through our comprehensive learning modules and interactive tools powered by the proven IDEA Strategic Brand Framework™.
+            Stop Guessing, Start Connecting. Master the proven IDEA Strategic Brand Framework™ to build trust-driven brands that captivate hearts and drive results.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-glow">
               <Link to="/diagnostic">
-                Take Your Free Brand Diagnostic
+                Discover Your Brand's Hidden Potential — Take the Free Diagnostic Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -231,7 +231,7 @@ export default function Landing() {
         {/* Premium Tools Section */}
         <div className="mb-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Professional Brand Building Tools</h2>
+            <h2 className="text-3xl font-bold mb-4">AI-Powered Tools to Build, Test, and Perfect Your Brand Strategy</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Advanced AI-powered tools to develop, test, and optimize your brand strategy
             </p>
@@ -311,12 +311,31 @@ export default function Landing() {
           <h2 className="text-3xl font-bold text-primary-foreground mb-4">
             Ready to Build a Brand That Resonates?
           </h2>
-          <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Start with our free brand diagnostic to discover your brand's hidden potential and get actionable insights in minutes.
-          </p>
+          <div className="text-left max-w-2xl mx-auto mb-8">
+            <p className="text-lg text-primary-foreground/90 mb-4">
+              Your Free Brand Diagnostic will reveal:
+            </p>
+            <ul className="text-primary-foreground/90 space-y-2 mb-4">
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary-foreground flex-shrink-0" />
+                The emotional drivers behind your customers' decisions
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary-foreground flex-shrink-0" />
+                Key areas where your brand can stand out
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-primary-foreground flex-shrink-0" />
+                Actionable insights to strengthen your brand's connection with your audience
+              </li>
+            </ul>
+            <p className="text-primary-foreground/90">
+              No sign-up required. Instant results.
+            </p>
+          </div>
           <Button asChild size="lg" variant="coach" className="text-lg px-8 py-6 shadow-glow">
             <Link to="/diagnostic">
-              Take Your Free Brand Diagnostic
+              Discover Your Brand's Hidden Potential — Take the Free Diagnostic Now
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
