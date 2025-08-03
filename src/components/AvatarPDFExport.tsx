@@ -1,9 +1,10 @@
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Building2, Target, MessageSquare, TrendingUp, Users, Heart, ShoppingCart, Lightbulb } from 'lucide-react';
+import { Download, Building2, Target, MessageSquare, TrendingUp, Users, Heart, ShoppingCart, Lightbulb, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
+import { DesktopOnlyFeature } from '@/components/DesktopOnlyFeature';
 
 interface Avatar {
   name: string;
@@ -593,9 +594,36 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
     </html>`;
   };
 
+  const mobileAlternative = (
+    <div className="space-y-3">
+      <p className="text-xs text-amber-700 dark:text-amber-200 font-medium">
+        Instead, you can:
+      </p>
+      <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-200">
+        <Eye className="w-3 h-3" />
+        <span>View the report content above and take screenshots for your records</span>
+      </div>
+    </div>
+  );
+
   // Preview component for showing the layout
   return (
     <div className="w-full">
+      <DesktopOnlyFeature
+        featureName="PDF Export"
+        mobileMessage="PDF generation requires desktop functionality for optimal formatting and file handling. The report content is fully viewable above."
+        mobileAlternative={mobileAlternative}
+      >
+        <Button 
+          onClick={handleExport}
+          className="w-full"
+          size="lg"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Export Professional PDF Report
+        </Button>
+      </DesktopOnlyFeature>
+      
       <div ref={contentRef} className="bg-background border rounded-lg p-6 mb-6">
         <div className="text-center border-b pb-6 mb-6">
           <div className="w-24 h-12 bg-gradient-to-r from-primary to-purple-600 rounded-lg mx-auto mb-4 flex items-center justify-center text-primary-foreground text-xs font-bold">
@@ -706,15 +734,6 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
           </CardContent>
         </Card>
       </div>
-
-      <Button 
-        onClick={handleExport}
-        className="w-full"
-        size="lg"
-      >
-        <Download className="w-4 h-4 mr-2" />
-        Export Professional PDF Report
-      </Button>
     </div>
   );
 };

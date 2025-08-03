@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, FileText, X, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
+import { Upload, FileText, X, CheckCircle, AlertCircle, Trash2, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { DesktopOnlyFeature } from '@/components/DesktopOnlyFeature';
 
 interface UploadedDocument {
   id: string;
@@ -279,10 +280,27 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
     }
   };
 
+  const mobileAlternative = (
+    <div className="space-y-3">
+      <p className="text-xs text-amber-700 dark:text-amber-200 font-medium">
+        Instead, you can:
+      </p>
+      <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-200">
+        <MessageSquare className="w-3 h-3" />
+        <span>Share key information directly in the text input when using AI consultations</span>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Upload Area */}
-      <Card>
+    <DesktopOnlyFeature
+      featureName="Document Upload"
+      mobileMessage="Document upload and processing is optimized for desktop use with drag-and-drop functionality, better file management, and enhanced processing capabilities."
+      mobileAlternative={mobileAlternative}
+    >
+      <div className="space-y-6">
+        {/* Upload Area */}
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
@@ -427,6 +445,7 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DesktopOnlyFeature>
   );
 };
