@@ -17,7 +17,8 @@ import {
   Heart,
   Shield,
   Search,
-  Lightbulb
+  Lightbulb,
+  Calendar
 } from "lucide-react";
 
 export default function Landing() {
@@ -340,6 +341,23 @@ export default function Landing() {
                   <p>
                     Trevor has systematized how businesses approach branding by integrating customer behavioral triggers with e-commerce growth strategies.
                   </p>
+                </div>
+                <div className="mt-6">
+                  <Button 
+                    asChild 
+                    variant="brand" 
+                    className="w-full"
+                  >
+                    <a 
+                      href="https://ideabrandconsultancy.com/calendar-page" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Book Free 30-Minute Consultation
+                    </a>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
