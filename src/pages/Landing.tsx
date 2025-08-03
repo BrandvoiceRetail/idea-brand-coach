@@ -118,22 +118,19 @@ export default function Landing() {
             Stop Guessing, Start Connecting. Master the proven IDEA Strategic Brand Framework™ to build trust-driven brands that captivate hearts and drive results.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-glow">
+          <div className="flex justify-center mb-8">
+            <Button asChild size="lg" className="text-xl px-12 py-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-glow">
               <Link to="/diagnostic">
-                Discover Your Brand's Hidden Potential — Take the Free Diagnostic Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            
-            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-              <Link to="/auth">
-                Sign Up to Access Full Platform
+                <div className="text-center">
+                  <div className="font-bold">Take Free Brand Diagnostic Now</div>
+                  <div className="text-base font-normal">Discover Your Brand's Hidden Potential</div>
+                </div>
+                <ArrowRight className="ml-3 h-6 w-6" />
               </Link>
             </Button>
           </div>
 
-          <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground mb-6">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-primary" />
               <span>Free to Start</span>
@@ -146,6 +143,14 @@ export default function Landing() {
               <CheckCircle className="h-4 w-4 text-primary" />
               <span>Instant Results</span>
             </div>
+          </div>
+
+          <div className="flex justify-center">
+            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
+              <Link to="/auth">
+                Sign Up to Access Full Platform
+              </Link>
+            </Button>
           </div>
         </div>
 
@@ -269,6 +274,15 @@ export default function Landing() {
               </Card>
             ))}
           </div>
+        </div>
+
+        {/* Sign Up Button Above Benefits */}
+        <div className="text-center mb-16">
+          <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6">
+            <Link to="/auth">
+              Sign Up to Access Full Platform
+            </Link>
+          </Button>
         </div>
 
         {/* Benefits and Author Section */}
