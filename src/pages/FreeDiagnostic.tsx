@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CheckCircle, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Question {
@@ -196,6 +196,17 @@ export default function FreeDiagnostic() {
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2"
+              >
+                <Home className="w-4 h-4" />
+                Back to Home
+              </Button>
+              <div className="flex-1" />
+            </div>
             <h1 className="text-3xl font-bold mb-4">Free Brand Diagnostic</h1>
             <p className="text-muted-foreground mb-6">
               Discover your brand's strengths and opportunities with our IDEA Framework™ assessment
