@@ -16,7 +16,9 @@ export default function Auth() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Auth page: user state:', user);
     if (user) {
+      console.log('User already logged in, redirecting to /');
       navigate('/');
     }
   }, [user, navigate]);
@@ -35,6 +37,8 @@ export default function Auth() {
     setIsLoading(false);
   };
 
+  console.log('Auth component rendering');
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
