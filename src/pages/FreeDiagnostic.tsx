@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { ArrowRight, ArrowLeft, CheckCircle, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import BetaTesterCapture from '@/components/BetaTesterCapture';
 
 interface Question {
   id: string;
@@ -98,6 +99,11 @@ export default function FreeDiagnostic() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showBetaCapture, setShowBetaCapture] = useState(false);
+  const [diagnosticResults, setDiagnosticResults] = useState<{
+    overallScore: number;
+    scores: Record<string, number>;
+  } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -176,6 +182,12 @@ export default function FreeDiagnostic() {
       (averageScores.insight + averageScores.distinctive + averageScores.empathetic + averageScores.authentic) / 4
     );
 
+    // Store results for beta capture
+    setDiagnosticResults({
+      overallScore,
+      scores: averageScores
+    });
+
     // Save to localStorage
     const diagnosticData = {
       answers,
@@ -186,7 +198,13 @@ export default function FreeDiagnostic() {
 
     localStorage.setItem('diagnosticData', JSON.stringify(diagnosticData));
     
-    // Navigate to results
+    // Show beta capture modal instead of navigating immediately
+    setIsCompleting(false);
+    setShowBetaCapture(true);
+  };
+
+  const handleBetaCaptureComplete = () => {
+    setShowBetaCapture(false);
     navigate('/diagnostic/results');
   };
 
@@ -278,6 +296,16 @@ export default function FreeDiagnostic() {
           </div>
         </div>
       </div>
+
+      {/* Beta Tester Capture Modal */}
+      {diagnosticResults && (
+        <BetaTesterCapture
+          isOpen={showBetaCapture}
+          onClose={() => setShowBetaCapture(false)}
+          onComplete={handleBetaCaptureComplete}
+          diagnosticData={diagnosticResults}
+        />
+      )}
     </div>
   );
 }

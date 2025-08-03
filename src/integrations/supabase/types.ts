@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      beta_testers: {
+        Row: {
+          category_scores: Json | null
+          company: string | null
+          created_at: string
+          diagnostic_completion_date: string
+          email: string | null
+          id: string
+          name: string | null
+          notes: string | null
+          overall_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          category_scores?: Json | null
+          company?: string | null
+          created_at?: string
+          diagnostic_completion_date?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          overall_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category_scores?: Json | null
+          company?: string | null
+          created_at?: string
+          diagnostic_completion_date?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          notes?: string | null
+          overall_score?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
