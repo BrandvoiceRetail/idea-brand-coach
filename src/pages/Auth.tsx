@@ -12,16 +12,11 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, signOut, user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log('Auth page: user state:', user);
-    if (user) {
-      console.log('User already logged in, redirecting to /');
-      navigate('/');
-    }
-  }, [user, navigate]);
+  // Remove automatic redirect - let users access auth page
+  // Users can sign out from here if needed
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +34,35 @@ export default function Auth() {
 
   console.log('Auth component rendering');
   
+  // Show account management if user is already logged in
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Account Management</CardTitle>
+            <CardDescription>You are already signed in as {user.email}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={() => navigate('/dashboard')} 
+              className="w-full"
+            >
+              Go to Dashboard
+            </Button>
+            <Button 
+              onClick={signOut} 
+              variant="outline" 
+              className="w-full"
+            >
+              Sign Out
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">

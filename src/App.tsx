@@ -43,84 +43,116 @@ const App = () => (
               <Route path="/diagnostic" element={<FreeDiagnostic />} />
               <Route path="/diagnostic/results" element={<DiagnosticResults />} />
               <Route path="/app" element={
-                <Layout>
-                  <Index />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <Index />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/dashboard" element={
-                <Layout>
-                  <Dashboard />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/brand-diagnostic" element={
-                <Layout>
-                  <BrandDiagnostic />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <BrandDiagnostic />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/idea-diagnostic" element={
-                <Layout>
-                  <IdeaDiagnostic />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <IdeaDiagnostic />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/idea" element={
-                <Layout>
-                  <IdeaFramework />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <IdeaFramework />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/idea/consultant" element={
-                <Layout>
-                  <IdeaFrameworkConsultant />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <IdeaFrameworkConsultant />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/idea/builder" element={
-                <Layout>
-                  <InteractiveIdeaBuilder />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <InteractiveIdeaBuilder />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/idea/insight" element={
-                <Layout>
-                  <IdeaInsight />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <IdeaInsight />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/insight-driven-learning" element={
-                <Layout>
-                  <InsightDrivenLearning />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <InsightDrivenLearning />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/distinctive-learning" element={
-                <Layout>
-                  <DistinctiveLearning />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <DistinctiveLearning />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/emotionally-intelligent-learning" element={
-                <Layout>
-                  <EmotionallyIntelligentLearning />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <EmotionallyIntelligentLearning />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/authenticity-learning" element={
-                <Layout>
-                  <AuthenticityLearning />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <AuthenticityLearning />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/research-learning" element={
-                <Layout>
-                  <ResearchLearning />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <ResearchLearning />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/avatar" element={
-                <Layout>
-                  <AvatarBuilder />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <AvatarBuilder />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/canvas" element={
-                <Layout>
-                  <BrandCanvas />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <BrandCanvas />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="/valuelens" element={
-                <Layout>
-                  <ValueLens />
-                </Layout>
+                <BrandProvider>
+                  <Layout>
+                    <ValueLens />
+                  </Layout>
+                </BrandProvider>
               } />
               <Route path="*" element={<NotFound />} />
             </Routes>
