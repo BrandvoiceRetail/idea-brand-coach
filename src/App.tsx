@@ -9,6 +9,8 @@ import { BrandProvider } from "@/contexts/BrandContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import BrandDiagnostic from "./pages/BrandDiagnostic";
+import FreeDiagnostic from "./pages/FreeDiagnostic";
+import DiagnosticResults from "./pages/DiagnosticResults";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
 import IdeaFrameworkConsultant from "./pages/IdeaFrameworkConsultant";
@@ -39,9 +41,11 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/brand-diagnostic" element={<BrandDiagnostic />} />
-              <Route path="/diagnostic" element={<IdeaDiagnostic />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/diagnostic" element={<FreeDiagnostic />} />
+                <Route path="/diagnostic/results" element={<DiagnosticResults />} />
+                <Route path="/brand-diagnostic" element={<BrandDiagnostic />} />
+                <Route path="/idea-diagnostic" element={<IdeaDiagnostic />} />
               <Route path="/idea" element={<IdeaFramework />} />
               <Route path="/idea/consultant" element={<IdeaFrameworkConsultant />} />
               <Route path="/idea/builder" element={<InteractiveIdeaBuilder />} />

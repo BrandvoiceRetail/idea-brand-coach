@@ -110,7 +110,7 @@ export default function Index() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-glow">
-              <Link to="/brand-diagnostic">
+              <Link to="/diagnostic">
                 Start Free Brand Diagnostic
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
@@ -307,7 +307,7 @@ export default function Index() {
             Start with our free brand diagnostic to discover your brand's hidden potential and get actionable insights in minutes.
           </p>
           <Button asChild size="lg" variant="coach" className="text-lg px-8 py-6 shadow-glow">
-            <Link to="/brand-diagnostic">
+            <Link to="/diagnostic">
               Get Your Free Brand Diagnostic
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
