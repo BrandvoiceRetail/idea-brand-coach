@@ -34,11 +34,8 @@ function resizeImageIfNeeded(canvas: HTMLCanvasElement, ctx: CanvasRenderingCont
 export const removeBackground = async (imageElement: HTMLImageElement): Promise<Blob> => {
   try {
     console.log('Starting background removal process...');
-    const segmenter = await pipeline('image-segmentation', 'Xenova/segformer-b0-finetuned-ade-512-512',{
-      device: 'webgpu',
-    });
     
-    // Convert HTMLImageElement to canvas
+    // Create canvas from image
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
@@ -48,52 +45,38 @@ export const removeBackground = async (imageElement: HTMLImageElement): Promise<
     const wasResized = resizeImageIfNeeded(canvas, ctx, imageElement);
     console.log(`Image ${wasResized ? 'was' : 'was not'} resized. Final dimensions: ${canvas.width}x${canvas.height}`);
     
-    // Get image data as base64
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
-    console.log('Image converted to base64');
+    // Simple color-based background removal for white backgrounds
+    console.log('Processing with color-based background removal...');
     
-    // Process the image with the segmentation model
-    console.log('Processing with segmentation model...');
-    const result = await segmenter(imageData);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
     
-    console.log('Segmentation result:', result);
-    
-    if (!result || !Array.isArray(result) || result.length === 0 || !result[0].mask) {
-      throw new Error('Invalid segmentation result');
+    // Remove white/light backgrounds
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Calculate brightness
+      const brightness = (r + g + b) / 3;
+      
+      // If pixel is very light (white/light gray), make it transparent
+      if (brightness > 240 && Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && Math.abs(r - b) < 20) {
+        data[i + 3] = 0; // Make transparent
+      }
+      // If pixel is moderately light, reduce opacity
+      else if (brightness > 200 && Math.abs(r - g) < 30 && Math.abs(g - b) < 30 && Math.abs(r - b) < 30) {
+        data[i + 3] = Math.round(data[i + 3] * 0.3); // Reduce opacity
+      }
     }
     
-    // Create a new canvas for the masked image
-    const outputCanvas = document.createElement('canvas');
-    outputCanvas.width = canvas.width;
-    outputCanvas.height = canvas.height;
-    const outputCtx = outputCanvas.getContext('2d');
-    
-    if (!outputCtx) throw new Error('Could not get output canvas context');
-    
-    // Draw original image
-    outputCtx.drawImage(canvas, 0, 0);
-    
-    // Apply the mask
-    const outputImageData = outputCtx.getImageData(
-      0, 0,
-      outputCanvas.width,
-      outputCanvas.height
-    );
-    const data = outputImageData.data;
-    
-    // Apply inverted mask to alpha channel
-    for (let i = 0; i < result[0].mask.data.length; i++) {
-      // Invert the mask value (1 - value) to keep the subject instead of the background
-      const alpha = Math.round((1 - result[0].mask.data[i]) * 255);
-      data[i * 4 + 3] = alpha;
-    }
-    
-    outputCtx.putImageData(outputImageData, 0, 0);
-    console.log('Mask applied successfully');
+    // Apply the processed image data
+    ctx.putImageData(imageData, 0, 0);
+    console.log('Background removal applied successfully');
     
     // Convert canvas to blob
     return new Promise((resolve, reject) => {
-      outputCanvas.toBlob(
+      canvas.toBlob(
         (blob) => {
           if (blob) {
             console.log('Successfully created final blob');
