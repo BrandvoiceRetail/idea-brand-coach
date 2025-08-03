@@ -91,11 +91,11 @@ export default function Landing() {
               />
             </div>
             <div className="flex items-center space-x-4">
-              <Button asChild variant="ghost" className="text-primary-foreground">
+              <Button asChild variant="ghost" className="text-primary-foreground hover:bg-white/10">
                 <Link to="/auth">Sign In</Link>
               </Button>
-              <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
-                <Link to="/diagnostic">Free Diagnostic</Link>
+              <Button asChild className="bg-white text-primary hover:bg-white/90 font-semibold">
+                <Link to="/auth">Get Started Free</Link>
               </Button>
             </div>
           </div>
@@ -145,10 +145,15 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="flex justify-center">
-            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 border-primary/20 hover:bg-primary/5">
               <Link to="/auth">
-                Sign Up to Access Full Platform
+                Start Your Free Account
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="lg" className="text-lg px-8 py-6 text-primary hover:bg-primary/5">
+              <Link to="/diagnostic">
+                Try Free Diagnostic
               </Link>
             </Button>
           </div>
@@ -194,7 +199,7 @@ export default function Landing() {
                         variant="secondary"
                         className="bg-white text-gray-900 hover:bg-gray-100"
                       >
-                        <Link to="/auth">Sign Up to Access</Link>
+                        <Link to="/auth">Unlock Premium</Link>
                       </Button>
                     </div>
                   </div>
@@ -224,7 +229,7 @@ export default function Landing() {
                       variant="secondary"
                       className="bg-white text-gray-900 hover:bg-gray-100"
                     >
-                      <Link to="/auth">Sign Up to Access</Link>
+                       <Link to="/auth">Unlock Premium</Link>
                     </Button>
                   </div>
                 </div>
@@ -266,7 +271,7 @@ export default function Landing() {
                         size="sm" 
                         variant="secondary"
                       >
-                        <Link to="/auth">Sign Up to Access</Link>
+                        <Link to="/auth">Access Tools</Link>
                       </Button>
                     </div>
                   </div>
@@ -278,9 +283,12 @@ export default function Landing() {
 
         {/* Sign Up Button Above Benefits */}
         <div className="text-center mb-16">
-          <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6">
+          <Button asChild size="lg" className="text-xl px-12 py-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-glow">
             <Link to="/auth">
-              Sign Up to Access Full Platform
+              <div className="text-center">
+                <div className="font-bold">Start Building Your Brand Today</div>
+                <div className="text-base font-normal">Join Thousands of Successful Entrepreneurs</div>
+              </div>
             </Link>
           </Button>
         </div>
