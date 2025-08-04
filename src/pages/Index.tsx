@@ -45,7 +45,7 @@ export default function Index() {
       description: "Uncover deep customer motivations and emotional triggers",
       color: "from-yellow-500 to-orange-500",
       icon: <Lightbulb className="h-6 w-6" />,
-      href: "/insight-driven-learning"
+      href: "/idea/insight"
     },
     {
       letter: "D",
@@ -53,7 +53,7 @@ export default function Index() {
       description: "Stand out with unique brand assets and positioning",
       color: "from-green-500 to-emerald-500",
       icon: <Star className="h-6 w-6" />,
-      href: "/distinctive-learning"
+      href: "/idea/distinctive"
     },
     {
       letter: "E",
@@ -61,7 +61,7 @@ export default function Index() {
       description: "Connect emotionally with your audience",
       color: "from-pink-500 to-rose-500",
       icon: <Heart className="h-6 w-6" />,
-      href: "/emotionally-intelligent-learning"
+      href: "/idea/empathy"
     },
     {
       letter: "A",
@@ -69,7 +69,7 @@ export default function Index() {
       description: "Build genuine, transparent brand relationships",
       color: "from-blue-500 to-indigo-500",
       icon: <Shield className="h-6 w-6" />,
-      href: "/authenticity-learning"
+      href: "/idea/authenticity"
     }
   ];
 

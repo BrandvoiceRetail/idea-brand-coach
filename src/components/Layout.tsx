@@ -20,7 +20,6 @@ const navItems = [
   { name: "Brand Diagnostic", href: "/diagnostic", icon: Brain },
   { name: "Dashboard", href: "/app", icon: BarChart },
   { name: "IDEA Strategic Brand Framework™", href: "/idea", icon: BookOpen },
-  { name: "Interactive IDEA Framework™", href: "/idea/builder", icon: MessageSquare },
   { name: "Avatar 2.0", href: "/avatar", icon: Target },
   { name: "ValueLens", href: "/valuelens", icon: Zap },
 ];

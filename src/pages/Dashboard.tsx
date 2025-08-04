@@ -53,7 +53,7 @@ const ideaModules = [
     title: "Insight Driven",
     description: "Interactive learning module: Deep customer insights and Avatar 2.0",
     icon: Lightbulb,
-    href: "/insight-driven-learning",
+    href: "/idea/insight",
     status: "available" as const,
     color: "from-yellow-500 to-orange-500"
   },
@@ -61,7 +61,7 @@ const ideaModules = [
     title: "Distinctive/Different",
     description: "Stand out at both product and brand level with distinctive assets",
     icon: Star,
-    href: "/idea/distinctiveness",
+    href: "/idea/distinctive",
     status: "available" as const,
     color: "from-green-500 to-emerald-500"
   },
@@ -103,7 +103,7 @@ const additionalModules = [
     description: "Visual drag-and-drop canvas for your IDEA Strategic Brand Framework™ strategy",
     icon: MessageSquare,
     href: "/canvas",
-    status: "coming-soon" as const
+    status: "available" as const
   },
   {
     title: "Listing Optimizer",
