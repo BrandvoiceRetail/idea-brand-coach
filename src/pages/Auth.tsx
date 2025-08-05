@@ -46,10 +46,10 @@ export default function Auth() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
-              onClick={() => navigate('/dashboard')} 
+              onClick={() => navigate('/app')} 
               className="w-full"
             >
-              Go to Dashboard
+              Go to Home
             </Button>
             <Button 
               onClick={signOut} 
@@ -70,7 +70,7 @@ export default function Auth() {
         <div className="flex justify-between items-center mb-4">
           <Button
             variant="ghost"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             className="flex items-center gap-2"
           >
             <Home className="w-4 h-4" />

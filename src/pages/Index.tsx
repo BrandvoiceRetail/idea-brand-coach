@@ -293,7 +293,7 @@ export default function Index() {
                       variant="coach" 
                       className="bg-white text-primary hover:bg-white/90"
                     >
-                      <a href="https://www.linkedin.com/in/trevorbradfordmarketing/" target="_blank" rel="noopener noreferrer">
+                      <a href="https://www.linkedin.com/in/trevor-bradford-51982b9/" target="_blank" rel="noopener noreferrer">
                         View LinkedIn Profile
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </a>
@@ -305,7 +305,7 @@ export default function Index() {
                       variant="outline" 
                       className="border-white/20 text-white hover:bg-white/10"
                     >
-                      <a href="https://calendly.com/trevor-ideabrandconsultancy/strategy-call" target="_blank" rel="noopener noreferrer">
+                      <a href="https://calendly.com/trevor-bradford-idea/30min" target="_blank" rel="noopener noreferrer">
                         <Calendar className="mr-2 h-4 w-4" />
                         Book Consultation
                       </a>
@@ -319,7 +319,7 @@ export default function Index() {
                     Creator of the IDEA Strategic Brand Framework™
                   </h4>
                   
-                  <div className="space-y-4 text-primary-foreground/90 leading-relaxed">
+                  <div className="space-y-4 text-white leading-relaxed">
                     <p>
                       Distinguished brand strategist and e-commerce expert with expertise rooted in behavioral sciences. Trevor has systematized how businesses approach branding by integrating customer behavioral triggers with growth strategies.
                     </p>

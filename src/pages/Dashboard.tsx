@@ -414,7 +414,7 @@ export default function Dashboard() {
                 <img 
                   src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
                   alt="Trevor Bradford" 
-                  className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                  className="w-24 h-24 rounded-full object-cover border-2 border-primary/20"
                 />
                 <div>
                   <h4 className="font-semibold">Trevor Bradford</h4>

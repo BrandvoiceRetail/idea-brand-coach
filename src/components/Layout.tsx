@@ -31,8 +31,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { user, signOut } = useAuth();
 
-  // Show auth page without layout if not authenticated and not on auth page
-  if (!user && location.pathname !== '/auth') {
+  // Show auth page without layout if not authenticated and not on auth or home page
+  if (!user && location.pathname !== '/auth' && location.pathname !== '/' && location.pathname !== '/diagnostic') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="text-center">
