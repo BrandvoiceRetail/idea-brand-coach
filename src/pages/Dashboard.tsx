@@ -442,22 +442,18 @@ export default function Dashboard() {
                 Trevor is an industry authority on branding and marketing and has helped hundreds of e-commerce entrepreneurs build trust-first strategies that drive sales conversions and reduce true advertising cost of sale (TACOS).
               </p>
               <div className="flex flex-col space-y-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                <button 
+                  className="w-full px-4 py-2 text-sm font-medium bg-white text-black border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                   onClick={() => window.open('https://calendly.com/trevor-bradford-idea/30min', '_blank')}
                 >
                   Book FREE Consultation
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
+                </button>
+                <button 
+                  className="w-full px-4 py-2 text-sm font-medium bg-white text-black border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                   onClick={() => window.open('https://www.linkedin.com/in/trevor-bradford-51982b9/', '_blank')}
                 >
                   Connect on LinkedIn
-                </Button>
+                </button>
               </div>
             </CardContent>
           </Card>
