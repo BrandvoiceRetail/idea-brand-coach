@@ -445,7 +445,7 @@ export default function Dashboard() {
                 <Button 
                   variant="outline"
                   size="sm" 
-                  className="w-full !text-foreground"
+                  className="w-full !text-black"
                   onClick={() => window.open('https://calendly.com/trevor-bradford-idea/30min', '_blank')}
                 >
                   Book Personal Consultation

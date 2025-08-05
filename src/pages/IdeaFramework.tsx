@@ -267,23 +267,25 @@ export default function IdeaFramework() {
         </Card>
       </div>
 
-      {/* AI Consultant Section */}
+      {/* Trevor Bradford Consultant Section */}
       <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-secondary/20 shadow-glow">
         <CardContent className="p-8">
           <div className="flex items-center justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-full flex items-center justify-center">
-              <Users className="w-8 h-8 text-white" />
-            </div>
+            <img 
+              src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png" 
+              alt="Trevor Bradford"
+              className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+            />
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">IDEA Framework Consultant</h2>
+            <h2 className="text-2xl font-bold mb-4">Ask Trevor Bradford - IDEA Framework Creator</h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Get personalized AI guidance from our IDEA Strategic Brand Framework expert. 
-              Ask questions, upload your documents, and receive tailored strategic advice 
-              to strengthen your brand foundation.
+              Get direct guidance from Trevor Bradford, creator of the IDEA Strategic Brand Framework™. 
+              With over 35 years of branding experience, Trevor provides personalized strategic advice 
+              to strengthen your brand foundation and drive sales conversions.
             </p>
             <div className="flex flex-wrap justify-center gap-2 mb-6">
-              <Badge variant="secondary" className="text-xs">Behavioral Science</Badge>
+              <Badge variant="secondary" className="text-xs">35+ Years Experience</Badge>
               <Badge variant="secondary" className="text-xs">Strategic Guidance</Badge>
               <Badge variant="secondary" className="text-xs">Document Analysis</Badge>
               <Badge variant="secondary" className="text-xs">24/7 Available</Badge>
@@ -291,7 +293,7 @@ export default function IdeaFramework() {
             <Button variant="secondary" size="lg" asChild className="shadow-glow">
               <Link to="/idea/consultant">
                 <Users className="w-4 h-4 mr-2" />
-                Ask the IDEA Consultant
+                Ask Trevor Bradford
               </Link>
             </Button>
           </div>
