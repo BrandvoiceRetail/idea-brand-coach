@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { name: "Home", href: "/", icon: Brain },
+  { name: "Home", href: "/app", icon: Brain },
   { name: "Brand Diagnostic", href: "/diagnostic", icon: Brain },
   { name: "Dashboard", href: "/dashboard", icon: BarChart },
   { name: "IDEA Strategic Brand Framework™", href: "/idea", icon: BookOpen },
