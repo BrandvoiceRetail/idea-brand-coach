@@ -445,7 +445,7 @@ export default function Dashboard() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full"
+                  className="w-full bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                   onClick={() => window.open('https://calendly.com/trevor-bradford-idea/30min', '_blank')}
                 >
                   Book FREE Consultation
