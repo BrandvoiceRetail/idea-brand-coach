@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useBrand } from "@/contexts/BrandContext";
 
 import { 
   Target, 
@@ -15,330 +16,324 @@ import {
   Heart,
   Shield,
   Search,
-  Lightbulb
+  Lightbulb,
+  Play,
+  Clock,
+  ChevronRight,
+  Award,
+  BookOpen,
+  PenTool,
+  MessageSquare,
+  Calendar
 } from "lucide-react";
 
 export default function Index() {
   const navigate = useNavigate();
-  const features = [
-    {
-      icon: <Brain className="h-8 w-8 text-primary" />,
-      title: "IDEA Strategic Brand Framework™",
-      description: "Build trust-driven, emotionally resonant brands with our proven methodology"
-    },
-    {
-      icon: <Target className="h-8 w-8 text-primary" />,
-      title: "Avatar 2.0 Builder",
-      description: "Create behavioral customer profiles with deep emotional triggers"
-    },
-    {
-      icon: <Zap className="h-8 w-8 text-primary" />,
-      title: "AI-Powered Copy Generation",
-      description: "Generate emotionally resonant messaging that converts"
-    }
-  ];
+  const { brandData, getCompletionPercentage } = useBrand();
+  const completionPercentage = getCompletionPercentage();
 
-  const ideaPillars = [
+  const processSteps = [
     {
-      letter: "I",
-      title: "Insight Driven",
-      description: "Uncover deep customer motivations and emotional triggers",
-      color: "from-yellow-500 to-orange-500",
-      icon: <Lightbulb className="h-6 w-6" />,
-      href: "/idea/insight"
-    },
-    {
-      letter: "D",
-      title: "Distinctive",
-      description: "Stand out with unique brand assets and positioning",
-      color: "from-green-500 to-emerald-500",
-      icon: <Star className="h-6 w-6" />,
-      href: "/idea/distinctive"
-    },
-    {
-      letter: "E",
-      title: "Empathetic",
-      description: "Connect emotionally with your audience",
-      color: "from-pink-500 to-rose-500",
-      icon: <Heart className="h-6 w-6" />,
-      href: "/idea/empathy"
-    },
-    {
-      letter: "A",
-      title: "Authentic",
-      description: "Build genuine, transparent brand relationships",
+      step: 1,
+      title: "Brand Diagnostic",
+      description: "Discover your brand's current strengths and gaps",
+      icon: <Search className="h-6 w-6" />,
+      time: "5 min",
+      href: "/diagnostic",
       color: "from-blue-500 to-indigo-500",
+      status: "available"
+    },
+    {
+      step: 2,
+      title: "I - Insight Driven",
+      description: "Uncover deep customer motivations and emotional triggers",
+      icon: <Lightbulb className="h-6 w-6" />,
+      time: "15 min",
+      href: "/idea/insight",
+      color: "from-yellow-500 to-orange-500",
+      status: "requires-signup"
+    },
+    {
+      step: 3,
+      title: "D - Distinctive",
+      description: "Stand out with unique brand assets and positioning",
+      icon: <Star className="h-6 w-6" />,
+      time: "20 min",
+      href: "/idea/distinctive",
+      color: "from-green-500 to-emerald-500",
+      status: "requires-signup"
+    },
+    {
+      step: 4,
+      title: "E - Empathetic",
+      description: "Connect emotionally with your audience",
+      icon: <Heart className="h-6 w-6" />,
+      time: "15 min",
+      href: "/idea/empathy",
+      color: "from-pink-500 to-rose-500",
+      status: "requires-signup"
+    },
+    {
+      step: 5,
+      title: "A - Authentic",
+      description: "Build genuine, transparent brand relationships",
       icon: <Shield className="h-6 w-6" />,
-      href: "/idea/authenticity"
+      time: "15 min",
+      href: "/idea/authenticity",
+      color: "from-blue-500 to-indigo-500",
+      status: "requires-signup"
     }
   ];
 
-  const benefits = [
-    "Stop guessing what your customers want",
-    "Create messaging that actually converts",
-    "Build a distinctive brand position",
-    "Connect emotionally with your audience",
-    "Generate AI-powered copy variations",
-    "Track your brand health progress"
+  const brandTools = [
+    {
+      title: "Avatar 2.0 Builder",
+      description: "Create detailed customer personas with behavioral triggers",
+      icon: <Users className="h-6 w-6" />,
+      time: "30 min",
+      href: "/avatar",
+      status: "requires-signup"
+    },
+    {
+      title: "Brand Canvas",
+      description: "Map your complete brand strategy on one page",
+      icon: <BookOpen className="h-6 w-6" />,
+      time: "45 min",
+      href: "/canvas",
+      status: "requires-signup"
+    },
+    {
+      title: "ValueLens Generator",
+      description: "Generate emotionally resonant copy variations",
+      icon: <PenTool className="h-6 w-6" />,
+      time: "20 min",
+      href: "/value-lens",
+      status: "requires-signup"
+    }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center max-w-4xl mx-auto mb-16">
-          <Badge variant="outline" className="mb-8 px-4 py-2">
-            <TrendingUp className="h-4 w-4 mr-2" />
-            AI-Powered Brand Strategy Platform
+      {/* Header Section */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center max-w-4xl mx-auto mb-12">
+          <Badge variant="outline" className="mb-6 px-4 py-2">
+            <Brain className="h-4 w-4 mr-2" />
+            IDEA Strategic Brand Framework™ Process Overview
           </Badge>
           
-          <div className="flex justify-center mb-8">
-            <div className="relative overflow-hidden">
-              <img 
-                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
-                alt="IDEA Brand Coach - Strategic Brand Framework Platform" 
-                className="h-32 w-auto object-contain object-center"
-              />
-            </div>
-          </div>
+          <h1 className="text-4xl font-bold mb-6">
+            Your Strategic Brand Building Journey
+          </h1>
           
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-            Transform from guessing to knowing your customers. Master strategic brand building through our comprehensive learning modules and interactive tools powered by the proven IDEA Strategic Brand Framework™.
+            Follow this proven step-by-step process to build an emotionally resonant brand that converts. Each step builds on the previous one to create a complete brand strategy.
           </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-glow">
-              <Link to="/diagnostic">
-                Start Free Brand Diagnostic
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            
-            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-              <Link to="/auth">
-                Sign Up to Access Full Platform
-              </Link>
-            </Button>
-          </div>
 
-          <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <span>Free to Start</span>
+          {brandData && (
+            <div className="bg-gradient-card rounded-lg p-6 mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Your Progress</h3>
+                <Badge variant="secondary">{completionPercentage}% Complete</Badge>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${completionPercentage}%` }}
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <span>5-Minute Setup</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <span>Instant Results</span>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Learning Modules Section */}
-        <div className="mb-20">
+        {/* Step-by-Step Process Flow */}
+        <div className="mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Master the IDEA Strategic Brand Framework™</h2>
+            <h2 className="text-3xl font-bold mb-4">The IDEA Framework Process</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Comprehensive learning modules that teach you to build emotionally resonant brands step-by-step
+              Follow this proven 5-step process to build your strategic brand foundation
             </p>
-            <div className="mt-4 text-sm text-muted-foreground">
-              <Shield className="h-4 w-4 inline mr-2" />
-              Premium modules require account signup
-            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {ideaPillars.map((pillar, index) => (
-              <Card 
-                key={index} 
-                className={`bg-gradient-to-br ${pillar.color} text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden`}
-              >
-                <CardContent className="p-8 text-center">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold">{pillar.letter}</span>
-                  </div>
-                  <div className="mb-3">
-                    {pillar.icon}
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{pillar.title}</h3>
-                  <p className="text-white/90 text-sm mb-4">{pillar.description}</p>
-                  
-                  {/* Sign Up Overlay */}
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                    <div className="text-center p-4">
-                      <Shield className="h-8 w-8 mx-auto mb-2 text-white" />
-                      <p className="text-white font-semibold mb-2">Premium Content</p>
-                      <Button 
-                        asChild 
-                        size="sm" 
-                        variant="secondary"
-                        className="bg-white text-gray-900 hover:bg-gray-100"
-                      >
-                        <Link to="/auth">Sign Up to Access</Link>
-                      </Button>
+          <div className="space-y-8">
+            {processSteps.map((step, index) => (
+              <div key={step.step} className="relative">
+                {/* Connector Line */}
+                {index < processSteps.length - 1 && (
+                  <div className="absolute left-8 top-20 w-0.5 h-12 bg-gradient-to-b from-primary to-primary/50 z-0" />
+                )}
+                
+                <Card className="relative overflow-hidden border-l-4 border-l-primary shadow-lg hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-8">
+                    <div className="flex items-start gap-6">
+                      {/* Step Number Circle */}
+                      <div className={`flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br ${step.color} text-white flex items-center justify-center font-bold text-xl shadow-lg`}>
+                        {step.step}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="flex items-center gap-2">
+                            {step.icon}
+                            <h3 className="text-xl font-bold">{step.title}</h3>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            <span>{step.time}</span>
+                          </div>
+                          {step.status === "requires-signup" && (
+                            <Badge variant="outline" className="text-xs">
+                              <Shield className="h-3 w-3 mr-1" />
+                              Premium
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <p className="text-muted-foreground mb-6 leading-relaxed">
+                          {step.description}
+                        </p>
+                        
+                        <div className="flex gap-4">
+                          {step.status === "available" ? (
+                            <Button asChild>
+                              <Link to={step.href}>
+                                <Play className="h-4 w-4 mr-2" />
+                                Start Step {step.step}
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button asChild variant="outline">
+                              <Link to="/auth">
+                                <Shield className="h-4 w-4 mr-2" />
+                                Sign Up to Access
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Arrow */}
+                      <div className="flex-shrink-0">
+                        <ChevronRight className="h-6 w-6 text-muted-foreground" />
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
-          
-          {/* Research Module */}
-          <div className="mt-8 text-center">
-            <Card className="max-w-md mx-auto bg-gradient-to-br from-yellow-300 to-yellow-500 text-gray-800 border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <Search className="h-8 w-8 text-gray-800 mx-auto" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-800">Strategic Brand Research</h3>
-                <p className="text-gray-800/90 leading-relaxed mb-4">Learn comprehensive research methods to uncover customer insights and emotional drivers</p>
-                
-                {/* Sign Up Overlay */}
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                  <div className="text-center p-4">
-                    <Shield className="h-8 w-8 mx-auto mb-2 text-white" />
-                    <p className="text-white font-semibold mb-2">Premium Content</p>
-                    <Button 
-                      asChild 
-                      size="sm" 
-                      variant="secondary"
-                      className="bg-white text-gray-900 hover:bg-gray-100"
-                    >
-                      <Link to="/auth">Sign Up to Access</Link>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
-        {/* Premium Tools Section */}
-        <div className="mb-20">
+        {/* Brand Building Tools */}
+        <div className="mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Professional Brand Building Tools</h2>
+            <h2 className="text-3xl font-bold mb-4">Essential Brand Building Tools</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Advanced AI-powered tools to develop, test, and optimize your brand strategy
+              After completing the IDEA framework, use these tools to implement your strategy
             </p>
-            <div className="mt-4 text-sm text-muted-foreground">
-              <Target className="h-4 w-4 inline mr-2" />
-              Professional tools require account creation
-            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="border-border/50 hover:shadow-lg transition-all duration-300 bg-gradient-card relative overflow-hidden group">
-                <CardContent className="p-8 text-center">
-                  <div className="mb-6">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">{feature.description}</p>
-                  
-                  {/* Sign Up Overlay */}
-                  <div className="absolute inset-0 bg-primary/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="text-center p-4">
-                      <Target className="h-8 w-8 mx-auto mb-2 text-primary-foreground" />
-                      <p className="text-primary-foreground font-semibold mb-2">Professional Tool</p>
-                      <Button 
-                        asChild 
-                        size="sm" 
-                        variant="secondary"
-                      >
-                        <Link to="/auth">Sign Up to Access</Link>
-                      </Button>
+            {brandTools.map((tool, index) => (
+              <Card key={index} className="border-border/50 hover:shadow-lg transition-all duration-300 bg-gradient-card">
+                <CardContent className="p-8">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      {tool.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">{tool.title}</h3>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{tool.time}</span>
+                      </div>
                     </div>
                   </div>
+                  
+                  <p className="text-muted-foreground mb-6 leading-relaxed">
+                    {tool.description}
+                  </p>
+                  
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/auth">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Sign Up to Access
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
 
-        {/* Benefits Section */}
-        <div className="mb-20">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold mb-6">Why Brand Builders Choose IDEA Coach</h2>
-              <div className="space-y-4">
-                {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-muted-foreground">{benefit}</span>
+        {/* About Trevor Bradford Section */}
+        <div className="mb-16">
+          <Card className="bg-gradient-hero text-primary-foreground border-0 shadow-xl">
+            <CardContent className="p-12">
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
+                {/* Trevor's Image */}
+                <div className="text-center lg:text-left">
+                  <div className="mb-6">
+                    <img 
+                      src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
+                      alt="Trevor Bradford - Brand Strategist" 
+                      className="w-48 h-48 rounded-full mx-auto lg:mx-0 object-cover shadow-lg border-4 border-white/20"
+                    />
                   </div>
-                ))}
-              </div>
-            </div>
-            
-            <Card className="bg-gradient-card shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-6 w-6 text-primary" />
-                  About the Author
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center mb-4">
-                  <h3 className="text-xl font-bold text-primary mb-2">Trevor Bradford</h3>
-                  <p className="text-sm text-muted-foreground">Brand Strategist, Ecommerce Expert, Conversion Master, Author</p>
-                </div>
-                <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
-                  <p>
-                    Distinguished brand strategist, e-commerce expert, and serial entrepreneur with expertise rooted in behavioral sciences.
+                  <h3 className="text-2xl font-bold mb-2">Trevor Bradford</h3>
+                  <p className="text-primary-foreground/90 mb-6">
+                    Brand Strategist, E-commerce Expert, Author
                   </p>
-                  <p>
-                    Trevor has systematized how businesses approach branding by integrating customer behavioral triggers with e-commerce growth strategies that drive deeper engagement and conversion.
-                  </p>
-                  <p>
-                    His consultancy work has helped numerous private-label sellers, Amazon, and Shopify entrepreneurs elevate their branding and maximize sales conversions.
-                  </p>
-        </div>
-
-        {/* Trevor Bradford Consultation Section */}
-        <div className="mb-20">
-          <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold mb-8">Need More Help?</h2>
-            
-            <Card className="bg-gradient-hero text-primary-foreground border-0 shadow-xl">
-              <CardContent className="p-12">
-                <div className="text-center mb-8">
-                  <div className="bg-white/10 rounded-lg p-6 mb-8">
-                    <h4 className="text-xl font-bold mb-4 text-primary-foreground">Request a FREE Consultation Today</h4>
-                    <h5 className="text-lg font-semibold mb-4">Are You Ready To Transform Your Business?</h5>
-                    
-                    <div className="text-left space-y-4 text-primary-foreground/90">
-                      <p>
-                        Trevor is an industry authority on branding and marketing and has helped hundreds of e-commerce entrepreneurs build trust-first strategies that drive sales conversions and reduce true advertising cost of sale (TACOS).
-                      </p>
-                      <p>
-                        As the creator of the IDEA Strategic Brand Framework™ and author of the book "What Captures The Heart Goes In The Cart" he combines behavioral science with strategic creativity and brand positioning to help Amazon, Shopify and DTC sellers stand out and scale up.
-                      </p>
-                    </div>
-                  </div>
                   
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    variant="coach" 
-                    className="text-lg px-8 py-6 shadow-glow bg-white text-primary hover:bg-white/90"
-                  >
-                    <a href="https://ideabrandconsultancy.com/trevor-bradford-biog" target="_blank" rel="noopener noreferrer">
-                      Learn More About Trevor
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </a>
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    <Button 
+                      asChild 
+                      size="lg" 
+                      variant="coach" 
+                      className="bg-white text-primary hover:bg-white/90"
+                    >
+                      <a href="https://www.linkedin.com/in/trevorbradfordmarketing/" target="_blank" rel="noopener noreferrer">
+                        View LinkedIn Profile
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </a>
+                    </Button>
+                    
+                    <Button 
+                      asChild 
+                      size="lg" 
+                      variant="outline" 
+                      className="border-white/20 text-white hover:bg-white/10"
+                    >
+                      <a href="https://calendly.com/trevor-ideabrandconsultancy/strategy-call" target="_blank" rel="noopener noreferrer">
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Book Consultation
+                      </a>
+                    </Button>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-              </CardContent>
-            </Card>
-          </div>
+                
+                {/* Trevor's Bio */}
+                <div>
+                  <h4 className="text-xl font-bold mb-6">
+                    Creator of the IDEA Strategic Brand Framework™
+                  </h4>
+                  
+                  <div className="space-y-4 text-primary-foreground/90 leading-relaxed">
+                    <p>
+                      Distinguished brand strategist and e-commerce expert with expertise rooted in behavioral sciences. Trevor has systematized how businesses approach branding by integrating customer behavioral triggers with growth strategies.
+                    </p>
+                    <p>
+                      As the author of "What Captures The Heart Goes In The Cart," Trevor combines behavioral science with strategic creativity to help Amazon, Shopify and DTC sellers stand out and scale up.
+                    </p>
+                    <p>
+                      His consultancy work has helped hundreds of entrepreneurs build trust-first strategies that drive sales conversions and reduce advertising costs.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* CTA Section */}
