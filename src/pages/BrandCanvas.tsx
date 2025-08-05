@@ -251,7 +251,7 @@ export default function BrandCanvas() {
                   rows={3}
                 />
                 <AIAssistant
-                  prompt="Help improve this brand purpose to be more insight-driven, distinctive, empathetic, and authentic"
+                  fieldType="purpose"
                   currentValue={brandData.brandCanvas.brandPurpose}
                   onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandPurpose: suggestion })}
                 />
@@ -276,7 +276,7 @@ export default function BrandCanvas() {
                   rows={3}
                 />
                 <AIAssistant
-                  prompt="Help improve this vision statement to be more aspirational and distinctive"
+                  fieldType="vision"
                   currentValue={brandData.brandCanvas.brandVision}
                   onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandVision: suggestion })}
                 />
@@ -301,7 +301,7 @@ export default function BrandCanvas() {
                   rows={3}
                 />
                 <AIAssistant
-                  prompt="Help improve this mission statement to be more actionable and customer-focused"
+                  fieldType="mission"
                   currentValue={brandData.brandCanvas.brandMission}
                   onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandMission: suggestion })}
                 />
@@ -388,7 +388,7 @@ export default function BrandCanvas() {
                   rows={3}
                 />
                 <AIAssistant
-                  prompt="Help create a strong positioning statement that highlights our distinctive advantages"
+                  fieldType="positioning"
                   currentValue={brandData.brandCanvas.positioningStatement}
                   onSuggestion={(suggestion) => updateBrandData('brandCanvas', { positioningStatement: suggestion })}
                 />
@@ -430,7 +430,7 @@ export default function BrandCanvas() {
                   rows={4}
                 />
                 <AIAssistant
-                  prompt="Help create a compelling value proposition based on our avatar insights and distinctive positioning"
+                  fieldType="valueProposition"
                   currentValue={brandData.brandCanvas.valueProposition}
                   onSuggestion={(suggestion) => updateBrandData('brandCanvas', { valueProposition: suggestion })}
                 />
@@ -517,7 +517,7 @@ export default function BrandCanvas() {
                   rows={3}
                 />
                 <AIAssistant
-                  prompt="Help define a distinctive brand voice that resonates with our target audience"
+                  fieldType="voice"
                   currentValue={brandData.brandCanvas.brandVoice}
                   onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandVoice: suggestion })}
                 />

@@ -4,16 +4,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useBrand } from '@/contexts/BrandContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AIAssistantProps {
-  prompt: string;
+  fieldType: string;
   currentValue: string;
   onSuggestion: (suggestion: string) => void;
   placeholder?: string;
 }
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
-  prompt,
+  fieldType,
   currentValue,
   onSuggestion,
   placeholder = "AI will help improve your input..."
@@ -21,6 +23,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [suggestion, setSuggestion] = useState('');
   const { toast } = useToast();
+  const { brandData } = useBrand();
 
   const generateSuggestion = async () => {
     if (!currentValue.trim()) {
@@ -34,20 +37,28 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
     setIsLoading(true);
     try {
-      // Simulate AI API call - replace with actual AI service
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockSuggestions = {
-        purpose: `Consider making your brand purpose more emotionally resonant. Instead of focusing on what you do, emphasize why it matters to your customers' lives. For example, transform "We sell fitness equipment" into "We empower people to reclaim their health and confidence."`,
-        insight: `Your market insight could be stronger with specific data points. Try adding statistics or trends that support your observation. Also, connect how this insight directly impacts your target customer's daily experience.`,
-        positioning: `Your positioning statement needs more differentiation. What can you offer that competitors absolutely cannot replicate? Focus on your unique combination of factors rather than individual features.`,
-        values: `Your brand values should be more specific and actionable. Instead of generic terms like "quality," try "meticulous craftsmanship that honors traditional techniques while embracing innovation."`
-      };
+      const { data, error } = await supabase.functions.invoke('brand-ai-assistant', {
+        body: {
+          fieldType,
+          currentValue,
+          ideaFramework: {
+            intent: brandData.insight?.marketInsight,
+            motivation: brandData.insight?.consumerInsight,
+            triggers: brandData.empathy?.emotionalConnection,
+            shopper: brandData.empathy?.customerNeeds,
+            demographics: brandData.avatar?.demographics
+          },
+          avatar: brandData.avatar,
+          brandCanvas: brandData.brandCanvas
+        }
+      });
 
-      const suggestionKey = Object.keys(mockSuggestions)[Math.floor(Math.random() * Object.keys(mockSuggestions).length)];
-      setSuggestion(mockSuggestions[suggestionKey as keyof typeof mockSuggestions]);
+      if (error) throw error;
+      
+      setSuggestion(data.suggestion);
       
     } catch (error) {
+      console.error('AI Assistant Error:', error);
       toast({
         title: "AI Assistant Error",
         description: "Unable to generate suggestions right now. Please try again.",
