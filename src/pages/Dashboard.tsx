@@ -89,19 +89,19 @@ const ideaModules = [
 
 const additionalModules = [
   {
-    title: "IDEA Framework Consultant",
-    description: "AI-powered strategic guidance expert for the IDEA Strategic Brand Framework™",
+    title: "IDEA Framework",
+    description: "Complete guide to the IDEA Strategic Brand Framework™ methodology",
+    icon: BookOpen,
+    href: "/idea",
+    status: "available" as const
+  },
+  {
+    title: "Ask Trevor Bradford",
+    description: "Get personalized strategic guidance from Trevor Bradford using the IDEA Strategic Brand Framework™",
     icon: Users,
     href: "/idea/consultant",
     status: "available" as const,
     special: true
-  },
-  {
-    title: "ValueLens Generator",
-    description: "AI-powered copy generator for emotionally resonant messaging",
-    icon: Zap,
-    href: "/valuelens",
-    status: "available" as const
   },
   {
     title: "Strategic Brand Research",
@@ -111,25 +111,19 @@ const additionalModules = [
     status: "available" as const
   },
   {
-    title: "IDEA Strategic Brand Framework™ Hub",
-    description: "Complete guide to the IDEA Strategic Brand Framework™ methodology",
-    icon: BookOpen,
-    href: "/idea",
-    status: "available" as const
-  },
-  {
     title: "Brand Canvas",
     description: "Visual drag-and-drop canvas for your IDEA Strategic Brand Framework™ strategy",
     icon: MessageSquare,
     href: "/canvas",
     status: "available" as const,
-    longDescription: `The Brand Canvas is a comprehensive visual tool that helps you map out your complete brand strategy on a single page. Using the IDEA Strategic Brand Framework™, you'll define your brand purpose, vision, mission, values, positioning statement, value proposition, brand personality, and brand voice.
-
-This interactive canvas allows you to see how all elements of your brand strategy connect and work together. You can drag and drop elements, customize layouts, and export your completed canvas as a PDF for presentations and internal alignment.
-
-The Brand Canvas integrates data from other IDEA Brand Coach tools, automatically populating sections with insights from your customer avatar, emotional triggers assessment, and IDEA framework modules. This ensures consistency across your entire brand strategy.
-
-Perfect for entrepreneurs, marketing teams, and brand strategists who need a visual representation of their brand strategy that can be easily shared with stakeholders, team members, and external partners.`
+    color: "from-yellow-500 to-amber-500"
+  },
+  {
+    title: "ValueLens Generator",
+    description: "AI-powered copy generator for emotionally resonant messaging",
+    icon: Zap,
+    href: "/valuelens",
+    status: "available" as const
   },
   {
     title: "Listing Optimizer",
@@ -405,29 +399,26 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                ) : module.title === "Brand Canvas" && module.longDescription ? (
+                ) : module.title === "Brand Canvas" && module.color ? (
                   <Card 
                     key={module.title}
-                    className="hover:shadow-brand transition-all duration-300 cursor-pointer"
+                    className={`bg-gradient-to-br ${module.color} text-white shadow-card hover:shadow-brand transition-all duration-300 border-0 cursor-pointer transform hover:scale-105`}
                     onClick={() => navigate(module.href)}
                   >
                     <CardContent className="p-6">
-                      <div className="flex items-start space-x-4 mb-4">
-                        <div className="p-2 bg-primary/10 rounded-lg">
+                      <div className="flex items-start space-x-4">
+                        <div className="p-2 bg-white/20 rounded-lg">
                           <module.icon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-2">{module.title}</h3>
-                           <CollapsibleDescription storageKey="brand-canvas-description">
-                             <p className="text-muted-foreground text-sm leading-relaxed">
-                               The Brand Canvas is a comprehensive visual tool that helps you map out your complete brand strategy on a single page.
-                             </p>
-                           </CollapsibleDescription>
+                          <h3 className="font-semibold text-lg mb-2 text-white">{module.title}</h3>
+                          <p className="text-white/90 text-sm leading-relaxed mb-4">{module.description}</p>
+                          <div className="flex items-center text-white/80 text-sm">
+                            <span>Available</span>
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </div>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {module.status === "available" ? "Available" : "Coming Soon"}
-                      </Badge>
                     </CardContent>
                   </Card>
                 ) : (
