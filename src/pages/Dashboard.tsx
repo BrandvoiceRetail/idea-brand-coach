@@ -443,9 +443,8 @@ export default function Dashboard() {
               </p>
               <div className="flex flex-col space-y-2">
                 <Button 
-                  variant="secondary"
+                  className="w-full bg-yellow-400 text-black hover:bg-yellow-500 border-0"
                   size="sm" 
-                  className="w-full"
                   onClick={() => window.open('https://calendly.com/trevor-bradford-idea/30min', '_blank')}
                 >
                   Book Personal Consultation
