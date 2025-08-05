@@ -412,7 +412,7 @@ export default function Dashboard() {
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-3">
                 <img 
-                  src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
+                  src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png" 
                   alt="Trevor Bradford" 
                   className="w-24 h-24 rounded-full object-cover border-2 border-primary/20"
                 />

@@ -276,7 +276,7 @@ export default function Index() {
                 <div className="text-center lg:text-left">
                   <div className="mb-6">
                     <img 
-                      src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
+                      src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png" 
                       alt="Trevor Bradford - Brand Strategist" 
                       className="w-48 h-48 rounded-full mx-auto lg:mx-0 object-cover shadow-lg border-4 border-white/20"
                     />
