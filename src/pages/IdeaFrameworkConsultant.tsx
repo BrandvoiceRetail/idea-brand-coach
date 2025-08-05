@@ -217,10 +217,24 @@ const IdeaFrameworkConsultant = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-primary">IDEA Framework Consultant</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Get strategic guidance powered by behavioral science, customer psychology, and the proven IDEA Strategic Brand Framework™
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center space-x-6">
+            <img 
+              src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+              alt="Trevor Bradford" 
+              className="w-24 h-24 rounded-full object-cover border-4 border-primary/20"
+            />
+            <div className="text-left">
+              <h1 className="text-4xl font-bold text-primary">AI Trevor Bradford</h1>
+              <p className="text-xl text-muted-foreground">Your AI Strategic Partner</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Based on Trevor Bradford's IDEA Strategic Brand Framework™
+              </p>
+            </div>
+          </div>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Get personalized strategic guidance powered by behavioral science, customer psychology, 
+            and proven brand strategy methodology from Trevor Bradford.
           </p>
         </div>
 
@@ -461,12 +475,58 @@ const IdeaFrameworkConsultant = () => {
           </Card>
         )}
 
+        {/* About Trevor & Personal Consultation */}
+        <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div>
+                <h3 className="text-2xl font-semibold mb-4">Want to Work Directly with Trevor?</h3>
+                <p className="text-muted-foreground mb-4 leading-relaxed">
+                  While this AI consultant provides 24/7 strategic guidance based on Trevor Bradford's methodology, 
+                  sometimes you need the personal touch of working directly with the creator of the IDEA Strategic 
+                  Brand Framework™.
+                </p>
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  Trevor Bradford is a behavioral brand strategist with over a decade of experience helping 
+                  businesses understand their customers at a psychological level. He combines academic behavioral 
+                  science with practical marketing strategy to create brands that resonate deeply with their audiences.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    size="lg"
+                    onClick={() => window.open('https://www.ideabrandconsultancy.com', '_blank')}
+                  >
+                    Book Personal Consultation
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    onClick={() => window.open('https://linkedin.com/in/trevor-bradford', '_blank')}
+                  >
+                    Connect on LinkedIn
+                  </Button>
+                </div>
+              </div>
+              <div className="text-center">
+                <img 
+                  src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+                  alt="Trevor Bradford" 
+                  className="w-48 h-48 rounded-full object-cover mx-auto border-4 border-primary/20 mb-4"
+                />
+                <h4 className="text-xl font-semibold">Trevor Bradford</h4>
+                <p className="text-muted-foreground">Creator, IDEA Strategic Brand Framework™</p>
+                <p className="text-sm text-muted-foreground mt-2">Behavioral Brand Strategist & Author</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Footer */}
         <Card className="bg-gradient-hero text-primary-foreground">
           <CardContent className="p-8 text-center">
             <h3 className="text-xl font-semibold mb-2">Powered by Behavioral Science</h3>
             <p className="mb-4">
-              This consultant integrates insights from Cialdini, Kahneman, Lindstrom, Harhut, and other leading behavioral scientists
+              This AI consultant integrates insights from Cialdini, Kahneman, Lindstrom, Harhut, and other leading behavioral scientists
             </p>
             <p className="text-sm opacity-90">
               Created by Trevor Bradford • IDEA Strategic Brand Framework™ Creator

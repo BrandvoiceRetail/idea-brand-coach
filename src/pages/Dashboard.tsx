@@ -394,6 +394,51 @@ export default function Dashboard() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Meet Your Brand Strategist */}
+          <Card className="bg-gradient-card shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Users className="w-5 h-5" />
+                <span>Meet Your Brand Strategist</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+                  alt="Trevor Bradford" 
+                  className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                />
+                <div>
+                  <h4 className="font-semibold">Trevor Bradford</h4>
+                  <p className="text-sm text-muted-foreground">Behavioral Brand Strategist</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Trevor Bradford combines behavioral science with brand strategy to help businesses 
+                connect with customers on a deeper psychological level. Creator of the IDEA Strategic 
+                Brand Framework™, he's helped hundreds of companies transform their messaging.
+              </p>
+              <div className="flex flex-col space-y-2">
+                <Button 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => window.open('https://www.ideabrandconsultancy.com', '_blank')}
+                >
+                  Book Personal Consultation
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => window.open('https://linkedin.com/in/trevor-bradford', '_blank')}
+                >
+                  Connect on LinkedIn
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Real Progress */}
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
