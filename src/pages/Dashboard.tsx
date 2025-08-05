@@ -97,7 +97,7 @@ const additionalModules = [
   },
   {
     title: "Ask Trevor Bradford",
-    description: "Get personalized strategic guidance from Trevor Bradford using the IDEA Strategic Brand Framework™",
+    description: "Get personalized AI strategy support from Trevor Bradford using the IDEA Strategic Brand Framework™",
     icon: Users,
     href: "/idea/consultant",
     status: "available" as const,
@@ -115,8 +115,7 @@ const additionalModules = [
     description: "Visual drag-and-drop canvas for your IDEA Strategic Brand Framework™ strategy",
     icon: MessageSquare,
     href: "/canvas",
-    status: "available" as const,
-    color: "from-yellow-500 to-amber-500"
+    status: "available" as const
   },
   {
     title: "ValueLens Generator",
@@ -385,38 +384,16 @@ export default function Dashboard() {
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start space-x-4">
-                        <div className="p-2 bg-gradient-to-br from-secondary to-primary rounded-lg">
+                        <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
                           <module.icon className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-2">{module.title}</h3>
+                          <h3 className="font-semibold text-lg mb-2 text-foreground">{module.title}</h3>
                           <p className="text-muted-foreground text-sm leading-relaxed mb-4">{module.description}</p>
-                          <div className="flex items-center text-secondary text-sm font-medium">
-                            <span>Ask Strategic Questions</span>
+                          <Button variant="coach" size="sm" className="w-full">
+                            Ask Strategic Questions
                             <ArrowRight className="w-4 h-4 ml-2" />
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : module.title === "Brand Canvas" && module.color ? (
-                  <Card 
-                    key={module.title}
-                    className={`bg-gradient-to-br ${module.color} text-white shadow-card hover:shadow-brand transition-all duration-300 border-0 cursor-pointer transform hover:scale-105`}
-                    onClick={() => navigate(module.href)}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start space-x-4">
-                        <div className="p-2 bg-white/20 rounded-lg">
-                          <module.icon className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-2 text-white">{module.title}</h3>
-                          <p className="text-white/90 text-sm leading-relaxed mb-4">{module.description}</p>
-                          <div className="flex items-center text-white/80 text-sm">
-                            <span>Available</span>
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </div>
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -481,6 +458,14 @@ export default function Dashboard() {
                   onClick={() => window.open('https://www.linkedin.com/in/trevor-bradford-51982b9/', '_blank')}
                 >
                   Connect on LinkedIn
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => window.location.href = 'mailto:contact@ideabrandconsultancy.com'}
+                >
+                  Email Contact
                 </Button>
               </div>
             </CardContent>
