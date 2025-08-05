@@ -190,25 +190,35 @@ export default function Dashboard() {
             : 'Build trust-driven, emotionally resonant brands using the IDEA Strategic Brand Framework™. Transform from guessing to knowing your customers.'
           }
         </p>
-        {hasStarted ? (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          {hasStarted ? (
+            <Button 
+              variant="coach" 
+              size="lg" 
+              className="shadow-glow"
+              onClick={() => navigate('/diagnostic')}
+            >
+              Continue Your Journey <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button 
+              variant="coach" 
+              size="lg" 
+              className="shadow-glow"
+              onClick={() => navigate('/diagnostic')}
+            >
+              Start Brand Diagnostic <PlayCircle className="w-4 h-4 ml-2" />
+            </Button>
+          )}
           <Button 
-            variant="coach" 
+            variant="outline" 
             size="lg" 
-            className="shadow-glow"
-            onClick={() => navigate('/diagnostic')}
+            className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20"
+            onClick={() => window.location.href = 'mailto:contact@ideabrandconsultancy.com'}
           >
-            Continue Your Journey <ArrowRight className="w-4 h-4 ml-2" />
+            Contact Us
           </Button>
-        ) : (
-          <Button 
-            variant="coach" 
-            size="lg" 
-            className="shadow-glow"
-            onClick={() => navigate('/diagnostic')}
-          >
-            Start Brand Diagnostic <PlayCircle className="w-4 h-4 ml-2" />
-          </Button>
-        )}
+        </div>
       </div>
 
       {/* Dynamic Stats Cards */}
@@ -377,27 +387,15 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {additionalModules.map((module) => (
                 module.special ? (
-                  <Card 
+                  <ModuleCard
                     key={module.title}
-                    className="bg-gradient-to-br from-secondary/10 to-primary/10 border-secondary/20 shadow-glow hover:shadow-brand transition-all duration-300 cursor-pointer transform hover:scale-105"
-                    onClick={() => navigate(module.href)}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start space-x-4">
-                        <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
-                          <module.icon className="w-6 h-6 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-2 text-foreground">{module.title}</h3>
-                          <p className="text-muted-foreground text-sm leading-relaxed mb-4">{module.description}</p>
-                          <Button variant="coach" size="sm" className="w-full">
-                            Ask Strategic Questions
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    title={module.title}
+                    description={module.description}
+                    icon={module.icon}
+                    href={module.href}
+                    status={module.status}
+                    className="border-secondary/20 shadow-glow"
+                  />
                 ) : (
                   <ModuleCard
                     key={module.title}
@@ -458,14 +456,6 @@ export default function Dashboard() {
                   onClick={() => window.open('https://www.linkedin.com/in/trevor-bradford-51982b9/', '_blank')}
                 >
                   Connect on LinkedIn
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => window.location.href = 'mailto:contact@ideabrandconsultancy.com'}
-                >
-                  Email Contact
                 </Button>
               </div>
             </CardContent>
