@@ -442,13 +442,23 @@ export default function Dashboard() {
                 Trevor is an industry authority on branding and marketing and has helped hundreds of e-commerce entrepreneurs build trust-first strategies that drive sales conversions and reduce true advertising cost of sale (TACOS).
               </p>
               <div className="flex flex-col space-y-2">
-                <Button 
-                  className="w-full bg-yellow-400 text-black hover:bg-yellow-500 border-0"
-                  size="sm" 
+                <button 
+                  className="w-full h-9 px-3 rounded-md text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: '#facc15',
+                    color: '#000000',
+                    border: 'none'
+                  }}
                   onClick={() => window.open('https://calendly.com/trevor-bradford-idea/30min', '_blank')}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#eab308';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#facc15';
+                  }}
                 >
                   Book Personal Consultation
-                </Button>
+                </button>
                 <Button 
                   variant="outline" 
                   size="sm" 
