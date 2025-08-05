@@ -169,9 +169,27 @@ Ready to experience the difference? Your future self will thank you.`;
           <Zap className="w-8 h-8 text-secondary-foreground" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">ValueLens AI Copy Generator</h1>
-        <p className="text-muted-foreground text-sm sm:text-base mb-6">
+        <p className="text-muted-foreground text-sm sm:text-base mb-4">
           Generate emotionally resonant copy using your brand data and customer insights
         </p>
+        
+        {/* Value Proposition */}
+        <div className="bg-muted/30 rounded-lg p-4 mb-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="text-center">
+              <div className="text-primary font-semibold mb-1">🧠 Behavioral Science</div>
+              <div className="text-muted-foreground">Copy triggers emotional responses using proven psychological principles</div>
+            </div>
+            <div className="text-center">
+              <div className="text-primary font-semibold mb-1">🎯 Avatar-Driven</div>
+              <div className="text-muted-foreground">Uses your customer avatar data for personalized messaging that resonates</div>
+            </div>
+            <div className="text-center">
+              <div className="text-primary font-semibold mb-1">⚡ Multiple Formats</div>
+              <div className="text-muted-foreground">Generate variants for Amazon, ads, social media, emails, and more</div>
+            </div>
+          </div>
+        </div>
         
         {/* Smart Guidance Banner */}
         {!hasCompletedStrategy && (

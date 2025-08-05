@@ -21,7 +21,8 @@ import {
   Lightbulb,
   Users,
   ArrowRight,
-  PlayCircle
+  PlayCircle,
+  Lock
 } from "lucide-react";
 
 const coreModules = [
@@ -228,16 +229,35 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => navigate('/valuelens')}>
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer relative" onClick={() => navigate('/valuelens')}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
-              <Zap className="w-8 h-8 text-secondary" />
+              <div className="relative">
+                <Zap className="w-8 h-8 text-secondary" />
+                {!brandData.avatar.completed && (
+                  <Lock className="w-4 h-4 absolute -top-1 -right-1 text-muted-foreground" />
+                )}
+              </div>
               <div>
                 <p className="text-2xl font-bold">-</p>
                 <p className="text-sm text-muted-foreground">Copy Variants</p>
               </div>
             </div>
-            <div className="mt-3 text-xs text-muted-foreground">Complete avatar to unlock</div>
+            {!brandData.avatar.completed ? (
+              <div className="mt-3">
+                <div className="text-xs text-amber-600 dark:text-amber-400 font-medium mb-1">Complete avatar to unlock</div>
+                <div className="text-xs text-muted-foreground">
+                  Generate emotionally resonant copy using your customer insights and behavioral triggers
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3">
+                <div className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">Ready to use!</div>
+                <div className="text-xs text-muted-foreground">
+                  Create copy variants that trigger emotional responses based on your avatar data
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
