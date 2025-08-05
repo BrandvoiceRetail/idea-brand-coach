@@ -85,6 +85,14 @@ const ideaModules = [
 
 const additionalModules = [
   {
+    title: "IDEA Framework Consultant",
+    description: "AI-powered strategic guidance expert for the IDEA Strategic Brand Framework™",
+    icon: Users,
+    href: "/idea/consultant",
+    status: "available" as const,
+    special: true
+  },
+  {
     title: "Strategic Brand Research",
     description: "Comprehensive research methods to uncover customer insights and emotional drivers",
     icon: Search,
@@ -327,14 +335,38 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold mb-6">Additional Tools</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {additionalModules.map((module) => (
-                <ModuleCard
-                  key={module.title}
-                  title={module.title}
-                  description={module.description}
-                  icon={module.icon}
-                  href={module.href}
-                  status={module.status}
-                />
+                module.special ? (
+                  <Card 
+                    key={module.title}
+                    className="bg-gradient-to-br from-secondary/10 to-primary/10 border-secondary/20 shadow-glow hover:shadow-brand transition-all duration-300 cursor-pointer transform hover:scale-105"
+                    onClick={() => navigate(module.href)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start space-x-4">
+                        <div className="p-2 bg-gradient-to-br from-secondary to-primary rounded-lg">
+                          <module.icon className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-2">{module.title}</h3>
+                          <p className="text-muted-foreground text-sm leading-relaxed mb-4">{module.description}</p>
+                          <div className="flex items-center text-secondary text-sm font-medium">
+                            <span>Ask Strategic Questions</span>
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <ModuleCard
+                    key={module.title}
+                    title={module.title}
+                    description={module.description}
+                    icon={module.icon}
+                    href={module.href}
+                    status={module.status}
+                  />
+                )
               ))}
             </div>
           </div>

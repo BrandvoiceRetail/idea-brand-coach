@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { AIAssistant } from "@/components/AIAssistant";
 import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
+import { FloatingConsultantButton } from "@/components/FloatingConsultantButton";
 
 export default function BrandCanvas() {
   const { toast } = useToast();
@@ -598,6 +599,10 @@ export default function BrandCanvas() {
           </Card>
         </div>
       </div>
+      
+      <FloatingConsultantButton 
+        show={getCompletionPercentage() > 20} 
+      />
     </div>
   );
 }

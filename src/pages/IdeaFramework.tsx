@@ -267,6 +267,37 @@ export default function IdeaFramework() {
         </Card>
       </div>
 
+      {/* AI Consultant Section */}
+      <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-secondary/20 shadow-glow">
+        <CardContent className="p-8">
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-full flex items-center justify-center">
+              <Users className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">IDEA Framework Consultant</h2>
+            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+              Get personalized AI guidance from our IDEA Strategic Brand Framework expert. 
+              Ask questions, upload your documents, and receive tailored strategic advice 
+              to strengthen your brand foundation.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              <Badge variant="secondary" className="text-xs">Behavioral Science</Badge>
+              <Badge variant="secondary" className="text-xs">Strategic Guidance</Badge>
+              <Badge variant="secondary" className="text-xs">Document Analysis</Badge>
+              <Badge variant="secondary" className="text-xs">24/7 Available</Badge>
+            </div>
+            <Button variant="secondary" size="lg" asChild className="shadow-glow">
+              <Link to="/idea/consultant">
+                <Users className="w-4 h-4 mr-2" />
+                Ask the IDEA Consultant
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Call to Action */}
       <Card className="bg-gradient-hero text-center">
         <CardContent className="p-8">
