@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Zap, Copy, RefreshCw, Sparkles, Lock, Crown } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { PaywallModal } from "@/components/PaywallModal";
@@ -179,14 +180,35 @@ Ready to experience the difference? Your future self will thank you.`;
         <p className="text-muted-foreground">
           {isUnlocked 
             ? "Generate emotionally resonant copy using your brand data and customer insights"
-            : "Unlock AI-powered copy generation with your completed brand strategy"
+            : "Complete your brand strategy to unlock AI copy generation"
           }
         </p>
         {!isUnlocked && (
-          <Badge variant="outline" className="mt-4">
-            <Lock className="w-4 h-4 mr-2" />
-            Premium Feature
-          </Badge>
+          <div className="mt-4 space-y-2">
+            <Badge variant="outline">
+              <Lock className="w-4 h-4 mr-2" />
+              Premium Feature
+            </Badge>
+            <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+              <p className="font-medium mb-2">To unlock ValueLens AI Copy Generator:</p>
+              <div className="space-y-1">
+                <p>✓ Complete all 4 IDEA Framework modules (Insight, Distinctive, Empathy, Authenticity)</p>
+                <p>✓ Build your Customer Avatar</p>
+                <p>✓ Complete your Brand Canvas</p>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/idea">Complete IDEA Framework</Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/avatar">Build Avatar</Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/canvas">Complete Canvas</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 

@@ -12,6 +12,7 @@ import { MessageSquare, Save, Lock, CheckCircle, ArrowRight, Sparkles } from "lu
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { AIAssistant } from "@/components/AIAssistant";
+import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
 
 export default function BrandCanvas() {
   const { toast } = useToast();
@@ -20,7 +21,15 @@ export default function BrandCanvas() {
 
   useEffect(() => {
     setIsUnlocked(isToolUnlocked('canvas'));
-  }, [brandData, isToolUnlocked]);
+    
+    // Auto-populate from IDEA Framework data
+    if (brandData.insight.completed && !brandData.brandCanvas.missionStatement) {
+      updateBrandData('brandCanvas', {
+        missionStatement: brandData.insight.brandPurpose || "",
+        valueProposition: brandData.insight.consumerInsight || "",
+      });
+    }
+  }, [brandData, isToolUnlocked, updateBrandData]);
 
   const completionPercentage = getCompletionPercentage();
 
@@ -125,7 +134,20 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="mission">Mission Statement</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="mission">Mission Statement</Label>
+                  {brandData.insight.completed && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => updateBrandData('brandCanvas', { 
+                        missionStatement: brandData.insight.brandPurpose || "Transform customer lives through innovative solutions that deliver genuine value and meaningful impact." 
+                      })}
+                    >
+                      Import from IDEA
+                    </Button>
+                  )}
+                </div>
                 <Textarea
                   id="mission"
                   placeholder="What is your brand's core purpose? Why do you exist?"
@@ -166,7 +188,24 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="valueProposition">Core Value Proposition</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="valueProposition">Core Value Proposition</Label>
+                  {(brandData.insight.completed || brandData.avatar.completed) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const avatarInsights = brandData.avatar.completed ? 
+                          ` for ${brandData.avatar.psychographics?.values?.slice(0,2).join(' and ') || 'quality-focused'} customers who value ${brandData.avatar.goals?.slice(0,2).join(' and ') || 'excellence and results'}` : '';
+                        updateBrandData('brandCanvas', { 
+                          valueProposition: `We deliver unique solutions that address real customer needs${avatarInsights}, combining innovation with proven results to create meaningful transformation in their lives.` 
+                        });
+                      }}
+                    >
+                      Import from IDEA + Avatar
+                    </Button>
+                  )}
+                </div>
                 <Textarea
                   id="valueProposition"
                   placeholder="What specific problems do you solve? What unique benefits do you provide?"
@@ -242,6 +281,72 @@ export default function BrandCanvas() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Additional Brand Strategy Sections */}
+          <Card className="bg-gradient-card shadow-card">
+            <CardHeader>
+              <CardTitle>Brand Positioning</CardTitle>
+              <CardDescription>Define how you want to be perceived in the market</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="positioning">Positioning Statement</Label>
+                <Textarea
+                  id="positioning"
+                  placeholder="For [target customer], [brand] is the [category] that [unique benefit] because [reason to believe]"
+                  value={brandData.distinctive.positioning}
+                  onChange={(e) => updateBrandData('distinctive', { positioning: e.target.value })}
+                  rows={3}
+                />
+                <AIAssistant
+                  prompt="Help create a compelling positioning statement based on our customer avatar and distinctive advantages"
+                  currentValue={brandData.distinctive.positioning}
+                  onSuggestion={(suggestion) => updateBrandData('distinctive', { positioning: suggestion })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="brandValues">Core Brand Values</Label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {brandData.authentic.brandValues.map((value, index) => (
+                    <Badge key={index} variant="secondary">
+                      {value}
+                    </Badge>
+                  ))}
+                </div>
+                <Input
+                  placeholder="Add brand values (integrity, innovation, quality, etc.)"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      const value = (e.target as HTMLInputElement).value.trim();
+                      if (value && !brandData.authentic.brandValues.includes(value)) {
+                        updateBrandData('authentic', {
+                          brandValues: [...brandData.authentic.brandValues, value]
+                        });
+                        (e.target as HTMLInputElement).value = '';
+                      }
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="brandPromise">Brand Promise</Label>
+                <Textarea
+                  id="brandPromise"
+                  placeholder="What promise do you make to your customers? What can they always expect from you?"
+                  value={brandData.authentic.brandPromise}
+                  onChange={(e) => updateBrandData('authentic', { brandPromise: e.target.value })}
+                  rows={2}
+                />
+                <AIAssistant
+                  prompt="Help create a compelling brand promise that aligns with our mission and customer expectations"
+                  currentValue={brandData.authentic.brandPromise}
+                  onSuggestion={(suggestion) => updateBrandData('authentic', { brandPromise: suggestion })}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sidebar */}
@@ -298,12 +403,19 @@ export default function BrandCanvas() {
                 Save Canvas
               </Button>
 
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/valuelens">
-                  Generate AI Copy
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
+              <div className="space-y-2">
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/valuelens">
+                    Generate AI Copy
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+                
+                <BrandCanvasPDFExport 
+                  brandCanvas={brandData.brandCanvas}
+                  companyName={brandData.userInfo.company || "Your Brand"}
+                />
+              </div>
             </CardContent>
           </Card>
         </div>

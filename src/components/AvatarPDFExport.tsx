@@ -64,14 +64,14 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
         return false;
       };
 
-      // Header with logo placeholder (configurable dimensions)
-      const logoWidth = 80;
-      const logoHeight = 20;
-      pdf.setFillColor(59, 130, 246);
+      // Header with IDEA logo
+      const logoWidth = 60;
+      const logoHeight = 15;
+      pdf.setFillColor(0, 0, 0);
       pdf.rect(pageWidth / 2 - logoWidth/2, yPosition, logoWidth, logoHeight, 'F');
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.text('YOUR LOGO', pageWidth / 2, yPosition + logoHeight/2 + 2, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.text('IDEA Brand Coach', pageWidth / 2, yPosition + logoHeight/2 + 1, { align: 'center' });
       
       yPosition += 30;
 
@@ -429,7 +429,7 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo-placeholder">YOUR LOGO</div>
+          <div class="logo-placeholder" style="background: black; color: white;">IDEA Brand Coach</div>
           <h1>Customer Avatar Report</h1>
           <p class="subtitle">${avatar.name || 'Complete Customer Profile'}</p>
           <p style="color: #6b7280; font-size: 14px; margin-top: 10px;">Generated on ${new Date().toLocaleDateString()}</p>
