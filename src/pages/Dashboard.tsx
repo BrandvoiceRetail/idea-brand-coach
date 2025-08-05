@@ -413,50 +413,6 @@ export default function Dashboard() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Meet Your Brand Strategist */}
-          <Card className="bg-gradient-card shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Users className="w-5 h-5" />
-                <span>Meet Your Brand Strategist</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <img 
-                  src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png" 
-                  alt="Trevor Bradford" 
-                  className="w-24 h-24 rounded-full object-cover border-2 border-primary/20"
-                />
-                <div>
-                  <h4 className="font-semibold">Trevor Bradford</h4>
-                  <p className="text-sm text-muted-foreground">Behavioral Brand Strategist</p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                <strong>Brand Strategist, Ecommerce Expert, Conversion Master, Author</strong><br/>
-                Creator of the IDEA Strategic Brand Framework™<br/><br/>
-                
-                With over 35 years of experience in branding as an agency owner, including 15 years in online retail, Trevor has collaborated with a wide range of clients from nationwide retailers, globally famous brands and emerging entrepreneurs.<br/><br/>
-                
-                Trevor is an industry authority on branding and marketing and has helped hundreds of e-commerce entrepreneurs build trust-first strategies that drive sales conversions and reduce true advertising cost of sale (TACOS).
-              </p>
-              <div className="flex flex-col space-y-2">
-                <button 
-                  className="w-full px-4 py-2 text-sm font-medium bg-white text-black border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                  onClick={() => window.open('https://calendly.com/trevor-bradford-idea/30min', '_blank')}
-                >
-                  Book FREE Consultation
-                </button>
-                <button 
-                  className="w-full px-4 py-2 text-sm font-medium bg-white text-black border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                  onClick={() => window.open('https://www.linkedin.com/in/trevor-bradford-51982b9/', '_blank')}
-                >
-                  Connect on LinkedIn
-                </button>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Real Progress */}
           <Card className="bg-gradient-card shadow-card">
