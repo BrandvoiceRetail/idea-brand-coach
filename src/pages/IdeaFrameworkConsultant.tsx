@@ -220,7 +220,7 @@ const IdeaFrameworkConsultant = () => {
         <div className="text-center space-y-6">
           <div className="flex items-center justify-center space-x-6">
             <img 
-              src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+              src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
               alt="Trevor Bradford" 
               className="w-24 h-24 rounded-full object-cover border-4 border-primary/20"
             />
@@ -487,9 +487,6 @@ const IdeaFrameworkConsultant = () => {
                   Brand Framework™.
                 </p>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  <strong>Brand Strategist, Ecommerce Expert, Conversion Master, Author</strong><br/>
-                  Creator of the IDEA Strategic Brand Framework™<br/><br/>
-                  
                   With over 35 years of experience in branding as an agency owner, including 15 years in online retail, Trevor has collaborated with a wide range of clients from nationwide retailers, globally famous brands and emerging entrepreneurs.<br/><br/>
                   
                   Trevor is an industry authority on branding and marketing and has helped hundreds of e-commerce entrepreneurs build trust-first strategies that drive sales conversions and reduce true advertising cost of sale (TACOS).
@@ -512,7 +509,7 @@ const IdeaFrameworkConsultant = () => {
               </div>
               <div className="text-center">
                 <img 
-                  src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+                  src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
                   alt="Trevor Bradford" 
                   className="w-48 h-48 rounded-full object-cover mx-auto border-4 border-primary/20 mb-4"
                 />

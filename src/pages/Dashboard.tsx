@@ -94,6 +94,13 @@ const additionalModules = [
     special: true
   },
   {
+    title: "ValueLens Generator",
+    description: "AI-powered copy generator for emotionally resonant messaging",
+    icon: Zap,
+    href: "/valuelens",
+    status: "available" as const
+  },
+  {
     title: "Strategic Brand Research",
     description: "Comprehensive research methods to uncover customer insights and emotional drivers",
     icon: Search,
@@ -405,7 +412,7 @@ export default function Dashboard() {
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-3">
                 <img 
-                  src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+                  src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
                   alt="Trevor Bradford" 
                   className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
                 />
