@@ -429,7 +429,9 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo-placeholder" style="background: black; color: white;">IDEA Brand Coach</div>
+          <div class="logo-placeholder" style="background: white; border: 1px solid #e5e7eb; padding: 8px; text-align: center;">
+            <img src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" alt="IDEA Brand Coach Logo" style="width: 80px; height: 40px; object-fit: contain;" />
+          </div>
           <h1>Customer Avatar Report</h1>
           <p class="subtitle">${avatar.name || 'Complete Customer Profile'}</p>
           <p style="color: #6b7280; font-size: 14px; margin-top: 10px;">Generated on ${new Date().toLocaleDateString()}</p>
@@ -626,8 +628,12 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
       
       <div ref={contentRef} className="bg-background border rounded-lg p-6 mb-6">
         <div className="text-center border-b pb-6 mb-6">
-          <div className="w-24 h-12 bg-gradient-to-r from-primary to-purple-600 rounded-lg mx-auto mb-4 flex items-center justify-center text-primary-foreground text-xs font-bold">
-            YOUR LOGO
+          <div className="w-24 h-12 bg-white rounded-lg mx-auto mb-4 flex items-center justify-center border">
+            <img 
+              src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
+              alt="IDEA Brand Coach Logo" 
+              className="w-20 h-10 object-contain"
+            />
           </div>
           <h1 className="text-2xl font-bold text-primary mb-2">Customer Avatar Report</h1>
           <p className="text-muted-foreground">{avatar.name || 'Complete Customer Profile'}</p>

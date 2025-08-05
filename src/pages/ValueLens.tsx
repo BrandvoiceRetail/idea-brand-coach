@@ -167,7 +167,7 @@ Ready to experience the difference? Your future self will thank you.`;
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8 px-4">
       <div className="text-center">
         <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
           {isUnlocked ? (
@@ -176,8 +176,8 @@ Ready to experience the difference? Your future self will thank you.`;
             <Crown className="w-8 h-8 text-secondary-foreground" />
           )}
         </div>
-        <h1 className="text-3xl font-bold mb-2">ValueLens AI Copy Generator</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">ValueLens AI Copy Generator</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           {isUnlocked 
             ? "Generate emotionally resonant copy using your brand data and customer insights"
             : "Complete your brand strategy to unlock AI copy generation"
@@ -190,20 +190,42 @@ Ready to experience the difference? Your future self will thank you.`;
               Premium Feature
             </Badge>
             <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-              <p className="font-medium mb-2">To unlock ValueLens AI Copy Generator:</p>
-              <div className="space-y-1">
-                <p>✓ Complete all 4 IDEA Framework modules (Insight, Distinctive, Empathy, Authenticity)</p>
-                <p>✓ Build your Customer Avatar</p>
-                <p>✓ Complete your Brand Canvas</p>
+              <p className="font-medium mb-2">To unlock ValueLens AI Copy Generator, complete these steps:</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  {(brandData.insight.completed && brandData.distinctive.completed && 
+                    brandData.empathy.completed && brandData.authentic.completed) ? (
+                    <span className="text-green-500">✓</span>
+                  ) : (
+                    <span className="text-muted-foreground">□</span>
+                  )}
+                  <span>Complete all 4 IDEA Framework modules</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {brandData.avatar.completed ? (
+                    <span className="text-green-500">✓</span>
+                  ) : (
+                    <span className="text-muted-foreground">□</span>
+                  )}
+                  <span>Build your Customer Avatar</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {brandData.brandCanvas.completed ? (
+                    <span className="text-green-500">✓</span>
+                  ) : (
+                    <span className="text-muted-foreground">□</span>
+                  )}
+                  <span>Complete your Brand Canvas</span>
+                </div>
               </div>
-              <div className="mt-3 flex gap-2">
-                <Button asChild variant="outline" size="sm">
+              <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                <Button asChild variant="outline" size="sm" className="text-xs">
                   <Link to="/idea">Complete IDEA Framework</Link>
                 </Button>
-                <Button asChild variant="outline" size="sm">
+                <Button asChild variant="outline" size="sm" className="text-xs">
                   <Link to="/avatar">Build Avatar</Link>
                 </Button>
-                <Button asChild variant="outline" size="sm">
+                <Button asChild variant="outline" size="sm" className="text-xs">
                   <Link to="/canvas">Complete Canvas</Link>
                 </Button>
               </div>
@@ -212,7 +234,7 @@ Ready to experience the difference? Your future self will thank you.`;
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Input Section */}
         <div className="space-y-6">
           <Card className="bg-gradient-card shadow-card">

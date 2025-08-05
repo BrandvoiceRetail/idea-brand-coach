@@ -43,13 +43,13 @@ export default function BrandCanvas() {
 
   if (!isUnlocked) {
     return (
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8 px-4">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
             <Lock className="w-8 h-8 text-secondary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold mb-2">Brand Canvas Builder</h1>
-          <p className="text-muted-foreground mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Brand Canvas Builder</h1>
+          <p className="text-muted-foreground mb-8 text-sm sm:text-base">
             Unlock this tool by completing the IDEA Strategic Brand Framework™ and Avatar Builder
           </p>
         </div>
@@ -97,11 +97,11 @@ export default function BrandCanvas() {
               </div>
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <Button asChild variant="outline">
-                <Link to="/idea/builder">Complete IDEA Strategic Brand Framework™</Link>
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Button asChild variant="outline" className="w-full sm:w-auto">
+                <Link to="/idea">Complete IDEA Strategic Brand Framework™</Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="w-full sm:w-auto">
                 <Link to="/avatar">Complete Avatar Builder</Link>
               </Button>
             </div>
@@ -112,18 +112,46 @@ export default function BrandCanvas() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8 px-4">
       <div className="text-center">
         <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
           <MessageSquare className="w-8 h-8 text-secondary-foreground" />
         </div>
-        <h1 className="text-3xl font-bold mb-2">Brand Canvas Builder</h1>
-        <p className="text-muted-foreground">
-          Consolidate your IDEA Strategic Brand Framework™ and Avatar insights into a comprehensive brand strategy
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">IDEA Brand Canvas™ Builder</h1>
+        <p className="text-muted-foreground text-sm sm:text-base mb-6">
+          Build your complete brand strategy using the IDEA Strategic Brand Framework™
         </p>
+        
+        {/* Brand Canvas Introduction */}
+        <Card className="bg-gradient-card shadow-card mb-8 text-left">
+          <CardHeader>
+            <CardTitle className="text-xl">About the IDEA Brand Canvas™</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm sm:text-base">
+            <p>
+              The IDEA Brand Canvas™ covers all the key elements of brand strategy, making it easy to define and refine your brand with clarity and confidence. This structured, fill-in-the-box approach simplifies and systematizes brand strategy.
+            </p>
+            <p>
+              Instead of getting lost in complex branding exercises, this canvas guides you step by step to create a clear, compelling brand identity that resonates with your customers and drives conversions.
+            </p>
+            <div className="bg-secondary/10 p-4 rounded-lg">
+              <p className="font-semibold mb-2">Key Strategy Elements Covered:</p>
+              <ul className="space-y-1 text-sm">
+                <li>• <strong>Brand Purpose:</strong> The "why" behind your existence</li>
+                <li>• <strong>Brand Vision:</strong> Your aspirational future impact</li>
+                <li>• <strong>Brand Mission:</strong> Actionable steps to fulfill your purpose</li>
+                <li>• <strong>Brand Values:</strong> Guiding principles that shape interactions</li>
+                <li>• <strong>Positioning Statement:</strong> How you stand out in the market</li>
+                <li>• <strong>Value Proposition:</strong> Why customers should choose you</li>
+                <li>• <strong>Brand Personality:</strong> Human-like traits that influence communication</li>
+                <li>• <strong>Brand Voice:</strong> Tone and communication style</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Main Canvas */}
         <div className="lg:col-span-2 space-y-6">
           {/* Mission & Vision */}

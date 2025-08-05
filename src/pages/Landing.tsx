@@ -365,11 +365,11 @@ export default function Landing() {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center bg-gradient-hero rounded-2xl p-12">
-          <h2 className="text-3xl font-bold text-primary-foreground mb-4">
+        <div className="text-center bg-gradient-hero rounded-2xl p-6 sm:p-8 lg:p-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground mb-4">
             Ready to Build a Brand That Resonates?
           </h2>
-          <div className="text-left max-w-2xl mx-auto mb-8">
+          <div className="text-left max-w-2xl mx-auto mb-6 sm:mb-8">
             <p className="text-lg text-primary-foreground/90 mb-4">
               Your Free Brand Diagnostic will reveal:
             </p>
@@ -391,13 +391,16 @@ export default function Landing() {
               No sign-up required. Instant results.
             </p>
           </div>
-          <Button asChild size="lg" variant="coach" className="text-lg px-8 py-6 shadow-glow">
-            <Link to="/diagnostic">
-              Discover Your Brand's Hidden Potential — Take the Free Diagnostic Now
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-          <p className="text-sm text-primary-foreground/80 mt-4">
+          <div className="px-4">
+            <Button asChild size="lg" variant="coach" className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 shadow-glow w-full sm:w-auto">
+              <Link to="/diagnostic" className="text-center">
+                <span className="block sm:inline">Discover Your Brand's Hidden Potential</span>
+                <span className="block sm:inline sm:ml-2">— Take the Free Diagnostic Now</span>
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 inline" />
+              </Link>
+            </Button>
+          </div>
+          <p className="text-xs sm:text-sm text-primary-foreground/80 mt-4 px-4">
             No credit card required • 5-minute assessment • Instant results
           </p>
         </div>

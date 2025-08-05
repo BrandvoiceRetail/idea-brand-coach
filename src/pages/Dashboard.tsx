@@ -154,8 +154,15 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="bg-gradient-hero rounded-lg p-8 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+      <div className="bg-gradient-hero rounded-lg p-6 sm:p-8 text-center">
+        <div className="flex items-center justify-center mb-6">
+          <img 
+            src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
+            alt="IDEA Brand Coach Logo" 
+            className="h-16 sm:h-20 w-auto object-contain"
+          />
+        </div>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
           {hasStarted ? `Welcome back to IDEA Brand Coach™` : 'Welcome to IDEA Brand Coach™'}
         </h1>
         <p className="text-lg text-primary-foreground/90 mb-6 max-w-2xl mx-auto">
