@@ -16,12 +16,9 @@ import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
 
 export default function BrandCanvas() {
   const { toast } = useToast();
-  const { brandData, updateBrandData, getCompletionPercentage, isToolUnlocked } = useBrand();
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const { brandData, updateBrandData, getCompletionPercentage, getRecommendedNextStep } = useBrand();
 
   useEffect(() => {
-    setIsUnlocked(isToolUnlocked('canvas'));
-    
     // Auto-populate from IDEA Framework data
     if (brandData.insight.completed && !brandData.brandCanvas.missionStatement) {
       updateBrandData('brandCanvas', {
@@ -29,7 +26,7 @@ export default function BrandCanvas() {
         valueProposition: brandData.insight.consumerInsight || "",
       });
     }
-  }, [brandData, isToolUnlocked, updateBrandData]);
+  }, [brandData, updateBrandData]);
 
   const completionPercentage = getCompletionPercentage();
 
@@ -41,75 +38,7 @@ export default function BrandCanvas() {
     });
   };
 
-  if (!isUnlocked) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-8 px-4">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-8 h-8 text-secondary-foreground" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Brand Canvas Builder</h1>
-          <p className="text-muted-foreground mb-8 text-sm sm:text-base">
-            Unlock this tool by completing the IDEA Strategic Brand Framework™ and Avatar Builder
-          </p>
-        </div>
-
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="w-6 h-6" />
-              Complete Prerequisites
-            </CardTitle>
-            <CardDescription>
-              To access the Brand Canvas Builder, you need to complete these steps first
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Overall Progress</span>
-                <span className="text-sm text-muted-foreground">{completionPercentage}%</span>
-              </div>
-              <Progress value={completionPercentage} className="h-2" />
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                {brandData.insight.completed ? (
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-muted-foreground" />
-                )}
-                <span className={brandData.insight.completed ? "text-foreground" : "text-muted-foreground"}>
-                  Complete IDEA Strategic Brand Framework™ - Insight Section
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                {brandData.avatar.completed ? (
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-muted-foreground" />
-                )}
-                <span className={brandData.avatar.completed ? "text-foreground" : "text-muted-foreground"}>
-                  Complete Avatar 2.0 Builder
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button asChild variant="outline" className="w-full sm:w-auto">
-                <Link to="/idea">Complete IDEA Strategic Brand Framework™</Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full sm:w-auto">
-                <Link to="/avatar">Complete Avatar Builder</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const recommendedStep = getRecommendedNextStep();
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 px-4">
@@ -121,6 +50,22 @@ export default function BrandCanvas() {
         <p className="text-muted-foreground text-sm sm:text-base mb-6">
           Build your complete brand strategy using the IDEA Strategic Brand Framework™
         </p>
+        
+        {/* Smart Guidance Banner */}
+        {recommendedStep !== 'All core modules completed!' && (
+          <div className="bg-gradient-to-r from-secondary/10 to-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <div>
+                <p className="font-medium text-primary">💡 Recommended Starting Point</p>
+                <p className="text-sm text-muted-foreground">{recommendedStep}</p>
+              </div>
+              <Button asChild variant="outline" size="sm" className="ml-auto">
+                <Link to="/idea">Get Started</Link>
+              </Button>
+            </div>
+          </div>
+        )}
         
         {/* Brand Canvas Introduction */}
         <Card className="bg-gradient-card shadow-card mb-8 text-left">

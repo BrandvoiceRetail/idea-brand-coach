@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Zap, Copy, RefreshCw, Sparkles, Lock, Crown } from "lucide-react";
+import { Zap, Copy, RefreshCw, Sparkles, Lock, Crown, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
@@ -57,9 +57,8 @@ const toneOptions = [
 
 export default function ValueLens() {
   const { toast } = useToast();
-  const { brandData, isToolUnlocked } = useBrand();
+  const { brandData, getRecommendedNextStep } = useBrand();
   const [showPaywall, setShowPaywall] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const [formData, setFormData] = useState<ValueLensInput>({
     productName: "",
     category: "",
@@ -75,15 +74,12 @@ export default function ValueLens() {
   const [generatedCopy, setGeneratedCopy] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  useEffect(() => {
-    setIsUnlocked(isToolUnlocked('valuelens'));
-  }, [brandData, isToolUnlocked]);
+  const recommendedStep = getRecommendedNextStep();
+  const hasCompletedStrategy = brandData.insight.completed && brandData.distinctive.completed && 
+    brandData.empathy.completed && brandData.authentic.completed && 
+    brandData.avatar.completed && brandData.brandCanvas.completed;
 
   const handleGenerate = async () => {
-    if (!isUnlocked) {
-      setShowPaywall(true);
-      return;
-    }
 
     if (!formData.productName || !formData.targetAudience) {
       toast({
@@ -170,64 +166,36 @@ Ready to experience the difference? Your future self will thank you.`;
     <div className="max-w-6xl mx-auto space-y-8 px-4">
       <div className="text-center">
         <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-          {isUnlocked ? (
-            <Zap className="w-8 h-8 text-secondary-foreground" />
-          ) : (
-            <Crown className="w-8 h-8 text-secondary-foreground" />
-          )}
+          <Zap className="w-8 h-8 text-secondary-foreground" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">ValueLens AI Copy Generator</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          {isUnlocked 
-            ? "Generate emotionally resonant copy using your brand data and customer insights"
-            : "Complete your brand strategy to unlock AI copy generation"
-          }
+        <p className="text-muted-foreground text-sm sm:text-base mb-6">
+          Generate emotionally resonant copy using your brand data and customer insights
         </p>
-        {!isUnlocked && (
-          <div className="mt-4 space-y-2">
-            <Badge variant="outline">
-              <Lock className="w-4 h-4 mr-2" />
-              Premium Feature
-            </Badge>
-            <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-              <p className="font-medium mb-2">To unlock ValueLens AI Copy Generator, complete these steps:</p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  {(brandData.insight.completed && brandData.distinctive.completed && 
-                    brandData.empathy.completed && brandData.authentic.completed) ? (
-                    <span className="text-green-500">✓</span>
-                  ) : (
-                    <span className="text-muted-foreground">□</span>
-                  )}
-                  <span>Complete all 4 IDEA Framework modules</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {brandData.avatar.completed ? (
-                    <span className="text-green-500">✓</span>
-                  ) : (
-                    <span className="text-muted-foreground">□</span>
-                  )}
-                  <span>Build your Customer Avatar</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {brandData.brandCanvas.completed ? (
-                    <span className="text-green-500">✓</span>
-                  ) : (
-                    <span className="text-muted-foreground">□</span>
-                  )}
-                  <span>Complete your Brand Canvas</span>
-                </div>
+        
+        {/* Smart Guidance Banner */}
+        {!hasCompletedStrategy && (
+          <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-amber-600" />
+              <div>
+                <p className="font-medium text-amber-700 dark:text-amber-300">🚀 Better Results with Complete Strategy</p>
+                <p className="text-sm text-muted-foreground">Complete your brand framework first for more targeted copy generation.</p>
               </div>
-              <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                <Button asChild variant="outline" size="sm" className="text-xs">
-                  <Link to="/idea">Complete IDEA Framework</Link>
-                </Button>
-                <Button asChild variant="outline" size="sm" className="text-xs">
-                  <Link to="/avatar">Build Avatar</Link>
-                </Button>
-                <Button asChild variant="outline" size="sm" className="text-xs">
-                  <Link to="/canvas">Complete Canvas</Link>
-                </Button>
+              <Button asChild variant="outline" size="sm" className="ml-auto">
+                <Link to="/idea">Continue Building</Link>
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {hasCompletedStrategy && (
+          <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="font-medium text-green-700 dark:text-green-300">✅ Strategy Complete!</p>
+                <p className="text-sm text-muted-foreground">Your brand framework is ready for AI-powered copy generation.</p>
               </div>
             </div>
           </div>
@@ -361,17 +329,12 @@ Ready to experience the difference? Your future self will thank you.`;
                 onClick={handleGenerate}
                 className="w-full"
                 variant="coach"
-                disabled={isGenerating || !isUnlocked}
+                disabled={isGenerating}
               >
                 {isGenerating ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                     Generating...
-                  </>
-                ) : !isUnlocked ? (
-                  <>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Unlock to Generate
                   </>
                 ) : (
                   <>
@@ -423,7 +386,7 @@ Ready to experience the difference? Your future self will thank you.`;
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Zap className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>{isUnlocked ? "Fill in the details and click \"Generate\" to see your copy" : "Complete your brand strategy to unlock AI copy generation"}</p>
+                  <p>Fill in the details and click "Generate" to see your copy</p>
                 </div>
               )}
             </CardContent>

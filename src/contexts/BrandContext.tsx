@@ -134,7 +134,8 @@ interface BrandContextType {
   updateBrandData: (section: keyof BrandData, data: Partial<BrandData[keyof BrandData]>) => void;
   updateUserInfo: (data: Partial<BrandData['userInfo']>) => void;
   getCompletionPercentage: () => number;
-  isToolUnlocked: (tool: 'idea' | 'avatar' | 'canvas' | 'valuelens') => boolean;
+  isToolUnlocked: () => boolean;
+  getRecommendedNextStep: () => string;
 }
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
@@ -175,19 +176,23 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return Math.round((completedSections / 6) * 100);
   };
 
-  const isToolUnlocked = (tool: 'idea' | 'avatar' | 'canvas' | 'valuelens') => {
-    switch (tool) {
-      case 'idea':
-        return true; // Always available
-      case 'avatar':
-        return brandData.insight.completed || brandData.distinctive.completed; // Unlock after any IDEA section
-      case 'canvas':
-        return brandData.insight.completed && brandData.avatar.completed; // Requires IDEA + Avatar
-      case 'valuelens':
-        return brandData.brandCanvas.completed; // Requires completed brand canvas
-      default:
-        return false;
+  const isToolUnlocked = () => {
+    return true; // All tools are always available
+  };
+
+  const getRecommendedNextStep = () => {
+    // Return smart guidance instead of locks
+    if (!brandData.insight.completed && !brandData.distinctive.completed && 
+        !brandData.empathy.completed && !brandData.authentic.completed) {
+      return 'Start with IDEA Framework for best results';
     }
+    if (!brandData.avatar.completed) {
+      return 'Build your customer avatar to enhance targeting';
+    }
+    if (!brandData.brandCanvas.completed) {
+      return 'Complete your brand canvas for comprehensive strategy';
+    }
+    return 'All core modules completed!';
   };
 
   return (
@@ -197,6 +202,7 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       updateUserInfo,
       getCompletionPercentage,
       isToolUnlocked,
+      getRecommendedNextStep,
     }}>
       {children}
     </BrandContext.Provider>
