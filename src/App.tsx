@@ -15,6 +15,7 @@ import DiagnosticResults from "./pages/DiagnosticResults";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
 import IdeaFrameworkConsultant from "./pages/IdeaFrameworkConsultant";
+import ResearchLearning from "./pages/ResearchLearning";
 
 import IdeaInsight from "./pages/IdeaInsight";
 import IdeaDistinctive from "./pages/IdeaDistinctive";
@@ -129,6 +130,13 @@ const App = () => (
                 <BrandProvider>
                   <Layout>
                     <ValueLens />
+                  </Layout>
+                </BrandProvider>
+              } />
+              <Route path="/research-learning" element={
+                <BrandProvider>
+                  <Layout>
+                    <ResearchLearning />
                   </Layout>
                 </BrandProvider>
               } />
