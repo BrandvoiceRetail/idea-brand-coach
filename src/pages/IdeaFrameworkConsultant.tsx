@@ -225,16 +225,16 @@ const IdeaFrameworkConsultant = () => {
               className="w-24 h-24 rounded-full object-cover border-4 border-primary/20"
             />
             <div className="text-left">
-               <h1 className="text-4xl font-bold text-primary">Trevor Bradford</h1>
-                <p className="text-xl text-muted-foreground">AI Strategic Consultant</p>
+               <h1 className="text-4xl font-bold text-foreground">Trevor Bradford</h1>
+                <p className="text-xl text-foreground">Brand Strategist, E-commerce Expert, Author</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Creator of the IDEA Strategic Brand Framework™
                 </p>
             </div>
           </div>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-lg text-foreground max-w-3xl mx-auto">
               Get personalized strategic guidance powered by behavioral science, customer psychology, 
-              and proven brand strategy methodology. Trevor Bradford's expertise delivered through AI.
+              and proven brand strategy methodology. Consult directly with Trevor Bradford.
             </p>
         </div>
 
@@ -283,7 +283,7 @@ const IdeaFrameworkConsultant = () => {
             <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="w-5 h-5" />
-              Ask Trevor Bradford
+              Consult with Trevor Bradford
             </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -320,7 +320,7 @@ const IdeaFrameworkConsultant = () => {
                     Getting Strategic Guidance...
                   </>
                 ) : (
-                  'Ask Trevor Bradford'
+                  'Get Strategic Guidance'
                 )}
               </Button>
 
@@ -347,7 +347,7 @@ const IdeaFrameworkConsultant = () => {
         <Card className="mt-8">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Strategic Guidance</CardTitle>
+              <CardTitle>Trevor's Strategic Guidance</CardTitle>
               {response && (
                 <div className="flex items-center gap-2">
                   {showContinueConversation && (
