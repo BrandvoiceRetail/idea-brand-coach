@@ -487,21 +487,24 @@ const IdeaFrameworkConsultant = () => {
                   Brand Framework™.
                 </p>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Trevor Bradford is a behavioral brand strategist with over a decade of experience helping 
-                  businesses understand their customers at a psychological level. He combines academic behavioral 
-                  science with practical marketing strategy to create brands that resonate deeply with their audiences.
+                  <strong>Brand Strategist, Ecommerce Expert, Conversion Master, Author</strong><br/>
+                  Creator of the IDEA Strategic Brand Framework™<br/><br/>
+                  
+                  With over 35 years of experience in branding as an agency owner, including 15 years in online retail, Trevor has collaborated with a wide range of clients from nationwide retailers, globally famous brands and emerging entrepreneurs.<br/><br/>
+                  
+                  Trevor is an industry authority on branding and marketing and has helped hundreds of e-commerce entrepreneurs build trust-first strategies that drive sales conversions and reduce true advertising cost of sale (TACOS).
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button 
                     size="lg"
-                    onClick={() => window.open('https://www.ideabrandconsultancy.com', '_blank')}
+                    onClick={() => window.open('https://calendly.com/trevor-bradford-idea/30min', '_blank')}
                   >
                     Book Personal Consultation
                   </Button>
                   <Button 
                     variant="outline" 
                     size="lg"
-                    onClick={() => window.open('https://linkedin.com/in/trevor-bradford', '_blank')}
+                    onClick={() => window.open('https://www.linkedin.com/in/trevor-bradford-51982b9/', '_blank')}
                   >
                     Connect on LinkedIn
                   </Button>
