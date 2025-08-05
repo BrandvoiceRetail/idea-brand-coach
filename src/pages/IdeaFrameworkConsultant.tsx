@@ -281,10 +281,10 @@ const IdeaFrameworkConsultant = () => {
           {/* Consultation Interface */}
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Strategic Consultation
-              </CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Ask Trevor Bradford
+            </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -320,7 +320,7 @@ const IdeaFrameworkConsultant = () => {
                     Getting Strategic Guidance...
                   </>
                 ) : (
-                  'Get IDEA Framework Guidance'
+                  'Ask Trevor Bradford'
                 )}
               </Button>
 
