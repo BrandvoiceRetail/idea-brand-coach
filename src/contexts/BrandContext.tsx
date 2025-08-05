@@ -50,12 +50,14 @@ export interface BrandData {
   
   // Brand Canvas Data
   brandCanvas: {
-    missionStatement: string;
-    visionStatement: string;
+    brandPurpose: string;
+    brandVision: string;
+    brandMission: string;
+    brandValues: string[];
+    positioningStatement: string;
     valueProposition: string;
-    brandArchetype: string;
-    tonalAttributes: string[];
-    visualIdentity: string;
+    brandPersonality: string[];
+    brandVoice: string;
     completed: boolean;
   };
   
@@ -113,12 +115,14 @@ const initialBrandData: BrandData = {
     completed: false,
   },
   brandCanvas: {
-    missionStatement: '',
-    visionStatement: '',
+    brandPurpose: '',
+    brandVision: '',
+    brandMission: '',
+    brandValues: [],
+    positioningStatement: '',
     valueProposition: '',
-    brandArchetype: '',
-    tonalAttributes: [],
-    visualIdentity: '',
+    brandPersonality: [],
+    brandVoice: '',
     completed: false,
   },
   userInfo: {
@@ -164,16 +168,23 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const getCompletionPercentage = () => {
-    const completedSections = [
-      brandData.insight.completed,
-      brandData.distinctive.completed,
-      brandData.empathy.completed,
-      brandData.authentic.completed,
-      brandData.avatar.completed,
-      brandData.brandCanvas.completed,
-    ].filter(Boolean).length;
+    // Calculate completion for Brand Canvas specifically
+    const canvasFields = [
+      brandData.brandCanvas.brandPurpose,
+      brandData.brandCanvas.brandVision,
+      brandData.brandCanvas.brandMission,
+      brandData.brandCanvas.brandValues.length > 0,
+      brandData.brandCanvas.positioningStatement,
+      brandData.brandCanvas.valueProposition,
+      brandData.brandCanvas.brandPersonality.length > 0,
+      brandData.brandCanvas.brandVoice,
+    ];
     
-    return Math.round((completedSections / 6) * 100);
+    const completedCanvasFields = canvasFields.filter(field => 
+      typeof field === 'boolean' ? field : Boolean(field)
+    ).length;
+    
+    return Math.round((completedCanvasFields / 8) * 100);
   };
 
   const isToolUnlocked = () => {

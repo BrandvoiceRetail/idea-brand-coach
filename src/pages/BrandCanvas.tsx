@@ -20,9 +20,9 @@ export default function BrandCanvas() {
 
   useEffect(() => {
     // Auto-populate from IDEA Framework data
-    if (brandData.insight.completed && !brandData.brandCanvas.missionStatement) {
+    if (brandData.insight.completed && !brandData.brandCanvas.brandPurpose) {
       updateBrandData('brandCanvas', {
-        missionStatement: brandData.insight.brandPurpose || "",
+        brandPurpose: brandData.insight.brandPurpose || "",
         valueProposition: brandData.insight.consumerInsight || "",
       });
     }
@@ -221,22 +221,22 @@ export default function BrandCanvas() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Main Canvas */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Mission & Vision */}
+          {/* Brand Purpose */}
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
-              <CardTitle>Mission & Vision</CardTitle>
-              <CardDescription>Define your brand's purpose and future aspirations</CardDescription>
+              <CardTitle>Brand Purpose</CardTitle>
+              <CardDescription>The "why" behind your existence—the core reason beyond just selling products</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="mission">Mission Statement</Label>
+                  <Label htmlFor="brandPurpose">Brand Purpose</Label>
                   {brandData.insight.completed && (
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => updateBrandData('brandCanvas', { 
-                        missionStatement: brandData.insight.brandPurpose || "Transform customer lives through innovative solutions that deliver genuine value and meaningful impact." 
+                        brandPurpose: brandData.insight.brandPurpose || "Transform customer lives through innovative solutions that deliver genuine value and meaningful impact." 
                       })}
                     >
                       Import from IDEA
@@ -244,32 +244,153 @@ export default function BrandCanvas() {
                   )}
                 </div>
                 <Textarea
-                  id="mission"
-                  placeholder="What is your brand's core purpose? Why do you exist?"
-                  value={brandData.brandCanvas.missionStatement}
-                  onChange={(e) => updateBrandData('brandCanvas', { missionStatement: e.target.value })}
+                  id="brandPurpose"
+                  placeholder="What is your brand's core purpose? Why do you exist beyond making money?"
+                  value={brandData.brandCanvas.brandPurpose}
+                  onChange={(e) => updateBrandData('brandCanvas', { brandPurpose: e.target.value })}
                   rows={3}
                 />
                 <AIAssistant
-                  prompt="Help improve this mission statement based on the IDEA Strategic Brand Framework™"
-                  currentValue={brandData.brandCanvas.missionStatement}
-                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { missionStatement: suggestion })}
+                  prompt="Help improve this brand purpose to be more insight-driven, distinctive, empathetic, and authentic"
+                  currentValue={brandData.brandCanvas.brandPurpose}
+                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandPurpose: suggestion })}
                 />
               </div>
+            </CardContent>
+          </Card>
 
+          {/* Brand Vision */}
+          <Card className="bg-gradient-card shadow-card">
+            <CardHeader>
+              <CardTitle>Brand Vision</CardTitle>
+              <CardDescription>Aspirational statement about the future impact your brand seeks to make</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="vision">Vision Statement</Label>
+                <Label htmlFor="brandVision">Vision Statement</Label>
                 <Textarea
-                  id="vision"
-                  placeholder="What future are you working towards? Where do you see your brand in 5-10 years?"
-                  value={brandData.brandCanvas.visionStatement}
-                  onChange={(e) => updateBrandData('brandCanvas', { visionStatement: e.target.value })}
+                  id="brandVision"
+                  placeholder="What future are you working towards? Where do you see your brand's impact in 5-10 years?"
+                  value={brandData.brandCanvas.brandVision}
+                  onChange={(e) => updateBrandData('brandCanvas', { brandVision: e.target.value })}
                   rows={3}
                 />
                 <AIAssistant
                   prompt="Help improve this vision statement to be more aspirational and distinctive"
-                  currentValue={brandData.brandCanvas.visionStatement}
-                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { visionStatement: suggestion })}
+                  currentValue={brandData.brandCanvas.brandVision}
+                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandVision: suggestion })}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Brand Mission */}
+          <Card className="bg-gradient-card shadow-card">
+            <CardHeader>
+              <CardTitle>Brand Mission</CardTitle>
+              <CardDescription>Actionable steps taken to fulfill your brand's purpose and vision</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="brandMission">Mission Statement</Label>
+                <Textarea
+                  id="brandMission"
+                  placeholder="How do you fulfill your purpose? What specific actions do you take?"
+                  value={brandData.brandCanvas.brandMission}
+                  onChange={(e) => updateBrandData('brandCanvas', { brandMission: e.target.value })}
+                  rows={3}
+                />
+                <AIAssistant
+                  prompt="Help improve this mission statement to be more actionable and customer-focused"
+                  currentValue={brandData.brandCanvas.brandMission}
+                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandMission: suggestion })}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Brand Values */}
+          <Card className="bg-gradient-card shadow-card">
+            <CardHeader>
+              <CardTitle>Brand Values</CardTitle>
+              <CardDescription>Guiding principles that shape how your brand interacts with customers</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newValue">Add Brand Values</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="newValue"
+                    placeholder="Enter a brand value (e.g., Integrity, Innovation)"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const value = (e.target as HTMLInputElement).value.trim();
+                        if (value && !brandData.brandCanvas.brandValues.includes(value)) {
+                          updateBrandData('brandCanvas', { 
+                            brandValues: [...brandData.brandCanvas.brandValues, value] 
+                          });
+                          (e.target as HTMLInputElement).value = '';
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const input = document.getElementById('newValue') as HTMLInputElement;
+                      const value = input.value.trim();
+                      if (value && !brandData.brandCanvas.brandValues.includes(value)) {
+                        updateBrandData('brandCanvas', { 
+                          brandValues: [...brandData.brandCanvas.brandValues, value] 
+                        });
+                        input.value = '';
+                      }
+                    }}
+                  >
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {brandData.brandCanvas.brandValues.map((value, index) => (
+                    <Badge key={index} variant="secondary" className="cursor-pointer">
+                      {value}
+                      <button
+                        onClick={() => {
+                          updateBrandData('brandCanvas', {
+                            brandValues: brandData.brandCanvas.brandValues.filter((_, i) => i !== index)
+                          });
+                        }}
+                        className="ml-2 text-xs"
+                      >
+                        ×
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Positioning Statement */}
+          <Card className="bg-gradient-card shadow-card">
+            <CardHeader>
+              <CardTitle>Positioning Statement</CardTitle>
+              <CardDescription>How your brand stands out in the market and why it's the best choice</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="positioningStatement">Positioning Statement</Label>
+                <Textarea
+                  id="positioningStatement"
+                  placeholder="For [target audience], [brand] is the [category] that [unique benefit] because [reason to believe]"
+                  value={brandData.brandCanvas.positioningStatement}
+                  onChange={(e) => updateBrandData('brandCanvas', { positioningStatement: e.target.value })}
+                  rows={3}
+                />
+                <AIAssistant
+                  prompt="Help create a strong positioning statement that highlights our distinctive advantages"
+                  currentValue={brandData.brandCanvas.positioningStatement}
+                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { positioningStatement: suggestion })}
                 />
               </div>
             </CardContent>
@@ -279,7 +400,7 @@ export default function BrandCanvas() {
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Value Proposition</CardTitle>
-              <CardDescription>What unique value do you deliver to customers?</CardDescription>
+              <CardDescription>Clear statement of why customers should buy from you vs competitors</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -317,131 +438,93 @@ export default function BrandCanvas() {
             </CardContent>
           </Card>
 
-          {/* Brand Archetype & Personality */}
+          {/* Brand Personality */}
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Brand Personality</CardTitle>
-              <CardDescription>Define your brand's character and tone</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="archetype">Brand Archetype</Label>
-                <Select
-                  value={brandData.brandCanvas.brandArchetype}
-                  onValueChange={(value) => updateBrandData('brandCanvas', { brandArchetype: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your brand archetype" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="innocent">The Innocent</SelectItem>
-                    <SelectItem value="everyman">The Everyman</SelectItem>
-                    <SelectItem value="hero">The Hero</SelectItem>
-                    <SelectItem value="outlaw">The Outlaw</SelectItem>
-                    <SelectItem value="explorer">The Explorer</SelectItem>
-                    <SelectItem value="creator">The Creator</SelectItem>
-                    <SelectItem value="ruler">The Ruler</SelectItem>
-                    <SelectItem value="magician">The Magician</SelectItem>
-                    <SelectItem value="lover">The Lover</SelectItem>
-                    <SelectItem value="caregiver">The Caregiver</SelectItem>
-                    <SelectItem value="jester">The Jester</SelectItem>
-                    <SelectItem value="sage">The Sage</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tonal Attributes</Label>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {brandData.brandCanvas.tonalAttributes.map((attribute, index) => (
-                    <Badge key={index} variant="secondary">
-                      {attribute}
-                    </Badge>
-                  ))}
-                </div>
-                <Input
-                  placeholder="Add tonal attributes (friendly, professional, innovative, etc.)"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      const value = (e.target as HTMLInputElement).value.trim();
-                      if (value && !brandData.brandCanvas.tonalAttributes.includes(value)) {
-                        updateBrandData('brandCanvas', {
-                          tonalAttributes: [...brandData.brandCanvas.tonalAttributes, value]
-                        });
-                        (e.target as HTMLInputElement).value = '';
-                      }
-                    }
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Additional Brand Strategy Sections */}
-          <Card className="bg-gradient-card shadow-card">
-            <CardHeader>
-              <CardTitle>Brand Positioning</CardTitle>
-              <CardDescription>Define how you want to be perceived in the market</CardDescription>
+              <CardDescription>Human-like traits that influence how your brand speaks and interacts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="positioning">Positioning Statement</Label>
-                <Textarea
-                  id="positioning"
-                  placeholder="For [target customer], [brand] is the [category] that [unique benefit] because [reason to believe]"
-                  value={brandData.distinctive.positioning}
-                  onChange={(e) => updateBrandData('distinctive', { positioning: e.target.value })}
-                  rows={3}
-                />
-                <AIAssistant
-                  prompt="Help create a compelling positioning statement based on our customer avatar and distinctive advantages"
-                  currentValue={brandData.distinctive.positioning}
-                  onSuggestion={(suggestion) => updateBrandData('distinctive', { positioning: suggestion })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="brandValues">Core Brand Values</Label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {brandData.authentic.brandValues.map((value, index) => (
-                    <Badge key={index} variant="secondary">
-                      {value}
+                <Label htmlFor="newPersonality">Add Personality Traits</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="newPersonality"
+                    placeholder="Enter personality trait (e.g., Friendly, Professional, Bold)"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const trait = (e.target as HTMLInputElement).value.trim();
+                        if (trait && !brandData.brandCanvas.brandPersonality.includes(trait)) {
+                          updateBrandData('brandCanvas', { 
+                            brandPersonality: [...brandData.brandCanvas.brandPersonality, trait] 
+                          });
+                          (e.target as HTMLInputElement).value = '';
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const input = document.getElementById('newPersonality') as HTMLInputElement;
+                      const trait = input.value.trim();
+                      if (trait && !brandData.brandCanvas.brandPersonality.includes(trait)) {
+                        updateBrandData('brandCanvas', { 
+                          brandPersonality: [...brandData.brandCanvas.brandPersonality, trait] 
+                        });
+                        input.value = '';
+                      }
+                    }}
+                  >
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {brandData.brandCanvas.brandPersonality.map((trait, index) => (
+                    <Badge key={index} variant="secondary" className="cursor-pointer">
+                      {trait}
+                      <button
+                        onClick={() => {
+                          updateBrandData('brandCanvas', {
+                            brandPersonality: brandData.brandCanvas.brandPersonality.filter((_, i) => i !== index)
+                          });
+                        }}
+                        className="ml-2 text-xs"
+                      >
+                        ×
+                      </button>
                     </Badge>
                   ))}
                 </div>
-                <Input
-                  placeholder="Add brand values (integrity, innovation, quality, etc.)"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      const value = (e.target as HTMLInputElement).value.trim();
-                      if (value && !brandData.authentic.brandValues.includes(value)) {
-                        updateBrandData('authentic', {
-                          brandValues: [...brandData.authentic.brandValues, value]
-                        });
-                        (e.target as HTMLInputElement).value = '';
-                      }
-                    }
-                  }}
-                />
               </div>
+            </CardContent>
+          </Card>
 
+          {/* Brand Voice */}
+          <Card className="bg-gradient-card shadow-card">
+            <CardHeader>
+              <CardTitle>Brand Voice</CardTitle>
+              <CardDescription>Tone, language, and communication style used across all platforms</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="brandPromise">Brand Promise</Label>
+                <Label htmlFor="brandVoice">Brand Voice Description</Label>
                 <Textarea
-                  id="brandPromise"
-                  placeholder="What promise do you make to your customers? What can they always expect from you?"
-                  value={brandData.authentic.brandPromise}
-                  onChange={(e) => updateBrandData('authentic', { brandPromise: e.target.value })}
-                  rows={2}
+                  id="brandVoice"
+                  placeholder="Describe your brand's tone and communication style (e.g., conversational yet professional, warm and approachable)"
+                  value={brandData.brandCanvas.brandVoice}
+                  onChange={(e) => updateBrandData('brandCanvas', { brandVoice: e.target.value })}
+                  rows={3}
                 />
                 <AIAssistant
-                  prompt="Help create a compelling brand promise that aligns with our mission and customer expectations"
-                  currentValue={brandData.authentic.brandPromise}
-                  onSuggestion={(suggestion) => updateBrandData('authentic', { brandPromise: suggestion })}
+                  prompt="Help define a distinctive brand voice that resonates with our target audience"
+                  currentValue={brandData.brandCanvas.brandVoice}
+                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandVoice: suggestion })}
                 />
               </div>
             </CardContent>
           </Card>
+
         </div>
 
         {/* Sidebar */}
@@ -469,9 +552,9 @@ export default function BrandCanvas() {
               <div className="pt-2">
                 <div className="flex justify-between text-sm mb-2">
                   <span>Canvas Progress</span>
-                  <span>75%</span>
+                  <span>{completionPercentage}%</span>
                 </div>
-                <Progress value={75} className="h-2" />
+                <Progress value={completionPercentage} className="h-2" />
               </div>
             </CardContent>
           </Card>
@@ -492,7 +575,7 @@ export default function BrandCanvas() {
               <Button 
                 onClick={handleSave}
                 className="w-full"
-                disabled={!brandData.brandCanvas.missionStatement || !brandData.brandCanvas.valueProposition}
+                disabled={!brandData.brandCanvas.brandPurpose || !brandData.brandCanvas.valueProposition}
               >
                 <Save className="w-4 h-4 mr-2" />
                 Save Canvas
