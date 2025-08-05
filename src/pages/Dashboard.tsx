@@ -1,6 +1,7 @@
 import { ModuleCard } from "@/components/ModuleCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
 import { useBrand } from "@/contexts/BrandContext";
@@ -24,6 +25,8 @@ import {
   PlayCircle,
   Lock
 } from "lucide-react";
+import { InteractiveEmotionalTriggers } from "@/components/InteractiveEmotionalTriggers";
+import { CollapsibleDescription } from "@/components/CollapsibleDescription";
 
 const coreModules = [
   {
@@ -119,7 +122,14 @@ const additionalModules = [
     description: "Visual drag-and-drop canvas for your IDEA Strategic Brand Framework™ strategy",
     icon: MessageSquare,
     href: "/canvas",
-    status: "available" as const
+    status: "available" as const,
+    longDescription: `The Brand Canvas is a comprehensive visual tool that helps you map out your complete brand strategy on a single page. Using the IDEA Strategic Brand Framework™, you'll define your brand purpose, vision, mission, values, positioning statement, value proposition, brand personality, and brand voice.
+
+This interactive canvas allows you to see how all elements of your brand strategy connect and work together. You can drag and drop elements, customize layouts, and export your completed canvas as a PDF for presentations and internal alignment.
+
+The Brand Canvas integrates data from other IDEA Brand Coach tools, automatically populating sections with insights from your customer avatar, emotional triggers assessment, and IDEA framework modules. This ensures consistency across your entire brand strategy.
+
+Perfect for entrepreneurs, marketing teams, and brand strategists who need a visual representation of their brand strategy that can be easily shared with stakeholders, team members, and external partners.`
   },
   {
     title: "Listing Optimizer",
@@ -357,6 +367,17 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Interactive Emotional Triggers */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">7 Emotional Triggers</h2>
+              <Badge variant="outline" className="text-xs">
+                Interactive Assessment
+              </Badge>
+            </div>
+            <InteractiveEmotionalTriggers />
+          </div>
+
           {/* Additional Modules */}
           <div>
             <h2 className="text-2xl font-bold mb-6">Additional Tools</h2>
@@ -382,6 +403,31 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                ) : module.title === "Brand Canvas" && module.longDescription ? (
+                  <Card 
+                    key={module.title}
+                    className="hover:shadow-brand transition-all duration-300 cursor-pointer"
+                    onClick={() => navigate(module.href)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start space-x-4 mb-4">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <module.icon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-2">{module.title}</h3>
+                          <CollapsibleDescription storageKey="brand-canvas-description">
+                            <p className="text-muted-foreground text-sm leading-relaxed">
+                              {module.longDescription}
+                            </p>
+                          </CollapsibleDescription>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {module.status === "available" ? "Available" : "Coming Soon"}
+                      </Badge>
                     </CardContent>
                   </Card>
                 ) : (

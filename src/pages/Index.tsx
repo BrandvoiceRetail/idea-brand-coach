@@ -204,10 +204,10 @@ export default function Index() {
                             </Button>
                           ) : (
                             <Button asChild variant="outline">
-                              <Link to="/auth">
-                                <Shield className="h-4 w-4 mr-2" />
-                                Sign Up to Access
-                              </Link>
+                               <Link to="/auth">
+                                 <Shield className="h-4 w-4 mr-2" />
+                                 Get Started Free
+                               </Link>
                             </Button>
                           )}
                         </div>
@@ -256,10 +256,10 @@ export default function Index() {
                   </p>
                   
                   <Button asChild variant="outline" className="w-full">
-                    <Link to="/auth">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Sign Up to Access
-                    </Link>
+                     <Link to="/auth">
+                       <Shield className="h-4 w-4 mr-2" />
+                       Get Started Free
+                     </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -319,17 +319,17 @@ export default function Index() {
                     Creator of the IDEA Strategic Brand Framework™
                   </h4>
                   
-                  <div className="space-y-4 text-white leading-relaxed">
-                    <p>
-                      Distinguished brand strategist and e-commerce expert with expertise rooted in behavioral sciences. Trevor has systematized how businesses approach branding by integrating customer behavioral triggers with growth strategies.
-                    </p>
-                    <p>
-                      As the author of "What Captures The Heart Goes In The Cart," Trevor combines behavioral science with strategic creativity to help Amazon, Shopify and DTC sellers stand out and scale up.
-                    </p>
-                    <p>
-                      His consultancy work has helped hundreds of entrepreneurs build trust-first strategies that drive sales conversions and reduce advertising costs.
-                    </p>
-                  </div>
+                   <div className="space-y-4 text-primary-foreground leading-relaxed">
+                     <p>
+                       Distinguished brand strategist and e-commerce expert with expertise rooted in behavioral sciences. Trevor has systematized how businesses approach branding by integrating customer behavioral triggers with growth strategies.
+                     </p>
+                     <p>
+                       As the author of "What Captures The Heart Goes In The Cart," Trevor combines behavioral science with strategic creativity to help Amazon, Shopify and DTC sellers stand out and scale up.
+                     </p>
+                     <p>
+                       His consultancy work has helped hundreds of entrepreneurs build trust-first strategies that drive sales conversions and reduce advertising costs.
+                     </p>
+                   </div>
                 </div>
               </div>
             </CardContent>

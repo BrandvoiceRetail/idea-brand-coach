@@ -225,17 +225,17 @@ const IdeaFrameworkConsultant = () => {
               className="w-24 h-24 rounded-full object-cover border-4 border-primary/20"
             />
             <div className="text-left">
-              <h1 className="text-4xl font-bold text-primary">AI Trevor Bradford</h1>
-              <p className="text-xl text-muted-foreground">Your AI Strategic Partner</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Based on Trevor Bradford's IDEA Strategic Brand Framework™
-              </p>
+               <h1 className="text-4xl font-bold text-primary">Trevor Bradford</h1>
+               <p className="text-xl text-muted-foreground">Your Strategic Partner</p>
+               <p className="text-sm text-muted-foreground mt-1">
+                 Powered by the IDEA Strategic Brand Framework™
+               </p>
             </div>
           </div>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Get personalized strategic guidance powered by behavioral science, customer psychology, 
-            and proven brand strategy methodology from Trevor Bradford.
-          </p>
+           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+             Get personalized strategic guidance powered by behavioral science, customer psychology, 
+             and proven brand strategy methodology. Trevor's expertise delivered through AI.
+           </p>
         </div>
 
         {/* Framework Overview */}
