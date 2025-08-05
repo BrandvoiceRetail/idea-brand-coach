@@ -13,18 +13,17 @@ import {
   Eye,
   Target,
   MessageSquare,
-  BarChart3,
-  Users,
-  Bot,
   TrendingUp,
   Wrench,
-  FileText,
-  Database
+  Brain,
+  Heart,
+  Shield,
+  Star
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CustomerReviewAnalyzer } from "@/components/research/CustomerReviewAnalyzer";
-import { SurveyBuilder } from "@/components/research/SurveyBuilder";
 import { BuyerIntentResearch } from "@/components/BuyerIntentResearch";
+import { useBrand } from "@/contexts/BrandContext";
 
 interface Step {
   id: number;
@@ -40,66 +39,50 @@ interface Step {
 const steps: Step[] = [
   {
     id: 1,
-    title: "Customer Reviews & Feedback Analysis",
-    description: "Uncover emotional drivers through direct customer feedback across multiple platforms",
-    content: "Customer reviews reveal direct emotional responses—pain points, desires, and frustrations that traditional research often misses. Think like a detective and gather data from multiple sources to uncover hidden insights about what truly drives customer decisions.",
-    example: "Amazon reviews for skincare products often reveal emotional language like 'finally found confidence' or 'frustrated with breakouts.' These insights help brands understand that customers aren't just buying skincare—they're seeking emotional transformation and self-esteem.",
+    title: "IDEA-Driven Customer Psychology Research",
+    description: "Uncover the emotional and psychological drivers that build customer trust",
+    content: "IDEA research goes beyond traditional market research by focusing on the psychological foundations of trust: Insight-driven understanding, Distinctive positioning, Emotional intelligence, and Authentic connection. Use behavioral science to understand not just what customers do, but why they trust certain brands over others.",
+    example: "Instead of asking 'What features do you want?', IDEA research asks 'What emotional outcome are you seeking?' For skincare, customers aren't buying products—they're buying confidence, social acceptance, and self-worth. Understanding these deeper motivations allows brands to build authentic trust.",
     actionSteps: [
-      "Collect reviews from Amazon, Google, Yelp, Facebook, and Reddit",
-      "Identify recurring emotional language and pain points",
-      "Use AI tools like MonkeyLearn for sentiment analysis at scale",
-      "Document unmet needs for product or messaging refinement",
-      "Compare competitor reviews to find positioning opportunities"
+      "Focus research on emotional triggers and trust factors",
+      "Identify distinctive brand positioning opportunities", 
+      "Uncover authentic customer pain points and desires",
+      "Map customer psychology to the 4 IDEA pillars",
+      "Translate insights into brand positioning strategy"
     ],
-    icon: <MessageSquare className="h-6 w-6" />,
+    icon: <Brain className="h-6 w-6" />,
     color: "from-blue-500 to-indigo-500"
   },
   {
     id: 2,
-    title: "Amazon-Specific Research Methods",
-    description: "Leverage Amazon's data ecosystem for deep customer insights and competitive intelligence",
-    content: "Amazon provides unfiltered insights into customer expectations, pre-purchase hesitations, and buying behaviors. From reviews to Q&A sections to search data, Amazon is a goldmine for understanding customer psychology and decision-making processes.",
-    example: "Analyzing Amazon Q&A sections for fitness equipment reveals customers asking 'Will this work in small apartments?' and 'Is assembly difficult?' This shows emotional concerns about space anxiety and competence fears, not just product specifications.",
+    title: "Customer Review Psychology Analysis",
+    description: "Extract emotional triggers and authenticity gaps from customer feedback",
+    content: "Customer reviews reveal the psychological drivers behind purchase decisions and brand loyalty. Analyze language patterns to identify emotional triggers, trust signals, and authenticity gaps that can inform your IDEA brand strategy.",
+    example: "Reviews saying 'finally found confidence' reveal emotional transformation desires. Comments about 'feeling ignored by customer service' show authenticity gaps. These insights directly inform your brand's emotional intelligence and authentic positioning.",
     actionSteps: [
-      "Analyze Amazon customer reviews for emotional patterns",
-      "Study Q&A sections to understand pre-purchase concerns",
-      "Track Best Seller Rank trends to identify emotional triggers",
-      "Use search term reports to decode customer intent",
-      "Apply tools like Helium 10 and ReviewMeta for deeper analysis"
+      "Analyze emotional language patterns in reviews",
+      "Identify trust signals and barriers in feedback",
+      "Map pain points to IDEA framework gaps",
+      "Extract authenticity indicators from customer stories",
+      "Apply insights to Brand Canvas positioning"
     ],
-    icon: <BarChart3 className="h-6 w-6" />,
-    color: "from-orange-500 to-red-500"
-  },
-  {
-    id: 3,
-    title: "Social Media Listening & UGC",
-    description: "Capture authentic emotional reactions through social media conversations and user content",
-    content: "Social media conversations reflect authentic, real-time emotional reactions to brands and products. This research reveals how customers naturally describe products in their own words and uncovers emerging emotional trends that competitors may have overlooked.",
-    example: "TikTok videos about productivity apps often use phrases like 'finally organized my life' or 'reduced my anxiety.' This emotional language reveals that customers aren't just buying organization tools—they're seeking peace of mind and life control.",
-    actionSteps: [
-      "Monitor Twitter, Instagram, TikTok, Reddit, and Facebook Groups",
-      "Collect influencer and customer video reviews",
-      "Identify natural language patterns customers use",
-      "Spot emerging emotional trends and frustrations",
-      "Use tools like Sprout Social for automated sentiment analysis"
-    ],
-    icon: <Users className="h-6 w-6" />,
+    icon: <MessageSquare className="h-6 w-6" />,
     color: "from-purple-500 to-pink-500"
   },
   {
-    id: 4,
-    title: "AI-Powered Research & Automation",
-    description: "Scale your research efforts using AI tools to process massive amounts of customer data",
-    content: "AI tools enable brands to automate research and uncover customer insights at unprecedented scale. From sentiment analysis to trend detection, AI can process massive amounts of data faster and identify patterns that manual research might miss.",
-    example: "Using ChatGPT to analyze 10,000 customer service emails reveals that 60% of complaints contain emotional language about 'feeling ignored' rather than technical issues. This insight shifts customer service training from technical skills to empathy and emotional intelligence.",
+    id: 3,
+    title: "Buyer Intent & Brand Positioning",
+    description: "Translate search behavior into brand positioning opportunities using IDEA principles",
+    content: "Buyer intent research through the IDEA lens reveals how customers emotionally approach their problems and what kind of brand authority they're seeking. This helps position your brand as the distinctive, emotionally intelligent choice they trust.",
+    example: "Search terms like 'best skincare for sensitive skin' reveal customers seeking authoritative expertise and emotional safety. 'Affordable skincare that works' shows price-value tension requiring authentic positioning. Map these intents to IDEA positioning strategies.",
     actionSteps: [
-      "Use Google Trends and Exploding Topics for behavioral shifts",
-      "Apply ChatGPT/Claude for customer persona generation",
-      "Implement Lexalytics for AI-powered sentiment analysis",
-      "Deploy Hotjar for visual customer interaction tracking",
-      "Create automated research workflows for continuous insights"
+      "Analyze search intent for emotional drivers",
+      "Identify brand authority opportunities",
+      "Map customer psychology to distinctive positioning",
+      "Translate intent patterns into IDEA messaging",
+      "Apply insights to customer avatar development"
     ],
-    icon: <Bot className="h-6 w-6" />,
+    icon: <Target className="h-6 w-6" />,
     color: "from-green-500 to-teal-500"
   }
 ];
@@ -108,6 +91,7 @@ export function ResearchModule() {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState("learning");
+  const { updateBrandData } = useBrand();
 
   const progress = (completedSteps.size / steps.length) * 100;
 
@@ -134,26 +118,54 @@ export function ResearchModule() {
       {/* Header */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <Search className="h-8 w-8 text-blue-500" />
-          <h1 className="text-3xl font-bold">Strategic Brand Research</h1>
+          <Search className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">IDEA Research Hub</h1>
         </div>
-        <p className="text-lg text-muted-foreground mb-6">
-          Learn research methods and use interactive tools to uncover customer insights
+        <p className="text-lg text-muted-foreground mb-4">
+          Research tools designed specifically for the IDEA Strategic Brand Framework™
         </p>
+        <div className="bg-muted/30 rounded-lg p-4 mb-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+            <div className="text-center">
+              <div className="text-primary font-semibold mb-1 flex items-center justify-center gap-1">
+                <Lightbulb className="h-4 w-4" />
+                Insight Driven
+              </div>
+              <div className="text-muted-foreground">Customer psychology research</div>
+            </div>
+            <div className="text-center">
+              <div className="text-primary font-semibold mb-1 flex items-center justify-center gap-1">
+                <Star className="h-4 w-4" />
+                Distinctive
+              </div>
+              <div className="text-muted-foreground">Positioning opportunities</div>
+            </div>
+            <div className="text-center">
+              <div className="text-primary font-semibold mb-1 flex items-center justify-center gap-1">
+                <Heart className="h-4 w-4" />
+                Emotionally Intelligent
+              </div>
+              <div className="text-muted-foreground">Emotional trigger analysis</div>
+            </div>
+            <div className="text-center">
+              <div className="text-primary font-semibold mb-1 flex items-center justify-center gap-1">
+                <Shield className="h-4 w-4" />
+                Authentic
+              </div>
+              <div className="text-muted-foreground">Trust gap identification</div>
+            </div>
+          </div>
+        </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="learning" className="flex items-center gap-2">
               <Lightbulb className="h-4 w-4" />
-              Learning Modules
+              IDEA Research Methods
             </TabsTrigger>
             <TabsTrigger value="tools" className="flex items-center gap-2">
               <Wrench className="h-4 w-4" />
               Research Tools
-            </TabsTrigger>
-            <TabsTrigger value="analysis" className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              Data Analysis
             </TabsTrigger>
           </TabsList>
 
@@ -285,9 +297,9 @@ export function ResearchModule() {
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="h-8 w-8 text-blue-600" />
                 </div>
-                <h2 className="text-2xl font-bold mb-4">Research Module Complete!</h2>
+                <h2 className="text-2xl font-bold mb-4">IDEA Research Methods Complete!</h2>
                 <p className="text-muted-foreground mb-6">
-                  You now have comprehensive research methods. Try our interactive tools to put your knowledge into practice.
+                  You now understand how to research customer psychology using the IDEA framework. Apply your knowledge with our specialized tools.
                 </p>
                 
                 <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -302,13 +314,16 @@ export function ResearchModule() {
                 <div className="flex flex-wrap justify-center gap-4">
                   <Button onClick={() => setActiveTab("tools")}>
                     <Wrench className="h-4 w-4 mr-2" />
-                    Try Research Tools
+                    Apply IDEA Research
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link to="/dashboard">Back to Dashboard</Link>
+                    <Link to="/brand-canvas">Build Brand Canvas</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link to="/brand-canvas">Apply to Brand Canvas</Link>
+                    <Link to="/avatar-builder">Create Customer Avatar</Link>
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <Link to="/idea-framework-consultant">Get AI Guidance</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -317,97 +332,66 @@ export function ResearchModule() {
         </>
       )}
 
-      {/* Interactive Tools */}
+      {/* IDEA Research Tools */}
       {activeTab === "tools" && (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <MessageSquare className="h-5 w-5 text-blue-500" />
-                  Review Analyzer
+                  Customer Review Psychology Analyzer
                 </CardTitle>
                 <CardDescription>
-                  Analyze customer reviews for sentiment and insights
+                  Extract emotional triggers and authenticity gaps for IDEA positioning
                 </CardDescription>
               </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-1 mb-3">
+                  <Badge variant="outline" className="text-xs">Emotional Intelligence</Badge>
+                  <Badge variant="outline" className="text-xs">Authenticity</Badge>
+                  <Badge variant="outline" className="text-xs">Trust Signals</Badge>
+                </div>
+              </CardContent>
             </Card>
             
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <FileText className="h-5 w-5 text-green-500" />
-                  Survey Builder
+                  <TrendingUp className="h-5 w-5 text-green-500" />
+                  IDEA Buyer Intent Research
                 </CardTitle>
                 <CardDescription>
-                  Create custom surveys to gather customer feedback
+                  Translate search behavior into distinctive brand positioning
                 </CardDescription>
               </CardHeader>
-            </Card>
-            
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <TrendingUp className="h-5 w-5 text-orange-500" />
-                  Intent Research
-                </CardTitle>
-                <CardDescription>
-                  Analyze buyer intent and search behavior
-                </CardDescription>
-              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-1 mb-3">
+                  <Badge variant="outline" className="text-xs">Insight Driven</Badge>
+                  <Badge variant="outline" className="text-xs">Distinctive</Badge>
+                  <Badge variant="outline" className="text-xs">Authority</Badge>
+                </div>
+              </CardContent>
             </Card>
           </div>
 
           <Tabs defaultValue="reviews" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="reviews">Review Analyzer</TabsTrigger>
-              <TabsTrigger value="surveys">Survey Builder</TabsTrigger>
-              <TabsTrigger value="intent">Intent Research</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="reviews">Review Psychology Analyzer</TabsTrigger>
+              <TabsTrigger value="intent">IDEA Intent Research</TabsTrigger>
             </TabsList>
 
             <TabsContent value="reviews" className="mt-6">
               <CustomerReviewAnalyzer />
             </TabsContent>
 
-            <TabsContent value="surveys" className="mt-6">
-              <SurveyBuilder />
-            </TabsContent>
-
             <TabsContent value="intent" className="mt-6">
               <BuyerIntentResearch onInsightsGenerated={(insights) => {
-                console.log("Generated insights:", insights);
+                console.log("IDEA insights generated:", insights);
+                // These insights are now focused on IDEA framework positioning
               }} />
             </TabsContent>
           </Tabs>
-        </div>
-      )}
-
-      {/* Data Analysis */}
-      {activeTab === "analysis" && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5 text-purple-500" />
-                Research Data Analysis
-              </CardTitle>
-              <CardDescription>
-                Analyze and visualize your collected research data
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Database className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
-                <p className="text-muted-foreground mb-4">
-                  Use the research tools to collect data, then return here for analysis.
-                </p>
-                <Button onClick={() => setActiveTab("tools")}>
-                  Start Collecting Data
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       )}
     </div>

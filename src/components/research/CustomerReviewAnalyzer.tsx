@@ -15,9 +15,22 @@ import {
   Star, 
   BarChart3,
   Download,
-  Upload
+  Upload,
+  Lightbulb,
+  Shield,
+  Brain,
+  Target
 } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { useBrand } from "@/contexts/BrandContext";
+
+interface IdeaInsight {
+  pillar: 'insight' | 'distinctive' | 'emotional' | 'authentic';
+  finding: string;
+  brandingImplication: string;
+  positioning: string;
+}
 
 interface SentimentResult {
   overall: number;
@@ -35,8 +48,9 @@ interface KeywordAnalysis {
 interface ReviewAnalysis {
   sentiment: SentimentResult;
   keywords: KeywordAnalysis[];
+  ideaInsights: IdeaInsight[];
   emotionalTriggers: string[];
-  painPoints: string[];
+  trustGaps: string[];
   recommendations: string[];
 }
 
@@ -45,6 +59,7 @@ export function CustomerReviewAnalyzer() {
   const [productUrl, setProductUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ReviewAnalysis | null>(null);
+  const { updateBrandData } = useBrand();
 
   const analyzeReviews = async () => {
     if (!reviewText.trim() && !productUrl.trim()) {
@@ -72,34 +87,67 @@ export function CustomerReviewAnalyzer() {
           { word: "durable", frequency: 28, sentiment: 'positive' },
           { word: "slow delivery", frequency: 12, sentiment: 'negative' }
         ],
+        ideaInsights: [
+          {
+            pillar: 'emotional',
+            finding: 'Customers express confidence boost from product appearance',
+            brandingImplication: 'Brand should position as confidence-builder, not just functional product',
+            positioning: 'Focus messaging on emotional transformation and self-esteem enhancement'
+          },
+          {
+            pillar: 'authentic',
+            finding: 'Trust concerns around pricing and value perception',
+            brandingImplication: 'Need transparent value communication and social proof',
+            positioning: 'Address pricing objections with clear value proposition and testimonials'
+          },
+          {
+            pillar: 'distinctive',
+            finding: 'Quality and durability mentioned as key differentiators',
+            brandingImplication: 'Position quality as distinctive advantage over competitors',
+            positioning: 'Emphasize superior materials and craftsmanship in brand messaging'
+          },
+          {
+            pillar: 'insight',
+            finding: 'Delivery concerns reveal customer anticipation psychology',
+            brandingImplication: 'Understand customer journey includes excitement management',
+            positioning: 'Improve delivery communication to enhance overall brand experience'
+          }
+        ],
         emotionalTriggers: [
           "Confidence boost from appearance",
           "Relief from solving a persistent problem",
           "Excitement about improved functionality",
           "Satisfaction with quality materials"
         ],
-        painPoints: [
+        trustGaps: [
           "Price sensitivity and value concerns",
           "Delivery expectations not met",
           "Size/fit uncertainty before purchase",
           "Product durability questions"
         ],
         recommendations: [
-          "Emphasize quality and durability in messaging",
-          "Address pricing with value proposition",
-          "Improve delivery communication",
-          "Add sizing guides and fit information",
-          "Highlight emotional benefits in marketing"
+          "EMOTIONAL: Emphasize confidence and transformation in messaging",
+          "AUTHENTIC: Address pricing with transparent value proposition",
+          "DISTINCTIVE: Highlight quality and durability as key differentiators",
+          "INSIGHT: Improve delivery communication to manage expectations",
+          "POSITIONING: Position as premium solution for emotional outcomes"
         ]
       };
 
       setAnalysis(mockAnalysis);
-      toast.success("Analysis complete! Review insights generated.");
+      toast.success("IDEA Analysis complete! Behavioral insights generated.");
     } catch (error) {
       toast.error("Analysis failed. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const applyToBrandCanvas = () => {
+    if (!analysis) return;
+    
+    // For now, just show success message - integration with brand canvas will be enhanced later
+    toast.success("Ready to apply insights to Brand Canvas! Visit the Brand Canvas page to integrate these findings.");
   };
 
   const exportResults = () => {
@@ -123,10 +171,10 @@ export function CustomerReviewAnalyzer() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-blue-500" />
-            Customer Review Analyzer
+            IDEA Customer Review Psychology Analyzer
           </CardTitle>
           <CardDescription>
-            Analyze customer reviews to uncover emotional triggers, pain points, and messaging opportunities
+            Extract emotional triggers, trust gaps, and positioning insights using the IDEA framework
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -178,8 +226,9 @@ export function CustomerReviewAnalyzer() {
               onClick={analyzeReviews} 
               disabled={isAnalyzing}
               className="w-full"
+              variant="coach"
             >
-              {isAnalyzing ? "Analyzing Reviews..." : "Analyze Reviews"}
+              {isAnalyzing ? "Analyzing with IDEA Framework..." : "Analyze for IDEA Insights"}
             </Button>
           </Tabs>
         </CardContent>
@@ -250,6 +299,44 @@ export function CustomerReviewAnalyzer() {
             </CardContent>
           </Card>
 
+          {/* IDEA Framework Insights */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-purple-500" />
+                IDEA Framework Insights
+              </CardTitle>
+              <CardDescription>
+                Strategic insights mapped to the four IDEA pillars
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {analysis.ideaInsights.map((insight, index) => (
+                  <div key={index} className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className={
+                        insight.pillar === 'insight' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                        insight.pillar === 'distinctive' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                        insight.pillar === 'emotional' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                      }>
+                        {insight.pillar === 'insight' && <Lightbulb className="h-3 w-3 mr-1" />}
+                        {insight.pillar === 'distinctive' && <Star className="h-3 w-3 mr-1" />}
+                        {insight.pillar === 'emotional' && <Heart className="h-3 w-3 mr-1" />}
+                        {insight.pillar === 'authentic' && <Shield className="h-3 w-3 mr-1" />}
+                        {insight.pillar.charAt(0).toUpperCase() + insight.pillar.slice(1)}
+                      </Badge>
+                    </div>
+                    <p className="text-sm font-medium mb-2">{insight.finding}</p>
+                    <p className="text-xs text-muted-foreground mb-2">{insight.brandingImplication}</p>
+                    <p className="text-xs text-primary">{insight.positioning}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Emotional Insights */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -258,6 +345,9 @@ export function CustomerReviewAnalyzer() {
                   <Heart className="h-5 w-5 text-red-500" />
                   Emotional Triggers
                 </CardTitle>
+                <CardDescription>
+                  Psychological drivers that motivate customer behavior
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
@@ -275,15 +365,18 @@ export function CustomerReviewAnalyzer() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-orange-500" />
-                  Pain Points
+                  Trust Gaps
                 </CardTitle>
+                <CardDescription>
+                  Areas where brand authenticity needs improvement
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {analysis.painPoints.map((pain, index) => (
+                  {analysis.trustGaps.map((gap, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <div className="w-2 h-2 bg-orange-500 rounded-full mt-2" />
-                      <span className="text-sm">{pain}</span>
+                      <span className="text-sm">{gap}</span>
                     </li>
                   ))}
                 </ul>
@@ -291,13 +384,16 @@ export function CustomerReviewAnalyzer() {
             </Card>
           </div>
 
-          {/* Recommendations */}
+          {/* IDEA Recommendations & Actions */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500" />
-                Marketing Recommendations
+                <Target className="h-5 w-5 text-green-500" />
+                IDEA Strategic Recommendations
               </CardTitle>
+              <CardDescription>
+                Actionable insights for brand positioning and messaging
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
@@ -311,7 +407,14 @@ export function CustomerReviewAnalyzer() {
                 ))}
               </ul>
               
-              <div className="mt-6 pt-4 border-t">
+              <div className="mt-6 pt-4 border-t flex flex-wrap gap-3">
+                <Button onClick={applyToBrandCanvas} className="flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Apply to Brand Canvas
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/brand-canvas">View Brand Canvas</Link>
+                </Button>
                 <Button onClick={exportResults} variant="outline" className="flex items-center gap-2">
                   <Download className="h-4 w-4" />
                   Export Analysis
