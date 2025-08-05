@@ -418,11 +418,11 @@ export default function Dashboard() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg mb-2">{module.title}</h3>
-                          <CollapsibleDescription storageKey="brand-canvas-description">
-                            <p className="text-muted-foreground text-sm leading-relaxed">
-                              {module.longDescription}
-                            </p>
-                          </CollapsibleDescription>
+                           <CollapsibleDescription storageKey="brand-canvas-description">
+                             <p className="text-muted-foreground text-sm leading-relaxed">
+                               The Brand Canvas is a comprehensive visual tool that helps you map out your complete brand strategy on a single page.
+                             </p>
+                           </CollapsibleDescription>
                         </div>
                       </div>
                       <Badge variant="outline" className="text-xs">
