@@ -129,23 +129,145 @@ export default function BrandCanvas() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm sm:text-base">
             <p>
-              The IDEA Brand Canvas™ covers all the key elements of brand strategy, making it easy to define and refine your brand with clarity and confidence. This structured, fill-in-the-box approach simplifies and systematizes brand strategy.
+              Building a strong, conversion-driven brand strategy doesn't have to be overwhelming but many sellers do struggle with unclear messaging, weak positioning, and fragmented branding, leading to low trust, poor engagement, and inconsistent sales.
             </p>
             <p>
-              Instead of getting lost in complex branding exercises, this canvas guides you step by step to create a clear, compelling brand identity that resonates with your customers and drives conversions.
+              That's why the IDEA Brand Canvas™ was created—a structured, fill-in-the-box approach that simplifies and systematizes brand strategy. Instead of getting lost in complex branding exercises, this worksheet guides you step by step to create a clear, compelling brand identity that resonates with your customers and drives conversions.
             </p>
-            <div className="bg-secondary/10 p-4 rounded-lg">
-              <p className="font-semibold mb-2">Key Strategy Elements Covered:</p>
-              <ul className="space-y-1 text-sm">
-                <li>• <strong>Brand Purpose:</strong> The "why" behind your existence</li>
-                <li>• <strong>Brand Vision:</strong> Your aspirational future impact</li>
-                <li>• <strong>Brand Mission:</strong> Actionable steps to fulfill your purpose</li>
-                <li>• <strong>Brand Values:</strong> Guiding principles that shape interactions</li>
-                <li>• <strong>Positioning Statement:</strong> How you stand out in the market</li>
-                <li>• <strong>Value Proposition:</strong> Why customers should choose you</li>
-                <li>• <strong>Brand Personality:</strong> Human-like traits that influence communication</li>
-                <li>• <strong>Brand Voice:</strong> Tone and communication style</li>
-              </ul>
+            <p>
+              The IDEA Brand Canvas™ covers all the critical elements of brand strategy, making it easy to define and refine your brand with clarity and confidence. Below is a detailed breakdown of each element and how it fits within the IDEA Strategic Brand Framework.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              {/* Brand Purpose */}
+              <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 p-4 rounded-lg border border-yellow-500/20">
+                <h4 className="font-semibold text-yellow-700 dark:text-yellow-300 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  Brand Purpose
+                </h4>
+                <p className="text-xs mb-2">The "why" behind your existence—the core reason it goes beyond just selling products.</p>
+                <div className="text-xs space-y-1">
+                  <p><strong>Insight-Driven:</strong> Identifies customer needs beyond the product</p>
+                  <p><strong>Distinctive:</strong> Stands out with a higher mission</p>
+                  <p><strong>Empathetic:</strong> Resonates with customer values</p>
+                  <p><strong>Authentic:</strong> Aligns with core identity</p>
+                </div>
+              </div>
+
+              {/* Brand Vision */}
+              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-4 rounded-lg border border-green-500/20">
+                <h4 className="font-semibold text-green-700 dark:text-green-300 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Brand Vision
+                </h4>
+                <p className="text-xs mb-2">Aspirational statement about the future impact the brand seeks to make.</p>
+                <div className="text-xs space-y-1">
+                  <p><strong>Insight-Driven:</strong> Rooted in evolving customer expectations</p>
+                  <p><strong>Distinctive:</strong> Sets unique direction for category leadership</p>
+                  <p><strong>Empathetic:</strong> Addresses emotional and societal needs</p>
+                  <p><strong>Authentic:</strong> Aligns with long-term commitments</p>
+                </div>
+              </div>
+
+              {/* Brand Mission */}
+              <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 p-4 rounded-lg border border-blue-500/20">
+                <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  Brand Mission
+                </h4>
+                <p className="text-xs mb-2">Actionable steps taken to fulfill the brand's purpose and vision.</p>
+                <div className="text-xs space-y-1">
+                  <p><strong>Insight-Driven:</strong> Addresses specific customer challenges</p>
+                  <p><strong>Distinctive:</strong> Defines unique way of delivering value</p>
+                  <p><strong>Empathetic:</strong> Focuses on improving customer lives</p>
+                  <p><strong>Authentic:</strong> Ensures consistency in messaging</p>
+                </div>
+              </div>
+
+              {/* Brand Values */}
+              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-4 rounded-lg border border-purple-500/20">
+                <h4 className="font-semibold text-purple-700 dark:text-purple-300 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  Brand Values
+                </h4>
+                <p className="text-xs mb-2">Guiding principles that shape how brand interacts with customers and stakeholders.</p>
+                <div className="text-xs space-y-1">
+                  <p><strong>Insight-Driven:</strong> Reflects what customers value beyond products</p>
+                  <p><strong>Distinctive:</strong> Sets brand apart through ethical standpoint</p>
+                  <p><strong>Empathetic:</strong> Aligns with customer beliefs</p>
+                  <p><strong>Authentic:</strong> Actions consistently reflect promises</p>
+                </div>
+              </div>
+
+              {/* Positioning Statement */}
+              <div className="bg-gradient-to-br from-red-500/10 to-rose-500/10 p-4 rounded-lg border border-red-500/20">
+                <h4 className="font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  Positioning Statement
+                </h4>
+                <p className="text-xs mb-2">Defines how the brand stands out in the market and why it's the best choice.</p>
+                <div className="text-xs space-y-1">
+                  <p><strong>Insight-Driven:</strong> Addresses customer pain points directly</p>
+                  <p><strong>Distinctive:</strong> Highlights unique solution offered</p>
+                  <p><strong>Empathetic:</strong> Aligns with customer aspirations</p>
+                  <p><strong>Authentic:</strong> Builds credibility through transparency</p>
+                </div>
+              </div>
+
+              {/* Value Proposition */}
+              <div className="bg-gradient-to-br from-teal-500/10 to-cyan-500/10 p-4 rounded-lg border border-teal-500/20">
+                <h4 className="font-semibold text-teal-700 dark:text-teal-300 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+                  Value Proposition
+                </h4>
+                <p className="text-xs mb-2">Clear, compelling statement of why customers should buy from you vs competitors.</p>
+                <div className="text-xs space-y-1">
+                  <p><strong>Insight-Driven:</strong> Understands customer pain points</p>
+                  <p><strong>Distinctive:</strong> Clearly differentiates from competitors</p>
+                  <p><strong>Empathetic:</strong> Addresses practical and emotional benefits</p>
+                  <p><strong>Authentic:</strong> Reinforces trust through transparency</p>
+                </div>
+              </div>
+
+              {/* Brand Personality */}
+              <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 p-4 rounded-lg border border-amber-500/20">
+                <h4 className="font-semibold text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                  Brand Personality
+                </h4>
+                <p className="text-xs mb-2">Human-like traits that influence how the brand speaks and interacts.</p>
+                <div className="text-xs space-y-1">
+                  <p><strong>Insight-Driven:</strong> Based on what attracts target audience</p>
+                  <p><strong>Distinctive:</strong> Establishes unique, recognizable identity</p>
+                  <p><strong>Empathetic:</strong> Creates emotional connection through traits</p>
+                  <p><strong>Authentic:</strong> Consistent across all communications</p>
+                </div>
+              </div>
+
+              {/* Brand Voice */}
+              <div className="bg-gradient-to-br from-slate-500/10 to-gray-500/10 p-4 rounded-lg border border-slate-500/20">
+                <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                  Brand Voice
+                </h4>
+                <p className="text-xs mb-2">Tone, language, and communication style used across all platforms.</p>
+                <div className="text-xs space-y-1">
+                  <p><strong>Insight-Driven:</strong> Matches customer communication preferences</p>
+                  <p><strong>Distinctive:</strong> Creates unique, recognizable voice</p>
+                  <p><strong>Empathetic:</strong> Resonates emotionally with audience</p>
+                  <p><strong>Authentic:</strong> Consistent across marketing and support</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-primary/5 p-4 rounded-lg mt-6 border border-primary/20">
+              <h4 className="font-semibold text-primary mb-2">How the IDEA Framework Brings Your Brand Strategy to Life</h4>
+              <p className="text-xs">
+                Using the IDEA Strategic Brand Framework alongside the Avatar 2.0 Tool, we simplify the branding process into a practical, easy-to-use system. 
+                Instead of guessing or overcomplicating brand strategy, the IDEA Brand Canvas helps you fill in key brand elements in a structured, 
+                intuitive way—all on a single unified document. This method ensures that every part of your brand is aligned, consistent, 
+                and designed to attract, engage, and convert your ideal customers.
+              </p>
             </div>
           </CardContent>
         </Card>
