@@ -18,8 +18,10 @@ const IdeaFrameworkConsultant = () => {
   const [context, setContext] = useState('');
   const [response, setResponse] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState<Array<{ question: string; answer: string }>>([]);
+  const [conversationHistory, setConversationHistory] = useState<Array<{ question: string; answer: string; timestamp: string }>>([]);
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
+  const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
+  const [showContinueConversation, setShowContinueConversation] = useState(false);
 
   const handleConsultation = async () => {
     if (!message.trim()) {
@@ -33,8 +35,20 @@ const IdeaFrameworkConsultant = () => {
 
     setIsLoading(true);
     try {
-      // Prepare enhanced context with user documents
+      // Prepare enhanced context with user documents and conversation history
       let enhancedContext = context.trim();
+      
+      // Add conversation context for continuity
+      if (conversationHistory.length > 0) {
+        const recentHistory = conversationHistory.slice(-3); // Last 3 exchanges for context
+        const historyContext = recentHistory.map(item => 
+          `Previous Q: ${item.question}\nPrevious A: ${item.answer}`
+        ).join('\n\n');
+        
+        enhancedContext = enhancedContext 
+          ? `${enhancedContext}\n\n### Conversation Context:\n${historyContext}`
+          : `### Conversation Context:\n${historyContext}`;
+      }
       
       if (userDocuments.length > 0) {
         const documentContent = userDocuments
@@ -61,14 +75,20 @@ const IdeaFrameworkConsultant = () => {
       const consultationResponse = data?.response || 'No response received';
       setResponse(consultationResponse);
       
-      // Add to conversation history
+      // Add to conversation history with timestamp
+      const timestamp = new Date().toISOString();
       setConversationHistory(prev => [...prev, {
         question: message.trim(),
-        answer: consultationResponse
+        answer: consultationResponse,
+        timestamp
       }]);
 
-      // Clear the message input
+      // Generate follow-up suggestions
+      generateFollowUpSuggestions(consultationResponse);
+
+      // Clear the message input but keep conversation active
       setMessage('');
+      setShowContinueConversation(true);
       
       toast({
         title: "Consultation Complete",
@@ -84,6 +104,50 @@ const IdeaFrameworkConsultant = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const generateFollowUpSuggestions = (response: string) => {
+    const suggestions = [];
+    
+    // Generate contextual follow-up questions based on response content
+    if (response.toLowerCase().includes('positioning')) {
+      suggestions.push("How can I test this positioning with my target audience?");
+      suggestions.push("What are the risks of this positioning strategy?");
+    }
+    
+    if (response.toLowerCase().includes('emotion')) {
+      suggestions.push("How do I measure emotional impact in my campaigns?");
+      suggestions.push("What specific triggers should I avoid?");
+    }
+    
+    if (response.toLowerCase().includes('brand')) {
+      suggestions.push("How do I implement this across different touchpoints?");
+      suggestions.push("What metrics should I track to measure success?");
+    }
+    
+    if (response.toLowerCase().includes('audience')) {
+      suggestions.push("How do I expand this to adjacent customer segments?");
+      suggestions.push("What research methods can validate these insights?");
+    }
+    
+    // Always include these generic follow-ups
+    suggestions.push("Can you elaborate on the behavioral science behind this?");
+    suggestions.push("What are the next steps to implement this strategy?");
+    
+    // Randomly select 3-4 suggestions
+    const shuffled = suggestions.sort(() => 0.5 - Math.random());
+    setFollowUpSuggestions(shuffled.slice(0, 4));
+  };
+
+  const handleFollowUpQuestion = (suggestion: string) => {
+    setMessage(suggestion);
+  };
+
+  const startNewConversation = () => {
+    setShowContinueConversation(false);
+    setFollowUpSuggestions([]);
+    setMessage('');
+    setResponse(null);
   };
 
   const downloadResponse = () => {
@@ -271,26 +335,93 @@ const IdeaFrameworkConsultant = () => {
             <div className="flex items-center justify-between">
               <CardTitle>Strategic Guidance</CardTitle>
               {response && (
-                <Button 
-                  onClick={downloadResponse}
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </Button>
+                <div className="flex items-center gap-2">
+                  {showContinueConversation && (
+                    <Button 
+                      onClick={startNewConversation}
+                      variant="outline" 
+                      size="sm"
+                    >
+                      New Conversation
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={downloadResponse}
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </Button>
+                </div>
               )}
             </div>
           </CardHeader>
           <CardContent>
             {response ? (
               <>
-                <div className="prose prose-sm max-w-none mb-4">
+                <div className="prose prose-sm max-w-none mb-6">
                   <div className="whitespace-pre-wrap text-sm leading-relaxed">
                     {response}
                   </div>
                 </div>
+
+                {/* Continue Conversation Interface */}
+                {showContinueConversation && (
+                  <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-border/50">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-sm">Continue the Conversation</h4>
+                    </div>
+                    
+                    {/* Follow-up Suggestions */}
+                    {followUpSuggestions.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">Quick follow-up questions:</p>
+                        <div className="grid grid-cols-1 gap-2">
+                          {followUpSuggestions.map((suggestion, index) => (
+                            <Button
+                              key={index}
+                              variant="ghost"
+                              size="sm"
+                              className="justify-start h-auto p-3 text-left whitespace-normal"
+                              onClick={() => handleFollowUpQuestion(suggestion)}
+                            >
+                              {suggestion}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Continue Conversation Input */}
+                    <div className="space-y-3">
+                      <Label htmlFor="follow-up">Ask a follow-up question:</Label>
+                      <Textarea
+                        id="follow-up"
+                        placeholder="Build on this guidance with additional questions..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        rows={3}
+                      />
+                      <Button 
+                        onClick={handleConsultation} 
+                        disabled={isLoading || !message.trim()}
+                        className="w-full"
+                        size="sm"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Getting Follow-up Guidance...
+                          </>
+                        ) : (
+                          'Continue Conversation'
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Privacy Notice */}
                 <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border/50">
