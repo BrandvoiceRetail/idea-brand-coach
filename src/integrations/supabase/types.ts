@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      beta_feedback: {
+        Row: {
+          areas_tested: string[] | null
+          beta_tester_id: string | null
+          contact_email: string | null
+          created_at: string
+          id: string
+          improvements: string | null
+          issues: string | null
+          liked_most: string | null
+          overall_rating: number | null
+          submitted_at: string
+          updated_at: string
+          user_id: string | null
+          would_recommend: string | null
+        }
+        Insert: {
+          areas_tested?: string[] | null
+          beta_tester_id?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          improvements?: string | null
+          issues?: string | null
+          liked_most?: string | null
+          overall_rating?: number | null
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string | null
+          would_recommend?: string | null
+        }
+        Update: {
+          areas_tested?: string[] | null
+          beta_tester_id?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          improvements?: string | null
+          issues?: string | null
+          liked_most?: string | null
+          overall_rating?: number | null
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string | null
+          would_recommend?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_feedback_beta_tester_id_fkey"
+            columns: ["beta_tester_id"]
+            isOneToOne: false
+            referencedRelation: "beta_testers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       beta_testers: {
         Row: {
           category_scores: Json | null

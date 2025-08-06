@@ -52,3 +52,6 @@ verify_jwt = false
 
 [functions.document-processor]
 verify_jwt = false
+
+[functions.save-beta-feedback]
+verify_jwt = false

@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   ThumbsUp, 
   ThumbsDown, 
@@ -53,8 +54,26 @@ export default function BetaFeedback() {
     setIsSubmitting(true);
 
     try {
-      // Here you would typically send to your backend
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      // Get current user if logged in
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Submit feedback to our edge function
+      const { data, error } = await supabase.functions.invoke('save-beta-feedback', {
+        body: {
+          overallRating,
+          likedMost,
+          improvements,
+          issues,
+          selectedAreas,
+          wouldRecommend,
+          email,
+          userId: user?.id || null
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: "Thank you! 🎉",
@@ -71,6 +90,7 @@ export default function BetaFeedback() {
       setEmail("");
       
     } catch (error) {
+      console.error('Error submitting feedback:', error);
       toast({
         title: "Error",
         description: "Failed to submit feedback. Please try again.",
