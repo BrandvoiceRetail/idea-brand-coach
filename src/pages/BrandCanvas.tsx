@@ -51,7 +51,7 @@ export default function BrandCanvas() {
   const recommendedStep = getRecommendedNextStep();
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 px-4 bg-gradient-to-br from-background via-background to-secondary/10">
+    <div className="max-w-4xl mx-auto space-y-8 px-4 bg-gradient-to-br from-background via-background to-secondary/20">
       <div className="text-center">
         <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
           <MessageSquare className="w-8 h-8 text-secondary-foreground" />
@@ -78,7 +78,7 @@ export default function BrandCanvas() {
         )}
         
         {/* Brand Canvas Introduction */}
-        <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand mb-8 text-left">
+        <Card className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg mb-8 text-left">
           <CardHeader>
             <CardTitle className="text-xl">About the IDEA Brand Canvas™</CardTitle>
           </CardHeader>
@@ -266,7 +266,7 @@ export default function BrandCanvas() {
         {/* Main Canvas */}
         <div className="lg:col-span-2 space-y-6">
           {/* Brand Purpose */}
-          <Card id="brand-purpose" className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand hover:shadow-brand transition-all duration-300">
+          <Card id="brand-purpose" className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Brand Purpose</CardTitle>
               <CardDescription>The "why" behind your existence—the core reason beyond just selling products</CardDescription>
@@ -304,7 +304,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Vision */}
-          <Card id="brand-vision" className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand hover:shadow-brand transition-all duration-300">
+          <Card id="brand-vision" className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Brand Vision</CardTitle>
               <CardDescription>Aspirational statement about the future impact your brand seeks to make</CardDescription>
@@ -329,7 +329,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Mission */}
-          <Card id="brand-mission" className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand hover:shadow-brand transition-all duration-300">
+          <Card id="brand-mission" className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Brand Mission</CardTitle>
               <CardDescription>Actionable steps taken to fulfill your brand's purpose and vision</CardDescription>
@@ -354,7 +354,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Values */}
-          <Card id="brand-values" className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand hover:shadow-brand transition-all duration-300">
+          <Card id="brand-values" className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Brand Values</CardTitle>
               <CardDescription>Guiding principles that shape how your brand interacts with customers</CardDescription>
@@ -416,7 +416,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Positioning Statement */}
-          <Card id="positioning-statement" className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand hover:shadow-brand transition-all duration-300">
+          <Card id="positioning-statement" className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Positioning Statement</CardTitle>
               <CardDescription>How your brand stands out in the market and why it's the best choice</CardDescription>
@@ -441,7 +441,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Value Proposition */}
-          <Card id="value-proposition" className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand hover:shadow-brand transition-all duration-300">
+          <Card id="value-proposition" className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Value Proposition</CardTitle>
               <CardDescription>Clear statement of why customers should buy from you vs competitors</CardDescription>
@@ -483,7 +483,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Personality */}
-          <Card id="brand-personality" className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand hover:shadow-brand transition-all duration-300">
+          <Card id="brand-personality" className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Brand Personality</CardTitle>
               <CardDescription>Human-like traits that influence how your brand speaks and interacts</CardDescription>
@@ -545,7 +545,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Voice */}
-          <Card id="brand-voice" className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand hover:shadow-brand transition-all duration-300">
+          <Card id="brand-voice" className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Brand Voice</CardTitle>
               <CardDescription>Tone, language, and communication style used across all platforms</CardDescription>
@@ -574,7 +574,7 @@ export default function BrandCanvas() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Quick Stats */}
-          <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand">
+          <Card className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg">
             <CardHeader>
               <CardTitle className="text-lg">Brand Data Summary</CardTitle>
             </CardHeader>
@@ -604,7 +604,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Next Steps */}
-          <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-brand">
+          <Card className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Sparkles className="w-5 h-5" />
