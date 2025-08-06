@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowRight, ArrowLeft, CheckCircle, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import BetaTesterCapture from '@/components/BetaTesterCapture';
+import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 
 interface Question {
   id: string;
@@ -306,6 +307,9 @@ export default function FreeDiagnostic() {
           diagnosticData={diagnosticResults}
         />
       )}
+
+      {/* Beta Navigation Widget */}
+      <BetaNavigationWidget />
     </div>
   );
 }
