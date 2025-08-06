@@ -105,6 +105,9 @@ export default function Landing() {
             </div>
             <div className="flex items-center space-x-4">
               <Button asChild variant="ghost" className="text-primary-foreground hover:bg-white/10">
+                <Link to="/beta" style={{ textDecoration: 'none' }}>Beta Testing</Link>
+              </Button>
+              <Button asChild variant="ghost" className="text-primary-foreground hover:bg-white/10">
                 <Link to="/auth" style={{ textDecoration: 'none' }}>Sign In</Link>
               </Button>
               <Button asChild className="bg-white text-primary hover:bg-white/90 font-semibold">
