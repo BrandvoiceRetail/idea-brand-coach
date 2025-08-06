@@ -47,7 +47,7 @@ const coreModules = [
     title: "ValueLens Generator",
     description: "AI-powered copy generator for emotionally resonant messaging",
     icon: Zap,
-    href: "/valuelens",
+    href: "/value-lens",
     status: "available" as const
   }
 ];
@@ -121,7 +121,7 @@ const additionalModules = [
     title: "ValueLens Generator",
     description: "AI-powered copy generator for emotionally resonant messaging",
     icon: Zap,
-    href: "/valuelens",
+    href: "/value-lens",
     status: "available" as const
   },
   {
@@ -249,7 +249,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer relative" onClick={() => navigate('/valuelens')}>
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer relative" onClick={() => navigate('/value-lens')}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <div className="relative">
@@ -474,7 +474,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-start space-x-3 p-3 bg-secondary/10 rounded-lg cursor-pointer hover:bg-secondary/20 transition-colors" onClick={() => navigate('/valuelens')}>
+                  <div className="flex items-start space-x-3 p-3 bg-secondary/10 rounded-lg cursor-pointer hover:bg-secondary/20 transition-colors" onClick={() => navigate('/value-lens')}>
                     <PlayCircle className="w-4 h-4 text-secondary mt-1 flex-shrink-0" />
                     <div className="flex-1">
                       <p className="text-sm font-medium">Generate Copy Variants</p>
