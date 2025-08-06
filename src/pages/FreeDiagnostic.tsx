@@ -218,7 +218,7 @@ export default function FreeDiagnostic() {
             <div className="flex justify-between items-center mb-4">
               <Button
                 variant="ghost"
-                onClick={() => navigate('/app')}
+                onClick={() => navigate('/')}
                 className="flex items-center gap-2"
               >
                 <Home className="w-4 h-4" />
