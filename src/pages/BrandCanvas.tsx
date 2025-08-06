@@ -78,7 +78,7 @@ export default function BrandCanvas() {
         )}
         
         {/* Brand Canvas Introduction */}
-        <Card className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 border-0 shadow-2xl mb-8 text-left text-white">
+        <Card className="bg-gradient-card shadow-card border mb-8 text-left">
           <CardHeader>
             <CardTitle className="text-xl">About the IDEA Brand Canvas™</CardTitle>
           </CardHeader>
@@ -97,161 +97,241 @@ export default function BrandCanvas() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               {/* Brand Purpose */}
-              <div 
-                className="bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
+              <Card 
+                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-purpose')}
               >
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Brand Purpose
-                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
-                </h4>
-                <p className="text-xs mb-2 text-white/90">The "why" behind your existence—the core reason it goes beyond just selling products.</p>
-                <div className="text-xs space-y-1 text-white/80">
-                  <p><strong>Insight-Driven:</strong> Identifies customer needs beyond the product</p>
-                  <p><strong>Distinctive:</strong> Stands out with a higher mission</p>
-                  <p><strong>Empathetic:</strong> Resonates with customer values</p>
-                  <p><strong>Authentic:</strong> Aligns with core identity</p>
-                </div>
-              </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-4 h-4 text-white">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        Brand Purpose
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-2">The "why" behind your existence—the core reason it goes beyond just selling products.</p>
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-1 text-muted-foreground">
+                    <p><strong>Insight-Driven:</strong> Identifies customer needs beyond the product</p>
+                    <p><strong>Distinctive:</strong> Stands out with a higher mission</p>
+                    <p><strong>Empathetic:</strong> Resonates with customer values</p>
+                    <p><strong>Authentic:</strong> Aligns with core identity</p>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Brand Vision */}
-              <div 
-                className="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
+              <Card 
+                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-vision')}
               >
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Brand Vision
-                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
-                </h4>
-                <p className="text-xs mb-2 text-white/90">Aspirational statement about the future impact the brand seeks to make.</p>
-                <div className="text-xs space-y-1 text-white/80">
-                  <p><strong>Insight-Driven:</strong> Rooted in evolving customer expectations</p>
-                  <p><strong>Distinctive:</strong> Sets unique direction for category leadership</p>
-                  <p><strong>Empathetic:</strong> Addresses emotional and societal needs</p>
-                  <p><strong>Authentic:</strong> Aligns with long-term commitments</p>
-                </div>
-              </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-4 h-4 text-white">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        Brand Vision
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-2">Aspirational statement about the future impact the brand seeks to make.</p>
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-1 text-muted-foreground">
+                    <p><strong>Insight-Driven:</strong> Rooted in evolving customer expectations</p>
+                    <p><strong>Distinctive:</strong> Sets unique direction for category leadership</p>
+                    <p><strong>Empathetic:</strong> Addresses emotional and societal needs</p>
+                    <p><strong>Authentic:</strong> Aligns with long-term commitments</p>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Brand Mission */}
-              <div 
-                className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
+              <Card 
+                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-mission')}
               >
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Brand Mission
-                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
-                </h4>
-                <p className="text-xs mb-2 text-white/90">Actionable steps taken to fulfill the brand's purpose and vision.</p>
-                <div className="text-xs space-y-1 text-white/80">
-                  <p><strong>Insight-Driven:</strong> Addresses specific customer challenges</p>
-                  <p><strong>Distinctive:</strong> Defines unique way of delivering value</p>
-                  <p><strong>Empathetic:</strong> Focuses on improving customer lives</p>
-                  <p><strong>Authentic:</strong> Ensures consistency in messaging</p>
-                </div>
-              </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-4 h-4 text-white">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        Brand Mission
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-2">Actionable steps taken to fulfill the brand's purpose and vision.</p>
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-1 text-muted-foreground">
+                    <p><strong>Insight-Driven:</strong> Addresses specific customer challenges</p>
+                    <p><strong>Distinctive:</strong> Defines unique way of delivering value</p>
+                    <p><strong>Empathetic:</strong> Focuses on improving customer lives</p>
+                    <p><strong>Authentic:</strong> Ensures consistency in messaging</p>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Brand Values */}
-              <div 
-                className="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
+              <Card 
+                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-values')}
               >
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Brand Values
-                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
-                </h4>
-                <p className="text-xs mb-2 text-white/90">Guiding principles that shape how brand interacts with customers and stakeholders.</p>
-                <div className="text-xs space-y-1 text-white/80">
-                  <p><strong>Insight-Driven:</strong> Reflects what customers value beyond products</p>
-                  <p><strong>Distinctive:</strong> Sets brand apart through ethical standpoint</p>
-                  <p><strong>Empathetic:</strong> Aligns with customer beliefs</p>
-                  <p><strong>Authentic:</strong> Actions consistently reflect promises</p>
-                </div>
-              </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-4 h-4 text-white">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        Brand Values
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-2">Guiding principles that shape how brand interacts with customers and stakeholders.</p>
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-1 text-muted-foreground">
+                    <p><strong>Insight-Driven:</strong> Reflects what customers value beyond products</p>
+                    <p><strong>Distinctive:</strong> Sets brand apart through ethical standpoint</p>
+                    <p><strong>Empathetic:</strong> Aligns with customer beliefs</p>
+                    <p><strong>Authentic:</strong> Actions consistently reflect promises</p>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Positioning Statement */}
-              <div 
-                className="bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
+              <Card 
+                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('positioning-statement')}
               >
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Positioning Statement
-                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
-                </h4>
-                <p className="text-xs mb-2 text-white/90">Defines how the brand stands out in the market and why it's the best choice.</p>
-                <div className="text-xs space-y-1 text-white/80">
-                  <p><strong>Insight-Driven:</strong> Addresses customer pain points directly</p>
-                  <p><strong>Distinctive:</strong> Highlights unique solution offered</p>
-                  <p><strong>Empathetic:</strong> Aligns with customer aspirations</p>
-                  <p><strong>Authentic:</strong> Builds credibility through transparency</p>
-                </div>
-              </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-4 h-4 text-white">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        Positioning Statement
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-2">Defines how the brand stands out in the market and why it's the best choice.</p>
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-1 text-muted-foreground">
+                    <p><strong>Insight-Driven:</strong> Addresses customer pain points directly</p>
+                    <p><strong>Distinctive:</strong> Highlights unique solution offered</p>
+                    <p><strong>Empathetic:</strong> Aligns with customer aspirations</p>
+                    <p><strong>Authentic:</strong> Builds credibility through transparency</p>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Value Proposition */}
-              <div 
-                className="bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
+              <Card 
+                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('value-proposition')}
               >
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Value Proposition
-                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
-                </h4>
-                <p className="text-xs mb-2 text-white/90">Clear, compelling statement of why customers should buy from you vs competitors.</p>
-                <div className="text-xs space-y-1 text-white/80">
-                  <p><strong>Insight-Driven:</strong> Understands customer pain points</p>
-                  <p><strong>Distinctive:</strong> Clearly differentiates from competitors</p>
-                  <p><strong>Empathetic:</strong> Addresses practical and emotional benefits</p>
-                  <p><strong>Authentic:</strong> Reinforces trust through transparency</p>
-                </div>
-              </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-4 h-4 text-white">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        Value Proposition
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-2">Clear, compelling statement of why customers should buy from you vs competitors.</p>
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-1 text-muted-foreground">
+                    <p><strong>Insight-Driven:</strong> Understands customer pain points</p>
+                    <p><strong>Distinctive:</strong> Clearly differentiates from competitors</p>
+                    <p><strong>Empathetic:</strong> Addresses practical and emotional benefits</p>
+                    <p><strong>Authentic:</strong> Reinforces trust through transparency</p>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Brand Personality */}
-              <div 
-                className="bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
+              <Card 
+                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-personality')}
               >
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Brand Personality
-                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
-                </h4>
-                <p className="text-xs mb-2 text-white/90">Human-like traits that influence how the brand speaks and interacts.</p>
-                <div className="text-xs space-y-1 text-white/80">
-                  <p><strong>Insight-Driven:</strong> Based on what attracts target audience</p>
-                  <p><strong>Distinctive:</strong> Establishes unique, recognizable identity</p>
-                  <p><strong>Empathetic:</strong> Creates emotional connection through traits</p>
-                  <p><strong>Authentic:</strong> Consistent across all communications</p>
-                </div>
-              </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-4 h-4 text-white">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        Brand Personality
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-2">Human-like traits that influence how the brand speaks and interacts.</p>
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-1 text-muted-foreground">
+                    <p><strong>Insight-Driven:</strong> Based on what attracts target audience</p>
+                    <p><strong>Distinctive:</strong> Establishes unique, recognizable identity</p>
+                    <p><strong>Empathetic:</strong> Creates emotional connection through traits</p>
+                    <p><strong>Authentic:</strong> Consistent across all communications</p>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Brand Voice */}
-              <div 
-                className="bg-gradient-to-br from-slate-600 via-gray-600 to-zinc-700 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
+              <Card 
+                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-voice')}
               >
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Brand Voice
-                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
-                </h4>
-                <p className="text-xs mb-2 text-white/90">Tone, language, and communication style used across all platforms.</p>
-                <div className="text-xs space-y-1 text-white/80">
-                  <p><strong>Insight-Driven:</strong> Matches customer communication preferences</p>
-                  <p><strong>Distinctive:</strong> Creates unique, recognizable voice</p>
-                  <p><strong>Empathetic:</strong> Resonates emotionally with audience</p>
-                  <p><strong>Authentic:</strong> Consistent across marketing and support</p>
-                </div>
-              </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-4 h-4 text-white">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        Brand Voice
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-2">Tone, language, and communication style used across all platforms.</p>
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-1 text-muted-foreground">
+                    <p><strong>Insight-Driven:</strong> Matches customer communication preferences</p>
+                    <p><strong>Distinctive:</strong> Creates unique, recognizable voice</p>
+                    <p><strong>Empathetic:</strong> Resonates emotionally with audience</p>
+                    <p><strong>Authentic:</strong> Consistent across marketing and support</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="bg-primary/5 p-4 rounded-lg mt-6 border border-primary/20">
-              <h4 className="font-semibold text-primary mb-2">How the IDEA Framework Brings Your Brand Strategy to Life</h4>
-              <p className="text-xs">
+            <div className="bg-secondary/50 p-4 rounded-lg mt-6 border">
+              <h4 className="font-semibold text-foreground mb-2">How the IDEA Framework Brings Your Brand Strategy to Life</h4>
+              <p className="text-xs text-muted-foreground">
                 Using the IDEA Strategic Brand Framework alongside the Avatar 2.0 Tool, we simplify the branding process into a practical, easy-to-use system. 
                 Instead of guessing or overcomplicating brand strategy, the IDEA Brand Canvas helps you fill in key brand elements in a structured, 
                 intuitive way—all on a single unified document. This method ensures that every part of your brand is aligned, consistent, 
@@ -266,10 +346,17 @@ export default function BrandCanvas() {
         {/* Main Canvas */}
         <div className="lg:col-span-2 space-y-6">
           {/* Brand Purpose */}
-          <Card id="brand-purpose" className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-brand hover:scale-105 transition-all duration-300">
+          <Card id="brand-purpose" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
-              <CardTitle>Brand Purpose</CardTitle>
-              <CardDescription className="text-white/90">The "why" behind your existence—the core reason beyond just selling products</CardDescription>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-foreground">Brand Purpose</CardTitle>
+                  <CardDescription>The "why" behind your existence—the core reason beyond just selling products</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -293,7 +380,6 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.brandPurpose}
                   onChange={(e) => updateBrandData('brandCanvas', { brandPurpose: e.target.value })}
                   rows={3}
-                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="purpose"
@@ -305,10 +391,17 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Vision */}
-          <Card id="brand-vision" className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-brand hover:scale-105 transition-all duration-300">
+          <Card id="brand-vision" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
-              <CardTitle>Brand Vision</CardTitle>
-              <CardDescription className="text-white/90">Aspirational statement about the future impact your brand seeks to make</CardDescription>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-foreground">Brand Vision</CardTitle>
+                  <CardDescription>Aspirational statement about the future impact your brand seeks to make</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -319,7 +412,6 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.brandVision}
                   onChange={(e) => updateBrandData('brandCanvas', { brandVision: e.target.value })}
                   rows={3}
-                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="vision"
@@ -331,10 +423,17 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Mission */}
-          <Card id="brand-mission" className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-brand hover:scale-105 transition-all duration-300">
+          <Card id="brand-mission" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
-              <CardTitle>Brand Mission</CardTitle>
-              <CardDescription className="text-white/90">Actionable steps taken to fulfill your brand's purpose and vision</CardDescription>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-foreground">Brand Mission</CardTitle>
+                  <CardDescription>Actionable steps taken to fulfill your brand's purpose and vision</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -345,7 +444,6 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.brandMission}
                   onChange={(e) => updateBrandData('brandCanvas', { brandMission: e.target.value })}
                   rows={3}
-                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="mission"
@@ -357,10 +455,17 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Values */}
-          <Card id="brand-values" className="bg-gradient-to-r from-pink-500 to-rose-500 text-white border-0 shadow-brand hover:scale-105 transition-all duration-300">
+          <Card id="brand-values" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
-              <CardTitle>Brand Values</CardTitle>
-              <CardDescription className="text-white/90">Guiding principles that shape how your brand interacts with customers</CardDescription>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-foreground">Brand Values</CardTitle>
+                  <CardDescription>Guiding principles that shape how your brand interacts with customers</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -369,7 +474,6 @@ export default function BrandCanvas() {
                   <Input
                     id="newValue"
                     placeholder="Enter a brand value (e.g., Integrity, Innovation)"
-                    className="text-foreground"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         const value = (e.target as HTMLInputElement).value.trim();
@@ -415,15 +519,30 @@ export default function BrandCanvas() {
                     </Badge>
                   ))}
                 </div>
+                <AIAssistant
+                  fieldType="values"
+                  currentValue={brandData.brandCanvas.brandValues.join(', ')}
+                  onSuggestion={(suggestion) => {
+                    const values = suggestion.split(',').map(v => v.trim()).filter(v => v);
+                    updateBrandData('brandCanvas', { brandValues: values });
+                  }}
+                />
               </div>
             </CardContent>
           </Card>
 
           {/* Positioning Statement */}
-          <Card id="positioning-statement" className="bg-gradient-to-r from-red-500 to-rose-500 text-white border-0 shadow-brand hover:scale-105 transition-all duration-300">
+          <Card id="positioning-statement" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
-              <CardTitle>Positioning Statement</CardTitle>
-              <CardDescription className="text-white/90">How your brand stands out in the market and why it's the best choice</CardDescription>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-foreground">Positioning Statement</CardTitle>
+                  <CardDescription>How your brand stands out in the market and why it's the best choice</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -434,7 +553,6 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.positioningStatement}
                   onChange={(e) => updateBrandData('brandCanvas', { positioningStatement: e.target.value })}
                   rows={3}
-                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="positioning"
@@ -446,10 +564,17 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Value Proposition */}
-          <Card id="value-proposition" className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white border-0 shadow-brand hover:scale-105 transition-all duration-300">
+          <Card id="value-proposition" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
-              <CardTitle>Value Proposition</CardTitle>
-              <CardDescription className="text-white/90">Clear statement of why customers should buy from you vs competitors</CardDescription>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-foreground">Value Proposition</CardTitle>
+                  <CardDescription>Clear statement of why customers should buy from you vs competitors</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -477,7 +602,6 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.valueProposition}
                   onChange={(e) => updateBrandData('brandCanvas', { valueProposition: e.target.value })}
                   rows={4}
-                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="valueProposition"
@@ -489,10 +613,17 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Personality */}
-          <Card id="brand-personality" className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0 shadow-brand hover:scale-105 transition-all duration-300">
+          <Card id="brand-personality" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
-              <CardTitle>Brand Personality</CardTitle>
-              <CardDescription className="text-white/90">Human-like traits that influence how your brand speaks and interacts</CardDescription>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-foreground">Brand Personality</CardTitle>
+                  <CardDescription>Human-like traits that influence how your brand speaks and interacts</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -501,7 +632,6 @@ export default function BrandCanvas() {
                   <Input
                     id="newPersonality"
                     placeholder="Enter personality trait (e.g., Friendly, Professional, Bold)"
-                    className="text-foreground"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         const trait = (e.target as HTMLInputElement).value.trim();
@@ -547,15 +677,30 @@ export default function BrandCanvas() {
                     </Badge>
                   ))}
                 </div>
+                <AIAssistant
+                  fieldType="personality"
+                  currentValue={brandData.brandCanvas.brandPersonality.join(', ')}
+                  onSuggestion={(suggestion) => {
+                    const traits = suggestion.split(',').map(t => t.trim()).filter(t => t);
+                    updateBrandData('brandCanvas', { brandPersonality: traits });
+                  }}
+                />
               </div>
             </CardContent>
           </Card>
 
           {/* Brand Voice */}
-          <Card id="brand-voice" className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-0 shadow-brand hover:scale-105 transition-all duration-300">
+          <Card id="brand-voice" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
-              <CardTitle>Brand Voice</CardTitle>
-              <CardDescription className="text-white/90">Tone, language, and communication style used across all platforms</CardDescription>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-foreground">Brand Voice</CardTitle>
+                  <CardDescription>Tone, language, and communication style used across all platforms</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -566,7 +711,6 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.brandVoice}
                   onChange={(e) => updateBrandData('brandCanvas', { brandVoice: e.target.value })}
                   rows={3}
-                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="voice"
