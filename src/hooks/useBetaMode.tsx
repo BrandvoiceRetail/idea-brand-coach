@@ -26,7 +26,7 @@ export function useBetaMode() {
   });
 
   // Check if user is in beta mode
-  const isBetaMode = betaProgress !== null || location.pathname.startsWith('/beta');
+  const isBetaMode = betaProgress !== null || location.pathname.startsWith('/beta') || searchParams.get('beta') === 'true';
 
   // Initialize beta mode from journey page
   const initializeBetaMode = (mode: 'quick' | 'comprehensive') => {
