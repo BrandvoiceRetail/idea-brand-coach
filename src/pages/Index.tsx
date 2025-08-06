@@ -24,7 +24,8 @@ import {
   BookOpen,
   PenTool,
   MessageSquare,
-  Calendar
+  Calendar,
+  FlaskConical
 } from "lucide-react";
 
 export default function Index() {
@@ -267,6 +268,27 @@ export default function Index() {
           </div>
         </div>
 
+
+        {/* Beta Testing Section */}
+        <div className="mb-16">
+          <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+            <CardContent className="p-8 text-center">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <FlaskConical className="h-8 w-8 text-primary" />
+                <h2 className="text-2xl font-bold">Join Our Beta Testing Program</h2>
+              </div>
+              <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
+                Help us improve IDEA Brand Coach and get early access to new features. Your feedback shapes the future of strategic brand building.
+              </p>
+              <Button asChild size="lg" className="text-lg px-8 py-4">
+                <Link to="/beta">
+                  <FlaskConical className="h-5 w-5 mr-2" />
+                  Start Beta Testing
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* CTA Section */}
         <div className="text-center bg-gradient-hero rounded-2xl p-12">

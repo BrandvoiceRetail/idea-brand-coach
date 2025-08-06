@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   LogOut,
-  User
+  User,
+  FlaskConical
 } from "lucide-react";
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { name: "Avatar 2.0", href: "/avatar", icon: Target },
   { name: "Brand Canvas", href: "/canvas", icon: MessageSquare },
   { name: "ValueLens", href: "/valuelens", icon: Zap },
+  { name: "Beta Testing", href: "/beta", icon: FlaskConical },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
