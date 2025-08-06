@@ -78,7 +78,7 @@ export default function BrandCanvas() {
         )}
         
         {/* Brand Canvas Introduction */}
-        <Card className="bg-gradient-card shadow-card border mb-8 text-left">
+        <Card className="bg-card shadow-card border mb-8 text-left">
           <CardHeader>
             <CardTitle className="text-xl">About the IDEA Brand Canvas™</CardTitle>
           </CardHeader>
@@ -98,7 +98,7 @@ export default function BrandCanvas() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               {/* Brand Purpose */}
               <Card 
-                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
+                className="bg-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-purpose')}
               >
                 <CardContent className="p-4">
@@ -127,7 +127,7 @@ export default function BrandCanvas() {
 
               {/* Brand Vision */}
               <Card 
-                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
+                className="bg-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-vision')}
               >
                 <CardContent className="p-4">
@@ -156,7 +156,7 @@ export default function BrandCanvas() {
 
               {/* Brand Mission */}
               <Card 
-                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
+                className="bg-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-mission')}
               >
                 <CardContent className="p-4">
@@ -185,7 +185,7 @@ export default function BrandCanvas() {
 
               {/* Brand Values */}
               <Card 
-                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
+                className="bg-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-values')}
               >
                 <CardContent className="p-4">
@@ -214,7 +214,7 @@ export default function BrandCanvas() {
 
               {/* Positioning Statement */}
               <Card 
-                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
+                className="bg-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('positioning-statement')}
               >
                 <CardContent className="p-4">
@@ -243,7 +243,7 @@ export default function BrandCanvas() {
 
               {/* Value Proposition */}
               <Card 
-                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
+                className="bg-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('value-proposition')}
               >
                 <CardContent className="p-4">
@@ -272,7 +272,7 @@ export default function BrandCanvas() {
 
               {/* Brand Personality */}
               <Card 
-                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
+                className="bg-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-personality')}
               >
                 <CardContent className="p-4">
@@ -301,7 +301,7 @@ export default function BrandCanvas() {
 
               {/* Brand Voice */}
               <Card 
-                className="bg-gradient-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
+                className="bg-card shadow-card border cursor-pointer hover:shadow-brand transition-all duration-200"
                 onClick={() => scrollToSection('brand-voice')}
               >
                 <CardContent className="p-4">
@@ -346,7 +346,7 @@ export default function BrandCanvas() {
         {/* Main Canvas */}
         <div className="lg:col-span-2 space-y-6">
           {/* Brand Purpose */}
-          <Card id="brand-purpose" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+          <Card id="brand-purpose" className="bg-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -391,7 +391,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Vision */}
-          <Card id="brand-vision" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+          <Card id="brand-vision" className="bg-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -423,7 +423,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Mission */}
-          <Card id="brand-mission" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+          <Card id="brand-mission" className="bg-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -455,7 +455,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Values */}
-          <Card id="brand-values" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+          <Card id="brand-values" className="bg-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -532,7 +532,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Positioning Statement */}
-          <Card id="positioning-statement" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+          <Card id="positioning-statement" className="bg-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -564,7 +564,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Value Proposition */}
-          <Card id="value-proposition" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+          <Card id="value-proposition" className="bg-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -613,7 +613,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Personality */}
-          <Card id="brand-personality" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+          <Card id="brand-personality" className="bg-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -690,7 +690,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Voice */}
-          <Card id="brand-voice" className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+          <Card id="brand-voice" className="bg-card shadow-card hover:shadow-brand transition-all duration-300">
             <CardHeader>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center flex-shrink-0">
