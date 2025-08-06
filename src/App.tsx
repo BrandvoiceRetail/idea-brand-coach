@@ -26,6 +26,9 @@ import AvatarBuilder from "./pages/AvatarBuilder";
 import BrandCanvas from "./pages/BrandCanvas";
 import ValueLens from "./pages/ValueLens";
 import Auth from "./pages/Auth";
+import BetaWelcome from "./pages/BetaWelcome";
+import BetaJourney from "./pages/BetaJourney";
+import BetaFeedback from "./pages/BetaFeedback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -140,6 +143,9 @@ const App = () => (
                   </Layout>
                 </BrandProvider>
               } />
+              <Route path="/beta" element={<BetaWelcome />} />
+              <Route path="/beta/journey" element={<BetaJourney />} />
+              <Route path="/beta/feedback" element={<BetaFeedback />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
