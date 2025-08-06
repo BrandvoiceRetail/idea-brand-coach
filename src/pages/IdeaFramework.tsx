@@ -185,7 +185,7 @@ export default function IdeaFramework() {
             </div>
             <Button variant="outline" className="w-full" asChild>
               <Link to="/idea/distinctive">
-                Explore Distinctiveness <ArrowRight className="w-4 h-4 ml-2" />
+                Explore Distinctive Module <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
           </CardContent>
@@ -260,7 +260,7 @@ export default function IdeaFramework() {
             </div>
             <Button variant="outline" className="w-full" asChild>
               <Link to="/idea/authenticity">
-                Explore Authenticity <ArrowRight className="w-4 h-4 ml-2" />
+                Explore Authenticity Module <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
           </CardContent>

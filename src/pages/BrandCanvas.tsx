@@ -14,10 +14,19 @@ import { useBrand } from "@/contexts/BrandContext";
 import { AIAssistant } from "@/components/AIAssistant";
 import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
 import { FloatingConsultantButton } from "@/components/FloatingConsultantButton";
+import { CollapsibleDescription } from "@/components/CollapsibleDescription";
 
 export default function BrandCanvas() {
   const { toast } = useToast();
   const { brandData, updateBrandData, getCompletionPercentage, getRecommendedNextStep } = useBrand();
+
+  // Scroll to specific section
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   useEffect(() => {
     // Auto-populate from IDEA Framework data
@@ -74,22 +83,28 @@ export default function BrandCanvas() {
             <CardTitle className="text-xl">About the IDEA Brand Canvas™</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm sm:text-base">
-            <p>
-              Building a strong, conversion-driven brand strategy doesn't have to be overwhelming but many sellers do struggle with unclear messaging, weak positioning, and fragmented branding, leading to low trust, poor engagement, and inconsistent sales.
-            </p>
-            <p>
-              That's why the IDEA Brand Canvas™ was created—a structured, fill-in-the-box approach that simplifies and systematizes brand strategy. Instead of getting lost in complex branding exercises, this worksheet guides you step by step to create a clear, compelling brand identity that resonates with your customers and drives conversions.
-            </p>
-            <p>
-              The IDEA Brand Canvas™ covers all the critical elements of brand strategy, making it easy to define and refine your brand with clarity and confidence. Below is a detailed breakdown of each element and how it fits within the IDEA Strategic Brand Framework.
-            </p>
+            <CollapsibleDescription maxLines={3} storageKey="brandCanvas_intro">
+              <p>
+                Building a strong, conversion-driven brand strategy doesn't have to be overwhelming but many sellers do struggle with unclear messaging, weak positioning, and fragmented branding, leading to low trust, poor engagement, and inconsistent sales.
+              </p>
+              <p>
+                That's why the IDEA Brand Canvas™ was created—a structured, fill-in-the-box approach that simplifies and systematizes brand strategy. Instead of getting lost in complex branding exercises, this worksheet guides you step by step to create a clear, compelling brand identity that resonates with your customers and drives conversions.
+              </p>
+              <p>
+                The IDEA Brand Canvas™ covers all the critical elements of brand strategy, making it easy to define and refine your brand with clarity and confidence. Below is a detailed breakdown of each element and how it fits within the IDEA Strategic Brand Framework.
+              </p>
+            </CollapsibleDescription>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               {/* Brand Purpose */}
-              <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 p-4 rounded-lg border border-yellow-500/20">
+              <div 
+                className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 p-4 rounded-lg border border-yellow-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                onClick={() => scrollToSection('brand-purpose')}
+              >
                 <h4 className="font-semibold text-yellow-700 dark:text-yellow-300 mb-2 flex items-center gap-2">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                   Brand Purpose
+                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
                 <p className="text-xs mb-2">The "why" behind your existence—the core reason it goes beyond just selling products.</p>
                 <div className="text-xs space-y-1">
@@ -101,10 +116,14 @@ export default function BrandCanvas() {
               </div>
 
               {/* Brand Vision */}
-              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-4 rounded-lg border border-green-500/20">
+              <div 
+                className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-4 rounded-lg border border-green-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                onClick={() => scrollToSection('brand-vision')}
+              >
                 <h4 className="font-semibold text-green-700 dark:text-green-300 mb-2 flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   Brand Vision
+                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
                 <p className="text-xs mb-2">Aspirational statement about the future impact the brand seeks to make.</p>
                 <div className="text-xs space-y-1">
@@ -116,10 +135,14 @@ export default function BrandCanvas() {
               </div>
 
               {/* Brand Mission */}
-              <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 p-4 rounded-lg border border-blue-500/20">
+              <div 
+                className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 p-4 rounded-lg border border-blue-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                onClick={() => scrollToSection('brand-mission')}
+              >
                 <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   Brand Mission
+                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
                 <p className="text-xs mb-2">Actionable steps taken to fulfill the brand's purpose and vision.</p>
                 <div className="text-xs space-y-1">
@@ -131,10 +154,14 @@ export default function BrandCanvas() {
               </div>
 
               {/* Brand Values */}
-              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-4 rounded-lg border border-purple-500/20">
+              <div 
+                className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-4 rounded-lg border border-purple-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                onClick={() => scrollToSection('brand-values')}
+              >
                 <h4 className="font-semibold text-purple-700 dark:text-purple-300 mb-2 flex items-center gap-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                   Brand Values
+                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
                 <p className="text-xs mb-2">Guiding principles that shape how brand interacts with customers and stakeholders.</p>
                 <div className="text-xs space-y-1">
@@ -146,10 +173,14 @@ export default function BrandCanvas() {
               </div>
 
               {/* Positioning Statement */}
-              <div className="bg-gradient-to-br from-red-500/10 to-rose-500/10 p-4 rounded-lg border border-red-500/20">
+              <div 
+                className="bg-gradient-to-br from-red-500/10 to-rose-500/10 p-4 rounded-lg border border-red-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                onClick={() => scrollToSection('positioning-statement')}
+              >
                 <h4 className="font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-2">
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                   Positioning Statement
+                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
                 <p className="text-xs mb-2">Defines how the brand stands out in the market and why it's the best choice.</p>
                 <div className="text-xs space-y-1">
@@ -161,10 +192,14 @@ export default function BrandCanvas() {
               </div>
 
               {/* Value Proposition */}
-              <div className="bg-gradient-to-br from-teal-500/10 to-cyan-500/10 p-4 rounded-lg border border-teal-500/20">
+              <div 
+                className="bg-gradient-to-br from-teal-500/10 to-cyan-500/10 p-4 rounded-lg border border-teal-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                onClick={() => scrollToSection('value-proposition')}
+              >
                 <h4 className="font-semibold text-teal-700 dark:text-teal-300 mb-2 flex items-center gap-2">
                   <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
                   Value Proposition
+                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
                 <p className="text-xs mb-2">Clear, compelling statement of why customers should buy from you vs competitors.</p>
                 <div className="text-xs space-y-1">
@@ -176,10 +211,14 @@ export default function BrandCanvas() {
               </div>
 
               {/* Brand Personality */}
-              <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 p-4 rounded-lg border border-amber-500/20">
+              <div 
+                className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 p-4 rounded-lg border border-amber-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                onClick={() => scrollToSection('brand-personality')}
+              >
                 <h4 className="font-semibold text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-2">
                   <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
                   Brand Personality
+                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
                 <p className="text-xs mb-2">Human-like traits that influence how the brand speaks and interacts.</p>
                 <div className="text-xs space-y-1">
@@ -191,10 +230,14 @@ export default function BrandCanvas() {
               </div>
 
               {/* Brand Voice */}
-              <div className="bg-gradient-to-br from-slate-500/10 to-gray-500/10 p-4 rounded-lg border border-slate-500/20">
+              <div 
+                className="bg-gradient-to-br from-slate-500/10 to-gray-500/10 p-4 rounded-lg border border-slate-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                onClick={() => scrollToSection('brand-voice')}
+              >
                 <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                   <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
                   Brand Voice
+                  <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
                 <p className="text-xs mb-2">Tone, language, and communication style used across all platforms.</p>
                 <div className="text-xs space-y-1">
@@ -223,7 +266,7 @@ export default function BrandCanvas() {
         {/* Main Canvas */}
         <div className="lg:col-span-2 space-y-6">
           {/* Brand Purpose */}
-          <Card className="bg-gradient-card shadow-card">
+          <Card id="brand-purpose" className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Brand Purpose</CardTitle>
               <CardDescription>The "why" behind your existence—the core reason beyond just selling products</CardDescription>
@@ -261,7 +304,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Vision */}
-          <Card className="bg-gradient-card shadow-card">
+          <Card id="brand-vision" className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Brand Vision</CardTitle>
               <CardDescription>Aspirational statement about the future impact your brand seeks to make</CardDescription>
@@ -286,7 +329,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Mission */}
-          <Card className="bg-gradient-card shadow-card">
+          <Card id="brand-mission" className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Brand Mission</CardTitle>
               <CardDescription>Actionable steps taken to fulfill your brand's purpose and vision</CardDescription>
@@ -311,7 +354,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Values */}
-          <Card className="bg-gradient-card shadow-card">
+          <Card id="brand-values" className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Brand Values</CardTitle>
               <CardDescription>Guiding principles that shape how your brand interacts with customers</CardDescription>
@@ -373,7 +416,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Positioning Statement */}
-          <Card className="bg-gradient-card shadow-card">
+          <Card id="positioning-statement" className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Positioning Statement</CardTitle>
               <CardDescription>How your brand stands out in the market and why it's the best choice</CardDescription>
@@ -398,7 +441,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Value Proposition */}
-          <Card className="bg-gradient-card shadow-card">
+          <Card id="value-proposition" className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Value Proposition</CardTitle>
               <CardDescription>Clear statement of why customers should buy from you vs competitors</CardDescription>
@@ -440,7 +483,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Personality */}
-          <Card className="bg-gradient-card shadow-card">
+          <Card id="brand-personality" className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Brand Personality</CardTitle>
               <CardDescription>Human-like traits that influence how your brand speaks and interacts</CardDescription>
@@ -502,7 +545,7 @@ export default function BrandCanvas() {
           </Card>
 
           {/* Brand Voice */}
-          <Card className="bg-gradient-card shadow-card">
+          <Card id="brand-voice" className="bg-gradient-card shadow-card">
             <CardHeader>
               <CardTitle>Brand Voice</CardTitle>
               <CardDescription>Tone, language, and communication style used across all platforms</CardDescription>

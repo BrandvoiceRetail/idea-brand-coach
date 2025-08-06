@@ -92,6 +92,7 @@ export default function BetaJourney() {
   const mode = searchParams.get("mode") || "quick";
   const { initializeBetaMode, betaProgress, addComment, completeStep, getComment } = useBetaMode();
   const [stepComments, setStepComments] = useState<Record<string, string>>({});
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const steps = mode === "quick" ? quickTestSteps : comprehensiveTestSteps;
   const totalTime = mode === "quick" ? "5-10 minutes" : "15-25 minutes";
@@ -102,6 +103,27 @@ export default function BetaJourney() {
       initializeBetaMode(mode as 'quick' | 'comprehensive');
     }
   }, [mode, betaProgress, initializeBetaMode]);
+
+  // Listen for localStorage changes to refresh comments in real-time
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'betaProgress') {
+        setRefreshTrigger(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Also listen for direct localStorage updates (same tab)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const completedSteps = betaProgress?.completedSteps || [];
   const progress = (completedSteps.length / steps.length) * 100;
