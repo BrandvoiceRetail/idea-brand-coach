@@ -293,6 +293,7 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.brandPurpose}
                   onChange={(e) => updateBrandData('brandCanvas', { brandPurpose: e.target.value })}
                   rows={3}
+                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="purpose"
@@ -318,6 +319,7 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.brandVision}
                   onChange={(e) => updateBrandData('brandCanvas', { brandVision: e.target.value })}
                   rows={3}
+                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="vision"
@@ -343,6 +345,7 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.brandMission}
                   onChange={(e) => updateBrandData('brandCanvas', { brandMission: e.target.value })}
                   rows={3}
+                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="mission"
@@ -366,6 +369,7 @@ export default function BrandCanvas() {
                   <Input
                     id="newValue"
                     placeholder="Enter a brand value (e.g., Integrity, Innovation)"
+                    className="text-foreground"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         const value = (e.target as HTMLInputElement).value.trim();
@@ -430,6 +434,7 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.positioningStatement}
                   onChange={(e) => updateBrandData('brandCanvas', { positioningStatement: e.target.value })}
                   rows={3}
+                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="positioning"
@@ -472,6 +477,7 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.valueProposition}
                   onChange={(e) => updateBrandData('brandCanvas', { valueProposition: e.target.value })}
                   rows={4}
+                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="valueProposition"
@@ -495,6 +501,7 @@ export default function BrandCanvas() {
                   <Input
                     id="newPersonality"
                     placeholder="Enter personality trait (e.g., Friendly, Professional, Bold)"
+                    className="text-foreground"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         const trait = (e.target as HTMLInputElement).value.trim();
@@ -559,6 +566,7 @@ export default function BrandCanvas() {
                   value={brandData.brandCanvas.brandVoice}
                   onChange={(e) => updateBrandData('brandCanvas', { brandVoice: e.target.value })}
                   rows={3}
+                  className="text-foreground"
                 />
                 <AIAssistant
                   fieldType="voice"
