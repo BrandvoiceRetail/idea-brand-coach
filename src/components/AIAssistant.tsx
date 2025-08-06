@@ -85,7 +85,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         disabled={isLoading}
         variant="outline"
         size="sm"
-        className="w-full"
+        className="w-full text-foreground hover:text-foreground"
       >
         {isLoading ? (
           <>

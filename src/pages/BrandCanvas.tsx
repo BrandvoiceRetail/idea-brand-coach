@@ -78,7 +78,7 @@ export default function BrandCanvas() {
         )}
         
         {/* Brand Canvas Introduction */}
-        <Card className="bg-gradient-to-br from-primary/10 to-secondary/20 border-primary/30 shadow-lg mb-8 text-left">
+        <Card className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 border-0 shadow-2xl mb-8 text-left text-white">
           <CardHeader>
             <CardTitle className="text-xl">About the IDEA Brand Canvas™</CardTitle>
           </CardHeader>
@@ -98,16 +98,16 @@ export default function BrandCanvas() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               {/* Brand Purpose */}
               <div 
-                className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 p-4 rounded-lg border border-yellow-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                className="bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
                 onClick={() => scrollToSection('brand-purpose')}
               >
-                <h4 className="font-semibold text-yellow-700 dark:text-yellow-300 mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                   Brand Purpose
                   <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
-                <p className="text-xs mb-2">The "why" behind your existence—the core reason it goes beyond just selling products.</p>
-                <div className="text-xs space-y-1">
+                <p className="text-xs mb-2 text-white/90">The "why" behind your existence—the core reason it goes beyond just selling products.</p>
+                <div className="text-xs space-y-1 text-white/80">
                   <p><strong>Insight-Driven:</strong> Identifies customer needs beyond the product</p>
                   <p><strong>Distinctive:</strong> Stands out with a higher mission</p>
                   <p><strong>Empathetic:</strong> Resonates with customer values</p>
@@ -117,16 +117,16 @@ export default function BrandCanvas() {
 
               {/* Brand Vision */}
               <div 
-                className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-4 rounded-lg border border-green-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                className="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
                 onClick={() => scrollToSection('brand-vision')}
               >
-                <h4 className="font-semibold text-green-700 dark:text-green-300 mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                   Brand Vision
                   <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
-                <p className="text-xs mb-2">Aspirational statement about the future impact the brand seeks to make.</p>
-                <div className="text-xs space-y-1">
+                <p className="text-xs mb-2 text-white/90">Aspirational statement about the future impact the brand seeks to make.</p>
+                <div className="text-xs space-y-1 text-white/80">
                   <p><strong>Insight-Driven:</strong> Rooted in evolving customer expectations</p>
                   <p><strong>Distinctive:</strong> Sets unique direction for category leadership</p>
                   <p><strong>Empathetic:</strong> Addresses emotional and societal needs</p>
@@ -136,16 +136,16 @@ export default function BrandCanvas() {
 
               {/* Brand Mission */}
               <div 
-                className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 p-4 rounded-lg border border-blue-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
                 onClick={() => scrollToSection('brand-mission')}
               >
-                <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                   Brand Mission
                   <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
-                <p className="text-xs mb-2">Actionable steps taken to fulfill the brand's purpose and vision.</p>
-                <div className="text-xs space-y-1">
+                <p className="text-xs mb-2 text-white/90">Actionable steps taken to fulfill the brand's purpose and vision.</p>
+                <div className="text-xs space-y-1 text-white/80">
                   <p><strong>Insight-Driven:</strong> Addresses specific customer challenges</p>
                   <p><strong>Distinctive:</strong> Defines unique way of delivering value</p>
                   <p><strong>Empathetic:</strong> Focuses on improving customer lives</p>
@@ -155,16 +155,16 @@ export default function BrandCanvas() {
 
               {/* Brand Values */}
               <div 
-                className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-4 rounded-lg border border-purple-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                className="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
                 onClick={() => scrollToSection('brand-values')}
               >
-                <h4 className="font-semibold text-purple-700 dark:text-purple-300 mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                   Brand Values
                   <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
-                <p className="text-xs mb-2">Guiding principles that shape how brand interacts with customers and stakeholders.</p>
-                <div className="text-xs space-y-1">
+                <p className="text-xs mb-2 text-white/90">Guiding principles that shape how brand interacts with customers and stakeholders.</p>
+                <div className="text-xs space-y-1 text-white/80">
                   <p><strong>Insight-Driven:</strong> Reflects what customers value beyond products</p>
                   <p><strong>Distinctive:</strong> Sets brand apart through ethical standpoint</p>
                   <p><strong>Empathetic:</strong> Aligns with customer beliefs</p>
@@ -174,16 +174,16 @@ export default function BrandCanvas() {
 
               {/* Positioning Statement */}
               <div 
-                className="bg-gradient-to-br from-red-500/10 to-rose-500/10 p-4 rounded-lg border border-red-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                className="bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
                 onClick={() => scrollToSection('positioning-statement')}
               >
-                <h4 className="font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                   Positioning Statement
                   <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
-                <p className="text-xs mb-2">Defines how the brand stands out in the market and why it's the best choice.</p>
-                <div className="text-xs space-y-1">
+                <p className="text-xs mb-2 text-white/90">Defines how the brand stands out in the market and why it's the best choice.</p>
+                <div className="text-xs space-y-1 text-white/80">
                   <p><strong>Insight-Driven:</strong> Addresses customer pain points directly</p>
                   <p><strong>Distinctive:</strong> Highlights unique solution offered</p>
                   <p><strong>Empathetic:</strong> Aligns with customer aspirations</p>
@@ -193,16 +193,16 @@ export default function BrandCanvas() {
 
               {/* Value Proposition */}
               <div 
-                className="bg-gradient-to-br from-teal-500/10 to-cyan-500/10 p-4 rounded-lg border border-teal-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                className="bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
                 onClick={() => scrollToSection('value-proposition')}
               >
-                <h4 className="font-semibold text-teal-700 dark:text-teal-300 mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                   Value Proposition
                   <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
-                <p className="text-xs mb-2">Clear, compelling statement of why customers should buy from you vs competitors.</p>
-                <div className="text-xs space-y-1">
+                <p className="text-xs mb-2 text-white/90">Clear, compelling statement of why customers should buy from you vs competitors.</p>
+                <div className="text-xs space-y-1 text-white/80">
                   <p><strong>Insight-Driven:</strong> Understands customer pain points</p>
                   <p><strong>Distinctive:</strong> Clearly differentiates from competitors</p>
                   <p><strong>Empathetic:</strong> Addresses practical and emotional benefits</p>
@@ -212,16 +212,16 @@ export default function BrandCanvas() {
 
               {/* Brand Personality */}
               <div 
-                className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 p-4 rounded-lg border border-amber-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                className="bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-600 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
                 onClick={() => scrollToSection('brand-personality')}
               >
-                <h4 className="font-semibold text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                   Brand Personality
                   <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
-                <p className="text-xs mb-2">Human-like traits that influence how the brand speaks and interacts.</p>
-                <div className="text-xs space-y-1">
+                <p className="text-xs mb-2 text-white/90">Human-like traits that influence how the brand speaks and interacts.</p>
+                <div className="text-xs space-y-1 text-white/80">
                   <p><strong>Insight-Driven:</strong> Based on what attracts target audience</p>
                   <p><strong>Distinctive:</strong> Establishes unique, recognizable identity</p>
                   <p><strong>Empathetic:</strong> Creates emotional connection through traits</p>
@@ -231,16 +231,16 @@ export default function BrandCanvas() {
 
               {/* Brand Voice */}
               <div 
-                className="bg-gradient-to-br from-slate-500/10 to-gray-500/10 p-4 rounded-lg border border-slate-500/20 cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                className="bg-gradient-to-br from-slate-600 via-gray-600 to-zinc-700 p-4 rounded-lg border-0 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-2xl text-white"
                 onClick={() => scrollToSection('brand-voice')}
               >
-                <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                   Brand Voice
                   <ArrowRight className="w-3 h-3 ml-auto opacity-70" />
                 </h4>
-                <p className="text-xs mb-2">Tone, language, and communication style used across all platforms.</p>
-                <div className="text-xs space-y-1">
+                <p className="text-xs mb-2 text-white/90">Tone, language, and communication style used across all platforms.</p>
+                <div className="text-xs space-y-1 text-white/80">
                   <p><strong>Insight-Driven:</strong> Matches customer communication preferences</p>
                   <p><strong>Distinctive:</strong> Creates unique, recognizable voice</p>
                   <p><strong>Empathetic:</strong> Resonates emotionally with audience</p>
