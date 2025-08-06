@@ -19,8 +19,8 @@ export default function IdeaFramework() {
     <div className="space-y-8">
       {/* Hero Section */}
       <div className="text-center max-w-4xl mx-auto">
-        <div className="w-20 h-20 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-6">
-          <BookOpen className="w-10 h-10 text-secondary-foreground" />
+        <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <BookOpen className="w-10 h-10 text-white" />
         </div>
         <h1 className="text-4xl font-bold mb-4">The IDEA Strategic Brand Framework™</h1>
         <p className="text-xl text-muted-foreground mb-6">
@@ -37,7 +37,7 @@ export default function IdeaFramework() {
       </div>
 
       {/* Framework Overview */}
-      <Card className="bg-gradient-card shadow-brand">
+      <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
         <CardContent className="p-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-4">The Four Pillars of Trust</h2>
@@ -49,7 +49,7 @@ export default function IdeaFramework() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Insight Driven */}
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto">
                 <Lightbulb className="w-8 h-8 text-white" />
               </div>
               <div>
@@ -62,7 +62,7 @@ export default function IdeaFramework() {
 
             {/* Distinctive/Different */}
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
                 <Star className="w-8 h-8 text-white" />
               </div>
               <div>
@@ -75,7 +75,7 @@ export default function IdeaFramework() {
 
             {/* Emotionally Intelligent */}
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-500 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center mx-auto">
                 <Heart className="w-8 h-8 text-white" />
               </div>
               <div>
@@ -88,7 +88,7 @@ export default function IdeaFramework() {
 
             {/* Authoritative & Authentic */}
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <div>
@@ -100,22 +100,24 @@ export default function IdeaFramework() {
             </div>
           </div>
 
-          <div className="text-center mt-8 p-6 bg-secondary/10 rounded-lg">
-            <h4 className="font-bold text-xl mb-2">TRUST</h4>
-            <p className="text-muted-foreground">
-              All four pillars work together to build the ultimate goal: unshakeable customer trust
-            </p>
-          </div>
+          <Card className="mt-8 bg-card border-secondary/20">
+            <CardContent className="p-6 text-center">
+              <h4 className="font-bold text-xl mb-2 text-secondary">TRUST</h4>
+              <p className="text-muted-foreground">
+                All four pillars work together to build the ultimate goal: unshakeable customer trust
+              </p>
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
 
       {/* Deep Dive Modules */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Insight Driven */}
-        <Card className="hover:shadow-brand transition-all duration-300">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
                 <Lightbulb className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -131,15 +133,15 @@ export default function IdeaFramework() {
             </p>
             <div className="space-y-2">
               <div className="flex items-center text-sm">
-                <Target className="w-4 h-4 mr-2 text-yellow-600" />
+                <Target className="w-4 h-4 mr-2 text-orange-600" />
                 <span>Buyer Intent Analysis</span>
               </div>
               <div className="flex items-center text-sm">
-                <Users className="w-4 h-4 mr-2 text-yellow-600" />
+                <Users className="w-4 h-4 mr-2 text-orange-600" />
                 <span>Motivation Mapping</span>
               </div>
               <div className="flex items-center text-sm">
-                <Heart className="w-4 h-4 mr-2 text-yellow-600" />
+                <Heart className="w-4 h-4 mr-2 text-orange-600" />
                 <span>Emotional Trigger Identification</span>
               </div>
             </div>
@@ -152,10 +154,10 @@ export default function IdeaFramework() {
         </Card>
 
         {/* Distinctive/Different */}
-        <Card className="hover:shadow-brand transition-all duration-300">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
                 <Star className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -192,10 +194,10 @@ export default function IdeaFramework() {
         </Card>
 
         {/* Emotionally Intelligent */}
-        <Card className="hover:shadow-brand transition-all duration-300">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-pink-500 rounded-lg flex items-center justify-center">
                 <Heart className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -227,10 +229,10 @@ export default function IdeaFramework() {
         </Card>
 
         {/* Authoritative & Authentic */}
-        <Card className="hover:shadow-brand transition-all duration-300">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -268,13 +270,13 @@ export default function IdeaFramework() {
       </div>
 
       {/* Trevor Bradford Consultant Section */}
-      <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-secondary/20 shadow-glow">
+      <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 border-secondary/20">
         <CardContent className="p-8">
           <div className="flex items-center justify-center mb-6">
             <img 
               src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png" 
               alt="Trevor Bradford"
-              className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+              className="w-16 h-16 rounded-full object-cover border-2 border-secondary"
             />
           </div>
           <div className="text-center">
@@ -290,7 +292,7 @@ export default function IdeaFramework() {
               <Badge variant="secondary" className="text-xs">Document Analysis</Badge>
               <Badge variant="secondary" className="text-xs">24/7 Available</Badge>
             </div>
-            <Button variant="secondary" size="lg" asChild className="shadow-glow">
+            <Button variant="secondary" size="lg" asChild>
               <Link to="/idea/consultant">
                 <Users className="w-4 h-4 mr-2" />
                 Ask Trevor Bradford
