@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, ArrowRight, Home, MessageSquare, Timer } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle, ArrowRight, Home, MessageSquare, Timer, FileText } from "lucide-react";
+import { useBetaMode } from "@/hooks/useBetaMode";
 
 const quickTestSteps = [
   {
@@ -28,7 +30,7 @@ const quickTestSteps = [
       "Answer all questions honestly",
       "Note any confusing questions"
     ],
-    link: "/free-diagnostic",
+    link: "/diagnostic",
     estimatedTime: "3-5 mins"
   },
   {
@@ -40,7 +42,7 @@ const quickTestSteps = [
       "Read through each category breakdown",
       "Check if recommendations make sense"
     ],
-    link: "/diagnostic-results",
+    link: "/diagnostic/results",
     estimatedTime: "2 mins"
   }
 ];
@@ -80,7 +82,7 @@ const comprehensiveTestSteps = [
       "Try the avatar builder",
       "Test any other available tools"
     ],
-    link: "/brand-canvas",
+    link: "/canvas",
     estimatedTime: "5-7 mins"
   }
 ];
@@ -88,19 +90,37 @@ const comprehensiveTestSteps = [
 export default function BetaJourney() {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") || "quick";
-  const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const { initializeBetaMode, betaProgress, addComment, completeStep, getComment } = useBetaMode();
+  const [stepComments, setStepComments] = useState<Record<string, string>>({});
 
   const steps = mode === "quick" ? quickTestSteps : comprehensiveTestSteps;
   const totalTime = mode === "quick" ? "5-10 minutes" : "15-25 minutes";
 
-  const markStepComplete = (stepId: string) => {
-    if (!completedSteps.includes(stepId)) {
-      setCompletedSteps([...completedSteps, stepId]);
+  // Initialize beta mode when component mounts
+  useEffect(() => {
+    if (!betaProgress || betaProgress.mode !== mode) {
+      initializeBetaMode(mode as 'quick' | 'comprehensive');
+    }
+  }, [mode, betaProgress, initializeBetaMode]);
+
+  const completedSteps = betaProgress?.completedSteps || [];
+  const progress = (completedSteps.length / steps.length) * 100;
+
+  const handleCommentChange = (stepId: string, comment: string) => {
+    setStepComments(prev => ({ ...prev, [stepId]: comment }));
+  };
+
+  const handleSaveComment = (stepId: string) => {
+    const comment = stepComments[stepId];
+    if (comment?.trim()) {
+      addComment(stepId, comment.trim());
+      setStepComments(prev => ({ ...prev, [stepId]: '' }));
     }
   };
 
-  const progress = (completedSteps.length / steps.length) * 100;
+  const markStepComplete = (stepId: string) => {
+    completeStep(stepId);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4">
@@ -126,7 +146,7 @@ export default function BetaJourney() {
         <div className="space-y-6 mb-8">
           {steps.map((step, index) => {
             const isCompleted = completedSteps.includes(step.id);
-            const isCurrent = index === currentStep;
+            const isCurrent = false; // No longer tracking current step, all steps are available
             
             return (
               <Card 
@@ -169,6 +189,42 @@ export default function BetaJourney() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Show existing comment if any */}
+                  {getComment(step.id) && (
+                    <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">Your feedback:</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{getComment(step.id)}</p>
+                    </div>
+                  )}
+
+                  {/* Add comment section for incomplete steps */}
+                  {!isCompleted && !getComment(step.id) && (
+                    <div className="mb-4 space-y-2">
+                      <label className="text-sm font-medium">Add notes about this step:</label>
+                      <Textarea
+                        placeholder="Any observations, issues, or feedback about this step..."
+                        value={stepComments[step.id] || ''}
+                        onChange={(e) => handleCommentChange(step.id, e.target.value)}
+                        rows={2}
+                        className="text-sm"
+                      />
+                      {stepComments[step.id]?.trim() && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleSaveComment(step.id)}
+                        >
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Save Note
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex gap-3">
                     <Button asChild>
                       <Link to={step.link}>

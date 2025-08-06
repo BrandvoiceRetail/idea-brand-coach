@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,8 +17,11 @@ import {
   Star,
   Bug,
   Lightbulb,
-  Heart
+  Heart,
+  FileText,
+  ArrowLeft
 } from "lucide-react";
+import { useBetaMode } from "@/hooks/useBetaMode";
 
 const feedbackAreas = [
   { id: "navigation", label: "Navigation & Layout" },
@@ -40,6 +43,14 @@ export default function BetaFeedback() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { toast } = useToast();
+  const { betaProgress } = useBetaMode();
+
+  // Pre-populate tested areas based on completed steps
+  useEffect(() => {
+    if (betaProgress?.completedSteps) {
+      setSelectedAreas(betaProgress.completedSteps);
+    }
+  }, [betaProgress]);
 
   const handleAreaToggle = (areaId: string) => {
     setSelectedAreas(prev => 
@@ -277,10 +288,38 @@ export default function BetaFeedback() {
             </CardContent>
           </Card>
 
+          {/* Step-by-Step Comments */}
+          {betaProgress?.comments && betaProgress.comments.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Your Step-by-Step Comments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {betaProgress.comments.map((comment, index) => (
+                    <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium capitalize">{comment.stepId.replace(/([A-Z])/g, ' $1')}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(comment.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{comment.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Submit buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="outline" asChild>
-              <Link to="/beta/journey">
+              <Link to={`/beta/journey?mode=${betaProgress?.mode || 'quick'}`}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Journey
               </Link>
             </Button>

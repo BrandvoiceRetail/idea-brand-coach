@@ -16,6 +16,7 @@ import {
   User,
   FlaskConical
 } from "lucide-react";
+import { BetaNavigationWidget } from "@/components/BetaNavigationWidget";
 
 const navItems = [
   { name: "Home", href: "/app", icon: Brain },
@@ -148,6 +149,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
+      <BetaNavigationWidget />
     </div>
   );
 }
