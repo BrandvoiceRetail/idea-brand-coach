@@ -51,7 +51,7 @@ export default function BrandCanvas() {
   const recommendedStep = getRecommendedNextStep();
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 px-4 bg-gradient-to-br from-background via-background to-secondary/20">
+    <div className="max-w-4xl mx-auto space-y-8 px-4 bg-background">
       <div className="text-center">
         <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
           <MessageSquare className="w-8 h-8 text-secondary-foreground" />
