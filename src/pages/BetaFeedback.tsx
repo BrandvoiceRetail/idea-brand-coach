@@ -43,7 +43,7 @@ export default function BetaFeedback() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { toast } = useToast();
-  const { betaProgress } = useBetaMode();
+  const { betaProgress, getBetaTesterInfo } = useBetaMode();
 
   // Pre-populate tested areas based on completed steps
   useEffect(() => {
@@ -68,6 +68,10 @@ export default function BetaFeedback() {
       // Get current user if logged in
       const { data: { user } } = await supabase.auth.getUser();
       
+      // Get beta tester info
+      const { getBetaTesterInfo } = useBetaMode();
+      const betaTesterInfo = getBetaTesterInfo();
+      
       // Submit feedback to our edge function
       const { data, error } = await supabase.functions.invoke('save-beta-feedback', {
         body: {
@@ -78,7 +82,8 @@ export default function BetaFeedback() {
           selectedAreas,
           wouldRecommend,
           email,
-          userId: user?.id || null
+          userId: user?.id || null,
+          betaTesterId: betaTesterInfo?.id || null
         }
       });
 

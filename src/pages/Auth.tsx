@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { Home } from 'lucide-react';
+import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
@@ -60,6 +61,7 @@ export default function Auth() {
             </Button>
           </CardContent>
         </Card>
+        <BetaNavigationWidget />
       </div>
     );
   }
@@ -166,6 +168,7 @@ export default function Auth() {
         </CardContent>
       </Card>
       </div>
+      <BetaNavigationWidget />
     </div>
   );
 }

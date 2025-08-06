@@ -10,11 +10,12 @@ import { Link } from 'react-router-dom';
 
 const stepMapping: Record<string, string> = {
   '/': 'explore',
-  '/diagnostic': 'diagnostic',
-  '/diagnostic/results': 'results',
-  '/auth': 'signup',
-  '/dashboard': 'dashboard',
-  '/canvas': 'tools'
+  '/diagnostic': 'freeDiagnostic',
+  '/diagnostic/results': 'reviewResults',
+  '/auth': 'createAccount',
+  '/dashboard': 'exploreDashboard',
+  '/canvas': 'testBrandTools',
+  '/avatar': 'testBrandTools'
 };
 
 export function BetaNavigationWidget() {

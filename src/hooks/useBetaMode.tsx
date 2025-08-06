@@ -85,6 +85,12 @@ export function useBetaMode() {
     return betaProgress?.comments.find(c => c.stepId === stepId)?.comment || '';
   };
 
+  // Get beta tester info from localStorage
+  const getBetaTesterInfo = () => {
+    const info = localStorage.getItem('betaTesterInfo');
+    return info ? JSON.parse(info) : null;
+  };
+
   return {
     isBetaMode,
     betaProgress,
@@ -92,6 +98,7 @@ export function useBetaMode() {
     addComment,
     completeStep,
     clearBetaMode,
-    getComment
+    getComment,
+    getBetaTesterInfo
   };
 }

@@ -16,6 +16,7 @@ import {
   Download,
   UserPlus
 } from 'lucide-react';
+import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 
 interface DiagnosticData {
   answers: Record<string, string>;
@@ -277,6 +278,7 @@ export default function DiagnosticResults() {
           </div>
         </div>
       </div>
+      <BetaNavigationWidget />
     </div>
   );
 }
