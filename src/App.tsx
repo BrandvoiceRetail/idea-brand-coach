@@ -43,17 +43,17 @@ const App = () => (
           <BrowserRouter>
             <ScrollToTop />
             <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/diagnostic" element={<FreeDiagnostic />} />
-              <Route path="/diagnostic/results" element={<DiagnosticResults />} />
-              <Route path="/app" element={
+              <Route path="/" element={
                 <BrandProvider>
                   <Layout>
                     <Index />
                   </Layout>
                 </BrandProvider>
               } />
+              <Route path="/welcome" element={<Landing />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/diagnostic" element={<FreeDiagnostic />} />
+              <Route path="/diagnostic/results" element={<DiagnosticResults />} />
               <Route path="/dashboard" element={
                 <BrandProvider>
                   <Layout>
