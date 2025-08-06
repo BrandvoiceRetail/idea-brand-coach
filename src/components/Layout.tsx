@@ -22,7 +22,7 @@ const navItems = [
   { name: "Home", href: "/app", icon: Brain },
   { name: "Brand Diagnostic", href: "/diagnostic", icon: Brain },
   { name: "Dashboard", href: "/dashboard", icon: BarChart },
-  { name: "IDEA Strategic Brand Framework™", href: "/idea", icon: BookOpen },
+  { name: "IDEA Framework", href: "/idea", icon: BookOpen },
   { name: "Avatar 2.0", href: "/avatar", icon: Target },
   { name: "Brand Canvas", href: "/canvas", icon: MessageSquare },
   { name: "ValueLens", href: "/valuelens", icon: Zap },
@@ -52,9 +52,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-gradient-primary shadow-brand border-b">
+      <header className="sticky top-0 z-50 bg-gradient-primary border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-between items-center h-24">
             {/* Logo */}
             <Link to="/app" className="flex items-center">
               <img 
