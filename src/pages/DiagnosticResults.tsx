@@ -270,7 +270,7 @@ export default function DiagnosticResults() {
           <div className="text-center mt-8">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/app')}
+              onClick={() => navigate('/')}
               className="text-muted-foreground"
             >
               ← Back to Home
