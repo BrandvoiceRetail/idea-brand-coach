@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,7 @@ const navItems = [
   { name: "Brand Diagnostic", href: "/diagnostic", icon: Brain },
   { name: "Dashboard", href: "/dashboard", icon: BarChart },
   { name: "IDEA Framework", href: "/idea", icon: BookOpen },
-  { name: "Brand Coach", href: "/idea/consultant", icon: MessageSquare },
+  { name: "Ask The Brand Coach", href: "/idea/consultant", icon: MessageSquare },
   { name: "Avatar 2.0", href: "/avatar", icon: Target },
   { name: "Brand Canvas", href: "/canvas", icon: MessageSquare },
   { name: "ValueLens", href: "/value-lens", icon: Zap },
