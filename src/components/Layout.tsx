@@ -58,11 +58,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-24">
             {/* Logo */}
-            <Link to="/" className="flex items-center">
+            <Link to="/" className="flex items-center mr-8">
               <img 
-                src="/lovable-uploads/70854908-715a-4210-bf5e-8bbb687541b9.png" 
+                src="/lovable-uploads/deb8c3dd-04b6-4d99-8cb3-07a33cf70ebb.png" 
                 alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
-                className="h-20 w-auto object-contain"
+                className="h-16 w-auto object-contain"
+                onError={(e) => {
+                  console.error('Logo failed to load:', e);
+                }}
               />
             </Link>
 
