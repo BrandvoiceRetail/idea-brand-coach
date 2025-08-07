@@ -60,9 +60,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {/* Logo */}
             <Link to="/" className="flex items-center">
               <img 
-                src="/lovable-uploads/9d0d469a-cd07-4743-9db7-d82dea0751e5.png" 
+                src="/lovable-uploads/875fc09e-6631-49ba-9c08-5b20c80e6b78.png" 
                 alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
-                className="h-28 w-auto object-contain"
+                className="h-20 w-auto object-contain"
               />
             </Link>
 
