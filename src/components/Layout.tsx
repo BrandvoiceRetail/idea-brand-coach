@@ -34,19 +34,7 @@ const navItems = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut, loading } = useAuth();
-
-  // Show loading state while authentication is being determined
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-2">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const { user, signOut } = useAuth();
 
   // Show auth page without layout if not authenticated and not on auth or home page
   if (!user && location.pathname !== '/auth' && location.pathname !== '/' && location.pathname !== '/diagnostic') {
@@ -70,16 +58,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-24">
             {/* Logo */}
-            <Link to="/" className="flex items-center mr-8">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
-                  <Brain className="w-8 h-8 text-secondary-foreground" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xl font-bold text-primary-foreground">IDEA</span>
-                  <span className="text-sm text-primary-foreground/80">Brand Coach</span>
-                </div>
-              </div>
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
+                alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
+                className="h-28 w-auto object-contain"
+              />
             </Link>
 
             {/* Desktop Navigation */}
