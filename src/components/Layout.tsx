@@ -61,12 +61,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <img 
                 src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
                 alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
-                className="h-16 w-auto object-contain"
+                className="h-28 w-auto object-contain"
                 onError={(e) => {
-                  console.error('Logo failed to load:', e);
-                  e.currentTarget.style.display = 'none';
+                  console.error('Layout logo failed to load:', e);
+                  console.log('Logo element:', e.currentTarget);
                 }}
-                onLoad={() => console.log('Logo loaded successfully')}
+                onLoad={(e) => {
+                  console.log('Layout logo loaded successfully');
+                  console.log('Logo dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+                  console.log('Logo computed style:', window.getComputedStyle(e.currentTarget));
+                }}
+                style={{ border: '1px solid red' }}
               />
             </Link>
 
