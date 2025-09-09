@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
 import { useBrand } from "@/contexts/BrandContext";
+import { UserDiagnosticResults } from "@/components/UserDiagnosticResults";
 import { 
   Brain, 
   Target, 
@@ -413,6 +414,9 @@ export default function Dashboard() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+
+          {/* User Diagnostic Results */}
+          <UserDiagnosticResults />
 
           {/* Real Progress */}
           <Card className="bg-gradient-card shadow-card">
