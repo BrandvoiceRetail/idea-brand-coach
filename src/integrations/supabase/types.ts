@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -171,6 +171,47 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      user_diagnostic_results: {
+        Row: {
+          beta_tester_id: string | null
+          category_scores: Json | null
+          created_at: string
+          diagnostic_completion_date: string
+          id: string
+          overall_score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          beta_tester_id?: string | null
+          category_scores?: Json | null
+          created_at?: string
+          diagnostic_completion_date?: string
+          id?: string
+          overall_score: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          beta_tester_id?: string | null
+          category_scores?: Json | null
+          created_at?: string
+          diagnostic_completion_date?: string
+          id?: string
+          overall_score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_diagnostic_results_beta_tester_id_fkey"
+            columns: ["beta_tester_id"]
+            isOneToOne: false
+            referencedRelation: "beta_testers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
