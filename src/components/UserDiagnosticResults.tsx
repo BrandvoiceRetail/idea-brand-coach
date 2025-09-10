@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Download, Calendar, TrendingUp, Brain } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Json } from "@/integrations/supabase/types";
+import jsPDF from "jspdf";
 
 interface DiagnosticResult {
   id: string;
@@ -64,28 +65,117 @@ export const UserDiagnosticResults = () => {
   };
 
   const downloadResults = (result: DiagnosticResult) => {
-    // Generate a downloadable report (simplified version)
-    const reportData = {
-      overall_score: result.overall_score,
-      category_scores: result.category_scores,
-      completion_date: result.diagnostic_completion_date,
-      report_generated: new Date().toISOString()
-    };
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const lineHeight = 6;
+      let yPosition = margin;
 
-    const dataStr = JSON.stringify(reportData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `diagnostic-results-${new Date(result.diagnostic_completion_date).toLocaleDateString()}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+      const checkPageBreak = (additionalSpace = 15) => {
+        if (yPosition > pageHeight - margin - additionalSpace) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+      };
 
-    toast({
-      title: "Success",
-      description: "Diagnostic results downloaded successfully",
-    });
+      // Title
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Brand Diagnostic Results', margin, yPosition);
+      yPosition += 15;
+
+      // Date
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      const completionDate = new Date(result.diagnostic_completion_date).toLocaleDateString();
+      pdf.text(`Assessment Date: ${completionDate}`, margin, yPosition);
+      yPosition += 10;
+
+      // Overall Score Section
+      checkPageBreak(20);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Overall Performance', margin, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(24);
+      pdf.setTextColor(34, 197, 94); // Green color for good scores
+      if (result.overall_score < 60) {
+        pdf.setTextColor(239, 68, 68); // Red for poor scores
+      } else if (result.overall_score < 80) {
+        pdf.setTextColor(245, 158, 11); // Yellow for average scores
+      }
+      
+      pdf.text(`${result.overall_score}%`, margin, yPosition);
+      yPosition += 15;
+
+      // Reset text color
+      pdf.setTextColor(0, 0, 0);
+
+      // Category Scores Section
+      if (result.category_scores && typeof result.category_scores === 'object' && result.category_scores !== null) {
+        checkPageBreak(30);
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Category Breakdown', margin, yPosition);
+        yPosition += 10;
+
+        const categoryScores = result.category_scores as Record<string, number>;
+        Object.entries(categoryScores).forEach(([category, score]) => {
+          checkPageBreak();
+          
+          pdf.setFontSize(12);
+          pdf.setFont('helvetica', 'normal');
+          
+          // Category name
+          const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+          pdf.text(categoryName + ':', margin, yPosition);
+          
+          // Score with color coding
+          if (score >= 80) {
+            pdf.setTextColor(34, 197, 94); // Green
+          } else if (score >= 60) {
+            pdf.setTextColor(245, 158, 11); // Yellow
+          } else {
+            pdf.setTextColor(239, 68, 68); // Red
+          }
+          
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(`${score}%`, margin + 60, yPosition);
+          
+          // Reset color
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFont('helvetica', 'normal');
+          
+          yPosition += lineHeight + 2;
+        });
+      }
+
+      // Footer
+      yPosition = pageHeight - 30;
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Report generated on ${new Date().toLocaleDateString()}`, margin, yPosition);
+      pdf.text('Brand Diagnostic Assessment Report', pageWidth - margin - 60, yPosition);
+
+      // Download the PDF
+      const fileName = `diagnostic-results-${completionDate.replace(/\//g, '-')}.pdf`;
+      pdf.save(fileName);
+
+      toast({
+        title: "Success",
+        description: "Diagnostic results downloaded as PDF successfully",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF report",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user) {
