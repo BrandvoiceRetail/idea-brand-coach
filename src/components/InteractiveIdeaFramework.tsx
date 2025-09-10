@@ -160,7 +160,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
     
     setInsights(prev => ({
       ...prev,
-      [key]: key === "emotionalTriggers" ? value.split(",").map(t => t.trim()).filter(t => t) : value
+      [key]: key === "emotionalTriggers" ? value: value
     }));
   };
 
