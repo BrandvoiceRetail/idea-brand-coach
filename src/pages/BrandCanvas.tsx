@@ -778,12 +778,12 @@ export default function BrandCanvas() {
               </Button>
 
               <div className="space-y-2">
-                <Button asChild variant="outline" className="w-full">
+                {/* <Button asChild variant="outline" className="w-full">
                   <Link to="/valuelens">
                     Generate AI Copy
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
-                </Button>
+                </Button> */}
                 
                 <BrandCanvasPDFExport 
                   brandCanvas={brandData.brandCanvas}
