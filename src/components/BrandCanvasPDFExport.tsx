@@ -143,8 +143,9 @@ export const BrandCanvasPDFExport: React.FC<BrandCanvasPDFExportProps> = ({
         pdf.setFontSize(11);
         brandCanvas.brandValues.forEach(value => {
           checkPageBreak();
-          pdf.text(`• ${value}`, margin, yPosition);
-          yPosition += lineHeight;
+          const valueLines = pdf.splitTextToSize(`• ${value}`, pageWidth - 2 * margin);
+          pdf.text(valueLines, margin, yPosition);
+          yPosition += (valueLines.length * lineHeight);
         });
         yPosition += 5;
       }
@@ -191,8 +192,9 @@ export const BrandCanvasPDFExport: React.FC<BrandCanvasPDFExportProps> = ({
         pdf.setFontSize(11);
         brandCanvas.brandPersonality.forEach(trait => {
           checkPageBreak();
-          pdf.text(`• ${trait}`, margin, yPosition);
-          yPosition += lineHeight;
+          const traitLines = pdf.splitTextToSize(`• ${trait}`, pageWidth - 2 * margin);
+          pdf.text(traitLines, margin, yPosition);
+          yPosition += (traitLines.length * lineHeight);
         });
         yPosition += 5;
       }
