@@ -41,7 +41,8 @@ export default function BetaFeedback() {
   const [wouldRecommend, setWouldRecommend] = useState<string>("");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const { getBetaTesterInfo } = useBetaMode();
+
   const { toast } = useToast();
   const { betaProgress, getBetaTesterInfo } = useBetaMode();
 
@@ -69,7 +70,6 @@ export default function BetaFeedback() {
       const { data: { user } } = await supabase.auth.getUser();
       
       // Get beta tester info
-      const { getBetaTesterInfo } = useBetaMode();
       const betaTesterInfo = getBetaTesterInfo();
       
       // Submit feedback to our edge function
