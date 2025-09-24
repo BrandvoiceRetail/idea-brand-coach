@@ -277,6 +277,8 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
                 question={`How do I identify ${currentStepData.title.toLowerCase()} for my brand?`}
                 category="idea-framework"
                 context={currentStepData.prompt}
+                currentStep={currentStepData.id}
+                isStepCompleted={getCurrentValue().trim().length > 0 && currentStep > steps.findIndex(s => s.id === currentStepData.id)}
               />
             </div>
             <Textarea

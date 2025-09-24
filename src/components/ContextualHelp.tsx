@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HelpCircle, X, Sparkles, Loader2 } from "lucide-react";
@@ -9,14 +9,29 @@ interface ContextualHelpProps {
   question: string;
   category: string;
   context?: string;
+  currentStep?: string | number;
+  isStepCompleted?: boolean;
 }
 
-export function ContextualHelp({ question, category, context }: ContextualHelpProps) {
+export function ContextualHelp({ question, category, context, currentStep, isStepCompleted }: ContextualHelpProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [helpText, setHelpText] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [cachedQuestion, setCachedQuestion] = useState<string | null>(null);
+  const [cachedStep, setCachedStep] = useState<string | number | null>(null);
   const { toast } = useToast();
+
+  // Reset help when step changes or step is completed
+  useEffect(() => {
+    if (currentStep !== cachedStep || isStepCompleted) {
+      setIsOpen(false);
+      if (currentStep !== cachedStep) {
+        setHelpText(null);
+        setCachedQuestion(null);
+        setCachedStep(currentStep);
+      }
+    }
+  }, [currentStep, isStepCompleted, cachedStep]);
 
   const getHelp = async () => {
     // Check if we have cached help for this specific question
