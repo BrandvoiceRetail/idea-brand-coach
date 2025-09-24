@@ -16,6 +16,11 @@ interface SearchInsight {
   insights: string[];
 }
 
+interface AnalysisResult {
+  insights: SearchInsight[];
+  ideaFrameworkAnalysis?: string;
+}
+
 interface BuyerIntentResearchProps {
   onInsightsGenerated: (insights: SearchInsight[]) => void;
 }
@@ -25,6 +30,7 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
   const [industry, setIndustry] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [insights, setInsights] = useState<SearchInsight[]>([]);
+  const [ideaFrameworkAnalysis, setIdeaFrameworkAnalysis] = useState<string>("");
   const { toast } = useToast();
 
   const analyzeIntent = async () => {
@@ -49,6 +55,7 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
       if (error) throw error;
 
       setInsights(data.insights);
+      setIdeaFrameworkAnalysis(data.ideaFrameworkAnalysis || "");
       onInsightsGenerated(data.insights);
       
       toast({
@@ -193,6 +200,7 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="detailed">Detailed Analysis</TabsTrigger>
                 <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+                <TabsTrigger value="idea-brand">Idea Brand Detail</TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview" className="space-y-4">
@@ -255,6 +263,27 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
                     <li>• Use commercial intent terms in paid advertising campaigns</li>
                   </ul>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="idea-brand" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="w-5 h-5" />
+                      IDEA Brand Framework Analysis
+                    </CardTitle>
+                    <CardDescription>
+                      Detailed strategic insights based on buyer intent patterns
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="prose prose-sm max-w-none">
+                      <div className="whitespace-pre-line text-sm leading-relaxed">
+                        {ideaFrameworkAnalysis || "No detailed analysis available. Please run the analysis to see IDEA Brand Framework insights."}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </CardContent>

@@ -52,6 +52,14 @@ For each term, provide:
 - 3-4 specific insights about what motivates this search
 - Behavioral patterns of users making this search
 
+ALSO provide a detailed IDEA Brand Framework analysis for these search terms using this structure:
+
+IDEA Brand Framework Analysis:
+- Insightful: What deep customer insights can be drawn from these search patterns?
+- Distinctive: How can brands differentiate themselves in this search landscape?
+- Empathetic: What emotional needs and pain points drive these searches?
+- Authentic: What authentic brand positioning opportunities exist based on this intent?
+
 Return as JSON with this structure:
 {
   "insights": [
@@ -62,7 +70,8 @@ Return as JSON with this structure:
       "competition": "competition level",
       "insights": ["insight 1", "insight 2", "insight 3"]
     }
-  ]
+  ],
+  "ideaFrameworkAnalysis": "Detailed analysis based on IDEA Brand Framework covering all four pillars with actionable recommendations for brand positioning and strategy based on the buyer intent patterns identified."
 }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -105,7 +114,8 @@ Return as JSON with this structure:
             "Search indicates problem awareness and solution seeking behavior",
             "May benefit from educational content that builds trust and authority"
           ]
-        }))
+        })),
+        ideaFrameworkAnalysis: "Based on the search patterns, users demonstrate problem awareness and solution-seeking behavior. Brands should focus on building trust through educational content while positioning themselves as authentic problem-solvers in this space."
       };
     }
 
