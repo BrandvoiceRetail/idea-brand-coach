@@ -41,7 +41,6 @@ export default function BetaFeedback() {
   const [wouldRecommend, setWouldRecommend] = useState<string>("");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { getBetaTesterInfo } = useBetaMode();
 
   const { toast } = useToast();
   const { betaProgress, getBetaTesterInfo } = useBetaMode();
