@@ -389,9 +389,9 @@ export default function IdeaInsight() {
                 <Button size="sm" asChild>
                   <Link to="/avatar">Build Avatar 2.0</Link>
                 </Button>
-                <Button size="sm" variant="outline" asChild>
+                {/* <Button size="sm" variant="outline" asChild>
                   <Link to="/diagnostic">Brand Diagnostic</Link>
-                </Button>
+                </Button> */}
               </div>
             </div>
           </CardContent>
