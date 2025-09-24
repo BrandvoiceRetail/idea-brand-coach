@@ -42,7 +42,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
     demographics: ""
   });
   const [isGenerating, setIsGenerating] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState<Record<string, string>>({});
+  const [currentStepAiSuggestion, setCurrentStepAiSuggestion] = useState<string>("");
   const { toast } = useToast();
 
   const steps = [
@@ -128,11 +128,8 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
 
       if (error) throw error;
 
-      // Store the AI suggestion for this step
-      setAiSuggestions(prev => ({
-        ...prev,
-        [stepId]: data.guidance
-      }));
+      // Store the AI suggestion for the current step only
+      setCurrentStepAiSuggestion(data.guidance);
 
       toast({
         title: "AI Guidance Generated",
@@ -175,6 +172,9 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
   };
 
   const handleNext = () => {
+    // Clear AI suggestions when moving to next step
+    setCurrentStepAiSuggestion("");
+    
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -187,6 +187,9 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
   };
 
   const handlePrevious = () => {
+    // Clear AI suggestions when moving to previous step
+    setCurrentStepAiSuggestion("");
+    
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
@@ -221,7 +224,10 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
               variant={isCurrent ? "default" : isCompleted ? "secondary" : "outline"}
               size="sm"
               className="flex items-center space-x-2 whitespace-nowrap"
-              onClick={() => setCurrentStep(index)}
+              onClick={() => {
+                setCurrentStepAiSuggestion("");
+                setCurrentStep(index);
+              }}
             >
               {isCompleted ? (
                 <CheckCircle className="w-4 h-4" />
@@ -287,14 +293,14 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
             />
             
             {/* AI Suggestions Display */}
-            {aiSuggestions[currentStepData.id] && (
+            {currentStepAiSuggestion && (
               <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-primary" />
                   <h5 className="font-semibold text-primary">AI Suggestions</h5>
                 </div>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {aiSuggestions[currentStepData.id]}
+                  {currentStepAiSuggestion}
                 </p>
               </div>
             )}
