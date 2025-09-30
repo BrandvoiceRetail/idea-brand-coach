@@ -55,3 +55,6 @@ verify_jwt = false
 
 [functions.save-beta-feedback]
 verify_jwt = false
+
+[functions.send-framework-email]
+verify_jwt = false

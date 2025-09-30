@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { InteractiveEmotionalTriggers } from "@/components/InteractiveEmotionalTriggers";
 import { CollapsibleDescription } from "@/components/CollapsibleDescription";
+import { FrameworkSubmissionsList } from "@/components/FrameworkSubmissionsList";
 
 const coreModules = [
   {
@@ -381,6 +382,9 @@ export default function Dashboard() {
             </div>
             <InteractiveEmotionalTriggers />
           </div>
+
+          {/* Framework Submissions */}
+          <FrameworkSubmissionsList />
 
           {/* Additional Modules */}
           <div>

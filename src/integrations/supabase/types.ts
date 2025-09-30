@@ -109,6 +109,42 @@ export type Database = {
         }
         Relationships: []
       }
+      idea_framework_submissions: {
+        Row: {
+          buyer_intent: string | null
+          created_at: string
+          demographics: string | null
+          id: string
+          motivation: string | null
+          shopper_type: string | null
+          triggers: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buyer_intent?: string | null
+          created_at?: string
+          demographics?: string | null
+          id?: string
+          motivation?: string | null
+          shopper_type?: string | null
+          triggers?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buyer_intent?: string | null
+          created_at?: string
+          demographics?: string | null
+          id?: string
+          motivation?: string | null
+          shopper_type?: string | null
+          triggers?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

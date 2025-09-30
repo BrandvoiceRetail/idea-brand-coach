@@ -15,10 +15,12 @@ import {
   ArrowRight,
   Sparkles,
   Lightbulb,
-  Target
+  Target,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface InsightData {
   buyerIntent: string;
@@ -33,6 +35,7 @@ interface InteractiveIdeaFrameworkProps {
 }
 
 export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFrameworkProps) {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [insights, setInsights] = useState<InsightData>({
     buyerIntent: "",
@@ -42,6 +45,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
     demographics: ""
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
@@ -174,15 +178,83 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
     return Array.isArray(value) ? value.join(", ") : value;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      onComplete(insights);
-      toast({
-        title: "Framework Complete! 🎉",
-        description: "Your IDEA insights have been saved. Ready to build your Avatar 2.0!",
-      });
+      setIsSaving(true);
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to save your framework submission",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Save to database
+        const { error: dbError } = await supabase
+          .from('idea_framework_submissions')
+          .insert({
+            user_id: user.id,
+            buyer_intent: insights.buyerIntent,
+            motivation: insights.buyerMotivation,
+            triggers: Array.isArray(insights.emotionalTriggers) 
+              ? insights.emotionalTriggers.join(', ') 
+              : insights.emotionalTriggers,
+            shopper_type: insights.shopperType,
+            demographics: insights.demographics
+          });
+
+        if (dbError) throw dbError;
+
+        // Get user email from profiles
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', user.id)
+          .single();
+
+        // Send email with framework data
+        if (profile?.email) {
+          await supabase.functions.invoke('send-framework-email', {
+            body: {
+              email: profile.email,
+              buyerIntent: insights.buyerIntent,
+              motivation: insights.buyerMotivation,
+              triggers: Array.isArray(insights.emotionalTriggers) 
+                ? insights.emotionalTriggers.join(', ') 
+                : insights.emotionalTriggers,
+              shopperType: insights.shopperType,
+              demographics: insights.demographics
+            }
+          });
+        }
+
+        onComplete(insights);
+        toast({
+          title: "Framework Complete! 🎉",
+          description: "Your IDEA insights have been saved and emailed to you. Redirecting to dashboard...",
+        });
+
+        // Navigate to dashboard after a short delay
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      } catch (error) {
+        console.error('Error saving framework:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save framework. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -330,11 +402,20 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
             </Button>
             <Button
               onClick={handleNext}
-              disabled={!getCurrentValue().trim()}
+              disabled={!getCurrentValue().trim() || isSaving}
               className="flex items-center gap-2"
             >
-              {currentStep === steps.length - 1 ? "Complete Framework" : "Next Step"}
-              <ArrowRight className="w-4 h-4" />
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  {currentStep === steps.length - 1 ? "Complete Framework" : "Next Step"}
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
