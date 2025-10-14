@@ -21,8 +21,8 @@ serve(async (req) => {
     const systemPrompt = `You are an expert brand strategist specializing in the IDEA Brand Framework. Analyze buyer intent and search behavior to provide detailed, actionable strategic insights.
 
 CRITICAL RESPONSE FORMATTING REQUIREMENTS:
-- Use clear headings with proper structure
-- Use markdown formatting for better readability (headers, bold, bullets)
+- Write in clear, flowing paragraphs without bold or special formatting
+- Use section headings only (no bullets, no bold text within paragraphs)
 - Professional, strategic consulting tone
 - Highly actionable outputs with specific steps
 - Focus on conversion and emotional connection
@@ -33,48 +33,31 @@ Your analysis should help brands improve sales conversion and emotional connecti
 
 Give me a detailed analysis based on the IDEA Brand Framework with highly actionable outputs.
 
-Structure your response with clear headings covering:
+Structure your response with clear section headings covering:
 
-1. BUYER INTENT OVERVIEW
-   - What are customers really looking for?
-   - What stage of the buying journey are they in?
-   - What problems are they trying to solve?
+BUYER INTENT OVERVIEW
+Explain what customers are really looking for, what stage of the buying journey they are in, and what problems they are trying to solve.
 
-2. INSIGHTFUL (Deep Customer Understanding)
-   - Key psychological drivers behind these searches
-   - Unmet needs and pain points
-   - Customer motivation patterns
-   - Actionable insights for positioning
+INSIGHTFUL (Deep Customer Understanding)
+Describe the key psychological drivers behind these searches, unmet needs and pain points, customer motivation patterns, and actionable insights for positioning.
 
-3. DISTINCTIVE (Stand Out Strategy)
-   - How competitors are currently addressing these searches
-   - Gaps in the market you can fill
-   - Unique positioning opportunities
-   - Differentiation strategies to implement
+DISTINCTIVE (Stand Out Strategy)
+Analyze how competitors are currently addressing these searches, gaps in the market you can fill, unique positioning opportunities, and differentiation strategies to implement.
 
-4. EMPATHETIC (Emotional Connection)
-   - Emotional triggers in these search terms
-   - Fears, desires, and aspirations
-   - How to speak to their emotional needs
-   - Messaging strategies that resonate
+EMPATHETIC (Emotional Connection)
+Identify emotional triggers in these search terms, fears, desires, and aspirations, how to speak to their emotional needs, and messaging strategies that resonate.
 
-5. AUTHENTIC (Trust & Credibility)
-   - What builds trust with these searchers?
-   - Credibility signals they're looking for
-   - Transparency opportunities
-   - How to align actions with promises
+AUTHENTIC (Trust & Credibility)
+Explain what builds trust with these searchers, credibility signals they're looking for, transparency opportunities, and how to align actions with promises.
 
-6. CONVERSION STRATEGY
-   - Specific tactics to turn searchers into customers
-   - Content recommendations
-   - Messaging hierarchy
-   - Quick wins to implement immediately
+CONVERSION STRATEGY
+Provide specific tactics to turn searchers into customers, content recommendations, messaging hierarchy, and quick wins to implement immediately.
 
-Provide detailed, specific, actionable recommendations throughout. Focus on practical steps they can take to improve conversion rates and emotional connection.
+Write in flowing paragraph format. Do NOT use bold text, asterisks, or bullet points. Use only plain text paragraphs under each heading. Provide detailed, specific, actionable recommendations throughout.
 
 Return ONLY valid JSON in this exact format:
 {
-  "analysis": "Your complete detailed analysis here with markdown formatting including headings (##), bold (**text**), and bullet points"
+  "analysis": "Your complete detailed analysis here with section headings (##) followed by plain text paragraphs. No bold, no bullets, no asterisks."
 }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

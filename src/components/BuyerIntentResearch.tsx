@@ -141,6 +141,29 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
         </CardContent>
       </Card>
 
+      {/* Intent Categories Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Understanding Buyer Intent Categories</CardTitle>
+          <CardDescription>
+            Different search patterns reveal different stages in the customer journey
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            {intentCategories.map((category) => (
+              <div key={category.type} className="space-y-2">
+                <Badge className={category.color}>{category.type}</Badge>
+                <p className="text-sm text-muted-foreground">{category.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  Examples: {category.examples.join(", ")}
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Results */}
       {analysis && (
         <Card>
@@ -154,17 +177,25 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div 
-              className="prose prose-sm max-w-none dark:prose-invert"
-              dangerouslySetInnerHTML={{ 
-                __html: analysis
-                  .replace(/##/g, '<h2 class="text-xl font-semibold mt-6 mb-3">')
-                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/- (.*?)(\n|$)/g, '<li>$1</li>')
-                  .replace(/(\d+)\. /g, '<div class="font-semibold mt-4">$1. ')
-                  .replace(/\n\n/g, '</p><p class="mb-4">')
-              }}
-            />
+            <div className="space-y-4 text-sm leading-relaxed whitespace-pre-wrap">
+              {analysis.split('##').map((section, index) => {
+                if (!section.trim()) return null;
+                const lines = section.trim().split('\n');
+                const heading = lines[0].trim();
+                const content = lines.slice(1).join('\n').trim();
+                
+                return (
+                  <div key={index} className="space-y-2">
+                    {heading && (
+                      <h2 className="text-lg font-semibold text-foreground">{heading}</h2>
+                    )}
+                    {content && (
+                      <p className="text-muted-foreground">{content}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       )}
