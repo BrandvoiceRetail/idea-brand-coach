@@ -85,8 +85,19 @@ Return ONLY valid JSON in this exact format:
     let analysisResult;
     
     try {
-      const content = data.choices[0].message.content;
-      console.log('AI Response:', content);
+      let content = data.choices[0].message.content;
+      console.log('AI Response (raw):', content);
+      
+      // Clean up the content - remove trailing newlines and quotes
+      content = content.trim();
+      if (content.endsWith('\\n"')) {
+        content = content.slice(0, -3) + '"';
+      }
+      if (content.endsWith('\\n')) {
+        content = content.slice(0, -2);
+      }
+      
+      console.log('AI Response (cleaned):', content);
       analysisResult = JSON.parse(content);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
