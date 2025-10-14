@@ -53,11 +53,11 @@ Explain what builds trust with these searchers, credibility signals they're look
 CONVERSION STRATEGY
 Provide specific tactics to turn searchers into customers, content recommendations, messaging hierarchy, and quick wins to implement immediately.
 
-Write in flowing paragraph format. Do NOT use bold text, asterisks, or bullet points. Use only plain text paragraphs under each heading. Provide detailed, specific, actionable recommendations throughout.
+Write in flowing paragraph format. Do NOT use bold text, asterisks, or bullet points. Start each section with the heading on its own line (like "BUYER INTENT OVERVIEW") followed by plain text paragraphs. Headings should be plain text without special formatting or symbols. Provide detailed, specific, actionable recommendations throughout.
 
 Return ONLY valid JSON in this exact format:
 {
-  "analysis": "Your complete detailed analysis here with section headings (##) followed by plain text paragraphs. No bold, no bullets, no asterisks."
+  "analysis": "Your complete detailed analysis here. Start each section with a plain text heading on its own line, followed by paragraph text. No bold, no bullets, no asterisks, no ## symbols."
 }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

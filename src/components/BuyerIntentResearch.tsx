@@ -177,24 +177,33 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 text-sm leading-relaxed whitespace-pre-wrap">
-              {analysis.split('##').map((section, index) => {
-                if (!section.trim()) return null;
+            <div className="space-y-4 text-sm leading-relaxed">
+              {analysis.split('\n\n').map((section, index) => {
                 const lines = section.trim().split('\n');
-                const heading = lines[0].trim();
-                const content = lines.slice(1).join('\n').trim();
+                const firstLine = lines[0];
+                const isHeading = firstLine && firstLine.toUpperCase() === firstLine && firstLine.length < 100;
+                
+                if (isHeading) {
+                  return (
+                    <div key={index} className="space-y-2">
+                      <p className="text-foreground">
+                        {firstLine}
+                      </p>
+                      {lines.slice(1).map((line, i) => (
+                        <p key={i} className="text-muted-foreground">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                  );
+                }
                 
                 return (
-                  <div key={index} className="space-y-2">
-                    {heading && (
-                      <h2 className="text-lg font-semibold text-foreground">{heading}</h2>
-                    )}
-                    {content && (
-                      <p className="text-muted-foreground">{content}</p>
-                    )}
-                  </div>
+                  <p key={index} className="text-muted-foreground">
+                    {section}
+                  </p>
                 );
-              })}
+              }).filter(Boolean)}
             </div>
           </CardContent>
         </Card>
