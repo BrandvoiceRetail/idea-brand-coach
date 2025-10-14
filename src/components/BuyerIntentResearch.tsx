@@ -3,34 +3,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, TrendingUp, Target, BarChart, Loader2 } from "lucide-react";
+import { Search, Target, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-interface SearchInsight {
-  query: string;
-  intent: string;
-  volume: string;
-  competition: string;
-  insights: string[];
-}
-
 interface AnalysisResult {
-  insights: SearchInsight[];
-  ideaFrameworkAnalysis?: string;
+  analysis: string;
 }
 
 interface BuyerIntentResearchProps {
-  onInsightsGenerated: (insights: SearchInsight[]) => void;
+  onInsightsGenerated: (analysis: string) => void;
 }
 
 export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearchProps) {
   const [searchTerms, setSearchTerms] = useState("");
   const [industry, setIndustry] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [insights, setInsights] = useState<SearchInsight[]>([]);
-  const [ideaFrameworkAnalysis, setIdeaFrameworkAnalysis] = useState<string>("");
+  const [analysis, setAnalysis] = useState<string>("");
   const { toast } = useToast();
 
   const analyzeIntent = async () => {
@@ -54,13 +43,12 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
 
       if (error) throw error;
 
-      setInsights(data.insights);
-      setIdeaFrameworkAnalysis(data.ideaFrameworkAnalysis || "");
-      onInsightsGenerated(data.insights);
+      setAnalysis(data.analysis || "");
+      onInsightsGenerated(data.analysis || "");
       
       toast({
         title: "Analysis Complete! 🎯",
-        description: `Generated insights for ${data.insights.length} search patterns.`,
+        description: "IDEA Brand Framework analysis generated successfully.",
       });
     } catch (error) {
       console.error('Error analyzing buyer intent:', error);
@@ -153,139 +141,30 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
         </CardContent>
       </Card>
 
-      {/* Intent Categories Guide */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Understanding Search Intent</CardTitle>
-          <CardDescription>
-            The four types of search intent and how to identify them
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            {intentCategories.map((category) => (
-              <div key={category.type} className="p-4 border rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className={category.color}>{category.type}</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">{category.description}</p>
-                <div className="flex flex-wrap gap-1">
-                  {category.examples.map((example) => (
-                    <Badge key={example} variant="outline" className="text-xs">
-                      {example}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Results */}
-      {insights.length > 0 && (
+      {analysis && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart className="w-5 h-5" />
-              Intent Analysis Results
+              <Target className="w-5 h-5" />
+              IDEA Brand Framework Analysis
             </CardTitle>
             <CardDescription>
-              Insights generated from your search terms and industry analysis
+              Detailed buyer intent analysis for: {searchTerms}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="detailed">Detailed Analysis</TabsTrigger>
-                <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
-                <TabsTrigger value="idea-brand">Idea Brand Detail</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="overview" className="space-y-4">
-                <div className="grid gap-4">
-                  {insights.map((insight, index) => (
-                    <div key={index} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">"{insight.query}"</h4>
-                        <Badge variant="outline">{insight.intent}</Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Volume:</span> {insight.volume}
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Competition:</span> {insight.competition}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="detailed" className="space-y-4">
-                {insights.map((insight, index) => (
-                  <Card key={index}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">"{insight.query}"</CardTitle>
-                      <div className="flex gap-2">
-                        <Badge>{insight.intent}</Badge>
-                        <Badge variant="outline">Vol: {insight.volume}</Badge>
-                        <Badge variant="outline">Comp: {insight.competition}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <h5 className="font-medium">Key Insights:</h5>
-                        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                          {insight.insights.map((item, i) => (
-                            <li key={i}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </TabsContent>
-              
-              <TabsContent value="recommendations" className="space-y-4">
-                <div className="p-4 bg-primary/5 rounded-lg border">
-                  <h4 className="font-medium mb-2 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Actionable Recommendations
-                  </h4>
-                  <ul className="space-y-2 text-sm">
-                    <li>• Focus content creation on high-intent, low-competition terms</li>
-                    <li>• Create separate landing pages for different intent types</li>
-                    <li>• Develop informational content to capture early-stage buyers</li>
-                    <li>• Optimize transactional pages for ready-to-buy customers</li>
-                    <li>• Use commercial intent terms in paid advertising campaigns</li>
-                  </ul>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="idea-brand" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="w-5 h-5" />
-                      IDEA Brand Framework Analysis
-                    </CardTitle>
-                    <CardDescription>
-                      Detailed strategic insights based on buyer intent patterns
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose prose-sm max-w-none">
-                      <div className="whitespace-pre-line text-sm leading-relaxed">
-                        {ideaFrameworkAnalysis || "No detailed analysis available. Please run the analysis to see IDEA Brand Framework insights."}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+            <div 
+              className="prose prose-sm max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ 
+                __html: analysis
+                  .replace(/##/g, '<h2 class="text-xl font-semibold mt-6 mb-3">')
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/- (.*?)(\n|$)/g, '<li>$1</li>')
+                  .replace(/(\d+)\. /g, '<div class="font-semibold mt-4">$1. ')
+                  .replace(/\n\n/g, '</p><p class="mb-4">')
+              }}
+            />
           </CardContent>
         </Card>
       )}

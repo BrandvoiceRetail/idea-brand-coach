@@ -18,60 +18,63 @@ serve(async (req) => {
 
     console.log('Buyer Intent Analysis request:', { searchTerms, industry });
 
-    const systemPrompt = `You are an expert in search intent analysis and customer behavior psychology. Analyze search terms and provide detailed buyer intent insights.
+    const systemPrompt = `You are an expert brand strategist specializing in the IDEA Brand Framework. Analyze buyer intent and search behavior to provide detailed, actionable strategic insights.
 
-CRITICAL RESPONSE FORMATTING REQUIREMENTS - MUST FOLLOW:
-- NEVER use asterisks (**) or any markdown formatting for bold text or emphasis
-- NEVER use markdown syntax like ** ** around words or phrases
-- Use CAPITAL LETTERS for emphasis instead of bold formatting
-- Write all headings and subheadings in plain text without any special characters
-- Use standard English grammar with proper comma usage
-- Never use EM dashes or hyphens in place of commas
-- Do not use emojis, icons, or special characters in responses
-- Write in clear, professional sentences without decorative formatting
-- Use plain text only - no markdown, no bold, no italics, no special formatting
-- Professional, strategic consulting tone throughout
-- Clear, concise, actionable advice
-- Use bullet points (simple hyphens) and numbered lists for clarity
+CRITICAL RESPONSE FORMATTING REQUIREMENTS:
+- Use clear headings with proper structure
+- Use markdown formatting for better readability (headers, bold, bullets)
+- Professional, strategic consulting tone
+- Highly actionable outputs with specific steps
+- Focus on conversion and emotional connection
 
-For each search term, identify:
-1. Primary intent type (Informational, Commercial, Transactional, Navigational)
-2. Estimated search volume category (High/Medium/Low)
-3. Competition level (High/Medium/Low)
-4. Key behavioral insights about what drives this search
-5. Actionable recommendations for targeting
+Your analysis should help brands improve sales conversion and emotional connection with customers.`;
 
-Focus on psychological drivers and behavioral patterns rather than just keyword data.`;
+    const prompt = `What is the Buyer intent for the keyword search: ${searchTerms.join(', ')} in the ${industry} industry?
 
-    const prompt = `Analyze these search terms for the ${industry} industry:
-${searchTerms.map((term, i) => `${i + 1}. "${term}"`).join('\n')}
+Give me a detailed analysis based on the IDEA Brand Framework with highly actionable outputs.
 
-For each term, provide:
-- Intent classification and reasoning
-- Volume/competition estimates
-- 3-4 specific insights about what motivates this search
-- Behavioral patterns of users making this search
+Structure your response with clear headings covering:
 
-ALSO provide a detailed IDEA Brand Framework analysis for these search terms using this structure:
+1. BUYER INTENT OVERVIEW
+   - What are customers really looking for?
+   - What stage of the buying journey are they in?
+   - What problems are they trying to solve?
 
-IDEA Brand Framework Analysis:
-- Insightful: What deep customer insights can be drawn from these search patterns?
-- Distinctive: How can brands differentiate themselves in this search landscape?
-- Empathetic: What emotional needs and pain points drive these searches?
-- Authentic: What authentic brand positioning opportunities exist based on this intent?
+2. INSIGHTFUL (Deep Customer Understanding)
+   - Key psychological drivers behind these searches
+   - Unmet needs and pain points
+   - Customer motivation patterns
+   - Actionable insights for positioning
 
-Return as JSON with this structure:
+3. DISTINCTIVE (Stand Out Strategy)
+   - How competitors are currently addressing these searches
+   - Gaps in the market you can fill
+   - Unique positioning opportunities
+   - Differentiation strategies to implement
+
+4. EMPATHETIC (Emotional Connection)
+   - Emotional triggers in these search terms
+   - Fears, desires, and aspirations
+   - How to speak to their emotional needs
+   - Messaging strategies that resonate
+
+5. AUTHENTIC (Trust & Credibility)
+   - What builds trust with these searchers?
+   - Credibility signals they're looking for
+   - Transparency opportunities
+   - How to align actions with promises
+
+6. CONVERSION STRATEGY
+   - Specific tactics to turn searchers into customers
+   - Content recommendations
+   - Messaging hierarchy
+   - Quick wins to implement immediately
+
+Provide detailed, specific, actionable recommendations throughout. Focus on practical steps they can take to improve conversion rates and emotional connection.
+
+Return ONLY valid JSON in this exact format:
 {
-  "insights": [
-    {
-      "query": "search term",
-      "intent": "intent type", 
-      "volume": "volume level",
-      "competition": "competition level",
-      "insights": ["insight 1", "insight 2", "insight 3"]
-    }
-  ],
-  "ideaFrameworkAnalysis": "Detailed analysis based on IDEA Brand Framework covering all four pillars with actionable recommendations for brand positioning and strategy based on the buyer intent patterns identified."
+  "analysis": "Your complete detailed analysis here with markdown formatting including headings (##), bold (**text**), and bullet points"
 }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -99,23 +102,14 @@ Return as JSON with this structure:
     let analysisResult;
     
     try {
-      analysisResult = JSON.parse(data.choices[0].message.content);
+      const content = data.choices[0].message.content;
+      console.log('AI Response:', content);
+      analysisResult = JSON.parse(content);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
       // Fallback: create structured response
       analysisResult = {
-        insights: searchTerms.map(term => ({
-          query: term,
-          intent: "Commercial",
-          volume: "Medium",
-          competition: "Medium", 
-          insights: [
-            "Users are likely in research phase before making purchase decisions",
-            "Search indicates problem awareness and solution seeking behavior",
-            "May benefit from educational content that builds trust and authority"
-          ]
-        })),
-        ideaFrameworkAnalysis: "Based on the search patterns, users demonstrate problem awareness and solution-seeking behavior. Brands should focus on building trust through educational content while positioning themselves as authentic problem-solvers in this space."
+        analysis: "## Analysis Error\n\nUnable to generate detailed analysis. Please try again with different search terms."
       };
     }
 
