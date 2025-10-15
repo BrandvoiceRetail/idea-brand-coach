@@ -216,7 +216,16 @@ export default function Index() {
                       
                       {/* Arrow */}
                       <div className="flex-shrink-0">
-                        <ChevronRight className="h-6 w-6 text-muted-foreground" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          asChild
+                          className="hover:bg-primary/10"
+                        >
+                          <Link to={step.href}>
+                            <ChevronRight className="h-6 w-6 text-muted-foreground" />
+                          </Link>
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
