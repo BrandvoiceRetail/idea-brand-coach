@@ -64,18 +64,31 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
         return false;
       };
 
-      // Header with logo
+      // Header with logo - black box background
+      const logoWidth = 40;
+      const logoHeight = 20;
+      const boxPadding = 5;
+      
+      // Draw black box
+      pdf.setFillColor(0, 0, 0);
+      pdf.rect(
+        pageWidth / 2 - (logoWidth + boxPadding * 2) / 2, 
+        yPosition - boxPadding, 
+        logoWidth + boxPadding * 2, 
+        logoHeight + boxPadding * 2, 
+        'F'
+      );
+      
+      // Add logo image on top
       const logoImg = new Image();
       logoImg.src = '/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png';
       await new Promise((resolve) => {
         logoImg.onload = resolve;
       });
       
-      const logoWidth = 40;
-      const logoHeight = 20;
       pdf.addImage(logoImg, 'PNG', pageWidth / 2 - logoWidth/2, yPosition, logoWidth, logoHeight);
       
-      yPosition += 30;
+      yPosition += 35;
 
       // Title
       pdf.setTextColor(30, 64, 175);
@@ -431,7 +444,7 @@ export const AvatarPDFExport: React.FC<AvatarPDFExportProps> = ({ avatar, analys
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo-placeholder" style="background: white; border: 1px solid #e5e7eb; padding: 8px; text-align: center;">
+          <div class="logo-placeholder" style="background: black; padding: 10px; text-align: center; border-radius: 4px;">
             <img src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" alt="IDEA Brand Coach Logo" style="width: 80px; height: 40px; object-fit: contain;" />
           </div>
           <h1>Customer Avatar Report</h1>
