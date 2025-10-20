@@ -5,8 +5,7 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface FrameworkEmailRequest {
@@ -24,10 +23,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, buyerIntent, motivation, triggers, shopperType, demographics }: FrameworkEmailRequest = await req.json();
+    const { email, buyerIntent, motivation, triggers, shopperType, demographics }: FrameworkEmailRequest =
+      await req.json();
 
     const emailResponse = await resend.emails.send({
-      from: "IDEA Brand Coach <onboarding@resend.dev>",
+      from: "Trevor <noreply@app.ideabrandconsultancy.com>",
       to: [email],
       subject: "Your IDEA Framework Submission",
       html: `
@@ -35,19 +35,19 @@ const handler = async (req: Request): Promise<Response> => {
         <p>Thank you for completing the IDEA Framework! Here are your responses:</p>
         
         <h2>Buyer Intent</h2>
-        <p>${buyerIntent || 'Not provided'}</p>
+        <p>${buyerIntent || "Not provided"}</p>
         
         <h2>Motivation</h2>
-        <p>${motivation || 'Not provided'}</p>
+        <p>${motivation || "Not provided"}</p>
         
         <h2>Emotional Triggers</h2>
-        <p>${triggers || 'Not provided'}</p>
+        <p>${triggers || "Not provided"}</p>
         
         <h2>Shopper Type</h2>
-        <p>${shopperType || 'Not provided'}</p>
+        <p>${shopperType || "Not provided"}</p>
         
         <h2>Demographics</h2>
-        <p>${demographics || 'Not provided'}</p>
+        <p>${demographics || "Not provided"}</p>
         
         <p>Best regards,<br>The IDEA Brand Coach Team</p>
       `,
@@ -64,13 +64,10 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-framework-email function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 
