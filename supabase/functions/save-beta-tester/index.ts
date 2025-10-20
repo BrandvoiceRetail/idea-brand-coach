@@ -98,13 +98,13 @@ serve(async (req) => {
           </div>
         `;
 
-        await resend.emails.send({
+        const getResponse = await resend.emails.send({
           from: "Trevor <noreply@app.ideabrandconsultancy.com>",
           to: [email],
           subject: `Your Diagnostic Results - ${overallScore}% Overall Score`,
           html: emailHTML,
         });
-
+        data.emailSend = getResponse;
         console.log("Diagnostic results email sent successfully");
       } catch (emailError) {
         console.error("Error sending diagnostic results email:", emailError);
