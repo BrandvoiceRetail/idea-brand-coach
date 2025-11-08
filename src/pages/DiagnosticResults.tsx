@@ -14,9 +14,12 @@ import {
   Heart,
   Shield,
   Download,
-  UserPlus
+  UserPlus,
+  MessageSquare
 } from 'lucide-react';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
+import { useDiagnostic } from '@/hooks/useDiagnostic';
+import { useAuth } from '@/hooks/useAuth';
 
 interface DiagnosticData {
   answers: Record<string, string>;
@@ -60,18 +63,36 @@ const categoryDetails = {
 export default function DiagnosticResults() {
   const [diagnosticData, setDiagnosticData] = useState<DiagnosticData | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { latestDiagnostic, isLoadingLatest, syncFromLocalStorage } = useDiagnostic();
 
   useEffect(() => {
-    const savedData = localStorage.getItem('diagnosticData');
-    if (savedData) {
-      setDiagnosticData(JSON.parse(savedData));
+    // First try to get from database if user is authenticated
+    if (user && latestDiagnostic) {
+      setDiagnosticData({
+        answers: latestDiagnostic.answers as any,
+        scores: {
+          insight: latestDiagnostic.scores.insight,
+          distinctive: latestDiagnostic.scores.distinctive,
+          empathetic: latestDiagnostic.scores.empathetic,
+          authentic: latestDiagnostic.scores.authentic,
+        },
+        overallScore: latestDiagnostic.scores.overall,
+        completedAt: latestDiagnostic.completed_at
+      });
     } else {
-      // Redirect to diagnostic if no data found
-      navigate('/diagnostic');
+      // Fall back to localStorage for non-authenticated users
+      const savedData = localStorage.getItem('diagnosticData');
+      if (savedData) {
+        setDiagnosticData(JSON.parse(savedData));
+      } else if (!isLoadingLatest) {
+        // Redirect to diagnostic if no data found
+        navigate('/diagnostic');
+      }
     }
-  }, [navigate]);
+  }, [user, latestDiagnostic, isLoadingLatest, navigate]);
 
-  if (!diagnosticData) {
+  if (isLoadingLatest || !diagnosticData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex items-center justify-center">
         <div className="text-center">
@@ -194,47 +215,86 @@ export default function DiagnosticResults() {
 
           {/* CTA Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Save Results CTA */}
-            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="w-5 h-5" />
-                  Save & Unlock Premium Tools
-                </CardTitle>
-                <CardDescription>
-                  Create your account to save these results and access advanced brand building tools
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span>Save diagnostic results permanently</span>
+            {/* Brand Coach CTA or Create Account CTA */}
+            {user ? (
+              <Card className="border-primary/50 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5" />
+                    Get Personalized Coaching
+                  </CardTitle>
+                  <CardDescription>
+                    Start a conversation with your AI Brand Coach based on these results
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span>Personalized guidance based on your scores</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span>Strategic recommendations</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span>Actionable next steps</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span>Access Avatar 2.0 Builder</span>
+                  <Button 
+                    asChild 
+                    className="w-full"
+                  >
+                    <button onClick={() => navigate('/idea/consultant')}>
+                      Start Brand Coaching
+                      <MessageSquare className="w-4 h-4 ml-2" />
+                    </button>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserPlus className="w-5 h-5" />
+                    Save & Unlock Premium Tools
+                  </CardTitle>
+                  <CardDescription>
+                    Create your account to save these results and access advanced brand building tools
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span>Save diagnostic results permanently</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span>AI Brand Coach with personalized guidance</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span>Access Avatar 2.0 Builder</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span>Interactive learning modules</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span>AI-powered copy generation</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span>Interactive learning modules</span>
-                  </div>
-                </div>
-                <Button 
-                  asChild 
-                  className="w-full"
-                >
-                  <button onClick={() => navigate('/auth')}>
-                    Create Free Account
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </button>
-                </Button>
-              </CardContent>
-            </Card>
+                  <Button 
+                    asChild 
+                    className="w-full"
+                  >
+                    <button onClick={() => navigate('/auth')}>
+                      Create Free Account
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </button>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Download Results */}
             <Card className="border-border/50">

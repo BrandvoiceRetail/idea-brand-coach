@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { ArrowRight, ArrowLeft, CheckCircle, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useDiagnostic } from '@/hooks/useDiagnostic';
+import { useAuth } from '@/hooks/useAuth';
 import BetaTesterCapture from '@/components/BetaTesterCapture';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 
@@ -98,6 +100,8 @@ const diagnosticQuestions: Question[] = [
 
 export default function FreeDiagnostic() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const { user } = useAuth();
+  const { syncFromLocalStorage } = useDiagnostic();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isCompleting, setIsCompleting] = useState(false);
   const [showBetaCapture, setShowBetaCapture] = useState(false);
@@ -204,10 +208,43 @@ export default function FreeDiagnostic() {
     setShowBetaCapture(true);
   };
 
-  const handleBetaCaptureComplete = () => {
+  const handleBetaCaptureComplete = async () => {
     setShowBetaCapture(false);
+    
+    // If user authenticated, sync localStorage to database
+    if (user) {
+      try {
+        await syncFromLocalStorage();
+        toast({
+          title: "Data saved",
+          description: "Your diagnostic results have been saved to your account.",
+        });
+      } catch (error) {
+        console.error('Error syncing diagnostic:', error);
+        toast({
+          title: "Sync warning",
+          description: "Results shown but couldn't sync to your account. You can still view them.",
+          variant: "destructive",
+        });
+      }
+    }
+    
     navigate('/diagnostic/results');
   };
+
+  // Auto-sync if user signs in while on this page
+  useEffect(() => {
+    const syncData = async () => {
+      if (user && localStorage.getItem('diagnosticData')) {
+        try {
+          await syncFromLocalStorage();
+        } catch (error) {
+          console.error('Error syncing diagnostic:', error);
+        }
+      }
+    };
+    syncData();
+  }, [user, syncFromLocalStorage]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
