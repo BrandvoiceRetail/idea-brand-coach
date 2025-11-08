@@ -24,6 +24,13 @@ Welcome to the beta launch documentation for the IDEA Brand Coach platform.
   - Phase 3: Security hardening (📋 Planned)
   - Testing checklist and launch preparation
 
+- **[BETA_TESTING_SETUP.md](./BETA_TESTING_SETUP.md)** - Required configuration before beta launch
+  - Supabase configuration steps
+  - Email setup options
+  - Testing checklist
+  - Common issues and solutions
+  - Beta tester invitation template
+
 ## 🚀 Beta Launch Status
 
 ### ✅ Completed

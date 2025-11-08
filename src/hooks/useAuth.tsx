@@ -65,9 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           variant: "destructive",
         });
       } else {
+        // Check if user is immediately confirmed (email confirmation disabled)
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        const isConfirmed = newUser?.email_confirmed_at !== undefined;
+        
         toast({
           title: "Success!",
-          description: "Please check your email to confirm your account.",
+          description: isConfirmed 
+            ? "Your account has been created. You can now sign in."
+            : "Please check your email to confirm your account.",
         });
       }
       
