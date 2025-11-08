@@ -17,6 +17,13 @@ Welcome to the beta launch documentation for the IDEA Brand Coach platform.
   - Security & privacy considerations
 
 ### Implementation Guides
+- **[P0_IMPLEMENTATION_PLAN.md](./P0_IMPLEMENTATION_PLAN.md)** - Detailed 14-day implementation plan
+  - Phase 1: Data Layer & RAG (Days 1-5)
+  - Phase 2: Integration & Auth (Days 6-8)
+  - Phase 3: Brand Coach UI (Days 9-11)
+  - Phase 4: Testing & Polish (Days 12-14)
+  - Sprint breakdown, success metrics, and risk mitigation
+
 - **[AUTH_IMPLEMENTATION.md](./AUTH_IMPLEMENTATION.md)** - Authentication implementation plan
   - Current state and gap analysis
   - Phase 1: Critical blockers (✅ Complete)
@@ -30,6 +37,13 @@ Welcome to the beta launch documentation for the IDEA Brand Coach platform.
   - Testing checklist
   - Common issues and solutions
   - Beta tester invitation template
+
+- **[P1_FEATURES.md](./P1_FEATURES.md)** - Post-launch features and enhancements
+  - Production email system (Resend integration)
+  - Enhanced authentication (Google OAuth, 2FA)
+  - Advanced RAG features
+  - User experience enhancements
+  - Analytics & monitoring
 
 ## 🚀 Beta Launch Status
 
@@ -49,7 +63,13 @@ Welcome to the beta launch documentation for the IDEA Brand Coach platform.
 ### 📋 Planned (P0)
 - [ ] Brand Diagnostic Supabase Integration
 - [ ] Brand Coach GPT with RAG
-- [ ] Phase 2 & 3 Authentication Features
+- [ ] Supabase Configuration (Email settings, URL configuration)
+
+### 🚀 Post-Launch (P1)
+- [ ] Production Email System (Resend)
+- [ ] Google OAuth
+- [ ] Advanced RAG Features
+- [ ] Email Nurture Sequences
 
 ## 🧪 Testing for Beta Testers
 
