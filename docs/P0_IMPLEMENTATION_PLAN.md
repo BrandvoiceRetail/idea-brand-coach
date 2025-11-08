@@ -1,8 +1,8 @@
 # P0 Implementation Plan
 ## IDEA Brand Coach Platform - Beta Launch
 
-**Version:** 1.1  
-**Last Updated:** 2025-11-08  
+**Version:** 1.0
+**Last Updated:** 2025-11-07
 **Status:** Planning Phase
 **Estimated Timeline:** 14 working days
 
@@ -182,39 +182,14 @@
 
 **Goal**: Connect all pieces together - diagnostic → auth → save → coaching
 
-#### Day 6: Auth Integration & Supabase Configuration
-
-**🚨 CRITICAL FIRST: Configure Supabase Authentication Settings**
-
-Before implementing code changes, complete these required Supabase configurations:
-
-1. **Disable Email Confirmation** (Required for beta testing):
-   - Navigate to [Authentication → Providers → Email](https://supabase.com/dashboard/project/ecdrxtbclxfpkknasmrw/auth/providers)
-   - Toggle OFF "Enable email confirmation"
-   - Save changes
-   - ⚠️ **Re-enable before production launch** (see `docs/P1_FEATURES.md`)
-
-2. **Configure Site URL and Redirect URLs**:
-   - Navigate to [Authentication → URL Configuration](https://supabase.com/dashboard/project/ecdrxtbclxfpkknasmrw/auth/url-configuration)
-   - Set Site URL to production domain
-   - Add Redirect URLs:
-     - `https://yourdomain.com/**` (production)
-     - `https://yourdomain.lovable.app/**` (preview)
-     - `http://localhost:5173/**` (local dev)
-
-3. **Verify Database Trigger**:
-   - Check `on_auth_user_created` trigger exists
-   - Test profile creation on new user signup
-
-**Reference**: See `docs/BETA_TESTING_SETUP.md` for detailed instructions
+#### Day 6: Auth Integration
 
 **Tasks**:
 1. **Enhance Auth.tsx**:
    - Use `useAuth()` hook with `IAuthService`
-   - Add Google OAuth button (optional - P1 feature)
+   - Add Google OAuth button (optional)
    - Improve UX (loading states, error messages)
    - Add password strength indicator
-   - Update signup success message to reflect email confirmation state
 2. **Build AuthModal.tsx**:
    - Reusable modal component for post-diagnostic auth
    - Tabs for Sign Up / Sign In
@@ -226,9 +201,9 @@ Before implementing code changes, complete these required Supabase configuration
 4. **Update ProtectedRoute.tsx**:
    - Add redirect URL preservation (nice-to-have)
    - Improve loading state
-5. Test auth flow end-to-end with Supabase configuration
+5. Test auth flow end-to-end
 
-**Deliverable**: Seamless auth integration with diagnostic flow + Supabase properly configured for beta testing
+**Deliverable**: Seamless auth integration with diagnostic flow
 
 #### Day 7: Diagnostic Flow Integration
 
@@ -635,4 +610,3 @@ Before implementing code changes, complete these required Supabase configuration
 | Date | Version | Changes |
 |------|---------|---------|
 | 2025-11-07 | 1.0 | Extracted from P0_BETA_LAUNCH_ROADMAP.md v1.3 |
-| 2025-11-08 | 1.1 | Added Supabase email configuration to Day 6, added reference to P1_FEATURES.md |

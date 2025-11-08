@@ -1,320 +1,362 @@
-# P1 Features - Post-Beta Launch
+# P1 Features - Post-Launch Roadmap
 ## IDEA Brand Coach Platform
 
-**Version:** 1.0  
-**Last Updated:** 2025-11-08  
-**Status:** Planning  
+**Version:** 1.0
+**Last Updated:** 2025-11-07
+**Status:** Planning Phase
 
 ---
 
 ## Overview
 
-This document outlines Post-Launch (P1) features to be implemented after successful beta launch. These features enhance user experience, security, and scalability but are not critical blockers for the initial beta release.
+This document defines all features **deferred to P1 (post-launch)**. These features exist in the codebase but are marked as lower priority to ensure a focused P0 beta launch.
+
+**P0 Completion Requirement**: All three core P0 features must be functional and stable before beginning P1 development.
+
+See [P0_FEATURES.md](./P0_FEATURES.md) for beta launch requirements.
 
 ---
 
-## Table of Contents
-1. [Production Email System](#production-email-system)
-2. [Enhanced Authentication](#enhanced-authentication)
-3. [Advanced RAG Features](#advanced-rag-features)
-4. [User Experience Enhancements](#user-experience-enhancements)
-5. [Analytics & Monitoring](#analytics--monitoring)
+## P1 Feature Categories
+
+1. [Advanced IDEA Framework Modules](#p11-advanced-idea-framework-modules)
+2. [Avatar & Customer Research Tools](#p12-avatar--customer-research-tools)
+3. [Brand Canvas & Visual Tools](#p13-brand-canvas--visual-tools)
+4. [Beta Journey & Feedback Flows](#p14-beta-journey--feedback-flows)
+5. [Document Upload & Knowledge Base](#p15-document-upload--knowledge-base)
+6. [Advanced Dashboard Features](#p16-advanced-dashboard-features)
 
 ---
 
-## 1. Production Email System
+## P1.1 - Advanced IDEA Framework Modules
 
-### Overview
-Replace development email configuration with production-grade email service for reliable transactional emails.
+### Features to Defer
 
-### Why P1?
-- Beta testing works without email confirmation (disabled in Supabase)
-- Email provider setup requires domain verification and configuration
-- Not a critical blocker for early testing
+**Existing Routes (All behind ProtectedRoute):**
+- `/idea` - IDEA Framework landing page
+- `/idea/consultant` - IDEA Framework Consultant (will become alias for `/brand-coach`)
+- `/idea/insight` - Insight module deep-dive
+- `/idea/distinctive` - Distinctive module deep-dive
+- `/idea/empathy` - Empathy module deep-dive
+- `/idea/authenticity` - Authenticity module deep-dive
+- `/idea-diagnostic` - Full authenticated diagnostic (vs free version)
 
-### Implementation: Resend Email Integration
+### Components
+- `IdeaDiagnostic.tsx` - Extended diagnostic (15+ questions)
+- `IdeaFramework.tsx` - Framework overview page
+- `IdeaInsight.tsx` - Insight deep-dive module
+- `IdeaDistinctive.tsx` - Distinctive deep-dive module
+- `IdeaEmpathy.tsx` - Empathy deep-dive module
+- `IdeaAuthenticity.tsx` - Authenticity deep-dive module
 
-**Priority:** High  
-**Estimated Time:** 2-4 hours  
-**Dependencies:** Custom domain, Supabase configuration access
+### Rationale
+- P0 FreeDiagnostic (6 questions) provides sufficient value for beta
+- Full framework modules add complexity and onboarding friction
+- Can be layered in based on beta feedback
 
-#### Setup Steps
+### Migration Path
+- Link from diagnostic results as "Learn More" CTAs
+- Unlock progressively as users engage with Brand Coach
+- Use Brand Coach to recommend specific modules based on low scores
 
-1. **Create Resend Account**:
-   - Sign up at [resend.com](https://resend.com)
-   - Navigate to [Domains](https://resend.com/domains)
-   - Add and verify your sending domain (yourdomain.com)
-   - Wait for DNS verification (usually 24-48 hours)
+---
 
-2. **Generate API Key**:
-   - Navigate to [API Keys](https://resend.com/api-keys)
-   - Create new API key with name "IDEA Brand Coach - Production"
-   - Copy the API key (starts with `re_`)
+## P1.2 - Avatar & Customer Research Tools
 
-3. **Configure Supabase SMTP**:
-   - Navigate to [Project Settings → Auth](https://supabase.com/dashboard/project/ecdrxtbclxfpkknasmrw/settings/auth)
-   - Scroll to "SMTP Settings"
-   - Configure:
-     ```
-     Host: smtp.resend.com
-     Port: 465
-     Username: resend
-     Password: [Your Resend API Key]
-     Sender Email: noreply@yourdomain.com
-     Sender Name: IDEA Brand Coach
-     ```
-   - Click "Save"
+### Features to Defer
 
-4. **Re-enable Email Confirmation**:
-   - Navigate to [Authentication → Providers → Email](https://supabase.com/dashboard/project/ecdrxtbclxfpkknasmrw/auth/providers)
-   - Toggle ON "Enable email confirmation"
-   - Save changes
+**Routes:**
+- `/avatar` - Avatar Builder (behind ProtectedRoute)
+- `/research-learning` - Research & Learning hub (behind ProtectedRoute)
 
-5. **Customize Email Templates**:
-   - Navigate to [Authentication → Email Templates](https://supabase.com/dashboard/project/ecdrxtbclxfpkknasmrw/auth/templates)
-   - Customize these templates with your brand:
-     - **Confirm Signup** - Welcome email with verification link
-     - **Magic Link** - Passwordless login
-     - **Change Email Address** - Email change confirmation
-     - **Reset Password** - Password reset instructions
+**Components:**
+- `AvatarBuilder.tsx` - Customer avatar creation tool
+- `SurveyBuilder.tsx` (`src/components/research/`)
+- `CustomerReviewAnalyzer.tsx` (`src/components/research/`)
 
-#### Email Template Recommendations
+### Rationale
+- These are advanced features for power users
+- Require significant onboarding and education
+- Better suited for paying customers post-beta
+- P0 diagnostic provides enough customer insight data
 
-**Confirm Signup Template:**
-```html
-<h2>Welcome to IDEA Brand Coach! 🎉</h2>
-<p>Hi {{ .Name }},</p>
-<p>Thanks for signing up! Click the button below to verify your email and unlock your personalized brand coaching:</p>
-<a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px;">
-  Verify Email Address
-</a>
-<p>Or copy and paste this URL into your browser:</p>
-<p>{{ .ConfirmationURL }}</p>
-<p>This link expires in 24 hours.</p>
-<p>Best,<br>The IDEA Brand Coach Team</p>
+### Migration Path
+- Introduce as premium features (paid tier)
+- Use Brand Coach to recommend avatar building when appropriate
+- Example: "To improve your Empathy score, build a detailed customer avatar"
+
+---
+
+## P1.3 - Brand Canvas & Visual Tools
+
+### Features to Defer
+
+**Routes:**
+- `/canvas` - Brand Canvas builder (behind ProtectedRoute)
+- `/value-lens` - Value Lens tool (behind ProtectedRoute)
+
+**Components:**
+- `BrandCanvas.tsx` - Interactive brand strategy canvas
+- `ValueLens.tsx` - Value proposition builder
+- `LogoProcessor.tsx` - Logo analysis tool
+- `BrandCanvasPDFExport.tsx` - PDF export functionality
+- `AvatarPDFExport.tsx` - Avatar PDF export
+
+### Rationale
+- These are workshop-style tools requiring time investment
+- Better experienced after establishing brand strategy foundation via diagnostic + Brand Coach
+- Require more user time and engagement
+
+### Migration Path
+- Offer as guided workflows after diagnostic completion
+- Integrate with Brand Coach recommendations
+- Example: "Let's create your brand canvas based on your diagnostic insights"
+
+---
+
+## P1.4 - Beta Journey & Feedback Flows
+
+### Features to Defer
+
+**Routes:**
+- `/beta` - Beta welcome page (public)
+- `/beta/journey` - Beta tester journey tracker (behind ProtectedRoute)
+- `/beta/feedback` - Structured feedback collection (behind ProtectedRoute)
+
+**Components:**
+- `BetaWelcome.tsx` - Beta program landing page
+- `BetaJourney.tsx` - Progress tracking for beta testers
+- `BetaFeedback.tsx` - Feedback form
+- `BetaNavigationWidget.tsx` - Persistent beta navigation
+
+**Database:**
+- `beta_testers` table - Already exists
+- Edge Function: `save-beta-feedback`
+
+### Rationale
+- P0 focuses on core product value, not beta program infrastructure
+- Can gather feedback through simpler means (email, support chat, quick surveys)
+- Structured beta program can launch alongside P1
+
+### Migration Path
+- Launch formal beta program after P0 stabilizes
+- Use feedback to prioritize P1 feature rollout
+- Simple feedback collection via:
+  - Post-session surveys in Brand Coach
+  - Email follow-ups
+  - Support chat (Intercom/Zendesk)
+
+---
+
+## P1.5 - Document Upload & Knowledge Base
+
+### Current State
+
+**Existing Infrastructure (Ready but Unused):**
+- ✅ Database table: `uploaded_documents`
+- ✅ Storage bucket: `documents`
+- ✅ RLS policies configured
+- ✅ Edge Function: `document-processor`
+- ✅ UI Component: `DocumentUpload.tsx` (used in IdeaFrameworkConsultant)
+
+**Database Schema:**
+```sql
+CREATE TABLE public.uploaded_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  filename TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  file_size INTEGER NOT NULL,
+  mime_type TEXT NOT NULL,
+  extracted_content TEXT,
+  status TEXT NOT NULL DEFAULT 'processing',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 ```
 
-**Reset Password Template:**
-```html
-<h2>Reset Your Password</h2>
-<p>Hi {{ .Name }},</p>
-<p>We received a request to reset your password. Click the button below to create a new password:</p>
-<a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px;">
-  Reset Password
-</a>
-<p>Or copy and paste this URL into your browser:</p>
-<p>{{ .ConfirmationURL }}</p>
-<p>If you didn't request this, you can safely ignore this email.</p>
-<p>This link expires in 1 hour.</p>
-<p>Best,<br>The IDEA Brand Coach Team</p>
-```
+### Why P1
+- Adds complexity to RAG implementation
+- Requires robust file processing pipeline (PDF/Word/text extraction)
+- Can start with diagnostic data only and expand
+- Document processing (OCR, parsing) adds latency
+- Need file size limits, virus scanning, format validation
 
-#### Testing Checklist
+### Migration Path
 
-- [ ] Test signup email delivery
-- [ ] Test password reset email delivery
-- [ ] Test magic link email delivery (if enabled)
-- [ ] Verify emails don't land in spam
-- [ ] Test email templates render correctly on:
-  - [ ] Gmail (desktop and mobile)
-  - [ ] Outlook (desktop and mobile)
-  - [ ] Apple Mail (desktop and mobile)
-- [ ] Verify sender name and email appear correctly
-- [ ] Test all links in emails work correctly
+**Phase 1 (P0)**: RAG uses diagnostic + profile data only
 
-#### Cost Estimation
+**Phase 2 (P1.5)**: Add document upload capability
+- User uploads brand guidelines, strategy docs, competitive analysis
+- `document-processor` Edge Function extracts text
+- Text chunked and embedded into `user_knowledge_chunks`
+- Brand Coach references uploaded documents in responses
 
-**Resend Pricing (as of 2024):**
-- Free tier: 3,000 emails/month
-- Pro: $20/month for 50,000 emails
-- Business: Custom pricing
-
-**Expected Usage:**
-- Beta (100 users): ~300 emails/month (signups, resets)
-- Launch (1,000 users): ~3,000 emails/month
-- Growth (10,000 users): ~30,000 emails/month
-
-**Recommendation:** Start with free tier, upgrade to Pro at ~3,000 users
-
-#### Monitoring
-
-**Key Metrics to Track:**
-- Email delivery rate (should be >98%)
-- Open rate (industry avg: 20-30%)
-- Click-through rate on verification links
-- Bounce rate (should be <5%)
-- Spam complaint rate (should be <0.1%)
-
-**Tools:**
-- Resend dashboard for delivery metrics
-- Supabase logs for email sending events
-- Google Postmaster Tools for Gmail reputation
+**Phase 3 (P2)**: Advanced document analysis
+- Competitive document analysis
+- Multi-document synthesis
+- Visual content analysis (logo, design assets)
 
 ---
 
-## 2. Enhanced Authentication
+## P1.6 - Advanced Dashboard Features
 
-### 2.1 Social Authentication (Google OAuth)
+### Features to Defer
 
-**Priority:** Medium  
-**Estimated Time:** 3-4 hours  
-**Status:** Planned
+**Dashboard Enhancements (Not Yet Built):**
+- Historical diagnostic trend charts
+- Brand health score tracking over time
+- Comparative analysis (vs industry benchmarks)
+- Team collaboration features
+- Export reports (PDF/PowerPoint)
+- Analytics dashboards (engagement, progress, ROI)
 
-**Implementation:**
-1. Enable Google OAuth in Supabase:
-   - Navigate to [Authentication → Providers](https://supabase.com/dashboard/project/ecdrxtbclxfpkknasmrw/auth/providers)
-   - Click on "Google"
-   - Create Google Cloud project and OAuth credentials
-   - Add authorized redirect URIs
-   - Copy Client ID and Client Secret to Supabase
-2. Update `Auth.tsx`:
-   - Add "Continue with Google" button
-   - Use `supabase.auth.signInWithOAuth({ provider: 'google' })`
-3. Test OAuth flow end-to-end
+**Current P0 Dashboard Scope:**
+- Show latest diagnostic scores
+- Quick access to Brand Coach
+- Link to retake diagnostic
 
-**Benefits:**
-- Faster signup (no email verification needed)
-- Better conversion rates
-- Reduced password reset requests
+### Rationale
+- P0 dashboard can show latest diagnostic only
+- Trend tracking requires time and multiple submissions
+- Advanced analytics better suited for paid tiers
+- Team features require collaboration infrastructure
 
-### 2.2 Two-Factor Authentication (2FA)
+### Migration Path
 
-**Priority:** Low  
-**Estimated Time:** 6-8 hours  
-**Status:** Future consideration
+**P1 Dashboard Features (in priority order):**
 
-**Implementation:**
-- Use Supabase's MFA features
-- Add TOTP (Time-based One-Time Password) support
-- Optional SMS verification via Twilio
+1. **Historical Tracking** (P1.6.1)
+   - Line charts showing score changes over time
+   - Comparison of diagnostic submissions
+   - "Your Progress" section
 
----
+2. **Brand Health Dashboard** (P1.6.2)
+   - Overall brand health score
+   - Category breakdowns with explanations
+   - Suggested focus areas
 
-## 3. Advanced RAG Features
+3. **PDF Report Export** (P1.6.3)
+   - Professional PDF of diagnostic results
+   - Brand Coach conversation summary
+   - Actionable recommendations
 
-### 3.1 Multi-Source Knowledge Base
-
-**Priority:** High  
-**Estimated Time:** 8-12 hours  
-**Status:** Planned
-
-**Features:**
-- Upload brand documents (PDFs, docs)
-- Analyze competitor websites
-- Import social media content
-- Store all in vector database with user-specific filtering
-
-### 3.2 Conversation Memory Improvements
-
-**Priority:** Medium  
-**Estimated Time:** 4-6 hours  
-**Status:** Planned
-
-**Features:**
-- Conversation summarization after 20+ messages
-- Long-term memory storage
-- Reference past conversations in new chats
+4. **Team Collaboration** (P1.6.4 - P2 consideration)
+   - Invite team members
+   - Shared diagnostic results
+   - Collaborative Brand Coach sessions
 
 ---
 
-## 4. User Experience Enhancements
+## P1 Implementation Priority
 
-### 4.1 Onboarding Flow
+**Recommended Rollout Sequence (Post-P0 Launch):**
 
-**Priority:** High  
-**Estimated Time:** 6-8 hours  
-**Status:** Planned
+### Phase P1.1 (Week 1-2 post-launch)
+**Focus**: Enhance existing features based on beta feedback
+- Historical diagnostic tracking
+- Improved Brand Coach suggested prompts
+- Dashboard polish and analytics
 
-**Features:**
-- Interactive product tour
-- Progressive profiling (ask for details gradually)
-- Suggested first actions
-- Video tutorials
+### Phase P1.2 (Week 3-4 post-launch)
+**Focus**: Document upload integration
+- Enable document upload in Brand Coach
+- Integrate with RAG pipeline
+- File processing and extraction
 
-### 4.2 Email Nurture Sequences
+### Phase P1.3 (Week 5-8 post-launch)
+**Focus**: IDEA Framework deep-dive modules
+- Enable /idea/insight, /idea/distinctive, etc.
+- Create guided learning paths
+- Integrate with Brand Coach recommendations
 
-**Priority:** Medium  
-**Estimated Time:** 8-12 hours (using Resend)  
-**Status:** Planned
+### Phase P1.4 (Week 9-12 post-launch)
+**Focus**: Advanced tools (Avatar, Canvas, Value Lens)
+- Unlock avatar builder
+- Enable brand canvas
+- Add value lens tool
+- Guided workflows
 
-**Sequences:**
-1. **Day 0**: Welcome email + getting started guide
-2. **Day 1**: Complete your diagnostic reminder (if incomplete)
-3. **Day 3**: Tips for using Brand Coach effectively
-4. **Day 7**: Success stories + invite to community
-5. **Day 14**: Feature spotlight + upgrade prompt (if freemium model)
-
-**Implementation:**
-- Create Supabase Edge Function: `send-nurture-emails`
-- Use Supabase cron jobs to trigger daily
-- Integrate with Resend API
-- Track email engagement
-
-### 4.3 Dashboard Enhancements
-
-**Priority:** Medium  
-**Estimated Time:** 6-8 hours  
-**Status:** Planned
-
-**Features:**
-- Diagnostic score trends over time
-- Quick stats (total chats, documents uploaded)
-- Recent activity feed
-- Personalized recommendations
+### Phase P1.5 (Week 13+ post-launch)
+**Focus**: Team & enterprise features
+- Team collaboration
+- Multi-user accounts
+- Enterprise-grade analytics
+- White-label considerations (P2)
 
 ---
 
-## 5. Analytics & Monitoring
+## Feature Comparison: P0 vs P1
 
-### 5.1 User Analytics
-
-**Priority:** High  
-**Estimated Time:** 4-6 hours  
-**Status:** Planned
-
-**Tools:**
-- PostHog or Amplitude for product analytics
-- LogRocket for session replay
-- Sentry for error tracking
-
-**Key Metrics:**
-- Signup conversion rate
-- Diagnostic completion rate
-- Chat engagement (messages per session)
-- Retention (DAU, WAU, MAU)
-- Feature adoption rates
-
-### 5.2 Performance Monitoring
-
-**Priority:** High  
-**Estimated Time:** 2-3 hours  
-**Status:** Planned
-
-**Metrics:**
-- Page load times
-- API response times
-- RAG retrieval latency
-- Error rates
-- Database query performance
+| Feature | P0 Beta | P1 Future |
+|---------|---------|-----------|
+| **Diagnostic** | ✅ Free 6-question | ✅ Extended 15-question |
+| **Account Creation** | ✅ Email + Google OAuth | ✅ + LinkedIn, SSO |
+| **Brand Coach GPT** | ✅ RAG with diagnostic data | ✅ + Document upload RAG |
+| **Diagnostic Results** | ✅ Basic scores + insights | ✅ + Trend analysis, comparisons |
+| **Dashboard** | ✅ Minimal (latest results, Brand Coach access) | ✅ Full analytics, history, charts |
+| **IDEA Framework Modules** | ❌ Deferred | ✅ 4 deep-dive modules |
+| **Avatar Builder** | ❌ Deferred | ✅ Full avatar creation |
+| **Brand Canvas** | ❌ Deferred | ✅ Interactive canvas |
+| **Value Lens** | ❌ Deferred | ✅ Value prop builder |
+| **Document Upload** | ❌ Deferred (schema ready) | ✅ Full upload + RAG |
+| **PDF/PPT Export** | ❌ Not planned | ✅ Professional reports |
+| **Team Collaboration** | ❌ Not planned | ⏳ P2 consideration |
+| **White-label** | ❌ Not planned | ⏳ P3 consideration |
 
 ---
 
-## Implementation Priority
+## Success Metrics for P1 Launch
 
-**Phase P1.1 (Weeks 3-4):**
-- [ ] Production email system (Resend)
-- [ ] User analytics setup
-- [ ] Performance monitoring
+**Engagement Metrics:**
+- 40%+ of P0 users adopt at least one P1 feature
+- 20%+ use document upload RAG
+- 30%+ explore IDEA deep-dive modules
+- 15%+ create customer avatars
 
-**Phase P1.2 (Weeks 5-6):**
-- [ ] Google OAuth
-- [ ] Onboarding flow
-- [ ] Advanced RAG features
+**Retention Metrics:**
+- 60%+ return within 14 days of P1 feature release
+- 25%+ weekly active users (vs 15% in P0)
 
-**Phase P1.3 (Weeks 7-8):**
-- [ ] Email nurture sequences
-- [ ] Dashboard enhancements
-- [ ] Conversation memory improvements
+**Business Metrics:**
+- 30%+ conversion to paid tier (if introducing pricing)
+- 50%+ reduction in support tickets (better self-service)
+
+---
+
+## Dependencies
+
+**P1 Features Require P0 Completion:**
+- ✅ Data access layer with service interfaces
+- ✅ RAG infrastructure (pgvector, embeddings)
+- ✅ Chat message persistence
+- ✅ Stable diagnostic → auth → save flow
+
+**Additional Infrastructure for P1:**
+- File processing pipeline (PDF, Word, text extraction)
+- Charts/visualization library (Recharts or similar)
+- PDF generation library (jsPDF or Puppeteer)
+- Team management database schema
+- Analytics tracking (PostHog, Amplitude)
+
+---
+
+## Open Questions for Product Team
+
+1. **Pricing Strategy**: When do we introduce paid tiers? Which features are premium?
+   - Recommendation: P0 free, P1.5+ introduces paid tiers
+
+2. **Document Upload Limits**: File size, format restrictions, storage quotas?
+   - Recommendation: 10MB per file, 100MB total per user, PDF/Word/txt only
+
+3. **Team Features Scope**: Multi-user accounts, role-based access, shared workspaces?
+   - Recommendation: Defer to P2, focus on individual users first
+
+4. **Industry Benchmarks**: Do we provide comparative data (e.g., "Your score vs SaaS average")?
+   - Recommendation: P1.6+ feature, requires data aggregation strategy
+
+5. **White-label/Enterprise**: Do we pursue enterprise customization?
+   - Recommendation: P3+, focus on product-market fit first
 
 ---
 
@@ -322,14 +364,4 @@ Replace development email configuration with production-grade email service for 
 
 | Date | Version | Changes |
 |------|---------|---------|
-| 2025-11-08 | 1.0 | Initial P1 features document created |
-
----
-
-## References
-
-- [P0_FEATURES.md](./P0_FEATURES.md) - Beta launch requirements
-- [BETA_TESTING_SETUP.md](./BETA_TESTING_SETUP.md) - Supabase configuration
-- [AUTH_IMPLEMENTATION.md](./AUTH_IMPLEMENTATION.md) - Authentication details
-- [Resend Documentation](https://resend.com/docs)
-- [Supabase Email Documentation](https://supabase.com/docs/guides/auth/auth-smtp)
+| 2025-11-07 | 1.0 | Extracted from P0_BETA_LAUNCH_ROADMAP.md v1.3 |
