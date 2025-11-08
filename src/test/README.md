@@ -1,7 +1,9 @@
-# Test Suite Documentation
+# Test Suite - IDEA Brand Coach P0
+
+This document outlines the comprehensive test suite for the IDEA Brand Coach P0 implementation.
 
 ## Overview
-Comprehensive unit tests for the IDEA Brand Coach P0 implementation (Phases 1-3).
+Comprehensive unit, component, and integration tests covering Phases 1-3 of the P0 implementation.
 
 ## Running Tests
 
