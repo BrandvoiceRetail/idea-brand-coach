@@ -109,6 +109,66 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      diagnostic_submissions: {
+        Row: {
+          answers: Json
+          completed_at: string
+          created_at: string
+          id: string
+          scores: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers: Json
+          completed_at?: string
+          created_at?: string
+          id?: string
+          scores: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          created_at?: string
+          id?: string
+          scores?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       idea_framework_submissions: {
         Row: {
           buyer_intent: string | null
@@ -148,23 +208,32 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          diagnostic_completed_at: string | null
           email: string
           full_name: string | null
           id: string
+          latest_diagnostic_data: Json | null
+          latest_diagnostic_score: number | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          diagnostic_completed_at?: string | null
           email: string
           full_name?: string | null
           id: string
+          latest_diagnostic_data?: Json | null
+          latest_diagnostic_score?: number | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          diagnostic_completed_at?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          latest_diagnostic_data?: Json | null
+          latest_diagnostic_score?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -249,18 +318,62 @@ export type Database = {
           },
         ]
       }
+      user_knowledge_chunks: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json | null
+          source_id: string | null
+          source_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source_id?: string | null
+          source_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source_id?: string | null
+          source_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      handle_ai_insight_guidance: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      handle_buyer_intent_analysis: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
+      handle_ai_insight_guidance: { Args: never; Returns: undefined }
+      handle_buyer_intent_analysis: { Args: never; Returns: undefined }
+      match_user_documents: {
+        Args: {
+          filter?: Json
+          match_count?: number
+          match_user_id: string
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
       }
     }
     Enums: {

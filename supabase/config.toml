@@ -58,3 +58,9 @@ verify_jwt = false
 
 [functions.send-framework-email]
 verify_jwt = false
+
+[functions.sync-diagnostic-to-embeddings]
+verify_jwt = false
+
+[functions.brand-coach-gpt]
+verify_jwt = false
