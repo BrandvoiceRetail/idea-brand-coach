@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useServices } from '@/services/ServiceProvider';
 
 interface AuthContextType {
   user: User | null;
@@ -9,6 +10,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
   loading: boolean;
 }
 
@@ -19,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { authService } = useServices();
 
   useEffect(() => {
     console.log('Setting up auth state listener');
@@ -45,18 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName || ''
-          }
-        }
-      });
+      const { user: newUser, error } = await authService.signUp(email, password, fullName);
       
       if (error) {
         toast({
@@ -65,8 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           variant: "destructive",
         });
       } else {
-        // Check if user is immediately confirmed (email confirmation disabled)
-        const { data: { user: newUser } } = await supabase.auth.getUser();
         const isConfirmed = newUser?.email_confirmed_at !== undefined;
         
         toast({
@@ -86,10 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await authService.signIn(email, password);
       
       if (error) {
         toast({
@@ -113,13 +100,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await authService.signOut();
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
       });
     } catch (error) {
       console.error('Sign out error:', error);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await authService.resetPassword(email);
+      return { error };
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return { error: error as Error };
     }
   };
 
@@ -130,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signIn,
       signOut,
+      resetPassword,
       loading
     }}>
       {children}

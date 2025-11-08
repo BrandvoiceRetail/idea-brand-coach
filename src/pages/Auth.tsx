@@ -10,7 +10,6 @@ import { Home, Loader2 } from 'lucide-react';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 const emailSchema = z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password must be less than 100 characters');
@@ -26,7 +25,7 @@ export default function Auth() {
   const [emailErrors, setEmailErrors] = useState('');
   const [passwordErrors, setPasswordErrors] = useState('');
   const [nameErrors, setNameErrors] = useState('');
-  const { signIn, signUp, signOut, user, loading } = useAuth();
+  const { signIn, signUp, signOut, resetPassword, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -106,9 +105,7 @@ export default function Auth() {
     if (!validateEmail(resetEmail)) return;
     
     setIsLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth`,
-    });
+    const { error } = await resetPassword(resetEmail);
     setIsLoading(false);
     
     if (error) {
