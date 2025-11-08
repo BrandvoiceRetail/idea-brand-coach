@@ -9,7 +9,7 @@ import { ArrowRight, ArrowLeft, CheckCircle, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useAuth } from '@/hooks/useAuth';
-import BetaTesterCapture from '@/components/BetaTesterCapture';
+import { DiagnosticAuthModal } from '@/components/DiagnosticAuthModal';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 
 interface Question {
@@ -335,13 +335,12 @@ export default function FreeDiagnostic() {
         </div>
       </div>
 
-      {/* Beta Tester Capture Modal */}
+      {/* Diagnostic Auth Modal */}
       {diagnosticResults && (
-        <BetaTesterCapture
+        <DiagnosticAuthModal
           isOpen={showBetaCapture}
-          onClose={() => setShowBetaCapture(false)}
           onComplete={handleBetaCaptureComplete}
-          diagnosticData={diagnosticResults}
+          diagnosticScore={diagnosticResults.overallScore}
         />
       )}
 
