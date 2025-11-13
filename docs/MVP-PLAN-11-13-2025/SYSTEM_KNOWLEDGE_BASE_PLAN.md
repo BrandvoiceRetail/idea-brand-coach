@@ -1,7 +1,7 @@
 # System Knowledge Base Plan - IDEA Brand Coach
-## Comprehensive RAG Knowledge Architecture
+## Shared Expert Knowledge (Trevor's Book + Marketing Frameworks)
 
-**Version:** 1.0
+**Version:** 2.0
 **Last Updated:** 2025-11-13
 **Status:** Planning Phase
 
@@ -9,45 +9,60 @@
 
 ## Executive Summary
 
-This document outlines the strategy for building a comprehensive system knowledge base that powers the IDEA Brand Coach RAG system. The knowledge base integrates Trevor's proprietary book with curated insights from established marketing literature, while respecting copyright laws.
+This document outlines the strategy for building the **System Knowledge Base** - the shared expert knowledge that powers the IDEA Brand Coach RAG system. This is ONE of TWO knowledge bases:
+
+**1. System Knowledge Base (This Document) - SHARED**
+- Trevor's proprietary book + marketing framework syntheses
+- Shared across ALL users
+- OpenAI Vector Stores (5 domain-specific stores)
+
+**2. User Knowledge Base (Separate) - PER-USER ISOLATED**
+- User's diagnostic results + uploaded documents
+- Strictly isolated by user_id
+- PostgreSQL with RLS (see SYSTEM_USER_KNOWLEDGE_BASE_SEPARATION_GUIDE.md)
 
 **Key Principles:**
 - ✅ **Full Rights**: Trevor's book (PDF upload with full IP rights)
 - ✅ **Curated Insights**: Key concepts from marketing classics (synthesized, not copied)
 - ✅ **Legal Compliance**: No direct PDF copying of copyrighted materials
 - ✅ **Structured Organization**: 5 domain-specific vector stores matching prompt architecture
+- ✅ **Shared Resource**: All users access same expert knowledge (no duplication)
 
 ---
 
-## Knowledge Base Architecture
+## System Knowledge Base Architecture
 
-### Integration with High-Level Design
+### Integration with Dual-KB Design
 
-The knowledge base aligns with the 5-prompt routing architecture from the high-level design:
+The System KB provides expert guidance (Trevor + marketing frameworks) that is retrieved alongside User KB (personalized context) at runtime.
+
+**System KB: 5 Domain-Specific Vector Stores (SHARED)**
 
 ```
-Vector Store Architecture:
-├─ Diagnostic KB (10,000 docs, 5GB)
+System Vector Store Architecture:
+├─ vs_system_diagnostic (10,000 docs, 5GB) [SHARED]
 │  ├─ Trevor's book chapters on assessment
 │  ├─ SWOT framework syntheses
 │  └─ Brand audit methodologies
-├─ Avatar KB (8,000 docs, 4GB)
+├─ vs_system_avatar (8,000 docs, 4GB) [SHARED]
 │  ├─ Trevor's customer profiling methods
 │  ├─ Persona development frameworks
 │  └─ Market segmentation insights
-├─ Canvas KB (7,000 docs, 3.5GB)
+├─ vs_system_canvas (7,000 docs, 3.5GB) [SHARED]
 │  ├─ Business model frameworks (Osterwalder synthesis)
 │  ├─ Trevor's business strategy guidance
 │  └─ Revenue model patterns
-├─ CAPTURE KB (12,000 docs, 6GB)
+├─ vs_system_capture (12,000 docs, 6GB) [SHARED]
 │  ├─ Trevor's content strategy chapters
 │  ├─ Marketing framework syntheses
 │  └─ Campaign planning methodologies
-└─ Core KB (5,000 docs, 2.5GB)
+└─ vs_system_core (5,000 docs, 2.5GB) [SHARED]
    ├─ Trevor's brand foundation philosophy
    ├─ Mission/vision development frameworks
    └─ Brand storytelling principles
 ```
+
+**Note**: This is the SYSTEM knowledge base only. User-specific context (diagnostic results, uploaded documents) is stored separately in the User Knowledge Base. See [SYSTEM_USER_KNOWLEDGE_BASE_SEPARATION_GUIDE.md](./SYSTEM_USER_KNOWLEDGE_BASE_SEPARATION_GUIDE.md) for complete architecture.
 
 ---
 

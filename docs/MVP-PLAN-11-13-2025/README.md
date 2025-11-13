@@ -121,12 +121,18 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 - **Alternative Evaluated**: Claude Sonnet 4.5 (2.1% better quality, but 48% more expensive)
 - **Decision**: GPT-5 - cost savings ($258/month) outweigh marginal quality gain
 
-### 3. **Context Management**: File Search with QMR Framework ✅
-- **Why**: Intelligent semantic retrieval reduces tokens by 93%
+### 3. **Knowledge Base Architecture**: Dual KB with Runtime Aggregation ✅
+- **System KB (Shared)**: Trevor's book + marketing frameworks (42K docs, 25GB, OpenAI Vector Stores)
+- **User KB (Per-User)**: Diagnostic results + uploaded documents (PostgreSQL with RLS)
+- **Aggregation**: Parallel retrieval - 75% System KB + 25% User KB at query time
+- **Benefit**: Expert methodology (Trevor) + personalized context (user) in single response
+
+### 4. **Context Management**: File Search with Semantic Retrieval ✅
+- **Why**: Intelligent retrieval reduces tokens by 93% (2K vs 32K)
 - **Benefit**: 3.3s response time vs 9.3s without RAG
 - **Cost Impact**: $0.05/query vs $0.32/query
 
-### 4. **Architecture Pattern**: Response Chaining (not threads) ✅
+### 5. **Architecture Pattern**: Response Chaining (not threads) ✅
 - **Why**: Simpler than thread management, stateless-first design
 - **Benefit**: 50% less code complexity
 - **Memory**: Via `previous_response_id` + database persistence
@@ -140,8 +146,8 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 | Component | Cost |
 |-----------|------|
 | GPT-5 API Calls | $282/month |
-| Vector Storage (25GB) | $75/month |
-| PostgreSQL (User Profiles) | $25/month |
+| System KB Vector Storage (25GB) | $75/month |
+| PostgreSQL (User KB + Profiles) | $25/month |
 | Redis Cache | $20/month |
 | **Total** | **~$402/month** |
 
@@ -237,12 +243,13 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 ## 🎓 Key Takeaways
 
 1. **Future-Proof Architecture**: Built on OpenAI's strategic platform (Responses API)
-2. **Intelligent Context Management**: QMR framework with file search (93% token reduction)
-3. **Cost-Effective**: GPT-5 delivers best ROI ($282/month at 30K queries)
-4. **Data-Driven Decisions**: Quarterly testing framework removes guesswork
-5. **Scalable**: Design supports 1K to 100K+ queries/month
-6. **Comprehensive Knowledge Base**: Trevor's book + marketing frameworks with legal compliance
-7. **Optimized Retrieval**: 5 strategies ensure relevant knowledge reaches the Model
+2. **Dual Knowledge Base Design**: System KB (shared expert knowledge) + User KB (isolated context)
+3. **Runtime Aggregation**: Parallel retrieval from both sources (75% System / 25% User)
+4. **Cost-Effective**: GPT-5 delivers best ROI ($282/month at 30K queries)
+5. **Data-Driven Decisions**: Quarterly testing framework removes guesswork
+6. **Scalable**: Design supports 1K to 100K+ queries/month
+7. **Expert + Personalized**: Trevor's methodology combined with user's specific brand context
+8. **Security First**: User KB strictly isolated with RLS, no cross-user data leakage
 
 ---
 
@@ -273,28 +280,51 @@ User Query
     ↓
 Router Prompt (Intent Classification)
     ↓
-Specialized Prompt + Vector Store
-├─ Diagnostic KB (10K docs) - Brand assessment
-├─ Avatar KB (8K docs) - Customer profiling
-├─ Canvas KB (7K docs) - Business models
-├─ CAPTURE KB (12K docs) - Marketing execution
-└─ Core KB (5K docs) - Brand foundations
+Specialized Prompt Selection
     ↓
-File Search (Semantic Retrieval)
-├─ Embed query as vector
-├─ Compare to all chunks in vector store
-├─ Select top 20 most relevant (similarity > 0.7)
-└─ Build Query with retrieved context
-    ↓
-GPT-5 Model Processing
-├─ Query = System Prompt + Retrieved Chunks + History + User Message
-├─ Attention mechanism weights by relevance
-└─ Generate expert response citing sources
-    ↓
-Response + Memory Persistence
-├─ Save to chat_messages table
-├─ Update user profile
-└─ Store response_id for next interaction
+PARALLEL RETRIEVAL FROM TWO KNOWLEDGE BASES:
+    ┌─────────────────────┐         ┌─────────────────────┐
+    │   SYSTEM KB         │         │    USER KB          │
+    │   (Shared)          │         │    (Per-User)       │
+    ├─────────────────────┤         ├─────────────────────┤
+    │ Trevor's Book +     │         │ User's Diagnostic   │
+    │ Marketing Syntheses │         │ Uploaded Documents  │
+    │                     │         │ Conversation History│
+    │ Storage:            │         │                     │
+    │ - Diagnostic (10K)  │         │ Storage:            │
+    │ - Avatar (8K)       │         │ - user_knowledge_   │
+    │ - Canvas (7K)       │         │   chunks table      │
+    │ - CAPTURE (12K)     │         │ - chat_messages     │
+    │ - Core (5K)         │         │                     │
+    │                     │         │ Filter:             │
+    │ OpenAI Vector Store │         │ WHERE user_id=X     │
+    └──────────┬──────────┘         └──────────┬──────────┘
+               │                               │
+               │   Retrieve 15 chunks          │  Retrieve 5 chunks
+               │   (75% of context)            │  (25% of context)
+               └───────────┬───────────────────┘
+                           │
+                   AGGREGATE 20 CHUNKS
+                           ↓
+                 Build Augmented Query
+    ┌───────────────────────────────────────────────┐
+    │ Query Components:                             │
+    │ ├─ System Prompt (500 tokens)                │
+    │ ├─ System KB Context (1,500 tokens)          │
+    │ ├─ User KB Context (500 tokens)              │
+    │ ├─ Conversation History (800 tokens)         │
+    │ └─ User Question (200 tokens)                │
+    │ Total: 3,500 tokens                          │
+    └───────────────────────┬───────────────────────┘
+                            ↓
+                  GPT-5 Model Processing
+    ├─ Attention mechanism weights by relevance
+    └─ Generate expert response citing both sources
+                            ↓
+              Response + Memory Persistence
+    ├─ Save to chat_messages table (User KB)
+    ├─ Update user profile
+    └─ Store response_id for next interaction
 ```
 
 ---
@@ -302,16 +332,21 @@ Response + Memory Persistence
 ## 💡 Success Criteria
 
 **Before Launch:**
-- [ ] All 5 vector stores populated with knowledge base
-- [ ] Trevor's book uploaded and tested (retrieval quality > 75%)
+- [ ] System KB: All 5 vector stores populated with Trevor's book + marketing syntheses
+- [ ] User KB: Database schema deployed with RLS policies
+- [ ] Trevor's book uploaded and tested (System KB retrieval quality > 75%)
+- [ ] User diagnostic sync tested (User KB isolation verified)
 - [ ] Routing accuracy > 95% on test queries
+- [ ] Runtime aggregation working (System KB + User KB parallel retrieval)
 - [ ] Average response time < 3 seconds (p95)
 - [ ] Cost per query < $0.01
 
 **Post-Launch (30 days):**
 - [ ] User satisfaction > 4.0/5.0
 - [ ] Response relevance score > 80%
-- [ ] 60%+ of responses cite Trevor's methodology
+- [ ] 60%+ of responses cite Trevor's methodology (System KB)
+- [ ] User context included in 90%+ of responses (User KB)
+- [ ] No cross-user data leakage incidents (User KB security)
 - [ ] System uptime > 99.5%
 - [ ] Cost tracking within budget
 

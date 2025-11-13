@@ -109,40 +109,54 @@ graph TB
    │  Prompt  │  │ Prompt │  │Prompt│ │Prompt │  │Prompt │
    └────┬────┘  └───┬────┘  └───┬──┘ └─┬─────┘  └───┬───┘
         │           │            │       │            │
-        │           │            │       │            │
-   ┌────▼────┐  ┌───▼────┐  ┌───▼──┐ ┌─▼─────┐  ┌───▼───┐
-   │Vector   │  │Vector  │  │Vector│ │Vector │  │Vector │
-   │Store    │  │Store   │  │Store │ │Store  │  │Store  │
-   │(Diag)   │  │(Avatar)│  │(Canv)│ │(CAPT) │  │(Core) │
-   └────┬────┘  └───┬────┘  └───┬──┘ └─┬─────┘  └───┬───┘
-        │           │            │       │            │
-        └───────────┴────────────┴───────┴────────────┘
-                                 │
-                    ┌────────────▼────────────┐
-                    │  Response with Context  │
-                    │  (previous_response_id) │
-                    └────────────┬────────────┘
-                                 │
-                ┌────────────────┼────────────────┐
-                │                                 │
-    ┌───────────▼──────────┐      ┌─────────────▼──────────┐
-    │  User Profile DB     │      │ Response ID Tracking   │
-    │  (PostgreSQL)        │      │ (Per-User Storage)     │
-    └───────────┬──────────┘      └─────────────┬──────────┘
-                │                                 │
-    ┌───────────▼──────────┐      ┌─────────────▼──────────┐
-    │  Long-term Memory    │      │  Conversation Context  │
-    │  Persistence         │      │  (Server-side Storage) │
-    └──────────────────────┘      └────────────────────────┘
+        │  ┌────────┴────────────┴───────┴────────┐   │
+        │  │    KNOWLEDGE BASE AGGREGATION        │   │
+        │  │  (Parallel Retrieval from 2 sources) │   │
+        │  └────────┬────────────────────┬────────┘   │
+        │           │                    │            │
+        │      ┌────▼────┐         ┌────▼────┐       │
+        │      │ SYSTEM  │         │  USER   │       │
+        │      │   KB    │         │   KB    │       │
+        │      │(Shared) │         │(Per-User)│      │
+        │      └────┬────┘         └────┬────┘       │
+        │           │                    │            │
+   ┌────▼───────────▼────────────────────▼────────────▼───┐
+   │ System KB: Trevor's Book + Marketing Frameworks      │
+   │ ├─ Diagnostic Vector Store (10K docs - shared)       │
+   │ ├─ Avatar Vector Store (8K docs - shared)            │
+   │ ├─ Canvas Vector Store (7K docs - shared)            │
+   │ ├─ CAPTURE Vector Store (12K docs - shared)          │
+   │ └─ Core Vector Store (5K docs - shared)              │
+   │                                                       │
+   │ User KB: Per-User Isolated Context                   │
+   │ ├─ user_knowledge_chunks (diagnostic, documents)     │
+   │ ├─ chat_messages (conversation history)              │
+   │ └─ Filter: WHERE user_id = current_user              │
+   └───────────────────────────┬───────────────────────────┘
+                               │
+                  ┌────────────▼────────────┐
+                  │  Response with Context  │
+                  │  (previous_response_id) │
+                  └────────────┬────────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              │                                 │
+  ┌───────────▼──────────┐      ┌─────────────▼──────────┐
+  │  User Profile DB     │      │ Response ID Tracking   │
+  │  (PostgreSQL)        │      │ (Per-User Storage)     │
+  └──────────────────────┘      └────────────────────────┘
 ```
 
 **Key Architectural Principles:**
 
-1. **Response Chaining**: Each response links to previous via `previous_response_id`
-2. **Stateless-First**: No thread management overhead
-3. **Stateful When Needed**: Server-side persistence with `store_response: true`
-4. **Domain Separation**: 5 specialized prompts with dedicated vector stores
-5. **Bidirectional Context**: Responses build on conversation history automatically
+1. **Two Knowledge Bases**: System KB (shared expertise) + User KB (isolated context)
+2. **Runtime Aggregation**: Parallel retrieval from both sources (75% System / 25% User)
+3. **Response Chaining**: Each response links to previous via `previous_response_id`
+4. **Stateless-First**: No thread management overhead
+5. **Stateful When Needed**: Server-side persistence with `store_response: true`
+6. **Domain Separation**: 5 specialized prompts with dedicated vector stores
+7. **Data Isolation**: User KB strictly filtered by user_id with RLS
+8. **Bidirectional Context**: Responses build on conversation history automatically
 
 ---
 
@@ -230,38 +244,71 @@ Persist to User Profile DB
 Store response_id for next interaction
 ```
 
-### 3. Vector Store Strategy
+### 3. Dual Knowledge Base Strategy
 
-**Domain-Specific Knowledge Bases:**
+**System Knowledge Base (Shared):** Trevor's expertise + marketing frameworks
 
 ```python
-# Each prompt has a dedicated vector store
-vector_stores = {
+# Each prompt has a dedicated SYSTEM vector store (shared across all users)
+system_vector_stores = {
     "diagnostic": {
-        "id": "vs_diagnostic_xxx",
-        "files": 10000,  # Brand assessment frameworks, SWOT templates
-        "size": "5GB"
+        "id": "vs_system_diagnostic_xxx",
+        "files": 10000,  # Trevor's assessment chapters + SWOT syntheses
+        "size": "5GB",
+        "scope": "SHARED"  # All users access same expertise
     },
     "avatar": {
-        "id": "vs_avatar_xxx",
-        "files": 8000,   # Customer profiling methodologies, persona templates
-        "size": "4GB"
+        "id": "vs_system_avatar_xxx",
+        "files": 8000,   # Trevor's profiling methods + StoryBrand synthesis
+        "size": "4GB",
+        "scope": "SHARED"
     },
     "canvas": {
-        "id": "vs_canvas_xxx",
-        "files": 7000,   # Business model canvas, revenue strategies
-        "size": "3.5GB"
+        "id": "vs_system_canvas_xxx",
+        "files": 7000,   # Business model frameworks + Blue Ocean synthesis
+        "size": "3.5GB",
+        "scope": "SHARED"
     },
     "capture": {
-        "id": "vs_capture_xxx",
-        "files": 12000,  # Content strategies, marketing frameworks
-        "size": "6GB"
+        "id": "vs_system_capture_xxx",
+        "files": 12000,  # Content strategies + Contagious/Made to Stick
+        "size": "6GB",
+        "scope": "SHARED"
     },
     "core": {
-        "id": "vs_core_xxx",
-        "files": 5000,   # Brand foundations, storytelling guides
-        "size": "2.5GB"
+        "id": "vs_system_core_xxx",
+        "files": 5000,   # Trevor's brand philosophy + storytelling
+        "size": "2.5GB",
+        "scope": "SHARED"
     }
+}
+```
+
+**User Knowledge Base (Per-User Isolated):** Individual brand context
+
+```python
+# PostgreSQL table with per-user vector embeddings
+user_knowledge_base = {
+    "table": "user_knowledge_chunks",
+    "scope": "PER_USER",  # Isolated by user_id
+    "storage": "PostgreSQL + pgvector",
+    "sources": [
+        "diagnostic_results",      # 6-question IDEA assessment
+        "uploaded_documents",      # Brand guidelines, business plans
+        "conversation_insights"    # Extracted from chat history
+    ],
+    "retrieval": "match_user_documents(user_id, query_embedding)",
+    "security": "RLS enforced - no cross-user access"
+}
+```
+
+**Runtime Aggregation:**
+```python
+# At query time, retrieve from BOTH:
+aggregated_context = {
+    "system_chunks": 15,  # 75% - Trevor's expertise (shared)
+    "user_chunks": 5,     # 25% - User's context (isolated)
+    "total_tokens": 2000  # Combined in Query
 }
 ```
 
