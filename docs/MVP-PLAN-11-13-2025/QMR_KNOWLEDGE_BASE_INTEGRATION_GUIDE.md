@@ -20,9 +20,9 @@ This guide explains the **architectural separation** between two knowledge bases
 - ~42,000 documents, 25GB total
 
 **2. User Knowledge Base (Per-User Isolated)**
-- User's diagnostic results
-- User's uploaded documents (business plans, brand guidelines, etc.)
-- User's conversation history
+- User's diagnostic results (P0 - core functionality) ✅
+- User's conversation history (P0 - automatic) ✅
+- User's uploaded documents (P0 - UI exists, needs embeddings integration)
 - **Strictly isolated per user** (via user_id filtering)
 
 ### Runtime Aggregation
@@ -100,7 +100,7 @@ At query time, the system:
 │  Storage: PostgreSQL + OpenAI Vector Stores (filtered)      │
 │                                                              │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │ User Diagnostic Data                                 │  │
+│  │ User Diagnostic Data (P0 - Core)                    │  │
 │  │ - 6-question IDEA assessment results                │  │
 │  │ - Category scores (Insight, Distinctive, etc.)      │  │
 │  │ - Formatted as context document                     │  │
@@ -109,20 +109,22 @@ At query time, the system:
 │  └──────────────────────────────────────────────────────┘  │
 │                                                              │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │ User Uploaded Documents (P1 Feature)                 │  │
-│  │ - Brand guidelines PDF                               │  │
-│  │ - Business plan                                      │  │
-│  │ - Marketing materials                                │  │
-│  │ Storage: user_knowledge_chunks table                │  │
-│  │ Filter: WHERE user_id = 'user_123'                  │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │ Conversation History                                 │  │
+│  │ Conversation History (P0 - Automatic)                │  │
 │  │ - Past questions and answers                         │  │
 │  │ - Extracted insights from coaching sessions          │  │
 │  │ Storage: chat_messages table                        │  │
 │  │ Filter: WHERE user_id = 'user_123'                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ User Uploaded Documents (P0 - Partial)               │  │
+│  │ - Brand guidelines PDF                               │  │
+│  │ - Business plan                                      │  │
+│  │ - Marketing materials                                │  │
+│  │ Storage: uploaded_documents table (text extraction)│  │
+│  │ TODO: Sync to user_knowledge_chunks (embeddings)    │  │
+│  │ Filter: WHERE user_id = 'user_123'                  │  │
+│  │ Status: UI ✅, Storage ✅, Embeddings ❌            │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 
@@ -480,9 +482,9 @@ See [SYSTEM_KNOWLEDGE_BASE_PLAN.md](./SYSTEM_KNOWLEDGE_BASE_PLAN.md) for complet
 
 ### Purpose
 Provides **personalized context** specific to each user:
-- User's diagnostic assessment results
-- User's uploaded documents (brand guidelines, business plans)
-- User's past conversation insights
+- **P0 ✅**: User's diagnostic assessment results (6-question IDEA assessment)
+- **P0 ✅**: User's past conversation insights (automatic from chat history)
+- **P0 Partial**: User's uploaded documents - UI and text extraction exist, needs embeddings sync
 
 ### Structure
 
@@ -574,25 +576,43 @@ async def sync_diagnostic_to_user_kb(
     logger.info(f"Synced {len(chunks)} diagnostic chunks for user {user_id}")
 ```
 
-### Implementation: Upload User Documents (P1)
+### Implementation: Sync Uploaded Documents to User KB (P0 TODO)
+
+**Current Status**:
+- ✅ UI for document upload exists (`src/components/DocumentUpload.tsx`)
+- ✅ Storage in `uploaded_documents` table with text extraction
+- ✅ `document-processor` Edge Function extracts text from PDFs/DOCs
+- ❌ **Missing**: Sync extracted text to `user_knowledge_chunks` with embeddings
+
+**What Needs to be Built**:
 
 ```python
-async def upload_user_document(
-    user_id: str,
-    document: UploadedFile,
-    document_type: str  # 'brand_guidelines', 'business_plan', etc.
+async def sync_document_to_user_kb(
+    document_id: str,
+    user_id: str
 ) -> None:
     """
-    Process and store user's uploaded documents in User KB
+    Sync uploaded document's extracted content to User KB with embeddings
+
+    This function should be called after document-processor completes
     """
 
-    # Extract text from document (PDF, DOCX, etc.)
-    text_content = await extract_text(document)
+    # Fetch document with extracted content
+    document = await supabase.from_('uploaded_documents').select('*').eq('id', document_id).single()
 
-    # Chunk the document
-    chunks = chunk_text(text_content, max_chunk_size=800, overlap=400)
+    if not document.data or not document.data.get('extracted_content'):
+        raise ValueError("Document has no extracted content")
 
-    # Generate embeddings and store
+    extracted_text = document.data['extracted_content']
+
+    # Chunk the extracted text
+    chunks = chunk_text(
+        extracted_text,
+        max_chunk_size=800,
+        overlap=400
+    )
+
+    # Generate embeddings and store in user_knowledge_chunks
     for chunk in chunks:
         embedding = await generate_embedding(chunk.content)
 
@@ -602,16 +622,49 @@ async def upload_user_document(
             'embedding': embedding,
             'metadata': {
                 'source': 'uploaded_document',
-                'document_type': document_type,
-                'document_name': document.filename,
-                'page_number': chunk.page_number,
+                'document_id': document_id,
+                'document_name': document.data['filename'],
                 'timestamp': datetime.now().isoformat()
             },
             'source': 'uploaded_document'
         }).execute()
 
-    logger.info(f"Uploaded document '{document.filename}' for user {user_id}")
+    logger.info(f"Synced document '{document.data['filename']}' to User KB with {len(chunks)} chunks")
 ```
+
+**Integration Point**:
+Modify `document-processor` Edge Function to call this after text extraction:
+
+```typescript
+// In document-processor/index.ts, after successful extraction:
+
+// Update document status
+await supabase
+  .from('uploaded_documents')
+  .update({
+    extracted_content: extractedContent,
+    status: 'completed'
+  })
+  .eq('id', documentId);
+
+// NEW: Sync to embeddings
+const { error: embeddingError } = await supabase.functions.invoke('sync-document-to-embeddings', {
+  body: {
+    documentId: documentId,
+    userId: document.user_id
+  }
+});
+
+if (embeddingError) {
+  console.error('Failed to create embeddings:', embeddingError);
+}
+```
+
+**Create New Edge Function**: `sync-document-to-embeddings`
+- Similar to `sync-diagnostic-to-embeddings` (already exists)
+- Takes extracted text from `uploaded_documents.extracted_content`
+- Chunks and generates embeddings
+- Stores in `user_knowledge_chunks` table with `source='uploaded_document'`
 
 ---
 
