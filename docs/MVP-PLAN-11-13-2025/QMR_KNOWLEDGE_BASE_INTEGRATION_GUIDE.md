@@ -1,7 +1,7 @@
 # QMR Knowledge Base Integration Guide
-## Ensuring Relevant System Knowledge Reaches the Model
+## Architectural Separation and Runtime Aggregation
 
-**Version:** 1.0
+**Version:** 2.0
 **Last Updated:** 2025-11-13
 **Status:** Implementation Guide
 
@@ -9,1161 +9,1219 @@
 
 ## Executive Summary
 
-This guide explains how to ensure that relevant information from the **System Knowledge Base** (Trevor's book + marketing frameworks) is properly included in the **Query** portion of the QMR (Query → Model → Response) framework. The goal is to maximize retrieval quality so that the Model receives the most relevant context for generating expert brand coaching responses.
+This guide explains the **architectural separation** between two knowledge bases and how they are **aggregated at runtime** to populate the Query in the QMR (Query → Model → Response) framework.
 
-**Key Principle**: The Model ONLY sees what's in the Query. File search's job is to intelligently select ONLY relevant chunks from 10,000+ documents and include them in the Query.
+### Two Knowledge Bases
+
+**1. System Knowledge Base (Shared)**
+- Trevor's book + marketing framework syntheses
+- Shared across ALL users
+- 5 domain-specific vector stores (Diagnostic, Avatar, Canvas, CAPTURE, Core)
+- ~42,000 documents, 25GB total
+
+**2. User Knowledge Base (Per-User Isolated)**
+- User's diagnostic results
+- User's uploaded documents (business plans, brand guidelines, etc.)
+- User's conversation history
+- **Strictly isolated per user** (via user_id filtering)
+
+### Runtime Aggregation
+
+At query time, the system:
+1. Retrieves relevant chunks from **System KB** (Trevor's expertise)
+2. Retrieves relevant chunks from **User KB** (user's specific context)
+3. Aggregates both into a single Query
+4. Sends to Model for personalized response
+
+**Key Principle**: The Model ONLY sees what's in the Query. File search intelligently selects the MOST relevant chunks from BOTH knowledge bases and combines them.
 
 ---
 
 ## Table of Contents
 
-1. [Understanding QMR in the Context of Knowledge Base](#understanding-qmr-in-the-context-of-knowledge-base)
-2. [The File Search Mechanism](#the-file-search-mechanism)
-3. [Optimization Strategies](#optimization-strategies)
-4. [Retrieval Quality Metrics](#retrieval-quality-metrics)
-5. [Troubleshooting Poor Retrieval](#troubleshooting-poor-retrieval)
-6. [Testing & Validation](#testing--validation)
-7. [Configuration Best Practices](#configuration-best-practices)
+1. [Architectural Separation](#architectural-separation)
+2. [Runtime Aggregation Strategy](#runtime-aggregation-strategy)
+3. [System Knowledge Base Integration](#system-knowledge-base-integration)
+4. [User Knowledge Base Integration](#user-knowledge-base-integration)
+5. [Query Construction with Both Sources](#query-construction-with-both-sources)
+6. [Security & Data Isolation](#security--data-isolation)
+7. [Optimization Strategies](#optimization-strategies)
+8. [Retrieval Quality Metrics](#retrieval-quality-metrics)
+9. [Configuration Best Practices](#configuration-best-practices)
 
 ---
 
-## Understanding QMR in the Context of Knowledge Base
+## Architectural Separation
 
-### The QMR Framework Revisited
-
-From the High-Level Design document, QMR stands for:
+### Knowledge Base Architecture
 
 ```
-Query → Model → Response
+┌─────────────────────────────────────────────────────────────┐
+│                   IDEA Brand Coach                          │
+│                   Knowledge Architecture                     │
+└─────────────────────────────────────────────────────────────┘
 
-Query = TOTAL INPUT to the Model, including:
-├─ System Prompt (IDEA Brand Coach instructions)
-├─ Retrieved Context (from file search - TOP 20 relevant chunks)
-├─ Conversation History (via previous_response_id)
-└─ User's Current Message
+┌─────────────────────────────────────────────────────────────┐
+│          SYSTEM KNOWLEDGE BASE (Shared)                     │
+│          ===================================                 │
+│                                                              │
+│  Purpose: Trevor's expertise + marketing frameworks          │
+│  Scope: Shared across ALL users                             │
+│  Storage: OpenAI Vector Stores                              │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Diagnostic KB (10K docs)                             │  │
+│  │ - Trevor's brand assessment chapters                 │  │
+│  │ - SWOT framework syntheses (Ries & Trout)           │  │
+│  │ - Positioning strategies (marketing classics)        │  │
+│  │ Vector Store ID: vs_system_diagnostic                │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Avatar KB (8K docs)                                  │  │
+│  │ - Trevor's customer profiling methods                │  │
+│  │ - StoryBrand synthesis (Miller)                      │  │
+│  │ - Persona development frameworks                     │  │
+│  │ Vector Store ID: vs_system_avatar                    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Canvas KB, CAPTURE KB, Core KB                       │  │
+│  │ (similar structure)                                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│          USER KNOWLEDGE BASE (Per-User)                     │
+│          ==================================                  │
+│                                                              │
+│  Purpose: User's specific brand context                     │
+│  Scope: ISOLATED per user_id                                │
+│  Storage: PostgreSQL + OpenAI Vector Stores (filtered)      │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ User Diagnostic Data                                 │  │
+│  │ - 6-question IDEA assessment results                │  │
+│  │ - Category scores (Insight, Distinctive, etc.)      │  │
+│  │ - Formatted as context document                     │  │
+│  │ Storage: user_knowledge_chunks table                │  │
+│  │ Filter: WHERE user_id = 'user_123'                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ User Uploaded Documents (P1 Feature)                 │  │
+│  │ - Brand guidelines PDF                               │  │
+│  │ - Business plan                                      │  │
+│  │ - Marketing materials                                │  │
+│  │ Storage: user_knowledge_chunks table                │  │
+│  │ Filter: WHERE user_id = 'user_123'                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Conversation History                                 │  │
+│  │ - Past questions and answers                         │  │
+│  │ - Extracted insights from coaching sessions          │  │
+│  │ Storage: chat_messages table                        │  │
+│  │ Filter: WHERE user_id = 'user_123'                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│          RUNTIME AGGREGATION                                │
+│          ==================                                  │
+│                                                              │
+│  At query time, retrieve from BOTH:                         │
+│  ├─ System KB: Trevor's expertise (10-15 chunks)           │
+│  └─ User KB: User's context (5-10 chunks)                  │
+│                                                              │
+│  Aggregate → Single Query → Model                           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Why This Matters for Knowledge Base
+### Database Schema for User Knowledge Base
 
-**Problem**: We have 42,000+ documents across 5 vector stores (~25GB total knowledge)
+```sql
+-- User-specific knowledge chunks (isolated per user)
+CREATE TABLE user_knowledge_chunks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  embedding vector(1536), -- OpenAI ada-002 dimension
+  metadata JSONB,
+  source TEXT, -- 'diagnostic', 'uploaded_document', 'conversation_insight'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 
-**Challenge**: We can only send ~3,500 tokens of context to the Model (top 20 chunks ≈ 2,000 tokens)
+-- IVFFlat index for fast vector search
+CREATE INDEX ON user_knowledge_chunks
+USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);
 
-**Solution**: Intelligent semantic retrieval ensures the Model gets the MOST RELEVANT 2,000 tokens out of 25GB
+-- B-tree index for user filtering (CRITICAL for data isolation)
+CREATE INDEX idx_user_knowledge_user_id
+ON user_knowledge_chunks(user_id);
 
-### Visual Flow
+-- Row Level Security (RLS) - ENFORCE per-user isolation
+ALTER TABLE user_knowledge_chunks ENABLE ROW LEVEL SECURITY;
 
+CREATE POLICY "Users can only access own chunks"
+ON user_knowledge_chunks FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can only insert own chunks"
+ON user_knowledge_chunks FOR INSERT
+WITH CHECK (auth.uid() = user_id);
 ```
-User asks: "How do I improve my brand positioning?"
-    ↓
-Step 1: Identify Intent
-├─ Router analyzes: "positioning" → Diagnostic prompt
-└─ Select vector store: diagnostic_kb (10,000 docs)
-    ↓
-Step 2: Semantic Search
-├─ Convert query to embedding vector
-├─ Compare to ALL 10,000 doc vectors in diagnostic_kb
-├─ Rank by cosine similarity
-└─ Result: Top 20 chunks (similarity 0.92-0.78)
-    ↓
-Step 3: Build Query
-Query = System Prompt (500 tokens)
-      + Top 20 Chunks (2,000 tokens) ← THIS IS CRITICAL
-      + Conversation History (800 tokens)
-      + User Question (50 tokens)
-    = 3,350 total tokens sent to Model
-    ↓
-Step 4: Model Processes Query
-├─ Attention mechanism weights chunks by relevance
-├─ Generates response using retrieved knowledge
-└─ Cites sources from retrieved chunks
-    ↓
-Response: "To improve your brand positioning, based on Trevor's
-framework... [cites retrieved chunks]"
+
+### Vector Search Function (User-Filtered)
+
+```sql
+CREATE OR REPLACE FUNCTION match_user_documents(
+  query_embedding vector(1536),
+  match_user_id UUID,
+  match_count INT DEFAULT 10,
+  filter JSONB DEFAULT '{}'::jsonb
+)
+RETURNS TABLE (
+  id UUID,
+  content TEXT,
+  metadata JSONB,
+  similarity FLOAT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    user_knowledge_chunks.id,
+    user_knowledge_chunks.content,
+    user_knowledge_chunks.metadata,
+    1 - (user_knowledge_chunks.embedding <=> query_embedding) AS similarity
+  FROM user_knowledge_chunks
+  WHERE user_knowledge_chunks.user_id = match_user_id  -- CRITICAL: User isolation
+    AND (filter = '{}'::jsonb OR user_knowledge_chunks.metadata @> filter)
+  ORDER BY user_knowledge_chunks.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$;
 ```
 
 ---
 
-## The File Search Mechanism
+## Runtime Aggregation Strategy
 
-### How OpenAI File Search Works
+### The Aggregation Flow
 
-**File Search is the engine that populates the Query with relevant knowledge.**
+```
+User Query: "How do I improve my brand positioning?"
+    ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Step 1: Intent Classification                               │
+│ Router Prompt determines: "diagnostic"                      │
+└─────────────────────────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Step 2: Parallel Retrieval from BOTH Knowledge Bases       │
+│                                                              │
+│ ┌─────────────────────────┐  ┌─────────────────────────┐  │
+│ │ System KB Search        │  │ User KB Search          │  │
+│ │                         │  │                         │  │
+│ │ Vector Store:           │  │ Database Query:         │  │
+│ │ vs_system_diagnostic    │  │ match_user_documents()  │  │
+│ │                         │  │ WHERE user_id='user_123'│  │
+│ │ Retrieves:              │  │                         │  │
+│ │ - 15 chunks from Trevor │  │ Retrieves:              │  │
+│ │ - Positioning frameworks│  │ - 5 chunks from user    │  │
+│ │ - SWOT strategies       │  │ - Diagnostic results    │  │
+│ │ - Marketing concepts    │  │ - Past conversations    │  │
+│ │                         │  │ - User's brand context  │  │
+│ │ Similarity: 0.92-0.78   │  │ Similarity: 0.88-0.72   │  │
+│ └─────────────────────────┘  └─────────────────────────┘  │
+│         ↓                              ↓                    │
+│         └──────────────┬───────────────┘                    │
+│                        ↓                                     │
+│              [Aggregate 20 chunks]                          │
+└─────────────────────────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Step 3: Build Augmented Query                               │
+│                                                              │
+│ Query Components:                                            │
+│ ├─ System Prompt (500 tokens)                              │
+│ │  "You are the IDEA Brand Coach..."                       │
+│ │                                                            │
+│ ├─ System KB Context (1,500 tokens)                        │
+│ │  [Chunk 1] Trevor's positioning framework...             │
+│ │  [Chunk 2] SWOT analysis for brand positioning...        │
+│ │  [Chunk 3] Competitive differentiation strategies...     │
+│ │  ...                                                      │
+│ │  [Chunk 15] Positioning statement templates...           │
+│ │                                                            │
+│ ├─ User KB Context (500 tokens)                            │
+│ │  [Chunk 16] User's diagnostic: Distinctive score=45/100  │
+│ │  [Chunk 17] Previous conversation: discussed target...   │
+│ │  [Chunk 18] User's industry: B2B SaaS for marketing...   │
+│ │  [Chunk 19] User's challenge: blending with competitors  │
+│ │  [Chunk 20] User previously asked about values...        │
+│ │                                                            │
+│ ├─ Conversation History (800 tokens)                       │
+│ │  [From previous_response_id]                             │
+│ │                                                            │
+│ └─ User's Current Question (50 tokens)                     │
+│    "How do I improve my brand positioning?"                │
+│                                                              │
+│ Total Query: 3,350 tokens                                   │
+└─────────────────────────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Step 4: Model Processing                                    │
+│                                                              │
+│ GPT-5 receives the complete Query with:                     │
+│ ✅ Trevor's expert frameworks (System KB)                   │
+│ ✅ User's specific brand context (User KB)                  │
+│ ✅ Past conversation context                                │
+│                                                              │
+│ Generates personalized response:                            │
+│ "Based on Trevor's positioning framework and your           │
+│  diagnostic showing a Distinctive score of 45/100,          │
+│  here's how to improve your brand positioning..."           │
+└─────────────────────────────────────────────────────────────┘
+```
 
-#### Step-by-Step Process
+### Implementation: Parallel Retrieval
 
 ```python
-# When you call Responses API with file search:
-response = client.responses.create(
-    model="gpt-5",
-    prompt_id="diagnostic_prompt",
-    input="How do I improve my brand positioning?",
-    previous_response_id=last_response_id,
-    tools=[{
-        "type": "file_search",
-        "vector_store_ids": ["vs_diagnostic_kb"],
-        "file_search": {
-            "max_num_results": 20,  # Top-K retrieval
-            "ranking_options": {
-                "ranker": "default_2024_08_21",
-                "score_threshold": 0.7  # Minimum relevance
-            }
-        }
-    }],
-    store_response=True
-)
+async def retrieve_aggregated_context(
+    user_id: str,
+    query: str,
+    intent: str,
+    max_system_chunks: int = 15,
+    max_user_chunks: int = 5
+) -> Dict[str, List[Chunk]]:
+    """
+    Retrieve and aggregate from both System KB and User KB in parallel
+    """
 
-# What happens behind the scenes:
+    # Parallel retrieval from both knowledge bases
+    system_chunks, user_chunks = await asyncio.gather(
+        retrieve_from_system_kb(query, intent, max_system_chunks),
+        retrieve_from_user_kb(user_id, query, max_user_chunks)
+    )
+
+    return {
+        "system_chunks": system_chunks,  # Trevor's expertise
+        "user_chunks": user_chunks,       # User's context
+        "total_chunks": len(system_chunks) + len(user_chunks)
+    }
+
+
+async def retrieve_from_system_kb(
+    query: str,
+    intent: str,
+    max_chunks: int = 15
+) -> List[Chunk]:
+    """
+    Retrieve from System Knowledge Base (Trevor's book + frameworks)
+    Shared across all users - no user_id filtering needed
+    """
+    vector_store_map = {
+        "diagnostic": "vs_system_diagnostic",
+        "avatar": "vs_system_avatar",
+        "canvas": "vs_system_canvas",
+        "capture": "vs_system_capture",
+        "core": "vs_system_core"
+    }
+
+    vector_store_id = vector_store_map[intent]
+
+    # Search System KB via OpenAI Vector Store
+    response = openai_client.responses.create(
+        model="gpt-5",
+        prompt_id=f"{intent}_prompt",
+        input=query,
+        tools=[{
+            "type": "file_search",
+            "vector_store_ids": [vector_store_id],
+            "file_search": {
+                "max_num_results": max_chunks,
+                "score_threshold": 0.7
+            }
+        }],
+        store_response=False  # Temporary retrieval, not persisted
+    )
+
+    return response.retrieved_chunks
+
+
+async def retrieve_from_user_kb(
+    user_id: str,
+    query: str,
+    max_chunks: int = 5
+) -> List[Chunk]:
+    """
+    Retrieve from User Knowledge Base (user's diagnostic + documents)
+    STRICTLY filtered by user_id for data isolation
+    """
+
+    # Generate embedding for query
+    query_embedding = await generate_embedding(query)
+
+    # Query PostgreSQL with user filtering
+    chunks = await supabase.rpc(
+        'match_user_documents',
+        {
+            'query_embedding': query_embedding,
+            'match_user_id': user_id,  # CRITICAL: User isolation
+            'match_count': max_chunks
+        }
+    ).execute()
+
+    return [
+        Chunk(
+            id=c['id'],
+            content=c['content'],
+            similarity_score=c['similarity'],
+            metadata=c['metadata']
+        )
+        for c in chunks.data
+    ]
+
+
+async def build_query_with_aggregated_context(
+    user_query: str,
+    system_chunks: List[Chunk],
+    user_chunks: List[Chunk],
+    conversation_history: str
+) -> str:
+    """
+    Build final Query with both System and User KB context
+    """
+
+    query = f"""
+You are the IDEA Brand Coach, an expert in brand strategy using Trevor's framework.
+
+=== EXPERT KNOWLEDGE (Trevor's Framework) ===
+{format_chunks(system_chunks)}
+
+=== USER'S BRAND CONTEXT ===
+{format_chunks(user_chunks)}
+
+=== CONVERSATION HISTORY ===
+{conversation_history}
+
+=== USER'S QUESTION ===
+{user_query}
+
+Provide expert coaching that combines Trevor's methodology with the user's specific brand context.
+"""
+
+    return query
 ```
 
-**Behind the Scenes:**
+---
 
-1. **Query Embedding** (automatic)
-   ```
-   User Query: "How do I improve my brand positioning?"
-   ↓
-   OpenAI embeds with text-embedding-3-large
-   ↓
-   Query Vector: [-0.023, 0.156, -0.089, ..., 0.234] (3072 dimensions)
-   ```
+## System Knowledge Base Integration
 
-2. **Vector Similarity Search** (automatic)
-   ```
-   For each of 10,000 chunks in diagnostic_kb:
-       Calculate cosine_similarity(query_vector, chunk_vector)
+### Purpose
+Provides **expert guidance** applicable to all users:
+- Trevor's proprietary brand methodology
+- Marketing framework syntheses (Positioning, StoryBrand, etc.)
+- Best practices and templates
 
-   Results (sorted by similarity):
-   1. "Brand positioning frameworks" → 0.94
-   2. "Competitive differentiation strategies" → 0.91
-   3. "Market positioning analysis" → 0.89
-   4. "Positioning statement templates" → 0.87
-   5. "Trevor's positioning methodology" → 0.86
-   ...
-   9,996. "Tomato gardening guide" → 0.12 (irrelevant)
-   ```
+### Structure
 
-3. **Top-K Selection** (automatic)
-   ```
-   Select top 20 chunks with similarity > 0.7
-   ↓
-   Total context: ~2,000 tokens
-   ↓
-   These 20 chunks are added to the Query
-   ```
+```
+System KB: 5 Domain-Specific Vector Stores
 
-4. **Query Construction** (automatic)
-   ```
-   Final Query sent to GPT-5:
+1. vs_system_diagnostic (10,000 docs, 5GB)
+   ├─ Trevor's brand assessment chapters
+   ├─ SWOT framework syntheses
+   ├─ Competitive positioning strategies
+   └─ Brand audit methodologies
 
-   [System Prompt]
-   You are the IDEA Brand Coach, an expert in brand strategy...
+2. vs_system_avatar (8,000 docs, 4GB)
+   ├─ Trevor's customer profiling methods
+   ├─ StoryBrand synthesis (Miller)
+   ├─ Persona development frameworks
+   └─ Customer journey mapping
 
-   [Retrieved Context - Top 20 Chunks]
-   Chunk 1 (similarity 0.94): "Brand positioning is the process of..."
-   Chunk 2 (similarity 0.91): "Competitive differentiation requires..."
-   Chunk 3 (similarity 0.89): "Market analysis for positioning involves..."
-   ...
-   Chunk 20 (similarity 0.78): "Positioning statements should include..."
+3. vs_system_canvas (7,000 docs, 3.5GB)
+   ├─ Business Model Canvas explanations
+   ├─ Trevor's business strategy guidance
+   ├─ Revenue model patterns
+   └─ Blue Ocean Strategy synthesis
 
-   [Conversation History]
-   User previously asked: "What's my brand strength?"
-   Assistant responded: "Let's assess your brand..."
+4. vs_system_capture (12,000 docs, 6GB)
+   ├─ Trevor's content strategy chapters
+   ├─ Contagious synthesis (Berger)
+   ├─ Made to Stick synthesis (Heath)
+   └─ Marketing campaign frameworks
 
-   [Current User Question]
-   User: "How do I improve my brand positioning?"
-   ```
+5. vs_system_core (5,000 docs, 2.5GB)
+   ├─ Trevor's brand foundation philosophy
+   ├─ Mission/vision development
+   ├─ Brand storytelling principles
+   └─ Authenticity frameworks
+```
 
-5. **Model Processing** (automatic)
-   ```
-   GPT-5 receives the complete Query (3,350 tokens)
-   ↓
-   Attention mechanism focuses on most relevant parts
-   ↓
-   Generates response using retrieved knowledge
-   ```
+### Upload Process
 
-### What You Control vs What's Automatic
+See [SYSTEM_KNOWLEDGE_BASE_PLAN.md](./SYSTEM_KNOWLEDGE_BASE_PLAN.md) for complete upload instructions.
 
-**You Control:**
-- ✅ Which vector store to search (`diagnostic_kb`, `avatar_kb`, etc.)
-- ✅ How many chunks to retrieve (`max_num_results: 20`)
-- ✅ Minimum relevance threshold (`score_threshold: 0.7`)
-- ✅ Which embedding model to use (text-embedding-3-large)
-- ✅ Chunking strategy when uploading documents (800 tokens, 400 overlap)
+**Quick Summary:**
+1. Upload Trevor's book PDF to OpenAI
+2. Distribute chapters to 5 vector stores based on topic
+3. Add marketing framework syntheses
+4. Configure retrieval parameters
 
-**OpenAI Handles Automatically:**
-- ✅ Converting query to embedding vector
-- ✅ Comparing to all chunk vectors
-- ✅ Ranking by semantic similarity
-- ✅ Building the final Query
-- ✅ Sending Query to Model
+---
+
+## User Knowledge Base Integration
+
+### Purpose
+Provides **personalized context** specific to each user:
+- User's diagnostic assessment results
+- User's uploaded documents (brand guidelines, business plans)
+- User's past conversation insights
+
+### Structure
+
+```
+User KB: Per-User Isolated Storage
+
+PostgreSQL Table: user_knowledge_chunks
+├─ user_id (UUID) - Foreign key to auth.users
+├─ content (TEXT) - Chunk content
+├─ embedding (vector(1536)) - Semantic vector
+├─ metadata (JSONB) - Source, timestamp, etc.
+└─ source (TEXT) - 'diagnostic', 'uploaded_document', 'conversation'
+
+Row Level Security (RLS):
+- Users can ONLY access their own chunks
+- Enforced at database level
+```
+
+### Data Flow: Diagnostic → User KB
+
+```
+User completes 6-question diagnostic
+    ↓
+Format as context document:
+"""
+BRAND DIAGNOSTIC RESULTS
+Company: Acme Corp
+Industry: B2B SaaS
+
+IDEA Scores:
+- Insight: 75/100 - Good customer understanding
+- Distinctive: 45/100 - Needs differentiation work  ← LOW SCORE
+- Empathetic: 80/100 - Strong emotional connection
+- Authentic: 70/100 - Solid brand authenticity
+
+Overall: 68/100
+"""
+    ↓
+Chunk into smaller pieces (800 tokens each)
+    ↓
+Generate embeddings for each chunk
+    ↓
+Store in user_knowledge_chunks table
+    ↓
+INSERT INTO user_knowledge_chunks (user_id, content, embedding, source)
+VALUES ('user_123', 'Distinctive: 45/100...', vector, 'diagnostic');
+```
+
+### Implementation: Sync Diagnostic to User KB
+
+```python
+async def sync_diagnostic_to_user_kb(
+    user_id: str,
+    diagnostic_data: DiagnosticAnswers,
+    scores: DiagnosticScores
+) -> None:
+    """
+    Convert diagnostic results to embeddings and store in User KB
+    """
+
+    # Format diagnostic as context document
+    context_doc = format_diagnostic_as_context(diagnostic_data, scores)
+
+    # Chunk the document
+    chunks = chunk_text(
+        context_doc,
+        max_chunk_size=800,
+        overlap=400
+    )
+
+    # Generate embeddings for each chunk
+    for chunk in chunks:
+        embedding = await generate_embedding(chunk.content)
+
+        # Insert into user_knowledge_chunks with user_id
+        await supabase.from_('user_knowledge_chunks').insert({
+            'user_id': user_id,  # CRITICAL: Associate with user
+            'content': chunk.content,
+            'embedding': embedding,
+            'metadata': {
+                'source': 'diagnostic',
+                'category': chunk.category,
+                'score': chunk.score,
+                'timestamp': datetime.now().isoformat()
+            },
+            'source': 'diagnostic'
+        }).execute()
+
+    logger.info(f"Synced {len(chunks)} diagnostic chunks for user {user_id}")
+```
+
+### Implementation: Upload User Documents (P1)
+
+```python
+async def upload_user_document(
+    user_id: str,
+    document: UploadedFile,
+    document_type: str  # 'brand_guidelines', 'business_plan', etc.
+) -> None:
+    """
+    Process and store user's uploaded documents in User KB
+    """
+
+    # Extract text from document (PDF, DOCX, etc.)
+    text_content = await extract_text(document)
+
+    # Chunk the document
+    chunks = chunk_text(text_content, max_chunk_size=800, overlap=400)
+
+    # Generate embeddings and store
+    for chunk in chunks:
+        embedding = await generate_embedding(chunk.content)
+
+        await supabase.from_('user_knowledge_chunks').insert({
+            'user_id': user_id,  # CRITICAL: User isolation
+            'content': chunk.content,
+            'embedding': embedding,
+            'metadata': {
+                'source': 'uploaded_document',
+                'document_type': document_type,
+                'document_name': document.filename,
+                'page_number': chunk.page_number,
+                'timestamp': datetime.now().isoformat()
+            },
+            'source': 'uploaded_document'
+        }).execute()
+
+    logger.info(f"Uploaded document '{document.filename}' for user {user_id}")
+```
+
+---
+
+## Query Construction with Both Sources
+
+### Optimal Chunk Distribution
+
+```
+Total Query Budget: ~3,500 tokens
+├─ System Prompt: 500 tokens
+├─ Retrieved Context: 2,000 tokens
+│  ├─ System KB: ~1,500 tokens (15 chunks @ 100 tokens each)
+│  └─ User KB: ~500 tokens (5 chunks @ 100 tokens each)
+├─ Conversation History: 800 tokens
+└─ User Question: 200 tokens
+```
+
+**Rationale:**
+- **System KB (75%)**: Trevor's expertise is the primary guidance
+- **User KB (25%)**: User's context personalizes the advice
+- Balance ensures both expert methodology and personalized relevance
+
+### Query Template
+
+```python
+QUERY_TEMPLATE = """
+You are the IDEA Brand Coach, an expert in brand strategy and marketing.
+
+### EXPERT METHODOLOGY (Trevor's Framework)
+{system_kb_chunks}
+
+### THIS USER'S BRAND CONTEXT
+{user_kb_chunks}
+
+### CONVERSATION HISTORY
+{conversation_history}
+
+### USER'S QUESTION
+{user_question}
+
+INSTRUCTIONS:
+1. Apply Trevor's methodology from the Expert Methodology section
+2. Personalize your advice using This User's Brand Context
+3. Reference specific frameworks and scores when relevant
+4. Provide actionable next steps
+
+Your response:
+"""
+
+
+def construct_query(
+    system_chunks: List[Chunk],
+    user_chunks: List[Chunk],
+    conversation_history: str,
+    user_question: str
+) -> str:
+    """
+    Construct final Query with both System and User KB
+    """
+
+    # Format System KB chunks
+    system_context = "\n\n".join([
+        f"[Trevor's Framework - {chunk.metadata.get('topic')}]\n{chunk.content}"
+        for chunk in system_chunks
+    ])
+
+    # Format User KB chunks
+    user_context = "\n\n".join([
+        f"[User Context - {chunk.metadata.get('source')}]\n{chunk.content}"
+        for chunk in user_chunks
+    ])
+
+    # Build final query
+    query = QUERY_TEMPLATE.format(
+        system_kb_chunks=system_context,
+        user_kb_chunks=user_context,
+        conversation_history=conversation_history,
+        user_question=user_question
+    )
+
+    return query
+```
+
+---
+
+## Security & Data Isolation
+
+### Critical Security Principles
+
+```
+1. User KB MUST be filtered by user_id at database level
+2. Row Level Security (RLS) enforced on PostgreSQL
+3. No cross-user data leakage possible
+4. System KB is shared (safe - contains no user data)
+```
+
+### Security Implementation
+
+```python
+async def retrieve_from_user_kb_secure(
+    user_id: str,
+    query: str,
+    max_chunks: int = 5
+) -> List[Chunk]:
+    """
+    SECURE retrieval from User KB with mandatory user_id filtering
+    """
+
+    # CRITICAL: Always include user_id filter
+    chunks = await supabase.rpc(
+        'match_user_documents',
+        {
+            'query_embedding': await generate_embedding(query),
+            'match_user_id': user_id,  # NEVER omit this
+            'match_count': max_chunks
+        }
+    ).execute()
+
+    # RLS at database level ensures only this user's chunks are returned
+    return chunks.data
+```
+
+### Testing Data Isolation
+
+```python
+@pytest.mark.asyncio
+async def test_user_kb_isolation():
+    """
+    Test: Users cannot access other users' knowledge chunks
+    """
+
+    # Setup: Create two users with diagnostic data
+    user1_id = "user_123"
+    user2_id = "user_456"
+
+    await sync_diagnostic_to_user_kb(user1_id, diagnostic1, scores1)
+    await sync_diagnostic_to_user_kb(user2_id, diagnostic2, scores2)
+
+    # Test: User 1 retrieves - should only get their chunks
+    user1_chunks = await retrieve_from_user_kb(user1_id, "brand positioning")
+
+    for chunk in user1_chunks:
+        assert chunk.metadata['user_id'] == user1_id, \
+            "User 1 retrieved User 2's data - SECURITY VIOLATION"
+
+    # Test: User 2 retrieves - should only get their chunks
+    user2_chunks = await retrieve_from_user_kb(user2_id, "brand positioning")
+
+    for chunk in user2_chunks:
+        assert chunk.metadata['user_id'] == user2_id, \
+            "User 2 retrieved User 1's data - SECURITY VIOLATION"
+
+    # Test: No overlap between users
+    user1_chunk_ids = set(c.id for c in user1_chunks)
+    user2_chunk_ids = set(c.id for c in user2_chunks)
+
+    assert len(user1_chunk_ids & user2_chunk_ids) == 0, \
+        "Chunks shared between users - DATA ISOLATION FAILED"
+```
 
 ---
 
 ## Optimization Strategies
 
-### Strategy 1: Intelligent Routing to Correct Vector Store
+### Strategy 1: Adaptive Chunk Distribution
 
-**Goal**: Send queries to the vector store with the most relevant knowledge
-
-**How It Works:**
-
-```
-User Query → Router Prompt → Intent Classification → Select Vector Store
-
-Examples:
-"Assess my brand" → Diagnostic → diagnostic_kb ✅
-"Define my ideal customer" → Avatar → avatar_kb ✅
-"Create content strategy" → CAPTURE → capture_kb ✅
-```
-
-**Implementation:**
+**Goal**: Adjust System KB vs User KB ratio based on query type
 
 ```python
-# Route to appropriate vector store based on intent
-routing_map = {
-    "diagnostic": "vs_diagnostic_kb",
-    "avatar": "vs_avatar_kb",
-    "canvas": "vs_canvas_kb",
-    "capture": "vs_capture_kb",
-    "core": "vs_core_kb"
-}
+def determine_chunk_distribution(intent: str, user_has_diagnostic: bool):
+    """
+    Adaptive distribution based on query intent and user data availability
+    """
 
-# Router determines intent
-intent = route_user_query(user_message)  # Returns: "diagnostic"
+    distributions = {
+        # Generic queries: More Trevor's guidance
+        "core": {
+            "system_chunks": 18,
+            "user_chunks": 2 if user_has_diagnostic else 0
+        },
 
-# Select correct vector store
-vector_store_id = routing_map[intent]
+        # Assessment queries: Balanced
+        "diagnostic": {
+            "system_chunks": 12,
+            "user_chunks": 8 if user_has_diagnostic else 0
+        },
 
-# File search now searches ONLY the relevant 10K docs (not all 42K)
-response = client.responses.create(
-    model="gpt-5",
-    prompt_id=f"{intent}_prompt",
-    input=user_message,
-    tools=[{
-        "type": "file_search",
-        "vector_store_ids": [vector_store_id]  # Focused search!
-    }]
-)
-```
-
-**Why This Matters:**
-
-- ❌ Without routing: Search all 42,000 docs → diluted results
-- ✅ With routing: Search relevant 10,000 docs → focused results
-
-### Strategy 2: Optimize Chunking During Upload
-
-**Goal**: Ensure documents are chunked at the right granularity for retrieval
-
-**Trevor's Book Upload Configuration:**
-
-```python
-from openai import OpenAI
-client = OpenAI()
-
-# Upload Trevor's book with optimal chunking
-file = client.files.create(
-    file=open("trevors_book.pdf", "rb"),
-    purpose="assistants"
-)
-
-# Add to vector store with chunking strategy
-vector_store = client.vector_stores.create(
-    name="Diagnostic Knowledge Base",
-    file_ids=[file.id],
-    chunking_strategy={
-        "type": "static",
-        "static": {
-            "max_chunk_size_tokens": 800,  # Sweet spot for retrieval
-            "chunk_overlap_tokens": 400     # Preserve context across chunks
+        # Personalized queries: More user context
+        "avatar": {
+            "system_chunks": 10,
+            "user_chunks": 10 if user_has_diagnostic else 0
         }
     }
-)
+
+    return distributions.get(intent, {"system_chunks": 15, "user_chunks": 5})
 ```
 
-**Chunking Guidelines:**
+### Strategy 2: Prioritize Low-Scoring Dimensions
 
-| Chunk Size | Pros | Cons | Best For |
-|------------|------|------|----------|
-| **400 tokens** | More granular, precise matches | May lose context | Short, specific facts |
-| **800 tokens** ⭐ | **Balanced context + precision** | **Recommended default** | **Most use cases** |
-| **1200 tokens** | More context per chunk | Less precise matching | Long-form explanations |
-
-**Why 800 Tokens Works Best:**
-
-- ✅ One complete concept or framework per chunk
-- ✅ Enough context for Model to understand
-- ✅ Not so large that irrelevant info dilutes relevance
-- ✅ 400-token overlap preserves cross-chunk context
-
-### Strategy 3: Tune Retrieval Parameters
-
-**Goal**: Balance between precision (quality) and recall (coverage)
-
-**Key Parameters:**
+**Goal**: Surface Trevor's guidance for user's weakest areas
 
 ```python
-tools=[{
-    "type": "file_search",
-    "vector_store_ids": ["vs_diagnostic_kb"],
-    "file_search": {
-        "max_num_results": 20,  # Top-K: How many chunks to retrieve
-        "ranking_options": {
-            "ranker": "default_2024_08_21",  # Latest algorithm
-            "score_threshold": 0.7  # Minimum similarity (0.0-1.0)
-        }
-    }
-}]
-```
-
-**Parameter Tuning Guide:**
-
-#### `max_num_results` (Top-K)
-
-| Value | Context Size | When to Use | Tradeoff |
-|-------|--------------|-------------|----------|
-| **10** | ~1,000 tokens | Simple queries, fast responses | Less comprehensive |
-| **20** ⭐ | **~2,000 tokens** | **Most queries (recommended)** | **Balanced** |
-| **50** | ~5,000 tokens | Complex analysis, research queries | Slower, higher cost |
-
-**Example Configurations:**
-
-```python
-# Configuration A: Fast, Precise (for simple queries)
-"file_search": {
-    "max_num_results": 10,
-    "score_threshold": 0.8  # High threshold = only very relevant chunks
-}
-
-# Configuration B: Balanced (recommended default)
-"file_search": {
-    "max_num_results": 20,
-    "score_threshold": 0.7  # Good balance
-}
-
-# Configuration C: Comprehensive (for complex queries)
-"file_search": {
-    "max_num_results": 50,
-    "score_threshold": 0.6  # Lower threshold = more inclusive
-}
-```
-
-#### `score_threshold` (Minimum Relevance)
-
-| Value | Effect | When to Use |
-|-------|--------|-------------|
-| **0.9** | Only highly similar chunks | Queries needing exact matches |
-| **0.7** ⭐ | **Good balance (recommended)** | **Most use cases** |
-| **0.5** | More inclusive, some noise | Exploratory queries |
-
-**How to Choose:**
-
-```python
-def select_retrieval_config(query_complexity, user_intent):
-    if query_complexity == "simple":
-        return {
-            "max_num_results": 10,
-            "score_threshold": 0.8
-        }
-    elif query_complexity == "medium":
-        return {
-            "max_num_results": 20,  # Default
-            "score_threshold": 0.7
-        }
-    elif query_complexity == "complex":
-        return {
-            "max_num_results": 50,
-            "score_threshold": 0.6
-        }
-```
-
-### Strategy 4: Enhance Queries with Context
-
-**Goal**: Help file search understand user intent better
-
-**Technique: Query Expansion**
-
-Instead of sending raw user query, expand it with context:
-
-```python
-# Basic approach (less effective)
-raw_query = "How do I improve positioning?"
-
-# Enhanced approach (more effective)
-enhanced_query = f"""
-User Context:
-- Company: {user_profile.company}
-- Industry: {user_profile.industry}
-- Current Challenge: Struggling with brand positioning
-
-User Question: How do I improve positioning?
-
-Additional Context from Conversation:
-- User previously completed brand diagnostic
-- IDEA Scores: Insight=75, Distinctive=45, Empathetic=80, Authentic=70
-- Low Distinctive score suggests positioning is the key issue
-"""
-
-response = client.responses.create(
-    model="gpt-5",
-    prompt_id="diagnostic_prompt",
-    input=enhanced_query,  # More context = better retrieval
-    tools=[{"type": "file_search", "vector_store_ids": ["vs_diagnostic_kb"]}]
-)
-```
-
-**Why This Works:**
-
-- ✅ File search embeds the enhanced query (more semantic info)
-- ✅ Better matches to relevant positioning content
-- ✅ Model receives both context AND retrieved knowledge
-
-### Strategy 5: Multi-Store Search for Cross-Domain Queries
-
-**Goal**: Handle queries that span multiple domains
-
-**Example Query:**
-"How do I position my brand to attract my ideal customer?"
-
-This requires knowledge from:
-- `diagnostic_kb` (positioning frameworks)
-- `avatar_kb` (customer understanding)
-
-**Implementation:**
-
-```python
-# Approach A: Sequential search (recommended for most cases)
-def handle_cross_domain_query(user_query, intents):
+def prioritize_low_scores(user_chunks: List[Chunk]) -> List[Chunk]:
     """
-    intents = ["diagnostic", "avatar"]
+    Boost retrieval for dimensions where user scored low
     """
-    all_retrieved_chunks = []
 
-    for intent in intents:
-        vector_store_id = routing_map[intent]
+    # Identify low-scoring dimensions from diagnostic
+    low_scores = [
+        chunk for chunk in user_chunks
+        if 'score' in chunk.metadata and chunk.metadata['score'] < 60
+    ]
 
-        # Search each relevant vector store
-        temp_response = client.responses.create(
-            model="gpt-5",
-            prompt_id=f"{intent}_prompt",
-            input=user_query,
-            tools=[{
-                "type": "file_search",
-                "vector_store_ids": [vector_store_id],
-                "file_search": {
-                    "max_num_results": 10  # 10 from each store
-                }
-            }],
-            store_response=False  # Don't persist temporary calls
-        )
+    # If user has low Distinctive score (45/100), prioritize:
+    # - Trevor's differentiation frameworks from System KB
+    # - User's diagnostic highlighting the low score
 
-        all_retrieved_chunks.extend(temp_response.retrieved_chunks)
+    return sorted(
+        user_chunks,
+        key=lambda c: c.metadata.get('score', 100),  # Lower scores first
+        reverse=False
+    )
+```
 
-    # Now create final response with all retrieved knowledge
-    final_response = client.responses.create(
-        model="gpt-5",
-        prompt_id="diagnostic_prompt",  # Primary domain
-        input=user_query,
-        # Include all retrieved chunks in system prompt
-        # (manual context injection)
+### Strategy 3: Boost Trevor's Content
+
+**Goal**: Ensure Trevor's book is primary source
+
+```python
+def boost_trevors_content(system_chunks: List[Chunk]) -> List[Chunk]:
+    """
+    Boost Trevor's book chunks over marketing syntheses
+    """
+
+    for chunk in system_chunks:
+        if 'trevors_book' in chunk.metadata.get('source', ''):
+            chunk.similarity_score *= 1.15  # 15% boost
+
+    return sorted(
+        system_chunks,
+        key=lambda c: c.similarity_score,
+        reverse=True
+    )
+```
+
+### Strategy 4: Cross-Reference System + User Context
+
+**Goal**: Find System KB chunks that relate to User KB context
+
+```python
+async def retrieve_with_user_context_awareness(
+    user_id: str,
+    query: str,
+    intent: str
+) -> Dict[str, List[Chunk]]:
+    """
+    Retrieve System KB chunks that are relevant to user's diagnostic
+    """
+
+    # First, get user's context
+    user_chunks = await retrieve_from_user_kb(user_id, query, max_chunks=5)
+
+    # Extract key themes from user's diagnostic
+    user_themes = extract_themes(user_chunks)
+    # Example: ["low_distinctive_score", "b2b_saas", "competitor_differentiation"]
+
+    # Enhance query with user themes for System KB search
+    enhanced_query = f"{query} {' '.join(user_themes)}"
+
+    # Retrieve from System KB with enhanced query
+    system_chunks = await retrieve_from_system_kb(
+        enhanced_query,
+        intent,
+        max_chunks=15
     )
 
-    return final_response
-
-# Approach B: Multi-store search (simpler, if supported)
-response = client.responses.create(
-    model="gpt-5",
-    prompt_id="diagnostic_prompt",
-    input=user_query,
-    tools=[{
-        "type": "file_search",
-        "vector_store_ids": [
-            "vs_diagnostic_kb",  # Search both stores
-            "vs_avatar_kb"
-        ],
-        "file_search": {
-            "max_num_results": 20  # Total across both stores
-        }
-    }]
-)
+    return {
+        "system_chunks": system_chunks,
+        "user_chunks": user_chunks
+    }
 ```
-
-**When to Use:**
-- Complex queries spanning multiple IDEA dimensions
-- User asks about relationships between concepts
-- Rare for most brand coaching queries (single-domain is typical)
 
 ---
 
 ## Retrieval Quality Metrics
 
-### How to Measure If Relevant Knowledge Is Reaching the Model
+### Metric 1: System vs User Balance
 
-#### Metric 1: Retrieval Precision
-
-**Definition**: Percentage of retrieved chunks that are actually relevant
+**Definition**: Verify appropriate mix of System and User KB chunks
 
 ```python
-def calculate_retrieval_precision(retrieved_chunks, ground_truth_relevant_chunks):
+def measure_kb_balance(retrieved_chunks: List[Chunk]) -> Dict:
     """
-    retrieved_chunks: Top 20 chunks file search returned
-    ground_truth_relevant_chunks: Manually labeled relevant chunks
+    Measure distribution of System KB vs User KB
     """
-    relevant_retrieved = sum(
-        1 for chunk in retrieved_chunks
-        if chunk.id in ground_truth_relevant_chunks
-    )
 
-    precision = relevant_retrieved / len(retrieved_chunks)
-    return precision
-
-# Example:
-# Retrieved 20 chunks
-# 18 are actually relevant to user's query
-# Precision = 18/20 = 0.90 (90%)
-```
-
-**Target**: > 80% precision
-
-#### Metric 2: Retrieval Recall
-
-**Definition**: Percentage of relevant chunks that were actually retrieved
-
-```python
-def calculate_retrieval_recall(retrieved_chunks, ground_truth_relevant_chunks):
-    """
-    How many of the relevant chunks did we find?
-    """
-    relevant_retrieved = sum(
-        1 for chunk_id in ground_truth_relevant_chunks
-        if chunk_id in [c.id for c in retrieved_chunks]
-    )
-
-    recall = relevant_retrieved / len(ground_truth_relevant_chunks)
-    return recall
-
-# Example:
-# 25 total relevant chunks in knowledge base
-# Retrieved 18 of them
-# Recall = 18/25 = 0.72 (72%)
-```
-
-**Target**: > 70% recall
-
-#### Metric 3: Mean Reciprocal Rank (MRR)
-
-**Definition**: How quickly do relevant chunks appear in results?
-
-```python
-def calculate_mrr(retrieved_chunks, ground_truth_relevant_chunks):
-    """
-    Measures ranking quality - are relevant chunks at the top?
-    """
-    for rank, chunk in enumerate(retrieved_chunks, start=1):
-        if chunk.id in ground_truth_relevant_chunks:
-            return 1.0 / rank  # Reciprocal of first relevant chunk's rank
-
-    return 0.0  # No relevant chunks found
-
-# Example:
-# First relevant chunk appears at position 2
-# MRR = 1/2 = 0.50
-
-# Ideal: First relevant chunk at position 1
-# MRR = 1/1 = 1.00
-```
-
-**Target**: > 0.7 MRR (relevant chunks in top 3)
-
-#### Metric 4: Similarity Score Distribution
-
-**Definition**: What's the similarity range of retrieved chunks?
-
-```python
-def analyze_similarity_distribution(retrieved_chunks):
-    similarities = [chunk.similarity_score for chunk in retrieved_chunks]
+    system_chunks = [c for c in retrieved_chunks if c.source == 'system_kb']
+    user_chunks = [c for c in retrieved_chunks if c.source == 'user_kb']
 
     return {
-        "max": max(similarities),
-        "min": min(similarities),
-        "mean": sum(similarities) / len(similarities),
-        "range": max(similarities) - min(similarities)
+        "system_count": len(system_chunks),
+        "user_count": len(user_chunks),
+        "system_percentage": len(system_chunks) / len(retrieved_chunks),
+        "user_percentage": len(user_chunks) / len(retrieved_chunks),
+        "balance_score": min(len(system_chunks), len(user_chunks)) / max(len(system_chunks), len(user_chunks))
     }
 
-# Good distribution:
-# {
-#   "max": 0.94,  # Highly relevant
-#   "min": 0.78,  # Still reasonably relevant
-#   "mean": 0.86,
-#   "range": 0.16  # Tight distribution
-# }
-
-# Poor distribution:
-# {
-#   "max": 0.92,
-#   "min": 0.42,  # Some irrelevant chunks
-#   "mean": 0.67,
-#   "range": 0.50  # Wide distribution (indicates noise)
-# }
+# Target:
+# system_percentage: 70-80%
+# user_percentage: 20-30%
 ```
 
-**Target**: Mean similarity > 0.75, range < 0.25
+### Metric 2: Trevor's Content Representation
 
-### Monitoring Retrieval Quality in Production
+**Definition**: Ensure Trevor's book is well-represented in System KB results
 
 ```python
-class RetrievalQualityMonitor:
-    def __init__(self):
-        self.metrics = []
+def measure_trevors_representation(system_chunks: List[Chunk]) -> Dict:
+    """
+    Measure how much Trevor's book content is retrieved
+    """
 
-    def log_retrieval(self, user_query, retrieved_chunks, user_feedback=None):
-        """Log every retrieval for analysis"""
+    trevors_chunks = [
+        c for c in system_chunks
+        if 'trevors_book' in c.metadata.get('source', '')
+    ]
 
-        metric = {
-            "timestamp": datetime.now().isoformat(),
-            "query": user_query,
-            "num_chunks": len(retrieved_chunks),
-            "similarity_scores": [c.similarity_score for c in retrieved_chunks],
-            "avg_similarity": sum(c.similarity_score for c in retrieved_chunks) / len(retrieved_chunks),
-            "min_similarity": min(c.similarity_score for c in retrieved_chunks),
-            "chunk_sources": [c.metadata.get("source") for c in retrieved_chunks],
-            "user_feedback": user_feedback  # "helpful" / "not helpful"
-        }
+    return {
+        "trevors_count": len(trevors_chunks),
+        "trevors_percentage": len(trevors_chunks) / len(system_chunks),
+        "avg_similarity": sum(c.similarity_score for c in trevors_chunks) / len(trevors_chunks)
+    }
 
-        self.metrics.append(metric)
-
-        # Alert if quality drops
-        if metric["avg_similarity"] < 0.65:
-            self.alert_low_retrieval_quality(metric)
-
-    def analyze_retrieval_patterns(self):
-        """Weekly analysis of retrieval quality"""
-
-        return {
-            "avg_similarity_all_queries": statistics.mean(
-                m["avg_similarity"] for m in self.metrics
-            ),
-            "queries_below_threshold": sum(
-                1 for m in self.metrics if m["avg_similarity"] < 0.7
-            ),
-            "most_common_sources": Counter(
-                source
-                for m in self.metrics
-                for source in m["chunk_sources"]
-            ).most_common(10),
-            "user_satisfaction": sum(
-                1 for m in self.metrics
-                if m["user_feedback"] == "helpful"
-            ) / len([m for m in self.metrics if m["user_feedback"]])
-        }
+# Target:
+# trevors_percentage: > 60% (Trevor's book should dominate)
+# avg_similarity: > 0.80 (highly relevant)
 ```
 
----
+### Metric 3: User Context Relevance
 
-## Troubleshooting Poor Retrieval
-
-### Symptom 1: Model Gives Generic Responses
-
-**Indicators:**
-- Responses don't reference Trevor's methodology
-- No specific frameworks mentioned
-- Feels like ChatGPT, not IDEA Brand Coach
-
-**Diagnosis:**
+**Definition**: Verify user's diagnostic/documents are relevant to query
 
 ```python
-# Check retrieved chunks
-for chunk in retrieved_chunks:
-    print(f"Similarity: {chunk.similarity_score}")
-    print(f"Source: {chunk.metadata['source']}")
-    print(f"Content preview: {chunk.content[:200]}")
-    print("---")
-
-# If similarity scores are low (< 0.7), retrieval is failing
-```
-
-**Solutions:**
-
-1. **Lower similarity threshold:**
-   ```python
-   "score_threshold": 0.6  # Was 0.7, now more inclusive
-   ```
-
-2. **Increase retrieval count:**
-   ```python
-   "max_num_results": 30  # Was 20, now more comprehensive
-   ```
-
-3. **Check if query is being routed to correct vector store:**
-   ```python
-   # Verify routing logic
-   intent = route_user_query("Assess my brand")
-   assert intent == "diagnostic"  # Should be True
-   ```
-
-4. **Enhance query with context:**
-   ```python
-   enhanced_query = f"[Brand Assessment Context]\n{user_query}"
-   ```
-
-### Symptom 2: Irrelevant Chunks Retrieved
-
-**Indicators:**
-- Retrieved chunks talk about unrelated topics
-- Wide similarity score range (0.95 to 0.40)
-- Model response uses irrelevant information
-
-**Diagnosis:**
-
-```python
-# Check chunk relevance manually
-for chunk in retrieved_chunks:
-    is_relevant = manually_assess_relevance(chunk.content, user_query)
-    if not is_relevant and chunk.similarity_score > 0.7:
-        print(f"FALSE POSITIVE: {chunk.id}")
-        print(f"Similarity: {chunk.similarity_score}")
-        print(f"Content: {chunk.content[:500]}")
-```
-
-**Solutions:**
-
-1. **Raise similarity threshold:**
-   ```python
-   "score_threshold": 0.8  # Was 0.7, now more selective
-   ```
-
-2. **Reduce retrieval count:**
-   ```python
-   "max_num_results": 10  # Was 20, focus on top results
-   ```
-
-3. **Improve document tagging during upload:**
-   ```python
-   # Add metadata to chunks for better filtering
-   client.files.create(
-       file=open("positioning_chapter.pdf", "rb"),
-       purpose="assistants",
-       metadata={
-           "category": "diagnostic",
-           "topic": "positioning",
-           "source": "trevors_book_chapter_7"
-       }
-   )
-   ```
-
-4. **Use metadata filtering:**
-   ```python
-   "file_search": {
-       "max_num_results": 20,
-       "metadata_filter": {
-           "topic": "positioning"  # Only retrieve positioning chunks
-       }
-   }
-   ```
-
-### Symptom 3: Missing Key Information
-
-**Indicators:**
-- Model doesn't cite Trevor's specific frameworks
-- Important concepts from the book aren't mentioned
-- Response quality lower than expected
-
-**Diagnosis:**
-
-```python
-# Check if Trevor's book chunks are being retrieved
-trevors_chunks = [
-    chunk for chunk in retrieved_chunks
-    if "trevors_book" in chunk.metadata.get("source", "")
-]
-
-print(f"Trevor's chunks retrieved: {len(trevors_chunks)}/20")
-# Should be > 50% for most queries
-
-# Check if specific concepts exist in knowledge base
-search_result = client.vector_stores.search(
-    vector_store_id="vs_diagnostic_kb",
-    query="SWOT analysis framework Trevor",
-    max_results=5
-)
-```
-
-**Solutions:**
-
-1. **Verify Trevor's book was uploaded correctly:**
-   ```bash
-   # Check file status
-   file = client.files.retrieve(file_id)
-   print(f"Status: {file.status}")  # Should be "processed"
-
-   # Check vector store file count
-   vs = client.vector_stores.retrieve("vs_diagnostic_kb")
-   print(f"Files: {vs.file_counts}")
-   ```
-
-2. **Re-chunk Trevor's book with smaller chunks:**
-   ```python
-   # If book chunks are too large, they may not match well
-   "chunking_strategy": {
-       "static": {
-           "max_chunk_size_tokens": 600,  # Smaller = more granular
-           "chunk_overlap_tokens": 300
-       }
-   }
-   ```
-
-3. **Boost Trevor's content in retrieval:**
-   ```python
-   # Custom ranking that prioritizes Trevor's book
-   def rerank_chunks(chunks, boost_sources=["trevors_book"]):
-       for chunk in chunks:
-           if any(source in chunk.metadata.get("source", "") for source in boost_sources):
-               chunk.similarity_score *= 1.1  # 10% boost
-
-       chunks.sort(key=lambda c: c.similarity_score, reverse=True)
-       return chunks[:20]
-   ```
-
-### Symptom 4: Inconsistent Retrieval Quality
-
-**Indicators:**
-- Some queries retrieve great content, others don't
-- User experience is unpredictable
-- Hard to identify pattern
-
-**Diagnosis:**
-
-```python
-# Analyze retrieval quality by query category
-categories = ["diagnostic", "avatar", "canvas", "capture", "core"]
-
-for category in categories:
-    queries = [q for q in test_queries if q.category == category]
-
-    avg_similarity = statistics.mean(
-        q.avg_retrieval_similarity for q in queries
-    )
-
-    print(f"{category}: avg similarity = {avg_similarity:.2f}")
-
-# Identify which categories have poor retrieval
-# Example output:
-# diagnostic: 0.86 ✅
-# avatar: 0.82 ✅
-# canvas: 0.65 ❌ <- Problem category
-# capture: 0.88 ✅
-# core: 0.84 ✅
-```
-
-**Solutions:**
-
-1. **Add more content to underperforming categories:**
-   ```python
-   # If canvas_kb has poor retrieval, add more business model content
-   ```
-
-2. **Improve query classification:**
-   ```python
-   # Some queries may be misrouted
-   # "Design my revenue model" misrouted to diagnostic instead of canvas
-   # Fix: Improve router prompt
-   ```
-
-3. **Category-specific retrieval configs:**
-   ```python
-   retrieval_configs = {
-       "diagnostic": {"max_num_results": 20, "score_threshold": 0.7},
-       "avatar": {"max_num_results": 20, "score_threshold": 0.7},
-       "canvas": {"max_num_results": 30, "score_threshold": 0.6},  # More lenient
-       "capture": {"max_num_results": 20, "score_threshold": 0.7},
-       "core": {"max_num_results": 15, "score_threshold": 0.75}    # More selective
-   }
-   ```
-
----
-
-## Testing & Validation
-
-### Test Suite for Retrieval Quality
-
-```python
-import pytest
-
-class TestRetrievalQuality:
-    """Automated tests for knowledge base retrieval"""
-
-    def test_diagnostic_retrieval(self):
-        """Test: Diagnostic queries retrieve Trevor's assessment frameworks"""
-
-        queries = [
-            "Assess my brand strength",
-            "Perform SWOT analysis",
-            "Analyze competitive positioning"
-        ]
-
-        for query in queries:
-            chunks = retrieve_chunks(
-                query=query,
-                vector_store_id="vs_diagnostic_kb",
-                max_results=20
-            )
-
-            # Assert: High average similarity
-            avg_similarity = sum(c.similarity_score for c in chunks) / len(chunks)
-            assert avg_similarity > 0.75, f"Low similarity for: {query}"
-
-            # Assert: Trevor's book content is retrieved
-            trevors_chunks = [c for c in chunks if "trevors_book" in c.metadata.get("source", "")]
-            assert len(trevors_chunks) >= 10, f"Not enough Trevor content for: {query}"
-
-    def test_avatar_retrieval(self):
-        """Test: Avatar queries retrieve customer profiling frameworks"""
-
-        queries = [
-            "Define my ideal customer",
-            "Create customer persona",
-            "Segment my audience"
-        ]
-
-        for query in queries:
-            chunks = retrieve_chunks(
-                query=query,
-                vector_store_id="vs_avatar_kb",
-                max_results=20
-            )
-
-            # Assert: Customer-related content retrieved
-            customer_keywords = ["customer", "persona", "audience", "demographic", "psychographic"]
-            relevant_chunks = sum(
-                1 for c in chunks
-                if any(keyword in c.content.lower() for keyword in customer_keywords)
-            )
-
-            assert relevant_chunks >= 15, f"Not enough customer content for: {query}"
-
-    def test_cross_category_queries(self):
-        """Test: Cross-category queries retrieve from multiple domains"""
-
-        query = "How do I position my brand to attract my ideal customer?"
-        # Should retrieve from both diagnostic_kb and avatar_kb
-
-        diagnostic_chunks = retrieve_chunks(query, "vs_diagnostic_kb", 10)
-        avatar_chunks = retrieve_chunks(query, "vs_avatar_kb", 10)
-
-        # Both should have reasonable similarity
-        assert sum(c.similarity_score for c in diagnostic_chunks) / 10 > 0.70
-        assert sum(c.similarity_score for c in avatar_chunks) / 10 > 0.70
-
-    def test_retrieval_speed(self):
-        """Test: Retrieval completes within performance SLA"""
-
-        import time
-
-        query = "Assess my brand positioning"
-
-        start = time.time()
-        chunks = retrieve_chunks(query, "vs_diagnostic_kb", 20)
-        elapsed = time.time() - start
-
-        # Assert: Retrieval < 500ms
-        assert elapsed < 0.5, f"Retrieval too slow: {elapsed:.2f}s"
-
-    def test_similarity_threshold(self):
-        """Test: All retrieved chunks meet minimum similarity threshold"""
-
-        query = "How to improve brand distinctiveness"
-
-        chunks = retrieve_chunks(
-            query=query,
-            vector_store_id="vs_diagnostic_kb",
-            max_results=20,
-            score_threshold=0.7
+def measure_user_context_relevance(
+    user_chunks: List[Chunk],
+    query: str
+) -> Dict:
+    """
+    Measure relevance of user's context to current query
+    """
+
+    diagnostic_chunks = [c for c in user_chunks if c.source == 'diagnostic']
+    document_chunks = [c for c in user_chunks if c.source == 'uploaded_document']
+
+    return {
+        "diagnostic_count": len(diagnostic_chunks),
+        "document_count": len(document_chunks),
+        "avg_similarity": sum(c.similarity_score for c in user_chunks) / len(user_chunks),
+        "low_score_mentioned": any(
+            c.metadata.get('score', 100) < 60
+            for c in diagnostic_chunks
         )
+    }
 
-        # Assert: All chunks above threshold
-        for chunk in chunks:
-            assert chunk.similarity_score >= 0.7, \
-                f"Chunk below threshold: {chunk.similarity_score}"
-```
-
-### Manual Validation Process
-
-**Weekly Retrieval Audit:**
-
-```markdown
-## Retrieval Quality Audit - Week of [Date]
-
-### Sample Size
-- 20 random queries from production logs
-- 5 queries per category (diagnostic, avatar, canvas, capture, core)
-
-### Evaluation Criteria
-For each query, rate retrieved chunks (1-5 scale):
-
-1. **Relevance**: Are chunks relevant to user query?
-   - 5 = All chunks highly relevant
-   - 3 = Most chunks relevant, some noise
-   - 1 = Many irrelevant chunks
-
-2. **Authority**: Do chunks cite Trevor's methodology?
-   - 5 = >75% of chunks from Trevor's book
-   - 3 = 50-75% from Trevor's book
-   - 1 = <50% from Trevor's book
-
-3. **Completeness**: Do chunks provide enough info for Model?
-   - 5 = Comprehensive coverage of topic
-   - 3 = Adequate coverage
-   - 1 = Missing key information
-
-4. **Ranking**: Are most relevant chunks at top?
-   - 5 = Top 5 chunks are most relevant
-   - 3 = Relevant chunks scattered
-   - 1 = Most relevant chunks at bottom
-
-### Results Template
-
-| Query | Relevance | Authority | Completeness | Ranking | Overall | Notes |
-|-------|-----------|-----------|--------------|---------|---------|-------|
-| "Assess brand" | 5 | 4 | 5 | 5 | 4.75 | Great retrieval |
-| "Define customer" | 4 | 3 | 4 | 4 | 3.75 | Could use more Trevor content |
-| ... | | | | | | |
-
-### Action Items
-- [ ] Issue 1: Canvas category retrieval needs improvement
-- [ ] Issue 2: Add more Trevor content on X topic
-- [ ] Issue 3: Adjust similarity threshold for Y category
+# Target:
+# avg_similarity: > 0.75 (user context is relevant)
+# low_score_mentioned: True (addressing user's weak areas)
 ```
 
 ---
 
 ## Configuration Best Practices
 
-### Recommended Default Configuration
+### Recommended Configuration
 
 ```python
 # config/rag_config.py
 
 RAG_CONFIG = {
-    # Vector Store IDs (set after uploading knowledge base)
-    "vector_stores": {
-        "diagnostic": "vs_diagnostic_xxx",
-        "avatar": "vs_avatar_xxx",
-        "canvas": "vs_canvas_xxx",
-        "capture": "vs_capture_xxx",
-        "core": "vs_core_xxx"
-    },
-
-    # Retrieval Settings (per category)
-    "retrieval": {
-        "diagnostic": {
-            "max_num_results": 20,
+    # System Knowledge Base (Shared)
+    "system_kb": {
+        "vector_stores": {
+            "diagnostic": "vs_system_diagnostic",
+            "avatar": "vs_system_avatar",
+            "canvas": "vs_system_canvas",
+            "capture": "vs_system_capture",
+            "core": "vs_system_core"
+        },
+        "retrieval": {
+            "max_chunks": 15,
             "score_threshold": 0.7,
-            "ranker": "default_2024_08_21"
-        },
-        "avatar": {
-            "max_num_results": 20,
-            "score_threshold": 0.7,
-            "ranker": "default_2024_08_21"
-        },
-        "canvas": {
-            "max_num_results": 25,  # Business models may need more context
-            "score_threshold": 0.65,
-            "ranker": "default_2024_08_21"
-        },
-        "capture": {
-            "max_num_results": 20,
-            "score_threshold": 0.7,
-            "ranker": "default_2024_08_21"
-        },
-        "core": {
-            "max_num_results": 15,  # Brand foundations more focused
-            "score_threshold": 0.75,
-            "ranker": "default_2024_08_21"
+            "boost_trevors_content": True,
+            "trevor_boost_factor": 1.15
         }
     },
 
-    # Chunking Strategy (used during document upload)
-    "chunking": {
-        "max_chunk_size_tokens": 800,
-        "chunk_overlap_tokens": 400
+    # User Knowledge Base (Per-User)
+    "user_kb": {
+        "database": "postgresql",
+        "table": "user_knowledge_chunks",
+        "retrieval": {
+            "max_chunks": 5,
+            "score_threshold": 0.65,  # Slightly lower - user context is valuable
+            "prioritize_low_scores": True,
+            "sources": ["diagnostic", "uploaded_document", "conversation"]
+        }
     },
 
-    # Embedding Model
-    "embedding_model": "text-embedding-3-large",
+    # Aggregation Strategy
+    "aggregation": {
+        "total_chunks": 20,
+        "system_ratio": 0.75,  # 75% System KB
+        "user_ratio": 0.25,    # 25% User KB
+        "adaptive_distribution": True,  # Adjust based on query intent
+        "cross_reference": True  # Use user context to enhance System KB search
+    },
 
-    # Quality Monitoring
-    "monitoring": {
-        "log_all_retrievals": True,
-        "alert_threshold": 0.65,  # Alert if avg similarity < 0.65
-        "weekly_audit": True
+    # Security
+    "security": {
+        "enforce_user_filtering": True,  # MANDATORY
+        "enable_rls": True,
+        "log_access": True,
+        "audit_cross_user_leakage": True
     }
 }
 ```
 
-### Environment-Specific Configurations
+### Intent-Specific Configurations
 
 ```python
-# Development: More verbose, lower thresholds for testing
-DEV_CONFIG = {
-    **RAG_CONFIG,
-    "retrieval": {
-        category: {
-            **settings,
-            "score_threshold": settings["score_threshold"] - 0.1  # More lenient
-        }
-        for category, settings in RAG_CONFIG["retrieval"].items()
+INTENT_CONFIGS = {
+    "diagnostic": {
+        "system_chunks": 12,
+        "user_chunks": 8,
+        "rationale": "Assessment needs balanced System + User context"
     },
-    "monitoring": {
-        "log_all_retrievals": True,
-        "alert_threshold": 0.60,
-        "weekly_audit": False  # Manual testing instead
-    }
-}
 
-# Production: Optimized for performance and quality
-PROD_CONFIG = {
-    **RAG_CONFIG,
-    "monitoring": {
-        "log_all_retrievals": True,  # For analytics
-        "alert_threshold": 0.70,  # Higher quality bar
-        "weekly_audit": True
+    "avatar": {
+        "system_chunks": 10,
+        "user_chunks": 10,
+        "rationale": "Customer profiling highly personalized"
+    },
+
+    "canvas": {
+        "system_chunks": 14,
+        "user_chunks": 6,
+        "rationale": "Business models need expert frameworks (Trevor)"
+    },
+
+    "capture": {
+        "system_chunks": 13,
+        "user_chunks": 7,
+        "rationale": "Marketing execution balanced"
+    },
+
+    "core": {
+        "system_chunks": 18,
+        "user_chunks": 2,
+        "rationale": "Brand foundations are universal (Trevor's philosophy)"
     }
 }
+```
+
+---
+
+## Complete Implementation Example
+
+```python
+class AggregatedRAGSystem:
+    """
+    Complete RAG system with System KB + User KB aggregation
+    """
+
+    def __init__(self, config: Dict):
+        self.config = config
+        self.openai_client = OpenAI()
+        self.supabase = create_supabase_client()
+
+    async def process_user_query(
+        self,
+        user_id: str,
+        query: str,
+        conversation_history: str = ""
+    ) -> str:
+        """
+        Main entry point: Process user query with aggregated RAG
+        """
+
+        # Step 1: Classify intent
+        intent = await self.classify_intent(query)
+
+        # Step 2: Determine chunk distribution
+        distribution = self.get_chunk_distribution(intent, user_id)
+
+        # Step 3: Retrieve from both knowledge bases in parallel
+        system_chunks, user_chunks = await asyncio.gather(
+            self.retrieve_system_kb(query, intent, distribution["system_chunks"]),
+            self.retrieve_user_kb(user_id, query, distribution["user_chunks"])
+        )
+
+        # Step 4: Boost Trevor's content in System KB
+        if self.config["system_kb"]["retrieval"]["boost_trevors_content"]:
+            system_chunks = self.boost_trevors_content(system_chunks)
+
+        # Step 5: Prioritize low-scoring dimensions in User KB
+        if self.config["user_kb"]["retrieval"]["prioritize_low_scores"]:
+            user_chunks = self.prioritize_low_scores(user_chunks)
+
+        # Step 6: Construct augmented Query
+        query_text = self.construct_query(
+            system_chunks=system_chunks,
+            user_chunks=user_chunks,
+            conversation_history=conversation_history,
+            user_question=query
+        )
+
+        # Step 7: Send to Model
+        response = await self.openai_client.responses.create(
+            model="gpt-5",
+            prompt_id=f"{intent}_prompt",
+            input=query_text,
+            store_response=True
+        )
+
+        # Step 8: Log for monitoring
+        await self.log_retrieval_quality(
+            user_id=user_id,
+            query=query,
+            system_chunks=system_chunks,
+            user_chunks=user_chunks,
+            response=response
+        )
+
+        return response.output
+
+    async def retrieve_system_kb(
+        self,
+        query: str,
+        intent: str,
+        max_chunks: int
+    ) -> List[Chunk]:
+        """Retrieve from System KB (Trevor's book + frameworks)"""
+        vector_store_id = self.config["system_kb"]["vector_stores"][intent]
+
+        response = await self.openai_client.responses.create(
+            model="gpt-5",
+            prompt_id=f"{intent}_prompt",
+            input=query,
+            tools=[{
+                "type": "file_search",
+                "vector_store_ids": [vector_store_id],
+                "file_search": {
+                    "max_num_results": max_chunks,
+                    "score_threshold": self.config["system_kb"]["retrieval"]["score_threshold"]
+                }
+            }],
+            store_response=False
+        )
+
+        return response.retrieved_chunks
+
+    async def retrieve_user_kb(
+        self,
+        user_id: str,
+        query: str,
+        max_chunks: int
+    ) -> List[Chunk]:
+        """Retrieve from User KB (user's diagnostic + documents)"""
+
+        query_embedding = await self.generate_embedding(query)
+
+        chunks = await self.supabase.rpc(
+            'match_user_documents',
+            {
+                'query_embedding': query_embedding,
+                'match_user_id': user_id,  # CRITICAL: User isolation
+                'match_count': max_chunks
+            }
+        ).execute()
+
+        return [Chunk(**c) for c in chunks.data]
 ```
 
 ---
 
 ## Key Takeaways
 
-### Checklist: Ensuring Relevant Knowledge Reaches the Model
+### Architectural Principles
 
-- [ ] **Router correctly classifies user intent** (diagnostic, avatar, etc.)
-- [ ] **Query routed to appropriate vector store** (10K relevant docs, not all 42K)
-- [ ] **Trevor's book uploaded and processed** (verify file status = "processed")
-- [ ] **Optimal chunking configured** (800 tokens, 400 overlap)
-- [ ] **Retrieval parameters tuned** (20 results, 0.7 threshold)
-- [ ] **Similarity scores are high** (avg > 0.75, min > 0.65)
-- [ ] **Trevor's content represented** (>50% of retrieved chunks)
-- [ ] **No irrelevant chunks** (all chunks above threshold)
-- [ ] **Monitoring in place** (log retrievals, weekly audits)
-- [ ] **Tests passing** (automated retrieval quality tests)
+1. ✅ **Two Knowledge Bases**: System (shared) + User (isolated)
+2. ✅ **Runtime Aggregation**: Retrieve from both, combine in Query
+3. ✅ **Data Isolation**: User KB strictly filtered by user_id
+4. ✅ **Optimal Balance**: 75% System KB (Trevor) + 25% User KB (context)
+5. ✅ **Security First**: RLS enforced, no cross-user leakage
 
-### Quick Reference: Troubleshooting Guide
+### Implementation Checklist
 
-| Problem | Quick Fix |
-|---------|-----------|
-| Generic responses | Lower threshold to 0.6, increase to 30 results |
-| Irrelevant chunks | Raise threshold to 0.8, reduce to 10 results |
-| Missing Trevor content | Verify book upload, check source metadata, boost Trevor chunks |
-| Slow retrieval | Reduce max_num_results to 10 |
-| Inconsistent quality | Category-specific configs, improve routing |
+- [ ] System KB: 5 vector stores with Trevor's book + frameworks
+- [ ] User KB: PostgreSQL table with RLS enabled
+- [ ] Parallel retrieval from both knowledge bases
+- [ ] Query construction with both sources
+- [ ] Security testing for data isolation
+- [ ] Monitoring for retrieval quality (System vs User balance)
+- [ ] Configuration per intent (adaptive distribution)
 
 ---
 
-**Document Version:** 1.0
+**Document Version:** 2.0
 **Last Updated:** 2025-11-13
-**Status:** ✅ Implementation Guide Complete
+**Status:** ✅ Implementation Guide Complete - Architectural Separation Defined
 
 **Related Documents:**
 - [System Knowledge Base Plan](./SYSTEM_KNOWLEDGE_BASE_PLAN.md)
