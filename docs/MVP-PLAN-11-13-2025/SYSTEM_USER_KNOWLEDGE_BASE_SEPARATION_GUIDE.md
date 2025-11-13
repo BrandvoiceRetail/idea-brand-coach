@@ -1,5 +1,5 @@
-# QMR Knowledge Base Integration Guide
-## Architectural Separation and Runtime Aggregation
+# System/User Knowledge Base Separation Guide
+## Architectural Separation and Runtime Aggregation for RAG
 
 **Version:** 2.0
 **Last Updated:** 2025-11-13

@@ -59,19 +59,19 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 
 ---
 
-### 4. [QMR_KNOWLEDGE_BASE_INTEGRATION_GUIDE.md](./QMR_KNOWLEDGE_BASE_INTEGRATION_GUIDE.md)
-**Technical guide for ensuring relevant knowledge reaches the Model**
+### 4. [SYSTEM_USER_KNOWLEDGE_BASE_SEPARATION_GUIDE.md](./SYSTEM_USER_KNOWLEDGE_BASE_SEPARATION_GUIDE.md)
+**Architectural guide for separating and aggregating two knowledge bases**
 
 **Contents**:
-- Deep dive into QMR (Query → Model → Response) framework
-- How file search selects relevant chunks from 10,000+ documents
-- 5 optimization strategies for retrieval quality
-- Retrieval quality metrics (precision, recall, MRR, similarity distribution)
-- Troubleshooting guide for poor retrieval (4 common symptoms + solutions)
-- Testing & validation suite (automated tests + manual audits)
-- Configuration best practices (per-category tuning)
+- System Knowledge Base (shared): Trevor's book + marketing frameworks across 5 vector stores
+- User Knowledge Base (per-user isolated): Diagnostic results, uploaded documents, conversation history
+- Runtime aggregation strategy: Parallel retrieval from both sources (75% System / 25% User)
+- Security & data isolation: RLS policies, user_id filtering, cross-user leakage prevention
+- Optimization strategies: Adaptive distribution, low-score prioritization, Trevor content boosting
+- Retrieval quality metrics: System vs User balance, Trevor's representation, context relevance
+- Complete implementation examples with parallel retrieval and query construction
 
-**Use this for**: Optimizing RAG retrieval, debugging generic responses, ensuring Trevor's content is prioritized
+**Use this for**: Understanding two-KB architecture, implementing per-user isolation, optimizing System+User aggregation
 
 ---
 
@@ -101,8 +101,8 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 ### Want to build the knowledge base?
 → Follow **SYSTEM_KNOWLEDGE_BASE_PLAN.md**
 
-### Want to optimize retrieval quality?
-→ Read **QMR_KNOWLEDGE_BASE_INTEGRATION_GUIDE.md**
+### Want to understand System vs User KB separation?
+→ Read **SYSTEM_USER_KNOWLEDGE_BASE_SEPARATION_GUIDE.md**
 
 ### Want to know why we didn't use Assistants API?
 → Read **ARCHIVED_ASSISTANTS_API_PLAN.md**
