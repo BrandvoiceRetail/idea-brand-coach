@@ -2,10 +2,12 @@
 
 ## IDEA Brand Coach Platform - Beta Launch
 
-**Version:** 2.0 (Updated after comprehensive codebase audit)
+**Version:** 2.1 (MVP-focused approach)
 **Last Updated:** 2025-11-08
 **Status:** Final Implementation & Testing (~83% Complete)
 **Original Timeline:** 14 working days
+**Remaining Work:** 3-5 hours (no manual testing dependency)
+**Target Launch:** Ready for beta deployment
 
 ---
 
@@ -14,15 +16,18 @@
 ### Progress Update
 
 **Original Assessment (2025-11-07):** ~60% complete, 14 days remaining
-**Actual Status (2025-11-08):** ~83% complete, 2-3 days remaining
+**Actual Status (2025-11-08):** ~83% complete, 3-5 hours remaining
 
+**MVP-Focused Approach:**
 Most foundational work is complete:
 
 - ✅ Service layer architecture (100%)
 - ✅ Database schema with RAG (100%)
-- ✅ Auth integration (90%)
+- ✅ Auth integration (90% - email/password working)
 - ✅ Brand Coach UI with service layer (85%)
-- ⚠️ Testing & polish (30%)
+- ⚠️ Final polish (optional items)
+
+**Key Decision:** Deferring exhaustive manual testing to post-launch beta validation. Remaining work focuses on automated security checks and critical path smoke testing (3-5 hours total).
 
 ---
 
@@ -137,63 +142,72 @@ Most foundational work is complete:
 
 ## Remaining Work
 
-### Day 12: Final Implementation (4-6 hours)
+### P0 Implementation Tasks (Can proceed without manual testing)
 
+<<<<<<< Updated upstream
 **High Priority:**
 
 1. **Google OAuth Button** (15 min)
    - Add button to Auth.tsx
    - Connect to existing `signInWithOAuth('google')`
+=======
+**Day 12: Final Implementation (2-3 hours)**
+>>>>>>> Stashed changes
 
-2. **Replace BetaTesterCapture** (30 min)
+1. **Replace BetaTesterCapture** (30 min)
    - Create modern AuthModal component
    - Integrate into FreeDiagnostic flow
+   - Code review/automated tests possible
 
-3. **Document Upload Wiring** (45 min)
+2. **Document Upload Wiring** (45 min) - OPTIONAL for P0
    - Connect document-processor to embeddings
-   - Test with sample PDF
+   - Can validate with automated tests
+   - Could defer to P1 if time-constrained
 
-4. **RAG Sources Display** (30 min)
+3. **RAG Sources Display** (30 min) - OPTIONAL for P0
    - Show which diagnostic insights were used
    - Collapsible section under messages
+   - Nice-to-have for transparency
 
-5. **Typing Indicator** (15 min)
+4. **Typing Indicator** (15 min) - OPTIONAL for P0
    - Show "Brand Coach is thinking..." during loading
+   - Polish item, not critical path
 
-### Day 13: Testing & Fixes (4-6 hours)
+**Day 13: Security & Basic Validation (1-2 hours)**
 
-1. **Cross-Browser Testing** (1 hour)
-   - Chrome, Safari, Firefox, Edge
+1. **Automated Security Checks** (30 min)
+   - Verify RLS policies with SQL tests
+   - Test cross-user data access with automated suite
+   - Check for exposed secrets (automated scan)
 
-2. **Mobile Testing** (1 hour)
-   - iOS Safari, Android Chrome
+2. **Smoke Test Critical Path** (30 min)
+   - Complete diagnostic → signup → chat flow
+   - Verify data persistence
+   - Test on local dev environment
 
-3. **E2E Scenarios** (1.5 hours)
-   - New user flow
-   - Returning user flow
-   - Skip signup scenario
+3. **Quick Bug Fixes** (1 hour buffer)
+   - Fix any issues discovered during smoke test
 
-4. **Performance Testing** (1 hour)
-   - TTI < 3s, API < 5s targets
+### P0 Manual Testing (Dependent on Trevor/Beta Testers)
 
-5. **Bug Fixes** (1-2 hours)
+**Post-Launch Validation:**
 
-### Day 14: Production Prep (3-4 hours)
+The following can be done with real beta testers rather than pre-launch:
+- Cross-browser testing (Chrome primary, others can be bug reports)
+- Mobile testing (can validate with early users)
+- Performance testing (monitor in production)
+- Comprehensive E2E scenarios (validate with beta user feedback)
 
-1. **Security Audit** (1 hour)
-   - Verify RLS policies
-   - Test cross-user data access
+**Rationale:** For MVP speed, leverage beta testers for edge case discovery rather than exhaustive pre-launch testing.
 
-2. **Monitoring Setup** (1 hour)
-   - Error tracking (Sentry)
-   - Performance monitoring
+### Deferred to P1
 
-3. **Documentation** (1 hour)
-   - User guide
-   - Support docs
-
-4. **Launch Checklist** (30 min)
-   - Final verification
+**Features (Not Critical for P0 Beta):**
+- ❌ Google OAuth button (backend ready, UI deferred - email/password sufficient for beta)
+- ❌ Comprehensive E2E test automation (manual validation sufficient for beta)
+- ❌ Multi-browser compatibility testing (ship Chrome-first, fix bugs as reported)
+- ❌ Advanced monitoring/analytics (Sentry/PostHog - add after validating core works)
+- ❌ Extensive documentation (iterate based on actual user questions)
 
 ---
 
@@ -840,7 +854,8 @@ Most foundational work is complete:
 
 ## Change Log
 
-| Date       | Version | Changes                                                                                   |
-| ---------- | ------- | ----------------------------------------------------------------------------------------- |
-| 2025-11-07 | 1.0     | Extracted from P0_BETA_LAUNCH_ROADMAP.md v1.3                                             |
-| 2025-11-08 | 2.0     | Comprehensive codebase audit - updated to reflect 83% completion, 2-3 days remaining work |
+| Date | Version | Changes |
+|------|---------|---------|
+| 2025-11-07 | 1.0 | Extracted from P0_BETA_LAUNCH_ROADMAP.md v1.3 |
+| 2025-11-08 | 2.0 | Comprehensive codebase audit - updated to reflect 83% completion, 2-3 days remaining work |
+| 2025-11-08 | 2.1 | MVP-focused approach: Moved Google OAuth to P1, defer manual testing to post-launch beta validation, focus on automated checks only (3-5 hours remaining) |
