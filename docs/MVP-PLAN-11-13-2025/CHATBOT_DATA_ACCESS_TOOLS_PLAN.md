@@ -498,8 +498,15 @@ Challenge: Blending in with competitors
 
 ### Router Prompt → Tool Mapping
 
+**Router Output:** The router returns one or more domains, or a clarification request.
+
 ```python
-INTENT_TO_TOOLS_MAP = {
+# Example router outputs:
+# Single domain: {"domains": ["diagnostic"], "confidence": 0.95}
+# Multiple domains: {"domains": ["avatar", "capture"], "confidence": 0.87}
+# Clarification: {"clarification_needed": true, "question": "Are you asking about...?"}
+
+DOMAIN_TO_TOOLS_MAP = {
     "diagnostic": {
         "system_tools": ["system_diagnostic_search"],
         "user_tools": ["user_diagnostic_search"]
@@ -523,34 +530,70 @@ INTENT_TO_TOOLS_MAP = {
     "core": {
         "system_tools": ["system_core_search"],
         "user_tools": ["user_core_search"]
-    },
-
-    # Cross-domain queries
-    "general": {
-        "system_tools": [
-            "system_diagnostic_search",
-            "system_core_search"
-        ],
-        "user_tools": [
-            "user_diagnostic_search",
-            "user_core_search"
-        ]
     }
 }
+
+# For multi-domain queries, aggregate tools from all selected domains
+def get_tools_for_domains(domains_list):
+    """
+    Given: ["avatar", "capture"]
+    Returns: All tools needed for both domains
+    """
+    all_system_tools = []
+    all_user_tools = []
+
+    for domain in domains_list:
+        mapping = DOMAIN_TO_TOOLS_MAP[domain]
+        all_system_tools.extend(mapping["system_tools"])
+        all_user_tools.extend(mapping["user_tools"])
+
+    return {
+        "system_tools": all_system_tools,
+        "user_tools": all_user_tools
+    }
 ```
 
-### Example: Diagnostic Query
+### Example 1: Single Domain Query
 
 ```
 User Query: "How can I improve my brand positioning?"
 
-Step 1: Router Prompt classifies intent → "diagnostic"
+Step 1: Router Prompt classifies intent → {"domains": ["diagnostic"], "confidence": 0.93}
 
-Step 2: Select tools from map:
+Step 2: Select tools from map for "diagnostic":
     system_tools: ["system_diagnostic_search"]
     user_tools: ["user_diagnostic_search"]
 
-Step 3: Execute tools in parallel (see next section)
+Step 3: Execute Diagnostic Prompt with these tools
+
+Step 4: Return final response (no synthesis needed for single domain)
+```
+
+### Example 2: Multi-Domain Query
+
+```
+User Query: "How do I market to my ideal customer?"
+
+Step 1: Router Prompt classifies intent → {"domains": ["avatar", "capture"], "confidence": 0.88}
+    Rationale: Question involves both customer definition (avatar) and marketing (capture)
+
+Step 2: Select tools for BOTH domains:
+    avatar_tools:
+        - system_avatar_search
+        - user_avatar_search
+    capture_tools:
+        - system_capture_search
+        - user_capture_search
+
+Step 3: Execute BOTH prompts in parallel:
+    - Avatar Prompt → Response A: "Your ideal customer profile..."
+    - CAPTURE Prompt → Response B: "Marketing channels to reach them..."
+
+Step 4: Synthesis Prompt combines Response A + Response B:
+    "To effectively market to your ideal customer, we need to consider both WHO they are
+     and HOW to reach them. [Synthesized answer combining both perspectives]
+
+     Would you like to explore either aspect in more detail?"
 
 Step 4: Aggregate results:
     ├─ System results: 15 chunks (Trevor's positioning frameworks)

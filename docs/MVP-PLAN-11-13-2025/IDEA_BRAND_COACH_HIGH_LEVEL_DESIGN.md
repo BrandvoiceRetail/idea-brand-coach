@@ -5,7 +5,7 @@
 
 ## 📋 Executive Summary
 
-This high-level design document outlines the architecture for the IDEA Brand Coach chatbot using OpenAI's **Responses API** - the future-proof platform that supersedes the Assistants API (which sunsets August 2026). The system intelligently routes prompts across 5 specialized domains, maintains persistent user memory, and scales effectively while delivering sub-3 second responses.
+This high-level design document outlines the architecture for the IDEA Brand Coach chatbot using OpenAI's **Responses API** - the future-proof platform that supersedes the Assistants API (which sunsets August 2026). The system uses a multi-stage routing architecture (Router → Specialized Prompts → Synthesis) across 5 specialized IDEA domains, maintains persistent user memory, and scales effectively while delivering sub-3 second responses.
 
 ### Why Responses API?
 
@@ -18,7 +18,7 @@ This high-level design document outlines the architecture for the IDEA Brand Coa
 
 ### Key Deliverables
 
-- **Intelligent Prompt Router** with 5 specialized prompts
+- **Multi-Stage Routing Architecture** with Router, 5 specialized domain prompts, and Synthesis prompt (7 total)
 - **Persistent User Memory System** via response chaining
 - **Scalable Vector Store Architecture** supporting 10,000+ documents per store
 - **Quality Assurance Framework** preventing context degradation
@@ -154,7 +154,7 @@ graph TB
 3. **Response Chaining**: Each response links to previous via `previous_response_id`
 4. **Stateless-First**: No thread management overhead
 5. **Stateful When Needed**: Server-side persistence with `store_response: true`
-6. **Domain Separation**: 5 specialized prompts with dedicated vector stores
+6. **Domain Separation**: 5 specialized domain prompts with dedicated vector stores (+ Router + Synthesis = 7 total prompts)
 7. **Data Isolation**: User KB strictly filtered by user_id with RLS
 8. **Bidirectional Context**: Responses build on conversation history automatically
 
@@ -164,20 +164,30 @@ graph TB
 
 ### 1. Intelligent Routing Architecture
 
-**Two-Stage Processing:**
+**Multi-Stage Processing:**
 
 ```
-Stage 1: Router Prompt
+Stage 1: Router Prompt (Intent Classification)
 ├─ Analyzes user intent
 ├─ Reviews conversation context (via previous_response_id)
-├─ Classifies into: Diagnostic, Avatar, Canvas, CAPTURE, or Core
-└─ Returns routing decision
+├─ Classifies into one or more domains: Diagnostic, Avatar, Canvas, CAPTURE, Core
+├─ OR asks clarification questions if intent is ambiguous
+└─ Returns: single domain | multiple domains | clarification_needed
+    └─ Tracks confidence score internally (not shown to user)
 
-Stage 2: Specialized Prompt
+Stage 2: Specialized Prompt(s) - Execute in Parallel if Multiple
 ├─ Receives full context via response chaining
-├─ Accesses domain-specific vector store
-├─ Generates expert response
-└─ Updates conversation history
+├─ Accesses domain-specific vector stores (System KB + User KB)
+├─ Generates expert response with citations
+└─ If single domain: Final response ready
+    If multiple domains: Proceed to Stage 3
+
+Stage 3: Synthesis Prompt (Multi-Domain Aggregation)
+├─ Receives all specialized prompt outputs
+├─ Combines into cohesive, comprehensive response
+├─ Maintains consistency and eliminates redundancy
+├─ Offers user options to explore specific domains deeper
+└─ Returns final synthesized response
 ```
 
 **Routing Decision Matrix:**
@@ -630,7 +640,7 @@ Per-User Storage:
 
 ## 🔄 Routing Logic
 
-### Two-Stage Routing Pattern
+### Multi-Stage Routing Pattern
 
 **Stage 1: Intent Classification**
 

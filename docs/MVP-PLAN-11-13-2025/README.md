@@ -15,7 +15,8 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 - System architecture using OpenAI Responses API
 - QMR (Query → Model → Response) framework explanation
 - Intelligent context management with file search
-- 5 specialized prompts (Diagnostic, Avatar, Canvas, CAPTURE, Core)
+- Multi-stage routing architecture (Router → Specialized Prompts → Synthesis)
+- 5 specialized domain prompts (Diagnostic, Avatar, Canvas, CAPTURE, Core)
 - Memory persistence strategy
 - Routing logic and scalability
 - GPT-5 model specifications
@@ -75,7 +76,43 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 
 ---
 
-### 5. [ARCHIVED_ASSISTANTS_API_PLAN.md](./ARCHIVED_ASSISTANTS_API_PLAN.md)
+### 5. [CHATBOT_DATA_ACCESS_TOOLS_PLAN.md](./CHATBOT_DATA_ACCESS_TOOLS_PLAN.md)
+**Unified tool-based architecture for knowledge base access**
+
+**Contents**:
+- 10 file_search tools (5 System KB + 5 User KB)
+- Domain-specific tool organization
+- Parallel tool execution strategy (System + User retrieval)
+- Tool selection and routing logic
+- Vector store configuration per domain
+- Security and data isolation patterns
+
+**Use this for**: Understanding tool architecture, implementing knowledge base access patterns
+
+---
+
+### 6. [prompts/](./prompts/) ⭐ NEW
+**Complete system prompt definitions using 7-step framework**
+
+**Contents**:
+- 7 total prompts: Router, Synthesis, + 5 specialized domain prompts
+- Each prompt in separate file with complete 7-step framework structure
+- [Router Prompt](./prompts/router-prompt.md) ✅ Complete - Intent classification
+- [Synthesis Prompt](./prompts/synthesis-prompt.md) ⏳ In Progress - Multi-domain aggregation
+- [Diagnostic Prompt](./prompts/diagnostic-prompt.md) ⏳ In Progress - Brand assessment
+- [Avatar Prompt](./prompts/avatar-prompt.md) ⏳ In Progress - Customer personas
+- [Canvas Prompt](./prompts/canvas-prompt.md) ⏳ In Progress - Business models
+- [CAPTURE Prompt](./prompts/capture-prompt.md) ⏳ In Progress - Marketing strategy
+- [Core Prompt](./prompts/core-prompt.md) ⏳ In Progress - Brand foundations
+- Tool definitions and configuration
+- Domain-specific tone matrix and response formats
+- Hypothetical few-shot examples per domain
+
+**Use this for**: Understanding chatbot behavior, prompt engineering, system implementation
+
+---
+
+### 7. [ARCHIVED_ASSISTANTS_API_PLAN.md](./ARCHIVED_ASSISTANTS_API_PLAN.md)
 **Historical reference - Original plan using deprecated API**
 
 **Contents**:
@@ -103,6 +140,12 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 
 ### Want to understand System vs User KB separation?
 → Read **SYSTEM_USER_KNOWLEDGE_BASE_SEPARATION_GUIDE.md**
+
+### Want to understand the chatbot prompts and behavior?
+→ Read **prompts/README.md** and individual prompt files
+
+### Want to implement tool-based knowledge access?
+→ Read **CHATBOT_DATA_ACCESS_TOOLS_PLAN.md**
 
 ### Want to know why we didn't use Assistants API?
 → Read **ARCHIVED_ASSISTANTS_API_PLAN.md**
@@ -262,13 +305,15 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 
 **For Implementers & Developers:**
 1. Read **High-Level Design** for technical architecture
-2. Follow **System Knowledge Base Plan** to build vector stores
-3. Use **QMR Integration Guide** to optimize retrieval
-4. Reference **Model Comparison Framework** for quarterly evaluations
+2. Read **prompts/** directory to understand chatbot behavior and system prompts
+3. Follow **Chatbot Data Access Tools Plan** for tool architecture
+4. Follow **System Knowledge Base Plan** to build vector stores
+5. Use **System/User KB Separation Guide** to implement dual knowledge base
+6. Reference **Model Comparison Framework** for quarterly evaluations
 
 **For Ongoing Operations:**
-1. **Weekly**: Monitor retrieval quality (QMR Integration Guide)
-2. **Monthly**: Update knowledge base (System KB Plan)
+1. **Weekly**: Monitor retrieval quality and prompt performance
+2. **Monthly**: Update knowledge base (System KB Plan) and refine prompts
 3. **Quarterly**: Run model comparison tests (Testing Framework)
 
 ---
@@ -278,9 +323,12 @@ This folder contains the complete planning documentation for the IDEA Brand Coac
 ```
 User Query
     ↓
-Router Prompt (Intent Classification)
+Stage 1: Router Prompt (Intent Classification)
+    ├─ Output: Single domain ["diagnostic"]
+    ├─ Output: Multiple domains ["avatar", "capture"]
+    └─ Output: Clarification request
     ↓
-Specialized Prompt Selection
+Stage 2: Specialized Prompt(s) Execute in Parallel
     ↓
 PARALLEL RETRIEVAL FROM TWO KNOWLEDGE BASES:
     ┌─────────────────────┐         ┌─────────────────────┐
@@ -308,20 +356,35 @@ PARALLEL RETRIEVAL FROM TWO KNOWLEDGE BASES:
                            ↓
                  Build Augmented Query
     ┌───────────────────────────────────────────────┐
-    │ Query Components:                             │
+    │ Query Components (per specialized prompt):   │
     │ ├─ System Prompt (500 tokens)                │
     │ ├─ System KB Context (1,500 tokens)          │
     │ ├─ User KB Context (500 tokens)              │
     │ ├─ Conversation History (800 tokens)         │
     │ └─ User Question (200 tokens)                │
-    │ Total: 3,500 tokens                          │
+    │ Total: ~3,500 tokens per domain              │
     └───────────────────────┬───────────────────────┘
                             ↓
                   GPT-5 Model Processing
     ├─ Attention mechanism weights by relevance
     └─ Generate expert response citing both sources
                             ↓
-              Response + Memory Persistence
+         Single Domain Response OR Multiple Responses
+                            ↓
+    ┌───────────────────────┴───────────────────────┐
+    │                                                │
+Single Domain          Multiple Domains (2+ responses)
+    │                               ↓
+    │                   ┌───────────────────────────┐
+    │                   │ Stage 3: Synthesis Prompt │
+    │                   │ Combines all responses    │
+    │                   │ into cohesive answer +    │
+    │                   │ offers deeper exploration │
+    │                   └───────────┬───────────────┘
+    │                               │
+    └───────────────┬───────────────┘
+                    ↓
+      Final Response + Memory Persistence
     ├─ Save to chat_messages table (User KB)
     ├─ Update user profile
     └─ Store response_id for next interaction
