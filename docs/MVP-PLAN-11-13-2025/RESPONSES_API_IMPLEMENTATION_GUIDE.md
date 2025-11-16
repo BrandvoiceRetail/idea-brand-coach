@@ -20,7 +20,8 @@ This guide provides the **correct, simplified implementation** using OpenAI's Re
 - Manually manage file search setup
 
 ✅ **You ONLY need to:**
-- Create prompts in OpenAI Platform (one-time setup)
+- Run setup script to create System KB vector stores (one-time)
+- Create prompts in OpenAI Platform UI (one-time)
 - Attach vector stores to prompts (via UI)
 - Make simple API calls with `prompt_id`
 - Track `response_id` for conversation memory
@@ -29,7 +30,16 @@ This guide provides the **correct, simplified implementation** using OpenAI's Re
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│         OpenAI Platform (One-Time Setup)                    │
+│         Setup Script (One-Time)                             │
+│                                                              │
+│  scripts/setup-system-kb.ts                                 │
+│  ├─ Upload Trevor's book + syntheses to OpenAI             │
+│  ├─ Create 5 System KB vector stores                       │
+│  └─ Output vector_store_ids to .env                        │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│         OpenAI Platform UI (One-Time)                       │
 │                                                              │
 │  Create 7 Prompts + Attach Vector Stores:                   │
 │  ├─ router_prompt → (no vector stores)                      │
@@ -70,46 +80,186 @@ This guide provides the **correct, simplified implementation** using OpenAI's Re
 
 ## Phase 1: OpenAI Platform Setup
 
-### Step 1.1: Create System KB Vector Stores
+### Step 1.1: Create System KB Vector Stores (Programmatically)
 
-**Location:** https://platform.openai.com/storage/vector_stores
+**Why programmatic?**
+- ✅ Reproducible across environments (dev, staging, prod)
+- ✅ Version controlled setup
+- ✅ Documented in code
+- ✅ Easy to rebuild if needed
 
-**Create 5 shared vector stores:**
+**Prerequisites:**
+1. Place Trevor's book and synthesis PDFs in `./content/` directory:
+   ```
+   content/
+   ├── trevors-book.pdf
+   └── syntheses/
+       ├── positioning-framework.pdf
+       ├── swot-analysis.pdf
+       ├── storybrand-framework.pdf
+       ├── persona-development.pdf
+       ├── business-model-canvas.pdf
+       ├── blue-ocean-strategy.pdf
+       ├── contagious-stepps.pdf
+       ├── made-to-stick.pdf
+       └── brand-storytelling.pdf
+   ```
 
-1. **System Diagnostic KB**
-   - Name: `IDEA System KB - Diagnostic`
-   - Upload: Trevor's book chapters on brand assessment
-   - Upload: SWOT framework syntheses
-   - Upload: Positioning strategy documents
-   - **Save the vector_store_id**
+2. Set OpenAI API key: `export OPENAI_API_KEY=sk-...`
 
-2. **System Avatar KB**
-   - Name: `IDEA System KB - Avatar`
-   - Upload: Trevor's customer profiling chapters
-   - Upload: StoryBrand framework synthesis
-   - Upload: Persona development guides
-   - **Save the vector_store_id**
+**Script: `scripts/setup-system-kb.ts`**
 
-3. **System Canvas KB**
-   - Name: `IDEA System KB - Canvas`
-   - Upload: Trevor's business model chapters
-   - Upload: Business Model Canvas synthesis
-   - Upload: Blue Ocean Strategy synthesis
-   - **Save the vector_store_id**
+```typescript
+import { OpenAI } from "openai";
+import fs from "fs";
+import path from "path";
 
-4. **System CAPTURE KB**
-   - Name: `IDEA System KB - CAPTURE`
-   - Upload: Trevor's marketing execution chapters
-   - Upload: Contagious (STEPPS) synthesis
-   - Upload: Made to Stick synthesis
-   - **Save the vector_store_id**
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-5. **System Core KB**
-   - Name: `IDEA System KB - Core`
-   - Upload: Trevor's brand philosophy chapters
-   - Upload: Brand storytelling frameworks
-   - Upload: Mission/vision development guides
-   - **Save the vector_store_id**
+async function setupSystemKB() {
+  console.log("🚀 Setting up System Knowledge Base...\n");
+
+  // 1. Upload files to OpenAI
+  console.log("📤 Uploading files to OpenAI...");
+
+  const trevorsBook = await openai.files.create({
+    file: fs.createReadStream("./content/trevors-book.pdf"),
+    purpose: "assistants",
+  });
+  console.log(`  ✅ Uploaded Trevor's book: ${trevorsBook.id}`);
+
+  // Upload syntheses
+  const syntheses = {
+    positioning: await uploadFile("./content/syntheses/positioning-framework.pdf"),
+    swot: await uploadFile("./content/syntheses/swot-analysis.pdf"),
+    storybrand: await uploadFile("./content/syntheses/storybrand-framework.pdf"),
+    persona: await uploadFile("./content/syntheses/persona-development.pdf"),
+    bmc: await uploadFile("./content/syntheses/business-model-canvas.pdf"),
+    blueOcean: await uploadFile("./content/syntheses/blue-ocean-strategy.pdf"),
+    contagious: await uploadFile("./content/syntheses/contagious-stepps.pdf"),
+    madeToStick: await uploadFile("./content/syntheses/made-to-stick.pdf"),
+    storytelling: await uploadFile("./content/syntheses/brand-storytelling.pdf"),
+  };
+
+  // 2. Create vector stores with files
+  console.log("\n📦 Creating vector stores...");
+
+  const diagnosticStore = await openai.beta.vectorStores.create({
+    name: "IDEA System KB - Diagnostic",
+    file_ids: [trevorsBook.id, syntheses.positioning, syntheses.swot],
+  });
+  console.log(`  ✅ Created Diagnostic Store: ${diagnosticStore.id}`);
+
+  const avatarStore = await openai.beta.vectorStores.create({
+    name: "IDEA System KB - Avatar",
+    file_ids: [trevorsBook.id, syntheses.storybrand, syntheses.persona],
+  });
+  console.log(`  ✅ Created Avatar Store: ${avatarStore.id}`);
+
+  const canvasStore = await openai.beta.vectorStores.create({
+    name: "IDEA System KB - Canvas",
+    file_ids: [trevorsBook.id, syntheses.bmc, syntheses.blueOcean],
+  });
+  console.log(`  ✅ Created Canvas Store: ${canvasStore.id}`);
+
+  const captureStore = await openai.beta.vectorStores.create({
+    name: "IDEA System KB - CAPTURE",
+    file_ids: [trevorsBook.id, syntheses.contagious, syntheses.madeToStick],
+  });
+  console.log(`  ✅ Created CAPTURE Store: ${captureStore.id}`);
+
+  const coreStore = await openai.beta.vectorStores.create({
+    name: "IDEA System KB - Core",
+    file_ids: [trevorsBook.id, syntheses.storytelling],
+  });
+  console.log(`  ✅ Created Core Store: ${coreStore.id}`);
+
+  // 3. Output configuration
+  console.log("\n✅ System KB setup complete!\n");
+  console.log("📝 Add these to your .env file:\n");
+
+  const envConfig = `
+SYSTEM_DIAGNOSTIC_STORE_ID=${diagnosticStore.id}
+SYSTEM_AVATAR_STORE_ID=${avatarStore.id}
+SYSTEM_CANVAS_STORE_ID=${canvasStore.id}
+SYSTEM_CAPTURE_STORE_ID=${captureStore.id}
+SYSTEM_CORE_STORE_ID=${coreStore.id}
+  `.trim();
+
+  console.log(envConfig);
+
+  // Optionally write to .env file
+  fs.appendFileSync('.env', '\n\n# System KB Vector Store IDs\n' + envConfig + '\n');
+  console.log("\n✅ Configuration appended to .env file");
+
+  return {
+    diagnosticStoreId: diagnosticStore.id,
+    avatarStoreId: avatarStore.id,
+    canvasStoreId: canvasStore.id,
+    captureStoreId: captureStore.id,
+    coreStoreId: coreStore.id,
+  };
+}
+
+async function uploadFile(filePath: string): Promise<string> {
+  const file = await openai.files.create({
+    file: fs.createReadStream(filePath),
+    purpose: "assistants",
+  });
+  console.log(`  ✅ Uploaded ${path.basename(filePath)}: ${file.id}`);
+  return file.id;
+}
+
+// Run the setup
+setupSystemKB()
+  .then(() => {
+    console.log("\n🎉 System KB setup complete! You can now create prompts in the UI.");
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("❌ Setup failed:", error);
+    process.exit(1);
+  });
+```
+
+**Run the setup:**
+
+```bash
+# One-time setup
+npm install openai  # or add to package.json
+npx tsx scripts/setup-system-kb.ts
+```
+
+**Expected output:**
+```
+🚀 Setting up System Knowledge Base...
+
+📤 Uploading files to OpenAI...
+  ✅ Uploaded Trevor's book: file-abc123
+  ✅ Uploaded positioning-framework.pdf: file-def456
+  ✅ Uploaded swot-analysis.pdf: file-ghi789
+  ... (more files)
+
+📦 Creating vector stores...
+  ✅ Created Diagnostic Store: vs_abc123
+  ✅ Created Avatar Store: vs_def456
+  ✅ Created Canvas Store: vs_ghi789
+  ✅ Created CAPTURE Store: vs_jkl012
+  ✅ Created Core Store: vs_mno345
+
+✅ System KB setup complete!
+
+📝 Add these to your .env file:
+
+SYSTEM_DIAGNOSTIC_STORE_ID=vs_abc123
+SYSTEM_AVATAR_STORE_ID=vs_def456
+SYSTEM_CANVAS_STORE_ID=vs_ghi789
+SYSTEM_CAPTURE_STORE_ID=vs_jkl012
+SYSTEM_CORE_STORE_ID=vs_mno345
+
+✅ Configuration appended to .env file
+🎉 System KB setup complete! You can now create prompts in the UI.
+```
 
 ### Step 1.2: Create Prompts in OpenAI Platform
 
@@ -930,10 +1080,11 @@ No:
 ## Implementation Checklist
 
 ### Day 1: OpenAI Platform Setup
-- [ ] Create 5 System KB vector stores
-- [ ] Upload Trevor's book and syntheses to each store
-- [ ] Create 7 prompts (Router + 5 domains + Synthesis)
-- [ ] Attach vector stores to domain prompts
+- [ ] Place Trevor's book and synthesis PDFs in `./content/` directory
+- [ ] Run `npx tsx scripts/setup-system-kb.ts` to create System KB vector stores
+- [ ] Verify vector store IDs added to `.env`
+- [ ] Create 7 prompts in OpenAI Platform UI (Router + 5 domains + Synthesis)
+- [ ] Attach vector stores to domain prompts (via UI)
 - [ ] Save all prompt IDs to `.env`
 - [ ] Test each prompt in OpenAI playground
 
