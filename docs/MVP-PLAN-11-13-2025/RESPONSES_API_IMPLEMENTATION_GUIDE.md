@@ -11,6 +11,71 @@
 
 This guide provides the **correct, simplified implementation** using OpenAI's Responses API. The key insight: **configure prompts and vector stores in the OpenAI Platform UI**, then make simple API calls with just `prompt_id`.
 
+### MVP Environment Strategy
+
+**For P0, share everything across environments:**
+- ✅ **System KB**: Shared (Trevor's book is the same everywhere)
+- ✅ **User KB**: Shared (same users, same Supabase database)
+- ✅ **OpenAI API Key**: Same key for dev/staging/prod
+- ✅ **Prompts**: Same prompt IDs everywhere
+
+**Benefits:**
+- ✅ Simpler setup, fewer resources to manage
+- ✅ Run setup script once
+- ✅ Use same `.env` configuration everywhere
+- ✅ Local dev connects to same vector stores as production
+- ✅ No environment drift (what you test is what you ship)
+
+**⚠️ Downsides (Important for Beta Launch Decision):**
+
+1. **No Safe Testing Ground**
+   - Testing prompt changes in dev affects production immediately
+   - Experimental content goes live to all users
+   - No staging environment to validate changes before prod
+
+2. **Shared API Costs**
+   - Dev/staging API calls count toward same quota as production
+   - Can't track costs separately per environment
+   - Development testing increases production bill
+
+3. **Data Contamination Risk**
+   - Test users in dev show up in production user list
+   - Test diagnostic data mixed with real user data
+   - Harder to analyze real usage metrics
+
+4. **No Rollback Safety**
+   - If you update prompts, affects production immediately
+   - Can't test new vector store content before switching
+   - No "staging gate" before production deployment
+
+5. **Rate Limit Sharing**
+   - Heavy dev testing could hit rate limits affecting production
+   - All environments share same OpenAI quota
+
+**When to Separate Environments (Pre-Beta Launch):**
+
+Consider separate environments when:
+- [ ] You have paying customers (protect production stability)
+- [ ] You want to test major prompt changes without affecting users
+- [ ] You need accurate cost tracking per environment
+- [ ] You want staging validation before production deploys
+- [ ] You hit rate limits during development
+
+**Migration Path (Post-MVP):**
+```bash
+# Create separate vector stores for each environment
+npm run setup:system-kb -- --env=dev
+npm run setup:system-kb -- --env=staging
+npm run setup:system-kb -- --env=prod
+
+# Use different .env files
+.env.development  # OPENAI_API_KEY_DEV, SYSTEM_DIAGNOSTIC_STORE_ID_DEV
+.env.staging      # OPENAI_API_KEY_STAGING, SYSTEM_DIAGNOSTIC_STORE_ID_STAGING
+.env.production   # OPENAI_API_KEY_PROD, SYSTEM_DIAGNOSTIC_STORE_ID_PROD
+```
+
+**For P0: Shared is fine. For Beta: Strongly recommend separation.**
+
 ### Why This is Simple
 
 ❌ **You DON'T need to:**
