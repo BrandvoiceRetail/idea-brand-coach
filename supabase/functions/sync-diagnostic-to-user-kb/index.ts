@@ -170,33 +170,23 @@ serve(async (req) => {
     }
 
     // Ensure user has vector stores (create if not)
-    let userStores = await supabase
-      .from("user_vector_stores")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!userStores.data) {
-      console.log(`User doesn't have vector stores yet, creating...`);
-
-      // Call create-user-kb function
-      const createResponse = await fetch(
-        `${Deno.env.get("SUPABASE_URL")}/functions/v1/create-user-kb`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": authHeader,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!createResponse.ok) {
-        throw new Error("Failed to create user KB");
+    const ensureResponse = await fetch(
+      `${Deno.env.get("SUPABASE_URL")}/functions/v1/ensure-user-kb`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": authHeader,
+          "Content-Type": "application/json",
+        },
       }
+    );
 
-      userStores.data = await createResponse.json();
+    if (!ensureResponse.ok) {
+      throw new Error("Failed to ensure user KB");
     }
+
+    const { stores } = await ensureResponse.json();
+    const userStores = { data: stores };
 
     // Format diagnostic as text document
     const diagnosticDocument = formatDiagnosticAsDocument(

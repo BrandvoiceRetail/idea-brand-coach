@@ -158,6 +158,18 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY not configured");
     }
 
+    // Ensure user has vector stores (create if first time)
+    await fetch(
+      `${Deno.env.get("SUPABASE_URL")}/functions/v1/ensure-user-kb`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": authHeader,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
     // Retrieve relevant context using RAG
     const { content: ragContext, sources } = await retrieveRelevantContext(
       supabaseClient,

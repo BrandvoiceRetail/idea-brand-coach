@@ -22,13 +22,10 @@ pop3_port = 54326
 
 [storage]
 enabled = true
-port = 54327
-image_transformation = false
-double_encode_urls = false
+file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-port = 54328
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["https://lovable.app"]
 jwt_expiry = 3600
@@ -36,7 +33,6 @@ enable_signup = true
 
 [edge_runtime]
 enabled = true
-port = 54329
 
 [functions.ai-insight-guidance]
 verify_jwt = false
@@ -63,4 +59,13 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.brand-coach-gpt]
+verify_jwt = false
+
+[functions.create-user-kb]
+verify_jwt = false
+
+[functions.ensure-user-kb]
+verify_jwt = false
+
+[functions.sync-diagnostic-to-user-kb]
 verify_jwt = false

@@ -51,6 +51,21 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
       // Don't throw - embeddings can be generated async
     }
 
+    // 4. Sync diagnostic to OpenAI User KB
+    try {
+      await supabase.functions.invoke('sync-diagnostic-to-user-kb', {
+        body: {
+          diagnosticData: {
+            answers: data.answers,
+          },
+          scores: data.scores,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to sync diagnostic to User KB:', error);
+      // Don't throw - KB sync can happen async
+    }
+
     return {
       id: submission.id,
       user_id: user.id,

@@ -8,15 +8,25 @@ import { IChatService } from './interfaces/IChatService';
 import { ChatMessage, ChatMessageCreate, ChatResponse } from '@/types/chat';
 
 export class SupabaseChatService implements IChatService {
-  async sendMessage(message: ChatMessageCreate): Promise<ChatResponse> {
+  /**
+   * Get current authenticated user ID
+   * @throws Error if user is not authenticated
+   */
+  private async getUserId(): Promise<string> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
+    return user.id;
+  }
+
+  async sendMessage(message: ChatMessageCreate): Promise<ChatResponse> {
+    const userId = await this.getUserId();
+    console.log('📤 Sending message to Brand Coach:', { userId, messageLength: message.content.length });
 
     // 1. Save user message to database
     const { data: userMessage, error: saveError } = await supabase
       .from('chat_messages')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         role: message.role,
         content: message.content,
         metadata: message.metadata,
@@ -30,9 +40,20 @@ export class SupabaseChatService implements IChatService {
     const recentMessages = await this.getRecentMessages(10);
 
     // 3. Call brand-coach-gpt Edge Function with RAG
+    console.log('🤖 Calling brand-coach-gpt Edge Function...');
+
+    // Get current session to pass auth token explicitly
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('No active session found');
+    }
+
     const { data: responseData, error: functionError } = await supabase.functions.invoke(
       'brand-coach-gpt',
       {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: {
           message: message.content,
           chat_history: recentMessages.map(msg => ({
@@ -43,13 +64,22 @@ export class SupabaseChatService implements IChatService {
       }
     );
 
-    if (functionError) throw functionError;
+    if (functionError) {
+      console.error('❌ Edge Function error:', functionError);
+      throw functionError;
+    }
+
+    console.log('✅ Received response from Brand Coach:', {
+      responseLength: responseData?.response?.length || 0,
+      hasSuggestions: !!responseData?.suggestions,
+      hasSources: !!responseData?.sources,
+    });
 
     // 4. Save assistant response to database
     const { data: assistantMessage, error: assistantError } = await supabase
       .from('chat_messages')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         role: 'assistant',
         content: responseData.response,
         metadata: {
@@ -78,13 +108,12 @@ export class SupabaseChatService implements IChatService {
   }
 
   async getChatHistory(limit: number = 50): Promise<ChatMessage[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    const userId = await this.getUserId();
 
     const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: true })
       .limit(limit);
 
@@ -102,25 +131,23 @@ export class SupabaseChatService implements IChatService {
   }
 
   async clearChatHistory(): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const userId = await this.getUserId();
 
     const { error } = await supabase
       .from('chat_messages')
       .delete()
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) throw error;
   }
 
   async getRecentMessages(count: number): Promise<ChatMessage[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    const userId = await this.getUserId();
 
     const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(count);
 
