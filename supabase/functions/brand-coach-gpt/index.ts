@@ -159,7 +159,8 @@ serve(async (req) => {
     }
 
     // Ensure user has vector stores (create if first time)
-    await fetch(
+    console.log("Ensuring user KB exists...");
+    const ensureKbResponse = await fetch(
       `${Deno.env.get("SUPABASE_URL")}/functions/v1/ensure-user-kb`,
       {
         method: "POST",
@@ -169,6 +170,14 @@ serve(async (req) => {
         },
       }
     );
+
+    if (!ensureKbResponse.ok) {
+      const errorText = await ensureKbResponse.text();
+      console.error("Failed to ensure user KB:", ensureKbResponse.status, errorText);
+    } else {
+      const kbResult = await ensureKbResponse.json();
+      console.log("User KB status:", kbResult.exists ? "already exists" : "created");
+    }
 
     // Retrieve relevant context using RAG
     const { content: ragContext, sources } = await retrieveRelevantContext(
