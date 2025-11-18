@@ -32,19 +32,44 @@ User: ${userMessage}
 Assistant: ${assistantResponse}
 
 **Instructions:**
-1. Extract ONLY new, actionable brand knowledge
-2. Ignore greetings, questions without answers, or generic advice
-3. Each insight should be specific and reusable
-4. Return JSON array of categories with insights
+1. Extract ALL actionable brand knowledge from the conversation
+2. Be generous - if it contains brand info, extract it
+3. Ignore ONLY: greetings, "hello", "thank you", pure questions without context
+4. Extract specific details like target audience, values, positioning, campaign ideas
+5. Each insight should be specific and quotable
+6. IMPORTANT: If the conversation contains brand information, you MUST extract insights
+7. Return a JSON object with a "categories" array
 
-**Response Format:**
-[
-  {
-    "category": "avatar",
-    "insights": ["Target audience is millennials interested in personal finance"],
-    "reasoning": "User stated their audience clearly"
-  }
-]`;
+**REQUIRED Response Format (JSON object with categories array):**
+{
+  "categories": [
+    {
+      "category": "avatar",
+      "insights": [
+        "Target audience: 25-35 year old TCG enthusiasts",
+        "Collectors value protection for prized cards - part investment, part identity"
+      ],
+      "reasoning": "User stated audience and assistant explained their psychographics"
+    },
+    {
+      "category": "core",
+      "insights": [
+        "Core values: trustworthy, exclusive, emotionally connected"
+      ],
+      "reasoning": "Assistant recommended these as brand values"
+    }
+  ]
+}
+
+**Example - Good extraction:**
+User: "our target audience is 25-35 TCG enthusiasts"
+Assistant: "TCG collectors value protection... This age group values authenticity..."
+=> Extract multiple categories: avatar (demographics), canvas (positioning), core (values)
+
+**Example - Skip:**
+User: "hello"
+Assistant: "Hi there! How can I help?"
+=> Return: {"categories": []}`;
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -57,7 +82,7 @@ Assistant: ${assistantResponse}
       messages: [
         {
           role: "system",
-          content: "You are an expert at extracting actionable brand insights from conversations. Return valid JSON only.",
+          content: "You are an expert at extracting actionable brand insights from conversations. You MUST return a valid JSON object with a 'categories' array containing insight objects. Be generous in extraction - if there is ANY brand information, extract it.",
         },
         { role: "user", content: analysisPrompt },
       ],
@@ -72,12 +97,61 @@ Assistant: ${assistantResponse}
   }
 
   const data = await response.json();
-  const result = JSON.parse(data.choices[0].message.content);
+  const rawContent = data.choices[0].message.content;
+  console.log("GPT analysis raw response:", rawContent);
 
-  // Handle both array and object responses
-  const categories = Array.isArray(result) ? result : result.categories || [];
+  let result;
+  try {
+    result = JSON.parse(rawContent);
+  } catch (parseError) {
+    console.error("Failed to parse GPT response:", parseError);
+    console.error("Raw content was:", rawContent);
+    return [];
+  }
 
-  return categories.filter((cat: InsightCategory) => cat.category !== 'none');
+  console.log("GPT analysis parsed:", JSON.stringify(result, null, 2));
+
+  // Validate and extract categories array
+  let categories: InsightCategory[] = [];
+
+  if (Array.isArray(result)) {
+    // GPT returned array directly (shouldn't happen with json_object, but handle it)
+    categories = result;
+  } else if (result && typeof result === 'object' && Array.isArray(result.categories)) {
+    // GPT returned object with categories array (expected format)
+    categories = result.categories;
+  } else {
+    console.warn("Unexpected GPT response structure:", result);
+    return [];
+  }
+
+  console.log(`Total categories found: ${categories.length}`);
+
+  // Validate category structure and filter
+  const validated = categories.filter((cat: any) => {
+    if (!cat || typeof cat !== 'object') {
+      console.warn("Invalid category object:", cat);
+      return false;
+    }
+    if (!cat.category || !Array.isArray(cat.insights)) {
+      console.warn("Category missing required fields:", cat);
+      return false;
+    }
+    return true;
+  });
+
+  console.log(`Valid categories after validation: ${validated.length}`);
+
+  const filtered = validated.filter((cat: InsightCategory) => cat.category !== 'none');
+  console.log(`Actionable categories after filtering 'none': ${filtered.length}`);
+
+  if (filtered.length === 0) {
+    console.warn("No actionable insights extracted from conversation");
+    console.warn("User message length:", userMessage.length);
+    console.warn("Assistant response length:", assistantResponse.length);
+  }
+
+  return filtered;
 }
 
 async function uploadInsightToVectorStore(
@@ -195,6 +269,9 @@ serve(async (req) => {
     }
 
     // Analyze conversation for insights
+    console.log("User message:", userMessage.substring(0, 200));
+    console.log("Assistant response:", assistantResponse.substring(0, 200));
+
     const categories = await analyzeConversationForInsights(
       userMessage,
       assistantResponse,
