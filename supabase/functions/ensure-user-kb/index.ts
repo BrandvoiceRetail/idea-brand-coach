@@ -89,24 +89,28 @@ serve(async (req) => {
       throw new Error("No authorization header");
     }
 
-    const supabase = createClient(
+    // Use anon key for auth, service role for database operations
+    const supabaseAuth = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      Deno.env.get("SUPABASE_ANON_KEY")!
     );
 
+    // Get authenticated user - extract JWT from Bearer header
+    const token = authHeader.replace('Bearer ', '');
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await supabaseAuth.auth.getUser(token);
 
     if (userError || !user) {
       throw new Error("User not authenticated");
     }
+
+    // Use service role key for database operations to bypass RLS
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
     // Check if user already has vector stores
     const { data: existing } = await supabase
