@@ -139,6 +139,20 @@ const IdeaFrameworkConsultant = () => {
       await saveChatMessage('user', message.trim());
       await saveChatMessage('assistant', consultationResponse);
 
+      // File conversation insights to User KB (async, don't wait)
+      supabase.functions.invoke('file-conversation-insights', {
+        body: {
+          userMessage: message.trim(),
+          assistantResponse: consultationResponse,
+        },
+      }).then(({ data, error }) => {
+        if (error) {
+          console.error('Failed to file insights:', error);
+        } else {
+          console.log('Insights filed:', data);
+        }
+      });
+
       // Add to conversation history with timestamp
       const timestamp = new Date().toISOString();
       setConversationHistory(prev => [...prev, {
