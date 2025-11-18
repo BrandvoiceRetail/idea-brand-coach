@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +22,66 @@ const IdeaFrameworkConsultant = () => {
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [showContinueConversation, setShowContinueConversation] = useState(false);
+
+  // Load chat history on mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('chatbot_type', 'idea-framework-consultant')
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          // Group messages into conversation pairs
+          const history: Array<{ question: string; answer: string; timestamp: string }> = [];
+          for (let i = 0; i < data.length; i += 2) {
+            if (data[i]?.role === 'user' && data[i + 1]?.role === 'assistant') {
+              history.push({
+                question: data[i].content,
+                answer: data[i + 1].content,
+                timestamp: data[i].created_at,
+              });
+            }
+          }
+          setConversationHistory(history);
+
+          // Show the last response if exists
+          if (history.length > 0) {
+            setResponse(history[history.length - 1].answer);
+            setShowContinueConversation(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+      }
+    };
+
+    loadChatHistory();
+  }, [user]);
+
+  // Save chat message to database
+  const saveChatMessage = async (role: 'user' | 'assistant', content: string) => {
+    if (!user) return;
+
+    try {
+      await supabase.from('chat_messages').insert({
+        user_id: user.id,
+        chatbot_type: 'idea-framework-consultant',
+        role,
+        content,
+      });
+    } catch (error) {
+      console.error('Error saving chat message:', error);
+      // Don't throw - let the conversation continue even if save fails
+    }
+  };
 
   const handleConsultation = async () => {
     if (!message.trim()) {
@@ -74,7 +134,11 @@ const IdeaFrameworkConsultant = () => {
 
       const consultationResponse = data?.response || 'No response received';
       setResponse(consultationResponse);
-      
+
+      // Save user message and assistant response to database
+      await saveChatMessage('user', message.trim());
+      await saveChatMessage('assistant', consultationResponse);
+
       // Add to conversation history with timestamp
       const timestamp = new Date().toISOString();
       setConversationHistory(prev => [...prev, {
