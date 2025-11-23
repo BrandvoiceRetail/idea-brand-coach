@@ -540,10 +540,10 @@ const IdeaFrameworkConsultant = () => {
         {conversationHistory.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Consultation History</CardTitle>
+              <CardTitle>Consultation History (Last 10 Exchanges)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {conversationHistory.slice().reverse().map((item, index) => (
+              {conversationHistory.slice(-10).reverse().map((item, index) => (
                 <div key={index} className="border-l-4 border-primary pl-4 space-y-2">
                   <div className="font-medium text-sm">Q: {item.question}</div>
                   <div className="text-sm text-muted-foreground whitespace-pre-wrap">{item.answer}</div>
