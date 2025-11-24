@@ -33,6 +33,7 @@ import BetaWelcome from "./pages/BetaWelcome";
 import BetaJourney from "./pages/BetaJourney";
 import BetaFeedback from "./pages/BetaFeedback";
 import NotFound from "./pages/NotFound";
+import { TestOfflineSync } from "./pages/TestOfflineSync";
 
 const queryClient = new QueryClient();
 
@@ -159,6 +160,13 @@ const App = () => (
               <Route path="/beta" element={<BetaWelcome />} />
               <Route path="/beta/journey" element={<BetaJourney />} />
               <Route path="/beta/feedback" element={<BetaFeedback />} />
+              <Route path="/test/offline-sync" element={
+                <BrandProvider>
+                  <Layout>
+                    <TestOfflineSync />
+                  </Layout>
+                </BrandProvider>
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

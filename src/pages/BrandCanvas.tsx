@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,40 +8,150 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { MessageSquare, Save, Lock, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
+import { MessageSquare, Save, ArrowRight, Sparkles, CheckCircle, Loader2, WifiOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
+import { usePersistedField, usePersistedArrayField } from "@/hooks/usePersistedField";
 import { AIAssistant } from "@/components/AIAssistant";
 import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
 import { FloatingConsultantButton } from "@/components/FloatingConsultantButton";
 import { CollapsibleDescription } from "@/components/CollapsibleDescription";
+import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
+
+// Sync status indicator component
+function SyncIndicator({ status }: { status: SyncStatus }): JSX.Element | null {
+  switch (status) {
+    case 'synced':
+      return <CheckCircle className="w-4 h-4 text-green-600" />;
+    case 'syncing':
+      return <Loader2 className="w-4 h-4 animate-spin text-blue-600" />;
+    case 'offline':
+      return <WifiOff className="w-4 h-4 text-amber-600" />;
+    case 'error':
+      return <WifiOff className="w-4 h-4 text-red-600" />;
+    default:
+      return null;
+  }
+}
 
 export default function BrandCanvas() {
   const { toast } = useToast();
-  const { brandData, updateBrandData, getCompletionPercentage, getRecommendedNextStep } = useBrand();
+  const { brandData, updateBrandData, getRecommendedNextStep } = useBrand();
+
+  // Persisted text fields (local-first with background sync)
+  const brandPurpose = usePersistedField({
+    fieldIdentifier: 'canvas_brand_purpose',
+    category: 'canvas',
+    debounceDelay: 1000
+  });
+
+  const brandVision = usePersistedField({
+    fieldIdentifier: 'canvas_brand_vision',
+    category: 'canvas',
+    debounceDelay: 1000
+  });
+
+  const brandMission = usePersistedField({
+    fieldIdentifier: 'canvas_brand_mission',
+    category: 'canvas',
+    debounceDelay: 1000
+  });
+
+  const positioningStatement = usePersistedField({
+    fieldIdentifier: 'canvas_positioning_statement',
+    category: 'canvas',
+    debounceDelay: 1000
+  });
+
+  const valueProposition = usePersistedField({
+    fieldIdentifier: 'canvas_value_proposition',
+    category: 'canvas',
+    debounceDelay: 1000
+  });
+
+  const brandVoice = usePersistedField({
+    fieldIdentifier: 'canvas_brand_voice',
+    category: 'canvas',
+    debounceDelay: 1000
+  });
+
+  // Persisted array fields
+  const brandValues = usePersistedArrayField({
+    fieldIdentifier: 'canvas_brand_values',
+    category: 'canvas'
+  });
+
+  const brandPersonality = usePersistedArrayField({
+    fieldIdentifier: 'canvas_brand_personality',
+    category: 'canvas'
+  });
 
   // Scroll to specific section
-  const scrollToSection = (sectionId: string) => {
+  const scrollToSection = (sectionId: string): void => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
-  useEffect(() => {
-    // Auto-populate from IDEA Framework data
-    if (brandData.insight.completed && !brandData.brandCanvas.brandPurpose) {
-      updateBrandData('brandCanvas', {
-        brandPurpose: brandData.insight.brandPurpose || "",
-        valueProposition: brandData.insight.consumerInsight || "",
-      });
-    }
-  }, [brandData, updateBrandData]);
+  // Calculate completion percentage from persisted fields
+  const completionPercentage = useMemo(() => {
+    const canvasFields = [
+      brandPurpose.value,
+      brandVision.value,
+      brandMission.value,
+      brandValues.value.length > 0,
+      positioningStatement.value,
+      valueProposition.value,
+      brandPersonality.value.length > 0,
+      brandVoice.value,
+    ];
 
-  const completionPercentage = getCompletionPercentage();
+    const completedCanvasFields = canvasFields.filter(field =>
+      typeof field === 'boolean' ? field : Boolean(field)
+    ).length;
 
-  const handleSave = () => {
-    updateBrandData('brandCanvas', { completed: true });
+    return Math.round((completedCanvasFields / 8) * 100);
+  }, [
+    brandPurpose.value,
+    brandVision.value,
+    brandMission.value,
+    brandValues.value,
+    positioningStatement.value,
+    valueProposition.value,
+    brandPersonality.value,
+    brandVoice.value
+  ]);
+
+  // Build canvas data object for PDF export and other uses
+  const canvasData = useMemo(() => ({
+    brandPurpose: brandPurpose.value,
+    brandVision: brandVision.value,
+    brandMission: brandMission.value,
+    brandValues: brandValues.value,
+    positioningStatement: positioningStatement.value,
+    valueProposition: valueProposition.value,
+    brandPersonality: brandPersonality.value,
+    brandVoice: brandVoice.value,
+    completed: completionPercentage === 100
+  }), [
+    brandPurpose.value,
+    brandVision.value,
+    brandMission.value,
+    brandValues.value,
+    positioningStatement.value,
+    valueProposition.value,
+    brandPersonality.value,
+    brandVoice.value,
+    completionPercentage
+  ]);
+
+  const handleSave = (): void => {
+    // Data is already persisted via the hooks - just update the completion flag in context
+    updateBrandData('brandCanvas', {
+      ...canvasData,
+      completed: true
+    });
     toast({
       title: "Brand Canvas Saved",
       description: "Your brand canvas has been saved and is ready for ValueLens AI Copy Generation."
@@ -361,14 +471,17 @@ export default function BrandCanvas() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="brandPurpose">Brand Purpose</Label>
+                  <Label htmlFor="brandPurpose" className="flex items-center gap-2">
+                    Brand Purpose
+                    <SyncIndicator status={brandPurpose.syncStatus} />
+                  </Label>
                   {brandData.insight.completed && (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => updateBrandData('brandCanvas', { 
-                        brandPurpose: brandData.insight.brandPurpose || "Transform customer lives through innovative solutions that deliver genuine value and meaningful impact." 
-                      })}
+                      onClick={() => brandPurpose.onChange(
+                        brandData.insight.brandPurpose || "Transform customer lives through innovative solutions that deliver genuine value and meaningful impact."
+                      )}
                     >
                       Import from IDEA
                     </Button>
@@ -377,14 +490,14 @@ export default function BrandCanvas() {
                 <Textarea
                   id="brandPurpose"
                   placeholder="What is your brand's core purpose? Why do you exist beyond making money?"
-                  value={brandData.brandCanvas.brandPurpose}
-                  onChange={(e) => updateBrandData('brandCanvas', { brandPurpose: e.target.value })}
+                  value={brandPurpose.value}
+                  onChange={(e) => brandPurpose.onChange(e.target.value)}
                   rows={3}
                 />
                 <AIAssistant
                   fieldType="purpose"
-                  currentValue={brandData.brandCanvas.brandPurpose}
-                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandPurpose: suggestion })}
+                  currentValue={brandPurpose.value}
+                  onSuggestion={(suggestion) => brandPurpose.onChange(suggestion)}
                 />
               </div>
             </CardContent>
@@ -405,18 +518,21 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="brandVision">Vision Statement</Label>
+                <Label htmlFor="brandVision" className="flex items-center gap-2">
+                  Vision Statement
+                  <SyncIndicator status={brandVision.syncStatus} />
+                </Label>
                 <Textarea
                   id="brandVision"
                   placeholder="What future are you working towards? Where do you see your brand's impact in 5-10 years?"
-                  value={brandData.brandCanvas.brandVision}
-                  onChange={(e) => updateBrandData('brandCanvas', { brandVision: e.target.value })}
+                  value={brandVision.value}
+                  onChange={(e) => brandVision.onChange(e.target.value)}
                   rows={3}
                 />
                 <AIAssistant
                   fieldType="vision"
-                  currentValue={brandData.brandCanvas.brandVision}
-                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandVision: suggestion })}
+                  currentValue={brandVision.value}
+                  onSuggestion={(suggestion) => brandVision.onChange(suggestion)}
                 />
               </div>
             </CardContent>
@@ -437,18 +553,21 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="brandMission">Mission Statement</Label>
+                <Label htmlFor="brandMission" className="flex items-center gap-2">
+                  Mission Statement
+                  <SyncIndicator status={brandMission.syncStatus} />
+                </Label>
                 <Textarea
                   id="brandMission"
                   placeholder="How do you fulfill your purpose? What specific actions do you take?"
-                  value={brandData.brandCanvas.brandMission}
-                  onChange={(e) => updateBrandData('brandCanvas', { brandMission: e.target.value })}
+                  value={brandMission.value}
+                  onChange={(e) => brandMission.onChange(e.target.value)}
                   rows={3}
                 />
                 <AIAssistant
                   fieldType="mission"
-                  currentValue={brandData.brandCanvas.brandMission}
-                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandMission: suggestion })}
+                  currentValue={brandMission.value}
+                  onSuggestion={(suggestion) => brandMission.onChange(suggestion)}
                 />
               </div>
             </CardContent>
@@ -469,7 +588,10 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="newValue">Add Brand Values</Label>
+                <Label htmlFor="newValue" className="flex items-center gap-2">
+                  Add Brand Values
+                  <SyncIndicator status={brandValues.syncStatus} />
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     id="newValue"
@@ -477,10 +599,8 @@ export default function BrandCanvas() {
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         const value = (e.target as HTMLInputElement).value.trim();
-                        if (value && !brandData.brandCanvas.brandValues.includes(value)) {
-                          updateBrandData('brandCanvas', { 
-                            brandValues: [...brandData.brandCanvas.brandValues, value] 
-                          });
+                        if (value) {
+                          brandValues.add(value);
                           (e.target as HTMLInputElement).value = '';
                         }
                       }
@@ -491,10 +611,8 @@ export default function BrandCanvas() {
                     onClick={() => {
                       const input = document.getElementById('newValue') as HTMLInputElement;
                       const value = input.value.trim();
-                      if (value && !brandData.brandCanvas.brandValues.includes(value)) {
-                        updateBrandData('brandCanvas', { 
-                          brandValues: [...brandData.brandCanvas.brandValues, value] 
-                        });
+                      if (value) {
+                        brandValues.add(value);
                         input.value = '';
                       }
                     }}
@@ -503,15 +621,11 @@ export default function BrandCanvas() {
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {brandData.brandCanvas.brandValues.map((value, index) => (
+                  {brandValues.value.map((value, index) => (
                     <Badge key={index} variant="secondary" className="cursor-pointer">
                       {value}
                       <button
-                        onClick={() => {
-                          updateBrandData('brandCanvas', {
-                            brandValues: brandData.brandCanvas.brandValues.filter((_, i) => i !== index)
-                          });
-                        }}
+                        onClick={() => brandValues.remove(index)}
                         className="ml-2 text-xs"
                       >
                         ×
@@ -521,10 +635,10 @@ export default function BrandCanvas() {
                 </div>
                 <AIAssistant
                   fieldType="values"
-                  currentValue={brandData.brandCanvas.brandValues.join(', ')}
+                  currentValue={brandValues.value.join(', ')}
                   onSuggestion={(suggestion) => {
                     const values = suggestion.split(',').map(v => v.trim()).filter(v => v);
-                    updateBrandData('brandCanvas', { brandValues: values });
+                    brandValues.set(values);
                   }}
                 />
               </div>
@@ -546,18 +660,21 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="positioningStatement">Positioning Statement</Label>
+                <Label htmlFor="positioningStatement" className="flex items-center gap-2">
+                  Positioning Statement
+                  <SyncIndicator status={positioningStatement.syncStatus} />
+                </Label>
                 <Textarea
                   id="positioningStatement"
                   placeholder="For [target audience], [brand] is the [category] that [unique benefit] because [reason to believe]"
-                  value={brandData.brandCanvas.positioningStatement}
-                  onChange={(e) => updateBrandData('brandCanvas', { positioningStatement: e.target.value })}
+                  value={positioningStatement.value}
+                  onChange={(e) => positioningStatement.onChange(e.target.value)}
                   rows={3}
                 />
                 <AIAssistant
                   fieldType="positioning"
-                  currentValue={brandData.brandCanvas.positioningStatement}
-                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { positioningStatement: suggestion })}
+                  currentValue={positioningStatement.value}
+                  onSuggestion={(suggestion) => positioningStatement.onChange(suggestion)}
                 />
               </div>
             </CardContent>
@@ -579,17 +696,20 @@ export default function BrandCanvas() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="valueProposition">Core Value Proposition</Label>
+                  <Label htmlFor="valueProposition" className="flex items-center gap-2">
+                    Core Value Proposition
+                    <SyncIndicator status={valueProposition.syncStatus} />
+                  </Label>
                   {(brandData.insight.completed || brandData.avatar.completed) && (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => {
-                        const avatarInsights = brandData.avatar.completed ? 
+                        const avatarInsights = brandData.avatar.completed ?
                           ` for ${brandData.avatar.psychographics?.values?.slice(0,2).join(' and ') || 'quality-focused'} customers who value ${brandData.avatar.goals?.slice(0,2).join(' and ') || 'excellence and results'}` : '';
-                        updateBrandData('brandCanvas', { 
-                          valueProposition: `We deliver unique solutions that address real customer needs${avatarInsights}, combining innovation with proven results to create meaningful transformation in their lives.` 
-                        });
+                        valueProposition.onChange(
+                          `We deliver unique solutions that address real customer needs${avatarInsights}, combining innovation with proven results to create meaningful transformation in their lives.`
+                        );
                       }}
                     >
                       Import from IDEA + Avatar
@@ -599,14 +719,14 @@ export default function BrandCanvas() {
                 <Textarea
                   id="valueProposition"
                   placeholder="What specific problems do you solve? What unique benefits do you provide?"
-                  value={brandData.brandCanvas.valueProposition}
-                  onChange={(e) => updateBrandData('brandCanvas', { valueProposition: e.target.value })}
+                  value={valueProposition.value}
+                  onChange={(e) => valueProposition.onChange(e.target.value)}
                   rows={4}
                 />
                 <AIAssistant
                   fieldType="valueProposition"
-                  currentValue={brandData.brandCanvas.valueProposition}
-                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { valueProposition: suggestion })}
+                  currentValue={valueProposition.value}
+                  onSuggestion={(suggestion) => valueProposition.onChange(suggestion)}
                 />
               </div>
             </CardContent>
@@ -627,7 +747,10 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="newPersonality">Add Personality Traits</Label>
+                <Label htmlFor="newPersonality" className="flex items-center gap-2">
+                  Add Personality Traits
+                  <SyncIndicator status={brandPersonality.syncStatus} />
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     id="newPersonality"
@@ -635,10 +758,8 @@ export default function BrandCanvas() {
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         const trait = (e.target as HTMLInputElement).value.trim();
-                        if (trait && !brandData.brandCanvas.brandPersonality.includes(trait)) {
-                          updateBrandData('brandCanvas', { 
-                            brandPersonality: [...brandData.brandCanvas.brandPersonality, trait] 
-                          });
+                        if (trait) {
+                          brandPersonality.add(trait);
                           (e.target as HTMLInputElement).value = '';
                         }
                       }
@@ -649,10 +770,8 @@ export default function BrandCanvas() {
                     onClick={() => {
                       const input = document.getElementById('newPersonality') as HTMLInputElement;
                       const trait = input.value.trim();
-                      if (trait && !brandData.brandCanvas.brandPersonality.includes(trait)) {
-                        updateBrandData('brandCanvas', { 
-                          brandPersonality: [...brandData.brandCanvas.brandPersonality, trait] 
-                        });
+                      if (trait) {
+                        brandPersonality.add(trait);
                         input.value = '';
                       }
                     }}
@@ -661,15 +780,11 @@ export default function BrandCanvas() {
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {brandData.brandCanvas.brandPersonality.map((trait, index) => (
+                  {brandPersonality.value.map((trait, index) => (
                     <Badge key={index} variant="secondary" className="cursor-pointer">
                       {trait}
                       <button
-                        onClick={() => {
-                          updateBrandData('brandCanvas', {
-                            brandPersonality: brandData.brandCanvas.brandPersonality.filter((_, i) => i !== index)
-                          });
-                        }}
+                        onClick={() => brandPersonality.remove(index)}
                         className="ml-2 text-xs"
                       >
                         ×
@@ -679,10 +794,10 @@ export default function BrandCanvas() {
                 </div>
                 <AIAssistant
                   fieldType="personality"
-                  currentValue={brandData.brandCanvas.brandPersonality.join(', ')}
+                  currentValue={brandPersonality.value.join(', ')}
                   onSuggestion={(suggestion) => {
                     const traits = suggestion.split(',').map(t => t.trim()).filter(t => t);
-                    updateBrandData('brandCanvas', { brandPersonality: traits });
+                    brandPersonality.set(traits);
                   }}
                 />
               </div>
@@ -704,18 +819,21 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="brandVoice">Brand Voice Description</Label>
+                <Label htmlFor="brandVoice" className="flex items-center gap-2">
+                  Brand Voice Description
+                  <SyncIndicator status={brandVoice.syncStatus} />
+                </Label>
                 <Textarea
                   id="brandVoice"
                   placeholder="Describe your brand's tone and communication style (e.g., conversational yet professional, warm and approachable)"
-                  value={brandData.brandCanvas.brandVoice}
-                  onChange={(e) => updateBrandData('brandCanvas', { brandVoice: e.target.value })}
+                  value={brandVoice.value}
+                  onChange={(e) => brandVoice.onChange(e.target.value)}
                   rows={3}
                 />
                 <AIAssistant
                   fieldType="voice"
-                  currentValue={brandData.brandCanvas.brandVoice}
-                  onSuggestion={(suggestion) => updateBrandData('brandCanvas', { brandVoice: suggestion })}
+                  currentValue={brandVoice.value}
+                  onSuggestion={(suggestion) => brandVoice.onChange(suggestion)}
                 />
               </div>
             </CardContent>
@@ -768,10 +886,10 @@ export default function BrandCanvas() {
                 Complete your brand canvas to unlock the ValueLens AI Copy Generator
               </p>
               
-              <Button 
+              <Button
                 onClick={handleSave}
                 className="w-full"
-                disabled={!brandData.brandCanvas.brandPurpose || !brandData.brandCanvas.valueProposition}
+                disabled={!brandPurpose.value || !valueProposition.value}
               >
                 <Save className="w-4 h-4 mr-2" />
                 Save Canvas
@@ -784,9 +902,9 @@ export default function BrandCanvas() {
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button> */}
-                
-                <BrandCanvasPDFExport 
-                  brandCanvas={brandData.brandCanvas}
+
+                <BrandCanvasPDFExport
+                  brandCanvas={canvasData}
                   companyName={brandData.userInfo.company || "Your Brand"}
                 />
               </div>
@@ -794,9 +912,9 @@ export default function BrandCanvas() {
           </Card>
         </div>
       </div>
-      
-      <FloatingConsultantButton 
-        show={getCompletionPercentage() > 20} 
+
+      <FloatingConsultantButton
+        show={completionPercentage > 20}
       />
     </div>
   );

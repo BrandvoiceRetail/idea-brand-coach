@@ -63,6 +63,7 @@ export interface BrandData {
   
   // User Info
   userInfo: {
+    userId: string;
     name: string;
     email: string;
     company: string;
@@ -126,6 +127,7 @@ const initialBrandData: BrandData = {
     completed: false,
   },
   userInfo: {
+    userId: '',
     name: '',
     email: '',
     company: '',

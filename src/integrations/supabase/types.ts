@@ -111,30 +111,27 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          chatbot_type: string
           content: string
           created_at: string
           id: string
-          metadata: Json | null
           role: string
-          updated_at: string
           user_id: string
         }
         Insert: {
+          chatbot_type: string
           content: string
           created_at?: string
           id?: string
-          metadata?: Json | null
           role: string
-          updated_at?: string
           user_id: string
         }
         Update: {
+          chatbot_type?: string
           content?: string
           created_at?: string
           id?: string
-          metadata?: Json | null
           role?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -318,6 +315,69 @@ export type Database = {
           },
         ]
       }
+      user_knowledge_base: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          embedding: string | null
+          field_identifier: string
+          id: string
+          is_current: boolean | null
+          last_synced_at: string | null
+          local_changes: boolean | null
+          metadata: Json | null
+          openai_file_id: string | null
+          openai_synced_at: string | null
+          source_page: string | null
+          structured_data: Json | null
+          subcategory: string | null
+          updated_at: string | null
+          user_id: string
+          version: number
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string | null
+          embedding?: string | null
+          field_identifier: string
+          id?: string
+          is_current?: boolean | null
+          last_synced_at?: string | null
+          local_changes?: boolean | null
+          metadata?: Json | null
+          openai_file_id?: string | null
+          openai_synced_at?: string | null
+          source_page?: string | null
+          structured_data?: Json | null
+          subcategory?: string | null
+          updated_at?: string | null
+          user_id: string
+          version?: number
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          embedding?: string | null
+          field_identifier?: string
+          id?: string
+          is_current?: boolean | null
+          last_synced_at?: string | null
+          local_changes?: boolean | null
+          metadata?: Json | null
+          openai_file_id?: string | null
+          openai_synced_at?: string | null
+          source_page?: string | null
+          structured_data?: Json | null
+          subcategory?: string | null
+          updated_at?: string | null
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       user_knowledge_chunks: {
         Row: {
           content: string
@@ -354,9 +414,98 @@ export type Database = {
         }
         Relationships: []
       }
+      user_vector_stores: {
+        Row: {
+          avatar_store_id: string
+          canvas_store_id: string
+          capture_store_id: string
+          core_store_id: string
+          created_at: string
+          diagnostic_store_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_store_id: string
+          canvas_store_id: string
+          capture_store_id: string
+          core_store_id: string
+          created_at?: string
+          diagnostic_store_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_store_id?: string
+          canvas_store_id?: string
+          capture_store_id?: string
+          core_store_id?: string
+          created_at?: string
+          diagnostic_store_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      user_knowledge_current: {
+        Row: {
+          category: string | null
+          content: string | null
+          created_at: string | null
+          embedding: string | null
+          field_identifier: string | null
+          id: string | null
+          is_current: boolean | null
+          last_synced_at: string | null
+          local_changes: boolean | null
+          metadata: Json | null
+          source_page: string | null
+          structured_data: Json | null
+          subcategory: string | null
+          updated_at: string | null
+          user_id: string | null
+          version: number | null
+        }
+        Insert: {
+          category?: string | null
+          content?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          field_identifier?: string | null
+          id?: string | null
+          is_current?: boolean | null
+          last_synced_at?: string | null
+          local_changes?: boolean | null
+          metadata?: Json | null
+          source_page?: string | null
+          structured_data?: Json | null
+          subcategory?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          version?: number | null
+        }
+        Update: {
+          category?: string | null
+          content?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          field_identifier?: string | null
+          id?: string | null
+          is_current?: boolean | null
+          last_synced_at?: string | null
+          local_changes?: boolean | null
+          metadata?: Json | null
+          source_page?: string | null
+          structured_data?: Json | null
+          subcategory?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       handle_ai_insight_guidance: { Args: never; Returns: undefined }
@@ -374,6 +523,34 @@ export type Database = {
           metadata: Json
           similarity: number
         }[]
+      }
+      match_user_knowledge: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          p_categories?: string[]
+          p_user_id?: string
+          query_embedding: string
+        }
+        Returns: {
+          category: string
+          content: string
+          field_identifier: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
+      }
+      update_knowledge_entry: {
+        Args: {
+          p_category: string
+          p_field_identifier: string
+          p_new_content: string
+          p_new_metadata?: Json
+          p_new_structured_data?: Json
+          p_user_id: string
+        }
+        Returns: string
       }
     }
     Enums: {
