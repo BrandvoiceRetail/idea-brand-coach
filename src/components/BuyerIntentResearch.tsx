@@ -3,9 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Search, Target, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { usePersistedField } from "@/hooks/usePersistedField";
+import { SyncStatusIndicator } from "@/components/SyncStatusIndicator";
+import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
 
 interface AnalysisResult {
   analysis: string;
@@ -16,14 +20,39 @@ interface BuyerIntentResearchProps {
 }
 
 export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearchProps) {
-  const [searchTerms, setSearchTerms] = useState("");
-  const [industry, setIndustry] = useState("");
+  // Persisted fields with local-first storage
+  const searchTerms = usePersistedField({
+    fieldIdentifier: 'insights_research_search_terms',
+    defaultValue: '',
+    category: 'insights',
+  });
+
+  const industry = usePersistedField({
+    fieldIdentifier: 'insights_research_industry',
+    defaultValue: '',
+    category: 'insights',
+  });
+
+  const analysis = usePersistedField({
+    fieldIdentifier: 'insights_research_intent_analysis',
+    defaultValue: '',
+    category: 'insights',
+  });
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState<string>("");
   const { toast } = useToast();
 
+  // Overall sync status
+  const getOverallSyncStatus = (): SyncStatus => {
+    const statuses = [searchTerms.syncStatus, industry.syncStatus, analysis.syncStatus];
+    if (statuses.some(s => s === 'error')) return 'error';
+    if (statuses.some(s => s === 'syncing')) return 'syncing';
+    if (statuses.some(s => s === 'offline')) return 'offline';
+    return 'synced';
+  };
+
   const analyzeIntent = async () => {
-    if (!searchTerms.trim() || !industry.trim()) {
+    if (!searchTerms.value.trim() || !industry.value.trim()) {
       toast({
         title: "Missing Information",
         description: "Please enter both search terms and industry.",
@@ -35,17 +64,17 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('buyer-intent-analyzer', {
-        body: { 
-          searchTerms: searchTerms.split(',').map(term => term.trim()),
-          industry: industry.trim()
+        body: {
+          searchTerms: searchTerms.value.split(',').map(term => term.trim()),
+          industry: industry.value.trim()
         }
       });
 
       if (error) throw error;
 
-      setAnalysis(data.analysis || "");
+      analysis.onChange(data.analysis || "");
       onInsightsGenerated(data.analysis || "");
-      
+
       toast({
         title: "Analysis Complete! 🎯",
         description: "IDEA Brand Framework analysis generated successfully.",
@@ -102,21 +131,28 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <SyncStatusIndicator status={getOverallSyncStatus()} />
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="font-medium text-sm">Search Terms (comma-separated)</label>
+              <div className="flex items-center gap-2">
+                <label className="font-medium text-sm">Search Terms (comma-separated)</label>
+              </div>
               <Input
                 placeholder="e.g., running shoes, workout gear, fitness tracker"
-                value={searchTerms}
-                onChange={(e) => setSearchTerms(e.target.value)}
+                value={searchTerms.value}
+                onChange={(e) => searchTerms.onChange(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <label className="font-medium text-sm">Industry/Niche</label>
+              <div className="flex items-center gap-2">
+                <label className="font-medium text-sm">Industry/Niche</label>
+              </div>
               <Input
                 placeholder="e.g., fitness equipment, skincare, productivity software"
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
+                value={industry.value}
+                onChange={(e) => industry.onChange(e.target.value)}
               />
             </div>
           </div>
@@ -165,7 +201,7 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
       </Card>
 
       {/* Results */}
-      {analysis && (
+      {analysis.value && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -173,12 +209,12 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
               IDEA Brand Framework Analysis
             </CardTitle>
             <CardDescription>
-              Detailed buyer intent analysis for: {searchTerms}
+              Detailed buyer intent analysis for: {searchTerms.value}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4 text-sm leading-relaxed">
-              {analysis.split('\n\n').map((section, index) => {
+              {analysis.value.split('\n\n').map((section, index) => {
                 const lines = section.trim().split('\n');
                 const firstLine = lines[0];
                 const isHeading = firstLine && firstLine.toUpperCase() === firstLine && firstLine.length < 100;

@@ -6,6 +6,9 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Heart, CheckCircle, BarChart, Target } from "lucide-react";
+import { usePersistedField } from "@/hooks/usePersistedField";
+import { SyncStatusIndicator } from "@/components/SyncStatusIndicator";
+import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
 
 interface TriggerScore {
   trigger: string;
@@ -127,14 +130,60 @@ const assessmentQuestions = [
 
 export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTriggerAssessmentProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [isComplete, setIsComplete] = useState(false);
-  const [results, setResults] = useState<TriggerScore[]>([]);
+
+  // Persisted fields with local-first storage
+  const answers = usePersistedField({
+    fieldIdentifier: 'insights_assessment_trigger_responses',
+    defaultValue: '{}',
+    category: 'insights',
+  });
+
+  const isComplete = usePersistedField({
+    fieldIdentifier: 'insights_assessment_completed',
+    defaultValue: 'false',
+    category: 'insights',
+  });
+
+  const results = usePersistedField({
+    fieldIdentifier: 'insights_assessment_trigger_profile',
+    defaultValue: '[]',
+    category: 'insights',
+  });
+
+  // Parse stored values
+  const answersObj: Record<string, string> = (() => {
+    try {
+      return JSON.parse(answers.value || '{}');
+    } catch {
+      return {};
+    }
+  })();
+
+  const isCompleteValue = isComplete.value === 'true';
+
+  const resultsArr: TriggerScore[] = (() => {
+    try {
+      const parsed = JSON.parse(results.value || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  // Overall sync status
+  const getOverallSyncStatus = (): SyncStatus => {
+    const statuses = [answers.syncStatus, isComplete.syncStatus, results.syncStatus];
+    if (statuses.some(s => s === 'error')) return 'error';
+    if (statuses.some(s => s === 'syncing')) return 'syncing';
+    if (statuses.some(s => s === 'offline')) return 'offline';
+    return 'synced';
+  };
 
   const progress = ((currentQuestion + 1) / assessmentQuestions.length) * 100;
 
   const handleAnswer = (questionId: string, value: string) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
+    const updated = { ...answersObj, [questionId]: value };
+    answers.onChange(JSON.stringify(updated));
   };
 
   const handleNext = () => {
@@ -153,17 +202,17 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
 
   const calculateResults = () => {
     const triggerCounts: Record<string, number> = {};
-    
+
     // Initialize counts
     emotionalTriggers.forEach(trigger => {
       triggerCounts[trigger.name] = 0;
     });
 
     // Count trigger mentions from answers
-    Object.entries(answers).forEach(([questionId, selectedValue]) => {
+    Object.entries(answersObj).forEach(([questionId, selectedValue]) => {
       const question = assessmentQuestions.find(q => q.id === questionId);
       const option = question?.options.find(opt => opt.value === selectedValue);
-      
+
       option?.triggers.forEach(trigger => {
         triggerCounts[trigger] = (triggerCounts[trigger] || 0) + 1;
       });
@@ -174,7 +223,7 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
     const triggerResults: TriggerScore[] = emotionalTriggers.map(trigger => {
       const count = triggerCounts[trigger.name] || 0;
       const score = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
-      
+
       return {
         trigger: trigger.name,
         score,
@@ -185,23 +234,28 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
       };
     }).sort((a, b) => b.score - a.score);
 
-    setResults(triggerResults);
-    setIsComplete(true);
+    results.onChange(JSON.stringify(triggerResults));
+    isComplete.onChange('true');
     onAssessmentComplete(triggerResults);
   };
 
-  if (isComplete) {
+  if (isCompleteValue) {
     return (
       <div className="space-y-6">
         <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
           <CardHeader>
-            <CardTitle className="text-green-800 dark:text-green-400 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              Assessment Complete!
-            </CardTitle>
-            <CardDescription>
-              Your emotional trigger profile has been generated based on your responses
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-green-800 dark:text-green-400 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Assessment Complete!
+                </CardTitle>
+                <CardDescription>
+                  Your emotional trigger profile has been generated based on your responses
+                </CardDescription>
+              </div>
+              <SyncStatusIndicator status={getOverallSyncStatus()} />
+            </div>
           </CardHeader>
         </Card>
 
@@ -216,7 +270,7 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {results.map((result, index) => (
+            {resultsArr.map((result, index) => (
               <div key={result.trigger} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -258,7 +312,7 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
           <CardContent>
             <div className="space-y-4">
               <div className="p-4 border rounded-lg">
-                <h4 className="font-medium mb-2">Primary Focus: {results[0]?.trigger}</h4>
+                <h4 className="font-medium mb-2">Primary Focus: {resultsArr[0]?.trigger}</h4>
                 <p className="text-sm text-muted-foreground mb-2">
                   Make this emotional trigger central to your messaging and brand experience.
                 </p>
@@ -266,9 +320,9 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
                   <strong>Next steps:</strong> Audit your current content and identify opportunities to strengthen this emotional connection.
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
-                <h4 className="font-medium mb-2">Secondary Support: {results[1]?.trigger}</h4>
+                <h4 className="font-medium mb-2">Secondary Support: {resultsArr[1]?.trigger}</h4>
                 <p className="text-sm text-muted-foreground mb-2">
                   Use this as a supporting theme in your marketing materials and customer touchpoints.
                 </p>
@@ -285,12 +339,12 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
           </CardContent>
         </Card>
 
-        <Button 
+        <Button
           onClick={() => {
             setCurrentQuestion(0);
-            setAnswers({});
-            setIsComplete(false);
-            setResults([]);
+            answers.onChange('{}');
+            isComplete.onChange('false');
+            results.onChange('[]');
           }}
           variant="outline"
           className="w-full"
@@ -302,20 +356,25 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
   }
 
   const currentQ = assessmentQuestions[currentQuestion];
-  const hasAnswer = answers[currentQ.id];
+  const hasAnswer = answersObj[currentQ.id];
 
   return (
     <div className="space-y-6">
       {/* Progress */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Heart className="w-5 h-5" />
-            Emotional Trigger Assessment
-          </CardTitle>
-          <CardDescription>
-            Question {currentQuestion + 1} of {assessmentQuestions.length}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="w-5 h-5" />
+                Emotional Trigger Assessment
+              </CardTitle>
+              <CardDescription>
+                Question {currentQuestion + 1} of {assessmentQuestions.length}
+              </CardDescription>
+            </div>
+            <SyncStatusIndicator status={getOverallSyncStatus()} />
+          </div>
         </CardHeader>
         <CardContent>
           <Progress value={progress} className="w-full" />
@@ -331,8 +390,8 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <RadioGroup 
-            value={answers[currentQ.id] || ""} 
+          <RadioGroup
+            value={answersObj[currentQ.id] || ""}
             onValueChange={(value) => handleAnswer(currentQ.id, value)}
           >
             {currentQ.options.map((option) => (

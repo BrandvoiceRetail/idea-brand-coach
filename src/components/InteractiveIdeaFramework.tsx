@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { ContextualHelp } from "@/components/ContextualHelp";
-import { 
-  Search, 
-  Brain, 
-  Heart, 
-  Users, 
+import {
+  Search,
+  Brain,
+  Heart,
+  Users,
   BarChart,
   CheckCircle,
   ArrowRight,
@@ -21,6 +22,9 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { usePersistedField } from "@/hooks/usePersistedField";
+import { SyncStatusIndicator } from "@/components/SyncStatusIndicator";
+import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
 
 interface InsightData {
   buyerIntent: string;
@@ -37,13 +41,38 @@ interface InteractiveIdeaFrameworkProps {
 export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFrameworkProps) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
-  const [insights, setInsights] = useState<InsightData>({
-    buyerIntent: "",
-    buyerMotivation: "",
-    emotionalTriggers: [],
-    shopperType: "",
-    demographics: ""
+
+  // Persisted fields with local-first storage
+  const buyerIntent = usePersistedField({
+    fieldIdentifier: 'insights_framework_step1_response',
+    defaultValue: '',
+    category: 'insights',
   });
+
+  const buyerMotivation = usePersistedField({
+    fieldIdentifier: 'insights_framework_step2_response',
+    defaultValue: '',
+    category: 'insights',
+  });
+
+  const emotionalTriggers = usePersistedField({
+    fieldIdentifier: 'insights_framework_step3_response',
+    defaultValue: '',
+    category: 'insights',
+  });
+
+  const shopperType = usePersistedField({
+    fieldIdentifier: 'insights_framework_step4_response',
+    defaultValue: '',
+    category: 'insights',
+  });
+
+  const demographics = usePersistedField({
+    fieldIdentifier: 'insights_framework_step5_response',
+    defaultValue: '',
+    category: 'insights',
+  });
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<Record<string, string>>({});
@@ -157,25 +186,57 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
   };
 
   const handleInputChange = (value: string) => {
-    const key = currentStepData.id === "triggers" ? "emotionalTriggers" : 
-                 currentStepData.id === "intent" ? "buyerIntent" :
-                 currentStepData.id === "motivation" ? "buyerMotivation" :
-                 currentStepData.id === "shopper" ? "shopperType" : "demographics";
-    
-    setInsights(prev => ({
-      ...prev,
-      [key]: key === "emotionalTriggers" ? value: value
-    }));
+    switch (currentStepData.id) {
+      case "intent":
+        buyerIntent.onChange(value);
+        break;
+      case "motivation":
+        buyerMotivation.onChange(value);
+        break;
+      case "triggers":
+        emotionalTriggers.onChange(value);
+        break;
+      case "shopper":
+        shopperType.onChange(value);
+        break;
+      case "demographics":
+        demographics.onChange(value);
+        break;
+    }
   };
 
   const getCurrentValue = () => {
-    const key = currentStepData.id === "triggers" ? "emotionalTriggers" : 
-               currentStepData.id === "intent" ? "buyerIntent" :
-               currentStepData.id === "motivation" ? "buyerMotivation" :
-               currentStepData.id === "shopper" ? "shopperType" : "demographics";
-    
-    const value = insights[key as keyof InsightData];
-    return Array.isArray(value) ? value.join(", ") : value;
+    switch (currentStepData.id) {
+      case "intent":
+        return buyerIntent.value;
+      case "motivation":
+        return buyerMotivation.value;
+      case "triggers":
+        return emotionalTriggers.value;
+      case "shopper":
+        return shopperType.value;
+      case "demographics":
+        return demographics.value;
+      default:
+        return "";
+    }
+  };
+
+  const getCurrentSyncStatus = (): SyncStatus => {
+    switch (currentStepData.id) {
+      case "intent":
+        return buyerIntent.syncStatus;
+      case "motivation":
+        return buyerMotivation.syncStatus;
+      case "triggers":
+        return emotionalTriggers.syncStatus;
+      case "shopper":
+        return shopperType.syncStatus;
+      case "demographics":
+        return demographics.syncStatus;
+      default:
+        return 'synced';
+    }
   };
 
   const handleNext = async () => {
@@ -201,13 +262,11 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
           .from('idea_framework_submissions')
           .insert({
             user_id: user.id,
-            buyer_intent: insights.buyerIntent,
-            motivation: insights.buyerMotivation,
-            triggers: Array.isArray(insights.emotionalTriggers) 
-              ? insights.emotionalTriggers.join(', ') 
-              : insights.emotionalTriggers,
-            shopper_type: insights.shopperType,
-            demographics: insights.demographics
+            buyer_intent: buyerIntent.value,
+            motivation: buyerMotivation.value,
+            triggers: emotionalTriggers.value,
+            shopper_type: shopperType.value,
+            demographics: demographics.value
           });
 
         if (dbError) throw dbError;
@@ -224,18 +283,23 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
           await supabase.functions.invoke('send-framework-email', {
             body: {
               email: profile.email,
-              buyerIntent: insights.buyerIntent,
-              motivation: insights.buyerMotivation,
-              triggers: Array.isArray(insights.emotionalTriggers) 
-                ? insights.emotionalTriggers.join(', ') 
-                : insights.emotionalTriggers,
-              shopperType: insights.shopperType,
-              demographics: insights.demographics
+              buyerIntent: buyerIntent.value,
+              motivation: buyerMotivation.value,
+              triggers: emotionalTriggers.value,
+              shopperType: shopperType.value,
+              demographics: demographics.value
             }
           });
         }
 
-        onComplete(insights);
+        // Complete callback with data
+        onComplete({
+          buyerIntent: buyerIntent.value,
+          buyerMotivation: buyerMotivation.value,
+          emotionalTriggers: [emotionalTriggers.value],
+          shopperType: shopperType.value,
+          demographics: demographics.value
+        });
         toast({
           title: "Framework Complete! 🎉",
           description: "Your IDEA insights have been saved and emailed to you. Redirecting to dashboard...",
@@ -344,8 +408,11 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
           {/* Input */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="font-semibold">Your {currentStepData.title}</label>
-              <ContextualHelp 
+              <div className="flex items-center gap-2">
+                <label className="font-semibold">Your {currentStepData.title}</label>
+                <SyncStatusIndicator status={getCurrentSyncStatus()} />
+              </div>
+              <ContextualHelp
                 question={`How do I identify ${currentStepData.title.toLowerCase()} for my brand?`}
                 category="idea-framework"
                 context={currentStepData.prompt}
