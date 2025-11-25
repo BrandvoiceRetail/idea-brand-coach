@@ -1,40 +1,53 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  Brain, 
-  Target, 
-  MessageSquare, 
-  Search, 
-  Zap, 
-  BarChart, 
-  BookOpen,
+import {
   Menu,
   X,
   LogOut,
   User,
-  FlaskConical
+  Home as HomeIcon,
 } from "lucide-react";
 import { BetaNavigationWidget } from "@/components/BetaNavigationWidget";
+import { getNavigationFeatures, getCurrentPhase } from "@/config/features";
 
-const navItems = [
-  { name: "Home", href: "/", icon: Brain },
-  { name: "Brand Diagnostic", href: "/diagnostic", icon: Brain },
-  { name: "Dashboard", href: "/dashboard", icon: BarChart },
-  { name: "IDEA Framework", href: "/idea", icon: BookOpen },
-  { name: "Brand Coach", href: "/idea/consultant", icon: MessageSquare },
-  { name: "Avatar 2.0", href: "/avatar", icon: Target },
-  { name: "Brand Canvas", href: "/canvas", icon: MessageSquare },
-  { name: "ValueLens", href: "/value-lens", icon: Zap },
-  { name: "Beta Testing", href: "/beta", icon: FlaskConical },
-];
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+
+  // Get navigation items based on current deployment phase
+  const navItems = useMemo(() => {
+    const currentPhase = getCurrentPhase();
+    const features = getNavigationFeatures(currentPhase);
+
+    // Build nav items from features with Home inserted after Brand Diagnostic (P1+)
+    const items: NavItem[] = [];
+
+    features.forEach((feature, index) => {
+      // Add the feature
+      items.push({
+        name: feature.name,
+        href: feature.route,
+        icon: feature.icon,
+      });
+
+      // Insert Home after the first feature (Brand Diagnostic) - only for P1+
+      if (index === 0 && currentPhase !== 'P0') {
+        items.push({ name: "Home", href: "/", icon: HomeIcon });
+      }
+    });
+
+    return items;
+  }, []);
 
   // Show auth page without layout if not authenticated and not on auth or home page
   if (!user && location.pathname !== '/auth' && location.pathname !== '/' && location.pathname !== '/diagnostic') {
