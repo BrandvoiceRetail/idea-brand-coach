@@ -1,23 +1,75 @@
 # P1 Features - Post-Launch Roadmap
 ## IDEA Brand Coach Platform
 
-**Version:** 1.0
-**Last Updated:** 2025-11-07
+**Version:** 2.0
+**Last Updated:** 2025-11-24
 **Status:** Planning Phase
 
 ---
 
 ## Overview
 
-This document defines all features **deferred to P1 (post-launch)**. These features exist in the codebase but are marked as lower priority to ensure a focused P0 beta launch.
+This document defines all features **planned for P1 (post-P0 launch)**. Features are managed through the centralized Feature Registry (`src/config/features.ts`) which controls phase gating, navigation visibility, and status messaging across the platform.
 
-**P0 Completion Requirement**: All three core P0 features must be functional and stable before beginning P1 development.
+**P0 Completion Requirement**: All core P0 features must be functional and stable before beginning P1 development.
 
 See [P0_FEATURES.md](./P0_FEATURES.md) for beta launch requirements.
 
 ---
 
-## P1 Feature Categories
+## Feature Registry System
+
+All features are now centrally managed in `src/config/features.ts`. This ensures:
+- Single source of truth for feature availability
+- Automatic phase-based navigation filtering
+- Consistent status messaging across the platform
+- Easy promotion/demotion of features between phases
+
+The deployment phase is controlled via `VITE_DEPLOYMENT_PHASE` environment variable (defaults to 'P0').
+
+---
+
+## P1 Core Features (from Feature Registry)
+
+The following features are marked as `phase: 'P1'` in the feature registry and will be enabled when `VITE_DEPLOYMENT_PHASE=P1`:
+
+### 1. Dashboard
+- **Route**: `/dashboard`
+- **Status**: Coming Soon (Q1 2026)
+- **Category**: Core
+- **Show in Nav**: Yes
+- **Requires Auth**: Yes
+- **Description**: Your brand coaching dashboard - Access all your brand coaching tools, view your progress, and manage your brand strategy from one central location.
+
+### 2. IDEA Framework
+- **Route**: `/idea`
+- **Status**: Coming Soon (Q1 2026)
+- **Category**: Core
+- **Show in Nav**: Yes
+- **Requires Auth**: No
+- **Description**: Learn the IDEA Strategic Brand Framework™ - A practical, step-by-step process to build trust, stand out in crowded markets, and turn hesitant browsers into loyal buyers.
+
+### 3. Framework Submissions
+- **Route**: `/submissions`
+- **Status**: Coming Soon (Q1 2026)
+- **Category**: Diagnostic
+- **Show in Nav**: Yes
+- **Requires Auth**: Yes
+- **Description**: Track your IDEA framework progress - View all your completed framework assessments, track progress over time, and see how your brand strategy evolves.
+
+### 4. Team Collaboration
+- **Route**: `/team`
+- **Status**: Coming Soon (Q2 2026)
+- **Category**: Collaboration
+- **Show in Nav**: Yes
+- **Requires Auth**: Yes
+- **Description**: Invite team members to collaborate on brand strategy. Share insights, documents, and consultant conversations with controlled access.
+
+---
+
+## Additional P1 Feature Categories
+
+Beyond the core P1 features in the registry, the following categories represent areas for future P1 development:
 
 1. [Advanced IDEA Framework Modules](#p11-advanced-idea-framework-modules)
 2. [Avatar & Customer Research Tools](#p12-avatar--customer-research-tools)
@@ -294,14 +346,16 @@ CREATE TABLE public.uploaded_documents (
 | **Account Creation** | ✅ Email + Google OAuth | ✅ + LinkedIn, SSO |
 | **Brand Coach GPT** | ✅ RAG with diagnostic data | ✅ + Document upload RAG |
 | **Diagnostic Results** | ✅ Basic scores + insights | ✅ + Trend analysis, comparisons |
-| **Dashboard** | ✅ Minimal (latest results, Brand Coach access) | ✅ Full analytics, history, charts |
+| **Dashboard** | ❌ Deferred to P1 | ✅ Full analytics, history, charts |
+| **Home Navigation** | ❌ Hidden in P0 | ✅ Visible in P1+ |
 | **IDEA Framework Modules** | ❌ Deferred | ✅ 4 deep-dive modules |
-| **Avatar Builder** | ❌ Deferred | ✅ Full avatar creation |
-| **Brand Canvas** | ❌ Deferred | ✅ Interactive canvas |
-| **Value Lens** | ❌ Deferred | ✅ Value prop builder |
+| **Framework Submissions** | ❌ Deferred | ✅ Progress tracking |
+| **Avatar Builder** | ✅ Available in P0 | ✅ Enhanced version |
+| **Brand Canvas** | ✅ Available in P0 | ✅ Enhanced version |
+| **Value Lens** | ✅ Available in P0 | ✅ Enhanced version |
 | **Document Upload** | ❌ Deferred (schema ready) | ✅ Full upload + RAG |
 | **PDF/PPT Export** | ❌ Not planned | ✅ Professional reports |
-| **Team Collaboration** | ❌ Not planned | ⏳ P2 consideration |
+| **Team Collaboration** | ❌ Deferred to P1 | ✅ Q2 2026 |
 | **White-label** | ❌ Not planned | ⏳ P3 consideration |
 
 ---
@@ -362,6 +416,7 @@ CREATE TABLE public.uploaded_documents (
 
 ## Change Log
 
-| Date | Version | Changes |
-|------|---------|---------|
-| 2025-11-07 | 1.0 | Extracted from P0_BETA_LAUNCH_ROADMAP.md v1.3 |
+| Date | Version | Changes | Author |
+|------|---------|---------|--------|
+| 2025-11-07 | 1.0 | Extracted from P0_BETA_LAUNCH_ROADMAP.md v1.3 | Claude Code |
+| 2025-11-24 | 2.0 | **Updated to reflect Feature Registry system:**<br>- Added Feature Registry System overview<br>- Documented P1 core features from features.ts<br>- Moved Dashboard from P0 to P1<br>- Added Home navigation visibility gating<br>- Updated feature comparison table<br>- Aligned with centralized feature configuration | Claude Code |
