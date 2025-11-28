@@ -5,9 +5,28 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { IChatService } from './interfaces/IChatService';
-import { ChatMessage, ChatMessageCreate, ChatResponse } from '@/types/chat';
+import { ChatMessage, ChatMessageCreate, ChatResponse, ChatbotType } from '@/types/chat';
+import { forceSyncUserData } from '@/lib/knowledge-base/sync-service-instance';
 
 export class SupabaseChatService implements IChatService {
+  private chatbotType: ChatbotType = 'brand-coach';
+
+  /**
+   * Set the chatbot type for filtering messages
+   */
+  setChatbotType(chatbotType: ChatbotType): void {
+    this.chatbotType = chatbotType;
+  }
+
+  /**
+   * Get the edge function name for the current chatbot type
+   */
+  private getEdgeFunctionName(): string {
+    return this.chatbotType === 'idea-framework-consultant'
+      ? 'idea-framework-consultant'
+      : 'brand-coach-gpt';
+  }
+
   /**
    * Get current authenticated user ID
    * @throws Error if user is not authenticated
@@ -20,7 +39,24 @@ export class SupabaseChatService implements IChatService {
 
   async sendMessage(message: ChatMessageCreate): Promise<ChatResponse> {
     const userId = await this.getUserId();
-    console.log('📤 Sending message to Brand Coach:', { userId, messageLength: message.content.length });
+    const chatbotType = message.chatbot_type || this.chatbotType;
+
+    console.log('📤 Sending message:', {
+      userId,
+      chatbotType,
+      messageLength: message.content.length
+    });
+
+    // 0. Force sync all local data to Supabase before sending
+    // This ensures the edge function has access to all user knowledge base data
+    console.log('🔄 Syncing local data to Supabase...');
+    try {
+      await forceSyncUserData(userId);
+      console.log('✅ Sync completed');
+    } catch (error) {
+      console.warn('⚠️ Sync failed, continuing anyway:', error);
+      // Continue even if sync fails - offline data will be used
+    }
 
     // 1. Save user message to database
     const { data: userMessage, error: saveError } = await supabase
@@ -29,6 +65,7 @@ export class SupabaseChatService implements IChatService {
         user_id: userId,
         role: message.role,
         content: message.content,
+        chatbot_type: chatbotType,
         metadata: message.metadata,
       })
       .select()
@@ -39,8 +76,9 @@ export class SupabaseChatService implements IChatService {
     // 2. Get recent chat history for context
     const recentMessages = await this.getRecentMessages(10);
 
-    // 3. Call brand-coach-gpt Edge Function with RAG
-    console.log('🤖 Calling brand-coach-gpt Edge Function...');
+    // 3. Call appropriate Edge Function
+    const edgeFunctionName = this.getEdgeFunctionName();
+    console.log(`🤖 Calling ${edgeFunctionName} Edge Function...`);
 
     // Get current session to pass auth token explicitly
     const { data: { session } } = await supabase.auth.getSession();
@@ -49,7 +87,7 @@ export class SupabaseChatService implements IChatService {
     }
 
     const { data: responseData, error: functionError } = await supabase.functions.invoke(
-      'brand-coach-gpt',
+      edgeFunctionName,
       {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -69,7 +107,7 @@ export class SupabaseChatService implements IChatService {
       throw functionError;
     }
 
-    console.log('✅ Received response from Brand Coach:', {
+    console.log('✅ Received response:', {
       responseLength: responseData?.response?.length || 0,
       hasSuggestions: !!responseData?.suggestions,
       hasSources: !!responseData?.sources,
@@ -82,6 +120,7 @@ export class SupabaseChatService implements IChatService {
         user_id: userId,
         role: 'assistant',
         content: responseData.response,
+        chatbot_type: chatbotType,
         metadata: {
           suggestions: responseData.suggestions,
           sources: responseData.sources,
@@ -98,6 +137,7 @@ export class SupabaseChatService implements IChatService {
         user_id: assistantMessage.user_id,
         role: assistantMessage.role as 'assistant',
         content: assistantMessage.content,
+        chatbot_type: assistantMessage.chatbot_type as ChatbotType,
         metadata: (assistantMessage.metadata as Record<string, any>) || {},
         created_at: assistantMessage.created_at,
         updated_at: assistantMessage.updated_at,
@@ -114,6 +154,7 @@ export class SupabaseChatService implements IChatService {
       .from('chat_messages')
       .select('*')
       .eq('user_id', userId)
+      .eq('chatbot_type', this.chatbotType)
       .order('created_at', { ascending: true })
       .limit(limit);
 
@@ -124,6 +165,7 @@ export class SupabaseChatService implements IChatService {
       user_id: item.user_id,
       role: item.role as 'user' | 'assistant' | 'system',
       content: item.content,
+      chatbot_type: item.chatbot_type as ChatbotType,
       metadata: (item.metadata as Record<string, any>) || {},
       created_at: item.created_at,
       updated_at: item.updated_at,
@@ -136,7 +178,8 @@ export class SupabaseChatService implements IChatService {
     const { error } = await supabase
       .from('chat_messages')
       .delete()
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('chatbot_type', this.chatbotType);
 
     if (error) throw error;
   }
@@ -148,6 +191,7 @@ export class SupabaseChatService implements IChatService {
       .from('chat_messages')
       .select('*')
       .eq('user_id', userId)
+      .eq('chatbot_type', this.chatbotType)
       .order('created_at', { ascending: false })
       .limit(count);
 
@@ -159,6 +203,7 @@ export class SupabaseChatService implements IChatService {
       user_id: item.user_id,
       role: item.role as 'user' | 'assistant' | 'system',
       content: item.content,
+      chatbot_type: item.chatbot_type as ChatbotType,
       metadata: (item.metadata as Record<string, any>) || {},
       created_at: item.created_at,
       updated_at: item.updated_at,

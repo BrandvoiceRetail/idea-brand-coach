@@ -1,17 +1,85 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
-serve(async (req)=>{
+
+/**
+ * Retrieve user's knowledge base context
+ */
+async function retrieveUserContext(
+  supabaseClient: any,
+  userId: string,
+  query: string
+): Promise<string> {
+  try {
+    console.log('[retrieveUserContext] Fetching knowledge for user:', userId);
+
+    // Get all current knowledge base entries for this user
+    const { data: entries, error } = await supabaseClient
+      .from('user_knowledge_base')
+      .select('field_identifier, category, content, subcategory')
+      .eq('user_id', userId)
+      .eq('is_current', true)
+      .not('content', 'is', null)
+      .gt('content', ''); // Only entries with content
+
+    if (error) {
+      console.error('[retrieveUserContext] Error fetching knowledge:', error);
+      return '';
+    }
+
+    if (!entries || entries.length === 0) {
+      console.log('[retrieveUserContext] No knowledge base entries found');
+      return '';
+    }
+
+    console.log(`[retrieveUserContext] Found ${entries.length} knowledge entries`);
+
+    // Group by category for better organization
+    const byCategory: Record<string, any[]> = {};
+    entries.forEach(entry => {
+      if (!byCategory[entry.category]) {
+        byCategory[entry.category] = [];
+      }
+      byCategory[entry.category].push(entry);
+    });
+
+    // Build context string
+    const contextParts: string[] = ['USER BRAND KNOWLEDGE BASE:'];
+
+    for (const [category, categoryEntries] of Object.entries(byCategory)) {
+      contextParts.push(`\n${category.toUpperCase()} INFORMATION:`);
+      categoryEntries.forEach(entry => {
+        const label = entry.field_identifier
+          .replace(`${category}_`, '')
+          .replace(/_/g, ' ')
+          .toUpperCase();
+        contextParts.push(`- ${label}: ${entry.content}`);
+      });
+    }
+
+    const context = contextParts.join('\n');
+    console.log(`[retrieveUserContext] Generated context (${context.length} chars)`);
+
+    return context;
+  } catch (error) {
+    console.error('[retrieveUserContext] Error:', error);
+    return '';
+  }
+}
+
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: corsHeaders
     });
   }
+
   try {
     if (!openAIApiKey) {
       console.error('OpenAI API key not found');
@@ -25,27 +93,51 @@ serve(async (req)=>{
         }
       });
     }
+
     // Get authenticated user
     const authHeader = req.headers.get('authorization');
     console.log('Auth header present:', !!authHeader);
+
+    let userId: string | null = null;
+    let supabaseClient = null;
+
     if (authHeader) {
-      const supabaseClient = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
+      // Create Supabase client with user's JWT for RLS
+      supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        {
+          global: {
+            headers: {
+              Authorization: authHeader  // Pass user's JWT for RLS
+            }
+          }
+        }
+      );
 
       // Extract JWT token from Bearer header
       const token = authHeader.replace('Bearer ', '');
       const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+
       console.log('getUser result:', { hasUser: !!user, userId: user?.id, authError });
+
       if (user) {
-        console.log('Authenticated user:', user.id);
+        userId = user.id;
+        console.log('Authenticated user:', userId);
+
         // Ensure user has vector stores (create if first time)
         console.log("Ensuring user KB exists...");
-        const ensureKbResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/ensure-user-kb`, {
-          method: "POST",
-          headers: {
-            "Authorization": authHeader,
-            "Content-Type": "application/json"
+        const ensureKbResponse = await fetch(
+          `${Deno.env.get("SUPABASE_URL")}/functions/v1/ensure-user-kb`,
+          {
+            method: "POST",
+            headers: {
+              "Authorization": authHeader,
+              "Content-Type": "application/json"
+            }
           }
-        });
+        );
+
         if (!ensureKbResponse.ok) {
           const errorText = await ensureKbResponse.text();
           console.error("Failed to ensure user KB:", ensureKbResponse.status, errorText);
@@ -55,11 +147,20 @@ serve(async (req)=>{
         }
       }
     }
+
     const { message, context } = await req.json();
     console.log('IDEA Framework Consultant request:', {
       message,
-      context
+      hasManualContext: !!context,
+      userId
     });
+
+    // Retrieve user's knowledge base context
+    let userKnowledgeContext = '';
+    if (userId && supabaseClient) {
+      userKnowledgeContext = await retrieveUserContext(supabaseClient, userId, message);
+    }
+
     const systemPrompt = `You are the IDEA Framework GPT, a specialized strategic branding consultant focused on the IDEA Strategic Brand Framework™. Your responses must prioritize:
 
 TONE OF VOICE REQUIREMENTS - APPLY TO ALL RESPONSES:
@@ -74,7 +175,7 @@ Sample communication style: "Let's figure this out together! Here's what I found
 
 CORE FRAMEWORK PRIORITIES:
 1. Insight-Driven: Focus on customer motivations, emotional triggers, and behavioral science
-2. Distinctive: Emphasize differentiation and unique positioning 
+2. Distinctive: Emphasize differentiation and unique positioning
 3. Empathetic: Connect with audience emotions and psychological drivers
 4. Authentic: Build genuine brand narratives and trust
 
@@ -149,19 +250,30 @@ CLARITY ENHANCEMENTS:
 - Offer alternative approaches for different budget levels
 - Include potential obstacles and mitigation strategies
 
-DOCUMENT INTEGRATION REQUIREMENTS:
-When user knowledge base content is provided in the context:
-- Always prioritize and reference uploaded document content when relevant to the query
-- Quote specific insights, data points, or brand guidelines from the user's documents
-- Align recommendations with the user's existing brand strategy and materials
-- Point out any gaps or opportunities based on their documented approach
-- Use the document content to provide more targeted, brand-specific advice
+USER KNOWLEDGE BASE INTEGRATION:
+When user knowledge base information is provided below, YOU MUST:
+- ALWAYS acknowledge and reference the specific information from their knowledge base
+- Use their brand information, target avatar details, and strategy elements to provide personalized advice
+- Quote or paraphrase their specific inputs to show you understand their context
+- Build recommendations directly on top of what they've already defined
+- Point out gaps or opportunities based on their documented information
+- Never give generic advice when specific user data is available
 
 Always encourage iterative refinement and ask clarifying questions when input lacks detail for optimal strategic guidance.`;
-    const userPrompt = context ? `Context: ${context}\n\nQuestion: ${message}` : message;
+
+    // Build user prompt with all available context
+    let userPrompt = message;
+
+    if (userKnowledgeContext) {
+      userPrompt = `${userKnowledgeContext}\n\n---\n\nQUESTION: ${message}\n\nIMPORTANT: Use the knowledge base information above to provide personalized, specific advice. Reference their actual inputs.`;
+    } else if (context) {
+      userPrompt = `Context: ${context}\n\nQuestion: ${message}`;
+    }
+
     console.log('Making OpenAI API request with model: gpt-4.1-2025-04-14');
-    console.log('API Key configured:', !!openAIApiKey);
-    console.log('API Key length:', openAIApiKey ? openAIApiKey.length : 0);
+    console.log('Has user knowledge context:', !!userKnowledgeContext);
+    console.log('User knowledge context length:', userKnowledgeContext.length);
+
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -185,16 +297,21 @@ Always encourage iterative refinement and ask clarifying questions when input la
           max_tokens: 1500
         })
       });
+
       console.log('OpenAI API response status:', response.status);
+
       if (!response.ok) {
         const errorBody = await response.text();
         console.error('OpenAI API error response:', errorBody);
         throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`);
       }
+
       const data = await response.json();
       console.log('OpenAI API response received successfully');
+
       const consultantResponse = data.choices[0].message.content;
       console.log('IDEA Framework consultation completed successfully');
+
       return new Response(JSON.stringify({
         response: consultantResponse
       }), {

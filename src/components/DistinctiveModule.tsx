@@ -1,20 +1,21 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Star, 
-  Target, 
-  Eye, 
-  CheckCircle, 
-  ArrowRight, 
+import {
+  Star,
+  Target,
+  Eye,
+  CheckCircle,
+  ArrowRight,
   ArrowLeft,
   Lightbulb,
   Palette,
   Zap
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { usePersistedField } from "@/hooks/usePersistedField";
 
 interface Step {
   id: number;
@@ -78,25 +79,57 @@ const steps: Step[] = [
 ];
 
 export function DistinctiveModule() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  // Persisted fields for learning progress
+  const currentStepField = usePersistedField({
+    fieldIdentifier: 'distinctive_current_step',
+    category: 'insights',
+    defaultValue: '0',
+    debounceDelay: 500
+  });
+
+  const completedStepsField = usePersistedField({
+    fieldIdentifier: 'distinctive_completed_steps',
+    category: 'insights',
+    defaultValue: '[]',
+    debounceDelay: 500
+  });
+
+  // Parse persisted values
+  const currentStep = useMemo(() => {
+    const parsed = parseInt(currentStepField.value || '0', 10);
+    return isNaN(parsed) ? 0 : parsed;
+  }, [currentStepField.value]);
+
+  const completedSteps = useMemo(() => {
+    try {
+      const parsed = JSON.parse(completedStepsField.value || '[]');
+      return new Set<number>(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      return new Set<number>();
+    }
+  }, [completedStepsField.value]);
 
   const progress = (completedSteps.size / steps.length) * 100;
 
   const markStepComplete = (stepId: number) => {
-    setCompletedSteps(prev => new Set([...prev, stepId]));
+    const newCompleted = new Set([...completedSteps, stepId]);
+    completedStepsField.onChange(JSON.stringify([...newCompleted]));
   };
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      currentStepField.onChange((currentStep + 1).toString());
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      currentStepField.onChange((currentStep - 1).toString());
     }
+  };
+
+  const handleStepChange = (index: number) => {
+    currentStepField.onChange(index.toString());
   };
 
   const allStepsCompleted = completedSteps.size === steps.length;
@@ -124,7 +157,7 @@ export function DistinctiveModule() {
           <Button
             key={step.id}
             variant={currentStep === index ? "default" : "outline"}
-            onClick={() => setCurrentStep(index)}
+            onClick={() => handleStepChange(index)}
             className="flex items-center gap-2"
           >
             {completedSteps.has(step.id) && <CheckCircle className="h-4 w-4" />}

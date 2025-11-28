@@ -132,7 +132,7 @@ export const FEATURES: Record<string, Feature> = {
     shortDescription: 'AI-powered brand consulting with RAG',
     fullDescription: 'Chat with our AI brand consultant powered by GPT-4 and RAG technology. Get personalized advice based on your brand diagnostic results and uploaded documents.',
     phase: 'P0',
-    route: '/consultant',
+    route: '/idea/consultant',
     icon: MessageSquare,
     statusMessage: 'Available Now',
     estimatedRelease: 'Live',

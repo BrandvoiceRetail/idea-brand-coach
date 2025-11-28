@@ -1,34 +1,50 @@
 /**
  * useChat Hook
  * React hook for Brand Coach chat operations
+ *
+ * @param chatbotType - Optional chatbot type ('brand-coach' or 'idea-framework-consultant')
  */
 
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/services/ServiceProvider';
-import { ChatMessageCreate } from '@/types/chat';
+import { ChatMessageCreate, ChatbotType } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 
-export const useChat = () => {
+interface UseChatOptions {
+  chatbotType?: ChatbotType;
+}
+
+export const useChat = (options: UseChatOptions = {}) => {
+  const { chatbotType = 'brand-coach' } = options;
   const { chatService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Query: Get chat history
+  // Set chatbot type on service when it changes
+  useEffect(() => {
+    chatService.setChatbotType(chatbotType);
+  }, [chatService, chatbotType]);
+
+  // Query: Get chat history (keyed by chatbot type for separate caches)
   const {
     data: messages,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['chat', 'messages'],
+    queryKey: ['chat', 'messages', chatbotType],
     queryFn: () => chatService.getChatHistory(),
     retry: 1,
   });
 
   // Mutation: Send message
   const sendMessageMutation = useMutation({
-    mutationFn: (message: ChatMessageCreate) => chatService.sendMessage(message),
+    mutationFn: (message: ChatMessageCreate) => chatService.sendMessage({
+      ...message,
+      chatbot_type: chatbotType,
+    }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'messages'] });
+      queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType] });
     },
     onError: (error: Error) => {
       toast({
@@ -43,7 +59,7 @@ export const useChat = () => {
   const clearChatMutation = useMutation({
     mutationFn: () => chatService.clearChatHistory(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'messages'] });
+      queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType] });
       toast({
         title: 'Chat Cleared',
         description: 'Your chat history has been cleared.',

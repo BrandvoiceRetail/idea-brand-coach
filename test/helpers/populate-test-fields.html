@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Field Test Data Populator</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      border-left: 4px solid #4CAF50;
+    }
+    .section h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button.clear {
+      background: #f44336;
+    }
+    button.clear:hover {
+      background: #da190b;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e8f5e9;
+      border-radius: 6px;
+      border-left: 4px solid #4CAF50;
+    }
+    .error {
+      background: #ffebee;
+      border-left-color: #f44336;
+    }
+    .log {
+      margin-top: 10px;
+      padding: 10px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .log-entry {
+      margin: 5px 0;
+      padding: 5px;
+    }
+    .log-entry.success { color: #4CAF50; }
+    .log-entry.error { color: #f44336; }
+    .log-entry.info { color: #2196F3; }
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Field Test Data Populator</h1>
+    <p class="subtitle">Automatically populate all test fields with sample data</p>
+
+    <div class="section">
+      <h2>Instructions</h2>
+      <ol>
+        <li>Open this page in the same browser where you're logged into IDEA Brand Coach</li>
+        <li>Make sure you're on the correct page (Brand Canvas or Avatar Builder)</li>
+        <li>Click the populate button for the section you want to test</li>
+        <li>Watch the log to see each field being filled</li>
+        <li>Use the check status script to verify sync: <code>npx tsx scripts/check-field-sync-status.ts &lt;user_id&gt;</code></li>
+      </ol>
+    </div>
+
+    <div class="section">
+      <h2>Brand Canvas Fields</h2>
+      <p>Navigate to <code>/brand-canvas</code> before clicking:</p>
+      <button onclick="populateBrandCanvas()">Populate Brand Canvas</button>
+      <button class="clear" onclick="clearBrandCanvas()">Clear Brand Canvas</button>
+    </div>
+
+    <div class="section">
+      <h2>Avatar Builder Fields</h2>
+      <p>Navigate to <code>/avatar</code> before clicking:</p>
+      <button onclick="populateAvatar()">Populate Avatar</button>
+      <button class="clear" onclick="clearAvatar()">Clear Avatar</button>
+    </div>
+
+    <div class="section">
+      <h2>All Fields</h2>
+      <button onclick="populateAll()">Populate All Fields (Sequential)</button>
+      <button class="clear" onclick="clearAll()">Clear All Fields</button>
+    </div>
+
+    <div id="status" class="status" style="display: none;"></div>
+    <div id="log" class="log" style="display: none;"></div>
+  </div>
+
+  <script>
+    const TEST_DATA = {
+      canvas: {
+        canvas_brand_purpose: "My test purpose is to help people succeed through innovative solutions",
+        canvas_brand_vision: "My vision is a world where everyone has access to transformative tools",
+        canvas_brand_mission: "My mission is to provide exceptional products that make a difference",
+        canvas_positioning_statement: "We position ourselves as the trusted leader in customer-first innovation",
+        canvas_value_proposition: "We deliver unmatched value through quality, innovation, and care",
+        canvas_brand_voice: "Our voice is friendly yet professional, approachable yet authoritative",
+        canvas_brand_values: ["Integrity", "Innovation", "Excellence", "Empathy"],
+        canvas_brand_personality: ["Trustworthy", "Bold", "Caring", "Innovative"]
+      },
+      avatar: {
+        avatar_name: "Sarah the Strategic Shopper",
+        avatar_demographics_age: "35-45",
+        avatar_demographics_income: "$75,000-$100,000",
+        avatar_demographics_location: "Urban areas in Northeast USA",
+        avatar_demographics_lifestyle: "Busy professional with two kids, values efficiency and quality over everything",
+        avatar_psychology_values: ["Family", "Success", "Time", "Quality"],
+        avatar_psychology_fears: ["Missing out on opportunities", "Making the wrong choice", "Wasting money"],
+        avatar_psychology_desires: ["Simplicity", "Premium quality", "Peace of mind"],
+        avatar_psychology_triggers: ["Social proof", "Scarcity", "Authority", "Reciprocity"],
+        avatar_buying_behavior_intent: "high",
+        avatar_buying_behavior_decision_factors: ["Customer reviews", "Brand trust", "Price-value ratio"],
+        avatar_buying_behavior_shopping_style: "Research-heavy, comparison shopping, reads reviews extensively",
+        avatar_buying_behavior_price_consciousness: "moderate",
+        avatar_voice_customer_feedback: "Customers often say: I love the quality but wish it was easier to find and the checkout process was smoother"
+      }
+    };
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      logDiv.style.display = 'block';
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function showStatus(message, isError = false) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.style.display = 'block';
+      statusDiv.className = isError ? 'status error' : 'status';
+      statusDiv.textContent = message;
+    }
+
+    async function fillField(fieldId, value) {
+      const input = document.querySelector(`[id="${fieldId}"], [name="${fieldId}"]`);
+
+      if (!input) {
+        log(`❌ Field not found: ${fieldId}`, 'error');
+        return false;
+      }
+
+      try {
+        // Handle different input types
+        if (Array.isArray(value)) {
+          // For array fields, we need to trigger the add function
+          log(`⚠️  Array field detected: ${fieldId}. Manual population needed.`, 'info');
+          log(`   Values to add: ${value.join(', ')}`, 'info');
+          return false;
+        } else {
+          // For text inputs and textareas
+          input.value = value;
+
+          // Trigger events to ensure React/hooks detect the change
+          const inputEvent = new Event('input', { bubbles: true });
+          const changeEvent = new Event('change', { bubbles: true });
+          input.dispatchEvent(inputEvent);
+          input.dispatchEvent(changeEvent);
+
+          log(`✅ Filled: ${fieldId}`, 'success');
+          return true;
+        }
+      } catch (error) {
+        log(`❌ Error filling ${fieldId}: ${error.message}`, 'error');
+        return false;
+      }
+    }
+
+    async function populateBrandCanvas() {
+      log('🚀 Starting Brand Canvas population...', 'info');
+      showStatus('Populating Brand Canvas fields...');
+
+      let filled = 0;
+      let failed = 0;
+
+      for (const [fieldId, value] of Object.entries(TEST_DATA.canvas)) {
+        const success = await fillField(fieldId, value);
+        if (success) filled++;
+        else failed++;
+        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between fields
+      }
+
+      showStatus(`✅ Brand Canvas: ${filled} filled, ${failed} failed/skipped`);
+      log(`\n📊 Summary: ${filled} filled, ${failed} failed/skipped`, 'info');
+    }
+
+    async function populateAvatar() {
+      log('🚀 Starting Avatar Builder population...', 'info');
+      showStatus('Populating Avatar Builder fields...');
+
+      let filled = 0;
+      let failed = 0;
+
+      for (const [fieldId, value] of Object.entries(TEST_DATA.avatar)) {
+        const success = await fillField(fieldId, value);
+        if (success) filled++;
+        else failed++;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      showStatus(`✅ Avatar: ${filled} filled, ${failed} failed/skipped`);
+      log(`\n📊 Summary: ${filled} filled, ${failed} failed/skipped`, 'info');
+    }
+
+    async function populateAll() {
+      log('🚀 Starting ALL fields population...', 'info');
+      log('⚠️  NOTE: You need to manually navigate between pages!', 'info');
+      showStatus('Populating all fields (requires manual navigation)...');
+
+      log('\n1️⃣  Navigate to /brand-canvas and click "Populate Brand Canvas"', 'info');
+      log('2️⃣  Wait 10 seconds for sync', 'info');
+      log('3️⃣  Navigate to /avatar and click "Populate Avatar"', 'info');
+      log('4️⃣  Wait 10 seconds for sync', 'info');
+      log('5️⃣  Run check-field-sync-status script', 'info');
+    }
+
+    async function clearField(fieldId) {
+      const input = document.querySelector(`[id="${fieldId}"], [name="${fieldId}"]`);
+      if (input) {
+        input.value = '';
+        const event = new Event('input', { bubbles: true });
+        input.dispatchEvent(event);
+        log(`🗑️  Cleared: ${fieldId}`, 'info');
+        return true;
+      }
+      return false;
+    }
+
+    async function clearBrandCanvas() {
+      log('🗑️  Clearing Brand Canvas...', 'info');
+      for (const fieldId of Object.keys(TEST_DATA.canvas)) {
+        await clearField(fieldId);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      showStatus('✅ Brand Canvas cleared');
+    }
+
+    async function clearAvatar() {
+      log('🗑️  Clearing Avatar...', 'info');
+      for (const fieldId of Object.keys(TEST_DATA.avatar)) {
+        await clearField(fieldId);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      showStatus('✅ Avatar cleared');
+    }
+
+    async function clearAll() {
+      await clearBrandCanvas();
+      await clearAvatar();
+      showStatus('✅ All fields cleared');
+    }
+
+    // Log initial instructions
+    log('👋 Ready to populate test fields!', 'success');
+    log('Navigate to the page you want to test, then click the populate button.', 'info');
+  </script>
+</body>
+</html>

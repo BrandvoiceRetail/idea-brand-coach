@@ -277,6 +277,53 @@ export class SupabaseSyncService implements ISyncService {
   }
 
   /**
+   * Force immediate sync of all unsynced fields and wait for completion
+   * Use this before operations that need guaranteed sync (like chat)
+   */
+  async forceSyncAll(userId: string): Promise<void> {
+    if (!this.isOnline()) {
+      console.log('[SupabaseSyncService] Offline - cannot force sync');
+      return;
+    }
+
+    console.log('[SupabaseSyncService] Force sync starting for user:', userId);
+
+    // Queue all unsynced entries
+    const unsyncedEntries = await this.repository.getUnsyncedEntries(userId);
+    console.log('[SupabaseSyncService] Found unsynced entries:', unsyncedEntries.length);
+
+    for (const entry of unsyncedEntries) {
+      await this.queueSync(userId, entry.fieldIdentifier, entry.content);
+    }
+
+    // Process queue and wait for completion
+    await this.waitForQueueEmpty(30000); // 30 second timeout
+
+    console.log('[SupabaseSyncService] Force sync completed');
+  }
+
+  /**
+   * Wait for sync queue to be empty
+   */
+  private async waitForQueueEmpty(timeoutMs: number = 30000): Promise<void> {
+    const startTime = Date.now();
+
+    while (this.syncQueue.size > 0 || this.isSyncing) {
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error('Sync timeout - queue did not empty in time');
+      }
+
+      // Trigger processing if not already running
+      if (!this.isSyncing && this.syncQueue.size > 0) {
+        this.processQueue();
+      }
+
+      // Wait a bit before checking again
+      await this.delay(100);
+    }
+  }
+
+  /**
    * Check for conflicts between local and remote
    */
   async checkForConflicts(userId: string): Promise<ConflictInfo[]> {

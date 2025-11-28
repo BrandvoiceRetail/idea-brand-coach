@@ -8,11 +8,22 @@
  *
  * Current implementation:
  * - SupabaseChatService: Persists to Supabase, calls Edge Function with RAG
+ *
+ * Supports multiple chatbot types:
+ * - brand-coach: General brand consulting with RAG
+ * - idea-framework-consultant: IDEA Framework specialist
  */
 
-import { ChatMessage, ChatMessageCreate, ChatResponse } from '@/types/chat';
+import { ChatMessage, ChatMessageCreate, ChatResponse, ChatbotType } from '@/types/chat';
 
 export interface IChatService {
+  /**
+   * Set the chatbot type for this service instance.
+   * Filters all operations to only this chatbot's messages.
+   *
+   * @param chatbotType - Type of chatbot ('brand-coach' or 'idea-framework-consultant')
+   */
+  setChatbotType(chatbotType: ChatbotType): void;
   /**
    * Send a message to Brand Coach and receive an AI-generated response.
    *

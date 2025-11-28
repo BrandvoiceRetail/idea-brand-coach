@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { PaywallModal } from "@/components/PaywallModal";
+import { usePersistedField } from "@/hooks/usePersistedField";
 
 interface ValueLensInput {
   productName: string;
@@ -59,20 +60,75 @@ export default function ValueLens() {
   const { toast } = useToast();
   const { brandData, getRecommendedNextStep } = useBrand();
   const [showPaywall, setShowPaywall] = useState(false);
-  const [formData, setFormData] = useState<ValueLensInput>({
-    productName: "",
-    category: "",
-    features: [],
-    targetAudience: "",
-    emotionalPayoff: "",
-    tone: "",
-    format: "",
-    additionalContext: ""
-  });
-  
-  const [newFeature, setNewFeature] = useState("");
-  const [generatedCopy, setGeneratedCopy] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Persisted fields for form data
+  const productName = usePersistedField({
+    fieldIdentifier: 'copy_product_name',
+    category: 'copy',
+    debounceDelay: 1000
+  });
+
+  const category = usePersistedField({
+    fieldIdentifier: 'copy_category',
+    category: 'copy',
+    debounceDelay: 1000
+  });
+
+  const features = usePersistedField({
+    fieldIdentifier: 'copy_features',
+    category: 'copy',
+    defaultValue: '[]',
+    debounceDelay: 1000
+  });
+
+  const targetAudience = usePersistedField({
+    fieldIdentifier: 'copy_target_audience',
+    category: 'copy',
+    debounceDelay: 1000
+  });
+
+  const emotionalPayoff = usePersistedField({
+    fieldIdentifier: 'copy_emotional_payoff',
+    category: 'copy',
+    debounceDelay: 1000
+  });
+
+  const tone = usePersistedField({
+    fieldIdentifier: 'copy_tone',
+    category: 'copy',
+    debounceDelay: 1000
+  });
+
+  const format = usePersistedField({
+    fieldIdentifier: 'copy_format',
+    category: 'copy',
+    debounceDelay: 1000
+  });
+
+  const additionalContext = usePersistedField({
+    fieldIdentifier: 'copy_additional_context',
+    category: 'copy',
+    debounceDelay: 1000
+  });
+
+  const generatedCopy = usePersistedField({
+    fieldIdentifier: 'copy_generated_result',
+    category: 'copy',
+    debounceDelay: 1000
+  });
+
+  // Parse features array
+  const featuresList = useMemo(() => {
+    try {
+      const parsed = JSON.parse(features.value || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, [features.value]);
+
+  const [newFeature, setNewFeature] = useState("");
 
   const recommendedStep = getRecommendedNextStep();
   const hasCompletedStrategy = brandData.insight.completed && brandData.distinctive.completed && 
@@ -80,8 +136,7 @@ export default function ValueLens() {
     brandData.avatar.completed && brandData.brandCanvas.completed;
 
   const handleGenerate = async () => {
-
-    if (!formData.productName || !formData.targetAudience) {
+    if (!productName.value || !targetAudience.value) {
       toast({
         title: "Missing Information",
         description: "Please fill in the product name and target audience.",
@@ -91,11 +146,11 @@ export default function ValueLens() {
     }
 
     setIsGenerating(true);
-    
+
     // Simulate AI generation
     setTimeout(() => {
       const sampleCopy = generateSampleCopy();
-      setGeneratedCopy(sampleCopy);
+      generatedCopy.onChange(sampleCopy);
       setIsGenerating(false);
       toast({
         title: "Copy Generated!",
@@ -106,56 +161,57 @@ export default function ValueLens() {
 
   const addFeature = () => {
     if (!newFeature.trim()) return;
-    setFormData(prev => ({
-      ...prev,
-      features: [...prev.features, newFeature.trim()]
-    }));
+    const newList = [...featuresList, newFeature.trim()];
+    features.onChange(JSON.stringify(newList));
     setNewFeature("");
   };
 
   const removeFeature = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index)
-    }));
+    const newList = featuresList.filter((_, i) => i !== index);
+    features.onChange(JSON.stringify(newList));
   };
 
   const generateSampleCopy = () => {
-    if (formData.format === "amazon-bullet") {
-      return `• TRANSFORM YOUR ${formData.category.toUpperCase()} EXPERIENCE - ${formData.productName} delivers the ${formData.emotionalPayoff.toLowerCase()} you've been searching for
+    const categoryVal = category.value || '';
+    const productNameVal = productName.value || '';
+    const emotionalPayoffVal = emotionalPayoff.value || '';
+    const formatVal = format.value || '';
+
+    if (formatVal === "amazon-bullet") {
+      return `• TRANSFORM YOUR ${categoryVal.toUpperCase()} EXPERIENCE - ${productNameVal} delivers the ${emotionalPayoffVal.toLowerCase()} you've been searching for
 • PREMIUM QUALITY THAT SHOWS - Built with superior materials that not only perform better but make you feel confident in your choice
 • INSTANT RESULTS YOU'LL LOVE - See immediate improvements that justify every penny and give you that satisfaction of making the right decision
 • TRUSTED BY THOUSANDS - Join customers who've discovered the difference quality makes in their daily routine
-• 100% SATISFACTION PROMISE - We're so confident you'll love ${formData.productName}, we guarantee your complete satisfaction or your money back`;
+• 100% SATISFACTION PROMISE - We're so confident you'll love ${productNameVal}, we guarantee your complete satisfaction or your money back`;
     }
-    
-    if (formData.format === "ad-headline") {
-      return `Finally! The ${formData.category} That Delivers Real ${formData.emotionalPayoff} (Without The Premium Price Tag)`;
+
+    if (formatVal === "ad-headline") {
+      return `Finally! The ${categoryVal} That Delivers Real ${emotionalPayoffVal} (Without The Premium Price Tag)`;
     }
-    
-    if (formData.format === "social-caption") {
-      return `POV: You just discovered the ${formData.category} that actually works 🤯
 
-I was skeptical too... but ${formData.productName} has completely changed how I feel about ${formData.category.toLowerCase()}.
+    if (formatVal === "social-caption") {
+      return `POV: You just discovered the ${categoryVal} that actually works 🤯
 
-The ${formData.emotionalPayoff.toLowerCase()} I get from this is unmatched. Finally something that delivers on its promises!
+I was skeptical too... but ${productNameVal} has completely changed how I feel about ${categoryVal.toLowerCase()}.
+
+The ${emotionalPayoffVal.toLowerCase()} I get from this is unmatched. Finally something that delivers on its promises!
 
 Who else is tired of products that overpromise and underdeliver? 👇
 
-#${formData.category.replace(/\s+/g, '')} #ProductReview #WorthIt`;
+#${categoryVal.replace(/\s+/g, '')} #ProductReview #WorthIt`;
     }
 
-    return `Transform your ${formData.category.toLowerCase()} experience with ${formData.productName}. 
+    return `Transform your ${categoryVal.toLowerCase()} experience with ${productNameVal}.
 
-Designed for people who value ${formData.emotionalPayoff.toLowerCase()}, this isn't just another product - it's your solution to finally getting the results you deserve.
+Designed for people who value ${emotionalPayoffVal.toLowerCase()}, this isn't just another product - it's your solution to finally getting the results you deserve.
 
-${formData.features.length > 0 ? `✓ ${formData.features.join('\n✓ ')}` : ''}
+${featuresList.length > 0 ? `✓ ${featuresList.join('\n✓ ')}` : ''}
 
 Ready to experience the difference? Your future self will thank you.`;
   };
 
   const copyCopy = () => {
-    navigator.clipboard.writeText(generatedCopy);
+    navigator.clipboard.writeText(generatedCopy.value);
     toast({
       title: "Copied!",
       description: "Copy has been copied to your clipboard."
@@ -240,8 +296,8 @@ Ready to experience the difference? Your future self will thank you.`;
                   <Input
                     id="productName"
                     placeholder="e.g., UltraGrip Phone Case"
-                    value={formData.productName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, productName: e.target.value }))}
+                    value={productName.value}
+                    onChange={(e) => productName.onChange(e.target.value)}
                   />
                 </div>
 
@@ -250,8 +306,8 @@ Ready to experience the difference? Your future self will thank you.`;
                   <Input
                     id="category"
                     placeholder="e.g., Phone Accessories"
-                    value={formData.category}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    value={category.value}
+                    onChange={(e) => category.onChange(e.target.value)}
                   />
                 </div>
               </div>
@@ -259,7 +315,7 @@ Ready to experience the difference? Your future self will thank you.`;
               <div className="space-y-2">
                 <Label>Key Features</Label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.features.map((feature, index) => (
+                  {featuresList.map((feature, index) => (
                     <Badge key={index} variant="secondary" className="flex items-center gap-1">
                       {feature}
                       <button
@@ -289,8 +345,8 @@ Ready to experience the difference? Your future self will thank you.`;
                 <Textarea
                   id="targetAudience"
                   placeholder="Describe your ideal customer..."
-                  value={formData.targetAudience}
-                  onChange={(e) => setFormData(prev => ({ ...prev, targetAudience: e.target.value }))}
+                  value={targetAudience.value}
+                  onChange={(e) => targetAudience.onChange(e.target.value)}
                   rows={3}
                 />
               </div>
@@ -308,8 +364,8 @@ Ready to experience the difference? Your future self will thank you.`;
               <div className="space-y-2">
                 <Label htmlFor="emotionalPayoff">Emotional Payoff *</Label>
                 <Select
-                  value={formData.emotionalPayoff}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, emotionalPayoff: value }))}
+                  value={emotionalPayoff.value}
+                  onValueChange={(value) => emotionalPayoff.onChange(value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select emotional benefit" />
@@ -327,16 +383,16 @@ Ready to experience the difference? Your future self will thank you.`;
               <div className="space-y-2">
                 <Label htmlFor="format">Copy Format *</Label>
                 <Select
-                  value={formData.format}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, format: value }))}
+                  value={format.value}
+                  onValueChange={(value) => format.onChange(value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select copy format" />
                   </SelectTrigger>
                   <SelectContent>
-                    {copyFormats.map((format) => (
-                      <SelectItem key={format.value} value={format.value}>
-                        {format.label}
+                    {copyFormats.map((formatOption) => (
+                      <SelectItem key={formatOption.value} value={formatOption.value}>
+                        {formatOption.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -371,7 +427,7 @@ Ready to experience the difference? Your future self will thank you.`;
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Generated Copy</span>
-                {generatedCopy && (
+                {generatedCopy.value && (
                   <Button onClick={copyCopy} size="sm" variant="outline">
                     <Copy className="w-4 h-4 mr-2" />
                     Copy
@@ -379,18 +435,18 @@ Ready to experience the difference? Your future self will thank you.`;
                 )}
               </CardTitle>
               <CardDescription>
-                {generatedCopy 
-                  ? `${copyFormats.find(f => f.value === formData.format)?.label || "Copy"} generated with emotional resonance`
+                {generatedCopy.value
+                  ? `${copyFormats.find(f => f.value === format.value)?.label || "Copy"} generated with emotional resonance`
                   : "Your AI-generated copy will appear here"
                 }
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {generatedCopy ? (
+              {generatedCopy.value ? (
                 <div className="space-y-4">
                   <div className="bg-muted/30 p-4 rounded-lg">
                     <pre className="whitespace-pre-wrap text-sm font-medium leading-relaxed">
-                      {generatedCopy}
+                      {generatedCopy.value}
                     </pre>
                   </div>
                   

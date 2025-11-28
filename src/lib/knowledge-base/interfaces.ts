@@ -95,6 +95,7 @@ export interface ISyncService {
   // Sync operations
   syncField(userId: string, fieldIdentifier: string, content: string): Promise<SyncStatus>;
   syncAllFields(userId: string): Promise<void>;
+  forceSyncAll(userId: string): Promise<void>;
 
   // Conflict detection
   checkForConflicts(userId: string): Promise<ConflictInfo[]>;
