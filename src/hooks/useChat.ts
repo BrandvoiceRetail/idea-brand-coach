@@ -45,6 +45,11 @@ export const useChat = (options: UseChatOptions = {}) => {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType] });
+      // Also invalidate sessions to refresh titles in sidebar
+      // Delay slightly to allow title generation to complete
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+      }, 2000);
     },
     onError: (error: Error) => {
       toast({
