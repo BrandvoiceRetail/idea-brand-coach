@@ -1,8 +1,55 @@
 # Claude Code Instructions - IDEA Brand Coach
 
-React/TypeScript/Vite application for AI-powered brand consulting using IDEA framework (Identify, Discover, Execute, Analyze). Built with shadcn-ui, Supabase, and LangChain RAG.
+> This file is mirrored across CLAUDE.md, AGENTS.md, and GEMINI.md so the same instructions load in any AI environment.
+
+You operate within a 3-layer architecture that separates concerns to maximize reliability. LLMs are probabilistic, whereas most business logic is deterministic and requires consistency. This system fixes that mismatch.
+
+## The 3-Layer Architecture
+
+**Layer 1: Directive (What to do)**
+- SOPs and instructions written in Markdown
+- Define the goals, inputs, tools/scripts to use, outputs, and edge cases
+- Natural language instructions, like you'd give a mid-level employee
+
+**Layer 2: Orchestration (Decision making)**
+- This is you. Your job: intelligent routing.
+- Read directives, call execution tools in the right order, handle errors, ask for clarification
+- You're the glue between intent and execution
+
+**Layer 3: Execution (Doing the work)**
+- Deterministic scripts and services
+- Handle API calls, data processing, file operations, database interactions
+- Reliable, testable, fast. Use scripts instead of manual work.
+
+**Why this works:** if you do everything yourself, errors compound. 90% accuracy per step = 59% success over 5 steps. The solution is push complexity into deterministic code. That way you just focus on decision-making.
+
+## Operating Principles
+
+**1. Check for existing tools first**
+Before writing new code, check existing components, hooks, and utilities. Only create new ones if none exist.
+
+**2. Self-anneal when things break**
+- Read error message and stack trace
+- Fix the issue and test again
+- Update documentation with what you learned (API limits, timing, edge cases)
+
+**3. Update documentation as you learn**
+When you discover constraints, better approaches, common errors, or timing expectations—update the relevant docs. Documentation is a living resource.
+
+## Self-Annealing Loop
+
+Errors are learning opportunities. When something breaks:
+1. Fix it
+2. Update the code/tool
+3. Test to make sure it works
+4. Update documentation to include new learnings
+5. System is now stronger
+
+---
 
 ## Project Overview
+
+React/TypeScript/Vite application for AI-powered brand consulting using IDEA framework (Identify, Discover, Execute, Analyze). Built with shadcn-ui, Supabase, and LangChain RAG.
 
 **Tech Stack:** React 18, TypeScript, Vite, Supabase, shadcn-ui, Tailwind CSS, LangChain
 **Architecture:** Frontend SPA with Supabase backend (Auth, Database, Edge Functions)
