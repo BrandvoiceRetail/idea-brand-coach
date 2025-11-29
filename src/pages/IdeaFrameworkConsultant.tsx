@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeftClose, PanelLeft, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
@@ -13,6 +14,7 @@ import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { ImperativePanelHandle } from 'react-resizable-panels';
 
 const IdeaFrameworkConsultant = () => {
   const { toast } = useToast();
@@ -40,6 +42,18 @@ const IdeaFrameworkConsultant = () => {
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+
+  const toggleSidebar = () => {
+    const panel = sidebarPanelRef.current;
+    if (panel) {
+      if (isSidebarCollapsed) {
+        panel.expand();
+      } else {
+        panel.collapse();
+      }
+    }
+  };
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -257,42 +271,51 @@ const IdeaFrameworkConsultant = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Sidebar */}
-      <div
-        className={`transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? 'w-0 overflow-hidden' : 'w-72'
-        }`}
-      >
-        <ChatSidebar
-          sessions={sessions}
-          currentSessionId={currentSessionId}
-          isLoading={isLoadingSessions}
-          isCreating={isCreating}
-          onCreateNew={createNewChat}
-          onSelectSession={switchToSession}
-          onRenameSession={renameSession}
-          onDeleteSession={deleteSession}
-        />
-      </div>
+    <div className="h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <ResizablePanelGroup direction="horizontal" className="h-full">
+        {/* Sidebar */}
+        <ResizablePanel
+          ref={sidebarPanelRef}
+          defaultSize={20}
+          minSize={15}
+          maxSize={40}
+          collapsible={true}
+          collapsedSize={0}
+          onCollapse={() => setIsSidebarCollapsed(true)}
+          onExpand={() => setIsSidebarCollapsed(false)}
+        >
+          <ChatSidebar
+            sessions={sessions}
+            currentSessionId={currentSessionId}
+            isLoading={isLoadingSessions}
+            isCreating={isCreating}
+            onCreateNew={createNewChat}
+            onSelectSession={switchToSession}
+            onRenameSession={renameSession}
+            onDeleteSession={deleteSession}
+          />
+        </ResizablePanel>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        {/* Sidebar Toggle */}
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b p-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="h-8 w-8"
-          >
-            {isSidebarCollapsed ? (
-              <PanelLeft className="h-4 w-4" />
-            ) : (
-              <PanelLeftClose className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+        <ResizableHandle withHandle />
+
+        {/* Main Content */}
+        <ResizablePanel defaultSize={80} minSize={50}>
+          <div className="h-full overflow-auto">
+            {/* Sidebar Toggle */}
+            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b p-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="h-8 w-8"
+              >
+                {isSidebarCollapsed ? (
+                  <PanelLeft className="h-4 w-4" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
 
         <div className="p-6">
           <div className="max-w-6xl mx-auto space-y-8">
@@ -620,7 +643,9 @@ const IdeaFrameworkConsultant = () => {
           </div>
         </div>
       </div>
-    </div>
+    </ResizablePanel>
+  </ResizablePanelGroup>
+</div>
   );
 };
 
