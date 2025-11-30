@@ -45,31 +45,8 @@ export const BrandCanvasPDFExport: React.FC<BrandCanvasPDFExportProps> = ({
         return false;
       };
 
-      // Header with IDEA logo
-      try {
-        // Add the actual IDEA Brand Coach logo
-        const logoImg = new Image();
-        logoImg.src = '/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png';
-        await new Promise((resolve, reject) => {
-          logoImg.onload = resolve;
-          logoImg.onerror = reject;
-        });
-        
-        const logoWidth = 40;
-        const logoHeight = 12;
-        pdf.addImage(logoImg, 'PNG', pageWidth / 2 - logoWidth/2, yPosition, logoWidth, logoHeight);
-      } catch (error) {
-        // Fallback to text if image fails to load
-        const logoWidth = 60;
-        const logoHeight = 15;
-        pdf.setFillColor(0, 0, 0);
-        pdf.rect(pageWidth / 2 - logoWidth/2, yPosition, logoWidth, logoHeight, 'F');
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(10);
-        pdf.text('IDEA Brand Coach', pageWidth / 2, yPosition + logoHeight/2 + 1, { align: 'center' });
-      }
-      
-      yPosition += 30;
+      // Header
+      yPosition += 10;
 
       // Title
       pdf.setTextColor(30, 64, 175);
