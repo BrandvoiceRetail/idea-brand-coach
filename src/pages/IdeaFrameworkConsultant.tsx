@@ -613,7 +613,8 @@ const IdeaFrameworkConsultant = () => {
                     <p className="text-xs text-blue-700 dark:text-blue-200">
                       Your conversations are securely stored and associated with your account to provide continuity across sessions.
                       You can view past conversations in the sidebar and delete individual sessions or clear entire conversations at any time using the "Clear Conversation" button.
-                      Your data is encrypted in transit and at rest, never shared with other users or third parties, and you maintain full control over your conversation history.
+                      Your data is encrypted in transit and at rest, never shared with other users, not used to train AI models, and you maintain full control over your conversation history.
+                      We use trusted service providers (like OpenAI and our cloud infrastructure) to deliver the service, all bound by strict confidentiality obligations.
                     </p>
                   </div>
                 </div>
