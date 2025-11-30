@@ -112,7 +112,11 @@ export class DataAggregator {
     );
 
     // Calculate completion stats
-    const completionStats = this.calculateCompletionStats(brandData);
+    const completionStats = this.calculateCompletionStats(
+      ideaFramework,
+      avatar,
+      canvas
+    );
 
     // Find last updated timestamp
     const lastUpdated = this.getLastUpdatedTimestamp(knowledgeEntries, chatMessages);
@@ -185,57 +189,61 @@ export class DataAggregator {
   }
 
   /**
-   * Calculate completion percentages for each major section
+   * Calculate completion percentages for each major section based on knowledge base entries
    */
-  private calculateCompletionStats(brandData: BrandData): Record<string, number> {
+  private calculateCompletionStats(
+    ideaFramework: {
+      insight: KnowledgeEntry[];
+      distinctive: KnowledgeEntry[];
+      empathy: KnowledgeEntry[];
+      authentic: KnowledgeEntry[];
+    },
+    avatar: KnowledgeEntry[],
+    canvas: KnowledgeEntry[]
+  ): Record<string, number> {
     const stats: Record<string, number> = {};
 
-    // IDEA Framework sections
-    stats.insight = brandData.insight.completed ? 100 : this.calculateFieldCompletion([
-      brandData.insight.marketInsight,
-      brandData.insight.consumerInsight,
-      brandData.insight.brandPurpose,
-    ]);
+    // Count entries with actual content
+    const hasContent = (entries: KnowledgeEntry[]): number => {
+      return entries.filter(e => e.content && e.content.trim().length > 0).length;
+    };
 
-    stats.distinctive = brandData.distinctive.completed ? 100 : this.calculateFieldCompletion([
-      brandData.distinctive.uniqueValue,
-      brandData.distinctive.positioning,
-      ...(brandData.distinctive.differentiators.length > 0 ? ['has_diff'] : []),
-    ]);
+    // Get unique field identifiers to count total available fields
+    const countUniqueFields = (entries: KnowledgeEntry[]): number => {
+      const uniqueFields = new Set(entries.map(e => e.fieldIdentifier));
+      return uniqueFields.size;
+    };
 
-    stats.empathy = brandData.empathy.completed ? 100 : this.calculateFieldCompletion([
-      brandData.empathy.emotionalConnection,
-      brandData.empathy.brandPersonality,
-      ...(brandData.empathy.customerNeeds.length > 0 ? ['has_needs'] : []),
-    ]);
+    // IDEA Framework sections - use actual field count if available, otherwise estimate
+    const insightTotal = countUniqueFields(ideaFramework.insight) || 3;
+    const distinctiveTotal = countUniqueFields(ideaFramework.distinctive) || 3;
+    const empathyTotal = countUniqueFields(ideaFramework.empathy) || 3;
+    const authenticTotal = countUniqueFields(ideaFramework.authentic) || 3;
 
-    stats.authentic = brandData.authentic.completed ? 100 : this.calculateFieldCompletion([
-      brandData.authentic.brandStory,
-      brandData.authentic.brandPromise,
-      ...(brandData.authentic.brandValues.length > 0 ? ['has_values'] : []),
-    ]);
+    stats.insight = insightTotal > 0
+      ? Math.min(100, Math.round((hasContent(ideaFramework.insight) / insightTotal) * 100))
+      : 0;
+    stats.distinctive = distinctiveTotal > 0
+      ? Math.min(100, Math.round((hasContent(ideaFramework.distinctive) / distinctiveTotal) * 100))
+      : 0;
+    stats.empathy = empathyTotal > 0
+      ? Math.min(100, Math.round((hasContent(ideaFramework.empathy) / empathyTotal) * 100))
+      : 0;
+    stats.authentic = authenticTotal > 0
+      ? Math.min(100, Math.round((hasContent(ideaFramework.authentic) / authenticTotal) * 100))
+      : 0;
 
-    // Avatar
-    stats.avatar = brandData.avatar.completed ? 100 : this.calculateFieldCompletion([
-      brandData.avatar.demographics.age,
-      brandData.avatar.demographics.gender,
-      brandData.avatar.demographics.location,
-      brandData.avatar.psychographics.lifestyle,
-      ...(brandData.avatar.painPoints.length > 0 ? ['has_pain'] : []),
-      ...(brandData.avatar.goals.length > 0 ? ['has_goals'] : []),
-    ]);
+    // Avatar - count actual unique fields dynamically
+    const avatarTotal = countUniqueFields(avatar) || 6;
+    stats.avatar = avatarTotal > 0
+      ? Math.min(100, Math.round((hasContent(avatar) / avatarTotal) * 100))
+      : 0;
 
-    // Canvas
-    stats.canvas = brandData.brandCanvas.completed ? 100 : this.calculateFieldCompletion([
-      brandData.brandCanvas.brandPurpose,
-      brandData.brandCanvas.brandVision,
-      brandData.brandCanvas.brandMission,
-      brandData.brandCanvas.positioningStatement,
-      brandData.brandCanvas.valueProposition,
-      brandData.brandCanvas.brandVoice,
-      ...(brandData.brandCanvas.brandValues.length > 0 ? ['has_values'] : []),
-      ...(brandData.brandCanvas.brandPersonality.length > 0 ? ['has_personality'] : []),
-    ]);
+    // Canvas - count actual unique fields dynamically
+    const canvasTotal = countUniqueFields(canvas) || 8;
+    stats.canvas = canvasTotal > 0
+      ? Math.min(100, Math.round((hasContent(canvas) / canvasTotal) * 100))
+      : 0;
 
     return stats;
   }

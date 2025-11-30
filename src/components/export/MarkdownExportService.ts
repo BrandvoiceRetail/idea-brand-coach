@@ -9,6 +9,7 @@ import type { IKnowledgeRepository } from '@/lib/knowledge-base/interfaces';
 import type { IChatService } from '@/services/interfaces/IChatService';
 import type { BrandData } from '@/contexts/BrandContext';
 import { DataAggregator, type AggregatedData } from './templates/formatters/DataAggregator';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Export configuration options
@@ -143,15 +144,42 @@ export class MarkdownExportService {
     // Collect knowledge base entries
     const knowledgeEntries = await this.knowledgeRepo.getAllUserData(userId);
 
-    // Collect chat sessions and messages
-    const chatSessions = await this.chatService.getSessions();
+    // Collect ALL chat sessions and messages (not filtered by chatbot type)
+    const { data: chatSessionsData, error: sessionsError } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false });
+
+    if (sessionsError) {
+      console.error('Failed to fetch chat sessions:', sessionsError);
+      throw sessionsError;
+    }
+
+    const chatSessions = chatSessionsData || [];
     const allMessages: any[] = [];
 
     // Get messages for each session
     for (const session of chatSessions) {
-      const messages = await this.chatService.getSessionMessages(session.id);
-      allMessages.push(...messages);
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('session_id', session.id)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) {
+        console.error(`Failed to fetch messages for session ${session.id}:`, messagesError);
+        continue;
+      }
+
+      allMessages.push(...(messagesData || []));
     }
+
+    console.log('📊 Export data collected:', {
+      knowledgeEntries: knowledgeEntries.length,
+      chatSessions: chatSessions.length,
+      chatMessages: allMessages.length,
+    });
 
     // Aggregate all data
     return this.dataAggregator.aggregateAllData(
