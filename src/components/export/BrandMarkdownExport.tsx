@@ -47,7 +47,7 @@ export function BrandMarkdownExport({
 
     try {
       // Initialize services
-      const knowledgeRepo = KnowledgeBaseFactory.createRepository();
+      const knowledgeRepo = await KnowledgeBaseFactory.createRepository();
       const chatService = new SupabaseChatService('idea-framework-consultant');
       const exportService = new MarkdownExportService(
         knowledgeRepo,
