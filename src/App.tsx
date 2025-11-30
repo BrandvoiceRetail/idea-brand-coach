@@ -34,6 +34,7 @@ import BetaJourney from "./pages/BetaJourney";
 import BetaFeedback from "./pages/BetaFeedback";
 import NotFound from "./pages/NotFound";
 import { TestOfflineSync } from "./pages/TestOfflineSync";
+import { StartHere } from "./pages/StartHere";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,13 @@ const App = () => (
               } />
               <Route path="/welcome" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/start-here" element={
+                <BrandProvider>
+                  <Layout>
+                    <StartHere />
+                  </Layout>
+                </BrandProvider>
+              } />
               <Route path="/diagnostic" element={<FreeDiagnostic />} />
               <Route path="/diagnostic/results" element={<DiagnosticResults />} />
               <Route path="/dashboard" element={
