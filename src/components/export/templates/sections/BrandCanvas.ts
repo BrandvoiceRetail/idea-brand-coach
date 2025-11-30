@@ -17,7 +17,39 @@ export function generateBrandCanvas(
   // Main section heading
   content += md.heading('Brand Canvas Strategy', 2);
 
-  const canvas = brandData.brandCanvas;
+  // Helper to get field value from knowledge base
+  const getFieldValue = (fieldId: string): string => {
+    const entry = data.canvas.find(e => e.fieldIdentifier === fieldId);
+    return entry?.content || '';
+  };
+
+  // Helper to get array field values
+  const getArrayFieldValues = (fieldId: string): string[] => {
+    const entry = data.canvas.find(e => e.fieldIdentifier === fieldId);
+    if (!entry) return [];
+
+    // Try to parse as JSON array first
+    try {
+      const parsed = JSON.parse(entry.content);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      // If not JSON, split by newlines or commas
+      return entry.content.split(/[\n,]/).map(v => v.trim()).filter(v => v);
+    }
+    return [];
+  };
+
+  // Get values from knowledge base
+  const canvas = {
+    brandPurpose: getFieldValue('canvas_brand_purpose'),
+    brandVision: getFieldValue('canvas_brand_vision'),
+    brandMission: getFieldValue('canvas_brand_mission'),
+    brandValues: getArrayFieldValues('canvas_brand_values'),
+    positioningStatement: getFieldValue('canvas_positioning_statement'),
+    valueProposition: getFieldValue('canvas_value_proposition'),
+    brandPersonality: getArrayFieldValues('canvas_brand_personality'),
+    brandVoice: getFieldValue('canvas_brand_voice'),
+  };
 
   // Brand Purpose
   content += md.heading('Brand Purpose', 3);

@@ -17,11 +17,7 @@ export function generateCustomerAvatar(
   // Main section heading
   content += md.heading('Customer Avatar Profile', 2);
 
-  const hasAvatarData = brandData.avatar.completed ||
-    Object.values(brandData.avatar.demographics).some(v => Boolean(v)) ||
-    Object.values(brandData.avatar.psychographics).some(v =>
-      Array.isArray(v) ? v.length > 0 : Boolean(v)
-    );
+  const hasAvatarData = data.avatar.length > 0;
 
   if (!hasAvatarData) {
     content += md.paragraph(
@@ -32,13 +28,13 @@ export function generateCustomerAvatar(
   }
 
   // Demographics
-  content += generateDemographics(brandData);
+  content += generateDemographics(data);
 
   // Psychographics
-  content += generatePsychographics(brandData);
+  content += generatePsychographics(data);
 
   // Pain Points & Goals
-  content += generatePainPointsAndGoals(brandData);
+  content += generatePainPointsAndGoals(data);
 
   // Preferred Channels
   if (brandData.avatar.preferredChannels.length > 0) {
@@ -54,23 +50,33 @@ export function generateCustomerAvatar(
 /**
  * Generate demographics subsection
  */
-function generateDemographics(brandData: BrandData): string {
+function generateDemographics(data: AggregatedData): string {
   let content = '';
-  const demo = brandData.avatar.demographics;
 
-  const hasData = Object.values(demo).some(v => Boolean(v));
+  const getAvatarField = (fieldId: string): string => {
+    const entry = data.avatar.find(e => e.fieldIdentifier === fieldId || e.fieldIdentifier.includes(fieldId));
+    return entry?.content || '';
+  };
+
+  const age = getAvatarField('age') || getAvatarField('demographics_age');
+  const gender = getAvatarField('gender') || getAvatarField('demographics_gender');
+  const income = getAvatarField('income') || getAvatarField('demographics_income');
+  const location = getAvatarField('location') || getAvatarField('demographics_location');
+  const occupation = getAvatarField('occupation') || getAvatarField('demographics_occupation');
+
+  const hasData = age || gender || income || location || occupation;
   if (!hasData) return '';
 
   content += md.heading('Demographics', 3);
 
   const items: string[] = [];
-  if (demo.age) items.push(md.keyValue('Age', demo.age));
-  if (demo.gender && demo.gender !== 'prefer-not-to-say') {
-    items.push(md.keyValue('Gender', demo.gender));
+  if (age) items.push(md.keyValue('Age', age));
+  if (gender && gender !== 'prefer-not-to-say') {
+    items.push(md.keyValue('Gender', gender));
   }
-  if (demo.income) items.push(md.keyValue('Income', demo.income));
-  if (demo.location) items.push(md.keyValue('Location', demo.location));
-  if (demo.occupation) items.push(md.keyValue('Occupation', demo.occupation));
+  if (income) items.push(md.keyValue('Income', income));
+  if (location) items.push(md.keyValue('Location', location));
+  if (occupation) items.push(md.keyValue('Occupation', occupation));
 
   if (items.length > 0) {
     content += items.join('\n') + '\n\n';
@@ -82,37 +88,52 @@ function generateDemographics(brandData: BrandData): string {
 /**
  * Generate psychographics subsection
  */
-function generatePsychographics(brandData: BrandData): string {
+function generatePsychographics(data: AggregatedData): string {
   let content = '';
-  const psycho = brandData.avatar.psychographics;
 
-  const hasData = psycho.interests.length > 0 ||
-    psycho.values.length > 0 ||
-    psycho.lifestyle ||
-    psycho.personality.length > 0;
+  const getArrayField = (fieldId: string): string[] => {
+    const entry = data.avatar.find(e => e.fieldIdentifier === fieldId || e.fieldIdentifier.includes(fieldId));
+    if (!entry) return [];
+    try {
+      return JSON.parse(entry.content);
+    } catch {
+      return entry.content.split(/[\n,]/).map(v => v.trim()).filter(v => v);
+    }
+  };
 
+  const getTextField = (fieldId: string): string => {
+    const entry = data.avatar.find(e => e.fieldIdentifier === fieldId || e.fieldIdentifier.includes(fieldId));
+    return entry?.content || '';
+  };
+
+  const values = getArrayField('psychographics_values') || getArrayField('values');
+  const interests = getArrayField('psychographics_interests') || getArrayField('interests');
+  const lifestyle = getTextField('psychographics_lifestyle') || getTextField('lifestyle');
+  const personality = getArrayField('psychographics_personality') || getArrayField('personality');
+
+  const hasData = values.length > 0 || interests.length > 0 || lifestyle || personality.length > 0;
   if (!hasData) return '';
 
   content += md.heading('Psychographics', 3);
 
-  if (psycho.values.length > 0) {
+  if (values.length > 0) {
     content += md.paragraph(md.bold('Values'));
-    content += md.unorderedList(psycho.values);
+    content += md.unorderedList(values);
   }
 
-  if (psycho.interests.length > 0) {
+  if (interests.length > 0) {
     content += md.paragraph(md.bold('Interests'));
-    content += md.unorderedList(psycho.interests);
+    content += md.unorderedList(interests);
   }
 
-  if (psycho.lifestyle) {
+  if (lifestyle) {
     content += md.paragraph(md.bold('Lifestyle'));
-    content += md.paragraph(psycho.lifestyle);
+    content += md.paragraph(lifestyle);
   }
 
-  if (psycho.personality.length > 0) {
+  if (personality.length > 0) {
     content += md.paragraph(md.bold('Personality Traits'));
-    content += md.unorderedList(psycho.personality);
+    content += md.unorderedList(personality);
   }
 
   return content;
@@ -121,11 +142,24 @@ function generatePsychographics(brandData: BrandData): string {
 /**
  * Generate pain points and goals subsection
  */
-function generatePainPointsAndGoals(brandData: BrandData): string {
+function generatePainPointsAndGoals(data: AggregatedData): string {
   let content = '';
 
-  const hasPainPoints = brandData.avatar.painPoints.length > 0;
-  const hasGoals = brandData.avatar.goals.length > 0;
+  const getArrayField = (fieldId: string): string[] => {
+    const entry = data.avatar.find(e => e.fieldIdentifier === fieldId || e.fieldIdentifier.includes(fieldId));
+    if (!entry) return [];
+    try {
+      return JSON.parse(entry.content);
+    } catch {
+      return entry.content.split(/[\n,]/).map(v => v.trim()).filter(v => v);
+    }
+  };
+
+  const painPoints = getArrayField('pain_points') || getArrayField('painPoints');
+  const goals = getArrayField('goals');
+
+  const hasPainPoints = painPoints.length > 0;
+  const hasGoals = goals.length > 0;
 
   if (!hasPainPoints && !hasGoals) return '';
 
@@ -133,12 +167,12 @@ function generatePainPointsAndGoals(brandData: BrandData): string {
 
   if (hasPainPoints) {
     content += md.paragraph(md.bold('Pain Points'));
-    content += md.unorderedList(brandData.avatar.painPoints);
+    content += md.unorderedList(painPoints);
   }
 
   if (hasGoals) {
     content += md.paragraph(md.bold('Goals & Aspirations'));
-    content += md.unorderedList(brandData.avatar.goals);
+    content += md.unorderedList(goals);
   }
 
   return content;
