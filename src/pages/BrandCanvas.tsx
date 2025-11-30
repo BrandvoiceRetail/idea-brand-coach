@@ -14,6 +14,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { usePersistedField, usePersistedArrayField } from "@/hooks/usePersistedField";
 import { AIAssistant } from "@/components/AIAssistant";
 import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
+import { BrandMarkdownExport } from "@/components/export/BrandMarkdownExport";
 import { FloatingConsultantButton } from "@/components/FloatingConsultantButton";
 import { CollapsibleDescription } from "@/components/CollapsibleDescription";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
@@ -902,6 +903,13 @@ export default function BrandCanvas() {
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button> */}
+
+                <BrandMarkdownExport
+                  companyName={brandData.userInfo.company || "Your Brand"}
+                  variant="outline"
+                  fullWidth
+                  includeChats={true}
+                />
 
                 <BrandCanvasPDFExport
                   brandCanvas={canvasData}
