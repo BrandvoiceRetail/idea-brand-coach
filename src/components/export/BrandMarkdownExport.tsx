@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { useBrand } from '@/contexts/BrandContext';
 import { MarkdownExportService } from './MarkdownExportService';
 import { KnowledgeBaseFactory } from '@/lib/knowledge-base';
@@ -39,20 +40,40 @@ export function BrandMarkdownExport({
   includeChats = true,
 }: BrandMarkdownExportProps): JSX.Element {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { brandData } = useBrand();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async (): Promise<void> => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please sign in to export your brand strategy.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsExporting(true);
 
     try {
+      // Update brandData with current user ID
+      const exportBrandData = {
+        ...brandData,
+        userInfo: {
+          ...brandData.userInfo,
+          userId: user.id,
+          email: user.email || brandData.userInfo.email,
+        },
+      };
+
       // Initialize services
       const knowledgeRepo = await KnowledgeBaseFactory.createRepository();
       const chatService = new SupabaseChatService('idea-framework-consultant');
       const exportService = new MarkdownExportService(
         knowledgeRepo,
         chatService,
-        brandData
+        exportBrandData
       );
 
       // Generate export
