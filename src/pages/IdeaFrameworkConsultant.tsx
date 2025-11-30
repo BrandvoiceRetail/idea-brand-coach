@@ -27,14 +27,19 @@ const IdeaFrameworkConsultant = () => {
     currentSessionId,
     isLoadingSessions,
     isCreating,
+    isRegeneratingTitle,
     createNewChat,
     renameSession,
     deleteSession,
+    regenerateTitle,
     switchToSession,
   } = useChatSessions({ chatbotType: 'idea-framework-consultant' });
 
-  // Chat for current session
-  const { messages, sendMessage, isSending, clearChat } = useChat({ chatbotType: 'idea-framework-consultant' });
+  // Chat for current session (passing sessionId ensures messages are cached per-session)
+  const { messages, sendMessage, isSending, clearChat } = useChat({
+    chatbotType: 'idea-framework-consultant',
+    sessionId: currentSessionId,
+  });
 
   const [message, setMessage] = useState('');
   const [context, setContext] = useState('');
@@ -66,6 +71,17 @@ const IdeaFrameworkConsultant = () => {
       navigate('/auth');
     }
   }, [user, navigate, toast]);
+
+  // Debug helper: Log user ID once on mount
+  useEffect(() => {
+    if (user) {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔑 User ID:', user.id);
+      console.log('   (Use this ID for verification scripts)');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only log once on mount
 
   // Generate follow-up suggestions when new assistant message arrives
   useEffect(() => {
@@ -289,10 +305,12 @@ const IdeaFrameworkConsultant = () => {
             currentSessionId={currentSessionId}
             isLoading={isLoadingSessions}
             isCreating={isCreating}
+            isRegeneratingTitle={isRegeneratingTitle}
             onCreateNew={createNewChat}
             onSelectSession={switchToSession}
             onRenameSession={renameSession}
             onDeleteSession={deleteSession}
+            onRegenerateTitle={regenerateTitle}
           />
         </ResizablePanel>
 
@@ -457,6 +475,7 @@ const IdeaFrameworkConsultant = () => {
                         onClick={handleClearChat}
                         variant="outline"
                         size="sm"
+                        disabled={!currentSessionId || messages.length === 0}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Clear Conversation

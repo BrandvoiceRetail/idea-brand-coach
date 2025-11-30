@@ -100,6 +100,9 @@ export interface ChatResponse {
 
   /** Optional source citations (e.g., IDEA Framework docs) */
   sources?: string[];
+
+  /** Promise that resolves when title generation completes (for cache invalidation) */
+  titlePromise?: Promise<void>;
 }
 
 /**

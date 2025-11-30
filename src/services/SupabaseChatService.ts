@@ -165,12 +165,12 @@ export class SupabaseChatService implements IChatService {
 
     if (assistantError) throw assistantError;
 
-    // Generate AI title for new sessions (fire and forget - don't block response)
-    if (sessionId) {
-      this.generateSessionTitle(sessionId, message.content, responseData.response).catch(() => {
-        // Silently ignore - title generation is not critical
-      });
-    }
+    // Generate AI title for new sessions (return promise for cache invalidation)
+    const titlePromise = sessionId
+      ? this.generateSessionTitle(sessionId, message.content, responseData.response).catch(() => {
+          // Silently ignore - title generation is not critical
+        })
+      : undefined;
 
     return {
       message: {
@@ -185,6 +185,7 @@ export class SupabaseChatService implements IChatService {
       },
       suggestions: responseData.suggestions,
       sources: responseData.sources,
+      titlePromise,
     };
   }
 
@@ -214,20 +215,50 @@ export class SupabaseChatService implements IChatService {
   async clearChatHistory(): Promise<void> {
     const userId = await this.getUserId();
 
-    let query = supabase
+    // SAFETY: Only clear if we have a current session ID
+    // This prevents accidentally clearing all messages across all sessions
+    if (!this.currentSessionId) {
+      throw new Error('Cannot clear chat history: No active session');
+    }
+
+    console.log('🗑️ Clearing chat history for session:', this.currentSessionId);
+
+    // First, get count of messages to be deleted for verification
+    const { count: beforeCount } = await supabase
+      .from('chat_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('chatbot_type', this.chatbotType)
+      .eq('session_id', this.currentSessionId);
+
+    console.log(`📊 Found ${beforeCount || 0} messages to delete`);
+
+    // Delete messages
+    const { error } = await supabase
       .from('chat_messages')
       .delete()
       .eq('user_id', userId)
-      .eq('chatbot_type', this.chatbotType);
+      .eq('chatbot_type', this.chatbotType)
+      .eq('session_id', this.currentSessionId);
 
-    // Clear only current session if set
-    if (this.currentSessionId) {
-      query = query.eq('session_id', this.currentSessionId);
+    if (error) {
+      console.error('❌ Delete failed:', error);
+      throw error;
     }
 
-    const { error } = await query;
+    // Verify deletion
+    const { count: afterCount } = await supabase
+      .from('chat_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('chatbot_type', this.chatbotType)
+      .eq('session_id', this.currentSessionId);
 
-    if (error) throw error;
+    console.log(`✅ Delete successful! Deleted ${beforeCount || 0} messages. Remaining: ${afterCount || 0}`);
+
+    if (afterCount && afterCount > 0) {
+      console.warn('⚠️ Warning: Some messages may not have been deleted');
+    }
   }
 
   async getRecentMessages(count: number): Promise<ChatMessage[]> {
@@ -396,13 +427,69 @@ export class SupabaseChatService implements IChatService {
   }
 
   /**
+   * Regenerate session title based on entire conversation history
+   * Used when user wants to update title to reflect evolved conversation
+   */
+  async regenerateSessionTitle(sessionId: string): Promise<string | null> {
+    try {
+      const messages = await this.getSessionMessages(sessionId, 20);
+      if (messages.length === 0) return null;
+
+      // Build conversation summary for title generation
+      const conversationSummary = messages
+        .slice(-6) // Use last 6 messages for context
+        .map(m => `${m.role}: ${m.content.substring(0, 200)}`)
+        .join('\n');
+
+      // Get auth session
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (!authSession) return null;
+
+      // Call edge function to generate title
+      const { data, error } = await supabase.functions.invoke('generate-session-title', {
+        headers: {
+          Authorization: `Bearer ${authSession.access_token}`,
+        },
+        body: {
+          user_message: conversationSummary,
+          assistant_response: '', // Empty since we're using full conversation
+          regenerate: true, // Flag to indicate full conversation context
+        },
+      });
+
+      if (error) {
+        console.warn('Failed to regenerate AI title:', error);
+        return null;
+      }
+
+      if (data?.title) {
+        await this.updateSession(sessionId, { title: data.title });
+        console.log('✅ Regenerated session title:', data.title);
+        return data.title;
+      }
+
+      return null;
+    } catch (error) {
+      console.warn('Failed to regenerate session title:', error);
+      return null;
+    }
+  }
+
+  /**
    * Generate an AI-powered session title after first exchange
    */
   async generateSessionTitle(sessionId: string, userMessage: string, assistantResponse: string): Promise<void> {
     try {
       const session = await this.getSession(sessionId);
-      // Only generate if title looks like it's the temp title (user's message)
       if (!session) return;
+
+      // Only generate title on first exchange (2 messages = user + assistant)
+      // This prevents overwriting manually renamed sessions
+      const messages = await this.getSessionMessages(sessionId, 3);
+      if (messages.length > 2) {
+        console.log('[generateSessionTitle] Skipping - not first exchange (has', messages.length, 'messages)');
+        return;
+      }
 
       // Get current session to pass auth token
       const { data: { session: authSession } } = await supabase.auth.getSession();

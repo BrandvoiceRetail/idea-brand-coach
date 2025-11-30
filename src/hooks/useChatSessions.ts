@@ -69,9 +69,9 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
   const setCurrentSessionId = useCallback((sessionId: string | undefined) => {
     setCurrentSessionIdState(sessionId);
     chatService.setCurrentSession(sessionId);
-    // Invalidate messages cache when session changes
-    queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType] });
-  }, [chatService, queryClient, chatbotType]);
+    // Note: No need to invalidate messages - the query key includes sessionId
+    // so React Query will automatically fetch messages for the new session
+  }, [chatService]);
 
   // Get current session object
   const currentSession = sessions?.find(s => s.id === currentSessionId) ?? null;
@@ -155,6 +155,38 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     return deleteSessionMutation.mutateAsync(sessionId);
   }, [deleteSessionMutation]);
 
+  // Mutation: Regenerate title
+  const regenerateTitleMutation = useMutation({
+    mutationFn: (sessionId: string) => chatService.regenerateSessionTitle(sessionId),
+    onSuccess: (newTitle) => {
+      if (newTitle) {
+        queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+        toast({
+          title: 'Title Updated',
+          description: `New title: "${newTitle}"`,
+        });
+      } else {
+        toast({
+          title: 'Could Not Generate Title',
+          description: 'Try again or rename manually.',
+          variant: 'destructive',
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Generating Title',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Regenerate title (convenience wrapper)
+  const regenerateTitle = useCallback(async (sessionId: string) => {
+    return regenerateTitleMutation.mutateAsync(sessionId);
+  }, [regenerateTitleMutation]);
+
   // Switch to session
   const switchToSession = useCallback((sessionId: string) => {
     setCurrentSessionId(sessionId);
@@ -171,6 +203,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     isCreating: createSessionMutation.isPending,
     isUpdating: updateSessionMutation.isPending,
     isDeleting: deleteSessionMutation.isPending,
+    isRegeneratingTitle: regenerateTitleMutation.isPending,
 
     // Error
     error: sessionsError,
@@ -179,6 +212,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     createNewChat,
     renameSession,
     deleteSession,
+    regenerateTitle,
     switchToSession,
     setCurrentSessionId,
   };

@@ -148,4 +148,13 @@ export interface IChatService {
    * @param assistantResponse - The assistant's response
    */
   generateSessionTitle(sessionId: string, userMessage: string, assistantResponse: string): Promise<void>;
+
+  /**
+   * Regenerate session title based on entire conversation history.
+   * Used when user wants to update title to reflect evolved conversation.
+   *
+   * @param sessionId - ID of the session to update
+   * @returns The new title, or null if generation failed
+   */
+  regenerateSessionTitle(sessionId: string): Promise<string | null>;
 }

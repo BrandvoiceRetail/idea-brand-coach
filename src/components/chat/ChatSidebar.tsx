@@ -33,6 +33,7 @@ import {
   Check,
   X,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { ChatSession } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -42,10 +43,12 @@ interface ChatSidebarProps {
   currentSessionId: string | undefined;
   isLoading?: boolean;
   isCreating?: boolean;
+  isRegeneratingTitle?: boolean;
   onCreateNew: () => void;
   onSelectSession: (sessionId: string) => void;
   onRenameSession: (sessionId: string, title: string) => Promise<void>;
   onDeleteSession: (sessionId: string) => Promise<void>;
+  onRegenerateTitle: (sessionId: string) => Promise<void>;
 }
 
 export function ChatSidebar({
@@ -53,10 +56,12 @@ export function ChatSidebar({
   currentSessionId,
   isLoading,
   isCreating,
+  isRegeneratingTitle,
   onCreateNew,
   onSelectSession,
   onRenameSession,
   onDeleteSession,
+  onRegenerateTitle,
 }: ChatSidebarProps): JSX.Element {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -171,10 +176,18 @@ export function ChatSidebar({
                   </div>
                 ) : (
                   // Normal mode
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => onSelectSession(session.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectSession(session.id);
+                      }
+                    }}
                     className={cn(
-                      'w-full text-left p-2 rounded-lg transition-colors',
+                      'w-full text-left p-2 rounded-lg transition-colors cursor-pointer',
                       'hover:bg-accent/50',
                       'flex items-start gap-2',
                       currentSessionId === session.id && 'bg-accent'
@@ -212,6 +225,17 @@ export function ChatSidebar({
                           Rename
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          onClick={() => onRegenerateTitle(session.id)}
+                          disabled={isRegeneratingTitle}
+                        >
+                          {isRegeneratingTitle ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4 mr-2" />
+                          )}
+                          Update Title
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           onClick={() => setDeleteSessionId(session.id)}
                           className="text-destructive focus:text-destructive"
                         >
@@ -220,7 +244,7 @@ export function ChatSidebar({
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </button>
+                  </div>
                 )}
               </div>
             ))
