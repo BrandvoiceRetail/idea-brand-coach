@@ -144,12 +144,12 @@ export class MarkdownExportService {
     const knowledgeEntries = await this.knowledgeRepo.getAllUserData(userId);
 
     // Collect chat sessions and messages
-    const chatSessions = await this.chatService.listSessions();
+    const chatSessions = await this.chatService.getSessions();
     const allMessages: any[] = [];
 
     // Get messages for each session
     for (const session of chatSessions) {
-      const messages = await this.chatService.getMessages(session.id);
+      const messages = await this.chatService.getSessionMessages(session.id);
       allMessages.push(...messages);
     }
 
