@@ -208,42 +208,37 @@ export class DataAggregator {
       return entries.filter(e => e.content && e.content.trim().length > 0).length;
     };
 
-    // Get unique field identifiers to count total available fields
-    const countUniqueFields = (entries: KnowledgeEntry[]): number => {
-      const uniqueFields = new Set(entries.map(e => e.fieldIdentifier));
-      return uniqueFields.size;
+    // Define expected field counts based on actual schema
+    // These numbers represent the total fields available in each section
+    const EXPECTED_FIELDS = {
+      insight: 3,        // market, consumer, purpose
+      distinctive: 2,    // value, positioning
+      empathy: 1,        // connection
+      authentic: 2,      // values, story
+      avatar: 20,        // All Avatar 2.0 fields (demographics, psychographics, behaviors, etc)
+      canvas: 8,         // purpose, vision, mission, values, positioning, value prop, personality, voice
     };
 
-    // IDEA Framework sections - use actual field count if available, otherwise estimate
-    const insightTotal = countUniqueFields(ideaFramework.insight) || 3;
-    const distinctiveTotal = countUniqueFields(ideaFramework.distinctive) || 3;
-    const empathyTotal = countUniqueFields(ideaFramework.empathy) || 3;
-    const authenticTotal = countUniqueFields(ideaFramework.authentic) || 3;
+    // IDEA Framework sections - use schema-defined field count
+    stats.insight = Math.min(100, Math.round((hasContent(ideaFramework.insight) / EXPECTED_FIELDS.insight) * 100));
+    stats.distinctive = Math.min(100, Math.round((hasContent(ideaFramework.distinctive) / EXPECTED_FIELDS.distinctive) * 100));
+    stats.empathy = Math.min(100, Math.round((hasContent(ideaFramework.empathy) / EXPECTED_FIELDS.empathy) * 100));
+    stats.authentic = Math.min(100, Math.round((hasContent(ideaFramework.authentic) / EXPECTED_FIELDS.authentic) * 100));
 
-    stats.insight = insightTotal > 0
-      ? Math.min(100, Math.round((hasContent(ideaFramework.insight) / insightTotal) * 100))
-      : 0;
-    stats.distinctive = distinctiveTotal > 0
-      ? Math.min(100, Math.round((hasContent(ideaFramework.distinctive) / distinctiveTotal) * 100))
-      : 0;
-    stats.empathy = empathyTotal > 0
-      ? Math.min(100, Math.round((hasContent(ideaFramework.empathy) / empathyTotal) * 100))
-      : 0;
-    stats.authentic = authenticTotal > 0
-      ? Math.min(100, Math.round((hasContent(ideaFramework.authentic) / authenticTotal) * 100))
-      : 0;
+    // Avatar - use schema-defined field count
+    const avatarFilled = hasContent(avatar);
+    stats.avatar = Math.min(100, Math.round((avatarFilled / EXPECTED_FIELDS.avatar) * 100));
 
-    // Avatar - count actual unique fields dynamically
-    const avatarTotal = countUniqueFields(avatar) || 6;
-    stats.avatar = avatarTotal > 0
-      ? Math.min(100, Math.round((hasContent(avatar) / avatarTotal) * 100))
-      : 0;
+    // Canvas - use schema-defined field count
+    const canvasFilled = hasContent(canvas);
+    stats.canvas = Math.min(100, Math.round((canvasFilled / EXPECTED_FIELDS.canvas) * 100));
 
-    // Canvas - count actual unique fields dynamically
-    const canvasTotal = countUniqueFields(canvas) || 8;
-    stats.canvas = canvasTotal > 0
-      ? Math.min(100, Math.round((hasContent(canvas) / canvasTotal) * 100))
-      : 0;
+    // Debug logging
+    console.log('📊 Completion Calculation Debug:');
+    console.log('Avatar:', { expected: EXPECTED_FIELDS.avatar, filled: avatarFilled, entries: avatar.length, percentage: stats.avatar });
+    console.log('Canvas:', { expected: EXPECTED_FIELDS.canvas, filled: canvasFilled, entries: canvas.length, percentage: stats.canvas });
+    console.log('Avatar entries:', avatar.map(e => ({ field: e.fieldIdentifier, hasContent: !!(e.content && e.content.trim()) })));
+    console.log('Canvas entries:', canvas.map(e => ({ field: e.fieldIdentifier, hasContent: !!(e.content && e.content.trim()) })));
 
     return stats;
   }
