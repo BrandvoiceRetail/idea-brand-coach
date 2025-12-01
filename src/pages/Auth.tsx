@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
+import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { Home, Loader2 } from 'lucide-react';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { z } from 'zod';
@@ -26,6 +27,7 @@ export default function Auth() {
   const [passwordErrors, setPasswordErrors] = useState('');
   const [nameErrors, setNameErrors] = useState('');
   const { signIn, signUp, signOut, resetPassword, user, loading, signInWithGoogle } = useAuth();
+  const { syncFromLocalStorage } = useDiagnostic();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -87,16 +89,34 @@ export default function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const isNameValid = validateName(fullName);
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
-    
+
     if (!isNameValid || !isEmailValid || !isPasswordValid) return;
-    
+
     setIsLoading(true);
     const { error } = await signUp(email, password, fullName);
     setIsLoading(false);
+
+    if (!error) {
+      // Sync diagnostic data from localStorage if it exists
+      const diagnosticData = localStorage.getItem('diagnosticData');
+      if (diagnosticData) {
+        try {
+          await syncFromLocalStorage();
+          toast({
+            title: "Account created!",
+            description: "Your diagnostic results have been saved to your account.",
+          });
+        } catch (syncError) {
+          console.error('Error syncing diagnostic data:', syncError);
+          // Don't block user flow if sync fails
+        }
+      }
+      navigate('/');
+    }
   };
 
   const handleGoogleSignIn = async () => {

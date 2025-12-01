@@ -103,10 +103,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       await authService.signOut();
+      // Clear local state immediately
+      setUser(null);
+      setSession(null);
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
       });
+      // Redirect to auth page
+      window.location.href = '/auth';
     } catch (error) {
       console.error('Sign out error:', error);
     }

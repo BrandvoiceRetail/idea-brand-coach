@@ -35,6 +35,7 @@ import BetaFeedback from "./pages/BetaFeedback";
 import NotFound from "./pages/NotFound";
 import { TestOfflineSync } from "./pages/TestOfflineSync";
 import { StartHere } from "./pages/StartHere";
+import PricingPaywall from "./pages/PricingPaywall";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
                 </BrandProvider>
               } />
               <Route path="/diagnostic" element={<FreeDiagnostic />} />
+              <Route path="/paywall" element={<PricingPaywall />} />
               <Route path="/diagnostic/results" element={<DiagnosticResults />} />
               <Route path="/dashboard" element={
                 <BrandProvider>

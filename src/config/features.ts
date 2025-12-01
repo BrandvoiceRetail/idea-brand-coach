@@ -82,21 +82,6 @@ export const FEATURES: Record<string, Feature> = {
   // P0 Features - Beta Launch
   // ========================================
 
-  START_HERE: {
-    id: 'START_HERE',
-    name: 'Start Here',
-    shortDescription: 'Introduction and training videos',
-    fullDescription: 'Watch introduction videos and training tutorials to learn how to use IDEA Brand Coach and build your brand strategy.',
-    phase: 'P0',
-    route: '/start-here',
-    icon: PlayCircle,
-    statusMessage: 'Available Now',
-    estimatedRelease: 'Live',
-    showInNav: true,
-    category: 'core',
-    requiresAuth: false,
-  },
-
   BRAND_DIAGNOSTIC: {
     id: 'BRAND_DIAGNOSTIC',
     name: 'Brand Diagnostic',
@@ -109,6 +94,21 @@ export const FEATURES: Record<string, Feature> = {
     estimatedRelease: 'Live',
     showInNav: true,
     category: 'diagnostic',
+    requiresAuth: false,
+  },
+
+  START_HERE: {
+    id: 'START_HERE',
+    name: 'Start Here',
+    shortDescription: 'Introduction and training videos',
+    fullDescription: 'Watch introduction videos and training tutorials to learn how to use IDEA Brand Coach and build your brand strategy.',
+    phase: 'P0',
+    route: '/start-here',
+    icon: PlayCircle,
+    statusMessage: 'Available Now',
+    estimatedRelease: 'Live',
+    showInNav: true,
+    category: 'core',
     requiresAuth: false,
   },
 
