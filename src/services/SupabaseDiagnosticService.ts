@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { IDiagnosticService } from './interfaces/IDiagnosticService';
 import { DiagnosticCreate, DiagnosticScores, DiagnosticSubmission } from '@/types/diagnostic';
 
-const DIAGNOSTIC_STORAGE_KEY = 'diagnostic_results';
+const DIAGNOSTIC_STORAGE_KEY = 'diagnosticData'; // Match key used in FreeDiagnostic component
 
 export class SupabaseDiagnosticService implements IDiagnosticService {
   async saveDiagnostic(data: DiagnosticCreate): Promise<DiagnosticSubmission> {
@@ -16,11 +16,12 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
 
     // 1. Save to diagnostic_submissions table
     const insertData: any = {
+      user_id: user.id,
       answers: data.answers,
       scores: data.scores,
       completed_at: new Date().toISOString(),
     };
-    
+
     const { data: submission, error: submissionError } = await supabase
       .from('diagnostic_submissions')
       .insert(insertData)
@@ -52,19 +53,13 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
     }
 
     // 4. Sync diagnostic to OpenAI User KB
-    try {
-      await supabase.functions.invoke('sync-diagnostic-to-user-kb', {
-        body: {
-          diagnosticData: {
-            answers: data.answers,
-          },
-          scores: data.scores,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to sync diagnostic to User KB:', error);
-      // Don't throw - KB sync can happen async
-    }
+    // Note: Skipping User KB sync for now as it requires server-side processing
+    // This will be handled by a database trigger or background job in the future
+    // The diagnostic data is already saved and embeddings are generated
+    console.log('ℹ️ User KB sync skipped - will be handled server-side');
+
+    // TODO: Phase 2 - Implement server-side trigger for User KB sync
+    // Current issue: Edge function auth not working from client-side invocation
 
     return {
       id: submission.id,

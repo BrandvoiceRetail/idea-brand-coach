@@ -65,7 +65,7 @@ const App = () => (
                 </BrandProvider>
               } />
               <Route path="/diagnostic" element={<FreeDiagnostic />} />
-              <Route path="/paywall" element={<PricingPaywall />} />
+              <Route path="/subscribe" element={<PricingPaywall />} />
               <Route path="/diagnostic/results" element={<DiagnosticResults />} />
               <Route path="/dashboard" element={
                 <BrandProvider>

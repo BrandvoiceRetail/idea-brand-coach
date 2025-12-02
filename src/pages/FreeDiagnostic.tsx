@@ -191,9 +191,9 @@ export default function FreeDiagnostic() {
 
     localStorage.setItem('diagnosticData', JSON.stringify(diagnosticData));
 
-    // Navigate to paywall instead of showing beta capture modal
+    // Navigate to results page
     setIsCompleting(false);
-    navigate('/paywall');
+    navigate('/diagnostic/results');
   };
 
 

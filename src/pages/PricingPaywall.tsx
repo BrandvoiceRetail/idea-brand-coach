@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Check, Sparkles, Zap, Crown, ArrowRight, Lock } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PricingTier {
   id: 'starter' | 'professional' | 'premium';
@@ -84,44 +84,25 @@ const pricingTiers: PricingTier[] = [
 
 export default function PricingPaywall(): JSX.Element {
   const navigate = useNavigate();
-  const [diagnosticData, setDiagnosticData] = useState<{
-    overallScore: number;
-    scores: Record<string, number>;
-  } | null>(null);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    // Load diagnostic results from localStorage
-    const savedData = localStorage.getItem('diagnosticData');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      setDiagnosticData({
-        overallScore: data.overallScore,
-        scores: data.scores
-      });
-    } else {
-      // No diagnostic data - redirect back to diagnostic
-      navigate('/diagnostic');
-    }
-  }, [navigate]);
+  // TODO: Phase 2 - Fetch user's current subscription from database
+  const currentSubscription = null; // Will be fetched from user_subscriptions table
 
   const handleSelectTier = (tierId: string) => {
     // Store selected tier in localStorage
     localStorage.setItem('selectedTier', tierId);
 
-    // TODO: When Stripe is integrated, this will create checkout session
-    // For now, navigate to auth with tier info
-    navigate(`/auth?plan=${tierId}`);
+    // TODO: Phase 2 - When Stripe is integrated, this will create checkout session
+    // For now, just navigate to dashboard if authenticated, otherwise to auth
+    if (user) {
+      // User is authenticated - proceed to app (stripe checkout will be added in Phase 2)
+      navigate('/');
+    } else {
+      // User not authenticated - need to sign up/sign in first
+      navigate(`/auth?plan=${tierId}&redirect=/subscribe`);
+    }
   };
-
-  if (!diagnosticData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Loading...</h2>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
@@ -129,9 +110,9 @@ export default function PricingPaywall(): JSX.Element {
       <div className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold mb-2">Your Brand Assessment is Complete!</h1>
+            <h1 className="text-3xl font-bold mb-2">Choose Your Plan</h1>
             <p className="text-muted-foreground">
-              Your overall brand strength score: <span className="font-bold text-primary text-xl">{diagnosticData.overallScore}%</span>
+              Select the perfect plan to unlock AI-powered brand building tools
             </p>
           </div>
         </div>
@@ -139,47 +120,8 @@ export default function PricingPaywall(): JSX.Element {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Results Teaser */}
-        <Card className="mb-12 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              Unlock Your Complete Brand Strategy
-            </CardTitle>
-            <CardDescription>
-              Your diagnostic revealed key insights across all 4 IDEA pillars. Choose a plan to access your full results and start building your brand strategy.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-background rounded-lg">
-                <div className="text-2xl font-bold text-primary mb-1">{diagnosticData.scores.insight}%</div>
-                <div className="text-sm text-muted-foreground">Insight Driven</div>
-              </div>
-              <div className="text-center p-4 bg-background rounded-lg">
-                <div className="text-2xl font-bold text-primary mb-1">{diagnosticData.scores.distinctive}%</div>
-                <div className="text-sm text-muted-foreground">Distinctive</div>
-              </div>
-              <div className="text-center p-4 bg-background rounded-lg">
-                <div className="text-2xl font-bold text-primary mb-1">{diagnosticData.scores.empathetic}%</div>
-                <div className="text-sm text-muted-foreground">Empathetic</div>
-              </div>
-              <div className="text-center p-4 bg-background rounded-lg">
-                <div className="text-2xl font-bold text-primary mb-1">{diagnosticData.scores.authentic}%</div>
-                <div className="text-sm text-muted-foreground">Authentic</div>
-              </div>
-            </div>
-            <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-              <p className="text-sm text-amber-800 dark:text-amber-200">
-                <strong>What's next?</strong> Get personalized recommendations, AI-powered coaching, and tools to strengthen each pillar of your brand strategy.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Pricing Section */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-3">Choose Your Plan</h2>
           <p className="text-muted-foreground text-lg mb-2">
             All plans include a one-time <span className="font-bold text-primary">$100 setup fee</span> to ensure you're committed to building a strong brand.
           </p>
@@ -244,6 +186,7 @@ export default function PricingPaywall(): JSX.Element {
                     }`}
                     size="lg"
                   >
+                    {/* TODO: Phase 2 - Show "Upgrade" or "Current Plan" based on subscription status */}
                     {tier.cta}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>

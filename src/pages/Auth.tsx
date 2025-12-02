@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +29,13 @@ export default function Auth() {
   const { signIn, signUp, signOut, resetPassword, user, loading, signInWithGoogle } = useAuth();
   const { syncFromLocalStorage } = useDiagnostic();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Get redirect URL from query params
+  // If no redirect specified, check if user completed diagnostic (should go to subscribe)
+  const defaultRedirect = localStorage.getItem('diagnosticData') ? '/subscribe' : '/';
+  const redirectUrl = searchParams.get('redirect') || defaultRedirect;
 
   const validateEmail = (value: string) => {
     try {
@@ -72,18 +78,36 @@ export default function Auth() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
-    
+
     if (!isEmailValid || !isPasswordValid) return;
-    
+
     setIsLoading(true);
     const { error } = await signIn(email, password);
-    setIsLoading(false);
-    
+
     if (!error) {
-      navigate('/');
+      setIsLoading(false);
+
+      // Navigate first
+      navigate(redirectUrl);
+
+      // Then sync diagnostic data from localStorage if it exists (async, non-blocking)
+      const diagnosticData = localStorage.getItem('diagnosticData');
+      console.log('🔍 Auth: Checking for diagnostic data in localStorage:', diagnosticData ? 'FOUND' : 'NOT FOUND');
+      if (diagnosticData) {
+        // Don't await - let it run in background after navigation
+        syncFromLocalStorage()
+          .then(() => {
+            console.log('✅ Auth: Diagnostic sync completed successfully');
+          })
+          .catch((syncError) => {
+            console.error('❌ Auth: Error syncing diagnostic data:', syncError);
+          });
+      }
+    } else {
+      setIsLoading(false);
     }
   };
 
@@ -98,24 +122,29 @@ export default function Auth() {
 
     setIsLoading(true);
     const { error } = await signUp(email, password, fullName);
-    setIsLoading(false);
 
     if (!error) {
-      // Sync diagnostic data from localStorage if it exists
+      setIsLoading(false);
+
+      // Navigate first
+      navigate(redirectUrl);
+
+      // Then sync diagnostic data from localStorage if it exists (async, non-blocking)
       const diagnosticData = localStorage.getItem('diagnosticData');
+      console.log('🔍 Auth (Sign Up): Checking for diagnostic data in localStorage:', diagnosticData ? 'FOUND' : 'NOT FOUND');
       if (diagnosticData) {
-        try {
-          await syncFromLocalStorage();
-          toast({
-            title: "Account created!",
-            description: "Your diagnostic results have been saved to your account.",
+        // Don't await - let it run in background after navigation
+        syncFromLocalStorage()
+          .then(() => {
+            console.log('✅ Auth (Sign Up): Diagnostic sync completed successfully');
+            // Toast will be shown by the useDiagnostic hook
+          })
+          .catch((syncError) => {
+            console.error('❌ Auth (Sign Up): Error syncing diagnostic data:', syncError);
           });
-        } catch (syncError) {
-          console.error('Error syncing diagnostic data:', syncError);
-          // Don't block user flow if sync fails
-        }
       }
-      navigate('/');
+    } else {
+      setIsLoading(false);
     }
   };
 
