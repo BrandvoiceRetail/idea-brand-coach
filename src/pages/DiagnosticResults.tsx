@@ -261,7 +261,7 @@ export default function DiagnosticResults() {
                     Save & Unlock Premium Tools
                   </CardTitle>
                   <CardDescription>
-                    Create your account to save these results and access advanced brand building tools
+                    Sign in or create an account to save these results and access subscription plans
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -283,12 +283,12 @@ export default function DiagnosticResults() {
                       <span>Interactive learning modules</span>
                     </div>
                   </div>
-                  <Button 
-                    asChild 
+                  <Button
+                    asChild
                     className="w-full"
                   >
-                    <button onClick={() => navigate('/auth')}>
-                      Create Free Account
+                    <button onClick={() => navigate('/auth?redirect=/subscribe')}>
+                      Sign In or Sign Up
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
                   </Button>

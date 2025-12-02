@@ -31,6 +31,9 @@ export interface ChatMessage {
   /** ID of the user who owns this conversation */
   user_id: string;
 
+  /** ID of the chat session this message belongs to */
+  session_id?: string;
+
   /** Role of the message sender */
   role: ChatRole;
 
@@ -61,6 +64,9 @@ export interface ChatMessageCreate {
 
   /** Text content of the message */
   content: string;
+
+  /** ID of the chat session this message belongs to */
+  session_id?: string;
 
   /** Type of chatbot (defaults to 'brand-coach') */
   chatbot_type?: ChatbotType;
@@ -94,4 +100,50 @@ export interface ChatResponse {
 
   /** Optional source citations (e.g., IDEA Framework docs) */
   sources?: string[];
+
+  /** Promise that resolves when title generation completes (for cache invalidation) */
+  titlePromise?: Promise<void>;
+}
+
+/**
+ * Chat session representing a conversation thread.
+ * Similar to ChatGPT/Claude.ai conversation management.
+ */
+export interface ChatSession {
+  /** Unique identifier for the session */
+  id: string;
+
+  /** ID of the user who owns this session */
+  user_id: string;
+
+  /** Type of chatbot this session belongs to */
+  chatbot_type: ChatbotType;
+
+  /** Title of the session (auto-generated or user-defined) */
+  title: string;
+
+  /** ISO 8601 timestamp when session was created */
+  created_at: string;
+
+  /** ISO 8601 timestamp when session was last updated */
+  updated_at: string;
+}
+
+/**
+ * Data required to create a new chat session.
+ */
+export interface ChatSessionCreate {
+  /** Type of chatbot (defaults to current chatbot type) */
+  chatbot_type?: ChatbotType;
+
+  /** Optional title (defaults to 'New Chat') */
+  title?: string;
+}
+
+/**
+ * Data for updating an existing chat session.
+ */
+export interface ChatSessionUpdate {
+  /** Updated title */
+  title?: string;
 }

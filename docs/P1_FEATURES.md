@@ -300,6 +300,188 @@ CREATE TABLE public.uploaded_documents (
 
 ---
 
+## P1.7 - Subscription Management & Payment Integration
+
+### Overview
+
+The subscription and payment system enables users to select and pay for service tiers, manage their subscriptions, and unlock premium features based on their plan.
+
+### Current State (Phase 2 - In Progress)
+
+**Implemented:**
+- ✅ `/subscribe` route displays pricing tiers (Starter, Professional, Premium)
+- ✅ Pricing page shows features and pricing for each tier
+- ✅ Auth flow redirects to `/subscribe` after sign in/sign up
+- ✅ Selected tier stored in localStorage
+- ✅ User can click through subscription flow (no payment required)
+
+**Not Yet Implemented:**
+- ❌ Stripe payment integration
+- ❌ `user_subscriptions` database table
+- ❌ Subscription status tracking in database
+- ❌ Active subscription check and enforcement
+- ❌ Upgrade/downgrade functionality
+- ❌ Billing portal for subscription management
+- ❌ Feature gating based on subscription tier
+- ❌ Usage tracking (messages, avatars, documents per tier)
+- ❌ Payment webhooks for subscription lifecycle events
+
+### P1 Requirements (Future Phases)
+
+#### P1.7.1 - Database Schema
+
+Create `user_subscriptions` table:
+
+```sql
+CREATE TABLE public.user_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  tier TEXT NOT NULL CHECK (tier IN ('starter', 'professional', 'premium')),
+  status TEXT NOT NULL CHECK (status IN ('active', 'past_due', 'canceled', 'trialing')) DEFAULT 'active',
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  current_period_start TIMESTAMP WITH TIME ZONE,
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  cancel_at_period_end BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  UNIQUE(user_id) -- One active subscription per user
+);
+
+-- RLS policies
+ALTER TABLE public.user_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own subscription"
+  ON public.user_subscriptions FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+-- Indexes
+CREATE INDEX idx_user_subscriptions_user_id ON public.user_subscriptions(user_id);
+CREATE INDEX idx_user_subscriptions_stripe_customer_id ON public.user_subscriptions(stripe_customer_id);
+```
+
+#### P1.7.2 - Stripe Integration
+
+**Setup Requirements:**
+- Stripe account and API keys (test + production)
+- Stripe webhook endpoint configuration
+- Product and price IDs in Stripe dashboard
+
+**Implementation Steps:**
+
+1. **Checkout Session Creation**
+   - Create Edge Function: `create-checkout-session`
+   - Accept tier selection and user info
+   - Create Stripe checkout session
+   - Redirect to Stripe hosted checkout
+
+2. **Webhook Handler**
+   - Create Edge Function: `stripe-webhooks`
+   - Handle events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+   - Update `user_subscriptions` table based on webhook events
+   - Send confirmation emails
+
+3. **Billing Portal**
+   - Create Edge Function: `create-portal-session`
+   - Redirect users to Stripe Customer Portal
+   - Allow users to manage payment methods, view invoices, cancel subscriptions
+
+#### P1.7.3 - Subscription Status UI
+
+**PricingPaywall Component Updates:**
+- Show "Current Plan" badge on user's active tier
+- Show "Upgrade" button for higher tiers
+- Show "Manage Subscription" button for current tier
+- Disable "Downgrade" temporarily (require manual support)
+
+**Dashboard Component:**
+- Display current subscription tier and status
+- Show renewal date or trial end date
+- Link to billing portal for subscription management
+- Display usage metrics (messages used, avatars created, etc.)
+
+#### P1.7.4 - Feature Gating
+
+**Implementation:**
+- Create `useSubscription` hook to fetch user's current subscription
+- Check subscription tier before allowing feature access
+- Graceful degradation (show upgrade prompt when limit reached)
+
+**Usage Tracking:**
+- Track AI chat messages per billing cycle
+- Track brand avatars created
+- Track documents uploaded
+- Display usage meters on dashboard
+
+**Limits Enforcement:**
+```typescript
+interface TierLimits {
+  starter: {
+    chatMessages: 50,
+    avatars: 1,
+    documents: 0,
+    chatHistory: '30 days'
+  },
+  professional: {
+    chatMessages: 200,
+    avatars: 3,
+    documents: 5,
+    chatHistory: '1 year'
+  },
+  premium: {
+    chatMessages: -1, // unlimited
+    avatars: -1,
+    documents: -1,
+    chatHistory: 'unlimited'
+  }
+}
+```
+
+#### P1.7.5 - Implementation Path
+
+**P1 Phase (Stripe Setup - Week 1)**
+- Set up Stripe account and products
+- Create database schema for subscriptions
+- Build Edge Functions for checkout and webhooks
+
+**P1 Phase (Payment Flow - Week 2)**
+- Integrate Stripe Checkout into `/subscribe` page
+- Handle successful payment and subscription activation
+- Test subscription creation flow end-to-end
+
+**P1 Phase (Subscription Management - Week 3)**
+- Build billing portal integration
+- Add subscription status display to dashboard
+- Implement upgrade/downgrade logic
+
+**P1 Phase (Feature Gating - Week 4)**
+- Implement usage tracking
+- Add feature gates based on subscription tier
+- Build usage meters and upgrade prompts
+
+### Success Criteria
+
+- ✅ Users can successfully subscribe using Stripe
+- ✅ Subscription status accurately reflected in database
+- ✅ Users can manage billing through Stripe portal
+- ✅ Feature access properly gated by subscription tier
+- ✅ Usage limits enforced with graceful upgrade prompts
+- ✅ Webhook events properly update subscription status
+- ✅ No payment data stored outside of Stripe (PCI compliance)
+
+### TODOs / Notes
+
+- **Security**: Never store payment card details - Stripe handles all PCI compliance
+- **Testing**: Use Stripe test mode extensively before production launch
+- **Webhooks**: Implement retry logic and idempotency for webhook handling
+- **Support**: Create admin interface to view/manage user subscriptions
+- **Trials**: Consider offering 7-day or 14-day free trial for Professional/Premium tiers
+- **Coupons**: Implement coupon/promo code support for beta users
+- **Annual Plans**: Consider offering annual billing at discounted rate
+
+---
+
 ## P1 Implementation Priority
 
 **Recommended Rollout Sequence (Post-P0 Launch):**

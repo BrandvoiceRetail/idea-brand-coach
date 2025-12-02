@@ -439,7 +439,7 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
                 Privacy & Security
               </p>
               <p className="text-xs text-green-700 dark:text-green-200">
-                Your documents are stored securely and are only accessible to you. Document content is processed to enhance AI consultations but is never shared with other users or third parties. You can delete your documents at any time. All data is encrypted in transit and at rest.
+                Your documents and conversations are stored securely and are only accessible to you. Document content is processed to enhance AI consultations but is never shared with other users, not used to train AI models, and you can delete your documents and clear your conversation history at any time. All data is encrypted in transit and at rest. We use trusted service providers (like OpenAI and our cloud infrastructure) to deliver the service, all bound by strict confidentiality obligations.
               </p>
             </div>
           </div>

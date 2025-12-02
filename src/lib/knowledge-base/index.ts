@@ -20,13 +20,15 @@ export type {
 } from './interfaces';
 
 // Implementations
-export { KnowledgeRepository } from './knowledge-repository';
-export { IndexedDBService, IndexedDBError } from './indexed-db-service';
-export { SupabaseSyncService } from './supabase-sync-service';
+import { KnowledgeRepository } from './knowledge-repository';
+import { IndexedDBService, IndexedDBError } from './indexed-db-service';
+import { SupabaseSyncService } from './supabase-sync-service';
+
+export { KnowledgeRepository, IndexedDBService, IndexedDBError, SupabaseSyncService };
 
 // Factory for creating instances
 export class KnowledgeBaseFactory {
-  static createRepository(config?: Partial<KnowledgeBaseConfig>): KnowledgeRepository {
+  static async createRepository(config?: Partial<KnowledgeBaseConfig>): Promise<KnowledgeRepository> {
     const defaultConfig: KnowledgeBaseConfig = {
       dbName: 'idea-brand-coach',
       dbVersion: 1,
@@ -35,10 +37,13 @@ export class KnowledgeBaseFactory {
       conflictResolution: 'local-first'
     };
 
-    return new KnowledgeRepository({
+    const repository = new KnowledgeRepository({
       ...defaultConfig,
       ...config
     });
+
+    await repository.initialize();
+    return repository;
   }
 
   static createSyncService(repository: KnowledgeRepository): SupabaseSyncService {

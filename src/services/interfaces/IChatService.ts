@@ -14,7 +14,15 @@
  * - idea-framework-consultant: IDEA Framework specialist
  */
 
-import { ChatMessage, ChatMessageCreate, ChatResponse, ChatbotType } from '@/types/chat';
+import {
+  ChatMessage,
+  ChatMessageCreate,
+  ChatResponse,
+  ChatbotType,
+  ChatSession,
+  ChatSessionCreate,
+  ChatSessionUpdate,
+} from '@/types/chat';
 
 export interface IChatService {
   /**
@@ -58,4 +66,95 @@ export interface IChatService {
    * @throws Error if messages cannot be retrieved
    */
   getRecentMessages(count: number): Promise<ChatMessage[]>;
+
+  // ==========================================
+  // Session Management Methods
+  // ==========================================
+
+  /**
+   * Set the current active session for message operations.
+   *
+   * @param sessionId - ID of the session to use, or undefined to clear
+   */
+  setCurrentSession(sessionId: string | undefined): void;
+
+  /**
+   * Get the current active session ID.
+   *
+   * @returns The current session ID or undefined if none set
+   */
+  getCurrentSessionId(): string | undefined;
+
+  /**
+   * Create a new chat session.
+   *
+   * @param session - Session creation data
+   * @returns Promise resolving to the created session
+   * @throws Error if session cannot be created
+   */
+  createSession(session?: ChatSessionCreate): Promise<ChatSession>;
+
+  /**
+   * Get all chat sessions for the current user and chatbot type.
+   *
+   * @returns Promise resolving to array of sessions ordered by update time (newest first)
+   * @throws Error if sessions cannot be retrieved
+   */
+  getSessions(): Promise<ChatSession[]>;
+
+  /**
+   * Get a single session by ID.
+   *
+   * @param sessionId - ID of the session to retrieve
+   * @returns Promise resolving to the session or null if not found
+   * @throws Error if session cannot be retrieved
+   */
+  getSession(sessionId: string): Promise<ChatSession | null>;
+
+  /**
+   * Update a chat session (e.g., rename title).
+   *
+   * @param sessionId - ID of the session to update
+   * @param update - Update data
+   * @returns Promise resolving to the updated session
+   * @throws Error if session cannot be updated
+   */
+  updateSession(sessionId: string, update: ChatSessionUpdate): Promise<ChatSession>;
+
+  /**
+   * Delete a chat session and all its messages.
+   *
+   * @param sessionId - ID of the session to delete
+   * @returns Promise resolving when session is deleted
+   * @throws Error if session cannot be deleted
+   */
+  deleteSession(sessionId: string): Promise<void>;
+
+  /**
+   * Get chat history for a specific session.
+   *
+   * @param sessionId - ID of the session
+   * @param limit - Maximum number of messages to retrieve
+   * @returns Promise resolving to array of messages
+   * @throws Error if messages cannot be retrieved
+   */
+  getSessionMessages(sessionId: string, limit?: number): Promise<ChatMessage[]>;
+
+  /**
+   * Generate an AI-powered session title based on first exchange.
+   *
+   * @param sessionId - ID of the session to update
+   * @param userMessage - The user's first message
+   * @param assistantResponse - The assistant's response
+   */
+  generateSessionTitle(sessionId: string, userMessage: string, assistantResponse: string): Promise<void>;
+
+  /**
+   * Regenerate session title based on entire conversation history.
+   * Used when user wants to update title to reflect evolved conversation.
+   *
+   * @param sessionId - ID of the session to update
+   * @returns The new title, or null if generation failed
+   */
+  regenerateSessionTitle(sessionId: string): Promise<string | null>;
 }

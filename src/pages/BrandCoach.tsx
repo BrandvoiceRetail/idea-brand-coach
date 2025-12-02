@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Sparkles } from 'lucide-react';
+import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Sparkles, Download, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
@@ -19,6 +19,7 @@ const BrandCoach = () => {
   const { latestDiagnostic } = useDiagnostic();
   const [message, setMessage] = useState('');
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -107,6 +108,52 @@ const BrandCoach = () => {
       toast({
         title: "Error",
         description: "Failed to clear chat history",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadChat = () => {
+    const chatText = messages.map(msg => {
+      const role = msg.role === 'user' ? 'You' : 'Brand Coach';
+      return `${role}:\n${msg.content}\n`;
+    }).join('\n---\n\n');
+
+    const blob = new Blob([chatText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `brand-coach-conversation-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Download Started",
+      description: "Your conversation has been downloaded",
+    });
+  };
+
+  const handleCopyChat = async () => {
+    const chatText = messages.map(msg => {
+      const role = msg.role === 'user' ? 'You' : 'Brand Coach';
+      return `${role}:\n${msg.content}`;
+    }).join('\n\n---\n\n');
+
+    try {
+      await navigator.clipboard.writeText(chatText);
+      setIsCopied(true);
+      toast({
+        title: "Copied to Clipboard",
+        description: "Your conversation has been copied",
+      });
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      console.error('Copy error:', error);
+      toast({
+        title: "Copy Failed",
+        description: "Failed to copy to clipboard",
         variant: "destructive",
       });
     }
@@ -236,10 +283,43 @@ const BrandCoach = () => {
       {messages.length > 0 && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <MessageSquare className="w-5 h-5" />
-              Conversation
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Conversation
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyChat}
+                  disabled={isLoading}
+                  className="gap-2"
+                >
+                  {isCopied ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copy Text
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadChat}
+                  disabled={isLoading}
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4 max-h-[500px] overflow-y-auto">
             {messages.map((msg, index) => (

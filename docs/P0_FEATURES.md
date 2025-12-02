@@ -1,9 +1,9 @@
 # P0 Features - Beta Launch Requirements
 ## IDEA Brand Coach Platform
 
-**Version:** 1.0
-**Last Updated:** 2025-11-07
-**Status:** Planning Phase
+**Version:** 1.1
+**Last Updated:** 2025-11-28
+**Status:** Active Development (~85-90% Complete)
 
 ---
 
@@ -188,20 +188,59 @@ await signInWithOAuth('google');
 
 ## Feature 3: Brand Coach GPT with LangChain RAG
 
-### Current State (Existing Implementation)
+### Current State (phase-2-mvp-beta Implementation)
 
-**What Already Exists:**
-- ✅ **Full Chat UI** - `IdeaFrameworkConsultant.tsx` with conversation history, follow-up suggestions
-- ✅ **Edge Function** - `idea-framework-consultant` using GPT-4 (`gpt-4.1-2025-04-14`)
-- ✅ **System Prompt** - Comprehensive IDEA framework prompt (behavioral science, tone guidelines)
-- ✅ **Document Upload** - Integration via `DocumentUpload` component
-- ✅ **Routed** - `/idea/consultant` (behind ProtectedRoute)
-- ⚠️ **Direct Supabase Calls** - Not using service layer
-- ⚠️ **Manual Context** - User must provide context manually
-- ❌ **No LangChain** - Raw OpenAI API
-- ❌ **No RAG** - No vector search or embeddings
-- ❌ **No Persistent Chat** - History in React state only
-- ❌ **No Diagnostic Access** - Doesn't retrieve user's scores automatically
+**✅ FULLY IMPLEMENTED:**
+
+**Database Layer:**
+- ✅ `chat_messages` table with RLS policies
+- ✅ `chat_sessions` table with session management
+- ✅ `user_knowledge_base` table with pgvector (1536 dimensions)
+- ✅ Vector similarity search function (`match_user_knowledge`)
+- ✅ Automated updated_at triggers
+
+**Service Layer:**
+- ✅ `IChatService` interface with full session support
+- ✅ `SupabaseChatService` implementation with:
+  - Message persistence
+  - Session management (create, list, rename, delete)
+  - Session-based message retrieval
+  - Auto-title generation for new sessions
+- ✅ Uses service layer pattern (no direct Supabase calls in UI)
+
+**Edge Functions:**
+- ✅ `brand-coach-gpt` - RAG-enabled GPT-4 consultant with:
+  - Vector similarity search for user context
+  - Diagnostic data retrieval
+  - Embedding generation (text-embedding-ada-002)
+  - Sources returned with responses
+- ✅ `idea-framework-consultant` - IDEA Framework specialist
+- ✅ `generate-session-title` - AI-powered session titles
+- ✅ `sync-diagnostic-to-user-kb` - Sync diagnostic → vector embeddings
+
+**UI Components:**
+- ✅ `IdeaFrameworkConsultant.tsx` with full chat interface
+- ✅ `ChatSidebar` component for session management:
+  - List all sessions
+  - Create new sessions
+  - Rename sessions (inline editing)
+  - Delete sessions
+  - Switch between sessions
+- ✅ Message persistence across sessions
+- ✅ Copy/Download conversation buttons
+- ✅ Responsive layout with collapsible sidebar
+- ✅ Document upload integration (via `DocumentUpload`)
+- ✅ Routed at `/idea/consultant` (behind ProtectedRoute)
+
+**React Hooks:**
+- ✅ `useChat` - Message operations with React Query caching
+- ✅ `useChatSessions` - Session management with auto-create
+- ✅ `useDiagnostic` - Diagnostic data access
+
+**⚠️ REMAINING WORK:**
+- ⚠️ Suggested prompts based on diagnostic scores (UI wiring)
+- ⚠️ "Sources" section in UI showing which diagnostic data was used
+- ⚠️ Polish and testing
 
 ### Migration Strategy
 
@@ -421,12 +460,16 @@ await sendMessage(userMessage);
 - [ ] Session persists across page refreshes
 
 ### Feature 3: Brand Coach GPT
-- [ ] RAG retrieves user's diagnostic data correctly
-- [ ] Chat responses reference diagnostic scores
-- [ ] Chat history persists to database
-- [ ] Conversation continuity across sessions
-- [ ] Suggested prompts based on low scores
-- [ ] API response time < 5 seconds (p95)
+- [x] RAG retrieves user's diagnostic data correctly
+- [x] Chat responses reference diagnostic scores
+- [x] Chat history persists to database
+- [x] Conversation continuity across sessions
+- [x] Session management (create, list, rename, delete)
+- [x] AI-powered session title generation
+- [x] Copy/Download conversation buttons
+- [ ] Suggested prompts based on low scores (UI pending)
+- [ ] Sources display in UI (data available, UI pending)
+- [ ] API response time < 5 seconds (p95) - needs testing
 
 ---
 
@@ -453,3 +496,4 @@ See [P1_FEATURES.md](./P1_FEATURES.md) for complete P1 scope.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2025-11-07 | 1.0 | Extracted from P0_BETA_LAUNCH_ROADMAP.md v1.3 |
+| 2025-11-28 | 1.1 | **Major implementation update** - Updated Feature 3 (Brand Coach GPT) to reflect actual implementation:<br>- Documented fully implemented database layer (chat_messages, chat_sessions, user_knowledge_base)<br>- Documented service layer with IChatService and SupabaseChatService<br>- Documented Edge Functions (brand-coach-gpt with RAG, generate-session-title, etc.)<br>- Documented UI components (ChatSidebar, Copy/Download buttons, session management)<br>- Updated success criteria checkboxes to reflect completed items<br>- Status updated to "Active Development (~85-90% Complete)" |

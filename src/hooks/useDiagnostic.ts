@@ -90,10 +90,10 @@ export const useDiagnostic = () => {
     historyError,
     
     // Mutations
-    saveDiagnostic: saveDiagnosticMutation.mutate,
+    saveDiagnostic: saveDiagnosticMutation.mutateAsync,
     isSaving: saveDiagnosticMutation.isPending,
-    
-    syncFromLocalStorage: syncFromLocalStorageMutation.mutate,
+
+    syncFromLocalStorage: syncFromLocalStorageMutation.mutateAsync,
     isSyncing: syncFromLocalStorageMutation.isPending,
     
     // Helpers

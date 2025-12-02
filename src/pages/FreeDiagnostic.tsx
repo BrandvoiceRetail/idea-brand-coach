@@ -9,7 +9,6 @@ import { ArrowRight, ArrowLeft, CheckCircle, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useAuth } from '@/hooks/useAuth';
-import { DiagnosticAuthModal } from '@/components/DiagnosticAuthModal';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 
 interface Question {
@@ -104,11 +103,6 @@ export default function FreeDiagnostic() {
   const { syncFromLocalStorage } = useDiagnostic();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isCompleting, setIsCompleting] = useState(false);
-  const [showBetaCapture, setShowBetaCapture] = useState(false);
-  const [diagnosticResults, setDiagnosticResults] = useState<{
-    overallScore: number;
-    scores: Record<string, number>;
-  } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -187,12 +181,6 @@ export default function FreeDiagnostic() {
       (averageScores.insight + averageScores.distinctive + averageScores.empathetic + averageScores.authentic) / 4
     );
 
-    // Store results for beta capture
-    setDiagnosticResults({
-      overallScore,
-      scores: averageScores
-    });
-
     // Save to localStorage
     const diagnosticData = {
       answers,
@@ -202,35 +190,12 @@ export default function FreeDiagnostic() {
     };
 
     localStorage.setItem('diagnosticData', JSON.stringify(diagnosticData));
-    
-    // Show beta capture modal instead of navigating immediately
-    setIsCompleting(false);
-    setShowBetaCapture(true);
-  };
 
-  const handleBetaCaptureComplete = async () => {
-    setShowBetaCapture(false);
-    
-    // If user authenticated, sync localStorage to database
-    if (user) {
-      try {
-        await syncFromLocalStorage();
-        toast({
-          title: "Data saved",
-          description: "Your diagnostic results have been saved to your account.",
-        });
-      } catch (error) {
-        console.error('Error syncing diagnostic:', error);
-        toast({
-          title: "Sync warning",
-          description: "Results shown but couldn't sync to your account. You can still view them.",
-          variant: "destructive",
-        });
-      }
-    }
-    
+    // Navigate to results page
+    setIsCompleting(false);
     navigate('/diagnostic/results');
   };
+
 
   // Auto-sync if user signs in while on this page
   useEffect(() => {
@@ -334,15 +299,6 @@ export default function FreeDiagnostic() {
           </div>
         </div>
       </div>
-
-      {/* Diagnostic Auth Modal */}
-      {diagnosticResults && (
-        <DiagnosticAuthModal
-          isOpen={showBetaCapture}
-          onComplete={handleBetaCaptureComplete}
-          diagnosticScore={diagnosticResults.overallScore}
-        />
-      )}
 
       {/* Beta Navigation Widget */}
       <BetaNavigationWidget />

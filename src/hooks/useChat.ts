@@ -3,6 +3,7 @@
  * React hook for Brand Coach chat operations
  *
  * @param chatbotType - Optional chatbot type ('brand-coach' or 'idea-framework-consultant')
+ * @param sessionId - Optional session ID to scope messages to specific session
  */
 
 import { useEffect } from 'react';
@@ -13,10 +14,11 @@ import { useToast } from '@/hooks/use-toast';
 
 interface UseChatOptions {
   chatbotType?: ChatbotType;
+  sessionId?: string;
 }
 
 export const useChat = (options: UseChatOptions = {}) => {
-  const { chatbotType = 'brand-coach' } = options;
+  const { chatbotType = 'brand-coach', sessionId } = options;
   const { chatService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -26,15 +28,21 @@ export const useChat = (options: UseChatOptions = {}) => {
     chatService.setChatbotType(chatbotType);
   }, [chatService, chatbotType]);
 
-  // Query: Get chat history (keyed by chatbot type for separate caches)
+  // Set current session on service when it changes
+  useEffect(() => {
+    chatService.setCurrentSession(sessionId);
+  }, [chatService, sessionId]);
+
+  // Query: Get chat history (keyed by chatbot type AND session ID for per-session caching)
   const {
     data: messages,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['chat', 'messages', chatbotType],
+    queryKey: ['chat', 'messages', chatbotType, sessionId],
     queryFn: () => chatService.getChatHistory(),
     retry: 1,
+    enabled: !!sessionId, // Only fetch if we have a session
   });
 
   // Mutation: Send message
@@ -43,8 +51,14 @@ export const useChat = (options: UseChatOptions = {}) => {
       ...message,
       chatbot_type: chatbotType,
     }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType, sessionId] });
+      // Wait for title generation to complete, then refresh sidebar
+      if (data.titlePromise) {
+        data.titlePromise.finally(() => {
+          queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -59,10 +73,10 @@ export const useChat = (options: UseChatOptions = {}) => {
   const clearChatMutation = useMutation({
     mutationFn: () => chatService.clearChatHistory(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType] });
+      queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType, sessionId] });
       toast({
         title: 'Chat Cleared',
-        description: 'Your chat history has been cleared.',
+        description: 'Your conversation has been cleared.',
       });
     },
     onError: (error: Error) => {
