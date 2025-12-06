@@ -141,7 +141,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
 
   // Create new chat (convenience wrapper)
   const createNewChat = useCallback(async () => {
-    const newSession = await createSessionMutation.mutateAsync();
+    const newSession = await createSessionMutation.mutateAsync({});
     return newSession;
   }, [createSessionMutation]);
 

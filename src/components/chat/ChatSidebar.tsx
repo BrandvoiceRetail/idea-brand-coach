@@ -46,9 +46,9 @@ interface ChatSidebarProps {
   isRegeneratingTitle?: boolean;
   onCreateNew: () => void;
   onSelectSession: (sessionId: string) => void;
-  onRenameSession: (sessionId: string, title: string) => Promise<void>;
+  onRenameSession: (sessionId: string, title: string) => Promise<void> | Promise<ChatSession>;
   onDeleteSession: (sessionId: string) => Promise<void>;
-  onRegenerateTitle: (sessionId: string) => Promise<void>;
+  onRegenerateTitle: (sessionId: string) => Promise<void> | Promise<string | null>;
 }
 
 export function ChatSidebar({

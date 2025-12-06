@@ -28,13 +28,19 @@ export { KnowledgeRepository, IndexedDBService, IndexedDBError, SupabaseSyncServ
 
 // Factory for creating instances
 export class KnowledgeBaseFactory {
-  static async createRepository(config?: Partial<KnowledgeBaseConfig>): Promise<KnowledgeRepository> {
-    const defaultConfig: KnowledgeBaseConfig = {
+  static async createRepository(config?: Partial<{
+    dbName: string;
+    dbVersion: number;
+    syncInterval?: number;
+    maxRetries?: number;
+    conflictResolution?: 'local-first' | 'remote-first' | 'manual';
+  }>): Promise<KnowledgeRepository> {
+    const defaultConfig = {
       dbName: 'idea-brand-coach',
       dbVersion: 1,
       syncInterval: 30000,
       maxRetries: 3,
-      conflictResolution: 'local-first'
+      conflictResolution: 'local-first' as const
     };
 
     const repository = new KnowledgeRepository({

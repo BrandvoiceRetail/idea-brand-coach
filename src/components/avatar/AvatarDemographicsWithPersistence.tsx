@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, WifiOff, AlertCircle } from "lucide-react";
-import { usePersistedField } from "@/hooks/usePersistedField";
+import { usePersistedField, usePersistedForm } from "@/hooks/usePersistedField";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
 
 /**
