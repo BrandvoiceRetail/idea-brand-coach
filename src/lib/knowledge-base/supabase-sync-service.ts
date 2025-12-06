@@ -124,8 +124,8 @@ export class SupabaseSyncService implements ISyncService {
         .from('user_knowledge_base')
         .update({
           content,
-          structured_data: localEntry.structuredData,
-          metadata: localEntry.metadata,
+          structured_data: localEntry.structuredData as unknown as import('@/integrations/supabase/types').Json,
+          metadata: localEntry.metadata as unknown as import('@/integrations/supabase/types').Json,
           version: localEntry.version,
           updated_at: new Date().toISOString()
         })
@@ -142,11 +142,11 @@ export class SupabaseSyncService implements ISyncService {
       const insertData = {
         user_id: userId,
         field_identifier: fieldIdentifier,
-        category: localEntry.category,
+        category: localEntry.category as string,
         subcategory: localEntry.subcategory,
         content,
-        structured_data: localEntry.structuredData,
-        metadata: localEntry.metadata,
+        structured_data: localEntry.structuredData as unknown as import('@/integrations/supabase/types').Json,
+        metadata: localEntry.metadata as unknown as import('@/integrations/supabase/types').Json,
         version: localEntry.version,
         is_current: true,
         created_at: localEntry.createdAt.toISOString(),
@@ -156,7 +156,7 @@ export class SupabaseSyncService implements ISyncService {
 
       const { error: insertError } = await supabase
         .from('user_knowledge_base')
-        .insert(insertData);
+        .insert([insertData]);
 
       if (insertError) {
         console.error('[SupabaseSyncService] Insert failed:', insertError);
@@ -348,11 +348,18 @@ export class SupabaseSyncService implements ISyncService {
           fieldIdentifier: localEntry.fieldIdentifier,
           localVersion: localEntry,
           remoteVersion: {
-            ...remoteEntry,
-            createdAt: new Date(remoteEntry.created_at),
-            updatedAt: new Date(remoteEntry.updated_at),
+            id: remoteEntry.id,
+            userId: remoteEntry.user_id,
+            fieldIdentifier: remoteEntry.field_identifier,
+            category: remoteEntry.category as import('./interfaces').KnowledgeCategory,
+            subcategory: remoteEntry.subcategory || undefined,
+            content: remoteEntry.content,
+            version: remoteEntry.version,
+            isCurrentVersion: remoteEntry.is_current || false,
+            createdAt: new Date(remoteEntry.created_at || ''),
+            updatedAt: new Date(remoteEntry.updated_at || ''),
             lastSyncedAt: remoteEntry.last_synced_at ? new Date(remoteEntry.last_synced_at) : undefined
-          } as KnowledgeEntry,
+          },
           suggestedResolution: this.suggestResolution(localEntry, remoteEntry)
         });
       }

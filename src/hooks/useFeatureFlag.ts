@@ -1,7 +1,9 @@
 /**
  * useFeatureFlag Hook
  *
- * Real-time feature flag evaluation with Supabase subscriptions
+ * Simple feature flag evaluation using local configuration.
+ * Since feature_flags table doesn't exist in the database,
+ * this provides a local-only implementation for now.
  *
  * @example
  * ```tsx
@@ -12,9 +14,25 @@
  */
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
 
-type FeatureFlagRow = Database['public']['Tables']['feature_flags']['Row'];
+/**
+ * Feature flag configuration (local-only for now)
+ */
+interface FeatureFlag {
+  name: string;
+  enabled: boolean;
+  targeting_rules?: {
+    userIds?: string[];
+    percentage?: number;
+    sessionPercentage?: number;
+  };
+}
+
+// Local feature flags configuration
+const LOCAL_FEATURE_FLAGS: Record<string, FeatureFlag> = {
+  // Add feature flags here as needed
+  // 'brand_analytics': { name: 'brand_analytics', enabled: false },
+};
 
 /**
  * Get or create a session ID for anonymous users
@@ -34,7 +52,7 @@ function getOrCreateSessionId(): string {
 
 export interface UseFeatureFlagOptions {
   /**
-   * Default value if flag doesn't exist or Supabase is unavailable
+   * Default value if flag doesn't exist
    */
   defaultValue?: boolean;
 
@@ -50,7 +68,7 @@ export interface UseFeatureFlagOptions {
 }
 
 /**
- * Hook to evaluate a feature flag with real-time updates
+ * Hook to evaluate a feature flag
  *
  * @param flagName - Unique feature flag name
  * @param defaultValue - Fallback value if flag doesn't exist (default: false)
@@ -82,70 +100,18 @@ export function useFeatureFlag(
     };
   }, [userId, options.userId, options.sessionId]);
 
-  // Fetch and subscribe to feature flag
+  // Evaluate flag from local configuration
   useEffect(() => {
-    let mounted = true;
+    const flag = LOCAL_FEATURE_FLAGS[flagName];
+    
+    if (!flag) {
+      setFlagValue(options.defaultValue ?? defaultValue);
+      return;
+    }
 
-    const fetchFlag = async (): Promise<void> => {
-      try {
-        // Fetch feature flag
-        const { data: flag, error } = await supabase
-          .from('feature_flags')
-          .select('*')
-          .eq('name', flagName)
-          .single();
-
-        if (error) {
-          // Flag doesn't exist - use default
-          if (mounted) setFlagValue(options.defaultValue ?? defaultValue);
-          return;
-        }
-
-        if (!flag) {
-          if (mounted) setFlagValue(options.defaultValue ?? defaultValue);
-          return;
-        }
-
-        // Evaluate flag based on targeting rules
-        const evaluated = evaluateFlag(flag, evaluationContext);
-        if (mounted) setFlagValue(evaluated);
-      } catch (error) {
-        console.error('[useFeatureFlag] Error fetching flag:', error);
-        if (mounted) setFlagValue(options.defaultValue ?? defaultValue);
-      }
-    };
-
-    // Initial fetch
-    fetchFlag();
-
-    // Subscribe to real-time changes
-    const channel = supabase
-      .channel(`feature_flag_${flagName}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'feature_flags',
-          filter: `name=eq.${flagName}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'DELETE') {
-            if (mounted) setFlagValue(options.defaultValue ?? defaultValue);
-          } else {
-            const flag = payload.new as FeatureFlagRow;
-            const evaluated = evaluateFlag(flag, evaluationContext);
-            if (mounted) setFlagValue(evaluated);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      mounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, [flagName, evaluationContext.userId, evaluationContext.sessionId, defaultValue, options.defaultValue]);
+    const evaluated = evaluateFlag(flag, evaluationContext);
+    setFlagValue(evaluated);
+  }, [flagName, evaluationContext, defaultValue, options.defaultValue]);
 
   return flagValue;
 }
@@ -154,7 +120,7 @@ export function useFeatureFlag(
  * Evaluate a feature flag based on targeting rules
  */
 function evaluateFlag(
-  flag: FeatureFlagRow,
+  flag: FeatureFlag,
   context: { userId?: string; sessionId?: string }
 ): boolean {
   // If flag is disabled globally, return false
@@ -167,11 +133,7 @@ function evaluateFlag(
     return flag.enabled;
   }
 
-  const rules = flag.targeting_rules as {
-    userIds?: string[];
-    percentage?: number;
-    sessionPercentage?: number;
-  };
+  const rules = flag.targeting_rules;
 
   // User ID targeting
   if (rules.userIds && rules.userIds.length > 0 && context.userId) {
@@ -219,56 +181,11 @@ function simpleHash(str: string): number {
  * Hook to get raw feature flag data (for admin UI)
  *
  * @param flagName - Unique feature flag name
- * @returns Feature flag document or null
+ * @returns Feature flag or null
  */
-export function useFeatureFlagData(flagName: string): FeatureFlagRow | null {
-  const [flag, setFlag] = useState<FeatureFlagRow | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const fetchFlag = async (): Promise<void> => {
-      const { data } = await supabase
-        .from('feature_flags')
-        .select('*')
-        .eq('name', flagName)
-        .single();
-
-      if (mounted && data) {
-        setFlag(data);
-      }
-    };
-
-    fetchFlag();
-
-    // Subscribe to changes
-    const channel = supabase
-      .channel(`feature_flag_data_${flagName}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'feature_flags',
-          filter: `name=eq.${flagName}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'DELETE') {
-            if (mounted) setFlag(null);
-          } else {
-            if (mounted) setFlag(payload.new as FeatureFlagRow);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      mounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, [flagName]);
-
-  return flag;
+export function useFeatureFlagData(flagName: string): FeatureFlag | null {
+  const flag = LOCAL_FEATURE_FLAGS[flagName];
+  return flag || null;
 }
 
 /**
@@ -276,47 +193,6 @@ export function useFeatureFlagData(flagName: string): FeatureFlagRow | null {
  *
  * @returns Array of all feature flags
  */
-export function useAllFeatureFlags(): FeatureFlagRow[] {
-  const [flags, setFlags] = useState<FeatureFlagRow[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const fetchFlags = async (): Promise<void> => {
-      const { data } = await supabase
-        .from('feature_flags')
-        .select('*')
-        .order('name');
-
-      if (mounted && data) {
-        setFlags(data);
-      }
-    };
-
-    fetchFlags();
-
-    // Subscribe to changes
-    const channel = supabase
-      .channel('all_feature_flags')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'feature_flags',
-        },
-        () => {
-          // Refetch all flags on any change
-          fetchFlags();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      mounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  return flags;
+export function useAllFeatureFlags(): FeatureFlag[] {
+  return Object.values(LOCAL_FEATURE_FLAGS);
 }

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useChat } from '../useChat';
 import { useServices } from '@/services/ServiceProvider';
+import type { IChatService } from '@/services/interfaces/IChatService';
 
 vi.mock('@/services/ServiceProvider');
 
@@ -25,11 +26,22 @@ describe('useChat', () => {
   };
 
   it('should provide chat methods and state', () => {
-    const mockChatService = {
+    const mockChatService: IChatService = {
       sendMessage: vi.fn(),
       getChatHistory: vi.fn().mockResolvedValue([]),
       clearChatHistory: vi.fn(),
       getRecentMessages: vi.fn().mockResolvedValue([]),
+      setChatbotType: vi.fn(),
+      setCurrentSession: vi.fn(),
+      getCurrentSessionId: vi.fn().mockReturnValue(undefined),
+      createSession: vi.fn().mockResolvedValue({ id: 'test-session', user_id: 'test-user', chatbot_type: 'brand-coach', title: 'New Chat', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
+      getSessions: vi.fn().mockResolvedValue([]),
+      getSession: vi.fn().mockResolvedValue(null),
+      updateSession: vi.fn().mockResolvedValue({ id: 'test-session', user_id: 'test-user', chatbot_type: 'brand-coach', title: 'Updated', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
+      deleteSession: vi.fn().mockResolvedValue(undefined),
+      getSessionMessages: vi.fn().mockResolvedValue([]),
+      generateSessionTitle: vi.fn().mockResolvedValue(undefined),
+      regenerateSessionTitle: vi.fn().mockResolvedValue(null),
     };
 
     vi.mocked(useServices).mockReturnValue({
