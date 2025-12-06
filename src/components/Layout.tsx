@@ -69,13 +69,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-gradient-primary border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-24">
-            {/* Logo */}
-            <Link to="/" className="flex items-center">
+          <div className="flex justify-between items-center h-16 sm:h-20 md:h-24 gap-4">
+            {/* Logo - fixed minimum size, never shrinks */}
+            <Link to="/" className="flex-shrink-0">
               <img 
                 src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
-                alt="IDEA Brand Coach - Build Emotionally Resonant Brands" 
-                className="h-28 w-auto object-contain"
+                alt="IDEA Brand Coach" 
+                className="h-12 sm:h-16 md:h-20 w-auto min-w-[120px] sm:min-w-[150px] object-contain"
               />
             </Link>
 
