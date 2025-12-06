@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { BetaNavigationWidget } from "@/components/BetaNavigationWidget";
 import { getNavigationFeatures, getCurrentPhase } from "@/config/features";
+import { usePriorityNav } from "@/hooks/usePriorityNav";
 
 interface NavItem {
   name: string;
@@ -32,18 +33,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const navContainerRef = useRef<HTMLDivElement>(null);
 
-  // Get navigation items based on current deployment phase
-  const { primaryItems, overflowItems } = useMemo(() => {
+  // Get all navigation items based on current deployment phase
+  const allNavItems = useMemo(() => {
     const currentPhase = getCurrentPhase();
     const features = getNavigationFeatures(currentPhase);
 
-    // Build nav items from features with Home inserted after Brand Diagnostic (P1+)
-    const allItems: NavItem[] = [];
+    const items: NavItem[] = [];
 
     features.forEach((feature, index) => {
-      // Add the feature
-      allItems.push({
+      items.push({
         name: feature.name,
         href: feature.route,
         icon: feature.icon,
@@ -51,17 +51,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       // Insert Home after the first feature (Brand Diagnostic) - only for P1+
       if (index === 0 && currentPhase !== 'P0') {
-        allItems.push({ name: "Home", href: "/", icon: HomeIcon });
+        items.push({ name: "Home", href: "/", icon: HomeIcon });
       }
     });
 
-    // Split into primary (first 3) and overflow (rest)
-    const PRIMARY_COUNT = 3;
-    return {
-      primaryItems: allItems.slice(0, PRIMARY_COUNT),
-      overflowItems: allItems.slice(PRIMARY_COUNT),
-    };
+    return items;
   }, []);
+
+  // Dynamic Priority+ navigation
+  const { visibleItems, overflowItems, measureRef } = usePriorityNav({
+    items: allNavItems,
+    containerRef: navContainerRef,
+    moreButtonWidth: 80,
+    userMenuWidth: user ? 50 : 0,
+    itemGap: 4,
+  });
 
   // Show auth page without layout if not authenticated and not on auth or home page
   if (!user && location.pathname !== '/auth' && location.pathname !== '/' && location.pathname !== '/diagnostic') {
@@ -83,7 +87,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-gradient-primary border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16 sm:h-20 md:h-24 gap-4">
+          <div className="flex items-center h-16 sm:h-20 md:h-24 gap-2">
             {/* Logo - fixed minimum size, never shrinks */}
             <Link to="/" className="flex-shrink-0">
               <img 
@@ -93,25 +97,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
               />
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-2 flex-shrink min-w-0 ml-auto">
-              {/* Primary nav items - always visible */}
-              <nav className="flex space-x-1">
-                {primaryItems.map((item) => {
+            {/* Desktop Navigation - Dynamic Priority+ */}
+            <div 
+              ref={navContainerRef}
+              className="hidden md:flex items-center flex-1 min-w-0"
+            >
+              {/* Visible nav items */}
+              <nav className="flex items-center gap-1">
+                {visibleItems.map((item, index) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.href;
                   return (
                     <Link
                       key={item.name}
+                      ref={(node) => measureRef(node, index)}
                       to={item.href}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
                         isActive
                           ? "bg-secondary text-secondary-foreground shadow-brand"
                           : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20"
                       }`}
                     >
-                      <Icon className="w-4 h-4" />
-                      <span className="hidden lg:inline">{item.name}</span>
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <span>{item.name}</span>
                     </Link>
                   );
                 })}
@@ -124,10 +132,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20"
+                      className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20 ml-1 flex-shrink-0"
                     >
                       <MoreHorizontal className="w-4 h-4" />
-                      <span className="hidden lg:inline ml-1">More</span>
+                      <span className="ml-1">More</span>
                       <ChevronDown className="w-3 h-3 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -139,7 +147,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         <DropdownMenuItem key={item.name} asChild>
                           <Link
                             to={item.href}
-                            className={`flex items-center space-x-2 cursor-pointer ${
+                            className={`flex items-center gap-2 cursor-pointer ${
                               isActive ? "bg-accent" : ""
                             }`}
                           >
@@ -153,6 +161,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </DropdownMenu>
               )}
               
+              {/* Spacer to push user menu to the right */}
+              <div className="flex-1" />
+
               {/* User dropdown menu */}
               {user && (
                 <DropdownMenu>
@@ -163,15 +174,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20 flex-shrink-0"
                     >
                       <User className="w-4 h-4" />
-                      <span className="hidden lg:inline ml-2 max-w-[100px] truncate">{user.email}</span>
                       <ChevronDown className="w-3 h-3 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-popover z-50">
-                    <div className="px-2 py-1.5 text-sm text-muted-foreground lg:hidden">
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
                       {user.email}
                     </div>
-                    <DropdownMenuSeparator className="lg:hidden" />
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive focus:text-destructive">
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
@@ -185,7 +195,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-primary-foreground"
+              className="md:hidden text-primary-foreground ml-auto"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -197,7 +207,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {isMobileMenuOpen && (
           <div className="md:hidden bg-primary/90 backdrop-blur-sm border-t border-primary-foreground/20">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {[...primaryItems, ...overflowItems].map((item) => {
+              {allNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
                 return (
