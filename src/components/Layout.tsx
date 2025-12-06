@@ -103,16 +103,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </nav>
               
               {user && (
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-2 text-primary-foreground/80">
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <div className="hidden lg:flex items-center space-x-2 text-primary-foreground/80">
                     <User className="w-4 h-4" />
-                    <span className="text-sm">{user.email}</span>
+                    <span className="text-sm truncate max-w-[150px]">{user.email}</span>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={signOut}
                     className="text-primary-foreground/80 hover:text-primary-foreground"
+                    title="Sign out"
                   >
                     <LogOut className="w-4 h-4" />
                   </Button>
@@ -155,6 +156,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })}
+              
+              {user && (
+                <>
+                  <div className="border-t border-primary-foreground/20 my-2" />
+                  <div className="px-3 py-2">
+                    <div className="flex items-center space-x-2 text-primary-foreground/80 mb-2">
+                      <User className="w-4 h-4" />
+                      <span className="text-sm truncate">{user.email}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        signOut();
+                      }}
+                      className="w-full justify-start text-primary-foreground/80 hover:text-primary-foreground"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

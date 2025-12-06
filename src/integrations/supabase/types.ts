@@ -115,7 +115,10 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          metadata: Json | null
           role: string
+          session_id: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -123,7 +126,10 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          metadata?: Json | null
           role: string
+          session_id?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -131,7 +137,45 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          metadata?: Json | null
           role?: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          chatbot_type: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chatbot_type?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chatbot_type?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
