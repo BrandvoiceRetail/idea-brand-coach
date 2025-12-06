@@ -89,14 +89,20 @@ serve(async (req) => {
   }
 
   try {
+    console.log("=== SYNC DIAGNOSTIC TO EMBEDDINGS STARTED ===");
+    
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { submission_id } = await req.json();
+    const body = await req.json();
+    const { submission_id } = body;
+    
+    console.log("Request body:", JSON.stringify(body));
     
     if (!submission_id) {
+      console.error("ERROR: submission_id is required");
       throw new Error("submission_id is required");
     }
 
@@ -109,87 +115,139 @@ serve(async (req) => {
       .eq("id", submission_id)
       .single();
 
-    if (submissionError) throw submissionError;
+    if (submissionError) {
+      console.error("ERROR fetching submission:", submissionError);
+      throw submissionError;
+    }
+
+    if (!submission) {
+      console.error("ERROR: Submission not found:", submission_id);
+      throw new Error(`Submission not found: ${submission_id}`);
+    }
+
+    console.log("Found submission:", {
+      id: submission.id,
+      user_id: submission.user_id,
+      scores: submission.scores
+    });
 
     const scores = submission.scores as DiagnosticScores;
     const userId = submission.user_id;
 
+    // Validate scores
+    if (!scores || typeof scores.overall === 'undefined') {
+      console.error("ERROR: Invalid scores format:", scores);
+      throw new Error("Invalid scores format in submission");
+    }
+
     // Generate context chunks
     const contextChunks = formatDiagnosticContext(scores, userId);
+    console.log("Generated", contextChunks.length, "context chunks");
 
     // Generate embeddings using OpenAI
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
+      console.error("ERROR: OPENAI_API_KEY not configured");
       throw new Error("OPENAI_API_KEY not configured");
     }
 
-    console.log("Generating embeddings for", contextChunks.length, "chunks");
+    console.log("OpenAI API key configured: ✓");
 
     // Delete existing diagnostic embeddings for this user
-    await supabaseClient
+    console.log("Deleting existing diagnostic embeddings for user:", userId);
+    const { error: deleteError, count: deleteCount } = await supabaseClient
       .from("user_knowledge_chunks")
       .delete()
       .eq("user_id", userId)
       .eq("source_type", "diagnostic");
 
+    if (deleteError) {
+      console.warn("Warning: Failed to delete existing chunks:", deleteError);
+    } else {
+      console.log("Deleted existing chunks (if any)");
+    }
+
     // Generate and store embeddings for each chunk
+    let successCount = 0;
     for (let i = 0; i < contextChunks.length; i++) {
       const chunk = contextChunks[i];
+      console.log(`Processing chunk ${i + 1}/${contextChunks.length}:`, chunk.substring(0, 100) + "...");
       
-      const embeddingResponse = await fetch("https://api.openai.com/v1/embeddings", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "text-embedding-ada-002",
-          input: chunk,
-        }),
-      });
-
-      if (!embeddingResponse.ok) {
-        const errorText = await embeddingResponse.text();
-        console.error("OpenAI API error:", errorText);
-        throw new Error(`OpenAI embedding failed: ${embeddingResponse.status}`);
-      }
-
-      const embeddingData = await embeddingResponse.json();
-      const embedding = embeddingData.data[0].embedding;
-
-      // Store in database
-      const { error: insertError } = await supabaseClient
-        .from("user_knowledge_chunks")
-        .insert({
-          user_id: userId,
-          content: chunk,
-          embedding,
-          source_type: "diagnostic",
-          source_id: submission_id,
-          metadata: { chunk_index: i, total_chunks: contextChunks.length },
+      try {
+        const embeddingResponse = await fetch("https://api.openai.com/v1/embeddings", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "text-embedding-ada-002",
+            input: chunk,
+          }),
         });
 
-      if (insertError) {
-        console.error("Error inserting chunk:", insertError);
-        throw insertError;
+        if (!embeddingResponse.ok) {
+          const errorText = await embeddingResponse.text();
+          console.error(`OpenAI API error for chunk ${i}:`, embeddingResponse.status, errorText);
+          throw new Error(`OpenAI embedding failed: ${embeddingResponse.status}`);
+        }
+
+        const embeddingData = await embeddingResponse.json();
+        const embedding = embeddingData.data[0].embedding;
+        console.log(`Generated embedding for chunk ${i + 1} (dim: ${embedding.length})`);
+
+        // Store in database
+        const { error: insertError } = await supabaseClient
+          .from("user_knowledge_chunks")
+          .insert({
+            user_id: userId,
+            content: chunk,
+            embedding: JSON.stringify(embedding),
+            source_type: "diagnostic",
+            source_id: submission_id,
+            metadata: { chunk_index: i, total_chunks: contextChunks.length },
+          });
+
+        if (insertError) {
+          console.error(`Error inserting chunk ${i}:`, insertError);
+          throw insertError;
+        }
+
+        successCount++;
+        console.log(`Successfully stored chunk ${i + 1}/${contextChunks.length}`);
+      } catch (chunkError) {
+        console.error(`Failed to process chunk ${i}:`, chunkError);
+        throw chunkError;
       }
     }
 
-    console.log("Successfully created", contextChunks.length, "embeddings");
+    console.log("=== SYNC DIAGNOSTIC TO EMBEDDINGS COMPLETED ===");
+    console.log(`Successfully created ${successCount}/${contextChunks.length} embeddings`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        chunks_created: contextChunks.length,
+        chunks_created: successCount,
+        total_chunks: contextChunks.length,
+        user_id: userId,
+        submission_id: submission_id
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error) {
-    console.error("Error in sync-diagnostic-to-embeddings:", error);
+    console.error("=== SYNC DIAGNOSTIC TO EMBEDDINGS FAILED ===");
+    console.error("Error details:", error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message,
+        details: error.stack
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

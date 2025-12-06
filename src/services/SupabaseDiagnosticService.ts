@@ -43,20 +43,21 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
     if (profileError) throw profileError;
 
     // 3. Trigger embedding generation via edge function
+    console.log('🔄 Triggering diagnostic embedding sync for submission:', submission.id);
     try {
-      await supabase.functions.invoke('sync-diagnostic-to-embeddings', {
+      const { data: syncResult, error: syncError } = await supabase.functions.invoke('sync-diagnostic-to-embeddings', {
         body: { submission_id: submission.id },
       });
+      
+      if (syncError) {
+        console.error('❌ Failed to sync diagnostic to embeddings:', syncError);
+      } else {
+        console.log('✅ Diagnostic embedding sync result:', syncResult);
+      }
     } catch (error) {
-      console.error('Failed to sync diagnostic to embeddings:', error);
-      // Don't throw - embeddings can be generated async
+      console.error('❌ Exception during diagnostic embedding sync:', error);
+      // Don't throw - embeddings can be generated async or retried later
     }
-
-    // 4. Sync diagnostic to OpenAI User KB
-    // Note: Skipping User KB sync for now as it requires server-side processing
-    // This will be handled by a database trigger or background job in the future
-    // The diagnostic data is already saved and embeddings are generated
-    console.log('ℹ️ User KB sync skipped - will be handled server-side');
 
     // TODO: Phase 2 - Implement server-side trigger for User KB sync
     // Current issue: Edge function auth not working from client-side invocation
