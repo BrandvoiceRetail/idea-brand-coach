@@ -25,7 +25,14 @@ export function VideoPlayer({
 }: VideoPlayerProps): JSX.Element {
   const getVimeoUrl = (): string => {
     const baseUrl = `https://player.vimeo.com/video/${videoId}`;
-    return hash ? `${baseUrl}?h=${hash}` : baseUrl;
+    const params = new URLSearchParams();
+    
+    if (hash) params.append('h', hash);
+    params.append('title', '0');
+    params.append('byline', '0');
+    params.append('portrait', '0');
+    
+    return `${baseUrl}?${params.toString()}`;
   };
 
   const src = platform === "youtube"
