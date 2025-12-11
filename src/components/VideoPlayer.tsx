@@ -3,6 +3,8 @@ interface VideoPlayerProps {
   platform?: "youtube" | "vimeo";
   title?: string;
   className?: string;
+  /** Privacy hash for unlisted Vimeo videos */
+  hash?: string;
 }
 
 /**
@@ -12,16 +14,23 @@ interface VideoPlayerProps {
  * @param platform - The video platform (defaults to "youtube")
  * @param title - Accessible title for the iframe
  * @param className - Additional CSS classes for the container
+ * @param hash - Privacy hash for unlisted Vimeo videos
  */
 export function VideoPlayer({
   videoId,
   platform = "youtube",
   title = "Training Video",
-  className = ""
+  className = "",
+  hash
 }: VideoPlayerProps): JSX.Element {
+  const getVimeoUrl = (): string => {
+    const baseUrl = `https://player.vimeo.com/video/${videoId}`;
+    return hash ? `${baseUrl}?h=${hash}` : baseUrl;
+  };
+
   const src = platform === "youtube"
     ? `https://www.youtube.com/embed/${videoId}`
-    : `https://player.vimeo.com/video/${videoId}`;
+    : getVimeoUrl();
 
   return (
     <div className={`aspect-video w-full ${className}`}>

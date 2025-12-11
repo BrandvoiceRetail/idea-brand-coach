@@ -25,8 +25,9 @@ export function StartHere(): JSX.Element {
           </CardHeader>
           <CardContent>
             <VideoPlayer
-              videoId="dQw4w9WgXcQ" // Replace with actual YouTube/Vimeo video ID
-              platform="youtube"
+              videoId="1145686648"
+              platform="vimeo"
+              hash="1e858fb0d6"
               title="Getting Started with IDEA Brand Coach"
             />
           </CardContent>
