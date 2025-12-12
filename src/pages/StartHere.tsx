@@ -12,8 +12,8 @@ export function StartHere(): JSX.Element {
         <div>
           <h1 className="text-4xl font-bold mb-2">Start Here</h1>
           <p className="text-muted-foreground text-lg">
-            Welcome to IDEA Brand Coach! Watch this introduction video to get started with your brand transformation
-            journey.
+            Welcome to IDEA Brand Coach! Watch this introduction video
+            to get started with your brand transformation journey.
           </p>
         </div>
 
