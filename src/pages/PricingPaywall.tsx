@@ -97,7 +97,7 @@ export default function PricingPaywall(): JSX.Element {
     // For now, just navigate to dashboard if authenticated, otherwise to auth
     if (user) {
       // User is authenticated - proceed to app (stripe checkout will be added in Phase 2)
-      navigate('/');
+      navigate('/start-here');
     } else {
       // User not authenticated - need to sign up/sign in first
       navigate(`/auth?plan=${tierId}&redirect=/subscribe`);
