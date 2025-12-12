@@ -166,7 +166,7 @@ const App = () => (
                   </Layout>
                 </BrandProvider>
               } />
-              <Route path="/app" element={<Navigate to="/" replace />} />
+              <Route path="/app" element={<Navigate to="/start-here" replace />} />
               <Route path="/beta" element={<BetaWelcome />} />
               <Route path="/beta/journey" element={<BetaJourney />} />
               <Route path="/beta/feedback" element={<BetaFeedback />} />

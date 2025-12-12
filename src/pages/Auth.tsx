@@ -207,7 +207,7 @@ export default function Auth() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
-              onClick={() => navigate('/')} 
+              onClick={() => navigate('/start-here')} 
               className="w-full"
             >
               Go to Dashboard
