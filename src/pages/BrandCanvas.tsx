@@ -12,6 +12,7 @@ import { MessageSquare, Save, ArrowRight, Sparkles, CheckCircle, Loader2, WifiOf
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { usePersistedField, usePersistedArrayField } from "@/hooks/usePersistedField";
+import { useModuleCompletionStatus } from "@/hooks/useModuleCompletionStatus";
 import { AIAssistant } from "@/components/AIAssistant";
 import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
 import { BrandMarkdownExport } from "@/components/export/BrandMarkdownExport";
@@ -38,6 +39,9 @@ function SyncIndicator({ status }: { status: SyncStatus }): JSX.Element | null {
 export default function BrandCanvas() {
   const { toast } = useToast();
   const { brandData, updateBrandData, getRecommendedNextStep } = useBrand();
+
+  // Module completion status from persisted fields
+  const { insightsStatus, avatarStatus, insightsProgress, avatarProgress } = useModuleCompletionStatus();
 
   // Persisted text fields (local-first with background sync)
   const brandPurpose = usePersistedField({
@@ -851,16 +855,26 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm">IDEA Insights</span>
-                <Badge variant={brandData.insight.completed ? "default" : "outline"}>
-                  {brandData.insight.completed ? "Complete" : "Pending"}
+                <div className="flex flex-col">
+                  <span className="text-sm">IDEA Insights</span>
+                  {insightsStatus === 'pending' && insightsProgress > 0 && (
+                    <span className="text-xs text-muted-foreground">{insightsProgress}% complete</span>
+                  )}
+                </div>
+                <Badge variant={insightsStatus === 'completed' ? "default" : insightsStatus === 'fully-optimized' ? "secondary" : "outline"}>
+                  {insightsStatus === 'completed' ? "Completed" : insightsStatus === 'fully-optimized' ? "Fully Optimized" : "Pending"}
                 </Badge>
               </div>
-              
+
               <div className="flex justify-between items-center">
-                <span className="text-sm">Avatar Profile</span>
-                <Badge variant={brandData.avatar.completed ? "default" : "outline"}>
-                  {brandData.avatar.completed ? "Complete" : "Pending"}
+                <div className="flex flex-col">
+                  <span className="text-sm">Avatar Profile</span>
+                  {avatarStatus === 'pending' && avatarProgress > 0 && (
+                    <span className="text-xs text-muted-foreground">{avatarProgress}% complete</span>
+                  )}
+                </div>
+                <Badge variant={avatarStatus === 'completed' ? "default" : avatarStatus === 'fully-optimized' ? "secondary" : "outline"}>
+                  {avatarStatus === 'completed' ? "Completed" : avatarStatus === 'fully-optimized' ? "Fully Optimized" : "Pending"}
                 </Badge>
               </div>
 
