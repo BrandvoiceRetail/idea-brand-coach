@@ -166,6 +166,7 @@ const App = () => (
                 </BrandProvider>
               } />
               <Route path="/app" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
+              <Route path="/value-lens" element={<Navigate to="/copy-generator" replace />} />
               <Route path="/beta" element={<BetaWelcome />} />
               <Route path="/beta/journey" element={<BetaJourney />} />
               <Route path="/beta/feedback" element={<BetaFeedback />} />
