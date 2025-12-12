@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowRight, 
-  TrendingUp, 
-  AlertCircle, 
-  CheckCircle2, 
+import {
+  ArrowRight,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
   Star,
   Lightbulb,
   Heart,
@@ -21,6 +21,7 @@ import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/config/routes';
+import { DiagnosticResultsPDFExport } from '@/components/export/DiagnosticResultsPDFExport';
 
 interface DiagnosticData {
   answers: Record<string, string>;
@@ -312,17 +313,24 @@ export default function DiagnosticResults() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Take your results with you and share them with your team. The PDF includes your scores, recommendations, and next steps.
                 </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => {
-                    // This will be implemented later with PDF generation
-                    alert('PDF download will be available after account creation');
-                  }}
-                >
-                  Download PDF Report
-                  <Download className="w-4 h-4 ml-2" />
-                </Button>
+                {user ? (
+                  <DiagnosticResultsPDFExport
+                    diagnosticData={diagnosticData}
+                    companyName={user.email?.split('@')[0] || 'Your Brand'}
+                    className="w-full"
+                  />
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      alert('PDF download will be available after account creation');
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF Report
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
