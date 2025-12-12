@@ -20,6 +20,9 @@ export const ROUTES = {
   
   /** Brand Coach chat interface */
   BRAND_COACH: '/brand-coach',
+  
+  /** Brand Copy Generator */
+  COPY_GENERATOR: '/copy-generator',
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
