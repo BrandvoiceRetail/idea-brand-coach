@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useAuth } from '@/hooks/useAuth';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
+import { ROUTES } from '@/config/routes';
 
 interface Question {
   id: string;
@@ -220,7 +221,7 @@ export default function FreeDiagnostic() {
             <div className="flex justify-between items-center mb-4">
               <Button
                 variant="ghost"
-                onClick={() => navigate('/start-here')}
+                onClick={() => navigate(ROUTES.HOME_PAGE)}
                 className="flex items-center gap-2"
               >
                 <Home className="w-4 h-4" />

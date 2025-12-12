@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Check, Sparkles, Zap, Crown, ArrowRight, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/config/routes';
 
 interface PricingTier {
   id: 'starter' | 'professional' | 'premium';
@@ -97,7 +98,7 @@ export default function PricingPaywall(): JSX.Element {
     // For now, just navigate to dashboard if authenticated, otherwise to auth
     if (user) {
       // User is authenticated - proceed to app (stripe checkout will be added in Phase 2)
-      navigate('/start-here');
+      navigate(ROUTES.HOME_PAGE);
     } else {
       // User not authenticated - need to sign up/sign in first
       navigate(`/auth?plan=${tierId}&redirect=/subscribe`);

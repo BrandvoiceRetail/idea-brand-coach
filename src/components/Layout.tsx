@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,6 +21,7 @@ import {
 import { BetaNavigationWidget } from "@/components/BetaNavigationWidget";
 import { getNavigationFeatures, getCurrentPhase } from "@/config/features";
 import { usePriorityNav } from "@/hooks/usePriorityNav";
+import { ROUTES } from "@/config/routes";
 
 interface NavItem {
   name: string;
@@ -89,7 +89,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16 sm:h-20 md:h-24 gap-2">
             {/* Logo - fixed minimum size, never shrinks */}
-            <Link to="/start-here" className="flex-shrink-0">
+            <Link to={ROUTES.HOME_PAGE} className="flex-shrink-0">
               <img 
                 src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png" 
                 alt="IDEA Brand Coach" 

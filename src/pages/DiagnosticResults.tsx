@@ -20,6 +20,7 @@ import {
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/config/routes';
 
 interface DiagnosticData {
   answers: Record<string, string>;
@@ -330,7 +331,7 @@ export default function DiagnosticResults() {
           <div className="text-center mt-8">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/start-here')}
+              onClick={() => navigate(ROUTES.HOME_PAGE)}
               className="text-muted-foreground"
             >
               ← Back to Start
