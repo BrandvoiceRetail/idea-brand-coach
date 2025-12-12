@@ -330,10 +330,10 @@ export default function DiagnosticResults() {
           <div className="text-center mt-8">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/start-here')}
               className="text-muted-foreground"
             >
-              ← Back to Home
+              ← Back to Start
             </Button>
           </div>
         </div>

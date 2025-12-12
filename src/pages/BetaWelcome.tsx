@@ -163,7 +163,7 @@ export default function BetaWelcome() {
 
           <div className="text-center mt-8">
             <Button variant="outline" asChild>
-              <Link to="/">Back to Home</Link>
+              <Link to="/start-here">Back to Start</Link>
             </Button>
           </div>
         </div>
@@ -298,8 +298,8 @@ export default function BetaWelcome() {
             Your feedback is invaluable in helping us create the best possible experience.
           </p>
           <Button variant="outline" asChild>
-            <Link to="/">
-              Back to Home
+            <Link to="/start-here">
+              Back to Start
             </Link>
           </Button>
         </div>
