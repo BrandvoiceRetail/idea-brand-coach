@@ -6,13 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Zap, Copy, RefreshCw, Sparkles, Lock, Crown, CheckCircle } from "lucide-react";
+import { Zap, Copy, RefreshCw, Sparkles, CheckCircle, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { PaywallModal } from "@/components/PaywallModal";
 import { usePersistedField } from "@/hooks/usePersistedField";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BrandCopyInput {
   productName: string;
@@ -135,6 +135,8 @@ export default function BrandCopyGenerator() {
     brandData.empathy.completed && brandData.authentic.completed && 
     brandData.avatar.completed && brandData.brandCanvas.completed;
 
+  const [hasUserContext, setHasUserContext] = useState(false);
+
   const handleGenerate = async () => {
     if (!productName.value || !targetAudience.value) {
       toast({
@@ -147,16 +149,43 @@ export default function BrandCopyGenerator() {
 
     setIsGenerating(true);
 
-    // Simulate AI generation
-    setTimeout(() => {
-      const sampleCopy = generateSampleCopy();
-      generatedCopy.onChange(sampleCopy);
-      setIsGenerating(false);
+    try {
+      const { data, error } = await supabase.functions.invoke('brand-copy-generator', {
+        body: {
+          productName: productName.value,
+          category: category.value || '',
+          features: featuresList,
+          targetAudience: targetAudience.value,
+          emotionalPayoff: emotionalPayoff.value || '',
+          tone: tone.value || '',
+          format: format.value || 'pdp-description',
+          additionalContext: additionalContext.value || '',
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      generatedCopy.onChange(data.copy);
+      setHasUserContext(data.hasUserContext || false);
+
       toast({
         title: "Copy Generated!",
-        description: "Your brand copy has been created."
+        description: data.hasUserContext
+          ? "Your brand copy has been created using your brand context."
+          : "Your brand copy has been created."
       });
-    }, 2000);
+    } catch (error) {
+      console.error('Error generating copy:', error);
+      toast({
+        title: "Generation Failed",
+        description: "There was an error generating your copy. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const addFeature = () => {
@@ -169,45 +198,6 @@ export default function BrandCopyGenerator() {
   const removeFeature = (index: number) => {
     const newList = featuresList.filter((_, i) => i !== index);
     features.onChange(JSON.stringify(newList));
-  };
-
-  const generateSampleCopy = () => {
-    const categoryVal = category.value || '';
-    const productNameVal = productName.value || '';
-    const emotionalPayoffVal = emotionalPayoff.value || '';
-    const formatVal = format.value || '';
-
-    if (formatVal === "amazon-bullet") {
-      return `• TRANSFORM YOUR ${categoryVal.toUpperCase()} EXPERIENCE - ${productNameVal} delivers the ${emotionalPayoffVal.toLowerCase()} you've been searching for
-• PREMIUM QUALITY THAT SHOWS - Built with superior materials that not only perform better but make you feel confident in your choice
-• INSTANT RESULTS YOU'LL LOVE - See immediate improvements that justify every penny and give you that satisfaction of making the right decision
-• TRUSTED BY THOUSANDS - Join customers who've discovered the difference quality makes in their daily routine
-• 100% SATISFACTION PROMISE - We're so confident you'll love ${productNameVal}, we guarantee your complete satisfaction or your money back`;
-    }
-
-    if (formatVal === "ad-headline") {
-      return `Finally! The ${categoryVal} That Delivers Real ${emotionalPayoffVal} (Without The Premium Price Tag)`;
-    }
-
-    if (formatVal === "social-caption") {
-      return `POV: You just discovered the ${categoryVal} that actually works 🤯
-
-I was skeptical too... but ${productNameVal} has completely changed how I feel about ${categoryVal.toLowerCase()}.
-
-The ${emotionalPayoffVal.toLowerCase()} I get from this is unmatched. Finally something that delivers on its promises!
-
-Who else is tired of products that overpromise and underdeliver? 👇
-
-#${categoryVal.replace(/\s+/g, '')} #ProductReview #WorthIt`;
-    }
-
-    return `Transform your ${categoryVal.toLowerCase()} experience with ${productNameVal}.
-
-Designed for people who value ${emotionalPayoffVal.toLowerCase()}, this isn't just another product - it's your solution to finally getting the results you deserve.
-
-${featuresList.length > 0 ? `✓ ${featuresList.join('\n✓ ')}` : ''}
-
-Ready to experience the difference? Your future self will thank you.`;
   };
 
   const copyCopy = () => {
@@ -444,17 +434,26 @@ Ready to experience the difference? Your future self will thank you.`;
             <CardContent>
               {generatedCopy.value ? (
                 <div className="space-y-4">
+                  {/* Context indicator */}
+                  {hasUserContext && (
+                    <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/30 px-3 py-2 rounded-lg">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Generated using your brand context (avatar, canvas, diagnostic data)</span>
+                    </div>
+                  )}
+
                   <div className="bg-muted/30 p-4 rounded-lg">
                     <pre className="whitespace-pre-wrap text-sm font-medium leading-relaxed">
                       {generatedCopy.value}
                     </pre>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="outline">✓ Emotional Hook</Badge>
                     <Badge variant="outline">✓ Benefit-Focused</Badge>
                     <Badge variant="outline">✓ Trust Signals</Badge>
                     <Badge variant="outline">✓ Clear CTA</Badge>
+                    {hasUserContext && <Badge variant="default">✓ Personalized</Badge>}
                   </div>
                 </div>
               ) : (
