@@ -482,6 +482,50 @@ interface TierLimits {
 
 ---
 
+## P1.8 - Email Support Contact
+
+### Overview
+
+Add email support functionality to allow users to contact the IDEA Brand Coach team directly via email.
+
+### Email Address
+
+**Support Email:** `contact@ideabrandconsultancy.com`
+
+### Implementation Options
+
+#### Option A: Simple Mailto Link (Quick)
+- Add "Contact Support" link to Help section
+- Uses native mailto: link
+- Zero backend required
+- Example: `<a href="mailto:contact@ideabrandconsultancy.com">Contact Support</a>`
+
+#### Option B: Contact Form with Email (Recommended)
+- Create contact form UI component
+- Capture: name, email, subject, message
+- Edge Function sends email via Resend API
+- Sends confirmation to user + notification to support team
+
+### Edge Function Requirements (Option B)
+
+**Required Setup:**
+1. Resend.com account and API key (`RESEND_API_KEY`)
+2. Verified email domain at https://resend.com/domains
+3. Edge function: `send-support-email`
+
+### UI Placement
+
+- Start Here page "Need Help?" section
+- Footer contact link
+- Help menu in navigation
+- Brand Coach "Need more help?" prompt
+
+### Priority
+
+**Low priority** - Can use simple mailto link initially, upgrade to contact form in later P1 phase.
+
+---
+
 ## P1 Implementation Priority
 
 **Recommended Rollout Sequence (Post-P0 Launch):**
