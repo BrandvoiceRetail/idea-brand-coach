@@ -12,7 +12,8 @@ export function StartHere(): JSX.Element {
         <div>
           <h1 className="text-4xl font-bold mb-2">Start Here</h1>
           <p className="text-muted-foreground text-lg">
-            Welcome to IDEA Brand Coach! Watch this introduction video to get started with your brand transformation journey.
+            Welcome to IDEA Brand Coach! Watch this introduction video to get started with your brand transformation
+            journey.
           </p>
         </div>
 
@@ -39,9 +40,7 @@ export function StartHere(): JSX.Element {
               <CardTitle className="text-lg">Next Steps</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                After watching the introduction, you can:
-              </p>
+              <p className="text-sm text-muted-foreground">After watching the introduction, you can:</p>
               <ul className="list-disc list-inside text-sm space-y-1">
                 <li>Complete your free brand diagnostic</li>
                 <li>Explore the brand canvas</li>
@@ -56,9 +55,7 @@ export function StartHere(): JSX.Element {
               <CardTitle className="text-lg">Need Help?</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                If you have questions or need support:
-              </p>
+              <p className="text-sm text-muted-foreground">If you have questions or need support:</p>
               <ul className="list-disc list-inside text-sm space-y-1">
                 <li>Use the AI chat for instant guidance</li>
                 <li>Check our video library for tutorials</li>
