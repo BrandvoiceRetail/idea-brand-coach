@@ -14,7 +14,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { PaywallModal } from "@/components/PaywallModal";
 import { usePersistedField } from "@/hooks/usePersistedField";
 
-interface ValueLensInput {
+interface BrandCopyInput {
   productName: string;
   category: string;
   features: string[];
@@ -56,7 +56,7 @@ const toneOptions = [
   "Bold & Confident"
 ];
 
-export default function ValueLens() {
+export default function BrandCopyGenerator() {
   const { toast } = useToast();
   const { brandData, getRecommendedNextStep } = useBrand();
   const [showPaywall, setShowPaywall] = useState(false);
@@ -154,7 +154,7 @@ export default function ValueLens() {
       setIsGenerating(false);
       toast({
         title: "Copy Generated!",
-        description: "Your ValueLens copy has been created."
+        description: "Your brand copy has been created."
       });
     }, 2000);
   };
@@ -224,7 +224,7 @@ Ready to experience the difference? Your future self will thank you.`;
         <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
           <Zap className="w-8 h-8 text-secondary-foreground" />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">ValueLens AI Copy Generator</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Brand Copy Generator</h1>
         <p className="text-muted-foreground text-sm sm:text-base mb-4">
           Generate emotionally resonant copy using your brand data and customer insights
         </p>
@@ -413,7 +413,7 @@ Ready to experience the difference? Your future self will thank you.`;
                 ) : (
                   <>
                     <Zap className="w-4 h-4 mr-2" />
-                    Generate ValueLens Copy
+                    Generate Brand Copy
                   </>
                 )}
               </Button>
@@ -471,7 +471,7 @@ Ready to experience the difference? Your future self will thank you.`;
       <PaywallModal 
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
-        feature="ValueLens AI Copy Generator"
+        feature="Brand Copy Generator"
       />
     </div>
   );

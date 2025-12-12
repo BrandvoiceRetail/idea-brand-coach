@@ -104,11 +104,11 @@ export default function Index() {
       status: "requires-signup"
     },
     {
-      title: "ValueLens Generator",
+      title: "Brand Copy Generator",
       description: "Generate emotionally resonant copy variations",
       icon: <PenTool className="h-6 w-6" />,
       time: "20 min",
-      href: "/value-lens",
+      href: "/copy-generator",
       status: "requires-signup"
     }
   ];

@@ -27,7 +27,7 @@ import IdeaAuthenticity from "./pages/IdeaAuthenticity";
 
 import AvatarBuilder from "./pages/AvatarBuilder";
 import BrandCanvas from "./pages/BrandCanvas";
-import ValueLens from "./pages/ValueLens";
+import BrandCopyGenerator from "./pages/BrandCopyGenerator";
 import Auth from "./pages/Auth";
 import BetaWelcome from "./pages/BetaWelcome";
 import BetaJourney from "./pages/BetaJourney";
@@ -151,14 +151,13 @@ const App = () => (
                   </Layout>
                 </BrandProvider>
               } />
-              <Route path="/value-lens" element={
+              <Route path="/copy-generator" element={
                 <BrandProvider>
                   <Layout>
-                    <ValueLens />
+                    <BrandCopyGenerator />
                   </Layout>
                 </BrandProvider>
               } />
-              <Route path="/valuelens" element={<Navigate to="/value-lens" replace />} />
               <Route path="/research-learning" element={
                 <BrandProvider>
                   <Layout>

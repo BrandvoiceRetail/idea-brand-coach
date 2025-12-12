@@ -178,7 +178,7 @@ export const FEATURES: Record<string, Feature> = {
     shortDescription: 'AI-powered brand copywriting',
     fullDescription: 'Generate compelling brand copy, taglines, and messaging using AI trained on your brand voice and positioning.',
     phase: 'P0',
-    route: '/value-lens',
+    route: '/copy-generator',
     icon: FileText,
     statusMessage: 'Available Now',
     estimatedRelease: 'Live',

@@ -46,7 +46,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
         'Everything in Starter',
         'Unlimited AI suggestions',
         'Advanced copy variations',
-        'ValueLens AI Copy Generator',
+        'Brand Copy Generator',
         'Multi-brand management',
         'Priority support',
         'Advanced analytics',

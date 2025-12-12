@@ -180,7 +180,7 @@ export class BrandStrategyTemplate {
 
     // If everything is complete, suggest next tools
     if (steps.length === 0) {
-      steps.push('Use the ValueLens AI Copy Generator to create brand-aligned content');
+      steps.push('Use the Brand Copy Generator to create brand-aligned content');
       steps.push('Develop a content calendar based on your brand voice and personality');
       steps.push('Create brand guidelines document for team and contractors');
     }

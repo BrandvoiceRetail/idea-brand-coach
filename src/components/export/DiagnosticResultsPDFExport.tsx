@@ -262,7 +262,7 @@ class DiagnosticResultsExporter extends MarkdownPDFExporter {
       `${md.bold('Start Brand Coaching')}: Get personalized AI coaching based on these results`,
       `${md.bold('Complete Avatar Builder')}: Define your ideal customer profile`,
       `${md.bold('Build Your Brand Canvas')}: Create a comprehensive brand strategy`,
-      `${md.bold('Use ValueLens')}: Generate brand-aligned copy and content`,
+      `${md.bold('Use Brand Copy Generator')}: Generate brand-aligned copy and content`,
     ];
 
     content += md.orderedList(steps);

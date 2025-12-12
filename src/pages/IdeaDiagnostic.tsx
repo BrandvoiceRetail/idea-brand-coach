@@ -206,13 +206,13 @@ export default function IdeaDiagnostic() {
               </Link>
             )}
             {scores.categories.empathy.percentage < 60 && (
-              <Link to="/valuelens" className="block">
+              <Link to="/copy-generator" className="block">
                 <div className="p-4 bg-secondary/10 rounded-lg hover:bg-secondary/20 transition-colors border border-secondary/20 hover:border-secondary/40">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-semibold mb-2">💝 Improve Emotional Connection</h4>
                       <p className="text-sm text-muted-foreground">
-                        Use ValueLens to create copy that addresses customer fears and desires.
+                        Use the Brand Copy Generator to create copy that addresses customer fears and desires.
                       </p>
                     </div>
                     <ArrowRight className="w-5 h-5 text-secondary" />

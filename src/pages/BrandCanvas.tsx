@@ -159,7 +159,7 @@ export default function BrandCanvas() {
     });
     toast({
       title: "Brand Canvas Saved",
-      description: "Your brand canvas has been saved and is ready for ValueLens AI Copy Generation."
+      description: "Your brand canvas has been saved and is ready for Brand Copy Generation."
     });
   };
 
@@ -898,7 +898,7 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Complete your brand canvas to unlock the ValueLens AI Copy Generator
+                Complete your brand canvas to unlock the Brand Copy Generator
               </p>
               
               <Button
@@ -912,7 +912,7 @@ export default function BrandCanvas() {
 
               <div className="space-y-2">
                 {/* <Button asChild variant="outline" className="w-full">
-                  <Link to="/valuelens">
+                  <Link to="/copy-generator">
                     Generate AI Copy
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
