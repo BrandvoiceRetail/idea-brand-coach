@@ -11,6 +11,7 @@ import { Home, Loader2 } from 'lucide-react';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
+import { ROUTES } from '@/config/routes';
 
 const emailSchema = z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password must be less than 100 characters');
@@ -207,7 +208,7 @@ export default function Auth() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
-              onClick={() => navigate('/start-here')} 
+              onClick={() => navigate(ROUTES.HOME_PAGE)} 
               className="w-full"
             >
               Go to Dashboard
@@ -232,7 +233,7 @@ export default function Auth() {
         <div className="flex justify-between items-center mb-4">
           <Button
             variant="ghost"
-            onClick={() => navigate('/start-here')}
+            onClick={() => navigate(ROUTES.HOME_PAGE)}
             className="flex items-center gap-2"
           >
             <Home className="w-4 h-4" />

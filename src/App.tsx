@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,7 @@ import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
@@ -166,7 +166,7 @@ const App = () => (
                   </Layout>
                 </BrandProvider>
               } />
-              <Route path="/app" element={<Navigate to="/start-here" replace />} />
+              <Route path="/app" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
               <Route path="/beta" element={<BetaWelcome />} />
               <Route path="/beta/journey" element={<BetaJourney />} />
               <Route path="/beta/feedback" element={<BetaFeedback />} />

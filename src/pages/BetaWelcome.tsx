@@ -8,6 +8,7 @@ import { CheckCircle, Clock, Users, Target, UserPlus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ROUTES } from "@/config/routes";
 
 export default function BetaWelcome() {
   const [name, setName] = useState("");
@@ -163,7 +164,7 @@ export default function BetaWelcome() {
 
           <div className="text-center mt-8">
             <Button variant="outline" asChild>
-              <Link to="/start-here">Back to Start</Link>
+              <Link to={ROUTES.HOME_PAGE}>Back to Start</Link>
             </Button>
           </div>
         </div>
@@ -298,7 +299,7 @@ export default function BetaWelcome() {
             Your feedback is invaluable in helping us create the best possible experience.
           </p>
           <Button variant="outline" asChild>
-            <Link to="/start-here">
+            <Link to={ROUTES.HOME_PAGE}>
               Back to Start
             </Link>
           </Button>
