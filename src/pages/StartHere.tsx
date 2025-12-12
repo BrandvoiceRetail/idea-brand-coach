@@ -63,7 +63,6 @@ export function StartHere(): JSX.Element {
                 <li>Use the AI chat for instant guidance</li>
                 <li>Check our video library for tutorials</li>
                 <li>Review the documentation</li>
-                <li>Contact support for assistance</li>
               </ul>
             </CardContent>
           </Card>
