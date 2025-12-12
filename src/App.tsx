@@ -48,13 +48,7 @@ const App = () => (
           <BrowserRouter>
             <ScrollToTop />
             <Routes>
-              <Route path="/" element={
-                <BrandProvider>
-                  <Layout>
-                    <Index />
-                  </Layout>
-                </BrandProvider>
-              } />
+              <Route path="/" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
               <Route path="/welcome" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/start-here" element={
