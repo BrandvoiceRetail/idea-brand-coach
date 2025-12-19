@@ -18,6 +18,7 @@ import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
 import { BrandMarkdownExport } from "@/components/export/BrandMarkdownExport";
 import { FloatingConsultantButton } from "@/components/FloatingConsultantButton";
 import { CollapsibleDescription } from "@/components/CollapsibleDescription";
+import { CollapsibleVideo } from "@/components/CollapsibleVideo";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
 
 // Sync status indicator component
@@ -192,6 +193,15 @@ export default function BrandCanvas() {
           </div>
         )}
         
+        <CollapsibleVideo
+          videoId="1145686648"
+          platform="vimeo"
+          hash="1e858fb0d6"
+          title="How to Complete Your Brand Canvas"
+          description="Step-by-step guide to building your complete brand strategy"
+          storageKey="canvas_intro"
+        />
+
         {/* Brand Canvas Introduction */}
         <Card className="bg-card shadow-card border mb-8 text-left">
           <CardHeader>

@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Target, Save, Share, Plus, X, Sparkles, Loader2, CheckCircle, WifiOff } from "lucide-react";
+import { Target, Plus, X, Sparkles, Loader2, CheckCircle, WifiOff } from "lucide-react";
+import { CollapsibleVideo } from "@/components/CollapsibleVideo";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { AIAssistant } from "@/components/AIAssistant";
@@ -278,6 +279,15 @@ export default function AvatarBuilder() {
           <SyncStatusIndicator status={getOverallSyncStatus()} />
         </div>
       </div>
+
+      <CollapsibleVideo
+        videoId="1145686648"
+        platform="vimeo"
+        hash="1e858fb0d6"
+        title="How to Build Your Customer Avatar"
+        description="Learn how to create detailed behavioral avatars that capture emotional drivers"
+        storageKey="avatar_intro"
+      />
 
       <Tabs defaultValue="demographics" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">

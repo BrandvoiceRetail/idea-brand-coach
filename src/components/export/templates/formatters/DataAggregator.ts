@@ -8,6 +8,7 @@
 import type { KnowledgeEntry, KnowledgeCategory } from '@/lib/knowledge-base/interfaces';
 import type { ChatSession, ChatMessage } from '@/types/chat';
 import type { BrandData } from '@/contexts/BrandContext';
+import { IDEAClassifier, type IDEAClassification, type IDEAConversationClassification } from './IDEAClassifier';
 
 /**
  * Aggregated data structure for export
@@ -20,6 +21,10 @@ export interface AggregatedData {
     empathy: KnowledgeEntry[];
     authentic: KnowledgeEntry[];
   };
+  /** IDEA classification from entire knowledge base (content-based) */
+  ideaClassification: IDEAClassification;
+  /** IDEA classification from chat conversations */
+  conversationClassification: IDEAConversationClassification;
   avatar: KnowledgeEntry[];
   canvas: KnowledgeEntry[];
   chatSessions: ChatSessionWithMessages[];
@@ -75,6 +80,12 @@ const FIELD_KEYWORDS: Record<string, string[]> = {
  * Data Aggregator Service
  */
 export class DataAggregator {
+  private ideaClassifier: IDEAClassifier;
+
+  constructor() {
+    this.ideaClassifier = new IDEAClassifier(0.15); // Lower threshold for more inclusive classification
+  }
+
   /**
    * Aggregates all user data from multiple sources
    */
@@ -85,7 +96,7 @@ export class DataAggregator {
     chatMessages: ChatMessage[],
     brandData: BrandData
   ): Promise<AggregatedData> {
-    // Group knowledge entries by category
+    // Group knowledge entries by category (legacy field-based approach)
     const ideaFramework = {
       insight: knowledgeEntries.filter(e =>
         e.category === 'insights' && e.fieldIdentifier.startsWith('insight_')
@@ -100,6 +111,16 @@ export class DataAggregator {
         e.category === 'insights' && e.fieldIdentifier.startsWith('authentic_')
       ),
     };
+
+    // NEW: Classify ALL knowledge entries into IDEA categories using content analysis
+    const ideaClassification = this.ideaClassifier.classifyEntries(knowledgeEntries);
+
+    // NEW: Classify chat conversations into IDEA categories
+    const sessionTitleMap = new Map(chatSessions.map(s => [s.id, s.title]));
+    const conversationClassification = this.ideaClassifier.classifyConversations(
+      chatMessages,
+      sessionTitleMap
+    );
 
     const avatar = knowledgeEntries.filter(e => e.category === 'avatar');
     const canvas = knowledgeEntries.filter(e => e.category === 'canvas');
@@ -124,6 +145,8 @@ export class DataAggregator {
     return {
       userInfo: brandData.userInfo,
       ideaFramework,
+      ideaClassification,
+      conversationClassification,
       avatar,
       canvas,
       chatSessions: sessionsWithMessages,
