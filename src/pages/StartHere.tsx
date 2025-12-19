@@ -1,5 +1,5 @@
-import { VideoPlayer } from "@/components/VideoPlayer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CollapsibleVideo } from "@/components/CollapsibleVideo";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 /**
  * StartHere page - Introduction and training videos for new users
@@ -17,22 +17,14 @@ export function StartHere(): JSX.Element {
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Getting Started with IDEA Brand Coach</CardTitle>
-            <CardDescription>
-              Learn how to use the IDEA framework (Identify, Discover, Execute, Analyze) to build and grow your brand
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <VideoPlayer
-              videoId="1145686648"
-              platform="vimeo"
-              hash="1e858fb0d6"
-              title="Getting Started with IDEA Brand Coach"
-            />
-          </CardContent>
-        </Card>
+        <CollapsibleVideo
+          videoId="1145686648"
+          platform="vimeo"
+          hash="1e858fb0d6"
+          title="Getting Started with IDEA Brand Coach"
+          description="Learn how to use the IDEA framework (Identify, Discover, Execute, Analyze) to build and grow your brand"
+          storageKey="startHere_intro"
+        />
 
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
@@ -60,6 +52,7 @@ export function StartHere(): JSX.Element {
                 <li>Use the AI chat for instant guidance</li>
                 <li>Check our video library for tutorials</li>
                 <li>Review the documentation</li>
+                <li>Email us at <a href="mailto:contact@ideabrandconsultancy.com" className="text-primary hover:underline">contact@ideabrandconsultancy.com</a></li>
               </ul>
             </CardContent>
           </Card>

@@ -110,8 +110,6 @@ const IdeaFrameworkConsultant = () => {
         metadata: { context: context.trim() || undefined }
       });
 
-      setMessage('');
-
       toast({
         title: "Consultation Complete",
         description: "Your strategic guidance is ready",

@@ -58,6 +58,13 @@ const App = () => (
                   </Layout>
                 </BrandProvider>
               } />
+              <Route path="/journey" element={
+                <BrandProvider>
+                  <Layout>
+                    <Index />
+                  </Layout>
+                </BrandProvider>
+              } />
               <Route path="/diagnostic" element={<FreeDiagnostic />} />
               <Route path="/subscribe" element={<PricingPaywall />} />
               <Route path="/diagnostic/results" element={<DiagnosticResults />} />

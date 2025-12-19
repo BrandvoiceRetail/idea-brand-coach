@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useBrand } from "@/contexts/BrandContext";
+import { CollapsibleVideo } from "@/components/CollapsibleVideo";
 
 import { 
   Target, 
@@ -126,7 +127,18 @@ export default function Index() {
           <h1 className="text-4xl font-bold mb-6">
             Your Strategic Brand Building Journey
           </h1>
-          
+
+          <div className="mb-8">
+            <CollapsibleVideo
+              videoId="1145686648"
+              platform="vimeo"
+              hash="1e858fb0d6"
+              title="Journey Overview"
+              description="Watch this video to understand how to navigate your brand building journey"
+              storageKey="journey_overview"
+            />
+          </div>
+
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
             Follow this proven step-by-step process to build an emotionally resonant brand that converts. Each step builds on the previous one to create a complete brand strategy.
           </p>
