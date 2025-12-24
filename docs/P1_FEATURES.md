@@ -640,9 +640,139 @@ Add email support functionality to allow users to contact the IDEA Brand Coach t
 
 ---
 
+## P1.9 - Brand Strategy Document Full Mode
+
+### Overview
+
+The Brand Strategy Document generation currently supports Lite mode for beta launch. Full mode adds comprehensive, deep-dive sections for enterprise-grade brand strategy documentation.
+
+### Current State (Lite Mode - P0 Beta)
+
+**Implemented:**
+- AI-powered document generation via `generate-brand-strategy-document` edge function
+- Lite document structure (8 sections)
+- UK English, senior strategist tone
+- Cross-module data aggregation (Canvas, Avatar, Insights, Chat)
+- PDF and Markdown export options
+
+**Lite Mode Sections:**
+1. Cover Page
+2. Executive Summary (short)
+3. Customer Snapshot (condensed)
+4. Brand Foundations (condensed)
+5. Positioning Statement
+6. Value Proposition
+7. Personality and Voice (combined)
+8. Strategic Direction Summary
+
+### P1 Requirements (Full Mode)
+
+**Additional Sections for Full Mode:**
+
+| Section | Description | Source Data |
+|---------|-------------|-------------|
+| Introduction and Strategic Overview | Context and methodology | Coach context, uploaded docs |
+| Customer Understanding (Deep) | Full Avatar synthesis with behavioural insights | Avatar 2.0, Interactive Insight |
+| Brand Story | Heritage, founding narrative, brand journey | Purpose, Vision, Values, Coach context |
+| Brand Principles | Lived values with "how it shows up" examples | Values + Coach decisions |
+| Brand Territories and Extensions | Category extensions, education strategy | Canvas territories, Insight patterns |
+| Strategic Outcomes and Implications | Commercial readiness, channel implications | Vision + Positioning + Coach |
+| Potential Shortcomings and Risks | Strategic watchouts (optional) | Coach "watchouts", compliance notes |
+
+**Full Mode Document Structure:**
+1. Cover Page
+2. Executive Summary
+3. Introduction and Strategic Overview
+4. Customer Understanding (Avatar synthesis + Insight enrichment)
+5. Brand Foundations (Purpose, Vision, Mission, Values, Personality, Voice)
+6. Brand Story
+7. Brand Positioning (Statement, Value Proposition, differentiation, white space)
+8. Brand Principles
+9. Brand Territories and Extensions (Education included if relevant)
+10. Strategic Outcomes and Implications
+11. Potential Shortcomings and Risks (optional, toggleable)
+
+### Implementation Requirements
+
+#### P1.9.1 - Full Mode Prompt
+
+Create `full-strategy-prompt.md` in edge function directory:
+- Extended section instructions for deep-dive content
+- Cross-reference logic between sections
+- "So what?" validation for each section
+- Strategic depth requirements
+
+#### P1.9.2 - Mode Toggle UI
+
+Add document mode selector to export UI:
+- Lite Strategy (default)
+- Full Strategy
+- Clear description of what each mode includes
+- Estimated generation time indicator
+
+#### P1.9.3 - Section Expansion Logic
+
+Each canvas step needs expansion rules:
+- **Purpose**: Human role + stabilising value
+- **Vision**: Future anchor + decision guidance
+- **Mission**: Execution lens without repeating purpose
+- **Values**: Lived principles with do's/don'ts
+- **Positioning**: Statement + strategic explanation + white space
+- **Value Proposition**: Clear proposition + why preferable + problem removed
+- **Personality**: Behavioural descriptors + emotional role
+- **Voice**: Voice as system + trust building across channels
+
+#### P1.9.4 - Quality Assurance
+
+Pre-export QA checklist (automated):
+- Mode consistency across sections
+- Section order validation
+- No placeholder content
+- No AI tell phrases
+- Minimal repetition across purpose/mission/vision
+- Strategic coherence checks
+
+### Technical Implementation
+
+**Files to Create/Modify:**
+
+1. `supabase/functions/generate-brand-strategy-document/full-strategy-prompt.md`
+   - Full mode prompt specification
+
+2. `supabase/functions/generate-brand-strategy-document/index.ts`
+   - Add mode parameter handling
+   - Load appropriate prompt based on mode
+
+3. `src/components/export/BrandMarkdownExport.tsx`
+   - Add mode selector UI
+   - Pass mode to export service
+
+4. `src/components/export/MarkdownExportService.ts`
+   - Pass mode to edge function
+
+### Success Criteria
+
+- Full mode document reads like senior strategist authored it
+- Deep sections provide defensible strategic logic
+- Cross-references between sections are accurate
+- No bloat or filler content
+- Commercially ready (usable for Amazon, packaging, retail pitches, investor conversations)
+- Founder confidence test: safe to share externally
+
+### Reference Documentation
+
+See `docs/beta_blockers/BRAND_STRATEGY_DOCUMENT_CREATION_STRATEGY.md` for complete SOP including:
+- Section mapping table
+- Conflict resolution rules
+- Data source priorities
+- Writing rules specification
+
+---
+
 ## Change Log
 
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-07 | 1.0 | Extracted from P0_BETA_LAUNCH_ROADMAP.md v1.3 | Claude Code |
 | 2025-11-24 | 2.0 | **Updated to reflect Feature Registry system:**<br>- Added Feature Registry System overview<br>- Documented P1 core features from features.ts<br>- Moved Dashboard from P0 to P1<br>- Added Home navigation visibility gating<br>- Updated feature comparison table<br>- Aligned with centralized feature configuration | Claude Code |
+| 2025-12-21 | 2.1 | **Added P1.9 Brand Strategy Document Full Mode:**<br>- Documented Full mode requirements and section structure<br>- Added implementation requirements for mode toggle, prompts, QA<br>- Referenced SOP in beta_blockers for complete specification<br>- Lite mode implemented in P0, Full mode deferred to P1 | Claude Code |
