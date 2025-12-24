@@ -43,11 +43,20 @@ export class SupabaseChatService implements IChatService {
 
   /**
    * Get the edge function name for the current chatbot type
+   * Uses test functions when VITE_USE_TEST_FUNCTIONS is enabled
    */
   private getEdgeFunctionName(): string {
-    return this.chatbotType === 'idea-framework-consultant'
-      ? 'idea-framework-consultant'
-      : 'brand-coach-gpt';
+    const useTestFunctions = import.meta.env.VITE_USE_TEST_FUNCTIONS === 'true';
+
+    if (this.chatbotType === 'idea-framework-consultant') {
+      const functionName = useTestFunctions
+        ? 'idea-framework-consultant-test'
+        : 'idea-framework-consultant';
+      console.log(`[ChatService] Using edge function: ${functionName} (test mode: ${useTestFunctions})`);
+      return functionName;
+    }
+
+    return 'brand-coach-gpt';
   }
 
   /**
