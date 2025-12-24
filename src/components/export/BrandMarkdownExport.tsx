@@ -76,10 +76,10 @@ export function BrandMarkdownExport({
         exportBrandData
       );
 
-      // Generate export
+      // Generate export - include up to 10 recent conversations for context
       const result = await exportService.generateExport({
         includeChats,
-        maxChatExcerpts: 5,
+        maxChatExcerpts: 10,
         format: 'full',
       });
 

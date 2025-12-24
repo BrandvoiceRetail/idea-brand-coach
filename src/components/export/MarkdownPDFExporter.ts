@@ -72,6 +72,7 @@ interface MarkdownElement {
   level?: number; // For headings (1-6)
   content: string;
   items?: string[]; // For lists
+  itemNumbers?: number[]; // Original numbers from markdown for ordered lists
   ordered?: boolean; // For ordered lists
   headers?: string[]; // For tables
   rows?: string[][]; // For tables
@@ -205,14 +206,66 @@ export abstract class MarkdownPDFExporter {
         continue;
       }
 
-      // Ordered list
+      // Ordered list - collect numbered items with their sub-content
       if (line.match(/^\d+\.\s+/)) {
         const items: string[] = [];
-        while (i < lines.length && lines[i].match(/^\d+\.\s+/)) {
-          items.push(lines[i].replace(/^\d+\.\s+/, ''));
-          i++;
+        const itemNumbers: number[] = [];
+
+        while (i < lines.length) {
+          const currentLine = lines[i];
+          const numberedMatch = currentLine.match(/^(\d+)\.\s+(.*)$/);
+
+          if (numberedMatch) {
+            // New numbered item - capture the number and content
+            itemNumbers.push(parseInt(numberedMatch[1], 10));
+            let itemContent = numberedMatch[2];
+            i++;
+
+            // Collect all indented sub-content (including sub-bullets)
+            while (i < lines.length) {
+              const nextLine = lines[i];
+              // Check if this is a new top-level numbered item
+              if (nextLine.match(/^\d+\.\s+/)) {
+                break;
+              }
+              // Check if this is a heading or horizontal rule (end of list)
+              if (nextLine.match(/^#{1,6}\s+/) || nextLine.match(/^---+$/)) {
+                break;
+              }
+              // Empty line might end the list or be between items
+              if (nextLine.trim() === '') {
+                // Look ahead to see if there's another numbered item
+                let hasMoreNumberedItems = false;
+                for (let j = i + 1; j < lines.length && j < i + 3; j++) {
+                  if (lines[j].match(/^\d+\.\s+/)) {
+                    hasMoreNumberedItems = true;
+                    break;
+                  }
+                  if (lines[j].match(/^#{1,6}\s+/) || lines[j].match(/^---+$/)) {
+                    break;
+                  }
+                }
+                if (!hasMoreNumberedItems) {
+                  break;
+                }
+                i++;
+                continue;
+              }
+              // Include indented content or sub-bullets as part of this item
+              itemContent += ' ' + nextLine.trim();
+              i++;
+            }
+
+            items.push(itemContent.trim());
+          } else {
+            // Not a numbered line, end the list
+            break;
+          }
         }
-        elements.push({ type: 'list', content: '', items, ordered: true });
+
+        if (items.length > 0) {
+          elements.push({ type: 'list', content: '', items, itemNumbers, ordered: true });
+        }
         continue;
       }
 
@@ -260,7 +313,7 @@ export abstract class MarkdownPDFExporter {
           this.renderParagraph(element.content);
           break;
         case 'list':
-          this.renderList(element.items || [], element.ordered || false);
+          this.renderList(element.items || [], element.ordered || false, element.itemNumbers);
           break;
         case 'blockquote':
           this.renderBlockquote(element.content);
@@ -272,7 +325,7 @@ export abstract class MarkdownPDFExporter {
           this.renderTable(element.headers || [], element.rows || []);
           break;
         case 'empty':
-          this.yPosition += 3;
+          this.yPosition += 1.5; // Reduced from 3
           break;
       }
     }
@@ -304,9 +357,11 @@ export abstract class MarkdownPDFExporter {
     };
 
     const size = sizes[level] || 12;
-    const spacing = level <= 2 ? 8 : 5;
+    // Reduced spacing - only add space before major headings
+    const spacingBefore = level === 1 ? 6 : level === 2 ? 5 : 3;
+    const spacingAfter = level <= 2 ? 3 : 2;
 
-    this.yPosition += spacing;
+    this.yPosition += spacingBefore;
     this.checkPageBreak(size + 10);
 
     this.pdf.setTextColor(...this.config.primaryColor);
@@ -317,7 +372,7 @@ export abstract class MarkdownPDFExporter {
     const processedText = this.stripMarkdownFormatting(text);
     const lines = this.pdf.splitTextToSize(processedText, this.contentWidth);
     this.pdf.text(lines, this.config.margins.left, this.yPosition);
-    this.yPosition += lines.length * (size / 2.5) + spacing;
+    this.yPosition += lines.length * (size / 2.5) + spacingAfter;
 
     // Reset text color
     this.pdf.setTextColor(0, 0, 0);
@@ -340,13 +395,13 @@ export abstract class MarkdownPDFExporter {
       this.yPosition += this.lineHeight;
     }
 
-    this.yPosition += 3;
+    this.yPosition += 2; // Reduced from 3
   }
 
   /**
    * Render a list (ordered or unordered)
    */
-  protected renderList(items: string[], ordered: boolean): void {
+  protected renderList(items: string[], ordered: boolean, itemNumbers?: number[]): void {
     this.pdf.setFont('helvetica', 'normal');
     this.pdf.setFontSize(11);
     this.pdf.setTextColor(0, 0, 0);
@@ -354,7 +409,10 @@ export abstract class MarkdownPDFExporter {
     items.forEach((item, index) => {
       this.checkPageBreak();
 
-      const prefix = ordered ? `${index + 1}.` : '•';
+      // Use original number from markdown if available, otherwise fallback to index+1
+      const prefix = ordered
+        ? `${itemNumbers && itemNumbers[index] !== undefined ? itemNumbers[index] : index + 1}.`
+        : '•';
       const processedItem = this.stripMarkdownFormatting(item);
       const lines = this.pdf.splitTextToSize(processedItem, this.contentWidth - 10);
 
@@ -370,7 +428,7 @@ export abstract class MarkdownPDFExporter {
       }
     });
 
-    this.yPosition += 3;
+    this.yPosition += 2; // Reduced from 3
   }
 
   /**

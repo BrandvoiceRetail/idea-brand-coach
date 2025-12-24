@@ -2,7 +2,10 @@
  * Markdown Export Service
  *
  * Service layer for generating comprehensive markdown exports of brand strategy.
- * Orchestrates data collection, aggregation, and template rendering.
+ * Orchestrates data collection and AI-powered document generation.
+ *
+ * Uses the generate-brand-strategy-document edge function to create
+ * professional, client-ready brand strategy documents.
  */
 
 import type { IKnowledgeRepository } from '@/lib/knowledge-base/interfaces';
@@ -70,7 +73,7 @@ export interface ExportMetadata {
 /**
  * Current export schema version
  */
-export const EXPORT_SCHEMA_VERSION = '1.0.0';
+export const EXPORT_SCHEMA_VERSION = '2.0.0';
 
 /**
  * Markdown Export Service
@@ -87,7 +90,7 @@ export class MarkdownExportService {
   }
 
   /**
-   * Generate comprehensive markdown export
+   * Generate comprehensive markdown export using AI
    */
   async generateExport(options: ExportOptions): Promise<ExportResult> {
     try {
@@ -100,8 +103,8 @@ export class MarkdownExportService {
       // Collect data from all sources
       const aggregatedData = await this.collectData(userId);
 
-      // Generate markdown content
-      const markdown = await this.generateMarkdown(aggregatedData, options);
+      // Generate markdown content using AI
+      const markdown = await this.generateMarkdownWithAI(aggregatedData, options);
 
       // Create filename
       const filename = this.generateFilename(this.brandData.userInfo.company);
@@ -198,9 +201,122 @@ export class MarkdownExportService {
   }
 
   /**
-   * Generate markdown content from aggregated data
+   * Generate markdown content using AI edge function
    */
-  private async generateMarkdown(
+  private async generateMarkdownWithAI(
+    data: AggregatedData,
+    options: ExportOptions
+  ): Promise<string> {
+    // Prepare canvas data from knowledge base entries
+    const canvasData: Record<string, string> = {};
+    for (const entry of data.canvas) {
+      const key = entry.fieldIdentifier.replace('canvas_', '');
+      canvasData[key] = entry.content;
+    }
+
+    // Prepare avatar data from knowledge base entries
+    const avatarData: Record<string, string> = {};
+    for (const entry of data.avatar) {
+      avatarData[entry.fieldIdentifier] = entry.content;
+    }
+
+    // Prepare insights data from all IDEA framework entries
+    const insightsData: Record<string, string> = {};
+    const allInsights = [
+      ...data.ideaFramework.insight,
+      ...data.ideaFramework.distinctive,
+      ...data.ideaFramework.empathy,
+      ...data.ideaFramework.authentic,
+    ];
+    for (const entry of allInsights) {
+      insightsData[entry.fieldIdentifier] = entry.content;
+    }
+
+    // Prepare chat insights - include recent conversations with full context
+    const chatInsights: Array<{ title: string; excerpt: string }> = [];
+    if (options.includeChats) {
+      // Sort by most recent first, take top sessions regardless of relevance score
+      const recentSessions = [...data.chatSessions]
+        .sort((a, b) => {
+          const aTime = new Date(a.session.updated_at).getTime();
+          const bTime = new Date(b.session.updated_at).getTime();
+          return bTime - aTime;
+        })
+        .slice(0, options.maxChatExcerpts || 10);
+
+      for (const session of recentSessions) {
+        // Build a comprehensive excerpt from the entire conversation
+        const conversationParts: string[] = [];
+
+        // Get all message pairs (user question + assistant response)
+        for (let i = 0; i < session.messages.length; i++) {
+          const msg = session.messages[i];
+          if (msg.role === 'user') {
+            conversationParts.push(`User: ${msg.content}`);
+          } else if (msg.role === 'assistant') {
+            // Truncate very long assistant responses but keep more context
+            const content = msg.content.length > 800
+              ? msg.content.substring(0, 800) + '...'
+              : msg.content;
+            conversationParts.push(`Coach: ${content}`);
+          }
+        }
+
+        if (conversationParts.length > 0) {
+          // Join all parts, but limit total length per session
+          let excerpt = conversationParts.join('\n\n');
+          if (excerpt.length > 3000) {
+            excerpt = excerpt.substring(0, 3000) + '\n\n[Conversation truncated...]';
+          }
+
+          chatInsights.push({
+            title: session.session.title || 'Strategic Conversation',
+            excerpt,
+          });
+        }
+      }
+    }
+
+    console.log('📝 Chat insights prepared:', {
+      sessionsIncluded: chatInsights.length,
+      titles: chatInsights.map(c => c.title),
+    });
+
+    console.log('📝 Calling AI to generate brand strategy document...');
+
+    // Call the edge function to generate the document
+    const { data: response, error } = await supabase.functions.invoke(
+      'generate-brand-strategy-document',
+      {
+        body: {
+          companyName: this.brandData.userInfo.company || 'Your Brand',
+          canvas: canvasData,
+          avatar: avatarData,
+          insights: insightsData,
+          chatInsights,
+        },
+      }
+    );
+
+    if (error) {
+      console.error('AI document generation failed:', error);
+      throw new Error(`Failed to generate document: ${error.message}`);
+    }
+
+    if (!response?.success || !response?.document) {
+      console.error('AI document generation returned invalid response:', response);
+      throw new Error(response?.error || 'Failed to generate document');
+    }
+
+    console.log('✅ AI document generated successfully');
+    return response.document;
+  }
+
+  /**
+   * Generate markdown content from aggregated data (legacy template-based)
+   * @deprecated Use generateMarkdownWithAI instead
+   */
+  private async generateMarkdownLegacy(
     data: AggregatedData,
     options: ExportOptions
   ): Promise<string> {
