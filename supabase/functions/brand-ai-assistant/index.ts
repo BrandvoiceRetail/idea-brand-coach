@@ -79,7 +79,7 @@ async function retrieveUserKnowledgeBase(
 async function retrieveChatHistory(
   supabaseClient: any,
   userId: string,
-  limit: number = 10
+  limit: number = 50
 ): Promise<string> {
   try {
     console.log('[retrieveChatHistory] Fetching chat history for user:', userId);
@@ -162,7 +162,7 @@ serve(async (req) => {
         // Fetch user's knowledge base and chat history in parallel
         const [knowledgeBase, chatHistory] = await Promise.all([
           retrieveUserKnowledgeBase(supabaseClient, userId),
-          retrieveChatHistory(supabaseClient, userId, 10)
+          retrieveChatHistory(supabaseClient, userId, 50)
         ]);
 
         userKnowledgeContext = knowledgeBase;

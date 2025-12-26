@@ -422,7 +422,7 @@ export default function BrandCopyGenerator() {
                   {hasUserContext && (
                     <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/30 px-3 py-2 rounded-lg">
                       <CheckCircle className="w-4 h-4" />
-                      <span>Generated using your brand context (avatar, canvas, diagnostic data)</span>
+                      <span>Generated using your brand context (avatar, canvas, coach conversations)</span>
                     </div>
                   )}
 

@@ -160,7 +160,7 @@ async function retrieveAllUserContext(
 async function retrieveChatHistory(
   supabaseClient: any,
   userId: string,
-  limit: number = 5
+  limit: number = 50
 ): Promise<string> {
   try {
     const { data: messages, error } = await supabaseClient
@@ -198,7 +198,7 @@ async function retrieveUserContext(
     // Fetch all user context and chat history in parallel
     const [allContext, chatHistory] = await Promise.all([
       retrieveAllUserContext(supabaseClient, userId),
-      retrieveChatHistory(supabaseClient, userId, 5)
+      retrieveChatHistory(supabaseClient, userId, 50)
     ]);
 
     if (!allContext && !chatHistory) {
