@@ -193,14 +193,16 @@ export default function BrandCanvas() {
           </div>
         )}
         
+        {/* PLACEHOLDER: Add unique video for Brand Canvas page when available
         <CollapsibleVideo
-          videoId="1145686648"
+          videoId="UNIQUE_VIDEO_ID"
           platform="vimeo"
-          hash="1e858fb0d6"
+          hash="VIDEO_HASH"
           title="How to Complete Your Brand Canvas"
           description="Step-by-step guide to building your complete brand strategy"
           storageKey="canvas_intro"
         />
+        */}
 
         {/* Brand Canvas Introduction */}
         <Card className="bg-card shadow-card border mb-8 text-left">

@@ -128,16 +128,18 @@ export default function Index() {
             Your Strategic Brand Building Journey
           </h1>
 
+          {/* PLACEHOLDER: Add unique video for Journey page when available
           <div className="mb-8">
             <CollapsibleVideo
-              videoId="1145686648"
+              videoId="UNIQUE_VIDEO_ID"
               platform="vimeo"
-              hash="1e858fb0d6"
+              hash="VIDEO_HASH"
               title="Journey Overview"
               description="Watch this video to understand how to navigate your brand building journey"
               storageKey="journey_overview"
             />
           </div>
+          */}
 
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
             Follow this proven step-by-step process to build an emotionally resonant brand that converts. Each step builds on the previous one to create a complete brand strategy.

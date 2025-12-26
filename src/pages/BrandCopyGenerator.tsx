@@ -237,22 +237,6 @@ export default function BrandCopyGenerator() {
           </div>
         </div>
         
-        {/* Smart Guidance Banner */}
-        {!hasCompletedStrategy && (
-          <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-amber-600" />
-              <div>
-                <p className="font-medium text-amber-700 dark:text-amber-300">🚀 Better Results with Complete Strategy</p>
-                <p className="text-sm text-muted-foreground">Complete your brand framework first for more targeted copy generation.</p>
-              </div>
-              <Button asChild variant="outline" size="sm" className="ml-auto">
-                <Link to="/idea">Continue Building</Link>
-              </Button>
-            </div>
-          </div>
-        )}
-        
         {hasCompletedStrategy && (
           <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-3">

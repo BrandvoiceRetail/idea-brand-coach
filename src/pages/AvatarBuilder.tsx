@@ -281,14 +281,16 @@ export default function AvatarBuilder() {
         </div>
       </div>
 
+      {/* PLACEHOLDER: Add unique video for Avatar page when available
       <CollapsibleVideo
-        videoId="1145686648"
+        videoId="UNIQUE_VIDEO_ID"
         platform="vimeo"
-        hash="1e858fb0d6"
+        hash="VIDEO_HASH"
         title="How to Build Your Customer Avatar"
         description="Learn how to create detailed behavioral avatars that capture emotional drivers"
         storageKey="avatar_intro"
       />
+      */}
 
       <Tabs defaultValue="demographics" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
