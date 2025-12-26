@@ -41,20 +41,35 @@ const IdeaFrameworkConsultant = () => {
     sessionId: currentSessionId,
   });
 
-  const [message, setMessage] = useState('');
-  const [context, setContext] = useState('');
+  // Per-session input storage
+  const [sessionInputs, setSessionInputs] = useState<Record<string, { message: string; context: string }>>({});
   const [userDocuments, setUserDocuments] = useState<unknown[]>([]);
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
 
-  // Clear input fields when switching to a different session
-  useEffect(() => {
-    setMessage('');
-    setContext('');
-    setFollowUpSuggestions([]);
-  }, [currentSessionId]);
+  // Get current session's input values (default to empty strings)
+  const currentInputs = currentSessionId ? sessionInputs[currentSessionId] || { message: '', context: '' } : { message: '', context: '' };
+  const message = currentInputs.message;
+  const context = currentInputs.context;
+
+  // Update input values for current session
+  const setMessage = (value: string) => {
+    if (!currentSessionId) return;
+    setSessionInputs(prev => ({
+      ...prev,
+      [currentSessionId]: { ...prev[currentSessionId], message: value, context: prev[currentSessionId]?.context || '' }
+    }));
+  };
+
+  const setContext = (value: string) => {
+    if (!currentSessionId) return;
+    setSessionInputs(prev => ({
+      ...prev,
+      [currentSessionId]: { message: prev[currentSessionId]?.message || '', context: value }
+    }));
+  };
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current;
