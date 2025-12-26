@@ -4,6 +4,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useBrand } from '@/contexts/BrandContext';
 import { supabase } from '@/integrations/supabase/client';
+import { AISuggestionPreview } from '@/components/AISuggestionPreview';
 
 interface AIAssistantProps {
   fieldType: string;
@@ -19,10 +20,11 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   placeholder = "AI will generate content for this field..."
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingSuggestion, setPendingSuggestion] = useState<string | null>(null);
   const { toast } = useToast();
   const { brandData } = useBrand();
 
-  const generateContent = async () => {
+  const generateContent = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('brand-ai-assistant', {
@@ -44,13 +46,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
       if (error) throw error;
 
-      // Directly apply the generated content to the field
-      onSuggestion(data.suggestion);
-
-      toast({
-        title: "Content Generated",
-        description: `Your ${fieldType.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} has been generated.`
-      });
+      // Show the suggestion for review instead of directly applying
+      setPendingSuggestion(data.suggestion);
 
     } catch (error) {
       console.error('AI Assistant Error:', error);
@@ -64,25 +61,56 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     }
   };
 
+  const handleAccept = (): void => {
+    if (pendingSuggestion) {
+      onSuggestion(pendingSuggestion);
+      setPendingSuggestion(null);
+      toast({
+        title: "Content Applied",
+        description: `Your ${fieldType.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} has been updated.`
+      });
+    }
+  };
+
+  const handleReject = (): void => {
+    setPendingSuggestion(null);
+    toast({
+      title: "Suggestion Dismissed",
+      description: "Your original content has been preserved."
+    });
+  };
+
   return (
-    <Button
-      onClick={generateContent}
-      disabled={isLoading}
-      variant="outline"
-      size="sm"
-      className="w-full text-foreground hover:text-foreground"
-    >
-      {isLoading ? (
-        <>
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          Generating...
-        </>
-      ) : (
-        <>
-          <Sparkles className="w-4 h-4 mr-2" />
-          Generate with AI
-        </>
+    <div>
+      <Button
+        onClick={generateContent}
+        disabled={isLoading || pendingSuggestion !== null}
+        variant="outline"
+        size="sm"
+        className="w-full text-foreground hover:text-foreground"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Generating...
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-4 h-4 mr-2" />
+            Generate with AI
+          </>
+        )}
+      </Button>
+
+      {pendingSuggestion && (
+        <AISuggestionPreview
+          suggestion={pendingSuggestion}
+          currentValue={currentValue}
+          fieldType={fieldType}
+          onAccept={handleAccept}
+          onReject={handleReject}
+        />
       )}
-    </Button>
+    </div>
   );
 };
