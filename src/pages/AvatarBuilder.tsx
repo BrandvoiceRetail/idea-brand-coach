@@ -12,7 +12,8 @@ import { CollapsibleVideo } from "@/components/CollapsibleVideo";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { AIAssistant } from "@/components/AIAssistant";
-import { AvatarPDFExport } from "@/components/AvatarPDFExport";
+// ARCHIVED: PDF export temporarily disabled
+// import { AvatarPDFExport } from "@/components/AvatarPDFExport";
 import { usePersistedField } from "@/hooks/usePersistedField";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
 
@@ -849,7 +850,7 @@ export default function AvatarBuilder() {
         </TabsContent>
       </Tabs>
 
-      {/* Export section */}
+      {/* ARCHIVED: PDF Export section - temporarily disabled
       <Card className="bg-gradient-to-br from-primary/5 to-secondary/5">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
@@ -886,6 +887,7 @@ export default function AvatarBuilder() {
           </div>
         </CardContent>
       </Card>
+      */}
 
       {/* Offline notification */}
       {getOverallSyncStatus() === 'offline' && (
