@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { MessageSquare, Save, ArrowRight, Sparkles, CheckCircle, Loader2, WifiOff } from "lucide-react";
+import { MessageSquare, ArrowRight, Sparkles, CheckCircle, Loader2, WifiOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { usePersistedField, usePersistedArrayField } from "@/hooks/usePersistedField";
@@ -152,18 +152,6 @@ export default function BrandCanvas() {
     completionPercentage
   ]);
 
-  const handleSave = (): void => {
-    // Data is already persisted via the hooks - just update the completion flag in context
-    updateBrandData('brandCanvas', {
-      ...canvasData,
-      completed: true
-    });
-    toast({
-      title: "Brand Canvas Saved",
-      description: "Your brand canvas has been saved and is ready for Brand Copy Generation."
-    });
-  };
-
   const recommendedStep = getRecommendedNextStep();
 
   return (
@@ -176,22 +164,6 @@ export default function BrandCanvas() {
         <p className="text-muted-foreground text-sm sm:text-base mb-6">
           Build your complete brand strategy using the IDEA Strategic Brand Framework™
         </p>
-        
-        {/* Smart Guidance Banner */}
-        {recommendedStep !== 'All core modules completed!' && (
-          <div className="bg-gradient-to-r from-secondary/10 to-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <div>
-                <p className="font-medium text-primary">💡 Recommended Starting Point</p>
-                <p className="text-sm text-muted-foreground">{recommendedStep}</p>
-              </div>
-              <Button asChild variant="outline" size="sm" className="ml-auto">
-                <Link to="/idea">Get Started</Link>
-              </Button>
-            </div>
-          </div>
-        )}
         
         {/* PLACEHOLDER: Add unique video for Brand Canvas page when available
         <CollapsibleVideo
@@ -909,19 +881,6 @@ export default function BrandCanvas() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Complete your brand canvas to unlock the Brand Copy Generator
-              </p>
-              
-              <Button
-                onClick={handleSave}
-                className="w-full"
-                disabled={!brandPurpose.value || !valueProposition.value}
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save Canvas
-              </Button>
-
               <div className="space-y-2">
                 {/* <Button asChild variant="outline" className="w-full">
                   <Link to="/copy-generator">
