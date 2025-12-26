@@ -621,26 +621,6 @@ const IdeaFrameworkConsultant = () => {
               </Card>
             )}
 
-            {/* Privacy & Data Notice */}
-            <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
-              <CardContent className="pt-6">
-                <div className="flex gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                      Privacy & Your Conversations
-                    </p>
-                    <p className="text-xs text-blue-700 dark:text-blue-200">
-                      Your conversations are securely stored and associated with your account to provide continuity across sessions.
-                      You can view past conversations in the sidebar and delete individual sessions or clear entire conversations at any time using the "Clear Conversation" button.
-                      Your data is encrypted in transit and at rest, never shared with other users, not used to train AI models, and you maintain full control over your conversation history.
-                      We use trusted service providers (like OpenAI and our cloud infrastructure) to deliver the service, all bound by strict confidentiality obligations.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* About Trevor & Personal Consultation */}
             <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
               <CardContent className="p-8">
