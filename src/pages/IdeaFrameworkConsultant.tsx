@@ -49,6 +49,13 @@ const IdeaFrameworkConsultant = () => {
   const [isCopied, setIsCopied] = useState(false);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
 
+  // Clear input fields when switching to a different session
+  useEffect(() => {
+    setMessage('');
+    setContext('');
+    setFollowUpSuggestions([]);
+  }, [currentSessionId]);
+
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current;
     if (panel) {
