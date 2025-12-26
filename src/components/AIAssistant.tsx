@@ -39,8 +39,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
             demographics: brandData.avatar?.demographics
           },
           avatar: brandData.avatar,
-          brandCanvas: brandData.brandCanvas,
-          diagnostic: brandData.diagnostic
+          brandCanvas: brandData.brandCanvas
         }
       });
 

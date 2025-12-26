@@ -1,7 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,37 +25,45 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, buyerIntent, motivation, triggers, shopperType, demographics }: FrameworkEmailRequest =
       await req.json();
 
-    const emailResponse = await resend.emails.send({
-      from: "Trevor <noreply@app.ideabrandconsultancy.com>",
-      to: [email],
-      subject: "Your IDEA Framework Submission",
-      html: `
-        <h1>Your IDEA Framework Submission</h1>
-        <p>Thank you for completing the IDEA Framework! Here are your responses:</p>
-        
-        <h2>Buyer Intent</h2>
-        <p>${buyerIntent || "Not provided"}</p>
-        
-        <h2>Motivation</h2>
-        <p>${motivation || "Not provided"}</p>
-        
-        <h2>Emotional Triggers</h2>
-        <p>${triggers || "Not provided"}</p>
-        
-        <h2>Shopper Type</h2>
-        <p>${shopperType || "Not provided"}</p>
-        
-        <h2>Demographics</h2>
-        <p>${demographics || "Not provided"}</p>
-        
-        <p>Best regards,<br>The IDEA Brand Coach Team</p>
-      `,
+    const emailResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "Trevor <noreply@app.ideabrandconsultancy.com>",
+        to: [email],
+        subject: "Your IDEA Framework Submission",
+        html: `
+          <h1>Your IDEA Framework Submission</h1>
+          <p>Thank you for completing the IDEA Framework! Here are your responses:</p>
+          
+          <h2>Buyer Intent</h2>
+          <p>${buyerIntent || "Not provided"}</p>
+          
+          <h2>Motivation</h2>
+          <p>${motivation || "Not provided"}</p>
+          
+          <h2>Emotional Triggers</h2>
+          <p>${triggers || "Not provided"}</p>
+          
+          <h2>Shopper Type</h2>
+          <p>${shopperType || "Not provided"}</p>
+          
+          <h2>Demographics</h2>
+          <p>${demographics || "Not provided"}</p>
+          
+          <p>Best regards,<br>The IDEA Brand Coach Team</p>
+        `,
+      }),
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    const data = await emailResponse.json();
+    console.log("Email sent successfully:", data);
 
-    return new Response(JSON.stringify(emailResponse), {
-      status: 200,
+    return new Response(JSON.stringify(data), {
+      status: emailResponse.ok ? 200 : 500,
       headers: {
         "Content-Type": "application/json",
         ...corsHeaders,
