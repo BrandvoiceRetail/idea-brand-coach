@@ -70,6 +70,124 @@ async function generateEmbedding(text: string, openaiKey: string): Promise<numbe
   return data.data[0].embedding;
 }
 
+/**
+ * Retrieve all current user knowledge base entries for comprehensive context
+ */
+async function retrieveAllUserContext(
+  supabaseClient: any,
+  userId: string
+): Promise<string> {
+  try {
+    console.log("[retrieveAllUserContext] Fetching all knowledge for user:", userId);
+
+    // Get ALL current knowledge base entries - this ensures we have complete brand context
+    const { data: entries, error } = await supabaseClient
+      .from("user_knowledge_base")
+      .select("field_identifier, category, content, subcategory")
+      .eq("user_id", userId)
+      .eq("is_current", true)
+      .not("content", "is", null)
+      .neq("content", "");
+
+    if (error) {
+      console.error("[retrieveAllUserContext] Error fetching knowledge:", error);
+      return "";
+    }
+
+    if (!entries || entries.length === 0) {
+      console.log("[retrieveAllUserContext] No knowledge base entries found");
+      return "";
+    }
+
+    console.log(`[retrieveAllUserContext] Found ${entries.length} knowledge entries`);
+
+    // Group by category for better organization
+    const byCategory: Record<string, any[]> = {};
+    entries.forEach((entry: any) => {
+      if (!byCategory[entry.category]) {
+        byCategory[entry.category] = [];
+      }
+      byCategory[entry.category].push(entry);
+    });
+
+    // Build context string with clear organization
+    const contextParts: string[] = [];
+
+    // Priority order for brand copy generation
+    const categoryOrder = ["canvas", "avatar", "idea", "diagnostic", "copy"];
+
+    for (const category of categoryOrder) {
+      if (byCategory[category]) {
+        const categoryName = category.toUpperCase().replace(/_/g, " ");
+        contextParts.push(`\n${categoryName} DATA:`);
+        byCategory[category].forEach((entry: any) => {
+          const label = entry.field_identifier
+            .replace(`${category}_`, "")
+            .replace(/_/g, " ")
+            .toUpperCase();
+          contextParts.push(`- ${label}: ${entry.content}`);
+        });
+        delete byCategory[category];
+      }
+    }
+
+    // Add any remaining categories
+    for (const [category, categoryEntries] of Object.entries(byCategory)) {
+      const categoryName = category.toUpperCase().replace(/_/g, " ");
+      contextParts.push(`\n${categoryName} DATA:`);
+      (categoryEntries as any[]).forEach((entry: any) => {
+        const label = entry.field_identifier
+          .replace(`${category}_`, "")
+          .replace(/_/g, " ")
+          .toUpperCase();
+        contextParts.push(`- ${label}: ${entry.content}`);
+      });
+    }
+
+    const context = contextParts.join("\n");
+    console.log(`[retrieveAllUserContext] Generated context (${context.length} chars)`);
+
+    return context;
+  } catch (error) {
+    console.error("[retrieveAllUserContext] Error:", error);
+    return "";
+  }
+}
+
+/**
+ * Retrieve recent chat history for additional brand insights
+ */
+async function retrieveChatHistory(
+  supabaseClient: any,
+  userId: string,
+  limit: number = 5
+): Promise<string> {
+  try {
+    const { data: messages, error } = await supabaseClient
+      .from("chat_messages")
+      .select("role, content, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error || !messages || messages.length === 0) {
+      return "";
+    }
+
+    console.log(`[retrieveChatHistory] Found ${messages.length} recent messages`);
+
+    const formattedMessages = messages
+      .reverse()
+      .map((msg: any) => `${msg.role === "user" ? "USER" : "CONSULTANT"}: ${msg.content}`)
+      .join("\n\n");
+
+    return `\nRECENT BRAND CONSULTANT INSIGHTS:\n${formattedMessages}`;
+  } catch (error) {
+    console.error("[retrieveChatHistory] Error:", error);
+    return "";
+  }
+}
+
 async function retrieveUserContext(
   supabaseClient: any,
   userId: string,
@@ -77,63 +195,66 @@ async function retrieveUserContext(
   openaiKey: string
 ): Promise<string> {
   try {
-    // Build a query that captures the copy generation context
-    const queryText = `
-      Brand copy for ${copyRequest.productName} in ${copyRequest.category} category.
-      Target audience: ${copyRequest.targetAudience}.
-      Emotional payoff: ${copyRequest.emotionalPayoff}.
-      Brand voice: ${copyRequest.tone}.
-    `;
+    // Fetch all user context and chat history in parallel
+    const [allContext, chatHistory] = await Promise.all([
+      retrieveAllUserContext(supabaseClient, userId),
+      retrieveChatHistory(supabaseClient, userId, 5)
+    ]);
 
-    const queryEmbedding = await generateEmbedding(queryText, openaiKey);
+    if (!allContext && !chatHistory) {
+      console.log("[retrieveUserContext] No user context found, trying vector search");
 
-    // Get relevant user knowledge base entries
-    const { data: matches, error } = await supabaseClient.rpc(
-      "match_user_documents",
-      {
-        query_embedding: queryEmbedding,
-        match_user_id: userId,
-        match_count: 5,
+      // Fall back to vector search if direct query returns nothing
+      const queryText = `
+        Brand copy for ${copyRequest.productName} in ${copyRequest.category} category.
+        Target audience: ${copyRequest.targetAudience}.
+        Emotional payoff: ${copyRequest.emotionalPayoff}.
+        Brand voice: ${copyRequest.tone}.
+      `;
+
+      const queryEmbedding = await generateEmbedding(queryText, openaiKey);
+
+      const { data: matches, error } = await supabaseClient.rpc(
+        "match_user_documents",
+        {
+          query_embedding: queryEmbedding,
+          match_user_id: userId,
+          match_count: 10,
+        }
+      );
+
+      if (error || !matches || matches.length === 0) {
+        return "";
       }
-    );
 
-    if (error) {
-      console.error("Error matching documents:", error);
-      return "";
-    }
-
-    if (!matches || matches.length === 0) {
-      // Try to get user's knowledge base entries directly
-      const { data: kbEntries } = await supabaseClient
-        .from("user_knowledge_base")
-        .select("field_identifier, content, category")
-        .eq("user_id", userId)
-        .in("category", ["avatar", "canvas", "insights", "diagnostic"]);
-
-      if (kbEntries && kbEntries.length > 0) {
-        const contextParts = kbEntries.map((entry: any) =>
-          `[${entry.category}/${entry.field_identifier}]: ${entry.content}`
-        );
-
-        return `
+      const contextParts = matches.map((match: any) => match.content);
+      return `
 <USER_BRAND_CONTEXT>
 ${contextParts.join("\n\n")}
 </USER_BRAND_CONTEXT>
 
 Use this brand context to create copy that aligns with the user's brand voice, target audience, and positioning.`;
-      }
-
-      return "";
     }
 
-    const contextParts = matches.map((match: any) => match.content);
+    // Combine all context sources
+    let fullContext = "";
+    if (allContext) {
+      fullContext += allContext;
+    }
+    if (chatHistory) {
+      fullContext += chatHistory;
+    }
 
     return `
 <USER_BRAND_CONTEXT>
-${contextParts.join("\n\n")}
+${fullContext}
 </USER_BRAND_CONTEXT>
 
-Use this brand context to create copy that aligns with the user's brand voice, target audience, and positioning.`;
+IMPORTANT: Use this brand context to create copy that:
+- Aligns with the user's defined brand voice and personality
+- Speaks directly to their target audience/avatar
+- Incorporates their brand values and positioning
+- Reflects insights from their brand strategy work`;
   } catch (error) {
     console.error("Error retrieving user context:", error);
     return "";

@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -7,6 +8,113 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+/**
+ * Retrieve user's knowledge base context from persisted fields
+ */
+async function retrieveUserKnowledgeBase(
+  supabaseClient: any,
+  userId: string
+): Promise<string> {
+  try {
+    console.log('[retrieveUserKnowledgeBase] Fetching knowledge for user:', userId);
+
+    const { data: entries, error } = await supabaseClient
+      .from('user_knowledge_base')
+      .select('field_identifier, category, content, subcategory')
+      .eq('user_id', userId)
+      .eq('is_current', true)
+      .not('content', 'is', null)
+      .neq('content', '');
+
+    if (error) {
+      console.error('[retrieveUserKnowledgeBase] Error fetching knowledge:', error);
+      return '';
+    }
+
+    if (!entries || entries.length === 0) {
+      console.log('[retrieveUserKnowledgeBase] No knowledge base entries found');
+      return '';
+    }
+
+    console.log(`[retrieveUserKnowledgeBase] Found ${entries.length} knowledge entries`);
+
+    // Group by category for better organization
+    const byCategory: Record<string, any[]> = {};
+    entries.forEach((entry: any) => {
+      if (!byCategory[entry.category]) {
+        byCategory[entry.category] = [];
+      }
+      byCategory[entry.category].push(entry);
+    });
+
+    // Build context string
+    const contextParts: string[] = [];
+
+    for (const [category, categoryEntries] of Object.entries(byCategory)) {
+      const categoryName = category.toUpperCase().replace(/_/g, ' ');
+      contextParts.push(`\n${categoryName} INFORMATION:`);
+      (categoryEntries as any[]).forEach((entry: any) => {
+        const label = entry.field_identifier
+          .replace(`${category}_`, '')
+          .replace(/_/g, ' ')
+          .toUpperCase();
+        contextParts.push(`- ${label}: ${entry.content}`);
+      });
+    }
+
+    const context = contextParts.join('\n');
+    console.log(`[retrieveUserKnowledgeBase] Generated context (${context.length} chars)`);
+
+    return context;
+  } catch (error) {
+    console.error('[retrieveUserKnowledgeBase] Error:', error);
+    return '';
+  }
+}
+
+/**
+ * Retrieve recent chat history with the brand consultant
+ */
+async function retrieveChatHistory(
+  supabaseClient: any,
+  userId: string,
+  limit: number = 10
+): Promise<string> {
+  try {
+    console.log('[retrieveChatHistory] Fetching chat history for user:', userId);
+
+    const { data: messages, error } = await supabaseClient
+      .from('chat_messages')
+      .select('role, content, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('[retrieveChatHistory] Error fetching chat history:', error);
+      return '';
+    }
+
+    if (!messages || messages.length === 0) {
+      console.log('[retrieveChatHistory] No chat history found');
+      return '';
+    }
+
+    console.log(`[retrieveChatHistory] Found ${messages.length} chat messages`);
+
+    // Reverse to get chronological order and format
+    const formattedMessages = messages
+      .reverse()
+      .map((msg: any) => `${msg.role === 'user' ? 'USER' : 'CONSULTANT'}: ${msg.content}`)
+      .join('\n\n');
+
+    return `\nRECENT CONSULTANT CONVERSATIONS:\n${formattedMessages}`;
+  } catch (error) {
+    console.error('[retrieveChatHistory] Error:', error);
+    return '';
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -22,14 +130,66 @@ serve(async (req) => {
   }
 
   try {
+    // Get authenticated user
+    const authHeader = req.headers.get('authorization');
+    let userId: string | null = null;
+    let supabaseClient = null;
+    let userKnowledgeContext = '';
+    let chatHistoryContext = '';
+
+    if (authHeader) {
+      // Create Supabase client with user's JWT for RLS
+      supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        {
+          global: {
+            headers: {
+              Authorization: authHeader
+            }
+          }
+        }
+      );
+
+      // Extract JWT token from Bearer header
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+
+      if (user) {
+        userId = user.id;
+        console.log('[brand-ai-assistant] Authenticated user:', userId);
+
+        // Fetch user's knowledge base and chat history in parallel
+        const [knowledgeBase, chatHistory] = await Promise.all([
+          retrieveUserKnowledgeBase(supabaseClient, userId),
+          retrieveChatHistory(supabaseClient, userId, 10)
+        ]);
+
+        userKnowledgeContext = knowledgeBase;
+        chatHistoryContext = chatHistory;
+      } else {
+        console.log('[brand-ai-assistant] No authenticated user found:', authError);
+      }
+    }
+
     const { fieldType, currentValue, ideaFramework, avatar, brandCanvas, diagnostic } = await req.json();
 
-    // Build comprehensive brand context
+    // Build comprehensive brand context from multiple sources
     let brandContext = "";
 
-    // Add diagnostic data if available
+    // 1. Add user knowledge base context (from database - most comprehensive)
+    if (userKnowledgeContext) {
+      brandContext += `\nUSER'S BRAND KNOWLEDGE BASE:${userKnowledgeContext}`;
+    }
+
+    // 2. Add chat history context for insights from consultant conversations
+    if (chatHistoryContext) {
+      brandContext += `\n${chatHistoryContext}`;
+    }
+
+    // 3. Add diagnostic data passed from frontend (fallback/supplement)
     if (diagnostic) {
-      brandContext += `\nBRAND DIAGNOSTIC INSIGHTS:`;
+      brandContext += `\n\nBRAND DIAGNOSTIC INSIGHTS:`;
       if (diagnostic.brandName) brandContext += `\n- Brand Name: ${diagnostic.brandName}`;
       if (diagnostic.industry) brandContext += `\n- Industry: ${diagnostic.industry}`;
       if (diagnostic.targetAudience) brandContext += `\n- Target Audience: ${diagnostic.targetAudience}`;
@@ -38,6 +198,7 @@ serve(async (req) => {
       if (diagnostic.brandPersonality) brandContext += `\n- Brand Personality: ${diagnostic.brandPersonality}`;
     }
 
+    // 4. Add IDEA framework context from frontend
     if (ideaFramework) {
       brandContext += `\n\nIDEA FRAMEWORK CONTEXT:`;
       if (ideaFramework.intent) brandContext += `\n- Buyer Intent: ${ideaFramework.intent}`;
@@ -47,6 +208,7 @@ serve(async (req) => {
       if (ideaFramework.demographics) brandContext += `\n- Demographics: ${ideaFramework.demographics}`;
     }
 
+    // 5. Add avatar context from frontend
     if (avatar) {
       brandContext += `\n\nTARGET CUSTOMER AVATAR:`;
       if (avatar.name) brandContext += `\n- Avatar Name: ${avatar.name}`;
@@ -60,6 +222,7 @@ serve(async (req) => {
       if (avatar.demographics?.occupation) brandContext += `\n- Occupation: ${avatar.demographics.occupation}`;
     }
 
+    // 6. Add existing brand canvas elements from frontend
     if (brandCanvas) {
       brandContext += `\n\nEXISTING BRAND CANVAS ELEMENTS:`;
       if (brandCanvas.purpose) brandContext += `\n- Brand Purpose: ${brandCanvas.purpose}`;
@@ -71,6 +234,9 @@ serve(async (req) => {
       if (brandCanvas.personality && brandCanvas.personality.length > 0) brandContext += `\n- Personality Traits: ${brandCanvas.personality.join(', ')}`;
       if (brandCanvas.voice) brandContext += `\n- Brand Voice: ${brandCanvas.voice}`;
     }
+
+    console.log(`[brand-ai-assistant] Total brand context length: ${brandContext.length} chars`);
+    console.log(`[brand-ai-assistant] Has knowledge base: ${!!userKnowledgeContext}, Has chat history: ${!!chatHistoryContext}`);
 
     // Field-specific generation instructions
     const fieldInstructions: Record<string, string> = {
@@ -107,12 +273,14 @@ CRITICAL REQUIREMENTS:
 - Write in clear, professional language
 - Make it specific to this brand based on all available context
 - Ensure consistency with other brand elements already defined
+- USE THE USER'S KNOWLEDGE BASE AND CHAT HISTORY to personalize the content
+- Reference specific details from the user's brand information when available
 
 ${fieldInstruction}
 ${brandContext}
 ${userGuidance}
 
-Remember: Output ONLY the final content that should appear in the field. No explanations or meta-commentary.`;
+Remember: Output ONLY the final content that should appear in the field. No explanations or meta-commentary. Make it specific to THIS brand based on all the context provided.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -132,11 +300,15 @@ Remember: Output ONLY the final content that should appear in the field. No expl
     });
 
     if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('[brand-ai-assistant] OpenAI API error:', response.status, errorBody);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
     const suggestion = data.choices[0].message.content.trim();
+
+    console.log('[brand-ai-assistant] Successfully generated suggestion');
 
     return new Response(JSON.stringify({ suggestion }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
