@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
+import { ServiceProvider } from "@/services/ServiceProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
@@ -41,10 +42,11 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-          <Toaster />
-          <Sonner />
+    <ServiceProvider>
+      <AuthProvider>
+        <TooltipProvider>
+            <Toaster />
+            <Sonner />
           <BrowserRouter>
             <ScrollToTop />
             <Routes>
@@ -181,8 +183,9 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </ServiceProvider>
   </QueryClientProvider>
 );
 
