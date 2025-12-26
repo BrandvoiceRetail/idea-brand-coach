@@ -45,8 +45,9 @@ export const useChat = (options: UseChatOptions = {}) => {
     enabled: !!sessionId, // Only fetch if we have a session
   });
 
-  // Mutation: Send message
+  // Mutation: Send message (keyed by session to reset state on session switch)
   const sendMessageMutation = useMutation({
+    mutationKey: ['chat', 'sendMessage', chatbotType, sessionId],
     mutationFn: (message: ChatMessageCreate) => chatService.sendMessage({
       ...message,
       chatbot_type: chatbotType,
@@ -69,8 +70,9 @@ export const useChat = (options: UseChatOptions = {}) => {
     },
   });
 
-  // Mutation: Clear chat history
+  // Mutation: Clear chat history (keyed by session to reset state on session switch)
   const clearChatMutation = useMutation({
+    mutationKey: ['chat', 'clearChat', chatbotType, sessionId],
     mutationFn: () => chatService.clearChatHistory(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType, sessionId] });
