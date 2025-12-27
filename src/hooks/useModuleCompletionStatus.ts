@@ -23,25 +23,25 @@ interface ModuleCompletionResult {
  * Hook to track completion status of IDEA Insights and Avatar modules
  */
 export function useModuleCompletionStatus(): ModuleCompletionResult {
-  // IDEA Insights fields (Interactive IDEA Framework - 5 steps)
-  const insightsStep1 = usePersistedField({
-    fieldIdentifier: 'insights_framework_step1_response',
+  // IDEA Insights fields (Interactive IDEA Framework - semantic field names)
+  const buyerIntent = usePersistedField({
+    fieldIdentifier: 'insight_buyer_intent',
     category: 'insights',
   });
-  const insightsStep2 = usePersistedField({
-    fieldIdentifier: 'insights_framework_step2_response',
+  const buyerMotivation = usePersistedField({
+    fieldIdentifier: 'insight_buyer_motivation',
     category: 'insights',
   });
-  const insightsStep3 = usePersistedField({
-    fieldIdentifier: 'insights_framework_step3_response',
+  const emotionalTriggers = usePersistedField({
+    fieldIdentifier: 'empathy_emotional_triggers',
     category: 'insights',
   });
-  const insightsStep4 = usePersistedField({
-    fieldIdentifier: 'insights_framework_step4_response',
+  const shopperType = usePersistedField({
+    fieldIdentifier: 'insight_shopper_type',
     category: 'insights',
   });
-  const insightsStep5 = usePersistedField({
-    fieldIdentifier: 'insights_framework_step5_response',
+  const demographics = usePersistedField({
+    fieldIdentifier: 'insight_demographics',
     category: 'insights',
   });
 
@@ -101,13 +101,13 @@ export function useModuleCompletionStatus(): ModuleCompletionResult {
 
   // Calculate completion status
   const result = useMemo(() => {
-    // IDEA Insights: all 5 steps must be completed
+    // IDEA Insights: all 5 framework fields must be completed
     const insightsFields = [
-      insightsStep1.value,
-      insightsStep2.value,
-      insightsStep3.value,
-      insightsStep4.value,
-      insightsStep5.value,
+      buyerIntent.value,
+      buyerMotivation.value,
+      emotionalTriggers.value,
+      shopperType.value,
+      demographics.value,
     ];
     const insightsCompleted = insightsFields.filter(Boolean).length;
     const insightsTotal = insightsFields.length;
@@ -147,11 +147,11 @@ export function useModuleCompletionStatus(): ModuleCompletionResult {
       avatarProgress,
     };
   }, [
-    insightsStep1.value,
-    insightsStep2.value,
-    insightsStep3.value,
-    insightsStep4.value,
-    insightsStep5.value,
+    buyerIntent.value,
+    buyerMotivation.value,
+    emotionalTriggers.value,
+    shopperType.value,
+    demographics.value,
     avatarName.value,
     avatarAge.value,
     avatarIncome.value,

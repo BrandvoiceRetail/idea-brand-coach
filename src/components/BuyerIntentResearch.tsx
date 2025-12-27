@@ -21,20 +21,21 @@ interface BuyerIntentResearchProps {
 
 export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearchProps) {
   // Persisted fields with local-first storage
+  // Field identifiers use semantic names for better AI context and data aggregation
   const searchTerms = usePersistedField({
-    fieldIdentifier: 'insights_research_search_terms',
+    fieldIdentifier: 'insight_search_terms',
     defaultValue: '',
     category: 'insights',
   });
 
   const industry = usePersistedField({
-    fieldIdentifier: 'insights_research_industry',
+    fieldIdentifier: 'insight_industry',
     defaultValue: '',
     category: 'insights',
   });
 
   const analysis = usePersistedField({
-    fieldIdentifier: 'insights_research_intent_analysis',
+    fieldIdentifier: 'insight_intent_analysis',
     defaultValue: '',
     category: 'insights',
   });

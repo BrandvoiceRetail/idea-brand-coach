@@ -43,32 +43,33 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
   const [currentStep, setCurrentStep] = useState(0);
 
   // Persisted fields with local-first storage
+  // Field identifiers use semantic names for better AI context and data aggregation
   const buyerIntent = usePersistedField({
-    fieldIdentifier: 'insights_framework_step1_response',
+    fieldIdentifier: 'insight_buyer_intent',
     defaultValue: '',
     category: 'insights',
   });
 
   const buyerMotivation = usePersistedField({
-    fieldIdentifier: 'insights_framework_step2_response',
+    fieldIdentifier: 'insight_buyer_motivation',
     defaultValue: '',
     category: 'insights',
   });
 
   const emotionalTriggers = usePersistedField({
-    fieldIdentifier: 'insights_framework_step3_response',
+    fieldIdentifier: 'empathy_emotional_triggers',
     defaultValue: '',
     category: 'insights',
   });
 
   const shopperType = usePersistedField({
-    fieldIdentifier: 'insights_framework_step4_response',
+    fieldIdentifier: 'insight_shopper_type',
     defaultValue: '',
     category: 'insights',
   });
 
   const demographics = usePersistedField({
-    fieldIdentifier: 'insights_framework_step5_response',
+    fieldIdentifier: 'insight_demographics',
     defaultValue: '',
     category: 'insights',
   });

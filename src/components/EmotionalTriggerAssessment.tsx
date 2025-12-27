@@ -132,20 +132,21 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
   const [currentQuestion, setCurrentQuestion] = useState(0);
 
   // Persisted fields with local-first storage
+  // Field identifiers use semantic names for better AI context and data aggregation
   const answers = usePersistedField({
-    fieldIdentifier: 'insights_assessment_trigger_responses',
+    fieldIdentifier: 'empathy_trigger_responses',
     defaultValue: '{}',
     category: 'insights',
   });
 
   const isComplete = usePersistedField({
-    fieldIdentifier: 'insights_assessment_completed',
+    fieldIdentifier: 'empathy_assessment_completed',
     defaultValue: 'false',
     category: 'insights',
   });
 
   const results = usePersistedField({
-    fieldIdentifier: 'insights_assessment_trigger_profile',
+    fieldIdentifier: 'empathy_trigger_profile',
     defaultValue: '[]',
     category: 'insights',
   });
