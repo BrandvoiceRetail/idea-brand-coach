@@ -1,0 +1,20 @@
+{
+  "discovered_files": {
+    "src/hooks/useOnboardingTour.ts": {
+      "description": "Custom hook pattern for onboarding tour: uses localStorage for persistence (STORAGE_KEYS pattern), integrates with useAuth for user context, uses requestAnimationFrame for DOM readiness detection, exports storage utilities for testing purposes.",
+      "category": "pattern",
+      "discovered_at": "2025-12-27T16:53:31.109545+00:00"
+    },
+    "src/components/OnboardingTour.tsx": {
+      "description": "OnboardingTour component pattern: uses React Joyride library, defines TOUR_STEPS array with 4 steps targeting data-tour attributes ([data-tour=\"diagnostic-feature\"], etc.), integrates with useOnboardingTour hook for state management, uses CallBackProps callback for handling STATUS.FINISHED, STATUS.SKIPPED, EVENTS.STEP_AFTER, and EVENTS.TARGET_NOT_FOUND events. Custom styles use CSS variables (hsl(var(--primary)), etc.) for design system consistency.",
+      "category": "component-pattern",
+      "discovered_at": "2025-12-27T16:55:55.225014+00:00"
+    },
+    "src/lib/analytics.ts": {
+      "description": "Analytics tracking service pattern: Uses localStorage queue for client-side analytics storage (capped at 100 events), provides generic trackEvent function plus specific tour tracking helpers (trackTourStarted, trackTourCompleted, trackTourSkipped, trackStepViewed). Integrates with supabase for user ID retrieval. Uses TOUR_EVENTS constant object for type-safe event names. Logs to console in development mode via import.meta.env.DEV check.",
+      "category": "service",
+      "discovered_at": "2025-12-27T16:58:18.634761+00:00"
+    }
+  },
+  "last_updated": "2025-12-27T16:58:18.634771+00:00"
+}

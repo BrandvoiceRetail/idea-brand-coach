@@ -3,10 +3,16 @@
  * Interactive guided tour using React Joyride to walk new users through key features
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import Joyride, { CallBackProps, STATUS, EVENTS, Step } from 'react-joyride';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 import { TourStep } from '@/types/tour';
+import {
+  trackTourStarted,
+  trackTourCompleted,
+  trackTourSkipped,
+  trackStepViewed,
+} from '@/lib/analytics';
 
 /**
  * Tour step definitions highlighting the 4 key features
@@ -152,6 +158,9 @@ export function OnboardingTour({
     setStepIndex,
   } = useOnboardingTour();
 
+  // Track if tour start analytics have been fired to avoid duplicates
+  const hasTrackedStartRef = useRef(false);
+
   // Auto-start tour for new users if autoStart is enabled
   useEffect(() => {
     if (autoStart && isReady && shouldShowTour()) {
@@ -170,24 +179,38 @@ export function OnboardingTour({
    */
   const handleJoyrideCallback = useCallback(
     (data: CallBackProps) => {
-      const { action, status, type, index } = data;
+      const { action, status, type, index, step } = data;
+
+      // Track tour started on first step (only once per tour run)
+      if (type === EVENTS.STEP_BEFORE && index === 0 && !hasTrackedStartRef.current) {
+        hasTrackedStartRef.current = true;
+        void trackTourStarted();
+      }
 
       // Handle tour completion
       if (status === STATUS.FINISHED) {
+        hasTrackedStartRef.current = false; // Reset for potential restart
         completeTour(TOUR_STEPS.length);
+        void trackTourCompleted(TOUR_STEPS.length);
         onComplete?.();
         return;
       }
 
       // Handle tour skip
       if (status === STATUS.SKIPPED) {
+        hasTrackedStartRef.current = false; // Reset for potential restart
         skipTour(index);
+        void trackTourSkipped(index);
         onSkip?.();
         return;
       }
 
-      // Handle step navigation
+      // Handle step navigation and track step views
       if (type === EVENTS.STEP_AFTER) {
+        // Track the step that was just viewed
+        const stepTarget = typeof step?.target === 'string' ? step.target : String(step?.target ?? '');
+        void trackStepViewed(index, stepTarget);
+
         // Move to next step
         if (action === 'next') {
           setStepIndex(index + 1);
