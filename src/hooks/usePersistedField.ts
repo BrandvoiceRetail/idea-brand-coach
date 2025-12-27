@@ -88,6 +88,7 @@ export function usePersistedField({
   const syncServiceRef = useRef<SupabaseSyncService | null>(null);
   const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasLoadedRef = useRef<boolean>(false);
 
   /**
    * Load initial value from IndexedDB
@@ -190,6 +191,9 @@ export function usePersistedField({
     // Update local state immediately for responsive UI
     setValue(newValue);
 
+    // Mark that we have a local value to prevent overwriting on re-render
+    hasLoadedRef.current = true;
+
     // Clear existing timer
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
@@ -278,10 +282,14 @@ export function usePersistedField({
 
   /**
    * Load initial value on mount
+   * Only load once when the component mounts, not on every userId change
    */
   useEffect(() => {
-    loadInitialValue();
-  }, [loadInitialValue]);
+    if (!hasLoadedRef.current && userId) {
+      hasLoadedRef.current = true;
+      loadInitialValue();
+    }
+  }, [userId, loadInitialValue]);
 
   /**
    * Cleanup timers on unmount

@@ -43,7 +43,8 @@ export type KnowledgeCategory =
   | 'avatar'
   | 'insights'
   | 'canvas'
-  | 'copy';
+  | 'copy'
+  | 'consultant';
 
 /**
  * Sync status for field data
