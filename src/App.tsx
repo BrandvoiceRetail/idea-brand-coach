@@ -7,6 +7,7 @@ import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
@@ -47,6 +48,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
+            <OnboardingTour autoStart={true} />
             <Routes>
               <Route path="/" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
               <Route path="/welcome" element={<Landing />} />
