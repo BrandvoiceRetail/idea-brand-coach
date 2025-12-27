@@ -3,9 +3,10 @@
  * Interactive guided tour using React Joyride to walk new users through key features
  */
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import Joyride, { CallBackProps, STATUS, EVENTS, Step } from 'react-joyride';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { TourStep } from '@/types/tour';
 import {
   trackTourStarted,
@@ -17,6 +18,7 @@ import {
 /**
  * Tour step definitions highlighting the 4 key features
  * Uses data-tour attributes for reliable DOM selectors
+ * Uses 'auto' placement for responsive positioning that adapts to viewport
  */
 const TOUR_STEPS: TourStep[] = [
   {
@@ -24,7 +26,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Brand Diagnostic',
     content:
       'Start here! Our Brand Diagnostic assesses your current brand strength across key dimensions. Get actionable insights to understand where your brand stands today.',
-    placement: 'bottom',
+    placement: 'auto',
     disableBeacon: true,
     spotlightPadding: 8,
   },
@@ -33,7 +35,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'IDEA Framework',
     content:
       'Master the IDEA Framework: Identity, Differentiation, Emotion, and Action. This proven methodology helps you build a brand that truly resonates with your audience.',
-    placement: 'bottom',
+    placement: 'auto',
     spotlightPadding: 8,
   },
   {
@@ -41,7 +43,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Avatar Builder',
     content:
       'Create detailed customer avatars to deeply understand your ideal audience. Know their goals, challenges, and what motivates them to buy.',
-    placement: 'bottom',
+    placement: 'auto',
     spotlightPadding: 8,
   },
   {
@@ -49,16 +51,17 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Brand Coach',
     content:
       'Get personalized AI-powered brand coaching. Ask questions, get strategic advice, and receive guidance tailored to your unique brand challenges.',
-    placement: 'bottom',
+    placement: 'auto',
     spotlightPadding: 8,
   },
 ];
 
 /**
- * Custom styles for the tour tooltips
- * Matches the application's design system
+ * Generate responsive tour styles based on screen size
+ * Matches the application's design system with mobile optimizations
+ * @param isMobile - Whether the current viewport is mobile (< 768px)
  */
-const TOUR_STYLES = {
+const getTourStyles = (isMobile: boolean) => ({
   options: {
     primaryColor: 'hsl(var(--primary))',
     backgroundColor: 'hsl(var(--background))',
@@ -66,42 +69,50 @@ const TOUR_STYLES = {
     arrowColor: 'hsl(var(--background))',
     overlayColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 10000,
+    // Constrain tooltip width on mobile to prevent overflow
+    width: isMobile ? 280 : 380,
   },
   tooltip: {
     borderRadius: '0.5rem',
-    padding: '1rem',
+    // Reduced padding on mobile for more compact display
+    padding: isMobile ? '0.75rem' : '1rem',
     boxShadow:
       '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    // Ensure tooltip respects viewport boundaries
+    maxWidth: isMobile ? 'calc(100vw - 32px)' : '400px',
   },
   tooltipContainer: {
     textAlign: 'left' as const,
   },
   tooltipTitle: {
-    fontSize: '1.125rem',
+    // Slightly smaller title on mobile
+    fontSize: isMobile ? '1rem' : '1.125rem',
     fontWeight: 600,
     marginBottom: '0.5rem',
     color: 'hsl(var(--foreground))',
   },
   tooltipContent: {
-    fontSize: '0.875rem',
+    // Slightly smaller content on mobile
+    fontSize: isMobile ? '0.8125rem' : '0.875rem',
     lineHeight: 1.6,
     color: 'hsl(var(--muted-foreground))',
   },
   buttonNext: {
     backgroundColor: 'hsl(var(--primary))',
     borderRadius: '0.375rem',
-    padding: '0.5rem 1rem',
-    fontSize: '0.875rem',
+    // Slightly smaller buttons on mobile
+    padding: isMobile ? '0.375rem 0.75rem' : '0.5rem 1rem',
+    fontSize: isMobile ? '0.8125rem' : '0.875rem',
     fontWeight: 500,
   },
   buttonBack: {
     color: 'hsl(var(--muted-foreground))',
-    marginRight: '0.5rem',
-    fontSize: '0.875rem',
+    marginRight: isMobile ? '0.25rem' : '0.5rem',
+    fontSize: isMobile ? '0.8125rem' : '0.875rem',
   },
   buttonSkip: {
     color: 'hsl(var(--muted-foreground))',
-    fontSize: '0.875rem',
+    fontSize: isMobile ? '0.8125rem' : '0.875rem',
   },
   buttonClose: {
     color: 'hsl(var(--muted-foreground))',
@@ -110,7 +121,7 @@ const TOUR_STYLES = {
   spotlight: {
     borderRadius: '0.5rem',
   },
-};
+});
 
 /**
  * Props for the OnboardingTour component
@@ -157,6 +168,12 @@ export function OnboardingTour({
     skipTour,
     setStepIndex,
   } = useOnboardingTour();
+
+  // Detect mobile viewport for responsive styles
+  const isMobile = useIsMobile();
+
+  // Memoize tour styles to prevent unnecessary re-renders
+  const tourStyles = useMemo(() => getTourStyles(isMobile), [isMobile]);
 
   // Track if tour start analytics have been fired to avoid duplicates
   const hasTrackedStartRef = useRef(false);
@@ -248,7 +265,7 @@ export function OnboardingTour({
       spotlightClicks={false}
       hideCloseButton={false}
       callback={handleJoyrideCallback}
-      styles={TOUR_STYLES}
+      styles={tourStyles}
       locale={{
         back: 'Back',
         close: 'Close',
@@ -259,7 +276,13 @@ export function OnboardingTour({
       }}
       floaterProps={{
         disableAnimation: false,
+        // Ensure floater stays within viewport boundaries on all screen sizes
+        offset: isMobile ? 8 : 16,
+        // Use flip for better positioning when tooltip would overflow viewport
+        autoOpen: true,
       }}
+      // Scroll offset adjusted for mobile to account for smaller viewport
+      scrollOffset={isMobile ? 60 : 100}
     />
   );
 }
