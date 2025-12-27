@@ -16,6 +16,7 @@ interface UploadedDocument {
   status: string;
   created_at: string;
   extracted_content?: string;
+  openai_file_id?: string;
 }
 
 interface DocumentUploadProps {
@@ -162,14 +163,16 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
 
       setUploadProgress(75);
 
-      // Process document content extraction
-      const { error: processError } = await supabase.functions.invoke('document-processor', {
+      // Upload document directly to OpenAI vector store (bypasses local text extraction)
+      const { data: vectorResult, error: vectorError } = await supabase.functions.invoke('upload-document-to-vector-store', {
         body: { documentId: docData.id }
       });
 
-      if (processError) {
-        console.warn('Document processing failed:', processError);
-        // Don't fail the upload, just log the warning
+      if (vectorError) {
+        console.warn('Vector store upload failed:', vectorError);
+        // Don't fail the upload, just log the warning - document is still saved
+      } else {
+        console.log('Document uploaded to vector store:', vectorResult);
       }
 
       setUploadProgress(100);
@@ -270,6 +273,7 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
+      case 'vectorized':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'processing':
         return <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />;
