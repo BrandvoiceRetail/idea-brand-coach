@@ -16,7 +16,7 @@ import {
 
 export default function IdeaFramework() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-tour="idea-framework">
       {/* Hero Section */}
       <div className="text-center max-w-4xl mx-auto">
         <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">

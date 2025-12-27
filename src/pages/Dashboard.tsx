@@ -225,7 +225,11 @@ export default function Dashboard() {
 
       {/* Dynamic Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => navigate('/diagnostic')}>
+        <Card
+          data-tour="diagnostic-feature"
+          className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer"
+          onClick={() => navigate('/diagnostic')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <TrendingUp className="w-8 h-8 text-secondary" />
@@ -238,7 +242,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => navigate('/avatar')}>
+        <Card
+          data-tour="avatar-builder"
+          className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 cursor-pointer"
+          onClick={() => navigate('/avatar')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <Target className="w-8 h-8 text-secondary" />
@@ -333,7 +341,7 @@ export default function Dashboard() {
           )}
 
           {/* IDEA Framework Modules */}
-          <div>
+          <div data-tour="idea-framework">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">IDEA Strategic Brand Framework™</h2>
               <Button variant="outline" size="sm" asChild>
@@ -392,15 +400,16 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {additionalModules.map((module) => (
                 module.special ? (
-                  <ModuleCard
-                    key={module.title}
-                    title={module.title}
-                    description={module.description}
-                    icon={module.icon}
-                    href={module.href}
-                    status={module.status}
-                    className="border-secondary/20 shadow-glow"
-                  />
+                  <div key={module.title} data-tour="brand-coach">
+                    <ModuleCard
+                      title={module.title}
+                      description={module.description}
+                      icon={module.icon}
+                      href={module.href}
+                      status={module.status}
+                      className="border-secondary/20 shadow-glow"
+                    />
+                  </div>
                 ) : (
                   <ModuleCard
                     key={module.title}

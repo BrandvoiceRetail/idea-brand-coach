@@ -267,7 +267,7 @@ export default function AvatarBuilder() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8" data-tour="avatar-builder">
       <div className="text-center">
         <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
           <Target className="w-8 h-8 text-secondary-foreground" />

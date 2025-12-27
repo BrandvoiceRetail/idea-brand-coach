@@ -178,8 +178,9 @@
             "command": "grep -q 'OnboardingTour' src/App.tsx && echo 'OK' || echo 'FAIL'",
             "expected": "OK"
           },
-          "status": "pending",
-          "notes": "Import and render OnboardingTour component within AuthProvider context. Add logic to check if user is new and should see tour on first login."
+          "status": "completed",
+          "notes": "Integrated OnboardingTour into App.tsx: added import for OnboardingTour component from @/components/OnboardingTour, rendered OnboardingTour with autoStart={true} inside BrowserRouter after ScrollToTop and before Routes. The component has access to AuthProvider context for user state and will auto-launch for new users based on the useOnboardingTour hook logic. Verification passed: grep confirms OnboardingTour exists in App.tsx. TypeScript compilation clean.",
+          "updated_at": "2025-12-27T17:02:34.790162+00:00"
         },
         {
           "id": "subtask-4-2",
@@ -491,5 +492,5 @@
     }
   },
   "qa_signoff": null,
-  "last_updated": "2025-12-27T17:00:27.696234+00:00"
+  "last_updated": "2025-12-27T17:02:34.790190+00:00"
 }
