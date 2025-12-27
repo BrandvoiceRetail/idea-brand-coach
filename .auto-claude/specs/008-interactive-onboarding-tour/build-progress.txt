@@ -1,0 +1,74 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Interactive Onboarding Tour
+Workspace: Managed by orchestrator
+Started: 2025-12-27
+
+Workflow Type: feature
+Rationale: Adding new guided onboarding functionality using React Joyride to educate new users on platform features and IDEA Framework methodology. Pure feature addition without modifying existing business logic.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Phases: 7
+- Total subtasks: 13
+- Created init.sh
+- Updated context.json with discovered patterns
+
+Phase Summary:
+- Phase 1 (Setup and Type Definitions): 2 subtasks, no dependencies
+- Phase 2 (Tour Component Implementation): 2 subtasks, depends on phase-1
+- Phase 3 (Analytics and Tracking): 2 subtasks, depends on phase-2
+- Phase 4 (App Integration and Auto-launch): 2 subtasks, depends on phase-3
+- Phase 5 (User Controls): 2 subtasks, depends on phase-4
+- Phase 6 (Mobile Responsiveness): 1 subtask, depends on phase-4
+- Phase 7 (Testing and Verification): 3 subtasks, depends on phase-5 and phase-6
+
+Services Involved:
+- main: React frontend application (TypeScript, Vite, Radix UI, Tailwind CSS)
+
+Parallelism Analysis:
+- Max parallel phases: 2
+- Recommended workers: 1
+- Parallel groups:
+  * phase-5-user-controls and phase-6-mobile-verification (both depend only on phase-4, work on different file sets)
+
+Key Files to Create:
+- src/types/tour.ts - Tour type definitions
+- src/hooks/useOnboardingTour.ts - Tour state management hook
+- src/components/OnboardingTour.tsx - Main tour component
+- src/lib/analytics.ts - Analytics tracking service
+- src/hooks/__tests__/useOnboardingTour.test.tsx - Hook tests
+- src/components/__tests__/OnboardingTour.test.tsx - Component tests
+
+Key Files to Modify:
+- package.json - Add react-joyride dependency
+- src/App.tsx - Integrate tour component
+- src/pages/Dashboard.tsx - Add data-tour attributes
+- src/pages/IdeaFramework.tsx - Add data-tour attributes
+- src/pages/AvatarBuilder.tsx - Add data-tour attributes
+- src/pages/BrandCoach.tsx - Add data-tour attributes
+- src/components/Layout.tsx - Add 'Start Tour' menu button
+
+Patterns to Follow:
+- Hooks: Use React Query for data fetching (see src/hooks/useProfile.ts)
+- Services: Service layer with interfaces (see src/services/)
+- Types: Define in src/types/ directory (see src/types/profile.ts)
+- Storage: Combined localStorage and Supabase persistence (see useDiagnostic.ts)
+- Components: Follow Radix UI patterns (see src/components/ui/)
+
+Verification Strategy:
+- Risk Level: medium
+- Test Types: unit, integration
+- Security Scan: not required
+- Acceptance Criteria: Tour launches for new users, 4 features highlighted, skip/revisit works, analytics tracked, mobile responsive
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 008 --parallel 1
+
+Example:
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 008 --parallel 1
+
+=== END SESSION 1 ===

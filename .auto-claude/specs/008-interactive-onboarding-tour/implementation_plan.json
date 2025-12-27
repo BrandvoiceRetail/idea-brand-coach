@@ -1,0 +1,414 @@
+{
+  "feature": "Interactive Onboarding Tour",
+  "workflow_type": "feature",
+  "workflow_rationale": "Adding new guided onboarding functionality using React Joyride to educate new users on platform features and IDEA Framework methodology. Pure feature addition without modifying existing business logic.",
+  "phases": [
+    {
+      "id": "phase-1-setup",
+      "name": "Setup and Type Definitions",
+      "type": "setup",
+      "description": "Install dependencies and create TypeScript type definitions for tour system",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Install react-joyride dependency",
+          "service": "main",
+          "files_to_modify": ["package.json"],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'react-joyride' package.json && echo 'OK' || echo 'FAIL'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Use 'bun add react-joyride' to install the library"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create tour TypeScript type definitions",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/types/tour.ts"],
+          "patterns_from": ["src/types/profile.ts"],
+          "verification": {
+            "type": "command",
+            "command": "test -f src/types/tour.ts && echo 'OK' || echo 'FAIL'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Define TourStep, TourState, TourCompletion types following existing type patterns"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-implementation",
+      "name": "Tour Component Implementation",
+      "type": "implementation",
+      "description": "Build the core tour components and state management hooks",
+      "depends_on": ["phase-1-setup"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create useOnboardingTour custom hook",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/hooks/useOnboardingTour.ts"],
+          "patterns_from": ["src/hooks/useProfile.ts", "src/hooks/useFeatureFlag.ts"],
+          "verification": {
+            "type": "command",
+            "command": "test -f src/hooks/useOnboardingTour.ts && grep -q 'useOnboardingTour' src/hooks/useOnboardingTour.ts && echo 'OK' || echo 'FAIL'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Hook manages tour state (run, stepIndex), checks eligibility, and provides start/reset methods. Use localStorage for completion status and React Query for Supabase sync."
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create OnboardingTour component with step definitions",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/components/OnboardingTour.tsx"],
+          "patterns_from": ["src/hooks/useAuth.tsx"],
+          "verification": {
+            "type": "command",
+            "command": "test -f src/components/OnboardingTour.tsx && grep -q 'OnboardingTour' src/components/OnboardingTour.tsx && echo 'OK' || echo 'FAIL'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Component integrates React Joyride with 4 tour steps (Diagnostic, IDEA Framework, Avatar Builder, Brand Coach). Use data-tour attributes on target elements for reliable selectors."
+        }
+      ]
+    },
+    {
+      "id": "phase-3-analytics-integration",
+      "name": "Analytics and Tracking",
+      "type": "implementation",
+      "description": "Add analytics tracking for tour events and user engagement metrics",
+      "depends_on": ["phase-2-implementation"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create analytics tracking service",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/lib/analytics.ts"],
+          "patterns_from": ["src/integrations/supabase/client.ts"],
+          "verification": {
+            "type": "command",
+            "command": "test -f src/lib/analytics.ts && grep -q 'trackEvent' src/lib/analytics.ts && echo 'OK' || echo 'FAIL'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Create trackEvent function for logging tour events (tour_started, tour_completed, tour_skipped, step_viewed) to Supabase analytics"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Add analytics callback handler to OnboardingTour",
+          "service": "main",
+          "files_to_modify": ["src/components/OnboardingTour.tsx"],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'handleJoyrideCallback\\|CallBackProps' src/components/OnboardingTour.tsx && echo 'OK' || echo 'FAIL'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Implement callback handler using CallBackProps from react-joyride to track STATUS.FINISHED, STATUS.SKIPPED, and EVENTS.STEP_AFTER"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-app-integration",
+      "name": "App Integration and Auto-launch",
+      "type": "integration",
+      "description": "Wire tour into App.tsx with auto-launch logic for new users",
+      "depends_on": ["phase-3-analytics-integration"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Integrate OnboardingTour into App.tsx",
+          "service": "main",
+          "files_to_modify": ["src/App.tsx"],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'OnboardingTour' src/App.tsx && echo 'OK' || echo 'FAIL'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Import and render OnboardingTour component within AuthProvider context. Add logic to check if user is new and should see tour on first login."
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Add data-tour attributes to feature target elements",
+          "service": "main",
+          "files_to_modify": [
+            "src/pages/Dashboard.tsx",
+            "src/pages/IdeaFramework.tsx",
+            "src/pages/AvatarBuilder.tsx",
+            "src/pages/BrandCoach.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify data-tour attributes exist on Diagnostic, IDEA Framework, Avatar Builder, and Brand Coach feature elements"
+          },
+          "status": "pending",
+          "notes": "Add data-tour='diagnostic-feature', data-tour='idea-framework', data-tour='avatar-builder', data-tour='brand-coach' attributes to clickable elements"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-user-controls",
+      "name": "User Controls (Skip/Revisit)",
+      "type": "implementation",
+      "description": "Add user controls to skip tour and revisit from settings/menu",
+      "depends_on": ["phase-4-app-integration"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Verify skip button functionality in tour configuration",
+          "service": "main",
+          "files_to_modify": ["src/components/OnboardingTour.tsx"],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'showSkipButton.*true' src/components/OnboardingTour.tsx && echo 'OK' || echo 'FAIL'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Ensure Joyride component has showSkipButton={true} prop and skip event is tracked in callback"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Add 'Start Tour' button to user menu/settings",
+          "service": "main",
+          "files_to_modify": ["src/components/Layout.tsx"],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard",
+            "checks": ["User menu contains 'Start Tour' button", "Button triggers tour restart"]
+          },
+          "status": "pending",
+          "notes": "Add menu item that calls useOnboardingTour().startTour() to allow users to revisit tour anytime"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-mobile-verification",
+      "name": "Mobile Responsiveness",
+      "type": "implementation",
+      "description": "Ensure tour works correctly on mobile devices with proper tooltip positioning",
+      "depends_on": ["phase-4-app-integration"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Test and adjust tour on mobile breakpoints",
+          "service": "main",
+          "files_to_modify": ["src/components/OnboardingTour.tsx"],
+          "files_to_create": [],
+          "patterns_from": ["tailwind.config.ts"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard",
+            "checks": [
+              "Tour renders correctly at 375px width",
+              "Tour renders correctly at 768px width",
+              "Tooltips don't overflow viewport",
+              "No horizontal scrolling on mobile"
+            ]
+          },
+          "status": "pending",
+          "notes": "React Joyride handles responsive positioning automatically, but verify tooltips fit within viewport. Use placement: 'auto' if needed."
+        }
+      ]
+    },
+    {
+      "id": "phase-7-testing",
+      "name": "Testing and Verification",
+      "type": "integration",
+      "description": "Write tests and verify end-to-end tour functionality",
+      "depends_on": ["phase-5-user-controls", "phase-6-mobile-verification"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Create unit tests for useOnboardingTour hook",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/hooks/__tests__/useOnboardingTour.test.tsx"],
+          "patterns_from": ["src/hooks/__tests__/useProfile.test.tsx"],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- useOnboardingTour.test.tsx",
+            "expected": "All tests pass"
+          },
+          "status": "pending",
+          "notes": "Test tour state management, eligibility checks, start/reset methods, and localStorage integration"
+        },
+        {
+          "id": "subtask-7-2",
+          "description": "Create component tests for OnboardingTour",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/components/__tests__/OnboardingTour.test.tsx"],
+          "patterns_from": ["src/pages/__tests__/Auth.test.tsx"],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- OnboardingTour.test.tsx",
+            "expected": "All tests pass"
+          },
+          "status": "pending",
+          "notes": "Test tour rendering, step progression, skip functionality, and callback event handling"
+        },
+        {
+          "id": "subtask-7-3",
+          "description": "Manual end-to-end verification",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Create new test user account",
+              "Complete login process",
+              "Verify tour launches automatically on dashboard",
+              "Step through all 4 tour steps",
+              "Verify tour completion is tracked",
+              "Verify skip button works",
+              "Verify 'Start Tour' menu item allows revisit",
+              "Check analytics events in Supabase"
+            ]
+          },
+          "status": "pending",
+          "notes": "Full manual walkthrough of onboarding tour with new user flow"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 13,
+    "services_involved": ["main"],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": ["phase-5-user-controls", "phase-6-mobile-verification"],
+          "reason": "Both depend only on phase-4, work on different file sets, can run in parallel"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution recommended due to dependencies"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 008 --parallel 1"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": ["unit", "integration"],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing tests pass",
+      "Tour component tests pass",
+      "useOnboardingTour hook tests pass",
+      "Tour launches automatically for new users",
+      "All 4 features highlighted correctly",
+      "Skip and revisit functionality works",
+      "Analytics events tracked to Supabase",
+      "Mobile responsive on 375px, 768px, 1024px viewports",
+      "No console errors or warnings"
+    ],
+    "verification_steps": [
+      {
+        "name": "Unit Tests",
+        "command": "npm test",
+        "expected_outcome": "All tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Integration Tests",
+        "command": "npm test -- --grep 'integration'",
+        "expected_outcome": "All integration tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Development Server",
+        "command": "npm run dev",
+        "expected_outcome": "Server starts on port 3000 without errors",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Medium risk user onboarding feature affecting first-time user experience. Requires unit tests for components/hooks and integration tests for full onboarding flow. No security-sensitive areas touched."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": ["npm test"],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": ["npm test -- --grep 'integration'"],
+      "services_to_test": ["main"]
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": [],
+      "flows": ["new-user-onboarding", "complete-tour", "skip-tour", "revisit-tour"]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/dashboard",
+          "checks": [
+            "Tour launches automatically for new users",
+            "All 4 feature steps render correctly",
+            "Skip button visible and functional",
+            "No console errors",
+            "Mobile responsive (375px, 768px, 1024px)"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/dashboard",
+          "checks": [
+            "'Start Tour' button in user menu",
+            "Tour can be revisited after completion"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "Analytics events logged to Supabase (onboarding_tour_started, onboarding_tour_completed, onboarding_tour_skipped, onboarding_step_viewed)",
+        "Tour completion state persisted in user preferences or profile"
+      ]
+    }
+  },
+  "qa_signoff": null
+}
