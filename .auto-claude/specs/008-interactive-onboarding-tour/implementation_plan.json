@@ -15,7 +15,9 @@
           "id": "subtask-1-1",
           "description": "Install react-joyride dependency",
           "service": "main",
-          "files_to_modify": ["package.json"],
+          "files_to_modify": [
+            "package.json"
+          ],
           "files_to_create": [],
           "patterns_from": [],
           "verification": {
@@ -23,16 +25,21 @@
             "command": "grep -q 'react-joyride' package.json && echo 'OK' || echo 'FAIL'",
             "expected": "OK"
           },
-          "status": "pending",
-          "notes": "Use 'bun add react-joyride' to install the library"
+          "status": "completed",
+          "notes": "Installed react-joyride ^2.9.3 dependency. Verification passed successfully.",
+          "updated_at": "2025-12-27T16:49:21.247141+00:00"
         },
         {
           "id": "subtask-1-2",
           "description": "Create tour TypeScript type definitions",
           "service": "main",
           "files_to_modify": [],
-          "files_to_create": ["src/types/tour.ts"],
-          "patterns_from": ["src/types/profile.ts"],
+          "files_to_create": [
+            "src/types/tour.ts"
+          ],
+          "patterns_from": [
+            "src/types/profile.ts"
+          ],
           "verification": {
             "type": "command",
             "command": "test -f src/types/tour.ts && echo 'OK' || echo 'FAIL'",
@@ -48,7 +55,9 @@
       "name": "Tour Component Implementation",
       "type": "implementation",
       "description": "Build the core tour components and state management hooks",
-      "depends_on": ["phase-1-setup"],
+      "depends_on": [
+        "phase-1-setup"
+      ],
       "parallel_safe": false,
       "subtasks": [
         {
@@ -56,8 +65,13 @@
           "description": "Create useOnboardingTour custom hook",
           "service": "main",
           "files_to_modify": [],
-          "files_to_create": ["src/hooks/useOnboardingTour.ts"],
-          "patterns_from": ["src/hooks/useProfile.ts", "src/hooks/useFeatureFlag.ts"],
+          "files_to_create": [
+            "src/hooks/useOnboardingTour.ts"
+          ],
+          "patterns_from": [
+            "src/hooks/useProfile.ts",
+            "src/hooks/useFeatureFlag.ts"
+          ],
           "verification": {
             "type": "command",
             "command": "test -f src/hooks/useOnboardingTour.ts && grep -q 'useOnboardingTour' src/hooks/useOnboardingTour.ts && echo 'OK' || echo 'FAIL'",
@@ -71,8 +85,12 @@
           "description": "Create OnboardingTour component with step definitions",
           "service": "main",
           "files_to_modify": [],
-          "files_to_create": ["src/components/OnboardingTour.tsx"],
-          "patterns_from": ["src/hooks/useAuth.tsx"],
+          "files_to_create": [
+            "src/components/OnboardingTour.tsx"
+          ],
+          "patterns_from": [
+            "src/hooks/useAuth.tsx"
+          ],
           "verification": {
             "type": "command",
             "command": "test -f src/components/OnboardingTour.tsx && grep -q 'OnboardingTour' src/components/OnboardingTour.tsx && echo 'OK' || echo 'FAIL'",
@@ -88,7 +106,9 @@
       "name": "Analytics and Tracking",
       "type": "implementation",
       "description": "Add analytics tracking for tour events and user engagement metrics",
-      "depends_on": ["phase-2-implementation"],
+      "depends_on": [
+        "phase-2-implementation"
+      ],
       "parallel_safe": false,
       "subtasks": [
         {
@@ -96,8 +116,12 @@
           "description": "Create analytics tracking service",
           "service": "main",
           "files_to_modify": [],
-          "files_to_create": ["src/lib/analytics.ts"],
-          "patterns_from": ["src/integrations/supabase/client.ts"],
+          "files_to_create": [
+            "src/lib/analytics.ts"
+          ],
+          "patterns_from": [
+            "src/integrations/supabase/client.ts"
+          ],
           "verification": {
             "type": "command",
             "command": "test -f src/lib/analytics.ts && grep -q 'trackEvent' src/lib/analytics.ts && echo 'OK' || echo 'FAIL'",
@@ -110,7 +134,9 @@
           "id": "subtask-3-2",
           "description": "Add analytics callback handler to OnboardingTour",
           "service": "main",
-          "files_to_modify": ["src/components/OnboardingTour.tsx"],
+          "files_to_modify": [
+            "src/components/OnboardingTour.tsx"
+          ],
           "files_to_create": [],
           "patterns_from": [],
           "verification": {
@@ -128,14 +154,18 @@
       "name": "App Integration and Auto-launch",
       "type": "integration",
       "description": "Wire tour into App.tsx with auto-launch logic for new users",
-      "depends_on": ["phase-3-analytics-integration"],
+      "depends_on": [
+        "phase-3-analytics-integration"
+      ],
       "parallel_safe": false,
       "subtasks": [
         {
           "id": "subtask-4-1",
           "description": "Integrate OnboardingTour into App.tsx",
           "service": "main",
-          "files_to_modify": ["src/App.tsx"],
+          "files_to_modify": [
+            "src/App.tsx"
+          ],
           "files_to_create": [],
           "patterns_from": [],
           "verification": {
@@ -172,14 +202,18 @@
       "name": "User Controls (Skip/Revisit)",
       "type": "implementation",
       "description": "Add user controls to skip tour and revisit from settings/menu",
-      "depends_on": ["phase-4-app-integration"],
+      "depends_on": [
+        "phase-4-app-integration"
+      ],
       "parallel_safe": true,
       "subtasks": [
         {
           "id": "subtask-5-1",
           "description": "Verify skip button functionality in tour configuration",
           "service": "main",
-          "files_to_modify": ["src/components/OnboardingTour.tsx"],
+          "files_to_modify": [
+            "src/components/OnboardingTour.tsx"
+          ],
           "files_to_create": [],
           "patterns_from": [],
           "verification": {
@@ -194,13 +228,18 @@
           "id": "subtask-5-2",
           "description": "Add 'Start Tour' button to user menu/settings",
           "service": "main",
-          "files_to_modify": ["src/components/Layout.tsx"],
+          "files_to_modify": [
+            "src/components/Layout.tsx"
+          ],
           "files_to_create": [],
           "patterns_from": [],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/dashboard",
-            "checks": ["User menu contains 'Start Tour' button", "Button triggers tour restart"]
+            "checks": [
+              "User menu contains 'Start Tour' button",
+              "Button triggers tour restart"
+            ]
           },
           "status": "pending",
           "notes": "Add menu item that calls useOnboardingTour().startTour() to allow users to revisit tour anytime"
@@ -212,16 +251,22 @@
       "name": "Mobile Responsiveness",
       "type": "implementation",
       "description": "Ensure tour works correctly on mobile devices with proper tooltip positioning",
-      "depends_on": ["phase-4-app-integration"],
+      "depends_on": [
+        "phase-4-app-integration"
+      ],
       "parallel_safe": true,
       "subtasks": [
         {
           "id": "subtask-6-1",
           "description": "Test and adjust tour on mobile breakpoints",
           "service": "main",
-          "files_to_modify": ["src/components/OnboardingTour.tsx"],
+          "files_to_modify": [
+            "src/components/OnboardingTour.tsx"
+          ],
           "files_to_create": [],
-          "patterns_from": ["tailwind.config.ts"],
+          "patterns_from": [
+            "tailwind.config.ts"
+          ],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/dashboard",
@@ -242,7 +287,10 @@
       "name": "Testing and Verification",
       "type": "integration",
       "description": "Write tests and verify end-to-end tour functionality",
-      "depends_on": ["phase-5-user-controls", "phase-6-mobile-verification"],
+      "depends_on": [
+        "phase-5-user-controls",
+        "phase-6-mobile-verification"
+      ],
       "parallel_safe": false,
       "subtasks": [
         {
@@ -250,8 +298,12 @@
           "description": "Create unit tests for useOnboardingTour hook",
           "service": "main",
           "files_to_modify": [],
-          "files_to_create": ["src/hooks/__tests__/useOnboardingTour.test.tsx"],
-          "patterns_from": ["src/hooks/__tests__/useProfile.test.tsx"],
+          "files_to_create": [
+            "src/hooks/__tests__/useOnboardingTour.test.tsx"
+          ],
+          "patterns_from": [
+            "src/hooks/__tests__/useProfile.test.tsx"
+          ],
           "verification": {
             "type": "command",
             "command": "npm test -- useOnboardingTour.test.tsx",
@@ -265,8 +317,12 @@
           "description": "Create component tests for OnboardingTour",
           "service": "main",
           "files_to_modify": [],
-          "files_to_create": ["src/components/__tests__/OnboardingTour.test.tsx"],
-          "patterns_from": ["src/pages/__tests__/Auth.test.tsx"],
+          "files_to_create": [
+            "src/components/__tests__/OnboardingTour.test.tsx"
+          ],
+          "patterns_from": [
+            "src/pages/__tests__/Auth.test.tsx"
+          ],
           "verification": {
             "type": "command",
             "command": "npm test -- OnboardingTour.test.tsx",
@@ -304,12 +360,17 @@
   "summary": {
     "total_phases": 7,
     "total_subtasks": 13,
-    "services_involved": ["main"],
+    "services_involved": [
+      "main"
+    ],
     "parallelism": {
       "max_parallel_phases": 2,
       "parallel_groups": [
         {
-          "phases": ["phase-5-user-controls", "phase-6-mobile-verification"],
+          "phases": [
+            "phase-5-user-controls",
+            "phase-6-mobile-verification"
+          ],
           "reason": "Both depend only on phase-4, work on different file sets, can run in parallel"
         }
       ],
@@ -322,7 +383,10 @@
     "risk_level": "medium",
     "skip_validation": false,
     "test_creation_phase": "post_implementation",
-    "test_types_required": ["unit", "integration"],
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
     "security_scanning_required": false,
     "staging_deployment_required": false,
     "acceptance_criteria": [
@@ -367,18 +431,29 @@
   "qa_acceptance": {
     "unit_tests": {
       "required": true,
-      "commands": ["npm test"],
+      "commands": [
+        "npm test"
+      ],
       "minimum_coverage": null
     },
     "integration_tests": {
       "required": true,
-      "commands": ["npm test -- --grep 'integration'"],
-      "services_to_test": ["main"]
+      "commands": [
+        "npm test -- --grep 'integration'"
+      ],
+      "services_to_test": [
+        "main"
+      ]
     },
     "e2e_tests": {
       "required": true,
       "commands": [],
-      "flows": ["new-user-onboarding", "complete-tour", "skip-tour", "revisit-tour"]
+      "flows": [
+        "new-user-onboarding",
+        "complete-tour",
+        "skip-tour",
+        "revisit-tour"
+      ]
     },
     "browser_verification": {
       "required": true,
@@ -410,5 +485,6 @@
       ]
     }
   },
-  "qa_signoff": null
+  "qa_signoff": null,
+  "last_updated": "2025-12-27T16:49:21.247149+00:00"
 }
