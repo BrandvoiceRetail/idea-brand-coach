@@ -9,7 +9,362 @@ const corsHeaders = {
 };
 
 /**
- * Retrieve user's knowledge base context
+ * Search OpenAI vector store for relevant document chunks
+ * Uses the Assistants API file_search tool
+ */
+async function searchVectorStore(
+  vectorStoreId: string,
+  query: string
+): Promise<string> {
+  try {
+    console.log(`[searchVectorStore] Searching vector store ${vectorStoreId} for: "${query.substring(0, 50)}..."`);
+
+    // Create a temporary thread with the vector store attached
+    const threadResponse = await fetch("https://api.openai.com/v1/threads", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openAIApiKey}`,
+        "Content-Type": "application/json",
+        "OpenAI-Beta": "assistants=v2",
+      },
+      body: JSON.stringify({
+        tool_resources: {
+          file_search: {
+            vector_store_ids: [vectorStoreId],
+          },
+        },
+      }),
+    });
+
+    if (!threadResponse.ok) {
+      const error = await threadResponse.text();
+      console.error("[searchVectorStore] Failed to create thread:", error);
+      return "";
+    }
+
+    const thread = await threadResponse.json();
+    console.log(`[searchVectorStore] Created thread: ${thread.id}`);
+
+    // Add the search query as a message
+    const messageResponse = await fetch(
+      `https://api.openai.com/v1/threads/${thread.id}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openAIApiKey}`,
+          "Content-Type": "application/json",
+          "OpenAI-Beta": "assistants=v2",
+        },
+        body: JSON.stringify({
+          role: "user",
+          content: `Search for information relevant to: ${query}`,
+        }),
+      }
+    );
+
+    if (!messageResponse.ok) {
+      console.error("[searchVectorStore] Failed to add message");
+      return "";
+    }
+
+    // Create a simple assistant to run file_search
+    const assistantResponse = await fetch("https://api.openai.com/v1/assistants", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openAIApiKey}`,
+        "Content-Type": "application/json",
+        "OpenAI-Beta": "assistants=v2",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        instructions: "Extract and return only the relevant text chunks from the user's documents. Return the raw content without commentary.",
+        tools: [{ type: "file_search" }],
+      }),
+    });
+
+    if (!assistantResponse.ok) {
+      console.error("[searchVectorStore] Failed to create assistant");
+      return "";
+    }
+
+    const assistant = await assistantResponse.json();
+    console.log(`[searchVectorStore] Created temp assistant: ${assistant.id}`);
+
+    // Run the assistant
+    const runResponse = await fetch(
+      `https://api.openai.com/v1/threads/${thread.id}/runs`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openAIApiKey}`,
+          "Content-Type": "application/json",
+          "OpenAI-Beta": "assistants=v2",
+        },
+        body: JSON.stringify({
+          assistant_id: assistant.id,
+        }),
+      }
+    );
+
+    if (!runResponse.ok) {
+      console.error("[searchVectorStore] Failed to create run");
+      // Cleanup
+      await fetch(`https://api.openai.com/v1/assistants/${assistant.id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${openAIApiKey}`, "OpenAI-Beta": "assistants=v2" },
+      });
+      return "";
+    }
+
+    const run = await runResponse.json();
+
+    // Poll for completion (max 30 seconds)
+    let attempts = 0;
+    let runStatus = run.status;
+    while (runStatus !== "completed" && runStatus !== "failed" && attempts < 30) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const statusResponse = await fetch(
+        `https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`,
+        {
+          headers: {
+            "Authorization": `Bearer ${openAIApiKey}`,
+            "OpenAI-Beta": "assistants=v2",
+          },
+        }
+      );
+      const statusData = await statusResponse.json();
+      runStatus = statusData.status;
+      attempts++;
+    }
+
+    if (runStatus !== "completed") {
+      console.error(`[searchVectorStore] Run did not complete: ${runStatus}`);
+      await fetch(`https://api.openai.com/v1/assistants/${assistant.id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${openAIApiKey}`, "OpenAI-Beta": "assistants=v2" },
+      });
+      return "";
+    }
+
+    // Get messages from the thread
+    const messagesResponse = await fetch(
+      `https://api.openai.com/v1/threads/${thread.id}/messages`,
+      {
+        headers: {
+          "Authorization": `Bearer ${openAIApiKey}`,
+          "OpenAI-Beta": "assistants=v2",
+        },
+      }
+    );
+
+    const messagesData = await messagesResponse.json();
+    const assistantMessage = messagesData.data?.find((m: any) => m.role === "assistant");
+
+    // Cleanup: delete the temporary assistant
+    await fetch(`https://api.openai.com/v1/assistants/${assistant.id}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${openAIApiKey}`, "OpenAI-Beta": "assistants=v2" },
+    });
+
+    if (!assistantMessage) {
+      console.log("[searchVectorStore] No assistant response found");
+      return "";
+    }
+
+    // Extract text content
+    const textContent = assistantMessage.content
+      ?.filter((c: any) => c.type === "text")
+      ?.map((c: any) => c.text?.value || "")
+      ?.join("\n");
+
+    console.log(`[searchVectorStore] Retrieved ${textContent?.length || 0} chars from vector store`);
+    return textContent || "";
+  } catch (error) {
+    console.error("[searchVectorStore] Error:", error);
+    return "";
+  }
+}
+
+/**
+ * Retrieve document context from user's OpenAI vector stores
+ */
+async function retrieveVectorStoreContext(
+  supabaseClient: any,
+  userId: string,
+  query: string
+): Promise<string> {
+  try {
+    console.log("[retrieveVectorStoreContext] Fetching user vector stores...");
+
+    // Get user's vector store IDs
+    const { data: stores, error } = await supabaseClient
+      .from("user_vector_stores")
+      .select("core_store_id")
+      .eq("user_id", userId)
+      .single();
+
+    if (error || !stores?.core_store_id) {
+      console.log("[retrieveVectorStoreContext] No vector stores found for user");
+      return "";
+    }
+
+    console.log(`[retrieveVectorStoreContext] Found core store: ${stores.core_store_id}`);
+
+    // Search the core store (where uploaded documents go)
+    const content = await searchVectorStore(stores.core_store_id, query);
+
+    if (!content) {
+      return "";
+    }
+
+    return `
+<UPLOADED_DOCUMENTS_CONTEXT>
+The following content was found in the user's uploaded documents:
+
+${content}
+</UPLOADED_DOCUMENTS_CONTEXT>`;
+  } catch (error) {
+    console.error("[retrieveVectorStoreContext] Error:", error);
+    return "";
+  }
+}
+
+/**
+ * Generate embedding for semantic search using OpenAI
+ */
+async function generateEmbedding(text: string): Promise<number[]> {
+  const response = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${openAIApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "text-embedding-ada-002",
+      input: text,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[generateEmbedding] Error:', response.status, errorText);
+    throw new Error(`Embedding generation failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.data[0].embedding;
+}
+
+/**
+ * Retrieve relevant context using semantic search (embeddings)
+ * This finds the most relevant documents based on query similarity
+ */
+async function retrieveSemanticContext(
+  supabaseClient: any,
+  userId: string,
+  query: string
+): Promise<{ content: string; sources: string[] }> {
+  try {
+    console.log('[retrieveSemanticContext] Generating embedding for query...');
+
+    // Generate embedding for the user's query
+    const queryEmbedding = await generateEmbedding(query);
+    console.log('[retrieveSemanticContext] Embedding generated, searching documents...');
+
+    // Use the match_user_documents function for semantic search
+    const { data: matches, error } = await supabaseClient.rpc(
+      "match_user_documents",
+      {
+        query_embedding: queryEmbedding,
+        match_user_id: userId,
+        match_count: 5, // Get top 5 most relevant chunks
+      }
+    );
+
+    if (error) {
+      console.error("[retrieveSemanticContext] Error matching documents:", error);
+      return { content: "", sources: [] };
+    }
+
+    if (!matches || matches.length === 0) {
+      console.log('[retrieveSemanticContext] No semantic matches found');
+      return { content: "", sources: [] };
+    }
+
+    console.log(`[retrieveSemanticContext] Found ${matches.length} semantic matches`);
+
+    // Combine relevant chunks with similarity scores
+    const contextParts = matches.map((match: any) => match.content);
+    const sources = matches.map((match: any, idx: number) =>
+      `Source ${idx + 1} (relevance: ${(match.similarity * 100).toFixed(1)}%)`
+    );
+
+    const combinedContext = `
+<SEMANTIC_CONTEXT>
+The following information was retrieved based on relevance to the user's question:
+
+${contextParts.join("\n\n---\n\n")}
+</SEMANTIC_CONTEXT>`;
+
+    return { content: combinedContext, sources };
+  } catch (error) {
+    console.error("[retrieveSemanticContext] Error:", error);
+    return { content: "", sources: [] };
+  }
+}
+
+/**
+ * Human-readable labels for field identifiers
+ * Maps semantic field names to descriptive labels for AI context
+ */
+const FIELD_LABELS: Record<string, string> = {
+  // Insight fields (from Interactive Insight Module)
+  'insight_buyer_intent': 'Buyer Intent (what customers search for)',
+  'insight_buyer_motivation': 'Buyer Motivation (psychological drivers)',
+  'insight_shopper_type': 'Shopper Type (behavioral category)',
+  'insight_demographics': 'Relevant Demographics',
+  'insight_search_terms': 'Search Terms Analyzed',
+  'insight_industry': 'Industry/Niche',
+  'insight_intent_analysis': 'AI Intent Analysis',
+
+  // Empathy fields (emotional triggers)
+  'empathy_emotional_triggers': 'Emotional Triggers',
+  'empathy_trigger_responses': 'Trigger Assessment Responses',
+  'empathy_trigger_profile': 'Emotional Trigger Profile',
+  'empathy_assessment_completed': 'Assessment Status',
+
+  // Canvas fields
+  'canvas_brand_purpose': 'Brand Purpose',
+  'canvas_brand_vision': 'Brand Vision',
+  'canvas_brand_mission': 'Brand Mission',
+  'canvas_brand_values': 'Brand Values',
+  'canvas_positioning_statement': 'Positioning Statement',
+  'canvas_value_proposition': 'Value Proposition',
+  'canvas_brand_personality': 'Brand Personality',
+  'canvas_brand_voice': 'Brand Voice',
+};
+
+/**
+ * Get human-readable label for a field identifier
+ */
+function getFieldLabel(fieldIdentifier: string, category: string): string {
+  // Check if we have a specific label for this field
+  if (FIELD_LABELS[fieldIdentifier]) {
+    return FIELD_LABELS[fieldIdentifier];
+  }
+
+  // Fall back to formatted field identifier
+  return fieldIdentifier
+    .replace(`${category}_`, '')
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
+ * Retrieve user's structured knowledge base context
+ * This gets all current brand information organized by category
  */
 async function retrieveUserContext(
   supabaseClient: any,
@@ -49,16 +404,23 @@ async function retrieveUserContext(
       byCategory[entry.category].push(entry);
     });
 
-    // Build context string
+    // Category display names for better readability
+    const categoryLabels: Record<string, string> = {
+      'insights': 'CUSTOMER INSIGHTS (from Interactive Insight Module)',
+      'canvas': 'BRAND CANVAS',
+      'avatar': 'CUSTOMER AVATAR',
+      'diagnostic': 'BRAND DIAGNOSTIC',
+      'copy': 'BRAND COPY',
+    };
+
+    // Build context string with descriptive labels
     const contextParts: string[] = ['USER BRAND KNOWLEDGE BASE:'];
 
     for (const [category, categoryEntries] of Object.entries(byCategory)) {
-      contextParts.push(`\n${category.toUpperCase()} INFORMATION:`);
+      const categoryLabel = categoryLabels[category] || category.toUpperCase();
+      contextParts.push(`\n${categoryLabel}:`);
       categoryEntries.forEach(entry => {
-        const label = entry.field_identifier
-          .replace(`${category}_`, '')
-          .replace(/_/g, ' ')
-          .toUpperCase();
+        const label = getFieldLabel(entry.field_identifier, category);
         contextParts.push(`- ${label}: ${entry.content}`);
       });
     }
@@ -71,6 +433,64 @@ async function retrieveUserContext(
     console.error('[retrieveUserContext] Error:', error);
     return '';
   }
+}
+
+/**
+ * Generate contextual follow-up suggestions based on response content
+ */
+function generateFollowUpSuggestions(userMessage: string, response: string): string[] {
+  const suggestions: string[] = [];
+  const responseLower = response.toLowerCase();
+  const messageLower = userMessage.toLowerCase();
+
+  // Add suggestions based on response content
+  if (responseLower.includes('positioning') || responseLower.includes('differentiat')) {
+    suggestions.push("How can I test this positioning with my target audience?");
+    suggestions.push("What are the risks of this positioning strategy?");
+  }
+
+  if (responseLower.includes('emotion') || responseLower.includes('trigger')) {
+    suggestions.push("How do I measure emotional impact in my campaigns?");
+    suggestions.push("What specific emotional triggers should I prioritize?");
+  }
+
+  if (responseLower.includes('brand') && responseLower.includes('story')) {
+    suggestions.push("Can you help me craft a compelling brand origin story?");
+    suggestions.push("How do I make my brand story more authentic?");
+  }
+
+  if (responseLower.includes('audience') || responseLower.includes('customer')) {
+    suggestions.push("How do I expand this to adjacent customer segments?");
+    suggestions.push("What research methods can validate these insights?");
+  }
+
+  if (responseLower.includes('avatar') || responseLower.includes('persona')) {
+    suggestions.push("How do I prioritize multiple customer avatars?");
+    suggestions.push("What are the key emotional drivers for this avatar?");
+  }
+
+  // Add IDEA framework-specific suggestions
+  if (messageLower.includes('insight') || responseLower.includes('insight')) {
+    suggestions.push("How can I gather deeper customer insights?");
+  }
+  if (messageLower.includes('distinctive') || responseLower.includes('distinctive')) {
+    suggestions.push("What makes brands in my industry truly stand out?");
+  }
+  if (messageLower.includes('empathetic') || responseLower.includes('empathetic')) {
+    suggestions.push("How do I build stronger emotional connections?");
+  }
+  if (messageLower.includes('authentic') || responseLower.includes('authentic')) {
+    suggestions.push("How do I ensure my brand stays authentic as it grows?");
+  }
+
+  // Always include these generic but useful follow-ups
+  suggestions.push("What are the next steps to implement this strategy?");
+  suggestions.push("Can you provide specific examples from similar brands?");
+
+  // Return unique suggestions, shuffled, limited to 4
+  const uniqueSuggestions = [...new Set(suggestions)];
+  const shuffled = uniqueSuggestions.sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, 4);
 }
 
 serve(async (req) => {
@@ -148,17 +568,45 @@ serve(async (req) => {
       }
     }
 
-    const { message, context } = await req.json();
+    const { message, context, chat_history } = await req.json();
     console.log('IDEA Framework Consultant request:', {
       message,
       hasManualContext: !!context,
+      hasChatHistory: !!chat_history,
+      chatHistoryLength: chat_history?.length || 0,
       userId
     });
 
-    // Retrieve user's knowledge base context
+    // Retrieve user's knowledge base context (structured data)
     let userKnowledgeContext = '';
+    // Retrieve semantic context (embedding-based similarity search)
+    let semanticContext = '';
+    // Retrieve uploaded documents from OpenAI vector store
+    let vectorStoreContext = '';
+    let sources: string[] = [];
+
     if (userId && supabaseClient) {
-      userKnowledgeContext = await retrieveUserContext(supabaseClient, userId, message);
+      // Run all retrievals in parallel for better performance
+      const [knowledgeResult, semanticResult, vectorStoreResult] = await Promise.all([
+        retrieveUserContext(supabaseClient, userId, message),
+        retrieveSemanticContext(supabaseClient, userId, message),
+        retrieveVectorStoreContext(supabaseClient, userId, message)
+      ]);
+
+      userKnowledgeContext = knowledgeResult;
+      semanticContext = semanticResult.content;
+      vectorStoreContext = vectorStoreResult;
+      sources = semanticResult.sources;
+
+      console.log('Context retrieval complete:', {
+        hasKnowledgeContext: !!userKnowledgeContext,
+        knowledgeContextLength: userKnowledgeContext.length,
+        hasSemanticContext: !!semanticContext,
+        semanticContextLength: semanticContext.length,
+        hasVectorStoreContext: !!vectorStoreContext,
+        vectorStoreContextLength: vectorStoreContext.length,
+        sourcesCount: sources.length
+      });
     }
 
     const systemPrompt = `You are the IDEA Framework GPT, a specialized strategic branding consultant focused on the IDEA Strategic Brand Framework™. Your responses must prioritize:
@@ -263,18 +711,67 @@ Always encourage iterative refinement and ask clarifying questions when input la
 
     // Build user prompt with all available context
     let userPrompt = message;
+    const contextParts: string[] = [];
 
+    // Add structured knowledge base context
     if (userKnowledgeContext) {
-      userPrompt = `${userKnowledgeContext}\n\n---\n\nQUESTION: ${message}\n\nIMPORTANT: Use the knowledge base information above to provide personalized, specific advice. Reference their actual inputs.`;
-    } else if (context) {
-      userPrompt = `Context: ${context}\n\nQuestion: ${message}`;
+      contextParts.push(userKnowledgeContext);
+    }
+
+    // Add semantic search context (relevant document chunks from local embeddings)
+    if (semanticContext) {
+      contextParts.push(semanticContext);
+    }
+
+    // Add uploaded documents context from OpenAI vector store
+    if (vectorStoreContext) {
+      contextParts.push(vectorStoreContext);
+    }
+
+    // Add manually provided context
+    if (context) {
+      contextParts.push(`ADDITIONAL CONTEXT:\n${context}`);
+    }
+
+    // Combine all context with the question
+    if (contextParts.length > 0) {
+      userPrompt = `${contextParts.join('\n\n---\n\n')}\n\n---\n\nQUESTION: ${message}\n\nIMPORTANT: Use ALL the context information above to provide personalized, specific advice. Reference their actual brand information, uploaded documents, and previous inputs when relevant.`;
     }
 
     console.log('Making OpenAI API request with model: gpt-4.1-2025-04-14');
-    console.log('Has user knowledge context:', !!userKnowledgeContext);
-    console.log('User knowledge context length:', userKnowledgeContext.length);
+    console.log('Context summary:', {
+      hasKnowledgeContext: !!userKnowledgeContext,
+      hasSemanticContext: !!semanticContext,
+      hasManualContext: !!context,
+      totalContextParts: contextParts.length,
+      totalPromptLength: userPrompt.length
+    });
 
     try {
+      // Build messages array with system prompt, chat history, and current message
+      const messages: Array<{ role: string; content: string }> = [
+        {
+          role: 'system',
+          content: systemPrompt
+        }
+      ];
+
+      // Add chat history for conversation continuity (last 10 messages)
+      if (chat_history && Array.isArray(chat_history)) {
+        const recentHistory = chat_history.slice(-10);
+        messages.push(...recentHistory.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content
+        })));
+        console.log(`Added ${recentHistory.length} messages from chat history`);
+      }
+
+      // Add current user message with all context
+      messages.push({
+        role: 'user',
+        content: userPrompt
+      });
+
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -283,16 +780,7 @@ Always encourage iterative refinement and ask clarifying questions when input la
         },
         body: JSON.stringify({
           model: 'gpt-4.1-2025-04-14',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            {
-              role: 'user',
-              content: userPrompt
-            }
-          ],
+          messages,
           temperature: 0.7,
           max_tokens: 1500
         })
@@ -312,8 +800,14 @@ Always encourage iterative refinement and ask clarifying questions when input la
       const consultantResponse = data.choices[0].message.content;
       console.log('IDEA Framework consultation completed successfully');
 
+      // Generate contextual follow-up suggestions
+      const suggestions = generateFollowUpSuggestions(message, consultantResponse);
+      console.log(`Generated ${suggestions.length} follow-up suggestions`);
+
       return new Response(JSON.stringify({
-        response: consultantResponse
+        response: consultantResponse,
+        suggestions,
+        sources
       }), {
         headers: {
           ...corsHeaders,
