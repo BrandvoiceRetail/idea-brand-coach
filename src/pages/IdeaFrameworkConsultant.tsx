@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeftClose, PanelLeft, Copy, Check } from 'lucide-react';
+import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeftClose, PanelLeft, Copy, Check, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
+import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +21,7 @@ const IdeaFrameworkConsultant = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { latestDiagnostic } = useDiagnostic();
 
   // Session management
   const {
@@ -45,6 +47,7 @@ const IdeaFrameworkConsultant = () => {
   const [sessionInputs, setSessionInputs] = useState<Record<string, { message: string; context: string }>>({});
   const [userDocuments, setUserDocuments] = useState<unknown[]>([]);
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
+  const [initialSuggestions, setInitialSuggestions] = useState<string[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
@@ -114,6 +117,37 @@ const IdeaFrameworkConsultant = () => {
       }
     }
   }, [messages]);
+
+  // Generate diagnostic-based initial suggestions when no messages yet
+  useEffect(() => {
+    if (latestDiagnostic && messages.length === 0) {
+      const suggestions: string[] = [];
+      const scores = latestDiagnostic.scores;
+
+      // Add suggestions based on low scores (areas needing improvement)
+      if (scores.insight < 60) {
+        suggestions.push("How can I better understand my customers' emotional triggers?");
+      }
+      if (scores.distinctive < 60) {
+        suggestions.push("What makes my brand stand out from competitors?");
+      }
+      if (scores.empathetic < 60) {
+        suggestions.push("How do I build deeper emotional connections with customers?");
+      }
+      if (scores.authentic < 60) {
+        suggestions.push("How can I communicate more authentically as a brand?");
+      }
+
+      // If all scores are good, provide growth-focused suggestions
+      if (suggestions.length === 0) {
+        suggestions.push("How can I maintain my strong brand performance?");
+        suggestions.push("What are the next steps to elevate my brand?");
+        suggestions.push("How do I scale my brand while keeping it authentic?");
+      }
+
+      setInitialSuggestions(suggestions.slice(0, 4));
+    }
+  }, [latestDiagnostic, messages.length]);
 
   const handleConsultation = async () => {
     if (!message.trim()) {
@@ -399,6 +433,72 @@ const IdeaFrameworkConsultant = () => {
               </CardContent>
             </Card>
 
+            {/* Diagnostic Score Summary - Your Brand Profile */}
+            {latestDiagnostic && (
+              <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    Your Brand Profile
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-primary">{latestDiagnostic.scores.overall}</div>
+                      <div className="text-sm text-muted-foreground">Overall</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{latestDiagnostic.scores.insight}</div>
+                      <div className="text-sm text-muted-foreground">Insight</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{latestDiagnostic.scores.distinctive}</div>
+                      <div className="text-sm text-muted-foreground">Distinctive</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{latestDiagnostic.scores.empathetic}</div>
+                      <div className="text-sm text-muted-foreground">Empathetic</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{latestDiagnostic.scores.authentic}</div>
+                      <div className="text-sm text-muted-foreground">Authentic</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center mt-4">
+                    Your consultant uses these scores to provide personalized recommendations
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Initial Suggestions Based on Diagnostic Scores */}
+            {initialSuggestions.length > 0 && messages.length === 0 && (
+              <Card className="border-dashed border-2 border-primary/30">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 text-yellow-500" />
+                    Suggested Questions Based on Your Profile
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {initialSuggestions.map((suggestion, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setMessage(suggestion)}
+                        className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
+                      >
+                        {suggestion}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Expertise Areas */}
             <Card>
               <CardHeader>
@@ -445,8 +545,17 @@ const IdeaFrameworkConsultant = () => {
                       placeholder="Describe your branding challenge, target audience question, positioning dilemma, or strategic need..."
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleConsultation();
+                        }
+                      }}
                       rows={4}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Press Enter to send, Shift+Enter for new line
+                    </p>
                   </div>
 
                   <Button
@@ -574,8 +683,17 @@ const IdeaFrameworkConsultant = () => {
                           placeholder="Build on this guidance with additional questions..."
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleConsultation();
+                            }
+                          }}
                           rows={3}
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Press Enter to send, Shift+Enter for new line
+                        </p>
                         <Button
                           onClick={handleConsultation}
                           disabled={isSending || !message.trim()}
