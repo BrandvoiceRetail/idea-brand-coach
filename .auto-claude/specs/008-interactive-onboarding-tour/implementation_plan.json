@@ -249,8 +249,9 @@
               "Button triggers tour restart"
             ]
           },
-          "status": "pending",
-          "notes": "Add menu item that calls useOnboardingTour().startTour() to allow users to revisit tour anytime"
+          "status": "completed",
+          "notes": "Added 'Start Tour' button to user menu in Layout.tsx. Desktop: dropdown menu item with HelpCircle icon between email display and Sign Out. Mobile: button in user section of mobile menu. Both call resetTour() then startTour() to restart the onboarding tour.",
+          "updated_at": "2025-12-27T17:09:53.861992+00:00"
         }
       ]
     },
@@ -285,8 +286,9 @@
               "No horizontal scrolling on mobile"
             ]
           },
-          "status": "pending",
-          "notes": "React Joyride handles responsive positioning automatically, but verify tooltips fit within viewport. Use placement: 'auto' if needed."
+          "status": "completed",
+          "notes": "Implemented mobile responsiveness for OnboardingTour:\n- Added useIsMobile hook to detect viewport size\n- Converted TOUR_STYLES to responsive getTourStyles function with mobile-specific sizing\n- Changed step placement to 'auto' for dynamic positioning that prevents viewport overflow\n- Reduced tooltip width to 280px (vs 380px desktop) with maxWidth constraint\n- Adjusted font sizes, padding, and button spacing for mobile\n- Added responsive floaterProps with smaller offset and adjusted scrollOffset\n- Memoized styles with useMemo to prevent re-renders\nBuild verified successfully.",
+          "updated_at": "2025-12-27T17:14:10.936085+00:00"
         }
       ]
     },
@@ -494,5 +496,5 @@
     }
   },
   "qa_signoff": null,
-  "last_updated": "2025-12-27T17:06:54.474618+00:00"
+  "last_updated": "2025-12-27T17:14:10.936095+00:00"
 }
