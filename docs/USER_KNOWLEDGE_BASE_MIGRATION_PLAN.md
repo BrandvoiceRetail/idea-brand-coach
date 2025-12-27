@@ -118,30 +118,44 @@ User Input → IndexedDB (instant) → Background Sync → Supabase
 ### Field Identifiers
 
 #### Interactive Framework (subcategory: `framework`)
-| Field Identifier | Type | Description |
-|-----------------|------|-------------|
-| `insights_framework_step1_response` | textarea | IDEA framework step 1 input |
-| `insights_framework_step2_response` | textarea | IDEA framework step 2 input |
-| `insights_framework_step3_response` | textarea | IDEA framework step 3 input |
-| `insights_framework_step4_response` | textarea | IDEA framework step 4 input |
-| `insights_framework_completed` | boolean | Framework completion status |
-| `insights_framework_summary` | json | Complete framework data |
+
+**UPDATED 2025-12-27: Field identifiers now use semantic IDEA prefixes for better AI context and Canvas export grouping.**
+
+| Field Identifier | Type | Description | IDEA Category |
+|-----------------|------|-------------|---------------|
+| `insight_buyer_intent` | textarea | What customers search for, their immediate needs | Insight |
+| `insight_buyer_motivation` | textarea | Psychological drivers behind buying decisions | Insight |
+| `empathy_emotional_triggers` | textarea | Emotional triggers that drive purchase decisions | Empathy |
+| `insight_shopper_type` | textarea | Customer behavioral category (cost-sensitive, quality-focused, etc.) | Insight |
+| `insight_demographics` | textarea | Relevant demographic patterns and behaviors | Insight |
 
 #### Buyer Intent Research (subcategory: `research`)
-| Field Identifier | Type | Description |
-|-----------------|------|-------------|
-| `insights_research_search_terms` | json_array | Analyzed search terms |
-| `insights_research_intent_analysis` | json | AI-generated intent analysis |
-| `insights_research_keywords` | json_array | Extracted keywords |
-| `insights_research_patterns` | textarea | Identified behavior patterns |
+| Field Identifier | Type | Description | IDEA Category |
+|-----------------|------|-------------|---------------|
+| `insight_search_terms` | text | Analyzed search terms | Insight |
+| `insight_industry` | text | Industry/niche context | Insight |
+| `insight_intent_analysis` | textarea | AI-generated buyer intent analysis | Insight |
 
 #### Emotional Trigger Assessment (subcategory: `assessment`)
-| Field Identifier | Type | Description |
-|-----------------|------|-------------|
-| `insights_assessment_trigger_responses` | json | Assessment question responses |
-| `insights_assessment_trigger_profile` | json | Generated trigger profile |
-| `insights_assessment_primary_triggers` | json_array | Top emotional triggers |
-| `insights_assessment_completed` | boolean | Assessment completion status |
+| Field Identifier | Type | Description | IDEA Category |
+|-----------------|------|-------------|---------------|
+| `empathy_trigger_responses` | json | Assessment question responses | Empathy |
+| `empathy_trigger_profile` | json | Generated emotional trigger profile | Empathy |
+| `empathy_assessment_completed` | boolean | Assessment completion status | Empathy |
+
+#### Historical Field Mapping (for backward compatibility)
+**Previous identifiers (deprecated 2025-12-27):**
+- `insights_framework_step1_response` → `insight_buyer_intent`
+- `insights_framework_step2_response` → `insight_buyer_motivation`
+- `insights_framework_step3_response` → `empathy_emotional_triggers`
+- `insights_framework_step4_response` → `insight_shopper_type`
+- `insights_framework_step5_response` → `insight_demographics`
+- `insights_research_search_terms` → `insight_search_terms`
+- `insights_research_industry` → `insight_industry`
+- `insights_research_analysis` → `insight_intent_analysis`
+- `insights_assessment_answers` → `empathy_trigger_responses`
+- `insights_assessment_complete` → `empathy_assessment_completed`
+- `insights_assessment_results` → `empathy_trigger_profile`
 
 ---
 

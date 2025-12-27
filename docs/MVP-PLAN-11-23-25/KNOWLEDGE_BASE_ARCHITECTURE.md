@@ -103,13 +103,24 @@ For complete field specifications per category, see:
 - **[USER_KNOWLEDGE_BASE_MIGRATION_PLAN.md](../USER_KNOWLEDGE_BASE_MIGRATION_PLAN.md)** - Field identifiers organized by page
 
 **Quick Reference (field counts per category):**
+
+*UPDATED 2025-12-27: Insights fields now use semantic IDEA prefixes (`insight_*`, `empathy_*`) for better AI context and Canvas export.*
+
 | Category | Fields | Key Identifiers |
 |----------|--------|-----------------|
 | diagnostic | 11 | `diagnostic_q1_answer`, `diagnostic_overall_score`, etc. |
 | avatar | 14 | `avatar_demographics_age`, `avatar_psychology_values`, etc. |
-| insights | 12 | `insights_research_search_terms`, `insights_assessment_*`, etc. |
+| insights | 11 | `insight_buyer_intent`, `insight_buyer_motivation`, `empathy_emotional_triggers`, `insight_search_terms`, `empathy_trigger_profile`, etc. |
 | canvas | 10 | `canvas_brand_purpose`, `canvas_brand_values`, etc. |
 | copy | 12 | `copy_input_product_name`, `copy_generated_content`, etc. |
+
+**Field Mapping Update (2025-12-27):**
+Previous `insights_framework_stepN_response` fields have been renamed to semantic identifiers:
+- Step 1 → `insight_buyer_intent` (Buyer Intent)
+- Step 2 → `insight_buyer_motivation` (Buyer Motivation)
+- Step 3 → `empathy_emotional_triggers` (Emotional Triggers)
+- Step 4 → `insight_shopper_type` (Shopper Type)
+- Step 5 → `insight_demographics` (Demographics)
 
 ---
 
