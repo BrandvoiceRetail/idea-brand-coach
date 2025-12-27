@@ -47,17 +47,22 @@ export interface ChatSessionWithMessages {
 
 /**
  * Field keywords for semantic matching
+ * Maps field identifiers to keywords for linking chat sessions to relevant fields
  */
 const FIELD_KEYWORDS: Record<string, string[]> = {
-  // IDEA Framework
-  'insight_market': ['market', 'industry', 'competition', 'competitive', 'landscape', 'trends'],
-  'insight_consumer': ['consumer', 'customer', 'audience', 'target', 'buyer', 'persona'],
-  'insight_purpose': ['purpose', 'why', 'mission', 'vision', 'reason', 'exist'],
-  'distinctive_value': ['unique', 'different', 'stand out', 'distinctive', 'advantage', 'edge'],
-  'distinctive_positioning': ['positioning', 'position', 'category', 'compete', 'space'],
-  'empathy_connection': ['emotional', 'empathy', 'connect', 'relate', 'resonate'],
-  'authentic_values': ['values', 'principles', 'beliefs', 'ethics', 'authentic'],
-  'authentic_story': ['story', 'narrative', 'history', 'background', 'journey'],
+  // IDEA Framework - Insight fields (from Interactive Insight Module)
+  'insight_buyer_intent': ['intent', 'search', 'looking for', 'seeking', 'need', 'want', 'problem', 'solution'],
+  'insight_buyer_motivation': ['motivation', 'why', 'driver', 'reason', 'desire', 'aspiration', 'goal'],
+  'insight_shopper_type': ['shopper', 'buyer', 'customer type', 'cost sensitive', 'quality focused', 'conscious', 'connected'],
+  'insight_demographics': ['demographic', 'age', 'income', 'location', 'occupation', 'behavior', 'pattern'],
+  'insight_search_terms': ['search', 'keyword', 'query', 'term', 'phrase'],
+  'insight_industry': ['industry', 'market', 'niche', 'sector', 'vertical'],
+  'insight_intent_analysis': ['intent analysis', 'buyer analysis', 'search analysis'],
+
+  // IDEA Framework - Empathy fields (emotional triggers)
+  'empathy_emotional_triggers': ['emotional', 'trigger', 'feeling', 'emotion', 'hope', 'trust', 'relief', 'belonging'],
+  'empathy_trigger_responses': ['trigger', 'response', 'emotional response'],
+  'empathy_trigger_profile': ['trigger profile', 'emotional profile', 'psychology'],
 
   // Avatar
   'avatar_demographics': ['age', 'gender', 'income', 'location', 'demographics', 'occupation'],
@@ -96,7 +101,8 @@ export class DataAggregator {
     chatMessages: ChatMessage[],
     brandData: BrandData
   ): Promise<AggregatedData> {
-    // Group knowledge entries by category (legacy field-based approach)
+    // Group knowledge entries by IDEA framework category
+    // Field identifiers use semantic prefixes: insight_, empathy_, distinctive_, authentic_
     const ideaFramework = {
       insight: knowledgeEntries.filter(e =>
         e.category === 'insights' && e.fieldIdentifier.startsWith('insight_')
@@ -234,19 +240,30 @@ export class DataAggregator {
     // Define expected field counts based on actual schema
     // These numbers represent the total fields available in each section
     const EXPECTED_FIELDS = {
-      insight: 3,        // market, consumer, purpose
-      distinctive: 2,    // value, positioning
-      empathy: 1,        // connection
-      authentic: 2,      // values, story
+      // Insight fields: buyer_intent, buyer_motivation, shopper_type, demographics, search_terms, industry, intent_analysis
+      insight: 7,
+      distinctive: 0,    // No distinctive fields currently implemented
+      // Empathy fields: emotional_triggers, trigger_responses, trigger_profile, assessment_completed
+      empathy: 4,
+      authentic: 0,      // No authentic fields currently implemented
       avatar: 20,        // All Avatar 2.0 fields (demographics, psychographics, behaviors, etc)
       canvas: 8,         // purpose, vision, mission, values, positioning, value prop, personality, voice
     };
 
     // IDEA Framework sections - use schema-defined field count
-    stats.insight = Math.min(100, Math.round((hasContent(ideaFramework.insight) / EXPECTED_FIELDS.insight) * 100));
-    stats.distinctive = Math.min(100, Math.round((hasContent(ideaFramework.distinctive) / EXPECTED_FIELDS.distinctive) * 100));
-    stats.empathy = Math.min(100, Math.round((hasContent(ideaFramework.empathy) / EXPECTED_FIELDS.empathy) * 100));
-    stats.authentic = Math.min(100, Math.round((hasContent(ideaFramework.authentic) / EXPECTED_FIELDS.authentic) * 100));
+    // Handle division by zero for sections without expected fields
+    stats.insight = EXPECTED_FIELDS.insight > 0
+      ? Math.min(100, Math.round((hasContent(ideaFramework.insight) / EXPECTED_FIELDS.insight) * 100))
+      : 0;
+    stats.distinctive = EXPECTED_FIELDS.distinctive > 0
+      ? Math.min(100, Math.round((hasContent(ideaFramework.distinctive) / EXPECTED_FIELDS.distinctive) * 100))
+      : 0;
+    stats.empathy = EXPECTED_FIELDS.empathy > 0
+      ? Math.min(100, Math.round((hasContent(ideaFramework.empathy) / EXPECTED_FIELDS.empathy) * 100))
+      : 0;
+    stats.authentic = EXPECTED_FIELDS.authentic > 0
+      ? Math.min(100, Math.round((hasContent(ideaFramework.authentic) / EXPECTED_FIELDS.authentic) * 100))
+      : 0;
 
     // Avatar - use schema-defined field count
     const avatarFilled = hasContent(avatar);
