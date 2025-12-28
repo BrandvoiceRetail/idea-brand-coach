@@ -42,6 +42,13 @@ This roadmap has been decomposed into focused, modular documents for easier navi
    - Risk mitigation strategies
    - Launch checklist
 
+5. **[METRICS_INSTRUMENTATION_PLAN.md](../METRICS_INSTRUMENTATION_PLAN.md)** 📊
+   - AI usage and cost tracking
+   - User behavior analytics
+   - Performance monitoring
+   - Beta → Post-Beta implementation phases
+   - **Priority: HIGH (implement before public launch)**
+
 ---
 
 ## Quick Start Guide
