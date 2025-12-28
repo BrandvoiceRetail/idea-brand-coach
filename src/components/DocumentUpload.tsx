@@ -39,6 +39,21 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
     }
   }, [user]);
 
+  // Poll for document status updates while any are processing
+  useEffect(() => {
+    const processingDocs = documents.filter(doc =>
+      ['uploading', 'processing', 'indexing'].includes(doc.status)
+    );
+
+    if (processingDocs.length === 0) return;
+
+    const interval = setInterval(() => {
+      loadUserDocuments();
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [documents, user]);
+
   const loadUserDocuments = async () => {
     if (!user) return;
 
@@ -116,11 +131,11 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
       return;
     }
 
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validate file size (20MB limit)
+    if (file.size > 20 * 1024 * 1024) {
       toast({
         title: "File Too Large",
-        description: "Please upload files smaller than 10MB",
+        description: "Please upload files smaller than 20MB",
         variant: "destructive",
       });
       return;
@@ -274,13 +289,36 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
     switch (status) {
       case 'completed':
       case 'vectorized':
+      case 'ready':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'uploading':
       case 'processing':
+      case 'indexing':
         return <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />;
       case 'error':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       default:
         return <FileText className="w-4 h-4 text-muted-foreground" />;
+    }
+  };
+
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'uploading':
+        return 'Uploading to AI';
+      case 'processing':
+        return 'Processing content';
+      case 'indexing':
+        return 'Indexing for search';
+      case 'ready':
+        return 'Ready for chat';
+      case 'completed':
+      case 'vectorized':
+        return 'Available';
+      case 'error':
+        return 'Failed';
+      default:
+        return status;
     }
   };
 
@@ -313,44 +351,41 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
         </CardHeader>
         <CardContent>
           <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
               dragActive
                 ? 'border-primary bg-primary/5'
-                : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-            }`}
+                : 'border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/5'
+            } ${isUploading ? 'pointer-events-none opacity-60' : ''}`}
+            onClick={() => !isUploading && fileInputRef.current?.click()}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            <div className="space-y-4">
+            <div className="space-y-4 pointer-events-none">
               <div className="mx-auto w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
                 <Upload className="w-6 h-6 text-muted-foreground" />
               </div>
               <div>
                 <p className="text-sm font-medium">
                   Drop your documents here, or{' '}
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-primary hover:underline"
-                    disabled={isUploading}
-                  >
+                  <span className="text-primary underline">
                     browse files
-                  </button>
+                  </span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  I can work with PDF, DOC, DOCX, and TXT files up to 10MB - whatever works best for you!
+                  I can work with PDF, DOC, DOCX, and TXT files up to 20MB - whatever works best for you!
                 </p>
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.doc,.docx,.txt"
-                onChange={handleFileSelect}
-                className="hidden"
-                disabled={isUploading}
-              />
             </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={isUploading}
+            />
           </div>
 
           {isUploading && (
@@ -361,6 +396,17 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
               </div>
               <Progress value={uploadProgress} className="w-full" />
             </div>
+          )}
+
+          {!isUploading && (
+            <Button
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Select Document to Upload
+            </Button>
           )}
         </CardContent>
       </Card>
@@ -384,6 +430,27 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
             </div>
           </CardHeader>
           <CardContent>
+            {/* Show status message if any documents are processing */}
+            {documents.some(doc => ['uploading', 'processing', 'indexing'].includes(doc.status)) && (
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <span>Processing documents... They'll be ready for chat soon!</span>
+                </div>
+              </div>
+            )}
+
+            {/* Show ready message for recently ready documents */}
+            {documents.some(doc => doc.status === 'ready') &&
+             !documents.some(doc => ['uploading', 'processing', 'indexing'].includes(doc.status)) && (
+              <div className="mb-4 p-3 bg-green-50 dark:bg-green-950/50 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-300">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Documents are ready! You can now ask questions about them in the Brand Coach.</span>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-3">
               {documents.map((doc) => (
                 <div
@@ -397,7 +464,13 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
                       <p className="text-xs text-muted-foreground">
                         {formatFileSize(doc.file_size)} • {' '}
                         {new Date(doc.created_at).toLocaleDateString()} • {' '}
-                        <span className="capitalize">{doc.status}</span>
+                        <span className={`font-medium ${
+                          doc.status === 'ready' ? 'text-green-600 dark:text-green-400' :
+                          doc.status === 'error' ? 'text-red-600 dark:text-red-400' :
+                          'text-blue-600 dark:text-blue-400'
+                        }`}>
+                          {getStatusLabel(doc.status)}
+                        </span>
                       </p>
                     </div>
                   </div>

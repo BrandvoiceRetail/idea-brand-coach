@@ -149,12 +149,13 @@ async function uploadFileToOpenAI(
 }
 
 /**
- * Add file to OpenAI vector store
+ * Add file to OpenAI vector store and wait for it to be fully processed
  */
 async function addFileToVectorStore(
   apiKey: string,
   vectorStoreId: string,
-  fileId: string
+  fileId: string,
+  updateStatus?: (status: string) => Promise<void>
 ): Promise<void> {
   console.log(`Adding file ${fileId} to vector store ${vectorStoreId}...`);
 
@@ -177,7 +178,48 @@ async function addFileToVectorStore(
   }
 
   const data = await response.json();
-  console.log(`✅ File added to vector store, status: ${data.status}`);
+  const vectorStoreFileId = data.id;
+  console.log(`✅ File added to vector store with ID: ${vectorStoreFileId}, initial status: ${data.status}`);
+
+  // Update status to "indexing"
+  if (updateStatus) {
+    await updateStatus("indexing");
+  }
+
+  // Poll for file processing completion (max 60 seconds)
+  let attempts = 0;
+  let fileStatus = data.status;
+
+  while ((fileStatus === "in_progress" || fileStatus === "pending") && attempts < 60) {
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+
+    const statusResponse = await fetch(
+      `https://api.openai.com/v1/vector_stores/${vectorStoreId}/files/${vectorStoreFileId}`,
+      {
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "OpenAI-Beta": "assistants=v2",
+        },
+      }
+    );
+
+    if (statusResponse.ok) {
+      const statusData = await statusResponse.json();
+      fileStatus = statusData.status;
+      console.log(`Polling attempt ${attempts + 1}: File status is ${fileStatus}`);
+    }
+
+    attempts++;
+  }
+
+  if (fileStatus === "completed") {
+    console.log(`✅ File fully processed and indexed in vector store`);
+  } else if (fileStatus === "failed") {
+    throw new Error(`File processing failed in vector store`);
+  } else {
+    console.warn(`⚠️ File processing timed out after 60 seconds, status: ${fileStatus}`);
+    // Don't throw error - file might still process successfully
+  }
 }
 
 serve(async (req) => {
@@ -240,6 +282,15 @@ serve(async (req) => {
       throw new Error(`Failed to download file: ${downloadError?.message || "Unknown error"}`);
     }
 
+    // Update status to "uploading"
+    await supabase
+      .from("uploaded_documents")
+      .update({
+        status: "uploading",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", documentId);
+
     // Upload to OpenAI
     const openaiFileId = await uploadFileToOpenAI(
       OPENAI_API_KEY,
@@ -247,26 +298,48 @@ serve(async (req) => {
       doc.filename
     );
 
-    // Add to vector store
+    // Update status to "processing"
+    await supabase
+      .from("uploaded_documents")
+      .update({
+        status: "processing",
+        openai_file_id: openaiFileId,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", documentId);
+
+    // Create status update callback
+    const updateStatus = async (status: string) => {
+      await supabase
+        .from("uploaded_documents")
+        .update({
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", documentId);
+    };
+
+    // Add to vector store with status updates
     await addFileToVectorStore(
       OPENAI_API_KEY,
       userStores.core_store_id,
-      openaiFileId
+      openaiFileId,
+      updateStatus
     );
 
-    // Update document status
+    // Final status update to "ready"
     const { error: updateError } = await supabase
       .from("uploaded_documents")
       .update({
-        status: "vectorized",
+        status: "ready",
         openai_file_id: openaiFileId,
         updated_at: new Date().toISOString(),
       })
       .eq("id", documentId);
 
     if (updateError) {
-      console.error(`Failed to update document status: ${updateError.message}`);
-      // Don't throw - the file is already in OpenAI, we just failed to record it
+      console.error(`Failed to update final document status: ${updateError.message}`);
+      // Don't throw - the file is already processed, we just failed to record it
     }
 
     console.log(`✅ Document ${doc.filename} successfully uploaded to vector store`);
