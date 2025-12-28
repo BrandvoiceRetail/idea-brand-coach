@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -7,6 +8,494 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// ============================================================================
+// SEMANTIC RETRIEVAL CONFIGURATION
+// Section-specific queries for intelligent document retrieval
+// ============================================================================
+
+interface SectionQueryConfig {
+  sectionId: string;
+  sectionName: string;
+  queries: string[];
+  matchCount: number;
+}
+
+const SECTION_QUERIES: SectionQueryConfig[] = [
+  {
+    sectionId: '0_brand_identity',
+    sectionName: 'Brand Identity',
+    queries: [
+      "brand name company name business name what is the brand called",
+      "brand identity who we are company identity our name"
+    ],
+    matchCount: 5
+  },
+  {
+    sectionId: '1_introduction',
+    sectionName: 'Introduction and Overview',
+    queries: [
+      "brand overview purpose mission vision values company description",
+      "company history founding story industry market business model"
+    ],
+    matchCount: 3
+  },
+  {
+    sectionId: '2_customer_understanding',
+    sectionName: 'Customer Understanding',
+    queries: [
+      "target customer demographics age income location occupation household psychographics lifestyle values",
+      "customer pain points challenges frustrations goals aspirations desires needs wants",
+      "buyer intent search behavior purchase decision shopping habits I want to know I want to buy"
+    ],
+    matchCount: 4
+  },
+  {
+    sectionId: '3_brand_foundations',
+    sectionName: 'Brand Foundations',
+    queries: [
+      "brand essence purpose why we exist core truth fundamental nature meaning",
+      "brand vision mission values personality traits guiding principles beliefs"
+    ],
+    matchCount: 4
+  },
+  {
+    sectionId: '4_brand_story',
+    sectionName: 'Brand Story',
+    queries: [
+      "founder story origin heritage history journey beginning started how we began",
+      "brand narrative breakthrough insight problem solution impact transformation"
+    ],
+    matchCount: 3
+  },
+  {
+    sectionId: '5_brand_positioning',
+    sectionName: 'Brand Positioning',
+    queries: [
+      "positioning statement value proposition unique benefit differentiator what makes us different",
+      "competitive advantage market position competitors alternatives white space opportunity"
+    ],
+    matchCount: 4
+  },
+  {
+    sectionId: '6_brand_principles',
+    sectionName: 'Brand Principles',
+    queries: [
+      "brand principles behavioral guidelines decision making rules governance how we operate",
+      "company culture values in action marketing product customer service partnership standards"
+    ],
+    matchCount: 3
+  },
+  {
+    sectionId: '7_brand_territories',
+    sectionName: 'Brand Territories',
+    queries: [
+      "thematic territories expertise areas cultural conversations lifestyle themes topics we own",
+      "brand permission content opportunities topic boundaries where we play"
+    ],
+    matchCount: 3
+  },
+  {
+    sectionId: '8_tone_of_voice',
+    sectionName: 'Tone of Voice',
+    queries: [
+      "tone of voice communication style voice characteristics warm professional casual friendly",
+      "writing guidelines vocabulary sentence structure words to use avoid language style"
+    ],
+    matchCount: 3
+  },
+  {
+    sectionId: '9_verbal_identity',
+    sectionName: 'Verbal Identity',
+    queries: [
+      "brand name usage correct incorrect tagline strapline slogan",
+      "naming conventions product naming service naming campaign naming vocabulary terminology"
+    ],
+    matchCount: 3
+  },
+  {
+    sectionId: '10_messaging_framework',
+    sectionName: 'Messaging Framework',
+    queries: [
+      "brand promise core messages messaging hierarchy proof points evidence support",
+      "audience specific messages value communication key themes talking points"
+    ],
+    matchCount: 3
+  },
+  {
+    sectionId: '11_product_architecture',
+    sectionName: 'Product Architecture',
+    queries: [
+      "product architecture portfolio branded house sub-brands endorsement hierarchy structure",
+      "product lines categories future expansion extensions licensing partnerships growth"
+    ],
+    matchCount: 3
+  }
+];
+
+/**
+ * Generate embedding for semantic search using OpenAI
+ */
+async function generateEmbedding(text: string): Promise<number[]> {
+  const response = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${openAIApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "text-embedding-ada-002",
+      input: text,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[generateEmbedding] Error:', response.status, errorText);
+    throw new Error(`Embedding generation failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.data[0].embedding;
+}
+
+/**
+ * Retrieve semantic context for a single section
+ * Queries both user_documents and user_knowledge_base
+ */
+async function retrieveSectionContext(
+  supabaseClient: any,
+  userId: string,
+  config: SectionQueryConfig
+): Promise<{ sectionName: string; context: string; sourceCount: number }> {
+  try {
+    const allChunks: Array<{ content: string; similarity: number; id: string }> = [];
+
+    // Run all queries for this section in parallel
+    const queryResults = await Promise.all(
+      config.queries.map(async (query) => {
+        const embedding = await generateEmbedding(query);
+
+        // Query both sources in parallel
+        const [docResult, kbResult] = await Promise.all([
+          // Search uploaded documents
+          supabaseClient.rpc('match_user_documents', {
+            query_embedding: embedding,
+            match_user_id: userId,
+            match_count: config.matchCount,
+          }),
+          // Search knowledge base
+          supabaseClient.rpc('match_user_knowledge', {
+            query_embedding: embedding,
+            p_user_id: userId,
+            match_count: config.matchCount,
+            match_threshold: 0.5,
+          })
+        ]);
+
+        const chunks: Array<{ content: string; similarity: number; id: string }> = [];
+
+        if (docResult.data && !docResult.error) {
+          for (const match of docResult.data) {
+            chunks.push({
+              content: match.content,
+              similarity: match.similarity,
+              id: `doc_${match.id}`
+            });
+          }
+        }
+
+        if (kbResult.data && !kbResult.error) {
+          for (const match of kbResult.data) {
+            chunks.push({
+              content: match.content,
+              similarity: match.similarity,
+              id: `kb_${match.id}`
+            });
+          }
+        }
+
+        return chunks;
+      })
+    );
+
+    // Flatten and deduplicate chunks
+    const seen = new Set<string>();
+    for (const chunks of queryResults) {
+      for (const chunk of chunks) {
+        if (!seen.has(chunk.id)) {
+          seen.add(chunk.id);
+          allChunks.push(chunk);
+        }
+      }
+    }
+
+    // Sort by similarity and take top results
+    const sortedChunks = allChunks
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, config.matchCount * 2);
+
+    if (sortedChunks.length === 0) {
+      return {
+        sectionName: config.sectionName,
+        context: '',
+        sourceCount: 0
+      };
+    }
+
+    // Format context
+    const context = sortedChunks
+      .map(c => c.content)
+      .join('\n\n');
+
+    return {
+      sectionName: config.sectionName,
+      context,
+      sourceCount: sortedChunks.length
+    };
+  } catch (error) {
+    console.error(`[retrieveSectionContext] Error for ${config.sectionName}:`, error);
+    return {
+      sectionName: config.sectionName,
+      context: '',
+      sourceCount: 0
+    };
+  }
+}
+
+/**
+ * Retrieve semantic context for all sections in parallel
+ */
+async function retrieveAllSectionContexts(
+  supabaseClient: any,
+  userId: string
+): Promise<Map<string, string>> {
+  console.log('[retrieveAllSectionContexts] Starting parallel retrieval for all sections...');
+
+  const results = await Promise.all(
+    SECTION_QUERIES.map(config =>
+      retrieveSectionContext(supabaseClient, userId, config)
+    )
+  );
+
+  const contextMap = new Map<string, string>();
+  let totalSources = 0;
+
+  for (const result of results) {
+    contextMap.set(result.sectionName, result.context);
+    totalSources += result.sourceCount;
+    if (result.sourceCount > 0) {
+      console.log(`[retrieveAllSectionContexts] ${result.sectionName}: ${result.sourceCount} sources`);
+    }
+  }
+
+  console.log(`[retrieveAllSectionContexts] Total sources retrieved: ${totalSources}`);
+  return contextMap;
+}
+
+/**
+ * Extract brand name using semantic search + chat insights + LLM
+ * Searches knowledge base, documents, AND chat history for brand name mentions
+ */
+async function extractBrandNameWithSemanticSearch(
+  supabaseClient: any,
+  userId: string,
+  chatInsights?: Array<{ title: string; excerpt: string }>
+): Promise<string | null> {
+  console.log('[extractBrandName] Starting semantic search for brand name...');
+
+  try {
+    // Semantic search for brand name mentions
+    const brandNameQuery = "brand name company name product name what is the brand called our brand identity";
+    const embedding = await generateEmbedding(brandNameQuery);
+
+    // Search knowledge base for brand name mentions
+    const { data: kbResults, error: kbError } = await supabaseClient.rpc('match_user_knowledge', {
+      query_embedding: embedding,
+      match_count: 10,
+      p_user_id: userId
+    });
+
+    if (kbError) {
+      console.error('[extractBrandName] Knowledge base search error:', kbError);
+    }
+
+    // Search uploaded documents for brand name mentions
+    const { data: docResults, error: docError } = await supabaseClient.rpc('match_user_documents', {
+      query_embedding: embedding,
+      match_count: 10,
+      match_user_id: userId
+    });
+
+    if (docError) {
+      console.error('[extractBrandName] Document search error:', docError);
+    }
+
+    // Log what we got from each source
+    console.log('[extractBrandName] Knowledge base results:', kbResults?.length || 0);
+    console.log('[extractBrandName] Document results:', docResults?.length || 0);
+
+    // Combine results from semantic search
+    const allResults = [
+      ...(kbResults || []).map((r: any) => ({ content: r.content, similarity: r.similarity, source: 'knowledge' })),
+      ...(docResults || []).map((r: any) => ({ content: r.content, similarity: r.similarity, source: 'document' }))
+    ];
+
+    // Sort by similarity and take top results
+    allResults.sort((a, b) => b.similarity - a.similarity);
+    const topResults = allResults.slice(0, 8);
+
+    console.log('[extractBrandName] Semantic search found', allResults.length, 'total results');
+    console.log('[extractBrandName] Top results by source:', topResults.map(r => r.source));
+
+    // ALSO include chat insights - brand name is often mentioned in conversations
+    // This is critical because chat messages aren't in the semantic search indexes
+    let chatContext = '';
+    if (chatInsights && chatInsights.length > 0) {
+      // Take first few chat sessions, use enough content to find brand mentions
+      const relevantChats = chatInsights.slice(0, 3).map(chat => {
+        // Use up to 2000 chars per chat to capture brand name mentions
+        const excerpt = chat.excerpt.length > 2000 ? chat.excerpt.substring(0, 2000) : chat.excerpt;
+        return excerpt;
+      });
+      chatContext = relevantChats.join('\n\n');
+      console.log('[extractBrandName] Added chat context, length:', chatContext.length);
+    }
+
+    // Combine semantic results with chat context
+    const semanticContent = topResults.map(r => r.content).join('\n\n---\n\n');
+    const combinedContext = [semanticContent, chatContext].filter(Boolean).join('\n\n---\n\n');
+
+    console.log('[extractBrandName] Combined context length:', combinedContext.length);
+
+    if (!combinedContext || combinedContext.length < 50) {
+      console.log('[extractBrandName] Not enough context found');
+      return null;
+    }
+
+    // Send to LLM for extraction
+    return await extractBrandNameWithLLM(combinedContext);
+  } catch (error) {
+    console.error('[extractBrandName] Semantic search failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Extract brand name from context using LLM
+ * Called after semantic search has found relevant content
+ */
+async function extractBrandNameWithLLM(context: string): Promise<string | null> {
+  if (!context || context.length < 50) {
+    console.log('[extractBrandNameWithLLM] Not enough context to extract brand name');
+    return null;
+  }
+
+  // Truncate to avoid token limits
+  const truncatedContext = context.substring(0, 6000);
+  console.log('[extractBrandNameWithLLM] Sending to LLM, context length:', truncatedContext.length);
+
+  try {
+    console.log('[extractBrandNameWithLLM] Calling LLM to extract brand name...');
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a brand name extractor. Your task is to identify the actual brand/company/product name being discussed in brand strategy conversations.
+
+Look for:
+- Product names mentioned in context (e.g., "Infinity Vault", "InfinityVault")
+- Company names being coached/advised on
+- Brand names the consultant is helping develop strategy for
+- Names that appear repeatedly when discussing "the brand" or "your product"
+
+Rules:
+- Return ONLY the brand name, nothing else (no quotes, no explanation)
+- Do NOT return generic terms like "Your Brand", "The Brand", "Our Brand", "the company"
+- Do NOT return framework terms like "IDEA Framework", "Distinctive Dimension", "Brand Canvas", "Brand Coach"
+- Do NOT return product categories like "Trading Card Game", "Card Protection", "TCG"
+- If the brand name contains multiple words, return them together (e.g., "Infinity Vault")
+- If the brand name is CamelCase, preserve it (e.g., "InfinityVault")
+- If you cannot find a clear brand name, return exactly: UNKNOWN
+
+Examples of valid brand names: Infinity Vault, InfinityVault, H4H, Nike, Apple, TechCorp, Acme Corp`
+          },
+          {
+            role: 'user',
+            content: `Find the specific brand/company/product name being discussed in this brand strategy context. Look for proper nouns that represent the actual brand being developed:\n\n${truncatedContext}`
+          }
+        ],
+        max_tokens: 30,
+        temperature: 0,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('[extractBrandNameWithLLM] API error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const extractedName = data.choices?.[0]?.message?.content?.trim();
+    console.log('[extractBrandNameWithLLM] LLM returned:', extractedName);
+
+    if (!extractedName || extractedName === 'UNKNOWN' || extractedName.toLowerCase() === 'unknown') {
+      console.log('[extractBrandNameWithLLM] LLM could not identify brand name');
+      return null;
+    }
+
+    // Validate the extracted name isn't a generic term
+    const invalidNames = [
+      'your brand', 'the brand', 'our brand', 'a brand', 'this brand',
+      'brand', 'company', 'business', 'unknown', 'n/a', 'none',
+      'distinctive dimension', 'idea framework', 'brand canvas'
+    ];
+
+    if (invalidNames.includes(extractedName.toLowerCase())) {
+      console.log(`[extractBrandNameWithLLM] Rejected invalid name: "${extractedName}"`);
+      return null;
+    }
+
+    console.log(`[extractBrandNameWithLLM] Successfully extracted brand name: "${extractedName}"`);
+    return extractedName;
+
+  } catch (error) {
+    console.error('[extractBrandNameWithLLM] Error:', error);
+    return null;
+  }
+}
+
+/**
+ * Format section contexts for LLM consumption
+ */
+function formatSectionContextsForLLM(contextMap: Map<string, string>): string {
+  let formatted = '\n## RETRIEVED DOCUMENT INSIGHTS (Per Section)\n';
+  formatted += 'The following insights were semantically retrieved from uploaded documents and knowledge base entries. Use these to enrich each section with specific details, quotes, and evidence:\n\n';
+
+  let hasContent = false;
+  for (const [sectionName, context] of contextMap) {
+    if (context && context.trim()) {
+      hasContent = true;
+      formatted += `### ${sectionName}\n`;
+      formatted += context;
+      formatted += '\n\n---\n\n';
+    }
+  }
+
+  if (!hasContent) {
+    return '\n## RETRIEVED DOCUMENT INSIGHTS\nNo uploaded documents or additional knowledge base entries were found. Generate the document based on the canvas, avatar, and chat insights provided above.\n';
+  }
+
+  return formatted;
+}
 
 // ============================================================================
 // BRAND STRATEGY DOCUMENT SYSTEM PROMPT
@@ -389,6 +878,13 @@ The brand context you receive includes:
 - **Avatar 2.0**: Target customer profiles with demographics, psychographics, pain points, decision factors, and buyer intent moments
 - **Interactive Insight**: Diagnostic results, scores, and strategic recommendations
 - **Chat Insights**: Key themes, decisions, and recommendations from Brand Coach conversations
+- **Retrieved Document Insights**: Semantically relevant excerpts from uploaded documents (PDFs, Word docs, etc.) and knowledge base entries, organised by section. These contain specific details, quotes, research, and evidence that should be incorporated into the relevant sections of the strategy document.
+
+When using Retrieved Document Insights:
+- Integrate specific facts, figures, and quotes directly into the relevant sections
+- Use document content to support and substantiate strategic claims
+- If document insights provide more specific information than canvas/avatar data, prefer the document detail
+- Cite the source naturally (e.g., "According to market research..." or "Customer feedback indicates...")
 
 ## Quality Expectations
 
@@ -424,6 +920,7 @@ function formatBrandContext(data: {
   avatar: Record<string, string>;
   insights: Record<string, string>;
   chatInsights: Array<{ title: string; excerpt: string }>;
+  documentInsights?: string;
 }): string {
   let context = '';
 
@@ -481,6 +978,11 @@ function formatBrandContext(data: {
     }
   }
 
+  // Document insights from semantic retrieval (if any)
+  if (data.documentInsights) {
+    context += data.documentInsights;
+  }
+
   return context;
 }
 
@@ -498,6 +1000,37 @@ serve(async (req) => {
   }
 
   try {
+    // Get authenticated user for semantic retrieval
+    const authHeader = req.headers.get('authorization');
+    let userId: string | null = null;
+    let supabaseClient = null;
+
+    if (authHeader) {
+      // Create Supabase client with user's JWT for RLS
+      supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        {
+          global: {
+            headers: {
+              Authorization: authHeader
+            }
+          }
+        }
+      );
+
+      // Extract JWT token and get user
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+
+      if (user) {
+        userId = user.id;
+        console.log('[generate-brand-strategy-document] Authenticated user:', userId);
+      } else if (authError) {
+        console.warn('[generate-brand-strategy-document] Auth error:', authError.message);
+      }
+    }
+
     const requestData = await req.json();
 
     const {
@@ -508,12 +1041,53 @@ serve(async (req) => {
       chatInsights,
     } = requestData;
 
+    // Debug logging
+    console.log('[generate-brand-strategy-document] Received data:', {
+      companyName,
+      chatInsightsCount: chatInsights?.length || 0,
+      chatInsightTitles: chatInsights?.map((c: any) => c.title) || [],
+      firstChatExcerptPreview: chatInsights?.[0]?.excerpt?.substring(0, 200) || 'none',
+    });
+
     // Validate required data
     if (!companyName) {
       return new Response(
         JSON.stringify({ error: 'Company name is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Retrieve semantic document insights if user is authenticated
+    let documentInsights = '';
+    let extractedBrandName: string | null = null;
+    if (userId && supabaseClient) {
+      console.log('[generate-brand-strategy-document] Retrieving semantic document insights...');
+      try {
+        const sectionContexts = await retrieveAllSectionContexts(supabaseClient, userId);
+        documentInsights = formatSectionContextsForLLM(sectionContexts);
+        console.log('[generate-brand-strategy-document] Document insights retrieved, length:', documentInsights.length);
+
+        // Try to extract brand name using semantic search + chat insights
+        extractedBrandName = await extractBrandNameWithSemanticSearch(supabaseClient, userId, chatInsights);
+        if (extractedBrandName) {
+          console.log('[generate-brand-strategy-document] Extracted brand name:', extractedBrandName);
+        }
+      } catch (retrievalError) {
+        console.error('[generate-brand-strategy-document] Error retrieving document insights:', retrievalError);
+        // Continue without document insights - they're optional
+      }
+    } else {
+      console.log('[generate-brand-strategy-document] No authenticated user, skipping semantic search');
+      // Can't do semantic search without auth - chatInsights are passed but we can't search semantically
+    }
+
+    // Use extracted brand name if companyName is generic/default
+    const effectiveBrandName = (companyName === 'Your Brand' || !companyName) && extractedBrandName
+      ? extractedBrandName
+      : companyName;
+
+    if (effectiveBrandName !== companyName) {
+      console.log(`[generate-brand-strategy-document] Using extracted brand name "${effectiveBrandName}" instead of "${companyName}"`);
     }
 
     // Format the brand context
@@ -524,15 +1098,16 @@ serve(async (req) => {
     });
 
     const brandContext = formatBrandContext({
-      companyName,
+      companyName: effectiveBrandName,
       generatedDate,
       canvas: canvas || {},
       avatar: avatar || {},
       insights: insights || {},
-      chatInsights: chatInsights || []
+      chatInsights: chatInsights || [],
+      documentInsights
     });
 
-    console.log('Generating brand strategy document for:', companyName);
+    console.log('Generating brand strategy document for:', effectiveBrandName);
     console.log('Chat insights received:', chatInsights?.length || 0);
     if (chatInsights?.length > 0) {
       console.log('Chat insight titles:', chatInsights.map((c: any) => c.title));
@@ -540,11 +1115,11 @@ serve(async (req) => {
 
     const userPrompt = `Generate a complete Brand Strategy Document for the following brand.
 
-IMPORTANT: Pay special attention to the KEY STRATEGIC CONVERSATIONS section below. These contain recent discussions about brand strategy, messaging decisions, and customer insights. The specific language, terminology, and strategic directions mentioned in these conversations should be directly reflected in the document. For example, if a conversation mentions "battle ready" as core messaging, that exact phrase and concept should appear in the positioning, messaging, and voice sections.
+IMPORTANT: Pay special attention to the KEY STRATEGIC CONVERSATIONS section and the RETRIEVED DOCUMENT INSIGHTS section below. These contain recent discussions about brand strategy, messaging decisions, customer insights, and semantically relevant information from uploaded documents. The specific language, terminology, and strategic directions mentioned should be directly reflected in the document.
 
 ${brandContext}
 
-Generate the complete document now in Markdown format, ensuring all insights from the strategic conversations are woven throughout the relevant sections.`;
+Generate the complete document now in Markdown format, ensuring all insights from the strategic conversations and document insights are woven throughout the relevant sections.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
