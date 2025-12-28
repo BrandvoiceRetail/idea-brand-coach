@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeftClose, PanelLeft, Copy, Check, Sparkles } from 'lucide-react';
+import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeftClose, PanelLeft, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
@@ -432,72 +432,6 @@ const IdeaFrameworkConsultant = () => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Diagnostic Score Summary - Your Brand Profile */}
-            {latestDiagnostic && (
-              <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    Your Brand Profile
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-primary">{latestDiagnostic.scores.overall}</div>
-                      <div className="text-sm text-muted-foreground">Overall</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{latestDiagnostic.scores.insight}</div>
-                      <div className="text-sm text-muted-foreground">Insight</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{latestDiagnostic.scores.distinctive}</div>
-                      <div className="text-sm text-muted-foreground">Distinctive</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{latestDiagnostic.scores.empathetic}</div>
-                      <div className="text-sm text-muted-foreground">Empathetic</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{latestDiagnostic.scores.authentic}</div>
-                      <div className="text-sm text-muted-foreground">Authentic</div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground text-center mt-4">
-                    Your consultant uses these scores to provide personalized recommendations
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Initial Suggestions Based on Diagnostic Scores */}
-            {initialSuggestions.length > 0 && messages.length === 0 && (
-              <Card className="border-dashed border-2 border-primary/30">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5 text-yellow-500" />
-                    Suggested Questions Based on Your Profile
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {initialSuggestions.map((suggestion, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setMessage(suggestion)}
-                        className="justify-start h-auto py-3 px-4 text-left whitespace-normal"
-                      >
-                        {suggestion}
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Expertise Areas */}
             <Card>
