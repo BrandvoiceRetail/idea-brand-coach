@@ -25,3 +25,12 @@ dist-ssr
 
 # Auto Claude data directory
 .auto-claude/
+
+# Claude Code settings
+.claude_settings.json
+
+# Git worktrees
+.worktrees/
+
+# Supabase CLI temp files
+supabase/.temp/
