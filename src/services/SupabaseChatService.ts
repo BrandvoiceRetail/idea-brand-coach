@@ -17,7 +17,7 @@ import {
 import { forceSyncUserData } from '@/lib/knowledge-base/sync-service-instance';
 
 export class SupabaseChatService implements IChatService {
-  private chatbotType: ChatbotType = 'brand-coach';
+  private chatbotType: ChatbotType = 'idea-framework-consultant';
   private currentSessionId: string | undefined;
 
   /**
@@ -43,15 +43,11 @@ export class SupabaseChatService implements IChatService {
 
   /**
    * Get the edge function name for the current chatbot type
-   * Uses test functions when VITE_USE_TEST_FUNCTIONS is enabled
+   * Always uses idea-framework-consultant
    */
   private getEdgeFunctionName(): string {
-    if (this.chatbotType === 'idea-framework-consultant') {
-      console.log('[ChatService] Using edge function: idea-framework-consultant');
-      return 'idea-framework-consultant';
-    }
-
-    return 'brand-coach-gpt';
+    console.log('[ChatService] Using edge function: idea-framework-consultant');
+    return 'idea-framework-consultant';
   }
 
   /**

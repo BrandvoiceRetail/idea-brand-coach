@@ -196,11 +196,11 @@ describe('Diagnostic Flow Integration Tests', () => {
     expect(mockDiagnostic.user_id).toBe('123');
   });
 
-  it('should prevent unauthorized access to Brand Coach', () => {
-    // Scenario 4: Anonymous user tries to access Brand Coach → redirected to auth
-    
+  it('should prevent unauthorized access to IDEA Framework Consultant', () => {
+    // Scenario 4: Anonymous user tries to access IDEA Framework Consultant → redirected to auth
+
     const mockNavigate = vi.fn();
-    
+
     vi.mock('react-router-dom', async () => {
       const actual = await vi.importActual('react-router-dom');
       return {
@@ -218,8 +218,8 @@ describe('Diagnostic Flow Integration Tests', () => {
       resetPassword: vi.fn(),
     } as any);
 
-    // Brand Coach component should redirect to /auth
-    // This is tested in BrandCoach.test.tsx
+    // IDEA Framework Consultant component should redirect to /auth
+    // This is tested in IdeaFrameworkConsultant.test.tsx
     expect(true).toBe(true); // Placeholder
   });
 

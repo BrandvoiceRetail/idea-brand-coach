@@ -15,10 +15,9 @@ export type ChatRole = 'user' | 'assistant' | 'system';
 
 /**
  * Type of chatbot for message filtering
- * - brand-coach: General Brand Coach GPT (uses RAG with embeddings)
- * - idea-framework-consultant: IDEA Framework specialist consultant
+ * - idea-framework-consultant: IDEA Framework specialist consultant with RAG
  */
-export type ChatbotType = 'brand-coach' | 'idea-framework-consultant';
+export type ChatbotType = 'idea-framework-consultant';
 
 /**
  * Complete chat message with all metadata.
@@ -68,7 +67,7 @@ export interface ChatMessageCreate {
   /** ID of the chat session this message belongs to */
   session_id?: string;
 
-  /** Type of chatbot (defaults to 'brand-coach') */
+  /** Type of chatbot (defaults to 'idea-framework-consultant') */
   chatbot_type?: ChatbotType;
 
   /** Optional metadata to attach to the message */

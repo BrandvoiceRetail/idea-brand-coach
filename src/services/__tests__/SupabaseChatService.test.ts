@@ -15,7 +15,7 @@ describe('SupabaseChatService', () => {
       const mockUser = { id: 'user-123' };
       const mockMessage = {
         role: 'user' as const,
-        content: 'Hello, Brand Coach!',
+        content: 'Hello, IDEA Framework Consultant!',
       };
       const mockResponse = 'Hello! How can I help you with your brand today?';
       const mockAssistantMessage = {
@@ -74,7 +74,7 @@ describe('SupabaseChatService', () => {
 
       expect(result.message.role).toBe('assistant');
       expect(result.message.content).toBe(mockResponse);
-      expect(supabase.functions.invoke).toHaveBeenCalledWith('brand-coach-gpt', 
+      expect(supabase.functions.invoke).toHaveBeenCalledWith('idea-framework-consultant', 
         expect.objectContaining({
           body: expect.objectContaining({
             message: mockMessage.content,

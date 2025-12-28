@@ -1,17 +1,14 @@
 /**
  * IChatService Interface
  *
- * Abstract contract for chat operations with Brand Coach.
+ * Abstract contract for chat operations with IDEA Framework Consultant.
  * This abstraction allows us to switch out implementations as downstream
  * dependencies evolve (e.g., migrating from Supabase to a different backend,
  * API changes, or testing with mocks) without impacting application code.
  *
  * Current implementation:
  * - SupabaseChatService: Persists to Supabase, calls Edge Function with RAG
- *
- * Supports multiple chatbot types:
- * - brand-coach: General brand consulting with RAG
- * - idea-framework-consultant: IDEA Framework specialist
+ * - idea-framework-consultant: IDEA Framework specialist with RAG
  */
 
 import {
@@ -29,11 +26,11 @@ export interface IChatService {
    * Set the chatbot type for this service instance.
    * Filters all operations to only this chatbot's messages.
    *
-   * @param chatbotType - Type of chatbot ('brand-coach' or 'idea-framework-consultant')
+   * @param chatbotType - Type of chatbot ('idea-framework-consultant')
    */
   setChatbotType(chatbotType: ChatbotType): void;
   /**
-   * Send a message to Brand Coach and receive an AI-generated response.
+   * Send a message to IDEA Framework Consultant and receive an AI-generated response.
    *
    * @param message - The message to send (user input)
    * @returns Promise resolving to the assistant's response with optional suggestions and sources

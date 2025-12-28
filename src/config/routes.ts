@@ -17,10 +17,7 @@ export const ROUTES = {
   
   /** Diagnostic results page */
   DIAGNOSTIC_RESULTS: '/diagnostic-results',
-  
-  /** Brand Coach chat interface */
-  BRAND_COACH: '/brand-coach',
-  
+
   /** Brand Copy Generator */
   COPY_GENERATOR: '/copy-generator',
 } as const;

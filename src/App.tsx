@@ -18,7 +18,6 @@ import DiagnosticResults from "./pages/DiagnosticResults";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
 import IdeaFrameworkConsultant from "./pages/IdeaFrameworkConsultant";
-import BrandCoach from "./pages/BrandCoach";
 import ResearchLearning from "./pages/ResearchLearning";
 
 import IdeaInsight from "./pages/IdeaInsight";
@@ -105,13 +104,7 @@ const App = () => (
                   </Layout>
                 </BrandProvider>
               } />
-              <Route path="/brand-coach" element={
-                <BrandProvider>
-                  <Layout>
-                    <BrandCoach />
-                  </Layout>
-                </BrandProvider>
-              } />
+              <Route path="/brand-coach" element={<Navigate to="/idea/consultant" replace />} />
               <Route path="/idea/insight" element={
                 <BrandProvider>
                   <Layout>

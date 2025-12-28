@@ -1,8 +1,8 @@
 /**
  * useChat Hook
- * React hook for Brand Coach chat operations
+ * React hook for IDEA Framework Consultant chat operations
  *
- * @param chatbotType - Optional chatbot type ('brand-coach' or 'idea-framework-consultant')
+ * @param chatbotType - Optional chatbot type (defaults to 'idea-framework-consultant')
  * @param sessionId - Optional session ID to scope messages to specific session
  */
 
@@ -18,7 +18,7 @@ interface UseChatOptions {
 }
 
 export const useChat = (options: UseChatOptions = {}) => {
-  const { chatbotType = 'brand-coach', sessionId } = options;
+  const { chatbotType = 'idea-framework-consultant', sessionId } = options;
   const { chatService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
