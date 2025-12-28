@@ -65,9 +65,13 @@ const IdeaFrameworkConsultant = () => {
   const [sessionSendingStates, setSessionSendingStates] = useState<Record<string, boolean>>({});
   const isSessionSending = currentSessionId ? (sessionSendingStates[currentSessionId] || isSending) : false;
 
-  // Reset hasUserTyped flag when switching sessions
+  // Separate state for follow-up questions
+  const [followUpMessage, setFollowUpMessage] = useState('');
+
+  // Reset hasUserTyped flag and follow-up message when switching sessions
   useEffect(() => {
     setHasUserTyped(false);
+    setFollowUpMessage('');
   }, [currentSessionId]);
 
   const [userDocuments, setUserDocuments] = useState<unknown[]>([]);
@@ -152,8 +156,10 @@ const IdeaFrameworkConsultant = () => {
     }
   }, [latestDiagnostic, messages.length]);
 
-  const handleConsultation = async () => {
-    if (!message.trim() || !currentSessionId) {
+  const handleConsultation = async (isFollowUp = false) => {
+    const messageToSend = isFollowUp ? followUpMessage.trim() : message.trim();
+
+    if (!messageToSend || !currentSessionId) {
       toast({
         title: "Message Required",
         description: "Please enter your question or challenge",
@@ -171,9 +177,14 @@ const IdeaFrameworkConsultant = () => {
     try {
       await sendMessage({
         role: 'user',
-        content: message.trim(),
+        content: messageToSend,
         metadata: { context: context.trim() || undefined }
       });
+
+      // Clear only the follow-up message after sending (keep main message intact)
+      if (isFollowUp) {
+        setFollowUpMessage('');
+      }
 
       toast({
         title: "Consultation Complete",
@@ -231,7 +242,7 @@ const IdeaFrameworkConsultant = () => {
   };
 
   const handleFollowUpQuestion = (suggestion: string) => {
-    setMessage(suggestion);
+    setFollowUpMessage(suggestion);
   };
 
   const downloadResponse = () => {
@@ -341,13 +352,21 @@ const IdeaFrameworkConsultant = () => {
   ];
 
   // Get the last assistant message for display
-  const lastResponse = messages.length > 0 && messages[messages.length - 1].role === 'assistant'
-    ? messages[messages.length - 1].content
-    : null;
+  // This will always show the most recent response from the assistant
+  const lastResponse = (() => {
+    // Find the last assistant message by iterating backwards
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i]?.role === 'assistant') {
+        return messages[i].content;
+      }
+    }
+    return null;
+  })();
 
   // Group messages into conversation pairs for history display
   const conversationHistory = [];
-  for (let i = 0; i < messages.length; i += 2) {
+  for (let i = 0; i < messages.length - 1; i++) {
+    // Look for user messages followed by assistant responses
     if (messages[i]?.role === 'user' && messages[i + 1]?.role === 'assistant') {
       conversationHistory.push({
         question: messages[i].content,
@@ -356,6 +375,11 @@ const IdeaFrameworkConsultant = () => {
       });
     }
   }
+
+  // Also check if we have a pending user message (last message is from user)
+  // This helps show that a question was asked even before response arrives
+  const hasPendingQuestion = messages.length > 0 &&
+    messages[messages.length - 1]?.role === 'user';
 
   return (
     <div className="h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -541,7 +565,7 @@ const IdeaFrameworkConsultant = () => {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
-                          handleConsultation();
+                          handleConsultation(false);
                         }
                       }}
                       rows={4}
@@ -552,7 +576,7 @@ const IdeaFrameworkConsultant = () => {
                   </div>
 
                   <Button
-                    onClick={handleConsultation}
+                    onClick={() => handleConsultation(false)}
                     disabled={isSessionSending || !message.trim()}
                     className="w-full"
                     size="lg"
@@ -590,7 +614,14 @@ const IdeaFrameworkConsultant = () => {
             <Card className="mt-8">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Trevor's Strategic Guidance</CardTitle>
+                  <CardTitle>
+                    Trevor's Strategic Guidance
+                    {conversationHistory.length > 1 && (
+                      <span className="text-sm font-normal text-muted-foreground ml-2">
+                        (Latest Response)
+                      </span>
+                    )}
+                  </CardTitle>
                   {lastResponse && (
                     <div className="flex items-center gap-2">
                       <Button
@@ -674,15 +705,14 @@ const IdeaFrameworkConsultant = () => {
                         <Textarea
                           id="follow-up"
                           placeholder="Build on this guidance with additional questions..."
-                          value={message}
+                          value={followUpMessage}
                           onChange={(e) => {
-                            setHasUserTyped(true);
-                            setMessage(e.target.value);
+                            setFollowUpMessage(e.target.value);
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
-                              handleConsultation();
+                              handleConsultation(true);
                             }
                           }}
                           rows={3}
@@ -691,8 +721,8 @@ const IdeaFrameworkConsultant = () => {
                           Press Enter to send, Shift+Enter for new line
                         </p>
                         <Button
-                          onClick={handleConsultation}
-                          disabled={isSessionSending || !message.trim()}
+                          onClick={() => handleConsultation(true)}
+                          disabled={isSessionSending || !followUpMessage.trim()}
                           className="w-full"
                           size="sm"
                         >
@@ -722,15 +752,35 @@ const IdeaFrameworkConsultant = () => {
             {conversationHistory.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Consultation History (Last 10 Exchanges)</CardTitle>
+                  <CardTitle>
+                    Consultation History
+                    {conversationHistory.length === 1
+                      ? ' (1 Exchange)'
+                      : ` (Last ${Math.min(10, conversationHistory.length)} Exchanges)`
+                    }
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {conversationHistory.slice(-10).reverse().map((item, index) => (
                     <div key={index} className="border-l-4 border-primary pl-4 space-y-2">
                       <div className="font-medium text-sm">Q: {item.question}</div>
                       <div className="text-sm text-muted-foreground whitespace-pre-wrap">{item.answer}</div>
+                      {item.timestamp && (
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(item.timestamp).toLocaleString()}
+                        </div>
+                      )}
                     </div>
                   ))}
+                  {hasPendingQuestion && isSessionSending && (
+                    <div className="border-l-4 border-yellow-500 pl-4 space-y-2">
+                      <div className="font-medium text-sm">Q: {messages[messages.length - 1].content}</div>
+                      <div className="text-sm text-muted-foreground italic flex items-center gap-2">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Awaiting response...
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
