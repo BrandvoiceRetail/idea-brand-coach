@@ -99,14 +99,24 @@ export function usePersistedField({
       return;
     }
 
+    // Set loading state
+    setIsLoading(true);
+
     try {
       const repo = await getRepository();
       repositoryRef.current = repo;
 
+      // Clear current value first to ensure we load fresh data
+      setValue('');
+
       // Load from local IndexedDB (instant)
       const storedValue = await repo.getField(userId, fieldIdentifier);
+
       if (storedValue !== null) {
         setValue(storedValue);
+      } else {
+        // No local value, use default
+        setValue(defaultValue);
       }
 
       // Initialize sync service
@@ -129,22 +139,24 @@ export function usePersistedField({
           // Silently fall back to local value
           setSyncStatus('offline');
         }
+      } else {
+        setSyncStatus('synced');
       }
     } catch (err) {
       console.error('Failed to load persisted field:', err);
       setError(err instanceof Error ? err : new Error('Failed to load field'));
+      setValue(defaultValue); // Fall back to default on error
     } finally {
       setIsLoading(false);
+      hasLoadedRef.current = true;
     }
-  }, [userId, fieldIdentifier, category]);
+  }, [userId, fieldIdentifier, category, defaultValue]);
 
   /**
    * Save value locally and queue for sync
    */
   const saveValue = useCallback(async (newValue: string) => {
     if (!userId) {
-      console.warn('[usePersistedField] Cannot save - no userId available');
-      console.warn('Auth state:', { user, userId });
       return;
     }
 
@@ -160,17 +172,10 @@ export function usePersistedField({
       setSyncStatus('syncing');
       sync.queueSync(userId, fieldIdentifier, newValue)
         .then(() => {
-          console.log('[usePersistedField] Successfully queued sync for:', fieldIdentifier);
           setSyncStatus('synced');
         })
         .catch((error) => {
-          console.error('[usePersistedField] SYNC ERROR for', fieldIdentifier, ':', error);
-          console.error('Full error details:', {
-            fieldIdentifier,
-            userId,
-            error: error instanceof Error ? error.message : error,
-            stack: error instanceof Error ? error.stack : undefined
-          });
+          console.error('[usePersistedField] Sync error:', error);
           setSyncStatus('offline');
         });
     } catch (err) {
@@ -190,9 +195,6 @@ export function usePersistedField({
   const handleChange = useCallback((newValue: string) => {
     // Update local state immediately for responsive UI
     setValue(newValue);
-
-    // Mark that we have a local value to prevent overwriting on re-render
-    hasLoadedRef.current = true;
 
     // Clear existing timer
     if (saveTimerRef.current) {
@@ -281,15 +283,18 @@ export function usePersistedField({
   }, [userId, syncStatus]);
 
   /**
-   * Load initial value on mount
-   * Only load once when the component mounts, not on every userId change
+   * Load initial value on mount and when fieldIdentifier changes
+   * This ensures we load the correct value when switching between sessions
    */
   useEffect(() => {
-    if (!hasLoadedRef.current && userId) {
-      hasLoadedRef.current = true;
+    if (userId && fieldIdentifier) {
+      // Reset the loaded flag to allow reloading for new field
+      hasLoadedRef.current = false;
       loadInitialValue();
     }
-  }, [userId, loadInitialValue]);
+  }, [userId, fieldIdentifier]); // Re-run when fieldIdentifier changes
+
+  // Note: loadInitialValue is intentionally omitted from deps to prevent infinite loops
 
   /**
    * Cleanup timers on unmount

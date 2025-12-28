@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
+import { usePersistedSessionForm } from '@/hooks/usePersistedSessionField';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { useNavigate } from 'react-router-dom';
@@ -43,36 +44,38 @@ const IdeaFrameworkConsultant = () => {
     sessionId: currentSessionId,
   });
 
-  // Per-session input storage
-  const [sessionInputs, setSessionInputs] = useState<Record<string, { message: string; context: string }>>({});
+  // Per-session input storage with database persistence
+  const {
+    message,
+    setMessage,
+    context,
+    setContext,
+    syncStatus,
+    isLoading
+  } = usePersistedSessionForm({
+    sessionId: currentSessionId,
+    category: 'consultant',
+    debounceDelay: 1000 // Save to DB after 1 second of no typing
+  });
+
+  // Track if user has typed to avoid showing sync status on initial load
+  const [hasUserTyped, setHasUserTyped] = useState(false);
+
+  // Track sending state per session to maintain button state when switching
+  const [sessionSendingStates, setSessionSendingStates] = useState<Record<string, boolean>>({});
+  const isSessionSending = currentSessionId ? (sessionSendingStates[currentSessionId] || isSending) : false;
+
+  // Reset hasUserTyped flag when switching sessions
+  useEffect(() => {
+    setHasUserTyped(false);
+  }, [currentSessionId]);
+
   const [userDocuments, setUserDocuments] = useState<unknown[]>([]);
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [initialSuggestions, setInitialSuggestions] = useState<string[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
-
-  // Get current session's input values (default to empty strings)
-  const currentInputs = currentSessionId ? sessionInputs[currentSessionId] || { message: '', context: '' } : { message: '', context: '' };
-  const message = currentInputs.message;
-  const context = currentInputs.context;
-
-  // Update input values for current session
-  const setMessage = (value: string) => {
-    if (!currentSessionId) return;
-    setSessionInputs(prev => ({
-      ...prev,
-      [currentSessionId]: { ...prev[currentSessionId], message: value, context: prev[currentSessionId]?.context || '' }
-    }));
-  };
-
-  const setContext = (value: string) => {
-    if (!currentSessionId) return;
-    setSessionInputs(prev => ({
-      ...prev,
-      [currentSessionId]: { message: prev[currentSessionId]?.message || '', context: value }
-    }));
-  };
 
   const toggleSidebar = () => {
     const panel = sidebarPanelRef.current;
@@ -150,7 +153,7 @@ const IdeaFrameworkConsultant = () => {
   }, [latestDiagnostic, messages.length]);
 
   const handleConsultation = async () => {
-    if (!message.trim()) {
+    if (!message.trim() || !currentSessionId) {
       toast({
         title: "Message Required",
         description: "Please enter your question or challenge",
@@ -158,6 +161,12 @@ const IdeaFrameworkConsultant = () => {
       });
       return;
     }
+
+    // Set sending state for this session
+    setSessionSendingStates(prev => ({
+      ...prev,
+      [currentSessionId]: true
+    }));
 
     try {
       await sendMessage({
@@ -177,6 +186,14 @@ const IdeaFrameworkConsultant = () => {
         description: error instanceof Error ? error.message : "Failed to get consultation",
         variant: "destructive",
       });
+    } finally {
+      // Clear sending state for this session
+      if (currentSessionId) {
+        setSessionSendingStates(prev => ({
+          ...prev,
+          [currentSessionId]: false
+        }));
+      }
     }
   };
 
@@ -275,7 +292,7 @@ const IdeaFrameworkConsultant = () => {
     try {
       await clearChat();
       setFollowUpSuggestions([]);
-      setMessage('');
+      // Keep both message and context fields intact - they are draft inputs, not part of the conversation
       toast({
         title: "Conversation Cleared",
         description: "Your conversation history has been cleared",
@@ -433,6 +450,18 @@ const IdeaFrameworkConsultant = () => {
               </CardContent>
             </Card>
 
+            {/* Request Status Indicator */}
+            {isSessionSending && (
+              <Card className="bg-primary/5 border-primary/30">
+                <CardContent className="py-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span className="text-primary font-medium">Processing your strategic consultation...</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Expertise Areas */}
             <Card>
               <CardHeader>
@@ -462,13 +491,40 @@ const IdeaFrameworkConsultant = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Sync Status Indicator - Only show when user has typed, not on initial load */}
+                  {hasUserTyped && syncStatus && syncStatus !== 'synced' && !isLoading && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {syncStatus === 'syncing' && (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Saving draft...</span>
+                        </>
+                      )}
+                      {syncStatus === 'offline' && (
+                        <>
+                          <span className="w-3 h-3 bg-yellow-500 rounded-full" />
+                          <span>Offline - draft saved locally</span>
+                        </>
+                      )}
+                      {syncStatus === 'error' && (
+                        <>
+                          <span className="w-3 h-3 bg-red-500 rounded-full" />
+                          <span>Error saving draft</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label htmlFor="context">Business Context (Optional)</Label>
                     <Input
                       id="context"
                       placeholder="e.g., E-commerce luxury brand, B2B SaaS, etc."
                       value={context}
-                      onChange={(e) => setContext(e.target.value)}
+                      onChange={(e) => {
+                        setHasUserTyped(true);
+                        setContext(e.target.value);
+                      }}
                     />
                   </div>
 
@@ -478,7 +534,10 @@ const IdeaFrameworkConsultant = () => {
                       id="message"
                       placeholder="Describe your branding challenge, target audience question, positioning dilemma, or strategic need..."
                       value={message}
-                      onChange={(e) => setMessage(e.target.value)}
+                      onChange={(e) => {
+                        setHasUserTyped(true);
+                        setMessage(e.target.value);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
@@ -494,11 +553,11 @@ const IdeaFrameworkConsultant = () => {
 
                   <Button
                     onClick={handleConsultation}
-                    disabled={isSending || !message.trim()}
+                    disabled={isSessionSending || !message.trim()}
                     className="w-full"
                     size="lg"
                   >
-                    {isSending ? (
+                    {isSessionSending ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Getting Strategic Guidance...
@@ -616,7 +675,10 @@ const IdeaFrameworkConsultant = () => {
                           id="follow-up"
                           placeholder="Build on this guidance with additional questions..."
                           value={message}
-                          onChange={(e) => setMessage(e.target.value)}
+                          onChange={(e) => {
+                            setHasUserTyped(true);
+                            setMessage(e.target.value);
+                          }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
@@ -630,11 +692,11 @@ const IdeaFrameworkConsultant = () => {
                         </p>
                         <Button
                           onClick={handleConsultation}
-                          disabled={isSending || !message.trim()}
+                          disabled={isSessionSending || !message.trim()}
                           className="w-full"
                           size="sm"
                         >
-                          {isSending ? (
+                          {isSessionSending ? (
                             <>
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                               Getting Follow-up Guidance...
