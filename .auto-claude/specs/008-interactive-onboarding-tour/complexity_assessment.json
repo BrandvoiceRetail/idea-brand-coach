@@ -1,0 +1,72 @@
+{
+  "complexity": "standard",
+  "workflow_type": "feature",
+  "confidence": 0.80,
+  "reasoning": "Single well-scoped frontend feature requiring one external library integration (tour library). Needs research for tour library selection and API usage, but scope is contained to 6-10 files within a single service.",
+
+  "analysis": {
+    "scope": {
+      "estimated_files": 8,
+      "estimated_services": 1,
+      "is_cross_cutting": true,
+      "notes": "Tour implementation, onboarding flow integration, state management, analytics tracking, user preferences. Cross-cutting across multiple pages for tour stops."
+    },
+    "integrations": {
+      "external_services": ["tour library (React Joyride, Shepherd.js, Driver.js, or similar)"],
+      "new_dependencies": ["tour library package"],
+      "research_needed": true,
+      "notes": "Need to evaluate tour libraries compatible with React/Radix UI and learn chosen library's API. Also need to understand analytics integration patterns."
+    },
+    "infrastructure": {
+      "docker_changes": false,
+      "database_changes": true,
+      "config_changes": true,
+      "notes": "Minor database change to track user tour completion status in Supabase. Possible env vars for feature flags or analytics configuration."
+    },
+    "knowledge": {
+      "patterns_exist": false,
+      "research_required": true,
+      "unfamiliar_tech": ["tour library"],
+      "notes": "Need to research tour library options and best practices. Must identify existing analytics patterns and onboarding hooks in codebase."
+    },
+    "risk": {
+      "level": "medium",
+      "concerns": [
+        "User onboarding is critical first impression",
+        "Database migration for tour status tracking",
+        "Analytics tracking must work correctly",
+        "Mobile responsiveness is crucial",
+        "Skip/revisit functionality requires careful state management"
+      ],
+      "notes": "User-facing feature affecting first-time user experience. Requires careful UX implementation to avoid being intrusive."
+    }
+  },
+
+  "recommended_phases": [
+    "discovery",
+    "requirements",
+    "research",
+    "context",
+    "spec_writing",
+    "planning",
+    "validation"
+  ],
+
+  "flags": {
+    "needs_research": true,
+    "needs_self_critique": false,
+    "needs_infrastructure_setup": false
+  },
+
+  "validation_recommendations": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "minimal_mode": false,
+    "test_types_required": ["unit", "integration"],
+    "security_scan_required": false,
+    "staging_deployment_required": false,
+    "reasoning": "User onboarding feature affecting multiple files requires unit tests for tour components/logic and integration tests for the full onboarding flow. No security-sensitive areas touched (no auth changes, no payments), so security scan not required."
+  },
+
+  "created_at": "2025-12-27T10:30:00Z"
+}

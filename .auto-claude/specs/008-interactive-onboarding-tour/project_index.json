@@ -1,0 +1,105 @@
+{
+  "project_root": "/Users/matthewkerns/workspace/idea-brand-coach",
+  "project_type": "single",
+  "services": {
+    "main": {
+      "name": "main",
+      "path": "/Users/matthewkerns/workspace/idea-brand-coach",
+      "language": "TypeScript",
+      "framework": "React",
+      "type": "frontend",
+      "package_manager": "bun",
+      "default_port": 3000,
+      "build_tool": "Vite",
+      "styling": "Tailwind CSS",
+      "dev_command": "npm run dev",
+      "key_directories": {
+        "src": {
+          "path": "src",
+          "purpose": "Source code"
+        },
+        "test": {
+          "path": "test",
+          "purpose": "Tests"
+        }
+      },
+      "entry_point": "src/App.tsx",
+      "dependencies": [
+        "@hookform/resolvers",
+        "@huggingface/transformers",
+        "@radix-ui/react-accordion",
+        "@radix-ui/react-alert-dialog",
+        "@radix-ui/react-aspect-ratio",
+        "@radix-ui/react-avatar",
+        "@radix-ui/react-checkbox",
+        "@radix-ui/react-collapsible",
+        "@radix-ui/react-context-menu",
+        "@radix-ui/react-dialog",
+        "@radix-ui/react-dropdown-menu",
+        "@radix-ui/react-hover-card",
+        "@radix-ui/react-label",
+        "@radix-ui/react-menubar",
+        "@radix-ui/react-navigation-menu",
+        "@radix-ui/react-popover",
+        "@radix-ui/react-progress",
+        "@radix-ui/react-radio-group",
+        "@radix-ui/react-scroll-area",
+        "@radix-ui/react-select"
+      ],
+      "dev_dependencies": [
+        "@eslint/js",
+        "@tailwindcss/typography",
+        "@types/node",
+        "@types/react",
+        "@types/react-dom",
+        "@types/uuid",
+        "@vitejs/plugin-react-swc",
+        "autoprefixer",
+        "eslint",
+        "eslint-plugin-react-hooks"
+      ],
+      "testing": "Vitest",
+      "test_directory": "test",
+      "environment": {
+        "variables": {
+          "VITE_SUPABASE_PROJECT_ID": {
+            "value": "ecdrxtbclxfpkknasmrw",
+            "source": ".env",
+            "type": "string",
+            "sensitive": false,
+            "required": false
+          },
+          "VITE_SUPABASE_PUBLISHABLE_KEY": {
+            "value": "<REDACTED>",
+            "source": ".env",
+            "type": "string",
+            "sensitive": true,
+            "required": false
+          },
+          "VITE_SUPABASE_URL": {
+            "value": "https://ecdrxtbclxfpkknasmrw.supabase.co",
+            "source": ".env",
+            "type": "url",
+            "sensitive": false,
+            "required": false
+          },
+          "VITE_USE_TEST_FUNCTIONS": {
+            "value": "true",
+            "source": ".env",
+            "type": "boolean",
+            "sensitive": false,
+            "required": false
+          }
+        },
+        "required_count": 0,
+        "optional_count": 0,
+        "detected_count": 4
+      }
+    }
+  },
+  "infrastructure": {},
+  "conventions": {
+    "js_linting": "ESLint",
+    "typescript": true
+  }
+}

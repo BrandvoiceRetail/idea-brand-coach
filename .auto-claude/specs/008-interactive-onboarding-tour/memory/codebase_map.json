@@ -1,0 +1,30 @@
+{
+  "discovered_files": {
+    "src/hooks/useOnboardingTour.ts": {
+      "description": "Custom hook pattern for onboarding tour: uses localStorage for persistence (STORAGE_KEYS pattern), integrates with useAuth for user context, uses requestAnimationFrame for DOM readiness detection, exports storage utilities for testing purposes.",
+      "category": "pattern",
+      "discovered_at": "2025-12-27T16:53:31.109545+00:00"
+    },
+    "src/components/OnboardingTour.tsx": {
+      "description": "Mobile responsiveness pattern: Uses useIsMobile hook with getTourStyles(isMobile) function to generate responsive styles. Key mobile adjustments: tooltip width 280px (vs 380px), placement='auto' for dynamic positioning, maxWidth calc(100vw - 32px) to prevent overflow, smaller font sizes (0.8125rem vs 0.875rem), reduced padding/spacing, and scrollOffset 60px (vs 100px). Styles are memoized with useMemo for performance.",
+      "category": "patterns",
+      "discovered_at": "2025-12-27T17:14:10.980543+00:00"
+    },
+    "src/lib/analytics.ts": {
+      "description": "Analytics tracking service pattern: Uses localStorage queue for client-side analytics storage (capped at 100 events), provides generic trackEvent function plus specific tour tracking helpers (trackTourStarted, trackTourCompleted, trackTourSkipped, trackStepViewed). Integrates with supabase for user ID retrieval. Uses TOUR_EVENTS constant object for type-safe event names. Logs to console in development mode via import.meta.env.DEV check.",
+      "category": "service",
+      "discovered_at": "2025-12-27T16:58:18.634761+00:00"
+    },
+    "src/pages/Dashboard.tsx": {
+      "description": "Tour target elements using data-tour attributes: diagnostic-feature (stats card), avatar-builder (stats card), idea-framework (section wrapper), brand-coach (Ask Trevor Bradford module wrapper). All targets are on Dashboard for main onboarding tour.",
+      "category": "component-pattern",
+      "discovered_at": "2025-12-27T17:05:38.349523+00:00"
+    },
+    "src/components/Layout.tsx": {
+      "description": "User menu Start Tour button: Added to both desktop (DropdownMenuItem) and mobile (Button) user menus. Uses useOnboardingTour hook's resetTour() to clear completion state, then startTour() to launch. Desktop positioned after email, before Sign Out with separator. Mobile positioned before Sign Out in the user section.",
+      "category": "feature",
+      "discovered_at": "2025-12-27T17:10:00.670519+00:00"
+    }
+  },
+  "last_updated": "2025-12-27T17:14:10.980554+00:00"
+}

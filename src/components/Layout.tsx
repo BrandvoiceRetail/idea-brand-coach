@@ -17,11 +17,13 @@ import {
   Home as HomeIcon,
   MoreHorizontal,
   ChevronDown,
+  HelpCircle,
 } from "lucide-react";
 import { BetaNavigationWidget } from "@/components/BetaNavigationWidget";
 import { getNavigationFeatures, getCurrentPhase } from "@/config/features";
 import { usePriorityNav } from "@/hooks/usePriorityNav";
 import { ROUTES } from "@/config/routes";
+import { useOnboardingTourContext } from "@/contexts/OnboardingTourContext";
 
 interface NavItem {
   name: string;
@@ -35,6 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const navContainerRef = useRef<HTMLDivElement>(null);
+  const { resetTour, startTour } = useOnboardingTourContext();
 
   // Get all navigation items based on current deployment phase
   const allNavItems = useMemo(() => {
@@ -221,6 +224,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       {user.email}
                     </div>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        resetTour();
+                        startTour();
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <HelpCircle className="w-4 h-4 mr-2" />
+                      Start Tour
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive focus:text-destructive">
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
@@ -292,6 +306,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       <User className="w-4 h-4" />
                       <span className="text-sm truncate">{user.email}</span>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        resetTour();
+                        startTour();
+                      }}
+                      className="w-full justify-start text-primary-foreground/80 hover:text-primary-foreground"
+                    >
+                      <HelpCircle className="w-4 h-4 mr-2" />
+                      Start Tour
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
