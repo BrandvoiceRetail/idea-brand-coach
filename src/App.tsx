@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
+import { OnboardingTourProvider } from "@/contexts/OnboardingTourContext";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { ROUTES } from "@/config/routes";
@@ -43,12 +44,13 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <OnboardingTour autoStart={true} />
+      <OnboardingTourProvider>
+        <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <OnboardingTour autoStart={true} />
             <Routes>
               <Route path="/" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
               <Route path="/welcome" element={<Landing />} />
@@ -183,7 +185,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </OnboardingTourProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

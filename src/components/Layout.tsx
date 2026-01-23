@@ -23,7 +23,7 @@ import { BetaNavigationWidget } from "@/components/BetaNavigationWidget";
 import { getNavigationFeatures, getCurrentPhase } from "@/config/features";
 import { usePriorityNav } from "@/hooks/usePriorityNav";
 import { ROUTES } from "@/config/routes";
-import { useOnboardingTour } from "@/hooks/useOnboardingTour";
+import { useOnboardingTourContext } from "@/contexts/OnboardingTourContext";
 
 interface NavItem {
   name: string;
@@ -36,7 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const navContainerRef = useRef<HTMLDivElement>(null);
-  const { resetTour, startTour } = useOnboardingTour();
+  const { resetTour, startTour } = useOnboardingTourContext();
 
   // Get all navigation items based on current deployment phase
   const allNavItems = useMemo(() => {

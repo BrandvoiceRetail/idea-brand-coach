@@ -5,7 +5,7 @@
 
 import { useEffect, useCallback, useRef, useMemo } from 'react';
 import Joyride, { CallBackProps, STATUS, EVENTS, Step } from 'react-joyride';
-import { useOnboardingTour } from '@/hooks/useOnboardingTour';
+import { useOnboardingTourContext } from '@/contexts/OnboardingTourContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TourStep } from '@/types/tour';
 import {
@@ -167,7 +167,7 @@ export function OnboardingTour({
     completeTour,
     skipTour,
     setStepIndex,
-  } = useOnboardingTour();
+  } = useOnboardingTourContext();
 
   // Detect mobile viewport for responsive styles
   const isMobile = useIsMobile();
