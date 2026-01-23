@@ -17,6 +17,7 @@ import { AIAssistant } from "@/components/AIAssistant";
 import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
 import { BrandMarkdownExport } from "@/components/export/BrandMarkdownExport";
 import { FloatingChatWidget } from "@/components/FloatingChatWidget";
+import { FieldChatButton } from "@/components/FieldChatModal";
 import { CollapsibleDescription } from "@/components/CollapsibleDescription";
 import { CollapsibleVideo } from "@/components/CollapsibleVideo";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
@@ -464,17 +465,28 @@ export default function BrandCanvas() {
                     Brand Purpose
                     <SyncIndicator status={brandPurpose.syncStatus} />
                   </Label>
-                  {brandData.insight.completed && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => brandPurpose.onChange(
-                        brandData.insight.brandPurpose || "Transform customer lives through innovative solutions that deliver genuine value and meaningful impact."
-                      )}
-                    >
-                      Import from IDEA
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <FieldChatButton
+                      field={{
+                        fieldId: 'canvas.brand_purpose',
+                        fieldLabel: 'Brand Purpose',
+                        currentValue: brandPurpose.value,
+                        systemPrompt: 'Help the user define their brand purpose - the "why" behind their existence beyond just selling products. Make it inspiring and authentic.'
+                      }}
+                      onApplyValue={(value) => brandPurpose.onChange(value)}
+                    />
+                    {brandData.insight.completed && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => brandPurpose.onChange(
+                          brandData.insight.brandPurpose || "Transform customer lives through innovative solutions that deliver genuine value and meaningful impact."
+                        )}
+                      >
+                        Import from IDEA
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <Textarea
                   id="brandPurpose"
@@ -507,10 +519,21 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="brandVision" className="flex items-center gap-2">
-                  Vision Statement
-                  <SyncIndicator status={brandVision.syncStatus} />
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="brandVision" className="flex items-center gap-2">
+                    Vision Statement
+                    <SyncIndicator status={brandVision.syncStatus} />
+                  </Label>
+                  <FieldChatButton
+                    field={{
+                      fieldId: 'canvas.brand_vision',
+                      fieldLabel: 'Brand Vision',
+                      currentValue: brandVision.value,
+                      systemPrompt: 'Help the user craft an aspirational vision statement about the future impact their brand seeks to make in 5-10 years.'
+                    }}
+                    onApplyValue={(value) => brandVision.onChange(value)}
+                  />
+                </div>
                 <Textarea
                   id="brandVision"
                   placeholder="What future are you working towards? Where do you see your brand's impact in 5-10 years?"
@@ -542,10 +565,21 @@ export default function BrandCanvas() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="brandMission" className="flex items-center gap-2">
-                  Mission Statement
-                  <SyncIndicator status={brandMission.syncStatus} />
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="brandMission" className="flex items-center gap-2">
+                    Mission Statement
+                    <SyncIndicator status={brandMission.syncStatus} />
+                  </Label>
+                  <FieldChatButton
+                    field={{
+                      fieldId: 'canvas.brand_mission',
+                      fieldLabel: 'Brand Mission',
+                      currentValue: brandMission.value,
+                      systemPrompt: 'Help the user create a mission statement that describes the actionable steps they take to fulfill their brand purpose and vision.'
+                    }}
+                    onApplyValue={(value) => brandMission.onChange(value)}
+                  />
+                </div>
                 <Textarea
                   id="brandMission"
                   placeholder="How do you fulfill your purpose? What specific actions do you take?"
@@ -689,21 +723,32 @@ export default function BrandCanvas() {
                     Core Value Proposition
                     <SyncIndicator status={valueProposition.syncStatus} />
                   </Label>
-                  {(brandData.insight.completed || brandData.avatar.completed) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const avatarInsights = brandData.avatar.completed ?
-                          ` for ${brandData.avatar.psychographics?.values?.slice(0,2).join(' and ') || 'quality-focused'} customers who value ${brandData.avatar.goals?.slice(0,2).join(' and ') || 'excellence and results'}` : '';
-                        valueProposition.onChange(
-                          `We deliver unique solutions that address real customer needs${avatarInsights}, combining innovation with proven results to create meaningful transformation in their lives.`
-                        );
+                  <div className="flex items-center gap-2">
+                    <FieldChatButton
+                      field={{
+                        fieldId: 'canvas.value_proposition',
+                        fieldLabel: 'Value Proposition',
+                        currentValue: valueProposition.value,
+                        systemPrompt: 'Help the user create a compelling value proposition that clearly explains why customers should buy from them vs competitors. Focus on specific problems solved and unique benefits.'
                       }}
-                    >
-                      Import from IDEA + Avatar
-                    </Button>
-                  )}
+                      onApplyValue={(value) => valueProposition.onChange(value)}
+                    />
+                    {(brandData.insight.completed || brandData.avatar.completed) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const avatarInsights = brandData.avatar.completed ?
+                            ` for ${brandData.avatar.psychographics?.values?.slice(0,2).join(' and ') || 'quality-focused'} customers who value ${brandData.avatar.goals?.slice(0,2).join(' and ') || 'excellence and results'}` : '';
+                          valueProposition.onChange(
+                            `We deliver unique solutions that address real customer needs${avatarInsights}, combining innovation with proven results to create meaningful transformation in their lives.`
+                          );
+                        }}
+                      >
+                        Import from IDEA + Avatar
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <Textarea
                   id="valueProposition"
@@ -909,6 +954,7 @@ export default function BrandCanvas() {
       <FloatingChatWidget
         pageContext="Brand Canvas page - building their visual brand strategy"
         placeholder="Ask about your brand canvas..."
+        startFresh={true}
       />
     </div>
   );

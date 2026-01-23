@@ -105,6 +105,13 @@ export interface ChatResponse {
 }
 
 /**
+ * Type of conversation for filtering
+ * - general: Standard Brand Coach conversation
+ * - field: Inline field-level chat
+ */
+export type ConversationType = 'general' | 'field';
+
+/**
  * Chat session representing a conversation thread.
  * Similar to ChatGPT/Claude.ai conversation management.
  */
@@ -120,6 +127,18 @@ export interface ChatSession {
 
   /** Title of the session (auto-generated or user-defined) */
   title: string;
+
+  /** Type of conversation: general or field */
+  conversation_type: ConversationType;
+
+  /** Field identifier for field-level chats (e.g., 'avatar.demographics') */
+  field_id?: string;
+
+  /** Human-readable label for the field */
+  field_label?: string;
+
+  /** Page context where conversation started */
+  page_context?: string;
 
   /** ISO 8601 timestamp when session was created */
   created_at: string;
@@ -137,6 +156,18 @@ export interface ChatSessionCreate {
 
   /** Optional title (defaults to 'New Chat') */
   title?: string;
+
+  /** Type of conversation: general or field (defaults to 'general') */
+  conversation_type?: ConversationType;
+
+  /** Field identifier for field-level chats */
+  field_id?: string;
+
+  /** Human-readable label for the field */
+  field_label?: string;
+
+  /** Page context where conversation started */
+  page_context?: string;
 }
 
 /**

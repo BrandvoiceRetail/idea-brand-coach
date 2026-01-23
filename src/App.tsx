@@ -28,6 +28,7 @@ import IdeaAuthenticity from "./pages/IdeaAuthenticity";
 import AvatarBuilder from "./pages/AvatarBuilder";
 import BrandCanvas from "./pages/BrandCanvas";
 import BrandCopyGenerator from "./pages/BrandCopyGenerator";
+import ConversationHistory from "./pages/ConversationHistory";
 import Auth from "./pages/Auth";
 import BetaWelcome from "./pages/BetaWelcome";
 import BetaJourney from "./pages/BetaJourney";
@@ -105,6 +106,13 @@ const App = () => (
                 </BrandProvider>
               } />
               <Route path="/brand-coach" element={<Navigate to="/idea/consultant" replace />} />
+              <Route path="/conversations" element={
+                <BrandProvider>
+                  <Layout>
+                    <ConversationHistory />
+                  </Layout>
+                </BrandProvider>
+              } />
               <Route path="/idea/insight" element={
                 <BrandProvider>
                   <Layout>

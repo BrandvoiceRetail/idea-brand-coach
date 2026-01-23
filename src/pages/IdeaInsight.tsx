@@ -9,6 +9,7 @@ import { InteractiveIdeaFramework } from "@/components/InteractiveIdeaFramework"
 import { BuyerIntentResearch } from "@/components/BuyerIntentResearch";
 import { EmotionalTriggerAssessment } from "@/components/EmotionalTriggerAssessment";
 import { ContextualHelp } from "@/components/ContextualHelp";
+import { FloatingChatWidget } from "@/components/FloatingChatWidget";
 import { 
   Lightbulb, 
   Search, 
@@ -397,6 +398,12 @@ export default function IdeaInsight() {
           </CardContent>
         </Card>
       )}
+
+      <FloatingChatWidget
+        pageContext="Interactive Insight page - working on customer insights and the IDEA framework"
+        placeholder="Ask about customer insights..."
+        startFresh={true}
+      />
     </div>
   );
 }

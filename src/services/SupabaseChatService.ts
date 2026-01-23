@@ -13,6 +13,7 @@ import {
   ChatSession,
   ChatSessionCreate,
   ChatSessionUpdate,
+  ConversationType,
 } from '@/types/chat';
 import { forceSyncUserData } from '@/lib/knowledge-base/sync-service-instance';
 
@@ -298,6 +299,10 @@ export class SupabaseChatService implements IChatService {
         user_id: userId,
         chatbot_type: sessionData?.chatbot_type || this.chatbotType,
         title: sessionData?.title || 'New Chat',
+        conversation_type: sessionData?.conversation_type || 'general',
+        field_id: sessionData?.field_id,
+        field_label: sessionData?.field_label,
+        page_context: sessionData?.page_context,
       })
       .select()
       .single();
@@ -547,6 +552,10 @@ export class SupabaseChatService implements IChatService {
       user_id: item.user_id as string,
       chatbot_type: item.chatbot_type as ChatbotType,
       title: item.title as string,
+      conversation_type: (item.conversation_type as ConversationType) || 'general',
+      field_id: item.field_id as string | undefined,
+      field_label: item.field_label as string | undefined,
+      page_context: item.page_context as string | undefined,
       created_at: item.created_at as string,
       updated_at: item.updated_at as string,
     };

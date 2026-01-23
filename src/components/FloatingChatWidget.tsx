@@ -17,12 +17,15 @@ interface FloatingChatWidgetProps {
   placeholder?: string;
   /** Position of the widget */
   position?: "bottom-right" | "bottom-left";
+  /** Start with a fresh chat instead of continuing previous session */
+  startFresh?: boolean;
 }
 
 export function FloatingChatWidget({
   pageContext,
   placeholder = "Ask about your brand strategy...",
   position = "bottom-right",
+  startFresh = false,
 }: FloatingChatWidgetProps) {
   const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -54,12 +57,22 @@ export function FloatingChatWidget({
     }
   }, [messages]);
 
-  // Create session if needed when expanding and user has no sessions
+  // Track if we've already created a fresh session for this widget instance
+  const [freshSessionCreated, setFreshSessionCreated] = useState(false);
+
+  // Create session when expanding - either fresh or continue existing
   useEffect(() => {
-    if (isExpanded && !currentSessionId && user && !isCreating) {
-      createNewChat();
+    if (isExpanded && user && !isCreating) {
+      // If startFresh mode and we haven't created a session yet, always create new
+      if (startFresh && !freshSessionCreated) {
+        createNewChat();
+        setFreshSessionCreated(true);
+      } else if (!startFresh && !currentSessionId) {
+        // Normal mode: only create if no existing session
+        createNewChat();
+      }
     }
-  }, [isExpanded, currentSessionId, user, createNewChat, isCreating]);
+  }, [isExpanded, currentSessionId, user, createNewChat, isCreating, startFresh, freshSessionCreated]);
 
   const handleNewChat = async () => {
     await createNewChat();
