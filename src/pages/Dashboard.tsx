@@ -61,7 +61,8 @@ const ideaModules = [
     icon: Lightbulb,
     href: "/idea/insight",
     status: "available" as const,
-    color: "from-yellow-500 to-orange-500"
+    color: "from-yellow-500 to-orange-500",
+    betaPreview: false
   },
   {
     title: "Distinctive/Different",
@@ -69,23 +70,26 @@ const ideaModules = [
     icon: Star,
     href: "/idea/distinctive",
     status: "available" as const,
-    color: "from-green-500 to-emerald-500"
+    color: "from-green-500 to-emerald-500",
+    betaPreview: true
   },
   {
-    title: "Emotionally Intelligent", 
+    title: "Emotionally Intelligent",
     description: "Connect with audience through understanding emotional cues",
     icon: Heart,
     href: "/idea/empathy",
     status: "available" as const,
-    color: "from-pink-500 to-rose-500"
+    color: "from-pink-500 to-rose-500",
+    betaPreview: true
   },
   {
     title: "Authoritative & Authentic",
     description: "Be genuine, transparent and create an attractive brand persona",
     icon: Shield,
-    href: "/idea/authenticity", 
+    href: "/idea/authenticity",
     status: "available" as const,
-    color: "from-blue-500 to-indigo-500"
+    color: "from-blue-500 to-indigo-500",
+    betaPreview: true
   }
 ];
 
@@ -342,9 +346,9 @@ export default function Dashboard() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {ideaModules.map((module) => (
-                <Card 
-                  key={module.title} 
-                  className={`bg-gradient-to-br ${module.color} text-white shadow-card hover:shadow-brand transition-all duration-300 border-0 cursor-pointer transform hover:scale-105`}
+                <Card
+                  key={module.title}
+                  className={`bg-gradient-to-br ${module.color} text-white shadow-card hover:shadow-brand transition-all duration-300 border-0 cursor-pointer transform hover:scale-105 relative`}
                   onClick={(e) => {
                     console.log('Card clicked!', module.title, module.href);
                     e.preventDefault();
@@ -352,6 +356,13 @@ export default function Dashboard() {
                     navigate(module.href);
                   }}
                 >
+                  {module.betaPreview && (
+                    <div className="absolute top-3 right-3">
+                      <Badge className="bg-white/20 text-white border-white/30 text-xs">
+                        Beta Preview
+                      </Badge>
+                    </div>
+                  )}
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
                       <div className="p-2 bg-white/20 rounded-lg">

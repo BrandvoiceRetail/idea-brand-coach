@@ -154,7 +154,10 @@ export default function IdeaFramework() {
         </Card>
 
         {/* Distinctive/Different */}
-        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 relative">
+          <Badge className="absolute top-3 right-3 bg-secondary/10 text-secondary border-secondary/30 text-xs">
+            Beta Preview
+          </Badge>
           <CardHeader>
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
@@ -194,7 +197,10 @@ export default function IdeaFramework() {
         </Card>
 
         {/* Emotionally Intelligent */}
-        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 relative">
+          <Badge className="absolute top-3 right-3 bg-secondary/10 text-secondary border-secondary/30 text-xs">
+            Beta Preview
+          </Badge>
           <CardHeader>
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-pink-500 rounded-lg flex items-center justify-center">
@@ -229,7 +235,10 @@ export default function IdeaFramework() {
         </Card>
 
         {/* Authoritative & Authentic */}
-        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300">
+        <Card className="bg-gradient-card shadow-card hover:shadow-brand transition-all duration-300 relative">
+          <Badge className="absolute top-3 right-3 bg-secondary/10 text-secondary border-secondary/30 text-xs">
+            Beta Preview
+          </Badge>
           <CardHeader>
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">

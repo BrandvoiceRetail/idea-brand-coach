@@ -5,19 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { DistinctiveModule } from "@/components/DistinctiveModule";
-import { 
-  Star, 
-  Search, 
-  Target, 
-  Heart, 
-  Users, 
+import {
+  Star,
+  Search,
+  Target,
+  Heart,
+  Users,
   TrendingUp,
   ArrowRight,
   CheckCircle,
   Brain,
   Eye,
   Zap,
-  PlayCircle
+  PlayCircle,
+  Info
 } from "lucide-react";
 
 export default function IdeaDistinctive() {
@@ -45,16 +46,16 @@ export default function IdeaDistinctive() {
         
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             onClick={() => setActiveTab("interactive")}
             className="flex items-center gap-2"
           >
             <PlayCircle className="w-5 h-5" />
             Start Learning Journey
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="lg"
             onClick={() => setActiveTab("assessment")}
             className="flex items-center gap-2"
@@ -63,6 +64,15 @@ export default function IdeaDistinctive() {
             Assess Your Brand
           </Button>
         </div>
+      </div>
+
+      {/* Beta Learning Module Notice */}
+      <div className="flex items-center gap-3 p-4 bg-secondary/10 border border-secondary/20 rounded-lg max-w-2xl mx-auto">
+        <Info className="w-5 h-5 text-secondary flex-shrink-0" />
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Beta Preview:</span> This is a learning module. For interactive help applying these concepts to your brand, use the{" "}
+          <Link to="/idea/consultant" className="text-secondary hover:underline font-medium">Brand Coach</Link>.
+        </p>
       </div>
 
       {/* Interactive Tools */}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface BetaComment {
   stepId: string;
@@ -28,6 +29,12 @@ export function useBetaMode() {
   // Check if user is in beta mode
   const isBetaMode = betaProgress !== null || location.pathname.startsWith('/beta') || searchParams.get('beta') === 'true';
 
+  // Get beta tester info from localStorage (defined early for use in addComment)
+  const getBetaTesterInfo = () => {
+    const info = localStorage.getItem('betaTesterInfo');
+    return info ? JSON.parse(info) : null;
+  };
+
   // Initialize beta mode from journey page
   const initializeBetaMode = (mode: 'quick' | 'comprehensive') => {
     const progress: BetaProgress = {
@@ -42,23 +49,48 @@ export function useBetaMode() {
   };
 
   // Add comment for current step/page (allows multiple comments per page)
-  const addComment = (stepId: string, comment: string) => {
+  // Saves to both localStorage (for UI) and Supabase (for persistence)
+  const addComment = async (stepId: string, comment: string) => {
     if (!betaProgress) return;
 
+    const timestamp = new Date().toISOString();
     const newComment: BetaComment = {
       stepId,
       pageUrl: location.pathname,
       comment,
-      timestamp: new Date().toISOString()
+      timestamp
     };
 
+    // Update local state and localStorage immediately for UI responsiveness
     const updatedProgress = {
       ...betaProgress,
       comments: [...betaProgress.comments, newComment]
     };
-
     setBetaProgress(updatedProgress);
     localStorage.setItem('betaProgress', JSON.stringify(updatedProgress));
+
+    // Save to Supabase in background
+    try {
+      const betaTesterInfo = getBetaTesterInfo();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { error } = await supabase.functions.invoke('save-beta-comment', {
+        body: {
+          stepId,
+          pageUrl: location.pathname,
+          comment,
+          timestamp,
+          userId: user?.id || null,
+          betaTesterId: betaTesterInfo?.id || null
+        }
+      });
+
+      if (error) {
+        console.error('Error saving comment to Supabase:', error);
+      }
+    } catch (error) {
+      console.error('Error saving comment to Supabase:', error);
+    }
   };
 
   // Mark step as complete
@@ -88,12 +120,6 @@ export function useBetaMode() {
   // Get all comments for specific step
   const getComments = (stepId: string): BetaComment[] => {
     return betaProgress?.comments.filter(c => c.stepId === stepId) || [];
-  };
-
-  // Get beta tester info from localStorage
-  const getBetaTesterInfo = () => {
-    const info = localStorage.getItem('betaTesterInfo');
-    return info ? JSON.parse(info) : null;
   };
 
   return {
