@@ -238,16 +238,16 @@ export const FEATURES: Record<string, Feature> = {
 
   CONVERSATION_HISTORY: {
     id: 'CONVERSATION_HISTORY',
-    name: 'Conversation History',
-    shortDescription: 'Access past consultant sessions',
-    fullDescription: 'Review your conversation history with the Brand Coach GPT. All insights and recommendations are saved and searchable.',
+    name: 'Conversations',
+    shortDescription: 'View all AI chat conversations',
+    fullDescription: 'Review your conversation history with the Brand Coach and field-level AI chats. All insights and recommendations are saved and organized.',
     phase: 'P0',
-    route: '/history',
+    route: '/conversations',
     icon: Clock,
     statusMessage: 'Available Now',
     estimatedRelease: 'Live',
-    showInNav: false,
-    category: 'core',
+    showInNav: true,
+    category: 'consultant',
     requiresAuth: true,
   },
 

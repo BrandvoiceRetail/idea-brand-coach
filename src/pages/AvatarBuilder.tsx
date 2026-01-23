@@ -7,11 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Target, Plus, X, Sparkles, Loader2, CheckCircle, WifiOff } from "lucide-react";
+import { Target, Plus, X, Sparkles, Loader2, CheckCircle, WifiOff, MessageSquare } from "lucide-react";
 import { CollapsibleVideo } from "@/components/CollapsibleVideo";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { AIAssistant } from "@/components/AIAssistant";
+import { FieldChatButton } from "@/components/FieldChatModal";
 // ARCHIVED: PDF export temporarily disabled
 // import { AvatarPDFExport } from "@/components/AvatarPDFExport";
 import { usePersistedField } from "@/hooks/usePersistedField";
@@ -312,7 +313,18 @@ export default function AvatarBuilder() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Avatar Name *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="name">Avatar Name *</Label>
+                    <FieldChatButton
+                      field={{
+                        fieldId: 'avatar.name',
+                        fieldLabel: 'Avatar Name',
+                        currentValue: avatarName.value,
+                        systemPrompt: 'Help the user create a compelling name for their ideal customer avatar. The name should be descriptive and memorable.'
+                      }}
+                      onApplyValue={(value) => avatarName.onChange(value)}
+                    />
+                  </div>
                   <Input
                     id="name"
                     placeholder="e.g., Busy Professional Mom"
@@ -385,7 +397,18 @@ export default function AvatarBuilder() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lifestyle">Lifestyle Description</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="lifestyle">Lifestyle Description</Label>
+                  <FieldChatButton
+                    field={{
+                      fieldId: 'avatar.lifestyle',
+                      fieldLabel: 'Lifestyle Description',
+                      currentValue: lifestyle.value,
+                      systemPrompt: 'Help the user describe their ideal customer\'s lifestyle including typical day, family situation, work life, and hobbies. Make it vivid and relatable.'
+                    }}
+                    onApplyValue={(value) => lifestyle.onChange(value)}
+                  />
+                </div>
                 <Textarea
                   id="lifestyle"
                   placeholder="Describe their typical day, family situation, work life, hobbies..."
@@ -763,7 +786,18 @@ export default function AvatarBuilder() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="voice">Customer Reviews & Feedback</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="voice">Customer Reviews & Feedback</Label>
+                  <FieldChatButton
+                    field={{
+                      fieldId: 'avatar.voice_of_customer',
+                      fieldLabel: 'Voice of Customer',
+                      currentValue: voiceOfCustomer.value,
+                      systemPrompt: 'Help analyze and improve customer voice data. Extract key themes, suggest additional feedback sources, or help synthesize insights from customer reviews.'
+                    }}
+                    onApplyValue={(value) => voiceOfCustomer.onChange(value)}
+                  />
+                </div>
                 <Textarea
                   id="voice"
                   placeholder="Paste customer reviews, feedback, or testimonials here..."

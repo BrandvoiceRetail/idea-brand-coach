@@ -15,10 +15,22 @@ interface UseChatSessionsOptions {
   chatbotType?: ChatbotType;
   /** Auto-create a session if none exists */
   autoCreate?: boolean;
+  /** Filter to only field-level conversations */
+  conversationType?: 'general' | 'field';
+  /** Filter to a specific field ID (requires conversationType: 'field') */
+  fieldId?: string;
+  /** Field label for session title (used when creating field sessions) */
+  fieldLabel?: string;
 }
 
 export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
-  const { chatbotType = 'idea-framework-consultant', autoCreate = true } = options;
+  const {
+    chatbotType = 'idea-framework-consultant',
+    autoCreate = true,
+    conversationType,
+    fieldId,
+    fieldLabel,
+  } = options;
   const { chatService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -31,30 +43,61 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     chatService.setChatbotType(chatbotType);
   }, [chatService, chatbotType]);
 
-  // Query: Get all sessions
+  // Build query key based on filters
+  const queryKey = conversationType === 'field' && fieldId
+    ? ['chat', 'sessions', chatbotType, 'field', fieldId]
+    : ['chat', 'sessions', chatbotType];
+
+  // Query: Get all sessions (with optional filtering)
   const {
     data: sessions,
     isLoading: isLoadingSessions,
     error: sessionsError,
   } = useQuery({
-    queryKey: ['chat', 'sessions', chatbotType],
-    queryFn: () => chatService.getSessions(),
+    queryKey,
+    queryFn: async () => {
+      const allSessions = await chatService.getSessions();
+      // Filter by conversation type and field ID if specified
+      if (conversationType === 'field' && fieldId) {
+        return allSessions.filter(
+          s => s.conversation_type === 'field' && s.field_id === fieldId
+        );
+      }
+      if (conversationType) {
+        return allSessions.filter(s => s.conversation_type === conversationType);
+      }
+      return allSessions;
+    },
     retry: 1,
   });
+
+  // Build session create data with field context if applicable
+  const buildSessionCreateData = useCallback((): ChatSessionCreate => {
+    if (conversationType === 'field' && fieldId) {
+      return {
+        title: fieldLabel || 'Field Chat',
+        conversation_type: 'field',
+        field_id: fieldId,
+        field_label: fieldLabel,
+      };
+    }
+    return {};
+  }, [conversationType, fieldId, fieldLabel]);
 
   // Auto-create session if none exists and autoCreate is enabled
   useEffect(() => {
     if (!isLoadingSessions && sessions && sessions.length === 0 && autoCreate && !currentSessionId) {
       // Create a new session automatically
-      chatService.createSession().then(newSession => {
+      const sessionData = buildSessionCreateData();
+      chatService.createSession(sessionData).then(newSession => {
         setCurrentSessionIdState(newSession.id);
         chatService.setCurrentSession(newSession.id);
-        queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+        queryClient.invalidateQueries({ queryKey });
       }).catch(error => {
         console.error('Failed to auto-create session:', error);
       });
     }
-  }, [sessions, isLoadingSessions, autoCreate, currentSessionId, chatService, queryClient, chatbotType]);
+  }, [sessions, isLoadingSessions, autoCreate, currentSessionId, chatService, queryClient, queryKey, buildSessionCreateData]);
 
   // Set first session as current if none selected and sessions exist
   useEffect(() => {
@@ -80,7 +123,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
   const createSessionMutation = useMutation({
     mutationFn: (data?: ChatSessionCreate) => chatService.createSession(data),
     onSuccess: (newSession) => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+      queryClient.invalidateQueries({ queryKey });
       // Switch to new session
       setCurrentSessionId(newSession.id);
     },
@@ -98,7 +141,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     mutationFn: ({ sessionId, update }: { sessionId: string; update: ChatSessionUpdate }) =>
       chatService.updateSession(sessionId, update),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+      queryClient.invalidateQueries({ queryKey });
     },
     onError: (error: Error) => {
       toast({
@@ -113,7 +156,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
   const deleteSessionMutation = useMutation({
     mutationFn: (sessionId: string) => chatService.deleteSession(sessionId),
     onSuccess: (_, deletedSessionId) => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+      queryClient.invalidateQueries({ queryKey });
 
       // If deleted current session, switch to another
       if (deletedSessionId === currentSessionId) {
@@ -141,9 +184,10 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
 
   // Create new chat (convenience wrapper)
   const createNewChat = useCallback(async () => {
-    const newSession = await createSessionMutation.mutateAsync({});
+    const sessionData = buildSessionCreateData();
+    const newSession = await createSessionMutation.mutateAsync(sessionData);
     return newSession;
-  }, [createSessionMutation]);
+  }, [createSessionMutation, buildSessionCreateData]);
 
   // Rename session (convenience wrapper)
   const renameSession = useCallback(async (sessionId: string, title: string) => {
@@ -160,7 +204,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     mutationFn: (sessionId: string) => chatService.regenerateSessionTitle(sessionId),
     onSuccess: (newTitle) => {
       if (newTitle) {
-        queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+        queryClient.invalidateQueries({ queryKey });
         toast({
           title: 'Title Updated',
           description: `New title: "${newTitle}"`,
