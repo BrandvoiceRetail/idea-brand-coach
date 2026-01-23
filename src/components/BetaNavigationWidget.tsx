@@ -77,7 +77,7 @@ export function BetaNavigationWidget() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed top-28 right-4 z-50">
       {!isExpanded ? (
         <div className="flex flex-col gap-2">
           <Button
