@@ -2,10 +2,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, X, Sparkles } from 'lucide-react';
+import { FormattedAIText } from '@/components/FormattedAIText';
 
 interface AISuggestionPreviewProps {
   suggestion: string;
-  currentValue: string;
   fieldType: string;
   onAccept: () => void;
   onReject: () => void;
@@ -13,7 +13,6 @@ interface AISuggestionPreviewProps {
 
 export function AISuggestionPreview({
   suggestion,
-  currentValue,
   fieldType,
   onAccept,
   onReject
@@ -26,8 +25,6 @@ export function AISuggestionPreview({
       .replace(/^\w/, c => c.toUpperCase());
   };
 
-  const hasExistingContent = currentValue && currentValue.trim().length > 0;
-
   return (
     <Card className="mt-3 border-primary/30 bg-primary/5">
       <CardContent className="p-4 space-y-3">
@@ -36,21 +33,10 @@ export function AISuggestionPreview({
           <span>AI Suggestion for {formatFieldType(fieldType)}</span>
         </div>
 
-        {hasExistingContent && (
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground font-medium">Your current content:</p>
-            <div className="text-sm p-2 rounded bg-muted/50 border border-muted text-muted-foreground line-clamp-3">
-              {currentValue}
-            </div>
-          </div>
-        )}
-
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground font-medium">
-            {hasExistingContent ? 'Suggested replacement:' : 'Suggested content:'}
-          </p>
-          <div className="text-sm p-3 rounded bg-background border border-primary/20">
-            {suggestion}
+          <p className="text-xs text-muted-foreground font-medium">Suggested content:</p>
+          <div className="p-3 rounded bg-background border border-primary/20 max-h-64 overflow-y-auto">
+            <FormattedAIText text={suggestion} />
           </div>
         </div>
 
@@ -73,12 +59,6 @@ export function AISuggestionPreview({
             Reject
           </Button>
         </div>
-
-        {hasExistingContent && (
-          <p className="text-xs text-muted-foreground text-center">
-            Accepting will replace your current content
-          </p>
-        )}
       </CardContent>
     </Card>
   );

@@ -104,7 +104,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
       {pendingSuggestion && (
         <AISuggestionPreview
           suggestion={pendingSuggestion}
-          currentValue={currentValue}
           fieldType={fieldType}
           onAccept={handleAccept}
           onReject={handleReject}

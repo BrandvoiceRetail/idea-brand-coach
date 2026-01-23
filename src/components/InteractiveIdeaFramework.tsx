@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ContextualHelp } from "@/components/ContextualHelp";
+import { AISuggestionPreview } from "@/components/AISuggestionPreview";
 import {
   Search,
   Brain,
@@ -76,8 +77,23 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState<Record<string, string>>({});
+  const [pendingSuggestion, setPendingSuggestion] = useState<string | null>(null);
   const { toast } = useToast();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea to fit content
+  const autoResizeTextarea = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.max(120, textarea.scrollHeight)}px`;
+    }
+  }, []);
+
+  // Trigger auto-resize when content changes (especially after accepting AI suggestion)
+  useEffect(() => {
+    autoResizeTextarea();
+  }, [buyerIntent.value, buyerMotivation.value, emotionalTriggers.value, shopperType.value, demographics.value, autoResizeTextarea]);
 
   const steps = [
     {
@@ -149,41 +165,52 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
 
   const generateAIGuidance = async (stepId: string, userInput: string) => {
     if (!userInput.trim()) return;
-    
+
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-insight-guidance', {
-        body: { 
-          stepId, 
-          userInput, 
-          context: `User is working on ${currentStepData.title} step of the IDEA Strategic Brand Framework™` 
+        body: {
+          stepId,
+          userInput,
+          context: `User is working on ${currentStepData.title} step of the IDEA Strategic Brand Framework™`
         }
       });
 
       if (error) throw error;
 
-      // Store the AI suggestion for this step
-      setAiSuggestions(prev => ({
-        ...prev,
-        [stepId]: data.guidance
-      }));
-
-      toast({
-        title: "AI Guidance Generated",
-        description: "Check the suggestions below to improve your insights.",
-      });
+      // Show the suggestion for review (accept/reject pattern)
+      setPendingSuggestion(data.guidance);
 
       return data.guidance;
     } catch (error) {
       console.error('Error generating AI guidance:', error);
       toast({
-        title: "AI Guidance Unavailable",
+        title: "AI Help Unavailable",
         description: "Continue with your current input. AI assistance will be available shortly.",
         variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleAcceptSuggestion = (): void => {
+    if (pendingSuggestion) {
+      handleInputChange(pendingSuggestion);
+      setPendingSuggestion(null);
+      toast({
+        title: "Content Applied",
+        description: `Your ${currentStepData.title.toLowerCase()} has been updated.`
+      });
+    }
+  };
+
+  const handleRejectSuggestion = (): void => {
+    setPendingSuggestion(null);
+    toast({
+      title: "Suggestion Dismissed",
+      description: "Your original content has been preserved."
+    });
   };
 
   const handleInputChange = (value: string) => {
@@ -422,26 +449,27 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
               />
             </div>
             <Textarea
+              ref={textareaRef}
               placeholder={`Describe your customers' ${currentStepData.title.toLowerCase()}...`}
               value={getCurrentValue()}
-              onChange={(e) => handleInputChange(e.target.value)}
-              className="min-h-[120px]"
+              onChange={(e) => {
+                handleInputChange(e.target.value);
+                autoResizeTextarea();
+              }}
+              className="min-h-[120px] resize-none overflow-hidden"
             />
             
-            {/* AI Suggestions Display */}
-            {aiSuggestions[currentStepData.id] && (
-              <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <h5 className="font-semibold text-primary">AI Suggestions</h5>
-                </div>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {aiSuggestions[currentStepData.id]}
-                </p>
-              </div>
+            {/* AI Suggestion Preview with Accept/Reject */}
+            {pendingSuggestion && (
+              <AISuggestionPreview
+                suggestion={pendingSuggestion}
+                fieldType={currentStepData.title}
+                onAccept={handleAcceptSuggestion}
+                onReject={handleRejectSuggestion}
+              />
             )}
-            
-            {getCurrentValue() && (
+
+            {getCurrentValue() && !pendingSuggestion && (
               <Button
                 variant="outline"
                 size="sm"
@@ -454,7 +482,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
                 ) : (
                   <Sparkles className="w-4 h-4" />
                 )}
-                Get AI Suggestions
+                Get AI Auto Suggestions
               </Button>
             )}
           </div>

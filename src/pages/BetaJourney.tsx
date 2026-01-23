@@ -10,33 +10,96 @@ import { useBetaMode } from "@/hooks/useBetaMode";
 
 const quickTestSteps = [
   {
-    id: "explore",
-    title: "Explore Homepage",
-    description: "Browse the homepage and get familiar with the layout",
+    id: "start-here",
+    title: "Start Here",
+    description: "Watch introduction videos and get oriented",
     tasks: [
-      "Notice the hero section and main value proposition",
-      "Check the navigation menu",
-      "Look for any confusing elements"
+      "Watch the intro video explaining the IDEA framework",
+      "Understand the overall workflow",
+      "Note if anything is unclear"
     ],
-    link: "/",
+    link: "/start-here",
+    estimatedTime: "2-3 mins"
+  },
+  {
+    id: "avatar",
+    title: "Avatar 2.0",
+    description: "Build your ideal customer persona",
+    tasks: [
+      "Fill out customer demographics and psychographics",
+      "Define pain points and motivations",
+      "Test the AI suggestions feature"
+    ],
+    link: "/avatar",
+    estimatedTime: "3-5 mins"
+  },
+  {
+    id: "interactive-insight",
+    title: "Interactive Insight",
+    description: "Get AI-powered insights based on your Avatar",
+    tasks: [
+      "Review the insights generated from your Avatar data",
+      "Try the 'Get AI Auto Suggestions' feature",
+      "Accept or reject AI suggestions"
+    ],
+    link: "/idea/insight",
+    estimatedTime: "2-3 mins"
+  },
+  {
+    id: "brand-canvas",
+    title: "Brand Canvas",
+    description: "Build your visual brand strategy",
+    tasks: [
+      "Explore each section of the canvas",
+      "Test AI-generated content suggestions",
+      "Try exporting/downloading your canvas"
+    ],
+    link: "/canvas",
+    estimatedTime: "3-4 mins"
+  },
+  {
+    id: "brand-coach",
+    title: "Brand Coach",
+    description: "Chat with the AI brand consultant",
+    tasks: [
+      "Ask a question about your brand strategy",
+      "See if responses reference your Avatar/Canvas data",
+      "Test follow-up questions"
+    ],
+    link: "/idea/consultant",
+    estimatedTime: "2-3 mins"
+  }
+];
+
+const comprehensiveTestSteps = [
+  {
+    id: "landing",
+    title: "Landing Page",
+    description: "Review the public-facing landing page",
+    tasks: [
+      "Review the hero section and value proposition",
+      "Check if the messaging is clear and compelling",
+      "Test the call-to-action buttons"
+    ],
+    link: "/welcome",
     estimatedTime: "2 mins"
   },
   {
     id: "diagnostic",
-    title: "Take Free Diagnostic",
-    description: "Complete the brand diagnostic to see your results",
+    title: "Free Diagnostic",
+    description: "Complete the brand diagnostic assessment",
     tasks: [
-      "Click 'Get Your Free Diagnostic'",
-      "Answer all questions honestly",
-      "Note any confusing questions"
+      "Answer all 6 diagnostic questions",
+      "Note any confusing questions",
+      "Check if questions feel relevant"
     ],
     link: "/diagnostic",
     estimatedTime: "3-5 mins"
   },
   {
-    id: "results",
-    title: "Review Your Results",
-    description: "Examine your diagnostic results and insights",
+    id: "diagnostic-results",
+    title: "Diagnostic Results",
+    description: "Review your diagnostic results and insights",
     tasks: [
       "Review your overall score",
       "Read through each category breakdown",
@@ -44,15 +107,11 @@ const quickTestSteps = [
     ],
     link: "/diagnostic/results",
     estimatedTime: "2 mins"
-  }
-];
-
-const comprehensiveTestSteps = [
-  ...quickTestSteps,
+  },
   {
     id: "signup",
     title: "Create Account",
-    description: "Sign up to access advanced features",
+    description: "Sign up to access the full app",
     tasks: [
       "Create a new account or sign in",
       "Note the signup process ease",
@@ -61,41 +120,54 @@ const comprehensiveTestSteps = [
     link: "/auth",
     estimatedTime: "2 mins"
   },
+  ...quickTestSteps,
   {
-    id: "dashboard",
-    title: "Explore Dashboard",
-    description: "Navigate the authenticated user dashboard",
+    id: "journey",
+    title: "Journey Page",
+    description: "Explore the Strategic Brand Building Journey",
     tasks: [
-      "Check the dashboard layout",
-      "Explore available tools and modules",
-      "Test navigation between sections"
+      "Review the step-by-step journey layout",
+      "Check if the flow is intuitive",
+      "Note any missing or confusing steps"
     ],
-    link: "/dashboard",
-    estimatedTime: "3 mins"
+    link: "/journey",
+    estimatedTime: "2 mins"
   },
   {
-    id: "tools",
-    title: "Test Brand Tools",
-    description: "Try the brand canvas and avatar builder",
+    id: "copy-generator",
+    title: "Copy Generator",
+    description: "Generate brand copy using AI",
     tasks: [
-      "Create a simple brand canvas",
-      "Try the avatar builder",
-      "Test any other available tools"
+      "Try generating different types of copy",
+      "Test if copy reflects your brand voice",
+      "Check quality and relevance of outputs"
+    ],
+    link: "/copy-generator",
+    estimatedTime: "3-4 mins"
+  },
+  {
+    id: "export",
+    title: "Export Strategy Document",
+    description: "Download your complete brand strategy",
+    tasks: [
+      "Export your strategy as PDF from Brand Canvas",
+      "Review the document for completeness",
+      "Check if all your inputs are included"
     ],
     link: "/canvas",
-    estimatedTime: "5-7 mins"
+    estimatedTime: "2 mins"
   }
 ];
 
 export default function BetaJourney() {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode") || "quick";
-  const { initializeBetaMode, betaProgress, addComment, completeStep, getComment } = useBetaMode();
+  const { initializeBetaMode, betaProgress, addComment, completeStep, getComments } = useBetaMode();
   const [stepComments, setStepComments] = useState<Record<string, string>>({});
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const steps = mode === "quick" ? quickTestSteps : comprehensiveTestSteps;
-  const totalTime = mode === "quick" ? "5-10 minutes" : "15-25 minutes";
+  const totalTime = mode === "quick" ? "12-18 minutes" : "25-35 minutes";
 
   // Initialize beta mode when component mounts
   useEffect(() => {
@@ -212,40 +284,44 @@ export default function BetaJourney() {
                     ))}
                   </div>
 
-                  {/* Show existing comment if any */}
-                  {getComment(step.id) && (
+                  {/* Show existing comments if any */}
+                  {getComments(step.id).length > 0 && (
                     <div className="mb-4 p-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <FileText className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">Your feedback:</span>
+                        <span className="text-sm font-medium">Your feedback ({getComments(step.id).length}):</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{getComment(step.id)}</p>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {getComments(step.id).map((c, i) => (
+                          <p key={i} className="text-sm text-muted-foreground border-b border-border pb-1 last:border-0">
+                            {c.comment}
+                          </p>
+                        ))}
+                      </div>
                     </div>
                   )}
 
-                  {/* Add comment section for incomplete steps */}
-                  {!isCompleted && !getComment(step.id) && (
-                    <div className="mb-4 space-y-2">
-                      <label className="text-sm font-medium">Add notes about this step:</label>
-                      <Textarea
-                        placeholder="Any observations, issues, or feedback about this step..."
-                        value={stepComments[step.id] || ''}
-                        onChange={(e) => handleCommentChange(step.id, e.target.value)}
-                        rows={2}
-                        className="text-sm"
-                      />
-                      {stepComments[step.id]?.trim() && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleSaveComment(step.id)}
-                        >
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          Save Note
-                        </Button>
-                      )}
-                    </div>
-                  )}
+                  {/* Always show add comment section */}
+                  <div className="mb-4 space-y-2">
+                    <label className="text-sm font-medium">Add notes about this step:</label>
+                    <Textarea
+                      placeholder="Any observations, issues, or feedback about this step..."
+                      value={stepComments[step.id] || ''}
+                      onChange={(e) => handleCommentChange(step.id, e.target.value)}
+                      rows={2}
+                      className="text-sm"
+                    />
+                    {stepComments[step.id]?.trim() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSaveComment(step.id)}
+                      >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Save Note
+                      </Button>
+                    )}
+                  </div>
 
                   <div className="flex gap-3">
                     <Button asChild>
@@ -280,7 +356,7 @@ export default function BetaJourney() {
           
           {progress === 100 && (
             <Button asChild className="bg-green-600 hover:bg-green-700">
-              <Link to="/beta/feedback">
+              <Link to="/beta-feedback">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Share Your Feedback
                 <ArrowRight className="ml-2 h-4 w-4" />

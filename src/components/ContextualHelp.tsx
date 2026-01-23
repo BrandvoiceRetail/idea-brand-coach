@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HelpCircle, X, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { FormattedAIText } from "@/components/FormattedAIText";
 
 interface ContextualHelpProps {
   question: string;
@@ -77,7 +78,7 @@ export function ContextualHelp({ question, category, context, currentStep, isSte
         ) : (
           <Sparkles className="w-4 h-4 mr-2" />
         )}
-        Get AI Help
+        Get AI Guidance
       </Button>
     );
   }
@@ -101,9 +102,7 @@ export function ContextualHelp({ question, category, context, currentStep, isSte
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="text-sm leading-relaxed text-foreground/90">
-          {helpText}
-        </p>
+        <FormattedAIText text={helpText || ''} className="text-foreground/90" />
       </CardContent>
     </Card>
   );
