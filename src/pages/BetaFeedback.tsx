@@ -24,11 +24,15 @@ import {
 import { useBetaMode } from "@/hooks/useBetaMode";
 
 const feedbackAreas = [
+  { id: "start-here", label: "Start Here / Videos" },
+  { id: "avatar", label: "Avatar 2.0" },
+  { id: "interactive-insight", label: "Interactive Insight" },
+  { id: "brand-canvas", label: "Brand Canvas" },
+  { id: "brand-coach", label: "Brand Coach Chat" },
+  { id: "copy-generator", label: "Copy Generator" },
+  { id: "diagnostic", label: "Free Diagnostic" },
+  { id: "export", label: "PDF Export" },
   { id: "navigation", label: "Navigation & Layout" },
-  { id: "diagnostic", label: "Brand Diagnostic" },
-  { id: "results", label: "Results & Insights" },
-  { id: "tools", label: "Brand Tools" },
-  { id: "signup", label: "Sign-up Process" },
   { id: "performance", label: "Speed & Performance" },
 ];
 
@@ -82,7 +86,8 @@ export default function BetaFeedback() {
           wouldRecommend,
           email,
           userId: user?.id || null,
-          betaTesterId: betaTesterInfo?.id || null
+          betaTesterId: betaTesterInfo?.id || null,
+          stepComments: betaProgress?.comments || []
         }
       });
 
@@ -322,7 +327,7 @@ export default function BetaFeedback() {
           {/* Submit buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="outline" asChild>
-              <Link to={`/beta/journey?mode=${betaProgress?.mode || 'quick'}`}>
+              <Link to={`/beta-journey?mode=${betaProgress?.mode || 'quick'}`}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Journey
               </Link>

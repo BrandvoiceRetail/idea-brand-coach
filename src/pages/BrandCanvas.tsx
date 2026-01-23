@@ -16,7 +16,7 @@ import { useModuleCompletionStatus } from "@/hooks/useModuleCompletionStatus";
 import { AIAssistant } from "@/components/AIAssistant";
 import { BrandCanvasPDFExport } from "@/components/BrandCanvasPDFExport";
 import { BrandMarkdownExport } from "@/components/export/BrandMarkdownExport";
-import { FloatingConsultantButton } from "@/components/FloatingConsultantButton";
+import { FloatingChatWidget } from "@/components/FloatingChatWidget";
 import { CollapsibleDescription } from "@/components/CollapsibleDescription";
 import { CollapsibleVideo } from "@/components/CollapsibleVideo";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
@@ -906,8 +906,9 @@ export default function BrandCanvas() {
         </div>
       </div>
 
-      <FloatingConsultantButton
-        show={completionPercentage > 20}
+      <FloatingChatWidget
+        pageContext="Brand Canvas page - building their visual brand strategy"
+        placeholder="Ask about your brand canvas..."
       />
     </div>
   );

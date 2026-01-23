@@ -41,10 +41,10 @@ export function useBetaMode() {
     localStorage.setItem('betaProgress', JSON.stringify(progress));
   };
 
-  // Add comment for current step/page
+  // Add comment for current step/page (allows multiple comments per page)
   const addComment = (stepId: string, comment: string) => {
     if (!betaProgress) return;
-    
+
     const newComment: BetaComment = {
       stepId,
       pageUrl: location.pathname,
@@ -54,7 +54,7 @@ export function useBetaMode() {
 
     const updatedProgress = {
       ...betaProgress,
-      comments: [...betaProgress.comments.filter(c => c.stepId !== stepId), newComment]
+      comments: [...betaProgress.comments, newComment]
     };
 
     setBetaProgress(updatedProgress);
@@ -80,9 +80,14 @@ export function useBetaMode() {
     localStorage.removeItem('betaProgress');
   };
 
-  // Get comment for specific step
+  // Get single comment for specific step (first one found)
   const getComment = (stepId: string) => {
     return betaProgress?.comments.find(c => c.stepId === stepId)?.comment || '';
+  };
+
+  // Get all comments for specific step
+  const getComments = (stepId: string): BetaComment[] => {
+    return betaProgress?.comments.filter(c => c.stepId === stepId) || [];
   };
 
   // Get beta tester info from localStorage
@@ -99,6 +104,7 @@ export function useBetaMode() {
     completeStep,
     clearBetaMode,
     getComment,
+    getComments,
     getBetaTesterInfo
   };
 }

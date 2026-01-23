@@ -27,6 +27,7 @@ interface NavItem {
   name: string;
   href: string;
   icon: React.ElementType;
+  openInNewTab?: boolean;
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -47,6 +48,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         name: feature.name,
         href: feature.route,
         icon: feature.icon,
+        openInNewTab: feature.openInNewTab,
       });
 
       // Insert Home after the first feature (Brand Diagnostic) - only for P1+
@@ -107,16 +109,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {visibleItems.map((item, index) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.href;
+                  const className = `flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
+                    isActive
+                      ? "bg-secondary text-secondary-foreground shadow-brand"
+                      : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20"
+                  }`;
+
+                  if (item.openInNewTab) {
+                    return (
+                      <a
+                        key={item.name}
+                        ref={(node) => measureRef(node, index)}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={className}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" />
+                        <span>{item.name}</span>
+                      </a>
+                    );
+                  }
+
                   return (
                     <Link
                       key={item.name}
                       ref={(node) => measureRef(node, index)}
                       to={item.href}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                        isActive
-                          ? "bg-secondary text-secondary-foreground shadow-brand"
-                          : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20"
-                      }`}
+                      className={className}
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" />
                       <span>{item.name}</span>
@@ -143,6 +163,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     {overflowItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = location.pathname === item.href;
+
+                      if (item.openInNewTab) {
+                        return (
+                          <DropdownMenuItem key={item.name} asChild>
+                            <a
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`flex items-center gap-2 cursor-pointer ${
+                                isActive ? "bg-accent" : ""
+                              }`}
+                            >
+                              <Icon className="w-4 h-4" />
+                              <span>{item.name}</span>
+                            </a>
+                          </DropdownMenuItem>
+                        );
+                      }
+
                       return (
                         <DropdownMenuItem key={item.name} asChild>
                           <Link
@@ -210,15 +249,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {allNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
+                const className = `flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${
+                  isActive
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20"
+                }`;
+
+                if (item.openInNewTab) {
+                  return (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={className}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span>{item.name}</span>
+                    </a>
+                  );
+                }
+
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${
-                      isActive
-                        ? "bg-secondary text-secondary-foreground"
-                        : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary/20"
-                    }`}
+                    className={className}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Icon className="w-5 h-5" />

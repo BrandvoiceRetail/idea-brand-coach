@@ -199,24 +199,24 @@ export default function BetaWelcome() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Perfect for busy testers. Focus on key flows and critical features.
+                Perfect for busy testers. Focus on the core brand strategy workflow.
               </p>
               <div className="space-y-2 mb-6">
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>5-10 minutes</span>
+                  <span>12-18 minutes</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Core diagnostic flow</span>
+                  <span>Avatar → Insights → Canvas → Coach flow</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Basic navigation test</span>
+                  <span>Core AI features</span>
                 </div>
               </div>
               <Button asChild className="w-full">
-                <Link to="/beta/journey?mode=quick">
+                <Link to="/beta-journey?mode=quick">
                   Start Quick Test
                 </Link>
               </Button>
@@ -237,23 +237,23 @@ export default function BetaWelcome() {
               <div className="space-y-2 mb-6">
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>15-25 minutes</span>
+                  <span>25-35 minutes</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>All diagnostic modules</span>
+                  <span>Full diagnostic + signup flow</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Advanced features</span>
+                  <span>All brand tools + Copy Generator</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Brand tools exploration</span>
+                  <span>PDF export and document review</span>
                 </div>
               </div>
               <Button asChild className="w-full" variant="default">
-                <Link to="/beta/journey?mode=comprehensive">
+                <Link to="/beta-journey?mode=comprehensive">
                   Start Comprehensive Test
                 </Link>
               </Button>

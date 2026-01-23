@@ -18,23 +18,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { 
-      overallRating, 
-      likedMost, 
-      improvements, 
-      issues, 
-      selectedAreas, 
-      wouldRecommend, 
+    const {
+      overallRating,
+      likedMost,
+      improvements,
+      issues,
+      selectedAreas,
+      wouldRecommend,
       email,
       userId,
-      betaTesterId 
+      betaTesterId,
+      stepComments
     } = await req.json()
 
-    console.log('Saving beta feedback:', { 
-      overallRating, 
-      userId, 
+    console.log('Saving beta feedback:', {
+      overallRating,
+      userId,
       betaTesterId,
-      areasCount: selectedAreas?.length 
+      areasCount: selectedAreas?.length,
+      stepCommentsCount: stepComments?.length || 0
     })
 
     const { data, error } = await supabase
@@ -48,7 +50,8 @@ serve(async (req) => {
         issues: issues || null,
         areas_tested: selectedAreas || [],
         would_recommend: wouldRecommend || null,
-        contact_email: email || null
+        contact_email: email || null,
+        step_comments: stepComments || []
       })
       .select()
 

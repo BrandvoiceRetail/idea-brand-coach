@@ -31,6 +31,7 @@ import {
   FileCheck,
   Clock,
   PlayCircle,
+  FlaskConical,
 } from 'lucide-react';
 
 export type DeploymentPhase = 'P0' | 'P1' | 'P2';
@@ -67,10 +68,13 @@ export interface Feature {
   showInNav: boolean;
 
   /** Category for organization */
-  category: 'core' | 'diagnostic' | 'consultant' | 'collaboration' | 'analytics';
+  category: 'core' | 'diagnostic' | 'consultant' | 'collaboration' | 'analytics' | 'testing';
 
   /** Require authentication to access? */
   requiresAuth: boolean;
+
+  /** Open in new tab? (for features that should run alongside the app) */
+  openInNewTab?: boolean;
 }
 
 /**
@@ -245,6 +249,22 @@ export const FEATURES: Record<string, Feature> = {
     showInNav: false,
     category: 'core',
     requiresAuth: true,
+  },
+
+  BETA_TEST: {
+    id: 'BETA_TEST',
+    name: 'Beta Test',
+    shortDescription: 'Beta testing journey and feedback',
+    fullDescription: 'Follow a guided beta testing journey and provide feedback to help us improve IDEA Brand Coach.',
+    phase: 'P0',
+    route: '/beta',
+    icon: FlaskConical,
+    statusMessage: 'Available Now',
+    estimatedRelease: 'Live',
+    showInNav: true,
+    category: 'testing',
+    requiresAuth: false,
+    openInNewTab: true,
   },
 
   // ========================================
