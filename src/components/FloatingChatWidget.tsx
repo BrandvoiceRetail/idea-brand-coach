@@ -50,7 +50,7 @@ export function FloatingChatWidget({
   });
 
   // System KB toggle (global state)
-  const { useSystemKB, toggleSystemKB } = useSystemKB();
+  const { useSystemKB: isSystemKBEnabled, toggleSystemKB } = useSystemKB();
 
   // Get current session title for display
   const currentSession = sessions?.find(s => s.id === currentSessionId);
@@ -155,7 +155,7 @@ export function FloatingChatWidget({
             </div>
             <div className="flex items-center gap-1">
               <SystemKBToggle
-                enabled={useSystemKB}
+                enabled={isSystemKBEnabled}
                 onToggle={toggleSystemKB}
                 variant="compact"
               />

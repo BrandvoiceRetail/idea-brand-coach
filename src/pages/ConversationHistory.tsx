@@ -41,7 +41,7 @@ export default function ConversationHistory() {
   });
 
   // System KB toggle (global state)
-  const { useSystemKB, toggleSystemKB } = useSystemKB();
+  const { useSystemKB: isSystemKBEnabled, toggleSystemKB } = useSystemKB();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -245,7 +245,7 @@ export default function ConversationHistory() {
                       </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                      <SystemKBToggle enabled={useSystemKB} onToggle={toggleSystemKB} />
+                      <SystemKBToggle enabled={isSystemKBEnabled} onToggle={toggleSystemKB} />
                       {selectedSession.conversation_type !== 'field' && (
                         <Button variant="outline" size="sm" asChild>
                           <Link to="/idea/consultant">
