@@ -1,9 +1,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { searchSystemKB } from "./system-kb.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const systemKbVectorStoreId = Deno.env.get('SYSTEM_KB_VECTOR_STORE_ID');
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
@@ -12,77 +12,10 @@ const corsHeaders = {
 /**
  * TEST VERSION - idea-framework-consultant with System KB integration
  *
- * This is a test version that includes System KB (Trevor's book) retrieval.
+ * This is a test version that includes System KB (Trevor's book) retrieval
+ * using the Responses API with file_search tool.
  * Once tested, this can be promoted to the main idea-framework-consultant function.
  */
-
-/**
- * Retrieve context from System Knowledge Base (Trevor's book)
- * Uses OpenAI's Responses API with file_search tool
- */
-async function retrieveSystemKBContext(query: string): Promise<string> {
-  if (!systemKbVectorStoreId) {
-    console.log('[retrieveSystemKBContext] No SYSTEM_KB_VECTOR_STORE_ID configured');
-    return '';
-  }
-
-  try {
-    console.log('[retrieveSystemKBContext] Searching System KB for:', query.substring(0, 100));
-
-    const response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        input: `Find relevant information about: ${query}`,
-        tools: [{
-          type: 'file_search',
-          vector_store_ids: [systemKbVectorStoreId],
-        }],
-        tool_choice: 'required', // Force file search
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[retrieveSystemKBContext] API error:', response.status, errorText);
-      return '';
-    }
-
-    const data = await response.json();
-
-    // Extract the response text which includes retrieved context
-    let systemContext = '';
-    if (data.output_text) {
-      systemContext = data.output_text;
-    } else if (data.output && Array.isArray(data.output)) {
-      // Find message output
-      for (const item of data.output) {
-        if (item.type === 'message' && item.content) {
-          for (const content of item.content) {
-            if (content.type === 'output_text') {
-              systemContext += content.text + '\n';
-            }
-          }
-        }
-      }
-    }
-
-    if (systemContext) {
-      console.log(`[retrieveSystemKBContext] Retrieved context (${systemContext.length} chars)`);
-      return `SYSTEM KNOWLEDGE BASE (Trevor's IDEA Framework):\n${systemContext}`;
-    }
-
-    console.log('[retrieveSystemKBContext] No context retrieved');
-    return '';
-  } catch (error) {
-    console.error('[retrieveSystemKBContext] Error:', error);
-    return '';
-  }
-}
 
 /**
  * Retrieve user's knowledge base context
@@ -233,7 +166,7 @@ serve(async (req) => {
 
     // Retrieve context from both knowledge bases in parallel
     const [systemKBContext, userKnowledgeContext] = await Promise.all([
-      retrieveSystemKBContext(message),
+      searchSystemKB(message, openAIApiKey!, 2000),
       userId && supabaseClient
         ? retrieveUserContext(supabaseClient, userId, message)
         : Promise.resolve('')
