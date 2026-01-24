@@ -13,12 +13,14 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Clock, ChevronRight, Loader2, Send, ExternalLink, Brain } from 'lucide-react';
+import { MessageSquare, Clock, ChevronRight, Loader2, Send, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ChatSession, ChatMessage } from '@/types/chat';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { useChat } from '@/hooks/useChat';
+import { useSystemKB } from '@/contexts/SystemKBContext';
+import { SystemKBToggle } from '@/components/chat/SystemKBToggle';
 
 export default function ConversationHistory() {
   const { chatService } = useServices();
@@ -33,10 +35,13 @@ export default function ConversationHistory() {
   });
 
   // Chat hook for messages and sending - this handles both fetching and updating messages
-  const { messages, sendMessage, isSending, isLoading: isLoadingMessages, useSystemKB, toggleSystemKB } = useChat({
+  const { messages, sendMessage, isSending, isLoading: isLoadingMessages } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: selectedSession?.id,
   });
+
+  // System KB toggle (global state)
+  const { useSystemKB, toggleSystemKB } = useSystemKB();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -240,15 +245,7 @@ export default function ConversationHistory() {
                       </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant={useSystemKB ? "default" : "outline"}
-                        size="sm"
-                        onClick={toggleSystemKB}
-                        className="text-xs"
-                      >
-                        <Brain className="w-3 h-3 mr-1" />
-                        {useSystemKB ? "IDEA KB: ON" : "IDEA KB: OFF"}
-                      </Button>
+                      <SystemKBToggle enabled={useSystemKB} onToggle={toggleSystemKB} />
                       {selectedSession.conversation_type !== 'field' && (
                         <Button variant="outline" size="sm" asChild>
                           <Link to="/idea/consultant">

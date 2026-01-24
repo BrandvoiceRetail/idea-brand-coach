@@ -7,6 +7,7 @@ import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { ServiceProvider } from "@/services/ServiceProvider";
+import { SystemKBProvider } from "@/contexts/SystemKBContext";
 import { OnboardingTourProvider } from "@/contexts/OnboardingTourContext";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { OnboardingTour } from "@/components/OnboardingTour";
@@ -45,9 +46,10 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ServiceProvider>
-      <AuthProvider>
-        <OnboardingTourProvider>
-          <TooltipProvider>
+      <SystemKBProvider>
+        <AuthProvider>
+          <OnboardingTourProvider>
+            <TooltipProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -187,10 +189,11 @@ const App = () => (
                 } />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </OnboardingTourProvider>
-      </AuthProvider>
+              </BrowserRouter>
+            </TooltipProvider>
+          </OnboardingTourProvider>
+        </AuthProvider>
+      </SystemKBProvider>
     </ServiceProvider>
   </QueryClientProvider>
 );

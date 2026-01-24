@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, X, Send, Loader2, Minimize2, Maximize2, Plus, ExternalLink, Brain } from "lucide-react";
+import { MessageSquare, X, Send, Loader2, Minimize2, Maximize2, Plus, ExternalLink } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
 import { useChatSessions } from "@/hooks/useChatSessions";
 import { useAuth } from "@/hooks/useAuth";
+import { useSystemKB } from "@/contexts/SystemKBContext";
+import { SystemKBToggle } from "@/components/chat/SystemKBToggle";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
@@ -42,10 +44,13 @@ export function FloatingChatWidget({
   } = useChatSessions({ chatbotType: 'idea-framework-consultant' });
 
   // Chat hook - uses same session system as consultant page
-  const { messages, sendMessage, isSending, useSystemKB, toggleSystemKB } = useChat({
+  const { messages, sendMessage, isSending } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
   });
+
+  // System KB toggle (global state)
+  const { useSystemKB, toggleSystemKB } = useSystemKB();
 
   // Get current session title for display
   const currentSession = sessions?.find(s => s.id === currentSessionId);
@@ -149,16 +154,11 @@ export function FloatingChatWidget({
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button
-                variant={useSystemKB ? "default" : "ghost"}
-                size="sm"
-                onClick={toggleSystemKB}
-                className="h-7 px-2 text-xs"
-                title={useSystemKB ? "IDEA KB Enabled" : "Enable IDEA KB"}
-              >
-                <Brain className="w-3 h-3" />
-                {useSystemKB && <span className="ml-1">KB</span>}
-              </Button>
+              <SystemKBToggle
+                enabled={useSystemKB}
+                onToggle={toggleSystemKB}
+                variant="compact"
+              />
               <Button
                 variant="ghost"
                 size="sm"
