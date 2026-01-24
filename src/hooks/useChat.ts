@@ -6,7 +6,7 @@
  * @param sessionId - Optional session ID to scope messages to specific session
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/services/ServiceProvider';
 import { ChatMessageCreate, ChatbotType } from '@/types/chat';
@@ -32,6 +32,21 @@ export const useChat = (options: UseChatOptions = {}) => {
   useEffect(() => {
     chatService.setCurrentSession(sessionId);
   }, [chatService, sessionId]);
+
+  // System KB toggle state (synced with service)
+  const [useSystemKB, setUseSystemKBState] = useState(() => chatService.getUseSystemKB());
+
+  // Toggle System KB integration
+  const toggleSystemKB = useCallback(() => {
+    const newValue = !useSystemKB;
+    chatService.setUseSystemKB(newValue);
+    setUseSystemKBState(newValue);
+  }, [chatService, useSystemKB]);
+
+  const setUseSystemKB = useCallback((enabled: boolean) => {
+    chatService.setUseSystemKB(enabled);
+    setUseSystemKBState(enabled);
+  }, [chatService]);
 
   // Query: Get chat history (keyed by chatbot type AND session ID for per-session caching)
   const {
@@ -93,20 +108,25 @@ export const useChat = (options: UseChatOptions = {}) => {
   return {
     // Data
     messages: messages || [],
-    
+
     // Loading states
     isLoading,
     isSending: sendMessageMutation.isPending,
-    
+
     // Error
     error,
-    
+
     // Mutations
     sendMessage: sendMessageMutation.mutateAsync,
     clearChat: clearChatMutation.mutate,
     isClearing: clearChatMutation.isPending,
-    
+
     // Last response data (includes suggestions and sources)
     lastResponse: sendMessageMutation.data,
+
+    // System KB integration (test feature)
+    useSystemKB,
+    toggleSystemKB,
+    setUseSystemKB,
   };
 };

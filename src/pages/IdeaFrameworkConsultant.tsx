@@ -39,7 +39,7 @@ const IdeaFrameworkConsultant = () => {
   } = useChatSessions({ chatbotType: 'idea-framework-consultant' });
 
   // Chat for current session (passing sessionId ensures messages are cached per-session)
-  const { messages, sendMessage, isSending, clearChat } = useChat({
+  const { messages, sendMessage, isSending, clearChat, useSystemKB, toggleSystemKB } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
   });
@@ -509,10 +509,21 @@ const IdeaFrameworkConsultant = () => {
               {/* Consultation Interface */}
               <Card className="lg:col-span-1">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5" />
-                    Consult with Trevor Bradford
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5" />
+                      Consult with Trevor Bradford
+                    </CardTitle>
+                    <Button
+                      variant={useSystemKB ? "default" : "outline"}
+                      size="sm"
+                      onClick={toggleSystemKB}
+                      className="text-xs"
+                    >
+                      <Brain className="w-3 h-3 mr-1" />
+                      {useSystemKB ? "IDEA KB: ON" : "IDEA KB: OFF"}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Sync Status Indicator - Only show when user has typed, not on initial load */}

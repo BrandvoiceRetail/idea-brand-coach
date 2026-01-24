@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Clock, ChevronRight, Loader2, Send, ExternalLink } from 'lucide-react';
+import { MessageSquare, Clock, ChevronRight, Loader2, Send, ExternalLink, Brain } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ChatSession, ChatMessage } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -33,7 +33,7 @@ export default function ConversationHistory() {
   });
 
   // Chat hook for messages and sending - this handles both fetching and updating messages
-  const { messages, sendMessage, isSending, isLoading: isLoadingMessages } = useChat({
+  const { messages, sendMessage, isSending, isLoading: isLoadingMessages, useSystemKB, toggleSystemKB } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: selectedSession?.id,
   });
@@ -239,14 +239,25 @@ export default function ConversationHistory() {
                         )}
                       </CardDescription>
                     </div>
-                    {selectedSession.conversation_type !== 'field' && (
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to="/idea/consultant">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Continue Chat
-                        </Link>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant={useSystemKB ? "default" : "outline"}
+                        size="sm"
+                        onClick={toggleSystemKB}
+                        className="text-xs"
+                      >
+                        <Brain className="w-3 h-3 mr-1" />
+                        {useSystemKB ? "IDEA KB: ON" : "IDEA KB: OFF"}
                       </Button>
-                    )}
+                      {selectedSession.conversation_type !== 'field' && (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to="/idea/consultant">
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Continue Chat
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">

@@ -20,6 +20,7 @@ import { forceSyncUserData } from '@/lib/knowledge-base/sync-service-instance';
 export class SupabaseChatService implements IChatService {
   private chatbotType: ChatbotType = 'idea-framework-consultant';
   private currentSessionId: string | undefined;
+  private useSystemKB: boolean = false;
 
   /**
    * Set the chatbot type for filtering messages
@@ -43,12 +44,30 @@ export class SupabaseChatService implements IChatService {
   }
 
   /**
+   * Enable/disable System KB integration (uses test function)
+   */
+  setUseSystemKB(enabled: boolean): void {
+    this.useSystemKB = enabled;
+    console.log('[ChatService] System KB integration:', enabled ? 'ENABLED' : 'DISABLED');
+  }
+
+  /**
+   * Check if System KB integration is enabled
+   */
+  getUseSystemKB(): boolean {
+    return this.useSystemKB;
+  }
+
+  /**
    * Get the edge function name for the current chatbot type
-   * Always uses idea-framework-consultant
+   * Uses test function when System KB is enabled
    */
   private getEdgeFunctionName(): string {
-    console.log('[ChatService] Using edge function: idea-framework-consultant');
-    return 'idea-framework-consultant';
+    const functionName = this.useSystemKB
+      ? 'idea-framework-consultant-test'
+      : 'idea-framework-consultant';
+    console.log(`[ChatService] Using edge function: ${functionName} (System KB: ${this.useSystemKB})`);
+    return functionName;
   }
 
   /**
