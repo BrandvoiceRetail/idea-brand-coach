@@ -143,7 +143,7 @@ export interface UseTourReturn {
   shouldShowTour: () => boolean;
   startTour: () => void;
   resetTour: () => void;
-  completeTour: () => void;
-  skipTour: () => void;
+  completeTour: (stepsCompleted?: number) => void;
+  skipTour: (currentStep?: number) => void;
   setStepIndex: (index: number) => void;
 }

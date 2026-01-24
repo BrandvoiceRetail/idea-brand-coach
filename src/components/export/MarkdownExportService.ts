@@ -185,10 +185,11 @@ export class MarkdownExportService {
     });
 
     // Aggregate all data
-    // Cast chat sessions to expected type (chatbot_type from DB is string but we need ChatbotType)
+    // Cast chat sessions to expected type (chatbot_type and conversation_type from DB are strings but we need specific types)
     const typedChatSessions = chatSessions.map(session => ({
       ...session,
-      chatbot_type: session.chatbot_type as import('@/types/chat').ChatbotType
+      chatbot_type: session.chatbot_type as import('@/types/chat').ChatbotType,
+      conversation_type: session.conversation_type as import('@/types/chat').ConversationType
     }));
 
     return this.dataAggregator.aggregateAllData(

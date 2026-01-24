@@ -34,14 +34,16 @@ describe('useChat', () => {
       setChatbotType: vi.fn(),
       setCurrentSession: vi.fn(),
       getCurrentSessionId: vi.fn().mockReturnValue(undefined),
-      createSession: vi.fn().mockResolvedValue({ id: 'test-session', user_id: 'test-user', chatbot_type: 'idea-framework-consultant', title: 'New Chat', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
+      createSession: vi.fn().mockResolvedValue({ id: 'test-session', user_id: 'test-user', chatbot_type: 'idea-framework-consultant', title: 'New Chat', conversation_type: 'general', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
       getSessions: vi.fn().mockResolvedValue([]),
       getSession: vi.fn().mockResolvedValue(null),
-      updateSession: vi.fn().mockResolvedValue({ id: 'test-session', user_id: 'test-user', chatbot_type: 'idea-framework-consultant', title: 'Updated', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
+      updateSession: vi.fn().mockResolvedValue({ id: 'test-session', user_id: 'test-user', chatbot_type: 'idea-framework-consultant', title: 'Updated', conversation_type: 'general', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
       deleteSession: vi.fn().mockResolvedValue(undefined),
       getSessionMessages: vi.fn().mockResolvedValue([]),
       generateSessionTitle: vi.fn().mockResolvedValue(undefined),
       regenerateSessionTitle: vi.fn().mockResolvedValue(null),
+      setUseSystemKB: vi.fn(),
+      getUseSystemKB: vi.fn().mockReturnValue(false),
     };
 
     vi.mocked(useServices).mockReturnValue({
