@@ -4,6 +4,7 @@ interface NavItem {
   name: string;
   href: string;
   icon: React.ElementType;
+  openInNewTab?: boolean;
 }
 
 interface UsePriorityNavProps {
