@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      beta_comments: {
+        Row: {
+          beta_tester_id: string | null
+          comment: string
+          commented_at: string
+          created_at: string
+          id: string
+          page_url: string | null
+          step_id: string
+          user_id: string | null
+        }
+        Insert: {
+          beta_tester_id?: string | null
+          comment: string
+          commented_at?: string
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          step_id: string
+          user_id?: string | null
+        }
+        Update: {
+          beta_tester_id?: string | null
+          comment?: string
+          commented_at?: string
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          step_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_comments_beta_tester_id_fkey"
+            columns: ["beta_tester_id"]
+            isOneToOne: false
+            referencedRelation: "beta_testers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       beta_feedback: {
         Row: {
           areas_tested: string[] | null
@@ -25,6 +66,7 @@ export type Database = {
           issues: string | null
           liked_most: string | null
           overall_rating: number | null
+          step_comments: Json | null
           submitted_at: string
           updated_at: string
           user_id: string | null
@@ -40,6 +82,7 @@ export type Database = {
           issues?: string | null
           liked_most?: string | null
           overall_rating?: number | null
+          step_comments?: Json | null
           submitted_at?: string
           updated_at?: string
           user_id?: string | null
@@ -55,6 +98,7 @@ export type Database = {
           issues?: string | null
           liked_most?: string | null
           overall_rating?: number | null
+          step_comments?: Json | null
           submitted_at?: string
           updated_at?: string
           user_id?: string | null
@@ -156,24 +200,36 @@ export type Database = {
       chat_sessions: {
         Row: {
           chatbot_type: string
+          conversation_type: string
           created_at: string
+          field_id: string | null
+          field_label: string | null
           id: string
+          page_context: string | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
           chatbot_type?: string
+          conversation_type?: string
           created_at?: string
+          field_id?: string | null
+          field_label?: string | null
           id?: string
+          page_context?: string | null
           title?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           chatbot_type?: string
+          conversation_type?: string
           created_at?: string
+          field_id?: string | null
+          field_label?: string | null
           id?: string
+          page_context?: string | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -288,6 +344,7 @@ export type Database = {
           filename: string
           id: string
           mime_type: string
+          openai_file_id: string | null
           status: string
           updated_at: string
           user_id: string | null
@@ -300,6 +357,7 @@ export type Database = {
           filename: string
           id?: string
           mime_type: string
+          openai_file_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -312,6 +370,7 @@ export type Database = {
           filename?: string
           id?: string
           mime_type?: string
+          openai_file_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null

@@ -47,7 +47,7 @@ const IdeaFrameworkConsultant = () => {
   });
 
   // System KB toggle (global state)
-  const { useSystemKB, toggleSystemKB } = useSystemKB();
+  const { useSystemKB: isSystemKBEnabled, toggleSystemKB } = useSystemKB();
 
   // Per-session input storage with database persistence
   const {
@@ -519,7 +519,7 @@ const IdeaFrameworkConsultant = () => {
                       <MessageSquare className="w-5 h-5" />
                       Consult with Trevor Bradford
                     </CardTitle>
-                    <SystemKBToggle enabled={useSystemKB} onToggle={toggleSystemKB} />
+                    <SystemKBToggle enabled={isSystemKBEnabled} onToggle={toggleSystemKB} />
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
