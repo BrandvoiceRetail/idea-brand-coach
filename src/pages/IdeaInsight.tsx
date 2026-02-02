@@ -109,7 +109,7 @@ export default function IdeaInsight() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6 mt-6">
+            <TabsContent value="overview" className="space-y-6 mt-6" key={`overview-${tabKey}`} forceMount={false}>
               {/* Key Principle */}
               <Card className="bg-gradient-card shadow-brand">
                 <CardContent className="p-8">

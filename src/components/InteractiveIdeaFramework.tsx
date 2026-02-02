@@ -95,6 +95,13 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
     autoResizeTextarea();
   }, [buyerIntent.value, buyerMotivation.value, emotionalTriggers.value, shopperType.value, demographics.value, autoResizeTextarea]);
 
+  // Clean up pending suggestion when component unmounts (tab switch)
+  useEffect(() => {
+    return () => {
+      setPendingSuggestion(null);
+    };
+  }, []);
+
   const steps = [
     {
       id: "intent",
@@ -268,6 +275,9 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
   };
 
   const handleNext = async () => {
+    // Clear any pending AI suggestion when moving to next step
+    setPendingSuggestion(null);
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -351,6 +361,9 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
   };
 
   const handlePrevious = () => {
+    // Clear any pending AI suggestion when moving to previous step
+    setPendingSuggestion(null);
+
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
@@ -385,7 +398,10 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
               variant={isCurrent ? "default" : isCompleted ? "secondary" : "outline"}
               size="sm"
               className="flex items-center space-x-2 whitespace-nowrap"
-              onClick={() => setCurrentStep(index)}
+              onClick={() => {
+                setPendingSuggestion(null);  // Clear any pending AI suggestion
+                setCurrentStep(index);
+              }}
             >
               {isCompleted ? (
                 <CheckCircle className="w-4 h-4" />
