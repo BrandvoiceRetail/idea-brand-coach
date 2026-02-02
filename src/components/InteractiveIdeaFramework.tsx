@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +74,29 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
     defaultValue: '',
     category: 'insights',
   });
+
+  // Calculate field-based progress
+  const calculateFieldProgress = useMemo(() => {
+    const fields = [
+      buyerIntent.value,
+      buyerMotivation.value,
+      emotionalTriggers.value,
+      shopperType.value,
+      demographics.value
+    ];
+
+    // Count non-empty fields (trim to ignore whitespace)
+    const completedFields = fields.filter(field => field && field.trim().length > 0).length;
+    const totalFields = fields.length;
+
+    return Math.round((completedFields / totalFields) * 100);
+  }, [
+    buyerIntent.value,
+    buyerMotivation.value,
+    emotionalTriggers.value,
+    shopperType.value,
+    demographics.value
+  ]);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -168,7 +191,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
   ];
 
   const currentStepData = steps[currentStep];
-  const progress = ((currentStep + 1) / steps.length) * 100;
+  const progress = calculateFieldProgress;
 
   const generateAIGuidance = async (stepId: string, userInput: string) => {
     if (!userInput.trim()) return;
@@ -381,7 +404,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
         </div>
         <Progress value={progress} className="w-full max-w-md mx-auto" />
         <p className="text-sm text-muted-foreground">
-          Step {currentStep + 1} of {steps.length} • {Math.round(progress)}% Complete
+          Step {currentStep + 1} of {steps.length} • {progress}% Fields Complete
         </p>
       </div>
 
@@ -389,13 +412,29 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
       <div className="flex justify-center space-x-2 overflow-x-auto pb-4">
         {steps.map((step, index) => {
           const StepIcon = step.icon;
-          const isCompleted = index < currentStep;
+          // Check if the field for this step has been completed
+          const isStepFieldCompleted = (() => {
+            switch (step.id) {
+              case "intent":
+                return buyerIntent.value.trim().length > 0;
+              case "motivation":
+                return buyerMotivation.value.trim().length > 0;
+              case "triggers":
+                return emotionalTriggers.value.trim().length > 0;
+              case "shopper":
+                return shopperType.value.trim().length > 0;
+              case "demographics":
+                return demographics.value.trim().length > 0;
+              default:
+                return false;
+            }
+          })();
           const isCurrent = index === currentStep;
-          
+
           return (
             <Button
               key={step.id}
-              variant={isCurrent ? "default" : isCompleted ? "secondary" : "outline"}
+              variant={isCurrent ? "default" : isStepFieldCompleted ? "secondary" : "outline"}
               size="sm"
               className="flex items-center space-x-2 whitespace-nowrap"
               onClick={() => {
@@ -403,7 +442,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
                 setCurrentStep(index);
               }}
             >
-              {isCompleted ? (
+              {isStepFieldCompleted ? (
                 <CheckCircle className="w-4 h-4" />
               ) : (
                 <StepIcon className="w-4 h-4" />
