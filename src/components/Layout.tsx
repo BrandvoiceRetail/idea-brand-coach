@@ -35,7 +35,7 @@ interface NavItem {
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const navContainerRef = useRef<HTMLDivElement>(null);
   const { resetTour, startTour } = useOnboardingTourContext();
 
@@ -73,7 +73,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   });
 
   // Show auth page without layout if not authenticated and not on auth or home page
-  if (!user && location.pathname !== '/auth' && location.pathname !== '/' && location.pathname !== '/diagnostic') {
+  // But ONLY after loading is complete to prevent flash of unauthenticated content
+  if (!loading && !user && location.pathname !== '/auth' && location.pathname !== '/' && location.pathname !== '/diagnostic') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="text-center">

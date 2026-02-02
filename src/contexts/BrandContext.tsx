@@ -159,11 +159,17 @@ const BrandContext = createContext<BrandContextType | undefined>(undefined);
 export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [brandData, setBrandData] = useState<BrandData>(initialBrandData);
   const [isInitializing, setIsInitializing] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // Load diagnostic status from database on mount
   useEffect(() => {
     const loadDiagnosticStatus = async () => {
+      // Don't initialize until auth is ready
+      if (authLoading) {
+        setIsInitializing(true);
+        return;
+      }
+
       setIsInitializing(true);
       if (user) {
         try {
@@ -188,7 +194,7 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     loadDiagnosticStatus();
-  }, [user]);
+  }, [user, authLoading]);
 
   const updateBrandData = (section: keyof BrandData, data: Partial<BrandData[keyof BrandData]>) => {
     setBrandData(prev => ({

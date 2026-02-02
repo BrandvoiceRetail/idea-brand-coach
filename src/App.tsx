@@ -11,6 +11,7 @@ import { SystemKBProvider } from "@/contexts/SystemKBContext";
 import { OnboardingTourProvider } from "@/contexts/OnboardingTourContext";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { AuthGate } from "@/components/AuthGate";
 import { ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
@@ -22,12 +23,10 @@ import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
 import IdeaFrameworkConsultant from "./pages/IdeaFrameworkConsultant";
 import ResearchLearning from "./pages/ResearchLearning";
-
 import IdeaInsight from "./pages/IdeaInsight";
 import IdeaDistinctive from "./pages/IdeaDistinctive";
 import IdeaEmpathy from "./pages/IdeaEmpathy";
 import IdeaAuthenticity from "./pages/IdeaAuthenticity";
-
 import AvatarBuilder from "./pages/AvatarBuilder";
 import BrandCanvas from "./pages/BrandCanvas";
 import BrandCopyGenerator from "./pages/BrandCopyGenerator";
@@ -40,162 +39,160 @@ import NotFound from "./pages/NotFound";
 import { TestOfflineSync } from "./pages/TestOfflineSync";
 import { StartHere } from "./pages/StartHere";
 import PricingPaywall from "./pages/PricingPaywall";
-
 const queryClient = new QueryClient();
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <ServiceProvider>
-        <SystemKBProvider>
-          <OnboardingTourProvider>
-            <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <ScrollToTop />
-              <OnboardingTour autoStart={true} />
-              <Routes>
+        <AuthGate>
+          <BrandProvider>
+            <SystemKBProvider>
+              <OnboardingTourProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <ScrollToTop />
+                    <OnboardingTour autoStart={true} />
+
+                    <Routes>
                 <Route path="/" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
+
                 <Route path="/welcome" element={<Landing />} />
+
                 <Route path="/auth" element={<Auth />} />
+
                 <Route path="/start-here" element={
-                  <BrandProvider>
-                    <Layout>
-                      <StartHere />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <StartHere />
+                  </Layout>
                 } />
+
                 <Route path="/journey" element={
-                  <BrandProvider>
-                    <Layout>
-                      <Index />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <Index />
+                  </Layout>
                 } />
+
                 <Route path="/diagnostic" element={<FreeDiagnostic />} />
+
                 <Route path="/subscribe" element={<PricingPaywall />} />
+
                 <Route path="/diagnostic/results" element={<DiagnosticResults />} />
+
                 <Route path="/dashboard" element={
-                  <BrandProvider>
-                    <Layout>
-                      <Dashboard />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
                 } />
+
                 <Route path="/brand-diagnostic" element={
-                  <BrandProvider>
-                    <Layout>
-                      <BrandDiagnostic />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <BrandDiagnostic />
+                  </Layout>
                 } />
+
                 <Route path="/idea-diagnostic" element={
-                  <BrandProvider>
-                    <Layout>
-                      <IdeaDiagnostic />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <IdeaDiagnostic />
+                  </Layout>
                 } />
+
                 <Route path="/idea" element={
-                  <BrandProvider>
-                    <Layout>
-                      <IdeaFramework />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <IdeaFramework />
+                  </Layout>
                 } />
+
                 <Route path="/idea/consultant" element={
-                  <BrandProvider>
-                    <Layout>
-                      <IdeaFrameworkConsultant />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <IdeaFrameworkConsultant />
+                  </Layout>
                 } />
+
                 <Route path="/brand-coach" element={<Navigate to="/idea/consultant" replace />} />
+
                 <Route path="/conversations" element={
-                  <BrandProvider>
-                    <Layout>
-                      <ConversationHistory />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <ConversationHistory />
+                  </Layout>
                 } />
+
                 <Route path="/idea/insight" element={
-                  <BrandProvider>
-                    <Layout>
-                      <IdeaInsight />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <IdeaInsight />
+                  </Layout>
                 } />
+
                 <Route path="/idea/distinctive" element={
-                  <BrandProvider>
-                    <Layout>
-                      <IdeaDistinctive />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <IdeaDistinctive />
+                  </Layout>
                 } />
+
                 <Route path="/idea/empathy" element={
-                  <BrandProvider>
-                    <Layout>
-                      <IdeaEmpathy />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <IdeaEmpathy />
+                  </Layout>
                 } />
+
                 <Route path="/idea/authenticity" element={
-                  <BrandProvider>
-                    <Layout>
-                      <IdeaAuthenticity />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <IdeaAuthenticity />
+                  </Layout>
                 } />
+
                 <Route path="/avatar" element={
-                  <BrandProvider>
-                    <Layout>
-                      <AvatarBuilder />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <AvatarBuilder />
+                  </Layout>
                 } />
+
                 <Route path="/canvas" element={
-                  <BrandProvider>
-                    <Layout>
-                      <BrandCanvas />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <BrandCanvas />
+                  </Layout>
                 } />
+
                 <Route path="/copy-generator" element={
-                  <BrandProvider>
-                    <Layout>
-                      <BrandCopyGenerator />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <BrandCopyGenerator />
+                  </Layout>
                 } />
+
                 <Route path="/research-learning" element={
-                  <BrandProvider>
-                    <Layout>
-                      <ResearchLearning />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <ResearchLearning />
+                  </Layout>
                 } />
+
                 <Route path="/app" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
+
                 <Route path="/value-lens" element={<Navigate to="/copy-generator" replace />} />
+
                 <Route path="/beta" element={<BetaWelcome />} />
+
                 <Route path="/beta-journey" element={<BetaJourney />} />
+
                 <Route path="/beta-feedback" element={<BetaFeedback />} />
+
                 <Route path="/test/offline-sync" element={
-                  <BrandProvider>
-                    <Layout>
-                      <TestOfflineSync />
-                    </Layout>
-                  </BrandProvider>
+                  <Layout>
+                    <TestOfflineSync />
+                  </Layout>
                 } />
+
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </OnboardingTourProvider>
-        </SystemKBProvider>
+
+                    </Routes>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </OnboardingTourProvider>
+            </SystemKBProvider>
+          </BrandProvider>
+        </AuthGate>
       </ServiceProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
-
 export default App;
