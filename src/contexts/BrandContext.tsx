@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface BrandData {
   // IDEA Strategic Brand Framework™ Data
@@ -135,6 +137,12 @@ const initialBrandData: BrandData = {
   },
 };
 
+interface SyncPayload {
+  diagnosticCompleted?: boolean;
+  avatarCompleted?: boolean;
+  insightsCompleted?: boolean;
+}
+
 interface BrandContextType {
   brandData: BrandData;
   updateBrandData: (section: keyof BrandData, data: Partial<BrandData[keyof BrandData]>) => void;
@@ -142,12 +150,45 @@ interface BrandContextType {
   getCompletionPercentage: () => number;
   isToolUnlocked: () => boolean;
   getRecommendedNextStep: () => string;
+  syncWithDatabase: (payload: SyncPayload) => Promise<void>;
+  isInitializing: boolean;
 }
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
 
 export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [brandData, setBrandData] = useState<BrandData>(initialBrandData);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const { user } = useAuth();
+
+  // Load diagnostic status from database on mount
+  useEffect(() => {
+    const loadDiagnosticStatus = async () => {
+      setIsInitializing(true);
+      if (user) {
+        try {
+          const { data } = await supabase
+            .from('diagnostic_submissions')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+
+          if (data) {
+            setBrandData(prev => ({
+              ...prev,
+              insight: { ...prev.insight, completed: true }
+            }));
+          }
+        } catch (error) {
+          // No diagnostic found, which is fine
+          console.log('No diagnostic found for user');
+        }
+      }
+      setIsInitializing(false);
+    };
+
+    loadDiagnosticStatus();
+  }, [user]);
 
   const updateBrandData = (section: keyof BrandData, data: Partial<BrandData[keyof BrandData]>) => {
     setBrandData(prev => ({
@@ -195,7 +236,7 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const getRecommendedNextStep = () => {
     // Return smart guidance instead of locks
-    if (!brandData.insight.completed && !brandData.distinctive.completed && 
+    if (!brandData.insight.completed && !brandData.distinctive.completed &&
         !brandData.empathy.completed && !brandData.authentic.completed) {
       return 'Start with IDEA Framework for best results';
     }
@@ -208,6 +249,29 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return 'All core modules completed!';
   };
 
+  const syncWithDatabase = async (payload: SyncPayload) => {
+    // Sync method to update state from external sources
+    // This allows the sync hook to update multiple fields at once
+    setBrandData(prev => {
+      const updated = { ...prev };
+
+      if (payload.diagnosticCompleted !== undefined) {
+        updated.insight = { ...updated.insight, completed: payload.diagnosticCompleted };
+      }
+
+      if (payload.avatarCompleted !== undefined) {
+        updated.avatar = { ...updated.avatar, completed: payload.avatarCompleted };
+      }
+
+      if (payload.insightsCompleted !== undefined) {
+        // For insights module, we also mark the insight section as complete
+        updated.insight = { ...updated.insight, completed: payload.insightsCompleted };
+      }
+
+      return updated;
+    });
+  };
+
   return (
     <BrandContext.Provider value={{
       brandData,
@@ -216,6 +280,8 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       getCompletionPercentage,
       isToolUnlocked,
       getRecommendedNextStep,
+      syncWithDatabase,
+      isInitializing,
     }}>
       {children}
     </BrandContext.Provider>

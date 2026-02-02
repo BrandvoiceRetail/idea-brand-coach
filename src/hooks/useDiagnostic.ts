@@ -7,11 +7,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/services/ServiceProvider';
 import { DiagnosticCreate } from '@/types/diagnostic';
 import { useToast } from '@/hooks/use-toast';
+import { useBrand } from '@/contexts/BrandContext';
 
 export const useDiagnostic = () => {
   const { diagnosticService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { updateBrandData } = useBrand();
 
   // Query: Get latest diagnostic
   const {
@@ -40,6 +42,7 @@ export const useDiagnostic = () => {
     mutationFn: (data: DiagnosticCreate) => diagnosticService.saveDiagnostic(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['diagnostic'] });
+      updateBrandData('insight', { completed: true });
       toast({
         title: 'Diagnostic Saved',
         description: 'Your diagnostic results have been saved successfully.',
@@ -60,6 +63,7 @@ export const useDiagnostic = () => {
     onSuccess: (data) => {
       if (data) {
         queryClient.invalidateQueries({ queryKey: ['diagnostic'] });
+        updateBrandData('insight', { completed: true });
         toast({
           title: 'Diagnostic Synced',
           description: 'Your diagnostic results have been synced to your account.',

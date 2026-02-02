@@ -6,13 +6,16 @@ import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
 import { useBrand } from "@/contexts/BrandContext";
 import { UserDiagnosticResults } from "@/components/UserDiagnosticResults";
-import { 
-  Brain, 
-  Target, 
-  MessageSquare, 
-  Search, 
-  Zap, 
-  BarChart, 
+import { useSyncBrandContext } from "@/hooks/useSyncBrandContext";
+import { useDiagnostic } from "@/hooks/useDiagnostic";
+import { useModuleCompletionStatus } from "@/hooks/useModuleCompletionStatus";
+import {
+  Brain,
+  Target,
+  MessageSquare,
+  Search,
+  Zap,
+  BarChart,
   BookOpen,
   TrendingUp,
   CheckCircle,
@@ -139,42 +142,62 @@ const additionalModules = [
   }
 ];
 
-// Quick Start Actions for first-time users
-const quickStartActions = [
-  {
-    title: "Start with Brand Diagnostic",
-    description: "Get your brand health assessment in 5 minutes",
-    href: "/diagnostic",
-    icon: Brain,
-    primary: true
-  },
-  {
-    title: "Build Your First Avatar",
-    description: "Create a detailed customer profile",
-    href: "/avatar",
-    icon: Users,
-    primary: false
-  },
-  {
-    title: "Explore IDEA Strategic Brand Framework™",
-    description: "Learn the methodology",
-    href: "/idea",
-    icon: BookOpen,
-    primary: false
-  }
-];
+// Note: quickStartActions defined inside component to access state
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { brandData, getCompletionPercentage } = useBrand();
-  
-  // Calculate real completion percentages
-  const overallCompletion = getCompletionPercentage();
-  const hasStarted = overallCompletion > 0;
-  
-  // Calculate specific metrics from actual data
-  const avatarsCreated = brandData.avatar.completed ? 1 : 0;
-  const diagnosticCompleted = brandData.insight.completed;
+  const { brandData, getCompletionPercentage, isInitializing } = useBrand();
+
+  // Sync database state with context
+  const syncStatus = useSyncBrandContext();
+
+  // Use database-aware hooks for real data
+  const { latestDiagnostic } = useDiagnostic();
+  const { avatarStatus } = useModuleCompletionStatus();
+
+  // Use real data from database hooks
+  const avatarsCreated = avatarStatus === 'completed' ? 1 : 0;
+  const diagnosticCompleted = !!latestDiagnostic;
+
+  // Calculate overall progress based on actual completion
+  const modulesCompleted = [
+    diagnosticCompleted,
+    avatarsCreated > 0,
+    brandData.brandCanvas.completed
+  ].filter(Boolean).length;
+  const overallProgress = Math.round((modulesCompleted / 3) * 100);
+
+  // Get canvas completion for detailed view
+  const canvasCompletion = getCompletionPercentage();
+
+  // User has started if they have any completed modules
+  const hasStarted = diagnosticCompleted || avatarsCreated > 0 || canvasCompletion > 0;
+
+  // Show loading skeleton during initial sync
+  if (isInitializing || syncStatus.isInitializing) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-gradient-hero rounded-lg p-6 sm:p-8 text-center animate-pulse">
+          <div className="h-20 w-48 bg-white/20 mx-auto mb-4 rounded"></div>
+          <div className="h-8 w-64 bg-white/20 mx-auto mb-4 rounded"></div>
+          <div className="h-6 w-96 bg-white/20 mx-auto mb-6 rounded"></div>
+          <div className="flex justify-center gap-4">
+            <div className="h-12 w-40 bg-white/20 rounded"></div>
+            <div className="h-12 w-32 bg-white/20 rounded"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-20 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-8">
@@ -191,8 +214,8 @@ export default function Dashboard() {
           {hasStarted ? `Welcome back to IDEA Brand Coach™` : 'Welcome to IDEA Brand Coach™'}
         </h1>
         <p className="text-lg text-primary-foreground/90 mb-6 max-w-2xl mx-auto">
-          {hasStarted 
-            ? `Continue building your brand strategy. You're ${overallCompletion}% complete.`
+          {hasStarted
+            ? `Continue building your brand strategy. You're ${overallProgress}% complete.`
             : 'Build trust-driven, emotionally resonant brands using the IDEA Strategic Brand Framework™. Transform from guessing to knowing your customers.'
           }
         </p>
@@ -238,7 +261,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-3">
               <TrendingUp className="w-8 h-8 text-secondary" />
               <div>
-                <p className="text-2xl font-bold">{overallCompletion}%</p>
+                <p className="text-2xl font-bold">{overallProgress}%</p>
                 <p className="text-sm text-muted-foreground">Brand Foundation Complete</p>
               </div>
             </div>
@@ -306,20 +329,52 @@ export default function Dashboard() {
             <div>
               <h2 className="text-2xl font-bold mb-6">Quick Start</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {quickStartActions.map((action) => (
-                  <Card 
+                {[
+                  {
+                    title: diagnosticCompleted ? "Review Brand Diagnostic" : "Start with Brand Diagnostic",
+                    description: diagnosticCompleted ? "View your assessment results" : "Get your brand health assessment in 5 minutes",
+                    href: "/diagnostic",
+                    icon: Brain,
+                    primary: !diagnosticCompleted,
+                    completed: diagnosticCompleted
+                  },
+                  {
+                    title: avatarsCreated > 0 ? "Edit Your Avatar" : "Build Your First Avatar",
+                    description: avatarsCreated > 0 ? "Update your customer profile" : "Create a detailed customer profile",
+                    href: "/avatar",
+                    icon: Users,
+                    primary: diagnosticCompleted && avatarsCreated === 0,
+                    completed: avatarsCreated > 0
+                  },
+                  {
+                    title: "Explore IDEA Strategic Brand Framework™",
+                    description: "Learn the methodology",
+                    href: "/idea",
+                    icon: BookOpen,
+                    primary: false,
+                    completed: false
+                  }
+                ].map((action) => (
+                  <Card
                     key={action.title}
-                    className={`hover:shadow-brand transition-all duration-300 cursor-pointer border-2 ${
-                      action.primary ? 'border-secondary bg-secondary/5' : 'border-border'
+                    className={`hover:shadow-brand transition-all duration-300 cursor-pointer border-2 relative ${
+                      action.primary ? 'border-secondary bg-secondary/5' : action.completed ? 'border-green-500/50 bg-green-500/5' : 'border-border'
                     }`}
                     onClick={() => navigate(action.href)}
                   >
+                    {action.completed && (
+                      <div className="absolute top-2 right-2">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      </div>
+                    )}
                     <CardContent className="p-6 text-center">
-                      <action.icon className={`w-12 h-12 mx-auto mb-4 ${action.primary ? 'text-secondary' : 'text-muted-foreground'}`} />
+                      <action.icon className={`w-12 h-12 mx-auto mb-4 ${
+                        action.completed ? 'text-green-600' : action.primary ? 'text-secondary' : 'text-muted-foreground'
+                      }`} />
                       <h3 className="font-semibold text-lg mb-2">{action.title}</h3>
                       <p className="text-sm text-muted-foreground mb-4">{action.description}</p>
                       <Button variant={action.primary ? "default" : "outline"} size="sm">
-                        {action.primary ? 'Start Now' : 'Learn More'}
+                        {action.completed ? 'View' : action.primary ? 'Start Now' : 'Learn More'}
                       </Button>
                     </CardContent>
                   </Card>
@@ -453,10 +508,10 @@ export default function Dashboard() {
             <CardContent className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Brand Foundation</span>
-                  <span>{overallCompletion}%</span>
+                  <span>Brand Diagnostic</span>
+                  <span>{diagnosticCompleted ? '100' : '0'}%</span>
                 </div>
-                <Progress value={overallCompletion} className="h-2" />
+                <Progress value={diagnosticCompleted ? 100 : 0} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-2">
@@ -467,10 +522,10 @@ export default function Dashboard() {
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Message Clarity</span>
-                  <span>{brandData.brandCanvas.completed ? '100' : '0'}%</span>
+                  <span>Brand Canvas</span>
+                  <span>{canvasCompletion}%</span>
                 </div>
-                <Progress value={brandData.brandCanvas.completed ? 100 : 0} className="h-2" />
+                <Progress value={canvasCompletion} className="h-2" />
               </div>
             </CardContent>
           </Card>

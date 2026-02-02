@@ -1,56 +1,40 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDiagnostic } from "@/hooks/useDiagnostic";
 import { Download, Calendar, TrendingUp, Brain } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Json } from "@/integrations/supabase/types";
 import jsPDF from "jspdf";
 
 interface DiagnosticResult {
   id: string;
-  overall_score: number;
-  category_scores: Json;
-  diagnostic_completion_date: string;
+  scores: {
+    overall: number;
+    insight: number;
+    distinctive: number;
+    empathetic: number;
+    authentic: number;
+  };
+  completed_at: string;
   created_at: string;
+  answers: Record<string, string>;
 }
 
 export const UserDiagnosticResults = () => {
-  const [results, setResults] = useState<DiagnosticResult[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { diagnosticHistory, isLoadingHistory } = useDiagnostic();
 
-  useEffect(() => {
-    if (user) {
-      fetchDiagnosticResults();
-    }
-  }, [user]);
-
-  const fetchDiagnosticResults = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_diagnostic_results')
-        .select('*')
-        .order('diagnostic_completion_date', { ascending: false });
-
-      if (error) throw error;
-      
-      setResults(data || []);
-    } catch (error) {
-      console.error('Error fetching diagnostic results:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load diagnostic results",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Transform diagnostic history to match existing component structure
+  const results: DiagnosticResult[] = diagnosticHistory?.map(diag => ({
+    id: diag.id,
+    scores: diag.scores as DiagnosticResult['scores'],
+    completed_at: diag.completed_at,
+    created_at: diag.created_at,
+    answers: diag.answers as Record<string, string>
+  })) || [];
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
@@ -89,7 +73,7 @@ export const UserDiagnosticResults = () => {
       // Date
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'normal');
-      const completionDate = new Date(result.diagnostic_completion_date).toLocaleDateString();
+      const completionDate = new Date(result.completed_at).toLocaleDateString();
       pdf.text(`Assessment Date: ${completionDate}`, margin, yPosition);
       yPosition += 10;
 
@@ -102,37 +86,43 @@ export const UserDiagnosticResults = () => {
 
       pdf.setFontSize(24);
       pdf.setTextColor(34, 197, 94); // Green color for good scores
-      if (result.overall_score < 60) {
+      const overallScore = result.scores?.overall || 0;
+      if (overallScore < 60) {
         pdf.setTextColor(239, 68, 68); // Red for poor scores
-      } else if (result.overall_score < 80) {
+      } else if (overallScore < 80) {
         pdf.setTextColor(245, 158, 11); // Yellow for average scores
       }
-      
-      pdf.text(`${result.overall_score}%`, margin, yPosition);
+
+      pdf.text(`${overallScore}%`, margin, yPosition);
       yPosition += 15;
 
       // Reset text color
       pdf.setTextColor(0, 0, 0);
 
       // Category Scores Section
-      if (result.category_scores && typeof result.category_scores === 'object' && result.category_scores !== null) {
+      if (result.scores && typeof result.scores === 'object') {
         checkPageBreak(30);
         pdf.setFontSize(16);
         pdf.setFont('helvetica', 'bold');
         pdf.text('Category Breakdown', margin, yPosition);
         yPosition += 10;
 
-        const categoryScores = result.category_scores as Record<string, number>;
+        const categoryScores = {
+          'Insight': result.scores.insight || 0,
+          'Distinctive': result.scores.distinctive || 0,
+          'Empathetic': result.scores.empathetic || 0,
+          'Authentic': result.scores.authentic || 0
+        };
+
         Object.entries(categoryScores).forEach(([category, score]) => {
           checkPageBreak();
-          
+
           pdf.setFontSize(12);
           pdf.setFont('helvetica', 'normal');
-          
+
           // Category name
-          const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-          pdf.text(categoryName + ':', margin, yPosition);
-          
+          pdf.text(category + ':', margin, yPosition);
+
           // Score with color coding
           if (score >= 80) {
             pdf.setTextColor(34, 197, 94); // Green
@@ -141,14 +131,14 @@ export const UserDiagnosticResults = () => {
           } else {
             pdf.setTextColor(239, 68, 68); // Red
           }
-          
+
           pdf.setFont('helvetica', 'bold');
           pdf.text(`${score}%`, margin + 60, yPosition);
-          
+
           // Reset color
           pdf.setTextColor(0, 0, 0);
           pdf.setFont('helvetica', 'normal');
-          
+
           yPosition += lineHeight + 2;
         });
       }
@@ -182,7 +172,7 @@ export const UserDiagnosticResults = () => {
     return null;
   }
 
-  if (loading) {
+  if (isLoadingHistory) {
     return (
       <Card>
         <CardHeader>
@@ -250,13 +240,13 @@ export const UserDiagnosticResults = () => {
                     <h3 className="font-semibold">Brand Diagnostic Assessment</h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="w-4 h-4" />
-                      {new Date(result.diagnostic_completion_date).toLocaleDateString()}
+                      {new Date(result.completed_at).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <Badge variant={getScoreBadgeVariant(result.overall_score)} className="mb-2">
-                    {result.overall_score}% Overall
+                  <Badge variant={getScoreBadgeVariant(result.scores?.overall || 0)} className="mb-2">
+                    {result.scores?.overall || 0}% Overall
                   </Badge>
                   <Button
                     variant="outline"
@@ -274,26 +264,31 @@ export const UserDiagnosticResults = () => {
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium">Overall Score</span>
-                    <span className={`text-sm font-bold ${getScoreColor(result.overall_score)}`}>
-                      {result.overall_score}%
+                    <span className={`text-sm font-bold ${getScoreColor(result.scores?.overall || 0)}`}>
+                      {result.scores?.overall || 0}%
                     </span>
                   </div>
-                  <Progress value={result.overall_score} className="h-2" />
+                  <Progress value={result.scores?.overall || 0} className="h-2" />
                 </div>
 
-                {result.category_scores && typeof result.category_scores === 'object' && result.category_scores !== null && (
+                {result.scores && typeof result.scores === 'object' && (
                   <div className="grid grid-cols-2 gap-3 mt-4">
-                    {Object.entries(result.category_scores as Record<string, number>).map(([category, score]) => (
-                      <div key={category} className="space-y-2">
+                    {[
+                      { name: 'Insight', value: result.scores.insight || 0 },
+                      { name: 'Distinctive', value: result.scores.distinctive || 0 },
+                      { name: 'Empathetic', value: result.scores.empathetic || 0 },
+                      { name: 'Authentic', value: result.scores.authentic || 0 }
+                    ].map(({ name, value }) => (
+                      <div key={name} className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium capitalize">
-                            {category}
+                          <span className="text-xs font-medium">
+                            {name}
                           </span>
-                          <span className={`text-xs font-bold ${getScoreColor(score)}`}>
-                            {score}%
+                          <span className={`text-xs font-bold ${getScoreColor(value)}`}>
+                            {value}%
                           </span>
                         </div>
-                        <Progress value={score} className="h-1" />
+                        <Progress value={value} className="h-1" />
                       </div>
                     ))}
                   </div>
