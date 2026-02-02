@@ -310,8 +310,8 @@ export default function IdeaInsight() {
               </div>
             </TabsContent>
 
-            <TabsContent value="framework" className="mt-6">
-              <InteractiveIdeaFramework 
+            <TabsContent value="framework" className="mt-6" key="framework-tab" forceMount={false}>
+              <InteractiveIdeaFramework
                 onComplete={(data) => {
                   setCompletedInsights(data);
                   // TODO: Save to brand context
@@ -319,16 +319,16 @@ export default function IdeaInsight() {
               />
             </TabsContent>
 
-            <TabsContent value="research" className="mt-6">
-              <BuyerIntentResearch 
+            <TabsContent value="research" className="mt-6" key="research-tab" forceMount={false}>
+              <BuyerIntentResearch
                 onInsightsGenerated={(insights) => {
                   setResearchData(insights);
                 }}
               />
             </TabsContent>
 
-            <TabsContent value="assessment" className="mt-6">
-              <EmotionalTriggerAssessment 
+            <TabsContent value="assessment" className="mt-6" key="assessment-tab" forceMount={false}>
+              <EmotionalTriggerAssessment
                 onAssessmentComplete={(results) => {
                   setTriggerResults(results);
                 }}
