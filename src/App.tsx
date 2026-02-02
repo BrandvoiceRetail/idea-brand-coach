@@ -42,8 +42,8 @@ import PricingPaywall from "./pages/PricingPaywall";
 const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <ServiceProvider>
+    <ServiceProvider>
+      <AuthProvider>
         <AuthGate>
           <BrandProvider>
             <SystemKBProvider>
@@ -191,8 +191,8 @@ const App = () => (
             </SystemKBProvider>
           </BrandProvider>
         </AuthGate>
-      </ServiceProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ServiceProvider>
   </QueryClientProvider>
 );
 export default App;
