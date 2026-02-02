@@ -31,6 +31,7 @@ import {
 
 export default function IdeaInsight() {
   const [activeTab, setActiveTab] = useState("framework");
+  const [tabKey, setTabKey] = useState(0); // Force remount on tab changes
   const [completedInsights, setCompletedInsights] = useState<any>(null);
   const [researchData, setResearchData] = useState<any>(null);
   const [triggerResults, setTriggerResults] = useState<any>(null);
@@ -56,18 +57,24 @@ export default function IdeaInsight() {
         
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <Button 
-            size="lg" 
-            onClick={() => setActiveTab("framework")}
+          <Button
+            size="lg"
+            onClick={() => {
+              setActiveTab("framework");
+              setTabKey(prev => prev + 1); // Force remount
+            }}
             className="flex items-center gap-2"
           >
             <PlayCircle className="w-5 h-5" />
             Start Interactive Framework
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="lg"
-            onClick={() => setActiveTab("research")}
+            onClick={() => {
+              setActiveTab("research");
+              setTabKey(prev => prev + 1); // Force remount
+            }}
             className="flex items-center gap-2"
           >
             <Search className="w-5 h-5" />
@@ -79,7 +86,10 @@ export default function IdeaInsight() {
       {/* Interactive Tools */}
       <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 shadow-lg">
         <CardContent className="p-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={(value) => {
+            setActiveTab(value);
+            setTabKey(prev => prev + 1); // Force remount on tab change
+          }} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <Eye className="w-4 h-4" />
@@ -135,7 +145,10 @@ export default function IdeaInsight() {
 
               {/* Interactive Tools Preview */}
               <div className="grid gap-6 md:grid-cols-3">
-                <Card className="hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => setActiveTab("framework")}>
+                <Card className="hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => {
+                  setActiveTab("framework");
+                  setTabKey(prev => prev + 1); // Force remount
+                }}>
                   <CardHeader className="text-center">
                     <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center mx-auto mb-2">
                       <Target className="w-6 h-6 text-white" />
@@ -154,7 +167,10 @@ export default function IdeaInsight() {
                   </CardContent>
                 </Card>
 
-                <Card className="hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => setActiveTab("research")}>
+                <Card className="hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => {
+                  setActiveTab("research");
+                  setTabKey(prev => prev + 1); // Force remount
+                }}>
                   <CardHeader className="text-center">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-2">
                       <Search className="w-6 h-6 text-white" />
@@ -173,7 +189,10 @@ export default function IdeaInsight() {
                   </CardContent>
                 </Card>
 
-                <Card className="hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => setActiveTab("assessment")}>
+                <Card className="hover:shadow-brand transition-all duration-300 cursor-pointer" onClick={() => {
+                  setActiveTab("assessment");
+                  setTabKey(prev => prev + 1); // Force remount
+                }}>
                   <CardHeader className="text-center">
                     <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center mx-auto mb-2">
                       <Heart className="w-6 h-6 text-white" />
@@ -310,7 +329,7 @@ export default function IdeaInsight() {
               </div>
             </TabsContent>
 
-            <TabsContent value="framework" className="mt-6" key="framework-tab" forceMount={false}>
+            <TabsContent value="framework" className="mt-6" key={`framework-${tabKey}`} forceMount={false}>
               <InteractiveIdeaFramework
                 onComplete={(data) => {
                   setCompletedInsights(data);
@@ -319,7 +338,7 @@ export default function IdeaInsight() {
               />
             </TabsContent>
 
-            <TabsContent value="research" className="mt-6" key="research-tab" forceMount={false}>
+            <TabsContent value="research" className="mt-6" key={`research-${tabKey}`} forceMount={false}>
               <BuyerIntentResearch
                 onInsightsGenerated={(insights) => {
                   setResearchData(insights);
@@ -327,7 +346,7 @@ export default function IdeaInsight() {
               />
             </TabsContent>
 
-            <TabsContent value="assessment" className="mt-6" key="assessment-tab" forceMount={false}>
+            <TabsContent value="assessment" className="mt-6" key={`assessment-${tabKey}`} forceMount={false}>
               <EmotionalTriggerAssessment
                 onAssessmentComplete={(results) => {
                   setTriggerResults(results);
