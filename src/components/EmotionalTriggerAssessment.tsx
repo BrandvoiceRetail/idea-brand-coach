@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -180,7 +180,17 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
     return 'synced';
   };
 
-  const progress = ((currentQuestion + 1) / assessmentQuestions.length) * 100;
+  // Calculate field-based progress
+  const calculateProgress = useMemo(() => {
+    const answeredQuestions = Object.values(answersObj).filter(
+      (answer) => answer && String(answer).trim().length > 0
+    ).length;
+    const totalQuestions = assessmentQuestions.length;
+
+    return Math.round((answeredQuestions / totalQuestions) * 100);
+  }, [answersObj]);
+
+  const progress = calculateProgress;
 
   const handleAnswer = (questionId: string, value: string) => {
     const updated = { ...answersObj, [questionId]: value };
@@ -371,7 +381,7 @@ export function EmotionalTriggerAssessment({ onAssessmentComplete }: EmotionalTr
                 Emotional Trigger Assessment
               </CardTitle>
               <CardDescription>
-                Question {currentQuestion + 1} of {assessmentQuestions.length}
+                Question {currentQuestion + 1} of {assessmentQuestions.length} • {progress}% Questions Answered
               </CardDescription>
             </div>
             <SyncStatusIndicator status={getOverallSyncStatus()} />
