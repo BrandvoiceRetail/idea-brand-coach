@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { InteractiveIdeaFramework } from '../InteractiveIdeaFramework';
 import { BrowserRouter } from 'react-router-dom';
+import { usePersistedField } from '@/hooks/usePersistedField';
 
 // Mock the persisted field hook
 vi.mock('@/hooks/usePersistedField', () => ({
@@ -9,6 +10,9 @@ vi.mock('@/hooks/usePersistedField', () => ({
     value: defaultValue,
     onChange: vi.fn(),
     syncStatus: 'synced',
+    isLoading: false,
+    error: null,
+    refresh: vi.fn(),
   })),
 }));
 
@@ -38,22 +42,18 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
       </BrowserRouter>
     );
 
-    // Look for the progress text
     const progressText = screen.getByText(/0% Fields Complete/);
     expect(progressText).toBeInTheDocument();
   });
 
-  it('should calculate progress based on filled fields, not navigation', () => {
-    // Mock the persisted field hook to return some filled values
-    const { usePersistedField } = await import('@/hooks/usePersistedField');
-
+  it('should calculate progress based on filled fields, not navigation', async () => {
     let fieldIndex = 0;
     const fieldValues = [
-      'Customer intent value', // 20%
-      'Motivation value',       // 40%
-      '',                      // Still 40% (empty field)
-      '',                      // Still 40%
-      ''                       // Still 40%
+      'Customer intent value',
+      'Motivation value',
+      '',
+      '',
+      ''
     ];
 
     vi.mocked(usePersistedField).mockImplementation(({ defaultValue }) => {
@@ -62,6 +62,9 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
         value,
         onChange: vi.fn(),
         syncStatus: 'synced',
+        isLoading: false,
+        error: null,
+        refresh: vi.fn(),
       };
     });
 
@@ -71,21 +74,18 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
       </BrowserRouter>
     );
 
-    // Should show 40% (2 out of 5 fields filled)
     const progressText = screen.getByText(/40% Fields Complete/);
     expect(progressText).toBeInTheDocument();
   });
 
-  it('should not count whitespace-only fields as complete', () => {
-    const { usePersistedField } = await import('@/hooks/usePersistedField');
-
+  it('should not count whitespace-only fields as complete', async () => {
     let fieldIndex = 0;
     const fieldValues = [
-      '   ',  // Whitespace only - should not count
-      'Real value', // This counts - 20%
-      '  \n  \t  ', // Whitespace only - should not count
-      '',     // Empty - should not count
-      ''      // Empty - should not count
+      '   ',
+      'Real value',
+      '  \n  \t  ',
+      '',
+      ''
     ];
 
     vi.mocked(usePersistedField).mockImplementation(({ defaultValue }) => {
@@ -94,6 +94,9 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
         value,
         onChange: vi.fn(),
         syncStatus: 'synced',
+        isLoading: false,
+        error: null,
+        refresh: vi.fn(),
       };
     });
 
@@ -103,14 +106,11 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
       </BrowserRouter>
     );
 
-    // Should show 20% (only 1 out of 5 fields has real content)
     const progressText = screen.getByText(/20% Fields Complete/);
     expect(progressText).toBeInTheDocument();
   });
 
-  it('should show 100% when all fields are complete', () => {
-    const { usePersistedField } = await import('@/hooks/usePersistedField');
-
+  it('should show 100% when all fields are complete', async () => {
     let fieldIndex = 0;
     const fieldValues = [
       'Intent value',
@@ -126,6 +126,9 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
         value,
         onChange: vi.fn(),
         syncStatus: 'synced',
+        isLoading: false,
+        error: null,
+        refresh: vi.fn(),
       };
     });
 
@@ -135,21 +138,18 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
       </BrowserRouter>
     );
 
-    // Should show 100% (all 5 fields filled)
     const progressText = screen.getByText(/100% Fields Complete/);
     expect(progressText).toBeInTheDocument();
   });
 
-  it('should show checkmarks only for completed fields in navigation', () => {
-    const { usePersistedField } = await import('@/hooks/usePersistedField');
-
+  it('should show checkmarks only for completed fields in navigation', async () => {
     let fieldIndex = 0;
     const fieldValues = [
-      'Intent filled',  // Should show checkmark
-      '',              // Should not show checkmark
-      'Triggers filled', // Should show checkmark
-      '',              // Should not show checkmark
-      ''               // Should not show checkmark
+      'Intent filled',
+      '',
+      'Triggers filled',
+      '',
+      ''
     ];
 
     vi.mocked(usePersistedField).mockImplementation(({ defaultValue }) => {
@@ -158,6 +158,9 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
         value,
         onChange: vi.fn(),
         syncStatus: 'synced',
+        isLoading: false,
+        error: null,
+        refresh: vi.fn(),
       };
     });
 
@@ -167,10 +170,7 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
       </BrowserRouter>
     );
 
-    // Check for navigation buttons
     const buttons = screen.getAllByRole('button');
-
-    // Filter buttons that are navigation step buttons
     const stepButtons = buttons.filter(btn => {
       const text = btn.textContent || '';
       return text.includes('Intent') ||
@@ -182,7 +182,6 @@ describe('InteractiveIdeaFramework - Progress Calculation', () => {
 
     expect(stepButtons).toHaveLength(5);
 
-    // The progress should reflect 40% (2 out of 5 fields filled)
     const progressText = screen.getByText(/40% Fields Complete/);
     expect(progressText).toBeInTheDocument();
   });
