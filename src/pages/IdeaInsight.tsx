@@ -109,7 +109,7 @@ export default function IdeaInsight() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6 mt-6" key={`overview-${tabKey}`} forceMount={false}>
+            <TabsContent value="overview" className="space-y-6 mt-6" key={`overview-${tabKey}`}>
               {/* Key Principle */}
               <Card className="bg-gradient-card shadow-brand">
                 <CardContent className="p-8">
@@ -329,7 +329,7 @@ export default function IdeaInsight() {
               </div>
             </TabsContent>
 
-            <TabsContent value="framework" className="mt-6" key={`framework-${tabKey}`} forceMount={false}>
+            <TabsContent value="framework" className="mt-6" key={`framework-${tabKey}`}>
               <InteractiveIdeaFramework
                 onComplete={(data) => {
                   setCompletedInsights(data);
@@ -338,7 +338,7 @@ export default function IdeaInsight() {
               />
             </TabsContent>
 
-            <TabsContent value="research" className="mt-6" key={`research-${tabKey}`} forceMount={false}>
+            <TabsContent value="research" className="mt-6" key={`research-${tabKey}`}>
               <BuyerIntentResearch
                 onInsightsGenerated={(insights) => {
                   setResearchData(insights);
@@ -346,7 +346,7 @@ export default function IdeaInsight() {
               />
             </TabsContent>
 
-            <TabsContent value="assessment" className="mt-6" key={`assessment-${tabKey}`} forceMount={false}>
+            <TabsContent value="assessment" className="mt-6" key={`assessment-${tabKey}`}>
               <EmotionalTriggerAssessment
                 onAssessmentComplete={(results) => {
                   setTriggerResults(results);

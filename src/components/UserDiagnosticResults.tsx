@@ -52,7 +52,7 @@ export const UserDiagnosticResults = () => {
         scores: diag.scores as DiagnosticResult['scores'],
         completed_at: diag.completed_at,
         created_at: diag.created_at,
-        answers: diag.answers as Record<string, string>
+        answers: diag.answers as unknown as Record<string, string>
       }));
   })();
 
