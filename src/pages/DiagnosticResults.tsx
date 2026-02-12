@@ -35,6 +35,34 @@ interface DiagnosticData {
   completedAt: string;
 }
 
+/** Parse localStorage diagnostic data, handling both old and new formats */
+function parseDiagnosticFromLocalStorage(): DiagnosticData | null {
+  const savedData = localStorage.getItem('diagnosticData');
+  if (!savedData) return null;
+
+  try {
+    const parsed = JSON.parse(savedData);
+    if (!parsed.scores) return null;
+
+    // Handle new format: overallScore lives inside scores.overall
+    const overallScore = parsed.overallScore ?? parsed.scores?.overall ?? 0;
+
+    return {
+      answers: parsed.answers ?? {},
+      scores: {
+        insight: parsed.scores.insight ?? 0,
+        distinctive: parsed.scores.distinctive ?? 0,
+        empathetic: parsed.scores.empathetic ?? 0,
+        authentic: parsed.scores.authentic ?? 0,
+      },
+      overallScore,
+      completedAt: parsed.completedAt ?? new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
 const categoryDetails = {
   insight: {
     icon: <Lightbulb className="w-6 h-6" />,
@@ -64,12 +92,29 @@ const categoryDetails = {
 
 export default function DiagnosticResults() {
   const [diagnosticData, setDiagnosticData] = useState<DiagnosticData | null>(null);
+  const [hasSynced, setHasSynced] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { latestDiagnostic, isLoadingLatest, syncFromLocalStorage } = useDiagnostic();
 
+  // 1. Always try localStorage first for immediate display
   useEffect(() => {
-    // First try to get from database if user is authenticated
+    const localData = parseDiagnosticFromLocalStorage();
+    if (localData) {
+      setDiagnosticData(localData);
+    }
+  }, []);
+
+  // 2. For authenticated users, sync localStorage to DB in background (once)
+  useEffect(() => {
+    if (user && !hasSynced && localStorage.getItem('diagnosticData')) {
+      setHasSynced(true);
+      syncFromLocalStorage().catch(console.error);
+    }
+  }, [user, hasSynced, syncFromLocalStorage]);
+
+  // 3. Update from DB data when available (secondary/updated source)
+  useEffect(() => {
     if (user && latestDiagnostic) {
       setDiagnosticData({
         answers: latestDiagnostic.answers as any,
@@ -80,19 +125,17 @@ export default function DiagnosticResults() {
           authentic: latestDiagnostic.scores.authentic,
         },
         overallScore: latestDiagnostic.scores.overall,
-        completedAt: latestDiagnostic.completed_at
+        completedAt: latestDiagnostic.completed_at,
       });
-    } else {
-      // Fall back to localStorage for non-authenticated users
-      const savedData = localStorage.getItem('diagnosticData');
-      if (savedData) {
-        setDiagnosticData(JSON.parse(savedData));
-      } else if (!isLoadingLatest) {
-        // Redirect to diagnostic if no data found
-        navigate('/diagnostic');
-      }
     }
-  }, [user, latestDiagnostic, isLoadingLatest, navigate]);
+  }, [user, latestDiagnostic]);
+
+  // 4. Redirect only when we're sure there's no data anywhere
+  useEffect(() => {
+    if (!isLoadingLatest && !diagnosticData && !localStorage.getItem('diagnosticData')) {
+      navigate('/diagnostic');
+    }
+  }, [isLoadingLatest, diagnosticData, navigate]);
 
   if (isLoadingLatest || !diagnosticData) {
     return (

@@ -101,7 +101,6 @@ const diagnosticQuestions: Question[] = [
 export default function FreeDiagnostic() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const { user } = useAuth();
-  const { syncFromLocalStorage } = useDiagnostic();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isCompleting, setIsCompleting] = useState(false);
   const navigate = useNavigate();
@@ -200,19 +199,8 @@ export default function FreeDiagnostic() {
   };
 
 
-  // Auto-sync if user signs in while on this page
-  useEffect(() => {
-    const syncData = async () => {
-      if (user && localStorage.getItem('diagnosticData')) {
-        try {
-          await syncFromLocalStorage();
-        } catch (error) {
-          console.error('Error syncing diagnostic:', error);
-        }
-      }
-    };
-    syncData();
-  }, [user, syncFromLocalStorage]);
+  // NOTE: Sync is intentionally NOT done here to avoid a race condition.
+  // The DiagnosticResults page handles syncing after reading localStorage.
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
