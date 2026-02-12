@@ -294,6 +294,35 @@ export default function DiagnosticResults() {
                 {getRecommendations()}
               </p>
 
+              {/* Download Results Section */}
+              <div className="border-t pt-6 pb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Download className="w-5 h-5" />
+                  <h3 className="text-lg font-semibold">Download Your Results</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Take your results with you and share them with your team. The PDF includes your scores, recommendations, and next steps.
+                </p>
+                {user ? (
+                  <DiagnosticResultsPDFExport
+                    diagnosticData={diagnosticData}
+                    companyName={user.email?.split('@')[0] || 'Your Brand'}
+                    className="w-full"
+                  />
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      alert('PDF download will be available after account creation');
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF Report
+                  </Button>
+                )}
+              </div>
+
               {/* CTA Section */}
               <div className="border-t pt-6">
                 <h3 className="text-lg font-semibold mb-4">Would you like some help with this?</h3>
@@ -315,42 +344,6 @@ export default function DiagnosticResults() {
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Download Results */}
-          <Card className="border-border/50 mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Download className="w-5 h-5" />
-                Download Results
-              </CardTitle>
-              <CardDescription>
-                Get a PDF summary of your brand assessment results
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Take your results with you and share them with your team. The PDF includes your scores, recommendations, and next steps.
-              </p>
-              {user ? (
-                <DiagnosticResultsPDFExport
-                  diagnosticData={diagnosticData}
-                  companyName={user.email?.split('@')[0] || 'Your Brand'}
-                  className="w-full"
-                />
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    alert('PDF download will be available after account creation');
-                  }}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download PDF Report
-                </Button>
-              )}
             </CardContent>
           </Card>
 
