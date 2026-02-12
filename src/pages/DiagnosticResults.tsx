@@ -15,7 +15,8 @@ import {
   Shield,
   Download,
   UserPlus,
-  MessageSquare
+  MessageSquare,
+  Calendar
 } from 'lucide-react';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
@@ -252,53 +253,38 @@ export default function DiagnosticResults() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 {getRecommendations()}
               </p>
+
+              {/* CTA Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Would you like some help with this?</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open('https://calendly.com/trevor-bradford-idea/30min', '_blank')}
+                    className="w-full"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Book a Free 30 Minute Consultation
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/idea/consultant')}
+                    className="w-full"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Chat with your AI Brand Coach
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
           {/* CTA Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Brand Coach CTA or Create Account CTA */}
-            {user ? (
-              <Card className="border-primary/50 bg-primary/5">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5" />
-                    Get Personalized Coaching
-                  </CardTitle>
-                  <CardDescription>
-                    Start a conversation with your AI Brand Coach based on these results
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary" />
-                      <span>Personalized guidance based on your scores</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary" />
-                      <span>Strategic recommendations</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary" />
-                      <span>Actionable next steps</span>
-                    </div>
-                  </div>
-                  <Button 
-                    asChild 
-                    className="w-full"
-                  >
-                    <button onClick={() => navigate('/idea/consultant')}>
-                      Start Brand Coaching
-                      <MessageSquare className="w-4 h-4 ml-2" />
-                    </button>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
+            {/* Create Account CTA for non-authenticated users */}
+            {!user && (
               <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -342,7 +328,7 @@ export default function DiagnosticResults() {
             )}
 
             {/* Download Results */}
-            <Card className="border-border/50">
+            <Card className={`border-border/50 ${user ? 'md:col-span-2' : ''}`}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Download className="w-5 h-5" />
