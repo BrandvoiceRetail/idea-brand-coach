@@ -27,14 +27,34 @@ export const UserDiagnosticResults = () => {
   const { toast } = useToast();
   const { diagnosticHistory, isLoadingHistory } = useDiagnostic();
 
-  // Transform diagnostic history to match existing component structure
-  const results: DiagnosticResult[] = diagnosticHistory?.map(diag => ({
-    id: diag.id,
-    scores: diag.scores as DiagnosticResult['scores'],
-    completed_at: diag.completed_at,
-    created_at: diag.created_at,
-    answers: diag.answers as Record<string, string>
-  })) || [];
+  // Transform and deduplicate diagnostic history
+  const results: DiagnosticResult[] = (() => {
+    if (!diagnosticHistory) return [];
+
+    // Group by date, keeping highest score per date
+    const grouped = new Map<string, typeof diagnosticHistory[0]>();
+
+    diagnosticHistory.forEach(diag => {
+      const date = new Date(diag.completed_at).toDateString();
+      const existing = grouped.get(date);
+
+      if (!existing || (diag.scores?.overall || 0) > (existing.scores?.overall || 0)) {
+        grouped.set(date, diag);
+      }
+    });
+
+    // Convert to array and transform, sorted by date descending
+    return Array.from(grouped.values())
+      .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
+      .slice(0, 10) // Limit to 10 most recent
+      .map(diag => ({
+        id: diag.id,
+        scores: diag.scores as DiagnosticResult['scores'],
+        completed_at: diag.completed_at,
+        created_at: diag.created_at,
+        answers: diag.answers as Record<string, string>
+      }));
+  })();
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";

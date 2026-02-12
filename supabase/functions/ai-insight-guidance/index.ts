@@ -133,117 +133,105 @@ async function retrieveAvatarData(
 }
 
 /**
- * Build dynamic prompts based on Avatar data
+ * Build avatar context string from structured avatar data.
+ * This becomes part of the user message so the model treats it as primary input.
  */
-function buildDynamicPrompt(stepId: string, avatarData: AvatarData): string {
+function buildAvatarContext(avatarData: AvatarData): string {
   const { demographics, psychology, buyingBehavior } = avatarData;
-  const avatarName = avatarData.name || 'your target customer';
-
-  // Build context string from available avatar data
-  let avatarContext = '';
+  const parts: string[] = [];
 
   if (avatarData.name) {
-    avatarContext += `Your customer avatar is "${avatarName}". `;
+    parts.push(`Customer avatar name: "${avatarData.name}".`);
   }
 
   if (demographics.age || demographics.income || demographics.location) {
-    avatarContext += `Demographics: `;
-    const parts = [];
-    if (demographics.age) parts.push(`age ${demographics.age}`);
-    if (demographics.income) parts.push(`income level ${demographics.income}`);
-    if (demographics.location) parts.push(`${demographics.location} area`);
-    avatarContext += parts.join(', ') + '. ';
+    const demoParts = [];
+    if (demographics.age) demoParts.push(`age ${demographics.age}`);
+    if (demographics.income) demoParts.push(`income level ${demographics.income}`);
+    if (demographics.location) demoParts.push(`${demographics.location} area`);
+    parts.push(`Demographics: ${demoParts.join(', ')}.`);
   }
 
   if (demographics.lifestyle) {
-    avatarContext += `Lifestyle: ${demographics.lifestyle}. `;
+    parts.push(`Lifestyle: ${demographics.lifestyle}.`);
   }
 
   if (psychology.values && psychology.values.length > 0) {
-    avatarContext += `Core values: ${psychology.values.join(', ')}. `;
+    parts.push(`Core values: ${psychology.values.join(', ')}.`);
   }
 
   if (psychology.fears && psychology.fears.length > 0) {
-    avatarContext += `Primary fears: ${psychology.fears.join(', ')}. `;
+    parts.push(`Primary fears: ${psychology.fears.join(', ')}.`);
   }
 
   if (psychology.desires && psychology.desires.length > 0) {
-    avatarContext += `Deep desires: ${psychology.desires.join(', ')}. `;
+    parts.push(`Deep desires: ${psychology.desires.join(', ')}.`);
   }
 
   if (psychology.triggers && psychology.triggers.length > 0) {
-    avatarContext += `Emotional triggers: ${psychology.triggers.join(', ')}. `;
+    parts.push(`Emotional triggers: ${psychology.triggers.join(', ')}.`);
   }
 
   if (buyingBehavior.shoppingStyle) {
-    avatarContext += `Shopping style: ${buyingBehavior.shoppingStyle}. `;
+    parts.push(`Shopping style: ${buyingBehavior.shoppingStyle}.`);
   }
 
   if (buyingBehavior.priceConsciousness) {
-    avatarContext += `Price sensitivity: ${buyingBehavior.priceConsciousness}. `;
+    parts.push(`Price sensitivity: ${buyingBehavior.priceConsciousness}.`);
   }
 
   if (buyingBehavior.decisionFactors && buyingBehavior.decisionFactors.length > 0) {
-    avatarContext += `Key decision factors: ${buyingBehavior.decisionFactors.join(', ')}. `;
+    parts.push(`Key decision factors: ${buyingBehavior.decisionFactors.join(', ')}.`);
   }
 
-  // Step-specific dynamic prompts
-  const stepPrompts: Record<string, string> = {
-    intent: `Generate refined buyer intent content for ${avatarName}. ${avatarContext ? `Based on their profile: ${avatarContext}` : ''}
+  return parts.join('\n');
+}
 
-Focus on:
-- What specific problems are they trying to solve?
+/**
+ * Build step-specific focus points that guide what the AI should address.
+ * Returns only the focus bullet points, not the full prompt.
+ */
+function buildStepFocusPoints(stepId: string, avatarData: AvatarData): string {
+  const { demographics, psychology, buyingBehavior } = avatarData;
+
+  const focusPoints: Record<string, string> = {
+    intent: `- What specific problems are they trying to solve?
 - What search terms and behaviors indicate their buying readiness?
-- What situations trigger their need for solutions like yours?
+- What situations trigger their need for solutions like yours?`,
 
-Write 2-3 paragraphs describing ${avatarName}'s buyer intent that can be used directly in a brand strategy document.`,
-
-    motivation: `Generate refined buyer motivation content for ${avatarName}. ${avatarContext ? `Based on their profile: ${avatarContext}` : ''}
-
-Focus on:
-- What deeper psychological needs drive their decisions?
+    motivation: `- What deeper psychological needs drive their decisions?
 - What subconscious desires influence their choices?
 - What aspirations and status needs are they trying to fulfill?
 ${psychology.fears && psychology.fears.length > 0 ? `- Address how their fears (${psychology.fears.join(', ')}) influence buying behavior.` : ''}
-${psychology.desires && psychology.desires.length > 0 ? `- Connect to their desires (${psychology.desires.join(', ')}).` : ''}
+${psychology.desires && psychology.desires.length > 0 ? `- Connect to their desires (${psychology.desires.join(', ')}).` : ''}`,
 
-Write 2-3 paragraphs describing ${avatarName}'s buyer motivations that can be used directly in a brand strategy document.`,
-
-    triggers: `Generate refined emotional trigger content for ${avatarName}. ${avatarContext ? `Based on their profile: ${avatarContext}` : ''}
-
-Focus on the 7 core emotional triggers and which resonate most:
-- Hope, Belonging, Validation, Trust, Relief, Aspiration, Empowerment
+    triggers: `- Which of the 7 core emotional triggers resonate most: Hope, Belonging, Validation, Trust, Relief, Aspiration, Empowerment?
 ${psychology.triggers && psychology.triggers.length > 0 ? `- Build upon their existing triggers: ${psychology.triggers.join(', ')}.` : ''}
-${psychology.values && psychology.values.length > 0 ? `- Connect to their core values: ${psychology.values.join(', ')}.` : ''}
+${psychology.values && psychology.values.length > 0 ? `- Connect to their core values: ${psychology.values.join(', ')}.` : ''}`,
 
-Write 2-3 paragraphs identifying the primary emotional triggers for ${avatarName} and how to leverage them in brand messaging.`,
-
-    shopper: `Generate refined shopper type analysis for ${avatarName}. ${avatarContext ? `Based on their profile: ${avatarContext}` : ''}
-
-Categorize using Shopify's research-backed shopper types:
-- Cost Sensitive (50%): Price-focused, seeks deals
-- Quality Focused (39%): Prioritizes quality over price
-- Conscious (9%): Values sustainability and ethics
-- Connected (2%): Influenced by social commerce
+    shopper: `- Categorize using Shopify's research-backed shopper types: Cost Sensitive (50%), Quality Focused (39%), Conscious (9%), Connected (2%).
 ${buyingBehavior.shoppingStyle ? `- Their shopping style is: ${buyingBehavior.shoppingStyle}.` : ''}
 ${buyingBehavior.priceConsciousness ? `- Their price sensitivity is: ${buyingBehavior.priceConsciousness}.` : ''}
+- What specific strategies will reach this shopper type?`,
 
-Write 2-3 paragraphs analyzing ${avatarName}'s shopper type and specific strategies to reach them.`,
-
-    demographics: `Generate refined behavior-driven demographics for ${avatarName}. ${avatarContext ? `Based on their profile: ${avatarContext}` : ''}
-
-Focus on demographics that actually influence purchasing:
-- Usage patterns and consumption habits
+    demographics: `- Usage patterns and consumption habits
 - Channel preferences (online, mobile, in-store)
 - Decision-making timeline and process
 - Lifestyle indicators that correlate with buying behavior
-${demographics.lifestyle ? `- Build on their lifestyle: ${demographics.lifestyle}.` : ''}
-
-Write 2-3 paragraphs describing the behavior-driven demographic characteristics that matter for reaching ${avatarName}.`
+${demographics.lifestyle ? `- Build on their lifestyle: ${demographics.lifestyle}.` : ''}`
   };
 
-  return stepPrompts[stepId] || stepPrompts.intent;
+  return focusPoints[stepId] || focusPoints.intent;
 }
+
+/** Step titles for readable prompt references */
+const STEP_TITLES: Record<string, string> = {
+  intent: 'Buyer Intent',
+  motivation: 'Buyer Motivation',
+  triggers: 'Emotional Triggers',
+  shopper: 'Shopper Type',
+  demographics: 'Behavior-Driven Demographics',
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -258,9 +246,9 @@ serve(async (req) => {
   }
 
   try {
-    const { stepId, userInput, context } = await req.json();
+    const { stepId, userInput } = await req.json();
 
-    console.log('[ai-insight-guidance] Request:', { stepId, userInput: userInput?.substring(0, 100) + '...', context });
+    console.log('[ai-insight-guidance] Request:', { stepId, userInput: userInput?.substring(0, 100) + '...' });
 
     // Get authenticated user and retrieve Avatar data
     const authHeader = req.headers.get('authorization');
@@ -294,26 +282,43 @@ serve(async (req) => {
       }
     }
 
-    // Build dynamic prompt based on Avatar data
-    const dynamicPrompt = buildDynamicPrompt(stepId, avatarData);
+    // Build prompt components from Avatar data
+    const avatarContext = buildAvatarContext(avatarData);
+    const stepFocusPoints = buildStepFocusPoints(stepId, avatarData);
+    const stepTitle = STEP_TITLES[stepId] || 'Buyer Intent';
+    const avatarName = avatarData.name || 'your target customer';
 
-    const systemPrompt = `You are an expert brand strategist specializing in customer psychology and the IDEA Strategic Brand Framework. Your task is to generate refined, polished content that can be used directly in a brand strategy document.
+    // System prompt: static instructions only (Role, Task, Specifics, Notes)
+    const systemPrompt = `# Role
+You are an expert brand strategist specializing in customer psychology and the IDEA Strategic Brand Framework. You have deep expertise in translating customer profile data into actionable brand strategy content.
 
-Current context: ${context}
+# Task
+Generate refined, polished ${stepTitle} content for a brand strategy document about ${avatarName}. Use the customer's initial thoughts as a starting point and enhance them with deeper insights grounded in their Avatar profile data.
 
-CRITICAL REQUIREMENTS:
+# Specifics
 - Generate ACTUAL CONTENT for the field, not suggestions or feedback
 - Output content that the user can accept and use directly
-- Do NOT provide instructions or tips - write the actual strategy content
+- Do NOT provide instructions or tips — write the actual strategy content
 - NEVER use asterisks, markdown, or special formatting
 - Write in clear, professional prose
-- Be specific based on the user's Avatar data when available
 - 2-3 paragraphs, detailed enough to be actionable
 - Professional consulting tone throughout
 
-The user has provided their initial thoughts. Use these as a starting point and enhance them with deeper insights based on their Avatar profile.
+# Notes
+- Be specific to the customer profile provided — do not generalize or narrow to a single demographic unless the profile explicitly calls for it
+- Ground every paragraph in the actual data provided about this customer
+- If the user describes multiple customer traits (interests, influences, product preferences, lifestyle), reflect ALL of them in your response
+- The customer's own words and descriptions are the primary source of truth — enhance them, do not replace them with generic archetypes`;
 
-User's initial input: "${userInput}"`;
+    // User message: all dynamic/variable data (avatar profile, user input, focus areas)
+    const userMessage = `# Customer Avatar Profile
+${avatarContext || 'No avatar profile data available yet.'}
+
+# Customer's Initial Thoughts on ${stepTitle}
+${userInput}
+
+# Focus Areas for ${stepTitle}
+${stepFocusPoints}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -325,7 +330,7 @@ User's initial input: "${userInput}"`;
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: dynamicPrompt }
+          { role: 'user', content: userMessage }
         ],
         temperature: 0.7,
         max_tokens: 800,

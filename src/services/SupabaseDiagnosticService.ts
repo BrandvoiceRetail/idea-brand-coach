@@ -99,7 +99,7 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
     };
   }
 
-  async getDiagnosticHistory(): Promise<DiagnosticSubmission[]> {
+  async getDiagnosticHistory(limit = 10): Promise<DiagnosticSubmission[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
@@ -107,11 +107,15 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
       .from('diagnostic_submissions')
       .select('*')
       .eq('user_id', user.id)
-      .order('completed_at', { ascending: false });
+      .order('completed_at', { ascending: false })
+      .limit(limit * 2); // Get extra to allow for deduplication
 
     if (error) throw error;
 
-    return data.map(item => ({
+    // Group by date and keep only the latest/best submission per day
+    const deduplicatedData = this.deduplicateByDate(data);
+
+    return deduplicatedData.slice(0, limit).map(item => ({
       id: item.id,
       user_id: user.id,
       answers: item.answers as any,
@@ -120,6 +124,28 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
       created_at: item.created_at,
       updated_at: item.updated_at,
     }));
+  }
+
+  private deduplicateByDate(submissions: any[]): any[] {
+    const grouped = new Map<string, any>();
+
+    submissions.forEach(submission => {
+      const date = new Date(submission.completed_at).toDateString();
+      const existing = grouped.get(date);
+
+      // Keep the submission with the highest overall score for each date
+      const currentScore = submission.scores?.overall || 0;
+      const existingScore = existing?.scores?.overall || 0;
+
+      if (!existing || currentScore > existingScore) {
+        grouped.set(date, submission);
+      }
+    });
+
+    // Return as array, sorted by date descending
+    return Array.from(grouped.values()).sort((a, b) =>
+      new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
+    );
   }
 
   async syncFromLocalStorage(): Promise<DiagnosticSubmission | null> {
@@ -136,10 +162,32 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
         return null;
       }
 
-      // Calculate scores if answers exist
-      const scores = parsed.answers 
-        ? this.calculateScores(parsed.answers)
-        : parsed.scores;
+      // Calculate scores with backward compatibility for old data format
+      const scores = (() => {
+        // If answers exist and have the right structure, calculate from them
+        if (parsed.answers && typeof parsed.answers === 'object') {
+          // Check if answers contain score values directly (new format)
+          if ('insight' in parsed.answers || 'distinctive' in parsed.answers) {
+            return this.calculateScores(parsed.answers);
+          }
+        }
+
+        // Handle new format (scores.overall)
+        if (parsed.scores && typeof parsed.scores.overall === 'number') {
+          return parsed.scores;
+        }
+
+        // Handle old format (separate overallScore)
+        if (parsed.overallScore !== undefined && parsed.scores) {
+          return {
+            ...parsed.scores,
+            overall: parsed.overallScore
+          };
+        }
+
+        // Default fallback
+        return parsed.scores || { overall: 0, insight: 0, distinctive: 0, empathetic: 0, authentic: 0 };
+      })();
 
       // Save to database
       const submission = await this.saveDiagnostic({

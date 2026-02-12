@@ -124,7 +124,7 @@ describe('SupabaseDiagnosticService', () => {
   });
 
   describe('syncFromLocalStorage', () => {
-    it('should sync valid localStorage data', async () => {
+    it('should handle new format with scores.overall', async () => {
       const mockData = {
         answers: { insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
         scores: { overall: 75, insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
@@ -192,6 +192,121 @@ describe('SupabaseDiagnosticService', () => {
       const result = await service.syncFromLocalStorage();
 
       expect(result).toBeNull();
+    });
+
+    it('should handle old format with separate overallScore', async () => {
+      const mockData = {
+        answers: { insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
+        scores: { insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
+        overallScore: 75,
+      };
+
+      const mockGetItem = vi.fn().mockReturnValue(JSON.stringify(mockData));
+      const mockRemoveItem = vi.fn();
+
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: mockGetItem,
+          removeItem: mockRemoveItem,
+        },
+        writable: true,
+      });
+
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: { id: 'user-123' } as any },
+        error: null,
+      });
+
+      const expectedScores = {
+        overall: 75,
+        insight: 80,
+        distinctive: 60,
+        empathetic: 70,
+        authentic: 90,
+      };
+
+      const mockSubmission = {
+        id: 'submission-123',
+        user_id: 'user-123',
+        answers: mockData.answers,
+        scores: expectedScores,
+        completed_at: '2025-01-01T00:00:00Z',
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
+      };
+
+      vi.mocked(supabase.from).mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockSubmission,
+              error: null,
+            }),
+          }),
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      } as any);
+
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({
+        data: null,
+        error: null,
+      });
+
+      const result = await service.syncFromLocalStorage();
+
+      expect(result).toBeDefined();
+      expect(result?.scores?.overall).toBe(75);
+      expect(mockRemoveItem).toHaveBeenCalledWith('diagnostic_results');
+    });
+  });
+
+  describe('deduplicateByDate', () => {
+    it('should keep only the highest score per date', () => {
+      const submissions = [
+        {
+          id: '1',
+          completed_at: '2024-02-02T10:00:00Z',
+          scores: { overall: 70 },
+        },
+        {
+          id: '2',
+          completed_at: '2024-02-02T14:00:00Z',
+          scores: { overall: 85 },
+        },
+        {
+          id: '3',
+          completed_at: '2024-02-01T10:00:00Z',
+          scores: { overall: 60 },
+        },
+      ];
+
+      const result = (service as any).deduplicateByDate(submissions);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('2'); // Higher score on Feb 2
+      expect(result[1].id).toBe('3'); // Only submission on Feb 1
+    });
+
+    it('should handle missing scores gracefully', () => {
+      const submissions = [
+        {
+          id: '1',
+          completed_at: '2024-02-02T10:00:00Z',
+          scores: null,
+        },
+        {
+          id: '2',
+          completed_at: '2024-02-02T14:00:00Z',
+          scores: { overall: 50 },
+        },
+      ];
+
+      const result = (service as any).deduplicateByDate(submissions);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('2'); // Submission with valid score
     });
   });
 });

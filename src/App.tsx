@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { migrateDiagnosticData } from "@/utils/diagnosticDataMigration";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
@@ -39,21 +41,38 @@ import NotFound from "./pages/NotFound";
 import { TestOfflineSync } from "./pages/TestOfflineSync";
 import { StartHere } from "./pages/StartHere";
 import PricingPaywall from "./pages/PricingPaywall";
-const queryClient = new QueryClient();
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ServiceProvider>
-      <AuthProvider>
-        <AuthGate>
-          <BrandProvider>
-            <SystemKBProvider>
-              <OnboardingTourProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <ScrollToTop />
-                    <OnboardingTour autoStart={true} />
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes (renamed from cacheTime in React Query v5)
+      refetchOnWindowFocus: false,
+      retry: 1,
+      // Deduplicate queries within 2 seconds
+      refetchInterval: false,
+    },
+  },
+});
+const App = () => {
+  // Run data migration on app load
+  useEffect(() => {
+    migrateDiagnosticData();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ServiceProvider>
+        <AuthProvider>
+          <AuthGate>
+            <BrandProvider>
+              <SystemKBProvider>
+                <OnboardingTourProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter>
+                      <ScrollToTop />
+                      <OnboardingTour autoStart={true} />
 
                     <Routes>
                 <Route path="/" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
@@ -194,5 +213,6 @@ const App = () => (
       </AuthProvider>
     </ServiceProvider>
   </QueryClientProvider>
-);
+  );
+};
 export default App;

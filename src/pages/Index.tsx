@@ -313,25 +313,6 @@ export default function Index() {
           </Card>
         </div>
 
-        {/* CTA Section */}
-        <div className="text-center bg-gradient-hero rounded-2xl p-12">
-          <h2 className="text-3xl font-bold text-primary-foreground mb-4">
-            Ready to Build a Brand That Resonates?
-          </h2>
-          <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Start with our free brand diagnostic to discover your brand's hidden potential and get actionable insights in minutes.
-          </p>
-          <Button asChild size="lg" variant="coach" className="text-lg px-8 py-6 shadow-glow">
-            <Link to="/diagnostic">
-              Get Your Free Brand Diagnostic
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-          <p className="text-sm text-primary-foreground/80 mt-4">
-            No credit card required • 5-minute assessment • Instant results
-          </p>
-        </div>
-
       </div>
     </div>
   );

@@ -182,11 +182,13 @@ export default function FreeDiagnostic() {
       (averageScores.insight + averageScores.distinctive + averageScores.empathetic + averageScores.authentic) / 4
     );
 
-    // Save to localStorage
+    // Save to localStorage with overallScore inside scores object
     const diagnosticData = {
       answers,
-      scores: averageScores,
-      overallScore,
+      scores: {
+        ...averageScores,
+        overall: overallScore  // Move overallScore inside scores for consistency
+      },
       completedAt: new Date().toISOString()
     };
 
