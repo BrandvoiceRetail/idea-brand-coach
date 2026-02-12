@@ -137,7 +137,7 @@ export default function DiagnosticResults() {
     }
   }, [isLoadingLatest, diagnosticData, navigate]);
 
-  if (isLoadingLatest || !diagnosticData) {
+  if (!diagnosticData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex items-center justify-center">
         <div className="text-center">
