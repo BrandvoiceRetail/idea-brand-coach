@@ -491,25 +491,6 @@ const IdeaFrameworkConsultant = () => {
               </Card>
             )}
 
-            {/* Expertise Areas */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="w-5 h-5" />
-                  Specialized Expertise Areas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {expertiseAreas.map((area, index) => (
-                    <Badge key={index} variant="secondary" className="text-sm py-1 px-3">
-                      {area}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Consultation Interface */}
               <Card className="lg:col-span-1">
