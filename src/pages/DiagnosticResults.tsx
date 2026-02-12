@@ -94,17 +94,21 @@ const categoryDetails = {
 export default function DiagnosticResults() {
   const [diagnosticData, setDiagnosticData] = useState<DiagnosticData | null>(null);
   const [hasSynced, setHasSynced] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { latestDiagnostic, isLoadingLatest, syncFromLocalStorage } = useDiagnostic();
+  const { latestDiagnostic, isLoadingLatest, syncFromLocalStorage, isSyncing } = useDiagnostic();
 
-  // 1. Always try localStorage first for immediate display
+  // 1. For non-authenticated users, load from localStorage immediately
   useEffect(() => {
-    const localData = parseDiagnosticFromLocalStorage();
-    if (localData) {
-      setDiagnosticData(localData);
+    if (!user) {
+      const localData = parseDiagnosticFromLocalStorage();
+      if (localData) {
+        setDiagnosticData(localData);
+      }
+      setIsInitialized(true);
     }
-  }, []);
+  }, [user]);
 
   // 2. For authenticated users, sync localStorage to DB in background (once)
   useEffect(() => {
@@ -114,36 +118,69 @@ export default function DiagnosticResults() {
     }
   }, [user, hasSynced, syncFromLocalStorage]);
 
-  // 3. Update from DB data when available (secondary/updated source)
+  // 3. For authenticated users, prefer DB data but fallback to localStorage
   useEffect(() => {
-    if (user && latestDiagnostic) {
-      setDiagnosticData({
-        answers: latestDiagnostic.answers as any,
-        scores: {
-          insight: latestDiagnostic.scores.insight,
-          distinctive: latestDiagnostic.scores.distinctive,
-          empathetic: latestDiagnostic.scores.empathetic,
-          authentic: latestDiagnostic.scores.authentic,
-        },
-        overallScore: latestDiagnostic.scores.overall,
-        completedAt: latestDiagnostic.completed_at,
-      });
+    if (user && !isLoadingLatest) {
+      if (latestDiagnostic) {
+        // Use fresh data from database
+        setDiagnosticData({
+          answers: latestDiagnostic.answers as any,
+          scores: {
+            insight: latestDiagnostic.scores.insight,
+            distinctive: latestDiagnostic.scores.distinctive,
+            empathetic: latestDiagnostic.scores.empathetic,
+            authentic: latestDiagnostic.scores.authentic,
+          },
+          overallScore: latestDiagnostic.scores.overall,
+          completedAt: latestDiagnostic.completed_at,
+        });
+      } else {
+        // Fallback to localStorage if no DB data
+        const localData = parseDiagnosticFromLocalStorage();
+        if (localData) {
+          setDiagnosticData(localData);
+        }
+      }
+      setIsInitialized(true);
     }
-  }, [user, latestDiagnostic]);
+  }, [user, latestDiagnostic, isLoadingLatest]);
 
   // 4. Redirect only when we're sure there's no data anywhere
   useEffect(() => {
-    if (!isLoadingLatest && !diagnosticData && !localStorage.getItem('diagnosticData')) {
+    if (isInitialized && !diagnosticData && !localStorage.getItem('diagnosticData')) {
       navigate('/diagnostic');
     }
-  }, [isLoadingLatest, diagnosticData, navigate]);
+  }, [isInitialized, diagnosticData, navigate]);
 
+  // Show loading spinner while fetching latest data for authenticated users
+  // or while syncing localStorage data
+  if ((user && (isLoadingLatest || isSyncing)) || (!isInitialized)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex items-center justify-center">
+        <div className="text-center">
+          <div className="mb-6">
+            {/* Loading spinner animation */}
+            <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
+          </div>
+          <h2 className="text-2xl font-bold mb-4">Loading your results...</h2>
+          <p className="text-muted-foreground">
+            {isSyncing ? 'Syncing your diagnostic data...' : 'Fetching your latest brand assessment...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no data is available
   if (!diagnosticData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Loading your results...</h2>
-          <p className="text-muted-foreground">Please wait while we analyze your brand assessment.</p>
+          <h2 className="text-2xl font-bold mb-4">No diagnostic results found</h2>
+          <p className="text-muted-foreground mb-6">Please complete the brand diagnostic first.</p>
+          <Button onClick={() => navigate('/diagnostic')}>
+            Start Diagnostic
+          </Button>
         </div>
       </div>
     );
@@ -281,88 +318,85 @@ export default function DiagnosticResults() {
             </CardContent>
           </Card>
 
-          {/* CTA Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Create Account CTA for non-authenticated users */}
-            {!user && (
-              <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <UserPlus className="w-5 h-5" />
-                    Save & Unlock Premium Tools
-                  </CardTitle>
-                  <CardDescription>
-                    Sign in or create an account to save these results and access subscription plans
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary" />
-                      <span>Save diagnostic results permanently</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary" />
-                      <span>AI Brand Coach with personalized guidance</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary" />
-                      <span>Access Avatar 2.0 Builder</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary" />
-                      <span>Interactive learning modules</span>
-                    </div>
-                  </div>
-                  <Button
-                    asChild
-                    className="w-full"
-                  >
-                    <button onClick={() => navigate('/auth?redirect=/subscribe')}>
-                      Sign In or Sign Up
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </button>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+          {/* Download Results */}
+          <Card className="border-border/50 mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Download className="w-5 h-5" />
+                Download Results
+              </CardTitle>
+              <CardDescription>
+                Get a PDF summary of your brand assessment results
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Take your results with you and share them with your team. The PDF includes your scores, recommendations, and next steps.
+              </p>
+              {user ? (
+                <DiagnosticResultsPDFExport
+                  diagnosticData={diagnosticData}
+                  companyName={user.email?.split('@')[0] || 'Your Brand'}
+                  className="w-full"
+                />
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    alert('PDF download will be available after account creation');
+                  }}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF Report
+                </Button>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Download Results */}
-            <Card className={`border-border/50 ${user ? 'md:col-span-2' : ''}`}>
+          {/* Create Account CTA for non-authenticated users */}
+          {!user && (
+            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 mb-8">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Download className="w-5 h-5" />
-                  Download Results
+                  <UserPlus className="w-5 h-5" />
+                  Save & Unlock Premium Tools
                 </CardTitle>
                 <CardDescription>
-                  Get a PDF summary of your brand assessment results
+                  Sign in or create an account to save these results and access subscription plans
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Take your results with you and share them with your team. The PDF includes your scores, recommendations, and next steps.
-                </p>
-                {user ? (
-                  <DiagnosticResultsPDFExport
-                    diagnosticData={diagnosticData}
-                    companyName={user.email?.split('@')[0] || 'Your Brand'}
-                    className="w-full"
-                  />
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      alert('PDF download will be available after account creation');
-                    }}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download PDF Report
-                  </Button>
-                )}
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
+                    <span>Save diagnostic results permanently</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
+                    <span>AI Brand Coach with personalized guidance</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
+                    <span>Access Avatar 2.0 Builder</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
+                    <span>Interactive learning modules</span>
+                  </div>
+                </div>
+                <Button
+                  asChild
+                  className="w-full"
+                >
+                  <button onClick={() => navigate('/auth?redirect=/subscribe')}>
+                    Sign In or Sign Up
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </button>
+                </Button>
               </CardContent>
             </Card>
-          </div>
+          )}
 
           {/* Back to Home */}
           <div className="text-center mt-8">
