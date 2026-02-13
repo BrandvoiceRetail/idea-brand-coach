@@ -347,6 +347,32 @@ export default function DiagnosticResults() {
             </CardContent>
           </Card>
 
+          {/* Trevor Bradford Introduction */}
+          <Card className="mb-8 border-primary/20">
+            <CardContent className="pt-8">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                <img
+                  src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png"
+                  alt="Trevor Bradford"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
+                />
+                <div className="text-center md:text-left flex-1">
+                  <h2 className="text-2xl font-bold mb-2">Trevor Bradford</h2>
+                  <p className="text-lg text-muted-foreground mb-2">
+                    Brand Strategist, E-commerce Expert, Author
+                  </p>
+                  <p className="text-sm text-primary font-medium mb-4">
+                    Creator of the IDEA Strategic Brand Framework™
+                  </p>
+                  <p className="text-base text-muted-foreground leading-relaxed">
+                    Get personalized strategic guidance powered by behavioral science, customer psychology,
+                    and proven brand strategy methodology. Consult directly with Trevor Bradford.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Create Account CTA for non-authenticated users */}
           {!user && (
             <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 mb-8">

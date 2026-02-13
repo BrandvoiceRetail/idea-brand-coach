@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useBetaMode } from '@/hooks/useBetaMode';
+import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, MessageSquare, X, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -43,12 +44,23 @@ const stepMapping: Record<string, string> = {
 };
 
 export function BetaNavigationWidget() {
-  const { isBetaMode, betaProgress, addComment, completeStep, getComments } = useBetaMode();
+  const { isBetaMode, betaProgress, addComment, completeStep, getComments, initializeBetaMode } = useBetaMode();
+  const { user } = useAuth();
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [comment, setComment] = useState('');
 
-  if (!isBetaMode || location.pathname.startsWith('/beta')) {
+  // Auto-initialize beta mode for logged-in users if not already initialized
+  useEffect(() => {
+    if (user && !betaProgress) {
+      // Initialize with 'quick' mode by default for all logged-in users
+      initializeBetaMode('quick');
+    }
+  }, [user, betaProgress, initializeBetaMode]);
+
+  // Always show for logged-in users (beta testing phase)
+  // Hide on beta-specific pages to avoid duplication
+  if (!user || location.pathname.startsWith('/beta')) {
     return null;
   }
 
