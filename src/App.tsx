@@ -14,6 +14,7 @@ import { OnboardingTourProvider } from "@/contexts/OnboardingTourContext";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { AuthGate } from "@/components/AuthGate";
+import { BetaFeedbackWidget } from "@/components/BetaFeedbackWidget";
 import { ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
@@ -73,6 +74,7 @@ const App = () => {
                     <BrowserRouter>
                       <ScrollToTop />
                       <OnboardingTour autoStart={true} />
+                      <BetaFeedbackWidget />
 
                     <Routes>
                 <Route path="/" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />

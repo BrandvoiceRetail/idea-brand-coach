@@ -18,6 +18,63 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    const requestData = await req.json()
+
+    // Check if this is a quick feedback from the widget or full feedback form
+    const isQuickFeedback = 'quickFeedback' in requestData
+
+    if (isQuickFeedback) {
+      // Handle quick feedback from the widget
+      const { quickFeedback, pageUrl, feedbackType, userId, timestamp } = requestData
+
+      console.log('Saving quick beta feedback:', {
+        feedbackType,
+        pageUrl,
+        userId,
+        timestamp
+      })
+
+      // Store quick feedback in step_comments field with special formatting
+      const { data, error } = await supabase
+        .from('beta_feedback')
+        .insert({
+          user_id: userId || null,
+          step_comments: [{
+            stepId: `widget-${feedbackType}`,
+            pageUrl: pageUrl,
+            comment: quickFeedback,
+            timestamp: timestamp
+          }],
+          // Mark this as widget feedback for easy filtering
+          issues: feedbackType === 'bug' ? quickFeedback : null,
+          improvements: feedbackType === 'idea' ? quickFeedback : null,
+          liked_most: feedbackType === 'general' ? quickFeedback : null
+        })
+        .select()
+
+      if (error) {
+        console.error('Error saving quick beta feedback:', error)
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+
+      console.log('Quick beta feedback saved successfully:', data)
+
+      return new Response(
+        JSON.stringify({ success: true, data }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Handle full feedback form submission (existing logic)
     const {
       overallRating,
       likedMost,
@@ -29,7 +86,7 @@ serve(async (req) => {
       userId,
       betaTesterId,
       stepComments
-    } = await req.json()
+    } = requestData
 
     console.log('Saving beta feedback:', {
       overallRating,
