@@ -20,7 +20,6 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { useChat } from '@/hooks/useChat';
 import { useSystemKB } from '@/contexts/SystemKBContext';
-import { SystemKBToggle } from '@/components/chat/SystemKBToggle';
 
 export default function ConversationHistory() {
   const { chatService } = useServices();
@@ -40,8 +39,8 @@ export default function ConversationHistory() {
     sessionId: selectedSession?.id,
   });
 
-  // System KB toggle (global state)
-  const { useSystemKB: isSystemKBEnabled, toggleSystemKB } = useSystemKB();
+  // System KB state (always enabled)
+  const { useSystemKB: isSystemKBEnabled } = useSystemKB();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -245,7 +244,6 @@ export default function ConversationHistory() {
                       </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                      <SystemKBToggle enabled={isSystemKBEnabled} onToggle={toggleSystemKB} />
                       {selectedSession.conversation_type !== 'field' && (
                         <Button variant="outline" size="sm" asChild>
                           <Link to="/idea/consultant">

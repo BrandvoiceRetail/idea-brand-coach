@@ -133,7 +133,7 @@ export const FEATURES: Record<string, Feature> = {
 
   BRAND_AVATAR: {
     id: 'BRAND_AVATAR',
-    name: 'Avatar 2.0',
+    name: 'Avatar',
     shortDescription: 'Define your ideal customer persona',
     fullDescription: 'Build detailed customer personas with demographics, psychographics, pain points, and motivations. Use AI to generate insights and validate assumptions.',
     phase: 'P0',
@@ -148,7 +148,7 @@ export const FEATURES: Record<string, Feature> = {
 
   INTERACTIVE_INSIGHT: {
     id: 'INTERACTIVE_INSIGHT',
-    name: 'Interactive Insight',
+    name: 'Insight',
     shortDescription: 'Deep customer insights and interactive learning',
     fullDescription: 'Dive deep into customer insights with interactive modules covering buyer intent research, emotional triggers, and the IDEA framework.',
     phase: 'P0',
@@ -163,7 +163,7 @@ export const FEATURES: Record<string, Feature> = {
 
   BRAND_COACH_CHAT: {
     id: 'BRAND_COACH_CHAT',
-    name: 'Brand Coach',
+    name: 'Coach',
     shortDescription: 'AI-powered brand consulting with RAG',
     fullDescription: 'Chat with our AI brand consultant powered by GPT-4 and RAG technology. Get personalized advice based on your brand diagnostic results and uploaded documents.',
     phase: 'P0',
@@ -411,7 +411,45 @@ export function getFeaturesForPhase(phase: DeploymentPhase): Feature[] {
  * Get features that should appear in navigation for current phase
  */
 export function getNavigationFeatures(currentPhase: DeploymentPhase): Feature[] {
-  return getFeaturesForPhase(currentPhase).filter(feature => feature.showInNav);
+  const features = getFeaturesForPhase(currentPhase).filter(feature => feature.showInNav);
+
+  // Define the desired navigation order: Start Here → Coach → Avatar → Insight
+  const navigationOrder = [
+    'START_HERE',
+    'BRAND_COACH_CHAT',  // Coach
+    'BRAND_AVATAR',      // Avatar
+    'INTERACTIVE_INSIGHT', // Insight
+    'JOURNEY',
+    'BRAND_CANVAS',
+    'BRAND_COPY_GENERATOR',
+    'CONVERSATION_HISTORY',
+    'BETA_TEST',
+    'DASHBOARD',
+    'IDEA_FRAMEWORK',
+    'FRAMEWORK_SUBMISSIONS',
+    'TEAM_COLLABORATION',
+    'BRAND_ANALYTICS',
+    'COMPETITIVE_ANALYSIS',
+    'BRAND_INSIGHTS_LIBRARY',
+  ];
+
+  // Sort features based on the defined order
+  return features.sort((a, b) => {
+    const indexA = navigationOrder.indexOf(a.id);
+    const indexB = navigationOrder.indexOf(b.id);
+
+    // If both are in the order list, sort by their position
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+
+    // If only one is in the order list, it comes first
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+
+    // If neither is in the list, maintain original order
+    return 0;
+  });
 }
 
 /**

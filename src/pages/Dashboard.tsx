@@ -42,7 +42,7 @@ const coreModules = [
     status: "available" as const
   },
   {
-    title: "Avatar 2.0 Builder", 
+    title: "Avatar Builder", 
     description: "Build behavioral customer profiles with emotional triggers and motivations",
     icon: Users,
     href: "/avatar",
@@ -60,7 +60,7 @@ const coreModules = [
 const ideaModules = [
   {
     title: "Insight Driven",
-    description: "Interactive learning module: Deep customer insights and Avatar 2.0",
+    description: "Interactive learning module: Deep customer insights and Avatar",
     icon: Lightbulb,
     href: "/idea/insight",
     status: "available" as const,

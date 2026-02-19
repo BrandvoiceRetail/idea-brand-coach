@@ -1,12 +1,12 @@
 /**
  * SystemKBContext
  *
- * Global context for System KB (IDEA Framework Knowledge Base) toggle state.
- * This ensures all chat components stay in sync when the toggle is changed.
+ * Global context for System KB (IDEA Framework Knowledge Base) state.
+ * NOTE: System KB is now always enabled. This context is kept for backwards compatibility
+ * and potential future extensions, but the toggle functionality has been removed.
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { useServices } from '@/services/ServiceProvider';
+import { createContext, useContext, useCallback, ReactNode } from 'react';
 
 interface SystemKBContextValue {
   /** Whether System KB integration is enabled */
@@ -24,22 +24,18 @@ interface SystemKBProviderProps {
 }
 
 export function SystemKBProvider({ children }: SystemKBProviderProps): JSX.Element {
-  const { chatService } = useServices();
+  // System KB is now always enabled
+  const useSystemKB = true;
 
-  // Initialize from service state
-  const [useSystemKB, setUseSystemKBState] = useState(() => chatService.getUseSystemKB());
-
-  // Sync service when state changes
-  useEffect(() => {
-    chatService.setUseSystemKB(useSystemKB);
-  }, [chatService, useSystemKB]);
-
+  // No-op functions for backwards compatibility
   const toggleSystemKB = useCallback(() => {
-    setUseSystemKBState(prev => !prev);
+    // No-op: System KB is always enabled
+    console.log('[SystemKBContext] System KB is always enabled');
   }, []);
 
   const setUseSystemKB = useCallback((enabled: boolean) => {
-    setUseSystemKBState(enabled);
+    // No-op: System KB is always enabled
+    console.log('[SystemKBContext] System KB is always enabled');
   }, []);
 
   return (

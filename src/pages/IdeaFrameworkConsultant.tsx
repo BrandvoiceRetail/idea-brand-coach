@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeftClose, PanelLeft, Copy, Check } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeft, Copy, Check, ChevronDown, ChevronUp, Menu, Upload, Settings2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
@@ -17,8 +17,7 @@ import { DocumentUpload } from '@/components/DocumentUpload';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemKB } from '@/contexts/SystemKBContext';
-import { SystemKBToggle } from '@/components/chat/SystemKBToggle';
-import { ImperativePanelHandle } from 'react-resizable-panels';
+import { cn } from '@/lib/utils';
 
 const IdeaFrameworkConsultant = () => {
   const { toast } = useToast();
@@ -40,16 +39,16 @@ const IdeaFrameworkConsultant = () => {
     switchToSession,
   } = useChatSessions({ chatbotType: 'idea-framework-consultant' });
 
-  // Chat for current session (passing sessionId ensures messages are cached per-session)
+  // Chat for current session
   const { messages, sendMessage, isSending, clearChat } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
   });
 
-  // System KB toggle (global state)
-  const { useSystemKB: isSystemKBEnabled, toggleSystemKB } = useSystemKB();
+  // System KB state (always enabled)
+  const { useSystemKB: isSystemKBEnabled } = useSystemKB();
 
-  // Per-session input storage with database persistence
+  // Per-session input storage
   const {
     message,
     setMessage,
@@ -60,255 +59,110 @@ const IdeaFrameworkConsultant = () => {
   } = usePersistedSessionForm({
     sessionId: currentSessionId,
     category: 'consultant',
-    debounceDelay: 1000 // Save to DB after 1 second of no typing
+    debounceDelay: 1000
   });
 
-  // Track if user has typed to avoid showing sync status on initial load
+  // UI state
   const [hasUserTyped, setHasUserTyped] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isFrameworkExpanded, setIsFrameworkExpanded] = useState(true);
+  const [showContextField, setShowContextField] = useState(false);
+  const [showDocumentDialog, setShowDocumentDialog] = useState(false);
+  const [userDocuments, setUserDocuments] = useState<unknown[]>([]);
+  const [isCopied, setIsCopied] = useState(false);
 
-  // Track sending state per session to maintain button state when switching
-  const [sessionSendingStates, setSessionSendingStates] = useState<Record<string, boolean>>({});
-  const isSessionSending = currentSessionId ? (sessionSendingStates[currentSessionId] || isSending) : false;
+  // Chat container ref for auto-scrolling
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Separate state for follow-up questions
-  const [followUpMessage, setFollowUpMessage] = useState('');
-
-  // Reset hasUserTyped flag and follow-up message when switching sessions
+  // Reset states when switching sessions
   useEffect(() => {
     setHasUserTyped(false);
-    setFollowUpMessage('');
   }, [currentSessionId]);
 
-  const [userDocuments, setUserDocuments] = useState<unknown[]>([]);
-  const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
-  const [initialSuggestions, setInitialSuggestions] = useState<string[]>([]);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
-  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
-
-  const toggleSidebar = () => {
-    const panel = sidebarPanelRef.current;
-    if (panel) {
-      if (isSidebarCollapsed) {
-        panel.expand();
-      } else {
-        panel.collapse();
-      }
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  };
+  }, [messages]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to access the IDEA Framework Consultant",
-        variant: "destructive",
-      });
       navigate('/auth');
     }
-  }, [user, navigate, toast]);
+  }, [user, navigate]);
 
-  // Debug helper: Log user ID once on mount
-  useEffect(() => {
-    if (user) {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔑 User ID:', user.id);
-      console.log('   (Use this ID for verification scripts)');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only log once on mount
+  // Auto-close sidebar on session selection
+  const handleSessionSelect = (sessionId: string) => {
+    switchToSession(sessionId);
+    setIsSidebarOpen(false);
+  };
 
-  // Generate follow-up suggestions when new assistant message arrives
-  useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'assistant') {
-        generateFollowUpSuggestions(lastMessage.content);
-      }
-    }
-  }, [messages]);
+  const handleConsultation = async () => {
+    if (!message.trim()) return;
 
-  // Generate diagnostic-based initial suggestions when no messages yet
-  useEffect(() => {
-    if (latestDiagnostic && messages.length === 0) {
-      const suggestions: string[] = [];
-      const scores = latestDiagnostic.scores;
-
-      // Add suggestions based on low scores (areas needing improvement)
-      if (scores.insight < 60) {
-        suggestions.push("How can I better understand my customers' emotional triggers?");
-      }
-      if (scores.distinctive < 60) {
-        suggestions.push("What makes my brand stand out from competitors?");
-      }
-      if (scores.empathetic < 60) {
-        suggestions.push("How do I build deeper emotional connections with customers?");
-      }
-      if (scores.authentic < 60) {
-        suggestions.push("How can I communicate more authentically as a brand?");
-      }
-
-      // If all scores are good, provide growth-focused suggestions
-      if (suggestions.length === 0) {
-        suggestions.push("How can I maintain my strong brand performance?");
-        suggestions.push("What are the next steps to elevate my brand?");
-        suggestions.push("How do I scale my brand while keeping it authentic?");
-      }
-
-      setInitialSuggestions(suggestions.slice(0, 4));
-    }
-  }, [latestDiagnostic, messages.length]);
-
-  const handleConsultation = async (isFollowUp = false) => {
-    const messageToSend = isFollowUp ? followUpMessage.trim() : message.trim();
-
-    if (!messageToSend || !currentSessionId) {
-      toast({
-        title: "Message Required",
-        description: "Please enter your question or challenge",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Set sending state for this session
-    setSessionSendingStates(prev => ({
-      ...prev,
-      [currentSessionId]: true
-    }));
+    const fullMessage = context
+      ? `Context: ${context}\n\nQuestion: ${message}`
+      : message;
 
     try {
-      await sendMessage({
-        role: 'user',
-        content: messageToSend,
-        metadata: { context: context.trim() || undefined }
-      });
-
-      // Clear only the follow-up message after sending (keep main message intact)
-      if (isFollowUp) {
-        setFollowUpMessage('');
-      }
-
-      toast({
-        title: "Consultation Complete",
-        description: "Your strategic guidance is ready",
-      });
+      await sendMessage(
+        fullMessage,
+        'user',
+        {
+          userDocuments,
+          useSystemKB: isSystemKBEnabled,
+          latestDiagnostic: latestDiagnostic || undefined
+        }
+      );
+      setMessage('');
+      setContext('');
+      setShowContextField(false);
+      setHasUserTyped(false);
     } catch (error) {
-      console.error('Consultation error:', error);
-      toast({
-        title: "Consultation Failed",
-        description: error instanceof Error ? error.message : "Failed to get consultation",
-        variant: "destructive",
-      });
-    } finally {
-      // Clear sending state for this session
-      if (currentSessionId) {
-        setSessionSendingStates(prev => ({
-          ...prev,
-          [currentSessionId]: false
-        }));
-      }
+      console.error('Error sending message:', error);
     }
-  };
-
-  const generateFollowUpSuggestions = (response: string) => {
-    const suggestions = [];
-
-    // Generate contextual follow-up questions based on response content
-    if (response.toLowerCase().includes('positioning')) {
-      suggestions.push("How can I test this positioning with my target audience?");
-      suggestions.push("What are the risks of this positioning strategy?");
-    }
-
-    if (response.toLowerCase().includes('emotion')) {
-      suggestions.push("How do I measure emotional impact in my campaigns?");
-      suggestions.push("What specific triggers should I avoid?");
-    }
-
-    if (response.toLowerCase().includes('brand')) {
-      suggestions.push("How do I implement this across different touchpoints?");
-      suggestions.push("What metrics should I track to measure success?");
-    }
-
-    if (response.toLowerCase().includes('audience')) {
-      suggestions.push("How do I expand this to adjacent customer segments?");
-      suggestions.push("What research methods can validate these insights?");
-    }
-
-    // Always include these generic follow-ups
-    suggestions.push("Can you elaborate on the behavioral science behind this?");
-    suggestions.push("What are the next steps to implement this strategy?");
-
-    // Randomly select 3-4 suggestions
-    const shuffled = suggestions.sort(() => 0.5 - Math.random());
-    setFollowUpSuggestions(shuffled.slice(0, 4));
-  };
-
-  const handleFollowUpQuestion = (suggestion: string) => {
-    setFollowUpMessage(suggestion);
   };
 
   const downloadResponse = () => {
-    if (messages.length === 0) return;
+    const allMessages = messages.map(m =>
+      `${m.role === 'user' ? 'You' : 'Trevor'}: ${m.content}`
+    ).join('\n\n');
 
-    const currentDate = new Date().toLocaleDateString();
-    const conversationContent = messages
-      .map(msg => `${msg.role === 'user' ? 'Q' : 'A'}: ${msg.content}`)
-      .join('\n\n');
-
-    const content = `IDEA Framework Consultation - ${currentDate}\n\n${conversationContent}\n\n---\nGenerated by IDEA Framework Consultant\nCreated by Trevor Bradford • IDEA Strategic Brand Framework™`;
-
-    const blob = new Blob([content], { type: 'text/plain' });
+    const blob = new Blob([allMessages], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `IDEA-Framework-Consultation-${new Date().getTime()}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `consultation-${new Date().toISOString()}.txt`;
+    a.click();
     URL.revokeObjectURL(url);
-
-    toast({
-      title: "Download Complete",
-      description: "Your consultation has been downloaded successfully.",
-    });
   };
 
-  const handleCopyChat = async () => {
-    if (messages.length === 0) return;
+  const handleCopyChat = () => {
+    const allMessages = messages.map(m =>
+      `${m.role === 'user' ? 'You' : 'Trevor'}: ${m.content}`
+    ).join('\n\n');
 
-    const currentDate = new Date().toLocaleDateString();
-    const conversationContent = messages
-      .map(msg => `${msg.role === 'user' ? 'Q' : 'A'}: ${msg.content}`)
-      .join('\n\n');
-
-    const content = `IDEA Framework Consultation - ${currentDate}\n\n${conversationContent}\n\n---\nGenerated by IDEA Framework Consultant\nCreated by Trevor Bradford • IDEA Strategic Brand Framework™`;
-
-    try {
-      await navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(allMessages).then(() => {
       setIsCopied(true);
-      toast({
-        title: "Copied to Clipboard",
-        description: "Your consultation has been copied successfully.",
-      });
       setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
-      console.error('Copy error:', error);
+      toast({
+        title: "Copied to clipboard",
+        description: "The conversation has been copied to your clipboard",
+      });
+    }).catch(() => {
       toast({
         title: "Copy Failed",
         description: "Failed to copy to clipboard",
         variant: "destructive",
       });
-    }
+    });
   };
 
   const handleClearChat = async () => {
     try {
       await clearChat();
-      setFollowUpSuggestions([]);
-      // Keep both message and context fields intact - they are draft inputs, not part of the conversation
       toast({
         title: "Conversation Cleared",
         description: "Your conversation history has been cleared",
@@ -345,499 +199,293 @@ const IdeaFrameworkConsultant = () => {
     }
   ];
 
-  const expertiseAreas = [
-    "Behavioral Science Integration",
-    "Customer Psychology",
-    "Brand Positioning",
-    "Emotional Triggers",
-    "Social Identity Theory",
-    "Conversion Optimization",
-    "Storytelling Strategy",
-    "Market Differentiation"
-  ];
-
-  // Get the last assistant message for display
-  // This will always show the most recent response from the assistant
-  const lastResponse = (() => {
-    // Find the last assistant message by iterating backwards
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i]?.role === 'assistant') {
-        return messages[i].content;
-      }
-    }
-    return null;
-  })();
-
-  // Group messages into conversation pairs for history display
-  const conversationHistory = [];
-  for (let i = 0; i < messages.length - 1; i++) {
-    // Look for user messages followed by assistant responses
-    if (messages[i]?.role === 'user' && messages[i + 1]?.role === 'assistant') {
-      conversationHistory.push({
-        question: messages[i].content,
-        answer: messages[i + 1].content,
-        timestamp: messages[i].created_at,
-      });
-    }
-  }
-
-  // Also check if we have a pending user message (last message is from user)
-  // This helps show that a question was asked even before response arrives
-  const hasPendingQuestion = messages.length > 0 &&
-    messages[messages.length - 1]?.role === 'user';
-
   return (
-    <div className="h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <ResizablePanelGroup direction="horizontal" className="h-full">
-        {/* Sidebar */}
-        <ResizablePanel
-          ref={sidebarPanelRef}
-          defaultSize={20}
-          minSize={15}
-          maxSize={40}
-          collapsible={true}
-          collapsedSize={0}
-          onCollapse={() => setIsSidebarCollapsed(true)}
-          onExpand={() => setIsSidebarCollapsed(false)}
-        >
-          <ChatSidebar
-            sessions={sessions}
-            currentSessionId={currentSessionId}
-            isLoading={isLoadingSessions}
-            isCreating={isCreating}
-            isRegeneratingTitle={isRegeneratingTitle}
-            onCreateNew={createNewChat}
-            onSelectSession={switchToSession}
-            onRenameSession={renameSession}
-            onDeleteSession={deleteSession}
-            onRegenerateTitle={regenerateTitle}
-          />
-        </ResizablePanel>
-
-        <ResizableHandle withHandle />
-
-        {/* Main Content */}
-        <ResizablePanel defaultSize={80} minSize={50}>
-          <div className="h-full overflow-auto">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Fixed Header */}
+      <div className="flex-none border-b bg-background/95 backdrop-blur-sm">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-4">
             {/* Sidebar Toggle */}
-            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b p-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSidebar}
-                className="h-8 w-8"
-              >
-                {isSidebarCollapsed ? (
-                  <PanelLeft className="h-4 w-4" />
-                ) : (
-                  <PanelLeftClose className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-
-        <div className="p-6">
-          <div className="max-w-6xl mx-auto space-y-8">
-            {/* Header */}
-            <div className="text-center space-y-6">
-              <div className="flex items-center justify-center space-x-6">
-                <img
-                  src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png"
-                  alt="Trevor Bradford"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-primary/20"
+            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-80">
+                <ChatSidebar
+                  sessions={sessions}
+                  currentSessionId={currentSessionId}
+                  isLoading={isLoadingSessions}
+                  isCreating={isCreating}
+                  isRegeneratingTitle={isRegeneratingTitle}
+                  onCreateNew={createNewChat}
+                  onSelectSession={handleSessionSelect}
+                  onRenameSession={renameSession}
+                  onDeleteSession={deleteSession}
+                  onRegenerateTitle={regenerateTitle}
                 />
-                <div className="text-left">
-                  <h1 className="text-4xl font-bold text-foreground">Trevor Bradford</h1>
-                  <p className="text-xl text-foreground">Brand Strategist, E-commerce Expert, Author</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Creator of the IDEA Strategic Brand Framework™
-                  </p>
-                </div>
-              </div>
-              <p className="text-lg text-foreground max-w-3xl mx-auto">
-                Get personalized strategic guidance powered by behavioral science, customer psychology,
-                and proven brand strategy methodology. Consult directly with Trevor Bradford.
-              </p>
-            </div>
+              </SheetContent>
+            </Sheet>
 
-            {/* Framework Overview */}
-            <Card className="border-2 border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-center text-2xl">The IDEA Strategic Brand Framework™</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  {frameworkPillars.map((pillar, index) => (
-                    <div key={index} className="text-center space-y-3">
-                      <div className={`${pillar.color} w-16 h-16 rounded-full flex items-center justify-center mx-auto`}>
-                        <pillar.icon className="w-8 h-8 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-lg">{pillar.title}</h3>
-                      <p className="text-sm text-muted-foreground">{pillar.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Request Status Indicator */}
-            {isSessionSending && (
-              <Card className="bg-primary/5 border-primary/30">
-                <CardContent className="py-3">
-                  <div className="flex items-center gap-3 text-sm">
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="text-primary font-medium">Processing your strategic consultation...</span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Consultation Interface */}
-              <Card className="lg:col-span-1">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5" />
-                      Consult with Trevor Bradford
-                    </CardTitle>
-                    <SystemKBToggle enabled={isSystemKBEnabled} onToggle={toggleSystemKB} />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Sync Status Indicator - Only show when user has typed, not on initial load */}
-                  {hasUserTyped && syncStatus && syncStatus !== 'synced' && !isLoading && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {syncStatus === 'syncing' && (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>Saving draft...</span>
-                        </>
-                      )}
-                      {syncStatus === 'offline' && (
-                        <>
-                          <span className="w-3 h-3 bg-yellow-500 rounded-full" />
-                          <span>Offline - draft saved locally</span>
-                        </>
-                      )}
-                      {syncStatus === 'error' && (
-                        <>
-                          <span className="w-3 h-3 bg-red-500 rounded-full" />
-                          <span>Error saving draft</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="context">Business Context (Optional)</Label>
-                    <Input
-                      id="context"
-                      placeholder="e.g., E-commerce luxury brand, B2B SaaS, etc."
-                      value={context}
-                      onChange={(e) => {
-                        setHasUserTyped(true);
-                        setContext(e.target.value);
-                      }}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Your Branding Question or Challenge</Label>
-                    <Textarea
-                      id="message"
-                      placeholder="Describe your branding challenge, target audience question, positioning dilemma, or strategic need..."
-                      value={message}
-                      onChange={(e) => {
-                        setHasUserTyped(true);
-                        setMessage(e.target.value);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleConsultation(false);
-                        }
-                      }}
-                      rows={4}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Press Enter to send, Shift+Enter for new line
-                    </p>
-                  </div>
-
-                  <Button
-                    onClick={() => handleConsultation(false)}
-                    disabled={isSessionSending || !message.trim()}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isSessionSending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Getting Strategic Guidance...
-                      </>
-                    ) : (
-                      'Get Strategic Guidance'
-                    )}
-                  </Button>
-
-                  {/* Example Questions */}
-                  <div className="pt-4 border-t">
-                    <h4 className="font-semibold mb-2">Example Questions:</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• How do I position my brand to trigger emotional buying decisions?</li>
-                      <li>• What psychological triggers work best for my target demographic?</li>
-                      <li>• How can I differentiate from competitors using behavioral science?</li>
-                      <li>• What storytelling approach will resonate with my audience?</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Knowledge Base Area */}
-              <div className="lg:col-span-1 space-y-6">
-                <DocumentUpload onDocumentsChange={setUserDocuments} />
+            {/* Trevor Branding */}
+            <div className="flex items-center gap-3">
+              <img
+                src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png"
+                alt="Trevor Bradford"
+                className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+              />
+              <div>
+                <h1 className="text-lg font-bold">Trevor Bradford • IDEA Framework Consultant</h1>
+                <p className="text-xs text-muted-foreground">Brand Strategist, E-commerce Expert, Author</p>
               </div>
             </div>
+          </div>
 
-            {/* Response Area - Full Width */}
-            <Card className="mt-8">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>
-                    Trevor's Strategic Guidance
-                    {conversationHistory.length > 1 && (
-                      <span className="text-sm font-normal text-muted-foreground ml-2">
-                        (Latest Response)
-                      </span>
-                    )}
-                  </CardTitle>
-                  {lastResponse && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        onClick={handleClearChat}
-                        variant="outline"
-                        size="sm"
-                        disabled={!currentSessionId || messages.length === 0}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Clear Conversation
-                      </Button>
-                      <Button
-                        onClick={handleCopyChat}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2"
-                      >
-                        {isCopied ? (
-                          <>
-                            <Check className="w-4 h-4" />
-                            Copied
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-4 h-4" />
-                            Copy Text
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        onClick={downloadResponse}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {lastResponse ? (
-                  <>
-                    <div className="prose prose-sm max-w-none mb-6">
-                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {lastResponse}
-                      </div>
-                    </div>
-
-                    {/* Continue Conversation Interface */}
-                    <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-border/50">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-sm">Continue the Conversation</h4>
-                      </div>
-
-                      {/* Follow-up Suggestions */}
-                      {followUpSuggestions.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">Quick follow-up questions:</p>
-                          <div className="grid grid-cols-1 gap-2">
-                            {followUpSuggestions.map((suggestion, index) => (
-                              <Button
-                                key={index}
-                                variant="ghost"
-                                size="sm"
-                                className="justify-start h-auto p-3 text-left whitespace-normal"
-                                onClick={() => handleFollowUpQuestion(suggestion)}
-                              >
-                                {suggestion}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Continue Conversation Input */}
-                      <div className="space-y-3">
-                        <Label htmlFor="follow-up">Ask a follow-up question:</Label>
-                        <Textarea
-                          id="follow-up"
-                          placeholder="Build on this guidance with additional questions..."
-                          value={followUpMessage}
-                          onChange={(e) => {
-                            setFollowUpMessage(e.target.value);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleConsultation(true);
-                            }
-                          }}
-                          rows={3}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Press Enter to send, Shift+Enter for new line
-                        </p>
-                        <Button
-                          onClick={() => handleConsultation(true)}
-                          disabled={isSessionSending || !followUpMessage.trim()}
-                          className="w-full"
-                          size="sm"
-                        >
-                          {isSessionSending ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Getting Follow-up Guidance...
-                            </>
-                          ) : (
-                            'Continue Conversation'
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center text-muted-foreground py-12">
-                    <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Your strategic guidance will appear here</p>
-                    <p className="text-sm mt-2">Ask a question to get personalized IDEA Framework insights</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Conversation History */}
-            {conversationHistory.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    Consultation History
-                    {conversationHistory.length === 1
-                      ? ' (1 Exchange)'
-                      : ` (Last ${Math.min(10, conversationHistory.length)} Exchanges)`
-                    }
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {conversationHistory.slice(-10).reverse().map((item, index) => (
-                    <div key={index} className="border-l-4 border-primary pl-4 space-y-2">
-                      <div className="font-medium text-sm">Q: {item.question}</div>
-                      <div className="text-sm text-muted-foreground whitespace-pre-wrap">{item.answer}</div>
-                      {item.timestamp && (
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(item.timestamp).toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {hasPendingQuestion && isSessionSending && (
-                    <div className="border-l-4 border-yellow-500 pl-4 space-y-2">
-                      <div className="font-medium text-sm">Q: {messages[messages.length - 1].content}</div>
-                      <div className="text-sm text-muted-foreground italic flex items-center gap-2">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        Awaiting response...
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+          {/* Header Actions */}
+          <div className="flex items-center gap-2">
+            {messages.length > 0 && (
+              <>
+                <Button
+                  onClick={handleCopyChat}
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                >
+                  {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+                <Button
+                  onClick={downloadResponse}
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={handleClearChat}
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
             )}
-
-            {/* About Trevor & Personal Consultation */}
-            <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
-              <CardContent className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                  <div>
-                    <h3 className="text-2xl font-semibold mb-4">Want to Work Directly with Trevor?</h3>
-                    <p className="text-muted-foreground mb-4 leading-relaxed">
-                      While this AI consultant provides 24/7 strategic guidance based on Trevor Bradford's methodology,
-                      sometimes you need the personal touch of working directly with the creator of the IDEA Strategic
-                      Brand Framework™.
-                    </p>
-                    <p className="text-muted-foreground mb-6 leading-relaxed">
-                      With over 35 years of experience in branding as an agency owner, including 15 years in online retail, Trevor has collaborated with a wide range of clients from nationwide retailers, globally famous brands and emerging entrepreneurs.<br/><br/>
-
-                      Trevor is an industry authority on branding and marketing and has helped hundreds of e-commerce entrepreneurs build trust-first strategies that drive sales conversions and reduce true advertising cost of sale (TACOS).
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <Button
-                        size="lg"
-                        onClick={() => window.open('https://calendly.com/trevor-bradford-idea/30min', '_blank')}
-                      >
-                        Book Personal Consultation
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => window.open('https://www.linkedin.com/in/trevor-bradford-51982b9/', '_blank')}
-                      >
-                        Connect on LinkedIn
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <img
-                      src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png"
-                      alt="Trevor Bradford"
-                      className="w-48 h-48 rounded-full object-cover mx-auto border-4 border-primary/20 mb-4"
-                    />
-                    <h4 className="text-xl font-semibold">Trevor Bradford</h4>
-                    <p className="text-muted-foreground">Creator, IDEA Strategic Brand Framework™</p>
-                    <p className="text-sm text-muted-foreground mt-2">Behavioral Brand Strategist & Author</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Footer */}
-            <Card className="bg-gradient-hero text-primary-foreground">
-              <CardContent className="p-8 text-center">
-                <h3 className="text-xl font-semibold mb-2">Powered by Behavioral Science</h3>
-                <p className="mb-4">
-                  This AI consultant integrates insights from Cialdini, Kahneman, Lindstrom, Harhut, and other leading behavioral scientists
-                </p>
-                <p className="text-sm opacity-90">
-                  Created by Trevor Bradford • IDEA Strategic Brand Framework™ Creator
-                </p>
-              </CardContent>
-            </Card>
           </div>
         </div>
+
+        {/* IDEA Framework Bar (Collapsible) */}
+        <div className="border-t bg-muted/50">
+          <Button
+            variant="ghost"
+            className="w-full p-2 flex items-center justify-between hover:bg-transparent"
+            onClick={() => setIsFrameworkExpanded(!isFrameworkExpanded)}
+          >
+            <span className="text-sm font-medium">IDEA Strategic Brand Framework™</span>
+            {isFrameworkExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+          {isFrameworkExpanded && (
+            <div className="px-4 pb-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+              {frameworkPillars.map((pillar, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", pillar.color)}>
+                    <pillar.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{pillar.title}</p>
+                    <p className="text-xs text-muted-foreground truncate hidden sm:block">{pillar.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </ResizablePanel>
-  </ResizablePanelGroup>
-</div>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center max-w-md">
+                <Brain className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <h2 className="text-xl font-semibold mb-2">Welcome to IDEA Framework Consultation</h2>
+                <p className="text-muted-foreground mb-4">
+                  Get personalized strategic guidance powered by behavioral science, customer psychology,
+                  and proven brand strategy methodology.
+                </p>
+                <div className="text-left space-y-2">
+                  <p className="text-sm font-medium">Example questions:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• How do I position my brand to trigger emotional buying decisions?</li>
+                    <li>• What psychological triggers work best for my target demographic?</li>
+                    <li>• How can I differentiate from competitors using behavioral science?</li>
+                    <li>• What storytelling approach will resonate with my audience?</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    "flex gap-3",
+                    msg.role === 'user' ? "justify-end" : "justify-start"
+                  )}
+                >
+                  {msg.role === 'assistant' && (
+                    <img
+                      src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png"
+                      alt="Trevor"
+                      className="w-8 h-8 rounded-full object-cover flex-none"
+                    />
+                  )}
+                  <div className={cn(
+                    "max-w-[70%] rounded-lg p-4",
+                    msg.role === 'user'
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  )}>
+                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    {msg.created_at && (
+                      <p className="text-xs mt-2 opacity-70">
+                        {new Date(msg.created_at).toLocaleTimeString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {isSending && (
+                <div className="flex gap-3">
+                  <img
+                    src="/lovable-uploads/2a42657e-2e28-4ddd-b7bf-83ae6a8b6ffa.png"
+                    alt="Trevor"
+                    className="w-8 h-8 rounded-full object-cover flex-none"
+                  />
+                  <div className="bg-muted rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm">Trevor is thinking...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Fixed Input Area */}
+        <div className="flex-none border-t bg-background p-4">
+          {/* Context field (collapsible) */}
+          {showContextField && (
+            <div className="mb-3">
+              <Input
+                placeholder="Business context (e.g., E-commerce luxury brand, B2B SaaS)"
+                value={context}
+                onChange={(e) => {
+                  setHasUserTyped(true);
+                  setContext(e.target.value);
+                }}
+                className="text-sm"
+              />
+            </div>
+          )}
+
+          {/* Main input area */}
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <Textarea
+                placeholder="Ask Trevor about your branding challenge..."
+                value={message}
+                onChange={(e) => {
+                  setHasUserTyped(true);
+                  setMessage(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleConsultation();
+                  }
+                }}
+                rows={2}
+                className="resize-none pr-24"
+              />
+
+              {/* Input actions */}
+              <div className="absolute right-2 bottom-2 flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setShowContextField(!showContextField)}
+                  title="Add context"
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+
+                <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      title="Upload documents"
+                    >
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Upload Documents</DialogTitle>
+                    </DialogHeader>
+                    <DocumentUpload onDocumentsChange={setUserDocuments} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleConsultation}
+              disabled={isSending || !message.trim()}
+              size="lg"
+            >
+              {isSending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <MessageSquare className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+
+          {/* Sync status */}
+          {hasUserTyped && syncStatus && syncStatus !== 'synced' && !isLoading && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+              {syncStatus === 'syncing' && (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>Saving draft...</span>
+                </>
+              )}
+              {syncStatus === 'offline' && (
+                <>
+                  <span className="w-3 h-3 bg-yellow-500 rounded-full" />
+                  <span>Offline - draft saved locally</span>
+                </>
+              )}
+              {syncStatus === 'error' && (
+                <>
+                  <span className="w-3 h-3 bg-red-500 rounded-full" />
+                  <span>Error saving draft</span>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
