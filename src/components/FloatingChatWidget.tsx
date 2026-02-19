@@ -8,7 +8,6 @@ import { useChat } from "@/hooks/useChat";
 import { useChatSessions } from "@/hooks/useChatSessions";
 import { useAuth } from "@/hooks/useAuth";
 import { useSystemKB } from "@/contexts/SystemKBContext";
-import { SystemKBToggle } from "@/components/chat/SystemKBToggle";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
@@ -23,6 +22,17 @@ interface FloatingChatWidgetProps {
   startFresh?: boolean;
 }
 
+// Animated dots component for thinking indicator
+function ThinkingIndicator() {
+  return (
+    <div className="flex items-center gap-1 px-3 py-2">
+      <span className="inline-block w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+      <span className="inline-block w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+      <span className="inline-block w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+    </div>
+  );
+}
+
 export function FloatingChatWidget({
   pageContext,
   placeholder = "Ask about your brand strategy...",
@@ -33,6 +43,7 @@ export function FloatingChatWidget({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isFullSize, setIsFullSize] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
+  const [tempUserMessage, setTempUserMessage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Session management - shared with /idea/consultant page
@@ -49,18 +60,39 @@ export function FloatingChatWidget({
     sessionId: currentSessionId,
   });
 
-  // System KB toggle (global state)
-  const { useSystemKB: isSystemKBEnabled, toggleSystemKB } = useSystemKB();
+  // System KB state (always enabled)
+  const { useSystemKB: isSystemKBEnabled } = useSystemKB();
 
   // Get current session title for display
   const currentSession = sessions?.find(s => s.id === currentSessionId);
+
+  // Combine real messages with temporary user message for display
+  const displayMessages = [
+    ...messages,
+    ...(tempUserMessage ? [{
+      role: 'user' as const,
+      content: tempUserMessage,
+      id: 'temp-user-msg',
+    }] : [])
+  ];
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [displayMessages, isSending]);
+
+  // Clear temp message when real messages update
+  useEffect(() => {
+    if (messages.length > 0 && tempUserMessage) {
+      // Check if the last message matches our temp message (without context)
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'user') {
+        setTempUserMessage(null);
+      }
+    }
+  }, [messages, tempUserMessage]);
 
   // Track if we've already created a fresh session for this widget instance
   const [freshSessionCreated, setFreshSessionCreated] = useState(false);
@@ -81,15 +113,19 @@ export function FloatingChatWidget({
 
   const handleNewChat = async () => {
     await createNewChat();
+    setTempUserMessage(null);
   };
 
   const handleSend = async () => {
     if (!inputMessage.trim() || isSending || !currentSessionId) return;
 
+    const userMessageDisplay = inputMessage.trim();
     const messageToSend = pageContext
-      ? `[Context: User is on ${pageContext}]\n\n${inputMessage}`
-      : inputMessage;
+      ? `[Context: User is on ${pageContext}]\n\n${userMessageDisplay}`
+      : userMessageDisplay;
 
+    // Show user message immediately in UI
+    setTempUserMessage(messageToSend);
     setInputMessage("");
 
     try {
@@ -97,8 +133,12 @@ export function FloatingChatWidget({
         content: messageToSend,
         role: 'user',
       });
+      // Success - temp message will be cleared when real messages update
     } catch (error) {
       console.error('Error sending message:', error);
+      // On error, remove temp message and restore input
+      setTempUserMessage(null);
+      setInputMessage(userMessageDisplay);
     }
   };
 
@@ -154,11 +194,6 @@ export function FloatingChatWidget({
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <SystemKBToggle
-                enabled={isSystemKBEnabled}
-                onToggle={toggleSystemKB}
-                variant="compact"
-              />
               <Button
                 variant="ghost"
                 size="sm"
@@ -209,7 +244,7 @@ export function FloatingChatWidget({
               <div className="text-center text-muted-foreground text-sm py-8">
                 <p>Please sign in to chat with the Brand Coach.</p>
               </div>
-            ) : messages.length === 0 ? (
+            ) : displayMessages.length === 0 && !isSending ? (
               <div className="text-center text-muted-foreground text-sm py-8">
                 <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p>Ask me anything about your brand strategy!</p>
@@ -217,11 +252,11 @@ export function FloatingChatWidget({
               </div>
             ) : (
               <div className="space-y-4">
-                {messages.map((msg, index) => (
+                {displayMessages.map((msg, index) => (
                   <div
-                    key={index}
+                    key={msg.id || index}
                     className={cn(
-                      "flex",
+                      "flex animate-fade-in",
                       msg.role === 'user' ? "justify-end" : "justify-start"
                     )}
                   >
@@ -245,9 +280,9 @@ export function FloatingChatWidget({
                   </div>
                 ))}
                 {isSending && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg px-3 py-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                  <div className="flex justify-start animate-fade-in">
+                    <div className="bg-muted rounded-lg">
+                      <ThinkingIndicator />
                     </div>
                   </div>
                 )}

@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/BrandContext";
 import { AIAssistant } from "@/components/AIAssistant";
 import { FieldChatButton } from "@/components/FieldChatModal";
+import { FloatingChatWidget } from "@/components/FloatingChatWidget";
 // ARCHIVED: PDF export temporarily disabled
 // import { AvatarPDFExport } from "@/components/AvatarPDFExport";
 import { usePersistedField } from "@/hooks/usePersistedField";
@@ -939,6 +940,12 @@ export default function AvatarBuilder() {
           </CardContent>
         </Card>
       )}
+
+      <FloatingChatWidget
+        pageContext="Avatar Builder page - defining ideal customer persona"
+        placeholder="Ask about building your customer avatar..."
+        startFresh={true}
+      />
     </div>
   );
 }
