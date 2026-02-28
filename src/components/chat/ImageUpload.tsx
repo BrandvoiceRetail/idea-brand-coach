@@ -2,9 +2,10 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Image, X, Upload, Loader2 } from 'lucide-react';
+import { Image, X, Upload, Loader2, Settings2, FileImage } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatImageAttachment } from '@/types/chat';
+import imageCompression from 'browser-image-compression';
 
 interface ImageUploadProps {
   onImagesChange?: (images: ChatImageAttachment[]) => void;
@@ -20,6 +21,82 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [attachedImages, setAttachedImages] = useState<ChatImageAttachment[]>([]);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState<{[key: string]: number}>({});
+  const [compressionEnabled, setCompressionEnabled] = useState(true);
+
+  // Helper function to format file sizes
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // Compression function
+  const compressImage = async (file: File, fileName: string): Promise<File> => {
+    // Skip compression if disabled or file is already small
+    if (!compressionEnabled || file.size < 1024 * 1024) { // < 1MB
+      return file;
+    }
+
+    // Determine compression settings based on file size
+    let maxSizeMB: number;
+    if (file.size < 2 * 1024 * 1024) { // < 2MB
+      maxSizeMB = 1.5;
+    } else if (file.size < 5 * 1024 * 1024) { // < 5MB
+      maxSizeMB = 2;
+    } else { // > 5MB
+      maxSizeMB = 3;
+    }
+
+    const options = {
+      maxSizeMB,
+      maxWidthOrHeight: 2048, // Optimal for GPT-4 Vision
+      useWebWorker: true,
+      fileType: file.type,
+      initialQuality: 0.9, // High quality for brand materials
+      alwaysKeepResolution: false,
+      preserveExif: true,
+      onProgress: (progress: number) => {
+        setCompressionProgress(prev => ({
+          ...prev,
+          [fileName]: Math.round(progress)
+        }));
+      }
+    };
+
+    try {
+      setIsCompressing(true);
+      const compressedFile = await imageCompression(file, options);
+
+      // Log compression results
+      const originalSize = formatFileSize(file.size);
+      const compressedSize = formatFileSize(compressedFile.size);
+      const reduction = Math.round((1 - compressedFile.size / file.size) * 100);
+
+      console.log(`Compressed ${file.name}: ${originalSize} → ${compressedSize} (-${reduction}%)`);
+
+      // Clear progress for this file
+      setCompressionProgress(prev => {
+        const newProgress = { ...prev };
+        delete newProgress[fileName];
+        return newProgress;
+      });
+
+      return compressedFile;
+    } catch (error) {
+      console.warn('Compression failed, using original:', error);
+      // Clear progress on error
+      setCompressionProgress(prev => {
+        const newProgress = { ...prev };
+        delete newProgress[fileName];
+        return newProgress;
+      });
+      return file; // Fallback to original
+    } finally {
+      setIsCompressing(false);
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -50,6 +127,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     setIsUploading(true);
     const newImages: ChatImageAttachment[] = [];
+    let totalOriginalSize = 0;
+    let totalCompressedSize = 0;
 
     for (const file of files) {
       // Validate file type
@@ -74,15 +153,23 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       }
 
       try {
+        const originalSize = file.size;
+        totalOriginalSize += originalSize;
+
+        // Compress the image if enabled
+        const fileToUpload = await compressImage(file, file.name);
+        const compressedSize = fileToUpload.size;
+        totalCompressedSize += compressedSize;
+
         // Create file path with user ID
         const fileName = `${user.id}/images/${Date.now()}-${file.name}`;
 
         // Upload file to Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('documents')
-          .upload(fileName, file, {
+          .upload(fileName, fileToUpload, {
             upsert: false,
-            contentType: file.type
+            contentType: fileToUpload.type
           });
 
         if (uploadError) throw uploadError;
@@ -96,8 +183,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           id: crypto.randomUUID(),
           url: publicUrlData.publicUrl,
           filename: file.name,
-          mime_type: file.type,
-          file_size: file.size
+          mime_type: fileToUpload.type,
+          file_size: compressedSize,
+          original_file_size: originalSize !== compressedSize ? originalSize : undefined,
+          compression_ratio: originalSize !== compressedSize
+            ? Math.round((1 - compressedSize / originalSize) * 100)
+            : undefined,
+          was_compressed: originalSize !== compressedSize
         };
 
         newImages.push(imageAttachment);
@@ -116,13 +208,24 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       setAttachedImages(updatedImages);
       onImagesChange?.(updatedImages);
 
-      toast({
-        title: "Images Attached",
-        description: `${newImages.length} image(s) ready to send with your message`,
-      });
+      // Show compression results if compression was applied
+      if (compressionEnabled && totalOriginalSize > totalCompressedSize) {
+        const saved = totalOriginalSize - totalCompressedSize;
+        const reduction = Math.round((saved / totalOriginalSize) * 100);
+        toast({
+          title: "Images Optimized & Attached",
+          description: `${newImages.length} image(s) ready to send (${formatFileSize(saved)} saved, -${reduction}%)`,
+        });
+      } else {
+        toast({
+          title: "Images Attached",
+          description: `${newImages.length} image(s) ready to send with your message`,
+        });
+      }
     }
 
     setIsUploading(false);
+    setIsCompressing(false);
 
     // Reset file input
     if (fileInputRef.current) {
@@ -149,15 +252,30 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           variant="outline"
           size="sm"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading || attachedImages.length >= maxImages}
+          disabled={isUploading || isCompressing || attachedImages.length >= maxImages}
           title="Supported formats: JPEG, PNG, GIF, WEBP (max 20MB)"
         >
-          {isUploading ? (
+          {isUploading || isCompressing ? (
             <Loader2 className="w-4 h-4 animate-spin mr-2" />
           ) : (
             <Image className="w-4 h-4 mr-2" />
           )}
-          Add Images
+          {isCompressing ? "Optimizing..." : "Add Images"}
+        </Button>
+
+        {/* Compression Toggle */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCompressionEnabled(!compressionEnabled)}
+          title={compressionEnabled ? "Compression enabled - click to disable" : "Compression disabled - click to enable"}
+        >
+          <Settings2 className="w-4 h-4 mr-1" />
+          {compressionEnabled ? (
+            <span className="text-xs">Optimization On</span>
+          ) : (
+            <span className="text-xs text-muted-foreground">Optimization Off</span>
+          )}
         </Button>
 
         {attachedImages.length > 0 && (
@@ -166,7 +284,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           </span>
         )}
 
-        {attachedImages.length === 0 && (
+        {attachedImages.length === 0 && !isCompressing && (
           <span className="text-xs text-muted-foreground">
             JPEG, PNG, GIF, WEBP (max 20MB each)
           </span>
@@ -182,6 +300,19 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           </Button>
         )}
       </div>
+
+      {/* Compression Progress */}
+      {Object.keys(compressionProgress).length > 0 && (
+        <div className="text-xs text-muted-foreground space-y-1">
+          {Object.entries(compressionProgress).map(([fileName, progress]) => (
+            <div key={fileName} className="flex items-center gap-2">
+              <FileImage className="w-3 h-3" />
+              <span>Optimizing {fileName}...</span>
+              <span className="font-mono">{progress}%</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Hidden File Input */}
       <input
@@ -217,9 +348,21 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               >
                 <X className="w-3 h-3" />
               </Button>
-              <p className="text-xs text-center truncate w-20 mt-1">
-                {image.filename}
-              </p>
+              <div className="mt-1">
+                <p className="text-xs text-center truncate w-20">
+                  {image.filename}
+                </p>
+                {image.was_compressed && (
+                  <p className="text-xs text-center text-green-600">
+                    -{image.compression_ratio}%
+                  </p>
+                )}
+                {image.file_size && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    {formatFileSize(image.file_size)}
+                  </p>
+                )}
+              </div>
             </div>
           ))}
         </div>

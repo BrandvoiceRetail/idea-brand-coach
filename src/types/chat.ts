@@ -31,8 +31,14 @@ export interface ChatImageAttachment {
   filename: string;
   /** MIME type of the image */
   mime_type?: string;
-  /** File size in bytes */
+  /** File size in bytes (after compression if applied) */
   file_size?: number;
+  /** Original file size before compression (in bytes) */
+  original_file_size?: number;
+  /** Compression ratio as percentage (e.g., 60 means 60% smaller) */
+  compression_ratio?: number;
+  /** Whether compression was applied to this image */
+  was_compressed?: boolean;
   /** GPT-4 Vision analysis cache (optional) */
   analysis?: string;
 }
