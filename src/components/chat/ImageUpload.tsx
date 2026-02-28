@@ -144,12 +144,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   return (
     <div className="space-y-2">
       {/* Upload Button */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Button
           variant="outline"
           size="sm"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || attachedImages.length >= maxImages}
+          title="Supported formats: JPEG, PNG, GIF, WEBP (max 20MB)"
         >
           {isUploading ? (
             <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -162,6 +163,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         {attachedImages.length > 0 && (
           <span className="text-sm text-muted-foreground">
             {attachedImages.length}/{maxImages} images attached
+          </span>
+        )}
+
+        {attachedImages.length === 0 && (
+          <span className="text-xs text-muted-foreground">
+            JPEG, PNG, GIF, WEBP (max 20MB each)
           </span>
         )}
 

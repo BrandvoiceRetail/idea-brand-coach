@@ -459,7 +459,7 @@ const IdeaFrameworkConsultant = () => {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 relative"
-                      title="Attach images"
+                      title="Attach images (JPEG, PNG, GIF, WEBP)"
                     >
                       <Image className="h-4 w-4" />
                       {attachedImages.length > 0 && (
@@ -471,7 +471,10 @@ const IdeaFrameworkConsultant = () => {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Attach Images</DialogTitle>
+                      <DialogTitle>Attach Images for Visual Analysis</DialogTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Upload images for AI to analyze in real-time. Perfect for logos, designs, screenshots, or any visual content you want to discuss.
+                      </p>
                     </DialogHeader>
                     <ImageUpload onImagesChange={setAttachedImages} />
                   </DialogContent>
