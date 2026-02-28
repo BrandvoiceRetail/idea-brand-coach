@@ -33,9 +33,12 @@ describe('ImageUpload', () => {
     });
 
     // Mock crypto.randomUUID
-    global.crypto = {
-      randomUUID: vi.fn(() => 'mock-uuid'),
-    } as any;
+    Object.defineProperty(global, 'crypto', {
+      value: {
+        randomUUID: vi.fn(() => 'mock-uuid'),
+      },
+      writable: true,
+    });
   });
 
   it('should render image upload button', () => {
