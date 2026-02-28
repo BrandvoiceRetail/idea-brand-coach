@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeft, Copy, Check, ChevronDown, ChevronUp, Menu, Upload, Settings2 } from 'lucide-react';
+import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeft, Copy, Check, ChevronDown, ChevronUp, Menu, Upload, Settings2, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
@@ -14,10 +14,12 @@ import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { usePersistedSessionForm } from '@/hooks/usePersistedSessionField';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { DocumentUpload } from '@/components/DocumentUpload';
+import { ImageUpload } from '@/components/chat/ImageUpload';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemKB } from '@/contexts/SystemKBContext';
 import { cn } from '@/lib/utils';
+import { ChatImageAttachment } from '@/types/chat';
 
 const IdeaFrameworkConsultant = () => {
   const { toast } = useToast();
@@ -70,6 +72,8 @@ const IdeaFrameworkConsultant = () => {
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   const [userDocuments, setUserDocuments] = useState<unknown[]>([]);
   const [isCopied, setIsCopied] = useState(false);
+  const [attachedImages, setAttachedImages] = useState<ChatImageAttachment[]>([]);
+  const [showImageDialog, setShowImageDialog] = useState(false);
 
   // Chat container ref for auto-scrolling
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -107,19 +111,21 @@ const IdeaFrameworkConsultant = () => {
       : message;
 
     try {
-      await sendMessage(
-        fullMessage,
-        'user',
-        {
+      await sendMessage({
+        content: fullMessage,
+        role: 'user',
+        metadata: {
           userDocuments,
           useSystemKB: isSystemKBEnabled,
-          latestDiagnostic: latestDiagnostic || undefined
+          latestDiagnostic: latestDiagnostic || undefined,
+          images: attachedImages.length > 0 ? attachedImages : undefined
         }
-      );
+      });
       setMessage('');
       setContext('');
       setShowContextField(false);
       setHasUserTyped(false);
+      setAttachedImages([]); // Clear attached images after sending
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -350,6 +356,27 @@ const IdeaFrameworkConsultant = () => {
                       : "bg-muted"
                   )}>
                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+
+                    {/* Display attached images */}
+                    {msg.metadata?.images && msg.metadata.images.length > 0 && (
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        {msg.metadata.images.map((image, imgIndex) => (
+                          <div key={imgIndex} className="rounded overflow-hidden border">
+                            <img
+                              src={image.url}
+                              alt={image.filename}
+                              className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => window.open(image.url, '_blank')}
+                              title="Click to view full size"
+                            />
+                            <p className="text-xs p-1 bg-background/10 truncate">
+                              {image.filename}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     {msg.created_at && (
                       <p className="text-xs mt-2 opacity-70">
                         {new Date(msg.created_at).toLocaleTimeString()}
@@ -425,6 +452,30 @@ const IdeaFrameworkConsultant = () => {
                 >
                   <Settings2 className="h-4 w-4" />
                 </Button>
+
+                <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 relative"
+                      title="Attach images"
+                    >
+                      <Image className="h-4 w-4" />
+                      {attachedImages.length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                          {attachedImages.length}
+                        </span>
+                      )}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Attach Images</DialogTitle>
+                    </DialogHeader>
+                    <ImageUpload onImagesChange={setAttachedImages} />
+                  </DialogContent>
+                </Dialog>
 
                 <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
                   <DialogTrigger asChild>
