@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, act } from '@testing-library/react';
 import { OnboardingTour, TOUR_STEPS } from '../OnboardingTour';
-import { useOnboardingTour } from '@/hooks/useOnboardingTour';
+import { useOnboardingTourContext } from '@/contexts/OnboardingTourContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   trackTourStarted,
@@ -12,7 +12,7 @@ import {
 import { STATUS, EVENTS } from 'react-joyride';
 
 // Mock dependencies
-vi.mock('@/hooks/useOnboardingTour');
+vi.mock('@/contexts/OnboardingTourContext');
 vi.mock('@/hooks/use-mobile');
 vi.mock('@/lib/analytics');
 
@@ -56,7 +56,7 @@ describe('OnboardingTour', () => {
     vi.useFakeTimers();
 
     // Default mocks
-    vi.mocked(useOnboardingTour).mockReturnValue(defaultHookReturn);
+    vi.mocked(useOnboardingTourContext).mockReturnValue(defaultHookReturn);
     vi.mocked(useIsMobile).mockReturnValue(false);
     mockShouldShowTour.mockReturnValue(false);
 
@@ -71,7 +71,7 @@ describe('OnboardingTour', () => {
 
   describe('rendering', () => {
     it('should render null when not ready', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: false,
       });
@@ -82,7 +82,7 @@ describe('OnboardingTour', () => {
     });
 
     it('should render Joyride when ready and running', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -94,7 +94,7 @@ describe('OnboardingTour', () => {
     });
 
     it('should not render active joyride when not running', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: false,
@@ -109,7 +109,7 @@ describe('OnboardingTour', () => {
   describe('auto-start', () => {
     it('should auto-start tour for new users when autoStart is true', () => {
       mockShouldShowTour.mockReturnValue(true);
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
       });
@@ -126,7 +126,7 @@ describe('OnboardingTour', () => {
 
     it('should not auto-start when autoStart is false', () => {
       mockShouldShowTour.mockReturnValue(true);
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
       });
@@ -142,7 +142,7 @@ describe('OnboardingTour', () => {
 
     it('should not auto-start when shouldShowTour returns false', () => {
       mockShouldShowTour.mockReturnValue(false);
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
       });
@@ -158,7 +158,7 @@ describe('OnboardingTour', () => {
 
     it('should not auto-start when not ready', () => {
       mockShouldShowTour.mockReturnValue(true);
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: false,
       });
@@ -175,7 +175,7 @@ describe('OnboardingTour', () => {
 
   describe('joyride callback handling', () => {
     it('should track tour started on first step', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -201,7 +201,7 @@ describe('OnboardingTour', () => {
     });
 
     it('should not track tour started multiple times', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -238,7 +238,7 @@ describe('OnboardingTour', () => {
     it('should handle tour completion', () => {
       const mockOnComplete = vi.fn();
 
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -267,7 +267,7 @@ describe('OnboardingTour', () => {
     it('should handle tour skip', () => {
       const mockOnSkip = vi.fn();
 
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -294,7 +294,7 @@ describe('OnboardingTour', () => {
     });
 
     it('should navigate to next step on next action', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -321,7 +321,7 @@ describe('OnboardingTour', () => {
     });
 
     it('should navigate to previous step on prev action', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -347,7 +347,7 @@ describe('OnboardingTour', () => {
     });
 
     it('should skip to next step when target not found', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -414,7 +414,7 @@ describe('OnboardingTour', () => {
   describe('responsive behavior', () => {
     it('should use mobile styles when on mobile', () => {
       vi.mocked(useIsMobile).mockReturnValue(true);
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -429,7 +429,7 @@ describe('OnboardingTour', () => {
 
     it('should use desktop styles when not on mobile', () => {
       vi.mocked(useIsMobile).mockReturnValue(false);
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -446,7 +446,7 @@ describe('OnboardingTour', () => {
   describe('props', () => {
     it('should default autoStart to false', () => {
       mockShouldShowTour.mockReturnValue(true);
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
       });
@@ -463,7 +463,7 @@ describe('OnboardingTour', () => {
     it('should call onComplete when provided and tour completes', () => {
       const mockOnComplete = vi.fn();
 
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -489,7 +489,7 @@ describe('OnboardingTour', () => {
     it('should call onSkip when provided and tour is skipped', () => {
       const mockOnSkip = vi.fn();
 
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -513,7 +513,7 @@ describe('OnboardingTour', () => {
     });
 
     it('should work without onComplete callback', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,
@@ -538,7 +538,7 @@ describe('OnboardingTour', () => {
     });
 
     it('should work without onSkip callback', () => {
-      vi.mocked(useOnboardingTour).mockReturnValue({
+      vi.mocked(useOnboardingTourContext).mockReturnValue({
         ...defaultHookReturn,
         isReady: true,
         run: true,

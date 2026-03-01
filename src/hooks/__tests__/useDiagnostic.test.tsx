@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useDiagnostic } from '../useDiagnostic';
 import { useServices } from '@/services/ServiceProvider';
+import { useBrand } from '@/contexts/BrandContext';
 
 vi.mock('@/services/ServiceProvider');
+vi.mock('@/contexts/BrandContext');
 
 describe('useDiagnostic', () => {
   let queryClient: QueryClient;
@@ -18,6 +20,11 @@ describe('useDiagnostic', () => {
       },
     });
     vi.clearAllMocks();
+
+    // Mock useBrand
+    vi.mocked(useBrand).mockReturnValue({
+      updateBrandData: vi.fn(),
+    } as any);
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => {

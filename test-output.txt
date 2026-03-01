@@ -1,0 +1,7 @@
+
+> vite_react_shadcn_ts@0.0.0 test
+> vitest run --run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.8 [39m[90m/Users/matthewkerns/workspace/ecommerce-tools/brand-systems/idea-brand-coach/.auto-claude/worktrees/tasks/017-pre-implementation-refactoring-sprint[39m
+

@@ -12,26 +12,86 @@ import type { KnowledgeCategory, SyncStatus } from '@/lib/knowledge-base/interfa
 
 /**
  * Configuration for the persisted field hook
+ *
+ * @template T - Type of the field value (string, array, object, etc.)
+ * @property {string} fieldIdentifier - Unique identifier for the field (e.g., 'brand-name')
+ * @property {KnowledgeCategory} category - Category for organizing fields (e.g., 'brand-basics')
+ * @property {T} [defaultValue] - Default value when field is not found (defaults to empty string)
+ * @property {number} [syncInterval] - Interval in milliseconds for periodic sync (default: 30000)
+ * @property {number} [debounceDelay] - Milliseconds to debounce saves (default: 500)
+ * @property {(value: T) => string} [serialize] - Custom serialization function (default: JSON.stringify for objects, passthrough for strings)
+ * @property {(value: string) => T} [deserialize] - Custom deserialization function (default: JSON.parse for objects, passthrough for strings)
  */
-interface UsePersistedFieldConfig {
+export interface UsePersistedFieldConfig<T> {
   fieldIdentifier: string;
   category: KnowledgeCategory;
-  defaultValue?: string;
+  defaultValue?: T;
   syncInterval?: number; // milliseconds
   debounceDelay?: number; // milliseconds
+  serialize?: (value: T) => string;
+  deserialize?: (value: string) => T;
 }
 
 /**
  * Return type for the persisted field hook
+ *
+ * @template T - Type of the field value
+ * @property {T} value - Current field value
+ * @property {(newValue: T) => void} onChange - Function to update field value (debounced)
+ * @property {SyncStatus} syncStatus - Current sync status ('synced' | 'syncing' | 'offline' | 'error')
+ * @property {boolean} isLoading - True during initial load
+ * @property {Error | null} error - Last error that occurred, or null
+ * @property {() => Promise<void>} refresh - Manually refresh from remote
  */
-interface UsePersistedFieldReturn {
-  value: string;
-  onChange: (newValue: string) => void;
+export interface UsePersistedFieldReturn<T> {
+  value: T;
+  onChange: (newValue: T) => void;
   syncStatus: SyncStatus;
   isLoading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
 }
+
+/**
+ * Default serialization function
+ *
+ * Converts a value to a string for storage. Strings are passed through,
+ * other types are JSON stringified.
+ *
+ * @template T - Type of the value
+ * @param {T} value - Value to serialize
+ * @returns {string} Serialized string
+ */
+const defaultSerialize = <T>(value: T): string => {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return JSON.stringify(value);
+};
+
+/**
+ * Create default deserialization function
+ *
+ * Creates a deserializer based on the default value type. Strings are
+ * passed through, other types are JSON parsed with fallback to default.
+ *
+ * @template T - Type of the value
+ * @param {T} defaultValue - Default value to use on parse errors
+ * @returns {(value: string) => T} Deserializer function
+ */
+const createDefaultDeserialize = <T>(defaultValue: T): ((value: string) => T) => {
+  return (value: string): T => {
+    if (typeof defaultValue === 'string') {
+      return value as T;
+    }
+    try {
+      return JSON.parse(value) as T;
+    } catch (error) {
+      console.error('[usePersistedField] Deserialization failed:', error);
+      return defaultValue;
+    }
+  };
+};
 
 // Singleton repository instance
 let repository: KnowledgeRepository | null = null;
@@ -39,6 +99,10 @@ let syncService: SupabaseSyncService | null = null;
 
 /**
  * Get or create repository instance
+ *
+ * Singleton accessor for the KnowledgeRepository. Initializes on first access.
+ *
+ * @returns {Promise<KnowledgeRepository>} The initialized repository
  */
 async function getRepository(): Promise<KnowledgeRepository> {
   if (!repository) {
@@ -55,6 +119,11 @@ async function getRepository(): Promise<KnowledgeRepository> {
 
 /**
  * Get or create sync service instance
+ *
+ * Singleton accessor for the SupabaseSyncService.
+ *
+ * @param {KnowledgeRepository} repo - Repository instance to use
+ * @returns {SupabaseSyncService} The sync service
  */
 function getSyncService(repo: KnowledgeRepository): SupabaseSyncService {
   if (!syncService) {
@@ -65,16 +134,70 @@ function getSyncService(repo: KnowledgeRepository): SupabaseSyncService {
 
 /**
  * Hook for persisted fields with local-first architecture
- * Provides instant local updates with background sync to Supabase
+ *
+ * Provides instant local updates with background sync to Supabase. Changes
+ * are saved locally immediately (<10ms) and synced to remote in the background.
+ * Automatically handles online/offline status and periodic sync.
+ *
+ * @template T - Type of the field value (defaults to string)
+ * @param {UsePersistedFieldConfig<T>} config - Configuration object
+ * @returns {UsePersistedFieldReturn<T>} Field state and controls
+ *
+ * @example
+ * // String field
+ * const { value, onChange, syncStatus } = usePersistedField({
+ *   fieldIdentifier: 'brand-name',
+ *   category: 'brand-basics',
+ *   defaultValue: ''
+ * });
+ * // Use in input: <input value={value} onChange={(e) => onChange(e.target.value)} />
+ *
+ * @example
+ * // Array field
+ * const { value, onChange } = usePersistedField<string[]>({
+ *   fieldIdentifier: 'target-audiences',
+ *   category: 'brand-basics',
+ *   defaultValue: []
+ * });
+ *
+ * @example
+ * // Object field with type
+ * interface BrandProfile {
+ *   name: string;
+ *   industry: string;
+ * }
+ *
+ * const { value, onChange, isLoading } = usePersistedField<BrandProfile>({
+ *   fieldIdentifier: 'brand-profile',
+ *   category: 'brand-basics',
+ *   defaultValue: { name: '', industry: '' }
+ * });
+ *
+ * @example
+ * // Customizing sync behavior
+ * const { value, onChange, syncStatus } = usePersistedField({
+ *   fieldIdentifier: 'notes',
+ *   category: 'brand-basics',
+ *   defaultValue: '',
+ *   syncInterval: 60000, // Sync every 60 seconds
+ *   debounceDelay: 1000  // Wait 1 second before saving
+ * });
  */
-export function usePersistedField({
+export function usePersistedField<T = string>({
   fieldIdentifier,
   category,
-  defaultValue = '',
+  defaultValue,
   syncInterval = 30000,
-  debounceDelay = 500
-}: UsePersistedFieldConfig): UsePersistedFieldReturn {
-  const [value, setValue] = useState<string>(defaultValue);
+  debounceDelay = 500,
+  serialize = defaultSerialize,
+  deserialize
+}: UsePersistedFieldConfig<T>): UsePersistedFieldReturn<T> {
+  // Use empty string as default for string types, otherwise use provided default or empty object
+  const actualDefaultValue = (defaultValue !== undefined ? defaultValue : '') as T;
+
+  // Create deserialize function with defaultValue bound if not provided
+  const deserializeFn = deserialize || createDefaultDeserialize(actualDefaultValue);
+  const [value, setValue] = useState<T>(actualDefaultValue);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('synced');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
@@ -92,6 +215,9 @@ export function usePersistedField({
 
   /**
    * Load initial value from IndexedDB
+   *
+   * Loads from local IndexedDB first for instant UI. If no local value exists
+   * or hasn't been synced, fetches from remote and caches locally.
    */
   const loadInitialValue = useCallback(async () => {
     if (!userId) {
@@ -106,17 +232,15 @@ export function usePersistedField({
       const repo = await getRepository();
       repositoryRef.current = repo;
 
-      // Clear current value first to ensure we load fresh data
-      setValue('');
-
       // Load from local IndexedDB (instant)
       const storedValue = await repo.getField(userId, fieldIdentifier);
 
       if (storedValue !== null) {
-        setValue(storedValue);
+        const deserialized = deserializeFn(storedValue);
+        setValue(deserialized);
       } else {
         // No local value, use default
-        setValue(defaultValue);
+        setValue(actualDefaultValue);
       }
 
       // Initialize sync service
@@ -131,7 +255,8 @@ export function usePersistedField({
         try {
           const remoteValue = await sync.fetchFromSupabase(userId, fieldIdentifier);
           if (remoteValue && remoteValue !== storedValue) {
-            setValue(remoteValue);
+            const deserialized = deserializeFn(remoteValue);
+            setValue(deserialized);
             await repo.saveField(userId, fieldIdentifier, remoteValue, category);
           }
           setSyncStatus('synced');
@@ -145,17 +270,22 @@ export function usePersistedField({
     } catch (err) {
       console.error('Failed to load persisted field:', err);
       setError(err instanceof Error ? err : new Error('Failed to load field'));
-      setValue(defaultValue); // Fall back to default on error
+      setValue(actualDefaultValue); // Fall back to default on error
     } finally {
       setIsLoading(false);
       hasLoadedRef.current = true;
     }
-  }, [userId, fieldIdentifier, category, defaultValue]);
+  }, [userId, fieldIdentifier, category, actualDefaultValue, deserializeFn]);
 
   /**
    * Save value locally and queue for sync
+   *
+   * Saves immediately to IndexedDB (<10ms) and queues background sync to Supabase.
+   * Does not throw on sync errors - local save always succeeds.
+   *
+   * @param {T} newValue - New value to save
    */
-  const saveValue = useCallback(async (newValue: string) => {
+  const saveValue = useCallback(async (newValue: T) => {
     if (!userId) {
       return;
     }
@@ -164,13 +294,16 @@ export function usePersistedField({
       const repo = repositoryRef.current || await getRepository();
       const sync = syncServiceRef.current || getSyncService(repo);
 
+      // Serialize the value for storage
+      const serialized = serialize(newValue);
+
       // Save locally immediately (<10ms)
-      await repo.saveField(userId, fieldIdentifier, newValue, category);
+      await repo.saveField(userId, fieldIdentifier, serialized, category);
       setValue(newValue);
 
       // Queue for background sync
       setSyncStatus('syncing');
-      sync.queueSync(userId, fieldIdentifier, newValue)
+      sync.queueSync(userId, fieldIdentifier, serialized)
         .then(() => {
           setSyncStatus('synced');
         })
@@ -187,12 +320,17 @@ export function usePersistedField({
         variant: 'destructive'
       });
     }
-  }, [userId, fieldIdentifier, category, toast]);
+  }, [userId, fieldIdentifier, category, serialize, toast]);
 
   /**
    * Handle value change with debouncing
+   *
+   * Updates local state immediately for responsive UI, then debounces
+   * the actual save operation to reduce write operations.
+   *
+   * @param {T} newValue - New value
    */
-  const handleChange = useCallback((newValue: string) => {
+  const handleChange = useCallback((newValue: T) => {
     // Update local state immediately for responsive UI
     setValue(newValue);
 
@@ -209,6 +347,9 @@ export function usePersistedField({
 
   /**
    * Refresh from remote
+   *
+   * Fetches latest value from Supabase and updates local cache if different.
+   * Useful for manual refresh or conflict resolution.
    */
   const refresh = useCallback(async () => {
     if (!userId || !syncServiceRef.current) return;
@@ -216,16 +357,20 @@ export function usePersistedField({
     try {
       setSyncStatus('syncing');
       const remoteValue = await syncServiceRef.current.fetchFromSupabase(userId, fieldIdentifier);
-      if (remoteValue !== null && remoteValue !== value) {
-        setValue(remoteValue);
-        await repositoryRef.current?.saveField(userId, fieldIdentifier, remoteValue, category);
+      if (remoteValue !== null) {
+        const deserialized = deserializeFn(remoteValue);
+        const serializedCurrent = serialize(value);
+        if (remoteValue !== serializedCurrent) {
+          setValue(deserialized);
+          await repositoryRef.current?.saveField(userId, fieldIdentifier, remoteValue, category);
+        }
       }
       setSyncStatus('synced');
     } catch (err) {
       setSyncStatus('offline');
       throw err;
     }
-  }, [userId, fieldIdentifier, category, value]);
+  }, [userId, fieldIdentifier, category, value, deserializeFn, serialize]);
 
   /**
    * Set up periodic sync
@@ -317,72 +462,31 @@ export function usePersistedField({
   };
 }
 
-/**
- * Hook for persisted array fields
- * Stores arrays as JSON strings with parsing/serialization
- */
-export function usePersistedArrayField({
-  fieldIdentifier,
-  category,
-  defaultValue = [],
-  debounceDelay = 500
-}: {
-  fieldIdentifier: string;
-  category: KnowledgeCategory;
-  defaultValue?: string[];
-  debounceDelay?: number;
-}): {
-  value: string[];
-  add: (item: string) => void;
-  remove: (index: number) => void;
-  set: (items: string[]) => void;
-  syncStatus: SyncStatus;
-  isLoading: boolean;
-} {
-  const field = usePersistedField({
-    fieldIdentifier,
-    category,
-    defaultValue: JSON.stringify(defaultValue),
-    debounceDelay
-  });
-
-  // Parse the stored JSON string to array
-  const value: string[] = useMemo(() => {
-    try {
-      const parsed = JSON.parse(field.value || '[]');
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }, [field.value]);
-
-  const add = useCallback((item: string) => {
-    if (item.trim() && !value.includes(item.trim())) {
-      field.onChange(JSON.stringify([...value, item.trim()]));
-    }
-  }, [value, field]);
-
-  const remove = useCallback((index: number) => {
-    field.onChange(JSON.stringify(value.filter((_, i) => i !== index)));
-  }, [value, field]);
-
-  const set = useCallback((items: string[]) => {
-    field.onChange(JSON.stringify(items));
-  }, [field]);
-
-  return {
-    value,
-    add,
-    remove,
-    set,
-    syncStatus: field.syncStatus,
-    isLoading: field.isLoading
-  };
-}
+// Re-export usePersistedArrayField for backward compatibility
+export { usePersistedArrayField } from './usePersistedArrayField';
+export type { UsePersistedArrayFieldConfig, UsePersistedArrayFieldReturn } from './usePersistedArrayField';
 
 /**
  * Hook for batch persisted fields
- * Useful for forms with multiple fields
+ *
+ * Useful for forms with multiple fields that need to be loaded and saved together.
+ * Provides batch operations to reduce overhead.
+ *
+ * @param {Array<{ identifier: string; category: KnowledgeCategory; defaultValue?: string }>} fields - Array of field configurations
+ * @returns {{ values: Record<string, string>; setValues: (newValues: Record<string, string>) => Promise<void>; syncStatus: SyncStatus; isLoading: boolean }} Form state and controls
+ *
+ * @example
+ * const { values, setValues, syncStatus, isLoading } = usePersistedForm([
+ *   { identifier: 'brand-name', category: 'brand-basics', defaultValue: '' },
+ *   { identifier: 'tagline', category: 'brand-basics', defaultValue: '' },
+ *   { identifier: 'industry', category: 'brand-basics', defaultValue: '' }
+ * ]);
+ *
+ * // Use in form
+ * <input
+ *   value={values['brand-name'] || ''}
+ *   onChange={(e) => setValues({ ...values, 'brand-name': e.target.value })}
+ * />
  */
 export function usePersistedForm(
   fields: Array<{ identifier: string; category: KnowledgeCategory; defaultValue?: string }>
@@ -396,6 +500,8 @@ export function usePersistedForm(
 
   /**
    * Load all field values
+   *
+   * Loads all configured fields from IndexedDB in parallel.
    */
   const loadAllFields = useCallback(async () => {
     if (!userId) {
@@ -422,6 +528,10 @@ export function usePersistedForm(
 
   /**
    * Save all field values
+   *
+   * Saves all fields to IndexedDB and queues batch sync to Supabase.
+   *
+   * @param {Record<string, string>} newValues - Object with field identifiers as keys and values
    */
   const saveAllFields = useCallback(async (newValues: Record<string, string>) => {
     if (!userId) return;
