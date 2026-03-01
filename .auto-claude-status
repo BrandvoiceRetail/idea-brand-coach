@@ -3,7 +3,7 @@
   "spec": "v2-state-extension",
   "state": "building",
   "subtasks": {
-    "completed": 1,
+    "completed": 3,
     "total": 4,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
+    "number": 5,
     "started_at": "2026-02-28T17:37:45.379058"
   },
-  "last_update": "2026-02-28T17:44:11.340174"
+  "last_update": "2026-02-28T17:47:39.907416"
 }
