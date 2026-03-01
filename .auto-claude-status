@@ -1,25 +1,25 @@
 {
   "active": true,
   "spec": "020-feature-flag-configuration",
-  "state": "planning",
+  "state": "building",
   "subtasks": {
-    "completed": 0,
-    "total": 0,
+    "completed": 3,
+    "total": 10,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Configure Feature Flag",
+    "current": "Implement V1/V2 Fallback",
     "id": null,
-    "total": 1
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 2,
+    "number": 5,
     "started_at": "2026-02-28T22:53:59.780450"
   },
-  "last_update": "2026-02-28T22:58:13.186345"
+  "last_update": "2026-02-28T23:07:40.419994"
 }
