@@ -28,12 +28,12 @@ interface GenerateTitleParams {
 
 export class ChatTitleService {
   /**
-   * Maybe update session title if it's still the default "New Chat"
-   * Sets a temporary title from the first message content while AI generates a better one
+   * Maybe update session title if it's still the default "New Chat".
+   * Sets a temporary title from the first message content while AI generates a better one.
    *
    * @param sessionId - ID of the session to potentially update
    * @param content - Content of the first message to use as temp title
-   * @returns Promise resolving when update is complete (or skipped)
+   * @returns Promise resolving to TitleResult when update is complete (or skipped)
    */
   async maybeUpdateSessionTitle(sessionId: string, content: string): Promise<TitleResult<void>> {
     try {
@@ -85,14 +85,14 @@ export class ChatTitleService {
   }
 
   /**
-   * Generate an AI-powered title for a session based on the first exchange
-   * Only generates for sessions with 2 or fewer messages (first exchange)
-   * This prevents overwriting manually renamed sessions
+   * Generate an AI-powered title for a session based on the first exchange.
+   * Only generates for sessions with 2 or fewer messages (first exchange).
+   * This prevents overwriting manually renamed sessions.
    *
-   * @param sessionId - ID of the session
+   * @param sessionId - ID of the session to generate title for
    * @param userMessage - Content of the user's first message
    * @param assistantResponse - Content of the assistant's first response
-   * @returns Promise resolving when title is generated and saved
+   * @returns Promise resolving to TitleResult with generated title or null if skipped/failed
    */
   async generateSessionTitle(
     sessionId: string,
@@ -178,11 +178,11 @@ export class ChatTitleService {
   }
 
   /**
-   * Regenerate session title based on entire conversation history
-   * Used when user wants to update title to reflect evolved conversation
+   * Regenerate session title based on entire conversation history.
+   * Used when user wants to update title to reflect evolved conversation.
    *
    * @param sessionId - ID of the session to regenerate title for
-   * @returns Promise resolving to the new title or null if generation failed
+   * @returns Promise resolving to TitleResult with new title or null if generation failed
    */
   async regenerateSessionTitle(sessionId: string): Promise<TitleResult<string>> {
     try {

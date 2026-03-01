@@ -25,12 +25,12 @@ export interface SessionResult<T> {
 
 export class ChatSessionService {
   /**
-   * Create a new chat session
+   * Create a new chat session.
    *
    * @param userId - ID of the user creating the session
    * @param chatbotType - Type of chatbot for the session
-   * @param sessionData - Optional session creation data
-   * @returns Promise resolving to the created session
+   * @param sessionData - Optional session creation data (title, conversation_type, field context)
+   * @returns Promise resolving to SessionResult with created session or error
    */
   async createSession(
     userId: string,
@@ -62,12 +62,12 @@ export class ChatSessionService {
   }
 
   /**
-   * Get all chat sessions for a user and chatbot type
-   * Returns sessions ordered by update time (newest first)
+   * Get all chat sessions for a user and chatbot type.
+   * Returns sessions ordered by update time (newest first).
    *
-   * @param userId - ID of the user
+   * @param userId - ID of the user who owns the sessions
    * @param chatbotType - Type of chatbot to filter by
-   * @returns Promise resolving to array of sessions
+   * @returns Promise resolving to SessionResult with array of sessions or error
    */
   async getSessions(
     userId: string,
@@ -90,12 +90,12 @@ export class ChatSessionService {
   }
 
   /**
-   * Get a single session by ID
-   * Returns null if session not found or doesn't belong to user
+   * Get a single session by ID.
+   * Returns null if session not found or doesn't belong to user.
    *
    * @param sessionId - ID of the session to retrieve
    * @param userId - ID of the user who owns the session
-   * @returns Promise resolving to the session or null
+   * @returns Promise resolving to SessionResult with session or null if not found
    */
   async getSession(
     sessionId: string,
@@ -123,13 +123,13 @@ export class ChatSessionService {
   }
 
   /**
-   * Update a chat session
-   * Automatically updates the updated_at timestamp
+   * Update a chat session (e.g., rename title).
+   * Automatically updates the updated_at timestamp.
    *
    * @param sessionId - ID of the session to update
    * @param userId - ID of the user who owns the session
-   * @param update - Update data
-   * @returns Promise resolving to the updated session
+   * @param update - Update data (currently supports title)
+   * @returns Promise resolving to SessionResult with updated session or error
    */
   async updateSession(
     sessionId: string,
@@ -158,12 +158,12 @@ export class ChatSessionService {
   }
 
   /**
-   * Delete a chat session and all its messages
-   * Messages will be cascade deleted due to FK constraint
+   * Delete a chat session and all its messages.
+   * Messages will be cascade deleted due to FK constraint.
    *
    * @param sessionId - ID of the session to delete
    * @param userId - ID of the user who owns the session
-   * @returns Promise resolving when session is deleted
+   * @returns Promise resolving to SessionResult when session is deleted or error
    */
   async deleteSession(
     sessionId: string,
@@ -183,8 +183,11 @@ export class ChatSessionService {
   }
 
   /**
-   * Map database row to ChatSession
-   * Private helper method for type conversion
+   * Map database row to ChatSession type.
+   * Private helper method for type conversion.
+   *
+   * @param item - Raw database row object
+   * @returns Typed ChatSession object
    */
   private mapSessionFromDb(item: Record<string, unknown>): ChatSession {
     return {

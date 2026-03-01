@@ -31,8 +31,11 @@ export interface MessageResult<T> {
 
 export class ChatMessageService {
   /**
-   * Save a message to the database
-   * Can be used for user, assistant, or system messages
+   * Save a message to the database.
+   * Can be used for user, assistant, or system messages.
+   *
+   * @param params - Message parameters including user_id, role, content, chatbot_type, etc.
+   * @returns Promise resolving to MessageResult with saved message or error
    */
   async saveMessage(params: SaveMessageParams): Promise<MessageResult<ChatMessage>> {
     const { data, error } = await supabase
@@ -59,8 +62,15 @@ export class ChatMessageService {
   }
 
   /**
-   * Save a user message to the database
-   * Convenience method for saving user messages
+   * Save a user message to the database.
+   * Convenience method for saving user messages.
+   *
+   * @param userId - ID of the user sending the message
+   * @param content - Message content text
+   * @param chatbotType - Type of chatbot ('idea-framework-consultant')
+   * @param sessionId - Optional ID of the chat session
+   * @param metadata - Optional metadata object for the message
+   * @returns Promise resolving to MessageResult with saved message or error
    */
   async saveUserMessage(
     userId: string,
@@ -80,8 +90,15 @@ export class ChatMessageService {
   }
 
   /**
-   * Save an assistant message to the database
-   * Convenience method for saving assistant responses
+   * Save an assistant message to the database.
+   * Convenience method for saving assistant responses.
+   *
+   * @param userId - ID of the user receiving the response
+   * @param content - Assistant response text
+   * @param chatbotType - Type of chatbot ('idea-framework-consultant')
+   * @param sessionId - Optional ID of the chat session
+   * @param metadata - Optional metadata object (e.g., sources, suggestions)
+   * @returns Promise resolving to MessageResult with saved message or error
    */
   async saveAssistantMessage(
     userId: string,
@@ -101,8 +118,15 @@ export class ChatMessageService {
   }
 
   /**
-   * Get recent messages in descending order (most recent first)
-   * Returns messages in chronological order (oldest first) after fetching
+   * Get recent messages for context building.
+   * Fetches in descending order (most recent first) then reverses to
+   * return messages in chronological order (oldest first).
+   *
+   * @param userId - ID of the user who owns the messages
+   * @param chatbotType - Type of chatbot to filter by
+   * @param count - Number of recent messages to retrieve
+   * @param sessionId - Optional session ID to filter messages
+   * @returns Promise resolving to MessageResult with array of messages or error
    */
   async getRecentMessages(
     userId: string,
@@ -136,7 +160,13 @@ export class ChatMessageService {
   }
 
   /**
-   * Get all messages for a specific session
+   * Get all messages for a specific session.
+   * Returns messages in chronological order (oldest first).
+   *
+   * @param userId - ID of the user who owns the messages
+   * @param sessionId - ID of the session to retrieve messages from
+   * @param limit - Maximum number of messages to retrieve (default: 50)
+   * @returns Promise resolving to MessageResult with array of messages or error
    */
   async getSessionMessages(
     userId: string,
@@ -161,8 +191,14 @@ export class ChatMessageService {
   }
 
   /**
-   * Get all messages for a user with optional filters
-   * Returns messages in chronological order (oldest first)
+   * Get all messages for a user with optional filters.
+   * Returns messages in chronological order (oldest first).
+   *
+   * @param userId - ID of the user who owns the messages
+   * @param chatbotType - Type of chatbot to filter by
+   * @param limit - Maximum number of messages to retrieve (default: 50)
+   * @param sessionId - Optional session ID to filter messages
+   * @returns Promise resolving to MessageResult with array of messages or error
    */
   async getAllMessages(
     userId: string,
@@ -195,8 +231,13 @@ export class ChatMessageService {
   }
 
   /**
-   * Clear all messages for a specific session
-   * SAFETY: Requires sessionId to prevent accidental deletion of all messages
+   * Clear all messages for a specific session.
+   * SAFETY: Requires sessionId to prevent accidental deletion of all messages.
+   *
+   * @param userId - ID of the user who owns the messages
+   * @param chatbotType - Type of chatbot to filter by
+   * @param sessionId - ID of the session to clear messages from (required for safety)
+   * @returns Promise resolving to MessageResult with count of deleted messages or error
    */
   async clearMessages(
     userId: string,
@@ -255,8 +296,11 @@ export class ChatMessageService {
   }
 
   /**
-   * Map database row to ChatMessage
-   * Private helper method for type conversion
+   * Map database row to ChatMessage type.
+   * Private helper method for type conversion.
+   *
+   * @param item - Raw database row object
+   * @returns Typed ChatMessage object
    */
   private mapMessageFromDb(item: Record<string, unknown>): ChatMessage {
     return {
