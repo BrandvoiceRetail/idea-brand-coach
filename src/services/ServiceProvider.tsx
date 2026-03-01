@@ -8,16 +8,19 @@ import { IDiagnosticService } from './interfaces/IDiagnosticService';
 import { IUserProfileService } from './interfaces/IUserProfileService';
 import { IChatService } from './interfaces/IChatService';
 import { IAuthService } from './interfaces/IAuthService';
+import { IAvatarService } from './interfaces/IAvatarService';
 import { SupabaseDiagnosticService } from './SupabaseDiagnosticService';
 import { SupabaseUserProfileService } from './SupabaseUserProfileService';
 import { SupabaseChatService } from './SupabaseChatService';
 import { SupabaseAuthService } from './SupabaseAuthService';
+import { SupabaseAvatarService } from './SupabaseAvatarService';
 
 interface Services {
   diagnosticService: IDiagnosticService;
   userProfileService: IUserProfileService;
   chatService: IChatService;
   authService: IAuthService;
+  avatarService: IAvatarService;
 }
 
 const ServicesContext = createContext<Services | null>(null);
@@ -41,6 +44,7 @@ export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children }) =>
     userProfileService: new SupabaseUserProfileService(),
     chatService: new SupabaseChatService(),
     authService: new SupabaseAuthService(),
+    avatarService: new SupabaseAvatarService(),
   };
 
   return (
