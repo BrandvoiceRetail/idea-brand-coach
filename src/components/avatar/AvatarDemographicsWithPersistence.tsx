@@ -1,16 +1,20 @@
 /**
  * Avatar Demographics Component with Local-First Persistence
  * Example implementation using the new IndexedDB-backed persistence
+ * Updated to use FieldEditor with validation and edit source tracking
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, WifiOff, AlertCircle } from "lucide-react";
 import { usePersistedField, usePersistedForm } from "@/hooks/usePersistedField";
+import { useFieldHistory } from "@/hooks/useFieldHistory";
+import { FieldEditor } from "@/components/ui/field-editor";
+import { FieldHistoryPopover } from "@/components/ui/field-history-popover";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
+import type { FieldConfig } from "@/types/field-metadata";
 
 /**
  * Sync status indicator component
@@ -79,9 +83,72 @@ export function AvatarDemographicsWithPersistence() {
     debounceDelay: 1000 // Longer debounce for textarea
   });
 
+  const email = usePersistedField({
+    fieldIdentifier: 'avatar_demographics_email',
+    category: 'avatar',
+    defaultValue: '',
+    debounceDelay: 500
+  });
+
+  const website = usePersistedField({
+    fieldIdentifier: 'avatar_demographics_website',
+    category: 'avatar',
+    defaultValue: '',
+    debounceDelay: 500
+  });
+
+  // Field history hooks
+  const lifestyleHistory = useFieldHistory({
+    fieldIdentifier: 'avatar_demographics_lifestyle',
+    enabled: true
+  });
+
+  const emailHistory = useFieldHistory({
+    fieldIdentifier: 'avatar_demographics_email',
+    enabled: true
+  });
+
+  const websiteHistory = useFieldHistory({
+    fieldIdentifier: 'avatar_demographics_website',
+    enabled: true
+  });
+
+  // Field configurations for FieldEditor
+  const lifestyleConfig: FieldConfig = {
+    fieldIdentifier: 'avatar_demographics_lifestyle',
+    label: 'Lifestyle Description',
+    helpText: 'Describe their typical day, family situation, work life, hobbies...',
+    placeholder: 'e.g., Busy professional, works 9-5, enjoys outdoor activities on weekends...',
+    validation: {
+      type: 'textarea',
+      minLength: 10,
+      maxLength: 1000
+    }
+  };
+
+  const emailConfig: FieldConfig = {
+    fieldIdentifier: 'avatar_demographics_email',
+    label: 'Email Address (Optional)',
+    helpText: 'Example email address that represents your target demographic',
+    placeholder: 'example@domain.com',
+    validation: {
+      type: 'email'
+    }
+  };
+
+  const websiteConfig: FieldConfig = {
+    fieldIdentifier: 'avatar_demographics_website',
+    label: 'Website/Social Media (Optional)',
+    helpText: 'Example website or social media profile URL',
+    placeholder: 'https://example.com',
+    validation: {
+      type: 'url'
+    }
+  };
+
   // Determine overall sync status
   const getOverallSyncStatus = (): SyncStatus => {
-    const statuses = [age.syncStatus, income.syncStatus, location.syncStatus, lifestyle.syncStatus];
+    const statuses = [age.syncStatus, income.syncStatus, location.syncStatus, lifestyle.syncStatus, email.syncStatus, website.syncStatus];
     if (statuses.some(s => s === 'error')) return 'error';
     if (statuses.some(s => s === 'syncing')) return 'syncing';
     if (statuses.some(s => s === 'offline')) return 'offline';
@@ -180,26 +247,87 @@ export function AvatarDemographicsWithPersistence() {
           </Select>
         </div>
 
-        {/* Lifestyle Description */}
+        {/* Lifestyle Description - Using FieldEditor */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <Label htmlFor="lifestyle">Lifestyle Description</Label>
+            <div className="flex-1">
+              <FieldEditor
+                config={lifestyleConfig}
+                value={lifestyle.value}
+                onChange={lifestyle.onChange}
+                editSource={lifestyle.editSource}
+                disabled={lifestyle.isLoading}
+                showEditSource={true}
+              />
+            </div>
+            <FieldHistoryPopover
+              history={lifestyleHistory.history}
+              fieldLabel="Lifestyle Description"
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-muted-foreground">
+              {lifestyle.value.length} characters
+            </p>
             {lifestyle.syncStatus === 'syncing' && (
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Saving...
+              </span>
             )}
           </div>
-          <Textarea
-            id="lifestyle"
-            placeholder="Describe their typical day, family situation, work life, hobbies..."
-            value={lifestyle.value}
-            onChange={(e) => lifestyle.onChange(e.target.value)}
-            disabled={lifestyle.isLoading}
-            rows={4}
-            className="resize-none"
-          />
-          <p className="text-xs text-muted-foreground">
-            {lifestyle.value.length} characters
-          </p>
+        </div>
+
+        {/* Email - Using FieldEditor with validation */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div className="flex-1">
+              <FieldEditor
+                config={emailConfig}
+                value={email.value}
+                onChange={email.onChange}
+                editSource={email.editSource}
+                disabled={email.isLoading}
+                showEditSource={true}
+              />
+            </div>
+            <FieldHistoryPopover
+              history={emailHistory.history}
+              fieldLabel="Email Address"
+            />
+          </div>
+          {email.syncStatus === 'syncing' && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Saving...
+            </span>
+          )}
+        </div>
+
+        {/* Website/Social Media - Using FieldEditor with URL validation */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div className="flex-1">
+              <FieldEditor
+                config={websiteConfig}
+                value={website.value}
+                onChange={website.onChange}
+                editSource={website.editSource}
+                disabled={website.isLoading}
+                showEditSource={true}
+              />
+            </div>
+            <FieldHistoryPopover
+              history={websiteHistory.history}
+              fieldLabel="Website/Social Media"
+            />
+          </div>
+          {website.syncStatus === 'syncing' && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Saving...
+            </span>
+          )}
         </div>
 
         {/* Offline notification */}
