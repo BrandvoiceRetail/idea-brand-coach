@@ -153,6 +153,68 @@ export type Database = {
         }
         Relationships: []
       }
+      brands: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      avatars: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          name: string
+          persona_data: Json | null
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          name: string
+          persona_data?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          persona_data?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avatars_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           chatbot_type: string
@@ -199,6 +261,7 @@ export type Database = {
       }
       chat_sessions: {
         Row: {
+          avatar_id: string | null
           chatbot_type: string
           conversation_type: string
           created_at: string
@@ -211,6 +274,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_id?: string | null
           chatbot_type?: string
           conversation_type?: string
           created_at?: string
@@ -223,6 +287,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_id?: string | null
           chatbot_type?: string
           conversation_type?: string
           created_at?: string
@@ -234,7 +299,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       diagnostic_submissions: {
         Row: {
@@ -301,6 +374,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      performance_metrics: {
+        Row: {
+          avatar_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_type: string
+          metric_value: number
+          recorded_at: string
+        }
+        Insert: {
+          avatar_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          metric_value: number
+          recorded_at?: string
+        }
+        Update: {
+          avatar_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          metric_value?: number
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_metrics_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
