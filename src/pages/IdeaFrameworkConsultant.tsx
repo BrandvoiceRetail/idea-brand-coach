@@ -204,6 +204,12 @@ const IdeaFrameworkConsultant = () => {
     }
   };
 
+  // Handle clicking an example question
+  const handleExampleQuestionClick = (question: string) => {
+    setMessage(question);
+    setHasUserTyped(true);
+  };
+
   const frameworkPillars = [
     {
       icon: Brain,
@@ -378,18 +384,57 @@ const IdeaFrameworkConsultant = () => {
                   and proven brand strategy methodology.
                 </p>
                 <div className="text-left space-y-2">
-                  <p className="text-sm font-medium">Example questions:</p>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• How do I position my brand to trigger emotional buying decisions?</li>
-                    <li>• What psychological triggers work best for my target demographic?</li>
-                    <li>• How can I differentiate from competitors using behavioral science?</li>
-                    <li>• What storytelling approach will resonate with my audience?</li>
-                  </ul>
+                  <p className="text-sm font-medium">
+                    {currentChapter
+                      ? `Questions for ${currentChapter.title}:`
+                      : 'Example questions:'}
+                  </p>
+                  <div className="space-y-2">
+                    {(currentChapter?.key_questions || [
+                      'How do I position my brand to trigger emotional buying decisions?',
+                      'What psychological triggers work best for my target demographic?',
+                      'How can I differentiate from competitors using behavioral science?',
+                      'What storytelling approach will resonate with my audience?'
+                    ]).map((question, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleExampleQuestionClick(question)}
+                        className="w-full text-left text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md p-2 transition-colors"
+                      >
+                        • {question}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           ) : (
             <>
+              {/* Chapter Questions Card (when chat has started) */}
+              {currentChapter && currentChapter.key_questions.length > 0 && (
+                <Card className="bg-muted/30 border-primary/20">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      {currentChapter.title} - Key Questions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="grid gap-2">
+                      {currentChapter.key_questions.map((question, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleExampleQuestionClick(question)}
+                          className="text-left text-sm text-muted-foreground hover:text-foreground hover:bg-background/50 rounded-md p-2 transition-colors"
+                        >
+                          {index + 1}. {question}
+                        </button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {messages.map((msg, index) => (
                 <div
                   key={index}
