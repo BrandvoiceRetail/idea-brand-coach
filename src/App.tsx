@@ -46,6 +46,7 @@ import PricingPaywall from "./pages/PricingPaywall";
 import { BrandCoachV2 } from "./pages/v2/BrandCoachV2";
 import FeatureGate from "@/components/FeatureGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
+import TestChapterNavigation from "./pages/TestChapterNavigation";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -214,9 +215,16 @@ const App = () => {
                   </Layout>
                 } />
 
+<<<<<<< HEAD
                 <Route path={ROUTES.FEATURE_FLAG_ADMIN} element={
                   <Layout>
                     <FeatureFlagAdmin />
+                  </Layout>
+                } />
+
+                <Route path="/test/chapter-navigation" element={
+                  <Layout>
+                    <TestChapterNavigation />
                   </Layout>
                 } />
 

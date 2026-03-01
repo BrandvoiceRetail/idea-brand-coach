@@ -6,20 +6,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeft, Copy, Check, ChevronDown, ChevronUp, Menu, Upload, Settings2, Image } from 'lucide-react';
+import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeft, Copy, Check, ChevronDown, ChevronUp, Menu, Upload, Settings2, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { usePersistedSessionForm } from '@/hooks/usePersistedSessionField';
+import { useChapterProgress } from '@/hooks/useChapterProgress';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
+import { ChapterProgress } from '@/components/chat/ChapterProgress';
+import { ChapterNavigation } from '@/components/chat/ChapterNavigation';
 import { DocumentUpload } from '@/components/DocumentUpload';
-import { ImageUpload } from '@/components/chat/ImageUpload';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemKB } from '@/contexts/SystemKBContext';
 import { cn } from '@/lib/utils';
-import { ChatImageAttachment } from '@/types/chat';
 
 const IdeaFrameworkConsultant = () => {
   const { toast } = useToast();
@@ -50,6 +51,15 @@ const IdeaFrameworkConsultant = () => {
   // System KB state (always enabled)
   const { useSystemKB: isSystemKBEnabled } = useSystemKB();
 
+  // Chapter progress management
+  const {
+    progress,
+    currentChapter,
+    allChapters,
+    navigateToChapter,
+    isLoading: isLoadingChapter,
+  } = useChapterProgress({ sessionId: currentSessionId });
+
   // Per-session input storage
   const {
     message,
@@ -67,13 +77,12 @@ const IdeaFrameworkConsultant = () => {
   // UI state
   const [hasUserTyped, setHasUserTyped] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isChapterNavOpen, setIsChapterNavOpen] = useState(false);
   const [isFrameworkExpanded, setIsFrameworkExpanded] = useState(true);
   const [showContextField, setShowContextField] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   const [userDocuments, setUserDocuments] = useState<unknown[]>([]);
   const [isCopied, setIsCopied] = useState(false);
-  const [attachedImages, setAttachedImages] = useState<ChatImageAttachment[]>([]);
-  const [showImageDialog, setShowImageDialog] = useState(false);
 
   // Chat container ref for auto-scrolling
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -103,6 +112,16 @@ const IdeaFrameworkConsultant = () => {
     setIsSidebarOpen(false);
   };
 
+  // Handle chapter selection
+  const handleChapterSelect = async (chapterId: string) => {
+    try {
+      await navigateToChapter(chapterId as any);
+      setIsChapterNavOpen(false);
+    } catch (error) {
+      console.error('Error navigating to chapter:', error);
+    }
+  };
+
   const handleConsultation = async () => {
     if (!message.trim()) return;
 
@@ -111,21 +130,28 @@ const IdeaFrameworkConsultant = () => {
       : message;
 
     try {
-      await sendMessage({
-        content: fullMessage,
-        role: 'user',
-        metadata: {
+      // Include chapter metadata if available
+      const chapterMetadata = currentChapter ? {
+        chapter_id: currentChapter.id,
+        chapter_number: currentChapter.number,
+        chapter_title: currentChapter.title,
+        chapter_category: currentChapter.category,
+      } : undefined;
+
+      await sendMessage(
+        fullMessage,
+        'user',
+        {
           userDocuments,
           useSystemKB: isSystemKBEnabled,
           latestDiagnostic: latestDiagnostic || undefined,
-          images: attachedImages.length > 0 ? attachedImages : undefined
+          chapterMetadata,
         }
-      });
+      );
       setMessage('');
       setContext('');
       setShowContextField(false);
       setHasUserTyped(false);
-      setAttachedImages([]); // Clear attached images after sending
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -176,6 +202,12 @@ const IdeaFrameworkConsultant = () => {
     } catch (error) {
       console.error('Error clearing chat:', error);
     }
+  };
+
+  // Handle clicking an example question
+  const handleExampleQuestionClick = (question: string) => {
+    setMessage(question);
+    setHasUserTyped(true);
   };
 
   const frameworkPillars = [
@@ -250,6 +282,24 @@ const IdeaFrameworkConsultant = () => {
 
           {/* Header Actions */}
           <div className="flex items-center gap-2">
+            {/* Chapter Navigation */}
+            <Sheet open={isChapterNavOpen} onOpenChange={setIsChapterNavOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  <span className="hidden sm:inline">Chapters</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="p-0 w-96">
+                <ChapterNavigation
+                  currentChapterId={currentChapter?.id}
+                  chapterStatuses={progress?.chapter_statuses}
+                  onSelectChapter={handleChapterSelect}
+                  isLoading={isLoadingChapter}
+                />
+              </SheetContent>
+            </Sheet>
+
             {messages.length > 0 && (
               <>
                 <Button
@@ -280,6 +330,18 @@ const IdeaFrameworkConsultant = () => {
             )}
           </div>
         </div>
+
+        {/* Chapter Progress (if available) */}
+        {currentChapter && progress && (
+          <div className="border-t bg-muted/30 px-4 py-3">
+            <ChapterProgress
+              currentChapter={currentChapter}
+              totalChapters={progress.total_chapters}
+              completedChapters={progress.completed_chapters}
+              compact
+            />
+          </div>
+        )}
 
         {/* IDEA Framework Bar (Collapsible) */}
         <div className="border-t bg-muted/50">
@@ -322,18 +384,57 @@ const IdeaFrameworkConsultant = () => {
                   and proven brand strategy methodology.
                 </p>
                 <div className="text-left space-y-2">
-                  <p className="text-sm font-medium">Example questions:</p>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• How do I position my brand to trigger emotional buying decisions?</li>
-                    <li>• What psychological triggers work best for my target demographic?</li>
-                    <li>• How can I differentiate from competitors using behavioral science?</li>
-                    <li>• What storytelling approach will resonate with my audience?</li>
-                  </ul>
+                  <p className="text-sm font-medium">
+                    {currentChapter
+                      ? `Questions for ${currentChapter.title}:`
+                      : 'Example questions:'}
+                  </p>
+                  <div className="space-y-2">
+                    {(currentChapter?.key_questions || [
+                      'How do I position my brand to trigger emotional buying decisions?',
+                      'What psychological triggers work best for my target demographic?',
+                      'How can I differentiate from competitors using behavioral science?',
+                      'What storytelling approach will resonate with my audience?'
+                    ]).map((question, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleExampleQuestionClick(question)}
+                        className="w-full text-left text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md p-2 transition-colors"
+                      >
+                        • {question}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           ) : (
             <>
+              {/* Chapter Questions Card (when chat has started) */}
+              {currentChapter && currentChapter.key_questions.length > 0 && (
+                <Card className="bg-muted/30 border-primary/20">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      {currentChapter.title} - Key Questions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="grid gap-2">
+                      {currentChapter.key_questions.map((question, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleExampleQuestionClick(question)}
+                          className="text-left text-sm text-muted-foreground hover:text-foreground hover:bg-background/50 rounded-md p-2 transition-colors"
+                        >
+                          {index + 1}. {question}
+                        </button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {messages.map((msg, index) => (
                 <div
                   key={index}
@@ -356,27 +457,6 @@ const IdeaFrameworkConsultant = () => {
                       : "bg-muted"
                   )}>
                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-
-                    {/* Display attached images */}
-                    {msg.metadata?.images && msg.metadata.images.length > 0 && (
-                      <div className="mt-3 grid grid-cols-2 gap-2">
-                        {msg.metadata.images.map((image, imgIndex) => (
-                          <div key={imgIndex} className="rounded overflow-hidden border">
-                            <img
-                              src={image.url}
-                              alt={image.filename}
-                              className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => window.open(image.url, '_blank')}
-                              title="Click to view full size"
-                            />
-                            <p className="text-xs p-1 bg-background/10 truncate">
-                              {image.filename}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
                     {msg.created_at && (
                       <p className="text-xs mt-2 opacity-70">
                         {new Date(msg.created_at).toLocaleTimeString()}
@@ -452,33 +532,6 @@ const IdeaFrameworkConsultant = () => {
                 >
                   <Settings2 className="h-4 w-4" />
                 </Button>
-
-                <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 relative"
-                      title="Attach images (JPEG, PNG, GIF, WEBP)"
-                    >
-                      <Image className="h-4 w-4" />
-                      {attachedImages.length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-                          {attachedImages.length}
-                        </span>
-                      )}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Attach Images for Visual Analysis</DialogTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Upload images for AI to analyze in real-time. Perfect for logos, designs, screenshots, or any visual content you want to discuss.
-                      </p>
-                    </DialogHeader>
-                    <ImageUpload onImagesChange={setAttachedImages} />
-                  </DialogContent>
-                </Dialog>
 
                 <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
                   <DialogTrigger asChild>

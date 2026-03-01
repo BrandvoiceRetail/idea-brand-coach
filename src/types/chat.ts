@@ -5,6 +5,8 @@
  * These types define the data structures used across all chat service implementations.
  */
 
+import type { ChapterId, ChapterMetadata } from './chapter';
+
 /**
  * Role of a chat message participant
  * - user: Message from the user
@@ -18,44 +20,6 @@ export type ChatRole = 'user' | 'assistant' | 'system';
  * - idea-framework-consultant: IDEA Framework specialist consultant with RAG
  */
 export type ChatbotType = 'idea-framework-consultant';
-
-/**
- * Image attachment metadata for chat messages
- */
-export interface ChatImageAttachment {
-  /** Unique identifier for the image */
-  id: string;
-  /** Public URL or signed URL for the image */
-  url: string;
-  /** Original filename */
-  filename: string;
-  /** MIME type of the image */
-  mime_type?: string;
-  /** File size in bytes (after compression if applied) */
-  file_size?: number;
-  /** Original file size before compression (in bytes) */
-  original_file_size?: number;
-  /** Compression ratio as percentage (e.g., 60 means 60% smaller) */
-  compression_ratio?: number;
-  /** Whether compression was applied to this image */
-  was_compressed?: boolean;
-  /** GPT-4 Vision analysis cache (optional) */
-  analysis?: string;
-}
-
-/**
- * Metadata that can be attached to chat messages
- */
-export interface ChatMessageMetadata {
-  /** Optional follow-up question suggestions */
-  suggestions?: string[];
-  /** Optional source citations */
-  sources?: string[];
-  /** Optional image attachments */
-  images?: ChatImageAttachment[];
-  /** Any other metadata */
-  [key: string]: any;
-}
 
 /**
  * Complete chat message with all metadata.
@@ -80,8 +44,14 @@ export interface ChatMessage {
   /** Type of chatbot this message belongs to */
   chatbot_type?: ChatbotType;
 
-  /** Optional metadata (suggestions, sources, images, etc.) */
-  metadata?: ChatMessageMetadata;
+  /** Optional chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Optional chapter metadata for context-aware responses */
+  chapter_metadata?: ChapterMetadata;
+
+  /** Optional metadata (suggestions, sources, etc.) */
+  metadata?: Record<string, any>;
 
   /** ISO 8601 timestamp when message was created */
   created_at: string;
@@ -108,8 +78,14 @@ export interface ChatMessageCreate {
   /** Type of chatbot (defaults to 'idea-framework-consultant') */
   chatbot_type?: ChatbotType;
 
+  /** Optional chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Optional chapter metadata for context-aware responses */
+  chapter_metadata?: ChapterMetadata;
+
   /** Optional metadata to attach to the message */
-  metadata?: ChatMessageMetadata;
+  metadata?: Record<string, any>;
 }
 
 /**
@@ -121,7 +97,7 @@ export interface ChatMessageUpdate {
   content?: string;
 
   /** Updated metadata */
-  metadata?: ChatMessageMetadata;
+  metadata?: Record<string, any>;
 }
 
 /**
@@ -178,6 +154,12 @@ export interface ChatSession {
   /** Page context where conversation started */
   page_context?: string;
 
+  /** Optional chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Optional chapter metadata for tracking book progress */
+  chapter_metadata?: ChapterMetadata;
+
   /** ISO 8601 timestamp when session was created */
   created_at: string;
 
@@ -206,6 +188,12 @@ export interface ChatSessionCreate {
 
   /** Page context where conversation started */
   page_context?: string;
+
+  /** Optional chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Optional chapter metadata for tracking book progress */
+  chapter_metadata?: ChapterMetadata;
 }
 
 /**
@@ -214,4 +202,10 @@ export interface ChatSessionCreate {
 export interface ChatSessionUpdate {
   /** Updated title */
   title?: string;
+
+  /** Updated chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Updated chapter metadata for tracking book progress */
+  chapter_metadata?: ChapterMetadata;
 }

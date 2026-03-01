@@ -4,21 +4,26 @@
  *
  * @param chatbotType - Optional chatbot type (defaults to 'idea-framework-consultant')
  * @param sessionId - Optional session ID to scope messages to specific session
+ * @param chapterId - Optional chapter ID for book-guided chat workflow
+ * @param chapterMetadata - Optional chapter metadata for context-aware responses
  */
 
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/services/ServiceProvider';
 import { ChatMessageCreate, ChatbotType } from '@/types/chat';
+import { ChapterId, ChapterMetadata } from '@/types/chapter';
 import { useToast } from '@/hooks/use-toast';
 
 interface UseChatOptions {
   chatbotType?: ChatbotType;
   sessionId?: string;
+  chapterId?: ChapterId;
+  chapterMetadata?: ChapterMetadata;
 }
 
 export const useChat = (options: UseChatOptions = {}) => {
-  const { chatbotType = 'idea-framework-consultant', sessionId } = options;
+  const { chatbotType = 'idea-framework-consultant', sessionId, chapterId, chapterMetadata } = options;
   const { chatService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -51,6 +56,9 @@ export const useChat = (options: UseChatOptions = {}) => {
     mutationFn: (message: ChatMessageCreate) => chatService.sendMessage({
       ...message,
       chatbot_type: chatbotType,
+      // Include chapter context if provided for chapter-aware prompting
+      ...(chapterId && { chapter_id: chapterId }),
+      ...(chapterMetadata && { chapter_metadata: chapterMetadata }),
     }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType, sessionId] });

@@ -22,7 +22,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { authService } = useServices();
+
+  // Safely get services - this can be undefined during HMR
+  let authService;
+  try {
+    const services = useServices();
+    authService = services.authService;
+  } catch (error) {
+    // During HMR, context might not be available yet
+    console.warn('Services not available yet, waiting for context initialization');
+  }
 
   useEffect(() => {
     console.log('Setting up auth state listener');
@@ -49,6 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
+    if (!authService) {
+      throw new Error('Auth service not available');
+    }
     try {
       const { user: newUser, error } = await authService.signUp(email, password, fullName);
       
@@ -77,6 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!authService) {
+      throw new Error('Auth service not available');
+    }
     try {
       const { error } = await authService.signIn(email, password);
       
@@ -101,6 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!authService) {
+      throw new Error('Auth service not available');
+    }
     try {
       await authService.signOut();
       // Clear local state immediately
@@ -118,6 +136,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    if (!authService) {
+      throw new Error('Auth service not available');
+    }
     try {
       const { error } = await authService.signInWithOAuth('google');
       
@@ -137,6 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
+    if (!authService) {
+      throw new Error('Auth service not available');
+    }
     try {
       const { error } = await authService.resetPassword(email);
       return { error };

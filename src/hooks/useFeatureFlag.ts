@@ -88,6 +88,21 @@ const LOCAL_FEATURE_FLAGS: Record<string, FeatureFlag> = {
       sessionPercentage: 0, // Current: 0% rollout (internal testing phase)
     },
   },
+
+  /**
+   * Brand Coach V2 Interface Flag
+   *
+   * Controls the new two-panel coaching interface at /v2/coach
+   * Toggle this to enable/disable the V2 interface regardless of deployment phase
+   */
+  'BRAND_COACH_V2': {
+    name: 'Brand Coach V2',
+    enabled: true, // Toggle this to enable/disable the feature
+    targeting_rules: {
+      // Optional: Add percentage rollout if needed
+      // sessionPercentage: 100,
+    },
+  },
 };
 
 /**

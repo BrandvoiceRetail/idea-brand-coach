@@ -1,374 +1,524 @@
 # IDEA Brand Coach V2 - Parallel Execution Plan
 
-## Quick Start for Auto-Claude
+## ⚠️ UPDATED: Aligned with PRD (Two-Panel Design, Multi-Avatar System)
+
+This plan has been updated to match the February 28, 2026 PRD specifications:
+- **Two-panel layout** (not three-panel)
+- **Single brand with multiple avatars** (not multiple brands)
+- **Book-guided chat workflow**
+- **Manual field editing priority**
+
+## 🏃‍♂️ START THESE THREE NOW - No Dependencies!
+
+| What You'll See in Auto-Claude | Command | Time |
+|--------------------------------|---------|------|
+| **"Multi-Avatar Database Schema"** | `auto-claude --feature database-migration` | 3 days |
+| **"Two-Panel Responsive UI Foundation"** | `auto-claude --feature ui-foundation-two-panel` | 4 days |
+| **"Feature Flag Configuration"** | `auto-claude --feature feature-flag-setup` | 2 days |
+
+All three can run in parallel worktrees starting TODAY!
+
+## Quick Start Commands
 
 ```bash
-# Navigate to the correct repository and branch
+# Navigate to repository
 cd /Users/matthewkerns/workspace/ecommerce-tools/brand-systems/idea-brand-coach
-git checkout main  # CRITICAL: Use main branch, not feature/image-processing
+git checkout main-v2
 
-# Execute phases sequentially (each phase can have parallel tracks)
-# Phase 0 has 3 parallel tracks that can run simultaneously
-auto-claude --feature phase-0-track-a-domain    # ✅ COMPLETED
-auto-claude --feature phase-0-track-b-ui        # Track B: UI Components
-auto-claude --feature phase-0-track-c-state     # Track C: State Management
+# Phase 0: Refactoring Sprint (Week 1) - SEQUENTIAL
+npm run analyze:all                    # Assessment
+npm run refactor:services              # Refactor services
+npm run refactor:components            # Refactor components
+npm run test:coverage                  # Verify 70% coverage
 
-# After Phase 0 completes, run Phase 1-6 sequentially
-auto-claude --feature phase-1-wire-domain-to-ui
-# ... continue with other phases
+# Phase 1: Foundation (Weeks 2-3) - PARALLEL TRACKS
+# Can run these simultaneously in different terminals:
+npm run dev:track-a                    # Database & Backend Services
+npm run dev:track-b                    # Frontend Foundation
+npm run dev:track-c                    # Infrastructure
+
+# Phase 2-5: Follow roadmap features
 ```
 
 ## Repository Information
 - **Path:** `/Users/matthewkerns/workspace/ecommerce-tools/brand-systems/idea-brand-coach`
-- **Branch:** `main` (DO NOT use feature/image-processing)
+- **Branch:** `main-v2`
 - **Implementation Directory:** `/src/v2/`
-- **Roadmap:** `/.auto-claude/roadmap/roadmap.json` (simplified for v2 only)
-- **Backup:** `/.auto-claude/roadmap/roadmap-backup-02-28.json` (original full roadmap)
-
-## Implementation Phases Overview
-
-### Phase 0: Foundation (3 Parallel Tracks) - 2-3 days
-**These can ALL run simultaneously in different terminals**
-- ✅ **Track A: Domain Layer** - Business logic, entities, use cases (COMPLETED)
-- ⏳ **Track B: UI Components** - Atomic design components
-- ⏳ **Track C: State Management** - Contexts and hooks
-
-### Phase 1: Integration Layer - 1 day
-Connect the three foundation tracks together
-
-### Phase 2: Three-Panel Layout - 2 days
-Complete responsive layout with panel persistence
-
-### Phase 3: Book-Aware Chat - 3 days
-IDEA book integration with intelligent field extraction
-
-### Phase 4: Field Intelligence - 2 days
-Smart field editor with real-time sync
-
-### Phase 5: Brand & Avatar Management - 2 days
-Complete lifecycle with document generation
-
-### Phase 6: Polish & Optimization - 2 days
-Performance, UX enhancements, mobile support
+- **Roadmap:** `/.auto-claude/roadmap/roadmap.json` (aligned with PRD)
+- **PRD:** `/Users/matthewkerns/workspace/ai-agency-development-os/claude-code-os-implementation/02-operations/project-management/active-projects/idea-brand-coach/v2-02-28/prd.md`
 
 ---
 
-## Phase 0: Foundation Implementation (Current)
+## 🚀 Parallel Implementation Strategy After Refactoring Sprint
 
-### Status
-- ✅ **Track A: Domain Layer** - COMPLETED (11 files, 0 TypeScript errors)
-- ⏳ **Track B: UI Components** - Ready to execute
-- ⏳ **Track C: State Management** - Ready to execute
+Based on the roadmap analysis, here's the optimal parallel execution plan:
 
-### Track A: Domain Layer (✅ COMPLETED)
-**Feature ID:** `phase-0-track-a-domain`
-**Status:** All 11 files implemented with zero TypeScript errors
+## Phase 0: Refactoring Sprint (Week 1) - SEQUENTIAL
 
-**Files Created:**
-```
-/src/v2/shared/types/index.ts                    ✅ Result type, ChatMessage, branded IDs
-/src/v2/domain/value-objects/Demographics.ts     ✅ Age/gender/location validation
-/src/v2/domain/value-objects/Psychographics.ts   ✅ Values/interests/lifestyle
-/src/v2/domain/entities/Brand.ts                 ✅ Business rules, 500 char limits
-/src/v2/domain/entities/Avatar.ts                ✅ Brand association, 20 item limits
-/src/v2/domain/repositories/IBrandRepository.ts  ✅ CRUD interface
-/src/v2/domain/repositories/IAvatarRepository.ts ✅ CRUD interface
-/src/v2/application/use-cases/CreateBrandUseCase.ts      ✅ Brand creation workflow
-/src/v2/application/use-cases/CreateAvatarUseCase.ts     ✅ Avatar creation with validation
-/src/v2/application/use-cases/UpdateFieldsFromChatUseCase.ts ✅ Chat field extraction
-/src/v2/application/use-cases/GenerateDocumentUseCase.ts    ✅ Document generation
-```
+**Must complete before starting parallel tracks**
 
-### Track B: UI Components (Ready to Execute)
-**Feature ID:** `phase-0-track-b-ui`
-**Command:** `auto-claude --feature phase-0-track-b-ui`
+### Critical Refactorings Required
+1. **SupabaseChatService.ts** - Extract methods, reduce complexity
+2. **AIAssistant.tsx** - Split into smaller components
+3. **usePersistedField.ts** - Add type safety
+4. **fieldSync.ts** - Extract shared service
+5. **Test coverage** - Achieve 70% on critical paths
 
-**Files to Create:**
-```typescript
-// Atoms (5 files)
-/src/v2/presentation/components/atoms/FileUploadButton.tsx  // Paperclip icon
-/src/v2/presentation/components/atoms/Input.tsx             // Base input
-/src/v2/presentation/components/atoms/Button.tsx            // Base button
-/src/v2/presentation/components/atoms/Badge.tsx             // Tags/status
-/src/v2/presentation/components/atoms/Avatar.tsx            // User avatar
-
-// Molecules (4 files)
-/src/v2/presentation/components/molecules/ChatInput.tsx     // Auto-resize textarea
-/src/v2/presentation/components/molecules/FieldInput.tsx    // Label + input + validation
-/src/v2/presentation/components/molecules/MessageBubble.tsx // Chat messages
-/src/v2/presentation/components/molecules/CollapsibleSection.tsx // Animated collapse
-
-// Organisms (3 files)
-/src/v2/presentation/components/organisms/ChatInterface.tsx    // Full chat UI
-/src/v2/presentation/components/organisms/FieldEditor.tsx      // Field list editor
-/src/v2/presentation/components/organisms/BookContextDisplay.tsx // Book excerpts
-
-// Templates (1 file)
-/src/v2/presentation/components/templates/ThreePanelTemplate.tsx // Main layout
-
-// Pages (2 files)
-/src/v2/presentation/components/pages/BrandsPage.tsx   // Brand management
-/src/v2/presentation/components/pages/AvatarsPage.tsx  // Avatar management
-```
-
-**Key Requirements:**
-- Use Tailwind CSS for all styling
-- Components must be pure (no state, just props)
-- FileUploadButton uses Paperclip icon from lucide-react
-- Support responsive design (mobile/tablet/desktop)
-- Include dark mode classes
-
-### Track C: State Management (Ready to Execute)
-**Feature ID:** `phase-0-track-c-state`
-**Command:** `auto-claude --feature phase-0-track-c-state`
-
-**Files to Create:**
-```typescript
-// Contexts (2 files)
-/src/v2/presentation/contexts/V2StateContext.tsx           // Global state
-/src/v2/presentation/contexts/PanelCommunicationContext.tsx // Inter-panel messaging
-
-// Hooks (5 files)
-/src/v2/presentation/hooks/useThreePanelState.ts  // Panel visibility/width
-/src/v2/presentation/hooks/useBrands.ts           // Brand CRUD operations
-/src/v2/presentation/hooks/useAvatars.ts          // Avatar CRUD operations
-/src/v2/presentation/hooks/useFieldSync.ts        // Chat-to-field sync
-/src/v2/presentation/hooks/usePersistedState.ts   // localStorage persistence
-```
-
-**Key Requirements:**
-- State updates must be under 16ms for smooth UI
-- Include proper cleanup in useEffect
-- Panel widths persist to localStorage
-- Support keyboard shortcuts (Cmd+1,2,3)
-- Optimistic updates for better UX
+### Success Criteria
+- [ ] Complexity reduced by 30%
+- [ ] Test coverage ≥70%
+- [ ] No functions >50 lines
+- [ ] No components >150 lines
+- [ ] All tests passing
 
 ---
 
-## Architecture Principles
+## 🚀 START NOW: Immediate Parallel Execution (No Need to Wait!)
 
-### Clean Architecture Layers
-```
-UI Layer (Track B)
-    ↓ depends on
-Application Layer (Track C - State/Hooks)
-    ↓ depends on
-Domain Layer (Track A) ✅
-    ↓ depends on
-Nothing (pure business logic)
-```
+These roadmap items can start TODAY in parallel worktrees:
 
-### Atomic Design Hierarchy
-```
-Atoms → Molecules → Organisms → Templates → Pages
-Small    Compose    Complex     Layout      Full
-units    atoms      sections    structure   views
+### Track A: Database & Backend Services
+**Developer Profile:** Backend/Database Specialist
+**Worktree:** `feature/v2-database`
+
+```mermaid
+graph LR
+    A[database-migration] --> B[avatar-management-service]
+    style A fill:#9f9,stroke:#333,stroke-width:3px
+    style B fill:#ff9,stroke:#333
 ```
 
-### State Management Flow
+1. **"Multi-Avatar Database Schema"** (3 days) ✅ START NOW
+   - Roadmap ID: `database-migration`
+   - Title: **Multi-Avatar Database Schema**
+   - No dependencies - completely independent!
+   - Create brands, avatars, performance_metrics tables
+   - Implement RLS policies
+   - ⚠️ Critical path - unlocks avatar-management-service
+
+2. **"Avatar Management Service Layer"** (3 days)
+   - Roadmap ID: `avatar-management-service`
+   - Title: **Avatar Management Service Layer**
+   - Dependencies: [`database-migration`] only
+   - Can start Day 3-4
+   - ⚠️ Biggest bottleneck - unlocks 5+ features
+
+### Track B: Frontend Foundation
+**Developer Profile:** Frontend/UI Specialist
+**Worktree:** `feature/v2-ui`
+
+```mermaid
+graph LR
+    A[ui-foundation-two-panel]
+    style A fill:#9f9,stroke:#333,stroke-width:3px
 ```
-User Action → Hook → Context → Reducer → State Update → UI Re-render
-                ↓
-            Use Case → Repository → External Service (Supabase/localStorage)
+
+1. **"Two-Panel Responsive UI Foundation"** (4 days) ✅ START NOW
+   - Roadmap ID: `ui-foundation-two-panel`
+   - Title: **Two-Panel Responsive UI Foundation**
+   - No dependencies - completely independent!
+   - Two-panel responsive layout
+   - Mobile bottom sheet
+   - Collapsible panels
+
+### Track C: Infrastructure
+**Developer Profile:** Full-Stack Developer
+**Worktree:** `feature/v2-infrastructure`
+
+```mermaid
+graph LR
+    A[feature-flag-setup]
+    style A fill:#9f9,stroke:#333,stroke-width:3px
 ```
+
+1. **"Feature Flag Configuration"** (2 days) ✅ START NOW
+   - Roadmap ID: `feature-flag-setup`
+   - Title: **Feature Flag Configuration**
+   - No dependencies - completely independent!
+   - Configure v2-multi-avatar flag
+   - Set up admin UI
+
+## 🎯 Phase 1 Can Run PARALLEL to Phase 0!
+
+**Refactoring Sprint (Phase 0)** in main worktree:
+- `tech-debt-cleanup`
+- `test-coverage-improvement`
+
+**Foundation (Phase 1)** in parallel worktrees:
+- `database-migration` ✅ START NOW
+- `ui-foundation-two-panel` ✅ START NOW
+- `feature-flag-setup` ✅ START NOW
+- `avatar-management-service` (after database)
 
 ---
 
-## Integration Points (Phase 1)
+## 📊 Phase 2: Core Multi-Avatar Features (Weeks 4-5) - PARALLEL EXPANSION
 
-After all three Phase 0 tracks complete, integration involves:
+Once "Avatar Management Service Layer" is complete, expand to multiple parallel streams:
 
-1. **Wire Domain to UI** (`phase-1-wire-domain-to-ui`)
-   - Map Brand/Avatar entities to component props
-   - Type definitions flow from domain to UI
+### Track A: Avatar Core Features
+**Requires:** "Avatar Management Service Layer" + "Two-Panel Responsive UI Foundation"
 
-2. **Connect State to Components** (`phase-1-connect-state-to-components`)
-   - Components consume hooks
-   - Actions dispatch through contexts
+```mermaid
+graph TB
+    A[avatar-crud-operations] --> B[avatar-tab-switching]
+    A --> C[field-editor-manual]
+    style A fill:#f9f,stroke:#333
+    style B fill:#9f9,stroke:#333
+    style C fill:#9f9,stroke:#333
+```
 
-3. **Implement Repositories** (`phase-1-implement-repositories`)
-   - SupabaseBrandRepository.ts
-   - SupabaseAvatarRepository.ts
-   - LocalStorageBrandRepository.ts (offline fallback)
+**Roadmap Items:**
+- **"Avatar CRUD Operations"** (`avatar-crud-operations`)
+  - Dependencies: [`avatar-management-service`, `ui-foundation-two-panel`]
+- **"Avatar Tab Navigation"** (`avatar-tab-switching`)
+  - Dependencies: [`avatar-crud-operations`]
+- **"Manual Field Editor with Sync"** (`field-editor-manual`)
+  - Dependencies: [`avatar-crud-operations`]
+
+### Track B: Chat System (Parallel!)
+**Requires:** "Avatar Management Service Layer" only
+
+```mermaid
+graph LR
+    A[book-guided-chat]
+    style A fill:#99f,stroke:#333
+```
+
+**Roadmap Items:**
+- **"Book-Guided Chat Workflow"** (`book-guided-chat`)
+  - Dependencies: [`avatar-management-service`]
+  - ✅ Can run completely parallel to Track A!
+
+### Track C: Convergence Point
+**Requires:** BOTH Track A + Track B completion
+
+```mermaid
+graph TB
+    A[field-editor-manual] --> C[field-extraction-pipeline]
+    B[book-guided-chat] --> C
+    style C fill:#ff9,stroke:#333
+```
+
+**Roadmap Items:**
+- **"AI Field Extraction from Chat"** (`field-extraction-pipeline`)
+  - Dependencies: [`book-guided-chat`, `field-editor-manual`]
+  - ⚠️ Must wait for both tracks to complete
 
 ---
 
-## File Structure After Phase 0
+## 🎯 Phase 3: Advanced Features (Weeks 6-7) - MAXIMUM PARALLELIZATION
 
+Three independent tracks with no interdependencies:
+
+### Track A: Analytics
+```mermaid
+graph LR
+    A[performance-metrics] --> B[roi-calculator]
+    style A fill:#f9f,stroke:#333
+    style B fill:#f9f,stroke:#333
 ```
-/src/v2/
-├── shared/
-│   └── types/
-│       └── index.ts                    ✅ Track A
-├── domain/                             ✅ Track A (COMPLETE)
-│   ├── entities/
-│   │   ├── Brand.ts                    ✅
-│   │   └── Avatar.ts                   ✅
-│   ├── value-objects/
-│   │   ├── Demographics.ts             ✅
-│   │   └── Psychographics.ts           ✅
-│   └── repositories/
-│       ├── IBrandRepository.ts         ✅
-│       └── IAvatarRepository.ts        ✅
-├── application/                        ✅ Track A (COMPLETE)
-│   └── use-cases/
-│       ├── CreateBrandUseCase.ts       ✅
-│       ├── CreateAvatarUseCase.ts      ✅
-│       ├── UpdateFieldsFromChatUseCase.ts ✅
-│       └── GenerateDocumentUseCase.ts  ✅
-├── presentation/
-│   ├── components/                     ⏳ Track B
-│   │   ├── atoms/
-│   │   ├── molecules/
-│   │   ├── organisms/
-│   │   ├── templates/
-│   │   └── pages/
-│   ├── contexts/                       ⏳ Track C
-│   └── hooks/                          ⏳ Track C
-└── services/
-    └── BookIndexService.js             ✅ (existing)
+
+### Track B: Content Generation
+```mermaid
+graph LR
+    A[document-generation]
+    style A fill:#9f9,stroke:#333
+```
+
+### Track C: UX Enhancements
+```mermaid
+graph TB
+    A[avatar-comparison]
+    B[mobile-optimization]
+    style A fill:#99f,stroke:#333
+    style B fill:#99f,stroke:#333
 ```
 
 ---
 
-## Testing Strategy
+## 💡 Key Optimization Strategies
 
-### Unit Tests (Each Track)
-- Track A: Test entities, value objects, use cases
-- Track B: Component snapshot tests
-- Track C: Hook behavior tests
+### 1. Start UI Foundation Early
+Since `ui-foundation-two-panel` has no dependencies, consider starting it during the refactoring sprint if you have capacity.
 
-### Integration Tests (Phase 1)
-- Data flow from domain to UI
-- State persistence
-- Repository operations
+### 2. Fast-track Database Path
+The database → service layer is your critical path. Prioritize this to unblock the most features.
 
-### E2E Tests (Phase 2+)
-- Complete user workflows
-- Panel interactions
-- Chat-to-field sync
+### 3. Optimal Resource Allocation
 
----
+| Developer | Specialization | Track Assignment | Critical Tasks |
+|-----------|---------------|------------------|----------------|
+| Dev 1 | Backend/Database | Track A | database-migration, avatar-management-service |
+| Dev 2 | Frontend/UI | Track B | ui-foundation-two-panel, field-editor-manual |
+| Dev 3 | Full-Stack | Track C → Support | feature-flags, then support critical path |
 
-## Success Metrics
+### 4. Bottleneck Management
 
-### Phase 0 Success
-- ✅ Track A: 11 files, 0 TypeScript errors (COMPLETED)
-- [ ] Track B: All components render without errors
-- [ ] Track C: State updates < 16ms, no memory leaks
+**Critical Bottlenecks:**
+1. `avatar-management-service` - blocks 5+ features
+2. `avatar-crud-operations` - second convergence point
+3. `field-extraction-pipeline` - requires two tracks
 
-### Overall V2 Success
-- Create avatar in < 10 minutes
-- Chat extracts fields with 80% accuracy
-- Book excerpts relevance score > 0.85
-- Document generation < 5 seconds
-- Mobile responsive
-- Offline capable
+**Mitigation:**
+- Allocate best resources to bottleneck tasks
+- Plan integration checkpoints when tracks merge
+- Have Dev 3 ready to support bottlenecks
 
----
+### 5. Phase Overlap Opportunities
 
-## Common Issues & Solutions
-
-### Issue: Import paths not resolving
-**Solution:** Use relative imports within v2, absolute imports for external
-
-### Issue: Type conflicts between tracks
-**Solution:** Refer to `/src/v2/shared/types/index.ts` for shared types
-
-### Issue: Component props undefined
-**Solution:** Components in Track B should define their own prop interfaces
-
-### Issue: State not persisting
-**Solution:** Check usePersistedState hook and localStorage keys
+```mermaid
+gantt
+    title Phase Overlap Strategy
+    dateFormat YYYY-MM-DD
+    section Phase 0
+    Refactoring Sprint      :2026-03-01, 5d
+    UI Foundation (early)   :2026-03-03, 3d
+    section Phase 1
+    Database Migration      :2026-03-06, 3d
+    Avatar Service         :2026-03-09, 3d
+    Feature Flags          :2026-03-06, 2d
+    section Phase 2
+    Core Features          :2026-03-12, 5d
+```
 
 ---
 
-## Dependencies & Tools
+## 🚦 Quick Start Execution Order
 
-### Required Packages (Already Installed)
-- React 18+
-- TypeScript 5+
-- Tailwind CSS
-- lucide-react (icons)
-- Supabase client
-- shadcn/ui components
-
-### Development Tools
-- auto-claude (for execution)
-- TypeScript compiler (tsc)
-- Tailwind CSS IntelliSense
-- React Developer Tools
-
----
-
-## Execution Checklist
-
-### Before Starting Track B or C:
-- [ ] Confirm on main branch: `git branch` shows `* main`
-- [ ] Repository path: `/Users/matthewkerns/workspace/ecommerce-tools/brand-systems/idea-brand-coach`
-- [ ] Check Track A completion: 11 files in domain/ and application/
-- [ ] Roadmap exists: `/.auto-claude/roadmap/roadmap.json`
-
-### Track B Execution:
+### Day 1 - Start All These in Parallel:
 ```bash
-auto-claude --feature phase-0-track-b-ui
-```
-- [ ] 15 component files created
-- [ ] All use Tailwind CSS
-- [ ] Components are pure (no hooks)
-- [ ] TypeScript strict mode
+# Terminal 1: "Multi-Avatar Database Schema"
+auto-claude --feature database-migration
 
-### Track C Execution:
+# Terminal 2: "Two-Panel Responsive UI Foundation"
+auto-claude --feature ui-foundation-two-panel
+
+# Terminal 3: "Feature Flag Configuration"
+auto-claude --feature feature-flag-setup
+
+# Terminal 4: "Pre-Implementation Refactoring Sprint" (optional, quality improvement)
+auto-claude --feature tech-debt-cleanup
+```
+
+### Day 3-4 - After Database Migration:
 ```bash
-auto-claude --feature phase-0-track-c-state
+# Terminal 1: "Avatar Management Service Layer"
+auto-claude --feature avatar-management-service
 ```
-- [ ] 2 context files created
-- [ ] 5 hook files created
-- [ ] localStorage persistence works
-- [ ] No memory leaks
 
-### After Phase 0 Complete:
-- [ ] Run Phase 1 integration features
-- [ ] Test data flow end-to-end
-- [ ] Verify TypeScript compilation
-- [ ] Check browser console for errors
+### Week 2 - After Foundation Complete:
+```bash
+# "Avatar CRUD Operations"
+auto-claude --feature avatar-crud-operations
+
+# "Book-Guided Chat Workflow" (parallel with above)
+auto-claude --feature book-guided-chat
+```
+
+## 📈 Timeline Impact with Roadmap Items
+
+### Original Sequential Timeline: 10 weeks
+### Parallel with Refactoring First: 8-9 weeks
+### Aggressive Parallel (START NOW): 6-7 weeks ⚡
+
+**Maximum Time Savings:** 3-4 weeks (30-40% reduction)
+
+### Week-by-Week Breakdown
+
+| Week | Phase | Parallel Tracks | Key Deliverables |
+|------|-------|-----------------|------------------|
+| 1 | Phase 0 | Sequential refactoring | Clean codebase, 70% test coverage |
+| 2-3 | Phase 1 | 3 parallel tracks | Database, UI foundation, feature flags |
+| 4-5 | Phase 2 | 2-3 parallel tracks | Avatar CRUD, chat system, field sync |
+| 6-7 | Phase 3 | 3 parallel tracks | Analytics, documents, UX |
+| 8 | Phase 4 | Testing convergence | Integration, E2E, security |
+| 9 | Phase 5 | Beta preparation | Rollout, monitoring |
 
 ---
 
-## Notes for Auto-Claude Agents
+## 📋 Complete Roadmap Reference (ID + Title)
 
-1. **Work ONLY in /src/v2/** - Do not modify v1 interface
-2. **Use TypeScript strictly** - No 'any' types except absolutely necessary
-3. **Follow existing patterns** - Check Track A implementation for types
-4. **Import from Track A** - Use types from `/src/v2/shared/types/index.ts`
-5. **Document complex logic** - Add JSDoc comments for public APIs
-6. **Test as you build** - Don't wait until integration
+### Items You Can Start NOW (No Dependencies):
+| Title | Roadmap ID | Duration | Worktree |
+|-------|------------|----------|----------|
+| **Multi-Avatar Database Schema** | `database-migration` | 3 days | feature/v2-database |
+| **Two-Panel Responsive UI Foundation** | `ui-foundation-two-panel` | 4 days | feature/v2-ui |
+| **Feature Flag Configuration** | `feature-flag-setup` | 2 days | feature/v2-infrastructure |
 
----
+### Items Starting Soon (Minimal Dependencies):
+| Title | Roadmap ID | Dependencies | Can Start |
+|-------|------------|-------------|-----------|
+| **Avatar Management Service Layer** | `avatar-management-service` | [`database-migration`] | Day 3-4 |
+| **Pre-Implementation Refactoring Sprint** | `tech-debt-cleanup` | None (but affects quality) | Anytime |
+| **Test Coverage Enhancement** | `test-coverage-improvement` | None | Anytime |
 
-## Quick Commands Reference
+### Phase 2 Items (After Foundation):
+| Title | Roadmap ID | Dependencies |
+|-------|------------|-------------|
+| **Avatar CRUD Operations** | `avatar-crud-operations` | [`avatar-management-service`, `ui-foundation-two-panel`] |
+| **Book-Guided Chat Workflow** | `book-guided-chat` | [`avatar-management-service`] |
+| **Avatar Tab Navigation** | `avatar-tab-switching` | [`avatar-crud-operations`] |
+| **Manual Field Editor with Sync** | `field-editor-manual` | [`avatar-crud-operations`] |
+| **AI Field Extraction from Chat** | `field-extraction-pipeline` | [`book-guided-chat`, `field-editor-manual`] |
 
+### Phase 3 Items (Advanced Features):
+| Title | Roadmap ID | Dependencies |
+|-------|------------|-------------|
+| **Performance Metrics Tracking** | `performance-metrics` | [`avatar-crud-operations`] |
+| **ROI Calculation & Reporting** | `roi-calculator` | [`performance-metrics`] |
+| **Strategy Document Generation** | `document-generation` | [`book-guided-chat`, `field-editor-manual`] |
+| **Avatar Comparison View** | `avatar-comparison` | [`avatar-crud-operations`] |
+| **Mobile Experience Optimization** | `mobile-optimization` | [`ui-foundation-two-panel`] |
+
+## 🎬 Execution Commands with Titles & IDs
+
+### Start NOW - Database Track (Worktree 1)
 ```bash
-# Check current branch
-git branch
+# Create worktree for database work
+git worktree add -b feature/v2-database ../idea-coach-database
 
-# Navigate to repository
+# Navigate to worktree
+cd ../idea-coach-database
+
+# Execute "Multi-Avatar Database Schema"
+auto-claude --feature database-migration
+
+# After completion, execute "Avatar Management Service Layer"
+auto-claude --feature avatar-management-service
+```
+
+### Start NOW - UI Track (Worktree 2)
+```bash
+# Create worktree for UI work
+git worktree add -b feature/v2-ui ../idea-coach-ui
+
+# Navigate to worktree
+cd ../idea-coach-ui
+
+# Execute "Two-Panel Responsive UI Foundation"
+auto-claude --feature ui-foundation-two-panel
+```
+
+### Start NOW - Infrastructure Track (Worktree 3)
+```bash
+# Create worktree for infrastructure
+git worktree add -b feature/v2-infrastructure ../idea-coach-infra
+
+# Navigate to worktree
+cd ../idea-coach-infra
+
+# Execute "Feature Flag Configuration"
+auto-claude --feature feature-flag-setup
+```
+
+### Meanwhile - Refactoring (Main Worktree)
+```bash
+# Stay in main repository
 cd /Users/matthewkerns/workspace/ecommerce-tools/brand-systems/idea-brand-coach
 
-# Execute Phase 0 tracks (parallel)
-auto-claude --feature phase-0-track-b-ui    # Terminal 1
-auto-claude --feature phase-0-track-c-state  # Terminal 2
+# Execute "Pre-Implementation Refactoring Sprint"
+auto-claude --feature tech-debt-cleanup
 
-# Execute Phase 1 (sequential)
-auto-claude --feature phase-1-wire-domain-to-ui
-auto-claude --feature phase-1-connect-state-to-components
-auto-claude --feature phase-1-implement-repositories
-
-# Check TypeScript compilation
-npx tsc --noEmit --project tsconfig.json
-
-# Run development server
-npm run dev
+# Execute "Test Coverage Enhancement"
+auto-claude --feature test-coverage-improvement
 ```
 
-This plan enables complete v2 implementation with clear phase separation and parallel execution where possible.
+### Phase 2: Core Features (Parallel)
+```bash
+# Terminal 1 - Track A
+npm run avatar:crud
+npm run avatar:tabs
+npm run field:editor
+
+# Terminal 2 - Track B
+npm run chat:book-guided
+npm run chat:rag-integration
+```
+
+### Phase 3: Advanced (Parallel)
+```bash
+# Terminal 1 - Track A
+npm run metrics:tracking
+npm run metrics:roi
+
+# Terminal 2 - Track B
+npm run document:generation
+
+# Terminal 3 - Track C
+npm run avatar:comparison
+npm run mobile:optimization
+```
+
+---
+
+## ✅ Success Criteria
+
+### Phase Completion Checklist
+
+**Phase 0 Complete When:**
+- [ ] All refactoring targets achieved
+- [ ] 70% test coverage
+- [ ] Performance benchmarks met
+
+**Phase 1 Complete When:**
+- [ ] Database migrations successful
+- [ ] Avatar service operational
+- [ ] Two-panel UI rendering
+- [ ] Feature flags configured
+
+**Phase 2 Complete When:**
+- [ ] Avatar CRUD working
+- [ ] Chat extracting fields
+- [ ] Manual edits preserved
+
+**Phase 3 Complete When:**
+- [ ] Metrics tracking operational
+- [ ] Documents generating
+- [ ] Mobile experience optimized
+
+---
+
+## 🚨 Risk Mitigation
+
+### Parallel Execution Risks
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Integration conflicts | High | Daily sync meetings, clear interfaces |
+| Dependency delays | Medium | Dev 3 as floating resource |
+| Resource contention | Low | Clear track ownership |
+| Scope creep | Medium | Strict feature boundaries |
+
+### Contingency Plans
+
+1. **If Track A delayed:** Shift Dev 3 to assist with database/service
+2. **If Track B delayed:** Can extend into Phase 2 (UI less critical)
+3. **If Track C delayed:** Feature flags not blocking (can manual deploy)
+
+---
+
+## 📊 Progress Tracking
+
+### Daily Standups
+- Track progress against parallel tracks
+- Identify blockers early
+- Coordinate integration points
+
+### Weekly Metrics
+- Features completed vs planned
+- Test coverage trends
+- Performance benchmarks
+- Blocker resolution time
+
+### KPIs for Success
+- **Velocity:** 3+ features/week with parallel execution
+- **Quality:** Maintain 70%+ test coverage
+- **Performance:** <3s page load throughout
+- **Coordination:** <1 day integration delays
+
+---
+
+**Last Updated:** February 28, 2026
+**Status:** Ready for Execution
+**Estimated Completion:** 8-9 weeks with parallel execution

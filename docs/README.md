@@ -1,8 +1,31 @@
-# IDEA Brand Coach - Beta Launch Documentation
+# IDEA Brand Coach Documentation
 
-Welcome to the beta launch documentation for the IDEA Brand Coach platform.
+## Overview
 
-## 📚 Documentation Index
+IDEA Brand Coach is an AI-powered brand consulting platform that helps businesses create and test customer avatars using the IDEA framework from "What Captures The Heart Goes In The Cart."
+
+## 🆕 V2 Documentation (New Multi-Avatar System)
+
+### [V2 Documentation Hub](./v2/)
+**Current Development Focus** - Multi-avatar system with book-guided chat workflow
+- [Architecture](./v2/architecture/) - Two-panel design, domain model
+- [Features](./v2/features/) - Avatar management, chat, tracking
+- [User Guide](./v2/user-guide/) - Quick start, workflows
+- [Development](./v2/development/) - Refactoring, testing, standards
+- [Migration](./v2/migration/) - Database, user data, rollback
+- [API](./v2/api/) - Endpoints, edge functions
+- [Deployment](./v2/deployment/) - Beta launch, monitoring
+
+### Key V2 Documents
+- 🎯 [V2 Documentation Plan](./V2_DOCUMENTATION_PLAN.md) - Complete v2 documentation strategy
+- 🔨 [Refactoring Sprint Plan](./v2/development/REFACTORING_PLAN.md) - Week 0 technical debt cleanup
+- 📐 [Two-Panel Design](./v2/architecture/TWO_PANEL_DESIGN.md) - Responsive layout architecture
+- 🗄️ [Database Migration](./v2/migration/DATABASE_MIGRATION.md) - Additive migration strategy
+- 🚀 [Quick Start Guide](./v2/user-guide/QUICK_START.md) - Create first avatar in 15 minutes
+
+---
+
+## 📚 V1 Documentation (Current Production)
 
 ### Core Planning Documents
 - **[P0_FEATURES.md](./P0_FEATURES.md)** - Three core features required for beta launch
@@ -99,10 +122,37 @@ Beta testers should focus on:
 
 ## 📝 Change Log
 
-See individual documents for detailed changelogs:
+### V2 Changes (February 2026)
+- Added comprehensive v2 documentation structure
+- Created refactoring sprint plan for Week 0
+- Documented two-panel responsive design
+- Added database migration strategy
+- Created user quick start guide
+
+### V1 Changes (November 2025)
 - [AUTH_IMPLEMENTATION.md - Changelog](./AUTH_IMPLEMENTATION.md#changelog)
+
+## 🗺️ Documentation Roadmap
+
+### Week 0 (Current): Refactoring Sprint
+- ✅ [Refactoring Plan](./v2/development/REFACTORING_PLAN.md) created
+- ⏳ Code smell assessment in progress
+- ⏳ Test coverage improvements needed
+
+### Weeks 1-2: Foundation Documentation
+- ✅ [Two-Panel Design](./v2/architecture/TWO_PANEL_DESIGN.md) documented
+- ✅ [Database Migration](./v2/migration/DATABASE_MIGRATION.md) planned
+- ⏳ Component library documentation pending
+- ⏳ State management patterns pending
+
+### Weeks 3-10: Feature & Deployment Docs
+- ⏳ Multi-avatar system documentation
+- ⏳ Book progression workflow
+- ⏳ Performance tracking guides
+- ⏳ Beta launch procedures
 
 ---
 
-**Last Updated:** 2025-11-08  
-**Version:** 1.0 Beta
+**Last Updated:** 2026-02-28
+**V2 Version:** 2.0.0-alpha (Pre-Implementation)
+**V1 Version:** 1.0 Beta (Production)

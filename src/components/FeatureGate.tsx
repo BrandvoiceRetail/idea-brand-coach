@@ -12,6 +12,7 @@
 
 import { ReactNode } from 'react';
 import { FEATURES, isFeatureAvailable, type Feature, type FeatureId, type DeploymentPhase } from '@/config/features';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import ComingSoon from './ComingSoon';
 
 interface FeatureGateProps {
@@ -42,12 +43,22 @@ export default function FeatureGate({
   fallback,
   comingSoonConfig,
 }: FeatureGateProps): JSX.Element {
-  const currentPhase = (import.meta.env.VITE_DEPLOYMENT_PHASE || 'P0') as DeploymentPhase;
-  const enabled = isFeatureAvailable(feature, currentPhase);
+  // First check dynamic feature flags (can override phase-based)
+  const dynamicFlagEnabled = useFeatureFlag(feature, { defaultValue: null });
 
-  // Feature is enabled - render children
-  if (enabled) {
-    return <>{children}</>;
+  // If dynamic flag exists and is explicitly set, use it
+  if (dynamicFlagEnabled !== null) {
+    if (dynamicFlagEnabled) {
+      return <>{children}</>;
+    }
+  } else {
+    // Fall back to phase-based check if no dynamic flag exists
+    const currentPhase = (import.meta.env.VITE_DEPLOYMENT_PHASE || 'P0') as DeploymentPhase;
+    const phaseEnabled = isFeatureAvailable(feature, currentPhase);
+
+    if (phaseEnabled) {
+      return <>{children}</>;
+    }
   }
 
   // Feature is disabled - render fallback

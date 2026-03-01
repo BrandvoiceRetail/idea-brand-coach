@@ -120,15 +120,15 @@ export function BrandCoachV2() {
       : message;
 
     try {
-      await sendMessage(
-        fullMessage,
-        'user',
-        {
+      await sendMessage({
+        content: fullMessage,
+        role: 'user',
+        metadata: {
           userDocuments,
           useSystemKB: isSystemKBEnabled,
           latestDiagnostic: latestDiagnostic || undefined
         }
-      );
+      });
       setMessage('');
       setContext('');
       setShowContextField(false);
