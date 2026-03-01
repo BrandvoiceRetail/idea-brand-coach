@@ -18,7 +18,6 @@ import { FloatingChatWidget } from "@/components/FloatingChatWidget";
 // import { AvatarPDFExport } from "@/components/AvatarPDFExport";
 import { usePersistedField } from "@/hooks/usePersistedField";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
-// TEMPORARY: For subtask-3-2 verification only - will be properly integrated in subtask-4-1
 import { AvatarTabNavigation } from "@/components/avatar/AvatarTabNavigation";
 
 /**
@@ -272,7 +271,7 @@ export default function AvatarBuilder() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8" data-tour="avatar-builder">
-      {/* TEMPORARY: For subtask-3-2 verification only - will be properly integrated in subtask-4-1 */}
+      {/* Avatar tab navigation - switches between multiple avatars */}
       <AvatarTabNavigation />
 
       <div className="text-center">
