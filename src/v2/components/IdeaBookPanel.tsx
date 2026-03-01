@@ -148,24 +148,26 @@ const KEY_CONCEPTS: BookExcerpt[] = [
 export function IdeaBookPanel() {
   const { useSystemKB: systemKBEnabled } = useSystemKB();
   const { lastMessage, subscribeToMessages } = usePanelCommunication();
-  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [activeTab, setActiveTab] = useState<string | null>(null); // Start with no active tab
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
 
   // Listen for messages from other panels
   useEffect(() => {
     const unsubscribe = subscribeToMessages((message) => {
-      if (message?.type === 'topic-selected') {
+      if (message?.type === 'topic-selected' || message?.type === 'chat_context_update') {
         // When a topic is selected in chat, show relevant book content
-        const topic = message.payload.topic?.toLowerCase();
-        if (topic?.includes('insight') || topic?.includes('identify')) {
+        const topic = message.payload.topic?.toLowerCase() || message.payload.content?.toLowerCase();
+        if (topic?.includes('insight') || topic?.includes('identify') || topic?.includes('purpose') || topic?.includes('values')) {
           setActiveTab('identify');
-        } else if (topic?.includes('distinctive') || topic?.includes('discover')) {
+        } else if (topic?.includes('distinctive') || topic?.includes('discover') || topic?.includes('market') || topic?.includes('competitive')) {
           setActiveTab('discover');
-        } else if (topic?.includes('empathy') || topic?.includes('execute')) {
+        } else if (topic?.includes('empathy') || topic?.includes('execute') || topic?.includes('promise') || topic?.includes('experience')) {
           setActiveTab('execute');
-        } else if (topic?.includes('authentic') || topic?.includes('analyze')) {
+        } else if (topic?.includes('authentic') || topic?.includes('analyze') || topic?.includes('metrics') || topic?.includes('feedback')) {
           setActiveTab('analyze');
+        } else if (topic?.includes('overview') || topic?.includes('framework') || topic?.includes('idea')) {
+          setActiveTab('overview');
         }
       }
     });
@@ -233,7 +235,7 @@ export function IdeaBookPanel() {
       </div>
 
       {/* Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+      <Tabs value={activeTab || ''} onValueChange={(value) => setActiveTab(value || null)} className="flex-1 flex flex-col">
         <TabsList className="w-full justify-start rounded-none border-b h-auto p-0">
           <TabsTrigger
             value="overview"
@@ -275,19 +277,37 @@ export function IdeaBookPanel() {
         </TabsList>
 
         <div className="flex-1 overflow-hidden">
-          <TabsContent value={activeTab} className="h-full m-0">
-            <BookContextDisplay
-              excerpts={phaseFilteredExcerpts}
-              title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} - IDEA Framework`}
-              description={
-                systemKBEnabled
-                  ? "Content from 'The IDEA Framework' book"
-                  : "Sample content (System KB disabled)"
-              }
-              maxHeight="calc(100vh - 250px)"
-              className="border-0 shadow-none"
-            />
-          </TabsContent>
+          {activeTab ? (
+            <TabsContent value={activeTab} className="h-full m-0">
+              <BookContextDisplay
+                excerpts={phaseFilteredExcerpts}
+                title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} - IDEA Framework`}
+                description={
+                  systemKBEnabled
+                    ? "Content from 'The IDEA Framework' book"
+                    : "Sample content (System KB disabled)"
+                }
+                maxHeight="calc(100vh - 250px)"
+                className="border-0 shadow-none"
+              />
+            </TabsContent>
+          ) : (
+            <div className="h-full flex items-center justify-center p-8">
+              <div className="text-center space-y-4 max-w-md">
+                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto" />
+                <h3 className="text-lg font-semibold">IDEA Framework Book</h3>
+                <p className="text-sm text-muted-foreground">
+                  Start a conversation in the chat to see relevant book excerpts appear here.
+                  As you discuss different aspects of the IDEA framework, relevant content will
+                  be displayed automatically.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  You can also click on the tabs above to manually explore different sections
+                  of the IDEA framework.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </Tabs>
     </div>

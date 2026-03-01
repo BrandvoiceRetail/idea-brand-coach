@@ -3,7 +3,7 @@ import { PanelCommunicationProvider } from '@/v2/contexts/PanelCommunicationCont
 import { ThreePanelTemplate } from '@/v2/components/ThreePanelTemplate';
 import { V2ChatPanel } from '@/v2/components/V2ChatPanel';
 import { IdeaBookPanel } from '@/v2/components/IdeaBookPanel';
-import { SimpleBrandPanel } from '@/v2/components/SimpleBrandPanel';
+import { FieldsHierarchyPanel } from '@/v2/components/FieldsHierarchyPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -26,8 +26,8 @@ export function V2Interface() {
 
             <TabsContent value="workspace" className="h-[calc(100%-3rem)] m-0">
               <ThreePanelTemplate
-                leftPanel={<SimpleBrandPanel />}
-                middlePanel={<V2ChatPanel />}
+                leftPanel={<FieldsHierarchyPanel />}
+                centerPanel={<V2ChatPanel />}
                 rightPanel={<IdeaBookPanel />}
               />
             </TabsContent>

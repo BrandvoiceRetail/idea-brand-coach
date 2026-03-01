@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
+import { usePanelCommunication } from '@/v2/contexts/PanelCommunicationContext';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageSquare, Plus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,9 +16,11 @@ export function V2ChatPanel() {
     currentSessionId,
     isLoadingSessions,
     isCreating,
+    isRegeneratingTitle,
     createNewChat,
     renameSession,
     deleteSession,
+    regenerateTitle,
     switchToSession,
   } = useChatSessions({ chatbotType: 'idea-framework-consultant' });
 
@@ -27,13 +30,65 @@ export function V2ChatPanel() {
     sessionId: currentSessionId,
   });
 
+  // Panel communication for inter-panel updates
+  const { notifyChatContextUpdate, sendMessage: sendPanelMessage } = usePanelCommunication();
+
   const [inputMessage, setInputMessage] = React.useState('');
+
+  // Extract fields from assistant messages
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+
+      // If it's an assistant message, analyze it for context and field values
+      if (lastMessage.role === 'assistant') {
+        const content = lastMessage.content.toLowerCase();
+
+        // Notify book panel of context update
+        notifyChatContextUpdate(lastMessage.content);
+
+        // Check for IDEA framework concepts and extract field values
+        const fieldPatterns = {
+          brand_purpose: /brand purpose[:\s]+([^.]+)/i,
+          target_audience: /target audience[:\s]+([^.]+)/i,
+          core_values: /core values[:\s]+([^.]+)/i,
+          brand_promise: /brand promise[:\s]+([^.]+)/i,
+          competitive_advantage: /competitive advantage[:\s]+([^.]+)/i,
+        };
+
+        const extractedFields: Record<string, string> = {};
+
+        Object.entries(fieldPatterns).forEach(([fieldId, pattern]) => {
+          const match = lastMessage.content.match(pattern);
+          if (match && match[1]) {
+            extractedFields[fieldId] = match[1].trim();
+          }
+        });
+
+        // If we extracted any fields, notify the fields panel
+        if (Object.keys(extractedFields).length > 0) {
+          sendPanelMessage({
+            type: 'fields_populated',
+            sourcePanel: 'center',
+            targetPanel: 'left',
+            payload: {
+              fields: extractedFields,
+            },
+          });
+        }
+      }
+    }
+  }, [messages, notifyChatContextUpdate, sendPanelMessage]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isSending) return;
 
     const messageToSend = inputMessage;
     setInputMessage('');
+
+    // Notify book panel about the user's message context
+    notifyChatContextUpdate(messageToSend);
+
     await sendMessage(messageToSend);
   };
 
@@ -55,8 +110,10 @@ export function V2ChatPanel() {
           onCreateNew={createNewChat}
           onRenameSession={renameSession}
           onDeleteSession={deleteSession}
+          onRegenerateTitle={regenerateTitle}
           isLoading={isLoadingSessions}
           isCreating={isCreating}
+          isRegeneratingTitle={isRegeneratingTitle}
         />
       </div>
 

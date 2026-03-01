@@ -9,6 +9,10 @@ export type PanelMessageType =
   | 'panel_focus'
   | 'panel_blur'
   | 'scroll_to_field'
+  | 'chat_context_update'
+  | 'fields_populated'
+  | 'book_section_request'
+  | 'topic_selected'
   | 'custom';
 
 /**
@@ -16,12 +20,19 @@ export type PanelMessageType =
  */
 export interface PanelMessage {
   type: PanelMessageType;
-  sourcePanel: 'left' | 'center' | 'right';
+  source?: string;
+  sourcePanel?: 'left' | 'center' | 'right';
   targetPanel?: 'left' | 'center' | 'right' | 'all';
   payload?: {
     fieldId?: string;
     fieldValue?: unknown;
+    value?: string;
+    label?: string;
+    category?: string;
     section?: string;
+    topic?: string;
+    content?: string;
+    fields?: Record<string, unknown>;
     metadata?: Record<string, unknown>;
   };
   timestamp: number;
@@ -64,6 +75,7 @@ interface PanelCommunicationContextType {
   notifyPanelFocus: (panel: 'left' | 'center' | 'right') => void;
   notifyPanelBlur: (panel: 'left' | 'center' | 'right') => void;
   scrollToField: (fieldId: string, targetPanel: 'left' | 'center' | 'right') => void;
+  notifyChatContextUpdate: (content: string, topic?: string) => void;
 }
 
 const PanelCommunicationContext = createContext<PanelCommunicationContextType | undefined>(undefined);
@@ -202,6 +214,21 @@ export const PanelCommunicationProvider: React.FC<{ children: ReactNode }> = ({ 
     });
   }, [sendMessage]);
 
+  /**
+   * Notify that chat context has changed (for book panel updates)
+   */
+  const notifyChatContextUpdate = useCallback((content: string, topic?: string): void => {
+    sendMessage({
+      type: 'chat_context_update',
+      sourcePanel: 'center',
+      targetPanel: 'right',
+      payload: {
+        content,
+        topic,
+      },
+    });
+  }, [sendMessage]);
+
   const value: PanelCommunicationContextType = {
     selectedField,
     lastMessage,
@@ -213,6 +240,7 @@ export const PanelCommunicationProvider: React.FC<{ children: ReactNode }> = ({ 
     notifyPanelFocus,
     notifyPanelBlur,
     scrollToField,
+    notifyChatContextUpdate,
   };
 
   return (
