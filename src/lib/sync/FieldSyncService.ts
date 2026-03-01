@@ -14,6 +14,11 @@ import type {
 
 /**
  * Configuration for field sync service
+ *
+ * @property {string} dbName - IndexedDB database name
+ * @property {number} dbVersion - Database schema version for migrations
+ * @property {number} [syncInterval] - Interval in milliseconds for periodic sync (default: 30000)
+ * @property {'local-first' | 'remote-first' | 'manual'} [conflictResolution] - Strategy for handling sync conflicts (default: 'local-first')
  */
 export interface FieldSyncConfig {
   dbName: string;
@@ -24,18 +29,52 @@ export interface FieldSyncConfig {
 
 /**
  * Callback for connection state changes
+ *
+ * @callback ConnectionCallback
+ * @param {boolean} online - True if connection is online, false if offline
  */
 type ConnectionCallback = (online: boolean) => void;
 
 /**
  * Callback for sync status changes
+ *
+ * @callback SyncStatusCallback
+ * @param {SyncStatus} status - Current sync status ('synced' | 'syncing' | 'offline' | 'error')
  */
 type SyncStatusCallback = (status: SyncStatus) => void;
 
 /**
  * Field Sync Service
- * Handles repository initialization, sync service management,
- * and online/offline state tracking
+ *
+ * Singleton service that manages field synchronization between local IndexedDB storage
+ * and remote Supabase backend. Provides automatic online/offline detection and
+ * handles background sync operations.
+ *
+ * @class
+ * @example
+ * // Initialize the service
+ * const syncService = FieldSyncService.getInstance({
+ *   dbName: 'idea-brand-coach',
+ *   dbVersion: 1,
+ *   syncInterval: 30000,
+ *   conflictResolution: 'local-first'
+ * });
+ *
+ * @example
+ * // Save and sync a field
+ * await syncService.saveField(
+ *   userId,
+ *   'brand-name',
+ *   'My Brand',
+ *   'brand-basics',
+ *   (status) => console.log('Sync status:', status)
+ * );
+ *
+ * @example
+ * // Listen for connection changes
+ * const unsubscribe = syncService.onConnectionChange((online) => {
+ *   console.log('Connection status:', online ? 'online' : 'offline');
+ * });
  */
 export class FieldSyncService {
   private static instance: FieldSyncService | null = null;
@@ -56,6 +95,10 @@ export class FieldSyncService {
 
   /**
    * Get or create the singleton instance
+   *
+   * @param {FieldSyncConfig} [config] - Configuration (required on first call)
+   * @returns {FieldSyncService} The singleton instance
+   * @throws {Error} If config is not provided on first initialization
    */
   public static getInstance(config?: FieldSyncConfig): FieldSyncService {
     if (!FieldSyncService.instance) {
@@ -79,6 +122,12 @@ export class FieldSyncService {
 
   /**
    * Initialize repository and sync service
+   *
+   * Creates and initializes the IndexedDB repository and Supabase sync service.
+   * Safe to call multiple times - will only initialize once.
+   *
+   * @returns {Promise<void>}
+   * @throws {Error} If initialization fails
    */
   public async initialize(): Promise<void> {
     if (this.isInitialized) {
@@ -114,6 +163,9 @@ export class FieldSyncService {
 
   /**
    * Get repository instance (ensures initialization)
+   *
+   * @returns {Promise<KnowledgeRepository>} The initialized repository
+   * @throws {Error} If repository initialization fails
    */
   public async getRepository(): Promise<KnowledgeRepository> {
     if (!this.repository) {
@@ -127,6 +179,9 @@ export class FieldSyncService {
 
   /**
    * Get sync service instance (ensures initialization)
+   *
+   * @returns {Promise<SupabaseSyncService>} The initialized sync service
+   * @throws {Error} If sync service initialization fails
    */
   public async getSyncService(): Promise<SupabaseSyncService> {
     if (!this.syncService) {
@@ -140,6 +195,8 @@ export class FieldSyncService {
 
   /**
    * Check if currently online
+   *
+   * @returns {boolean} True if online, false if offline
    */
   public isOnline(): boolean {
     return this.onlineStatus;
@@ -178,7 +235,16 @@ export class FieldSyncService {
 
   /**
    * Register callback for connection state changes
-   * Returns unsubscribe function
+   *
+   * @param {ConnectionCallback} callback - Function to call when connection state changes
+   * @returns {() => void} Unsubscribe function to remove the listener
+   * @example
+   * const unsubscribe = syncService.onConnectionChange((online) => {
+   *   if (online) {
+   *     console.log('Back online - syncing...');
+   *   }
+   * });
+   * // Later: unsubscribe();
    */
   public onConnectionChange(callback: ConnectionCallback): () => void {
     this.connectionListeners.add(callback);
@@ -204,6 +270,26 @@ export class FieldSyncService {
 
   /**
    * Save a field value locally and queue for sync
+   *
+   * Saves immediately to IndexedDB and queues background sync to Supabase.
+   * Does not throw on sync errors - local save always succeeds.
+   *
+   * @param {string} userId - User ID who owns the field
+   * @param {string} fieldIdentifier - Unique identifier for the field
+   * @param {string} content - Serialized field content to save
+   * @param {KnowledgeCategory} category - Category for organizing fields
+   * @param {SyncStatusCallback} [onStatusChange] - Optional callback for sync status updates
+   * @returns {Promise<void>}
+   * @example
+   * await syncService.saveField(
+   *   userId,
+   *   'brand-name',
+   *   'Acme Corp',
+   *   'brand-basics',
+   *   (status) => {
+   *     console.log('Sync status:', status);
+   *   }
+   * );
    */
   public async saveField(
     userId: string,
@@ -238,7 +324,11 @@ export class FieldSyncService {
   }
 
   /**
-   * Load a field value from repository
+   * Load a field value from local repository
+   *
+   * @param {string} userId - User ID who owns the field
+   * @param {string} fieldIdentifier - Unique identifier for the field
+   * @returns {Promise<string | null>} The field content, or null if not found
    */
   public async loadField(
     userId: string,
@@ -250,6 +340,11 @@ export class FieldSyncService {
 
   /**
    * Fetch field from remote (Supabase)
+   *
+   * @param {string} userId - User ID who owns the field
+   * @param {string} fieldIdentifier - Unique identifier for the field
+   * @returns {Promise<string | null>} The field content from remote, or null if not found
+   * @throws {Error} If remote fetch fails
    */
   public async fetchFromRemote(
     userId: string,
@@ -261,6 +356,12 @@ export class FieldSyncService {
 
   /**
    * Sync all fields for a user
+   *
+   * Performs full bidirectional sync of all fields between local and remote.
+   *
+   * @param {string} userId - User ID whose fields to sync
+   * @returns {Promise<void>}
+   * @throws {Error} If sync fails
    */
   public async syncAllFields(userId: string): Promise<void> {
     const sync = await this.getSyncService();
@@ -269,7 +370,13 @@ export class FieldSyncService {
 
   /**
    * Set up periodic sync for a user
-   * Returns cleanup function to stop the interval
+   *
+   * @param {string} userId - User ID whose fields to sync
+   * @param {number} [interval=30000] - Interval in milliseconds (default: 30 seconds)
+   * @returns {() => void} Cleanup function to stop the periodic sync
+   * @example
+   * const stopSync = syncService.setupPeriodicSync(userId, 60000); // Every 60 seconds
+   * // Later: stopSync();
    */
   public setupPeriodicSync(
     userId: string,
@@ -311,6 +418,9 @@ export class FieldSyncService {
 
 /**
  * Default configuration for field sync
+ *
+ * @constant
+ * @type {FieldSyncConfig}
  */
 export const DEFAULT_FIELD_SYNC_CONFIG: FieldSyncConfig = {
   dbName: 'idea-brand-coach',
@@ -321,6 +431,12 @@ export const DEFAULT_FIELD_SYNC_CONFIG: FieldSyncConfig = {
 
 /**
  * Helper function to get or create field sync service
+ *
+ * @param {FieldSyncConfig} [config] - Optional configuration (uses DEFAULT_FIELD_SYNC_CONFIG if not provided)
+ * @returns {FieldSyncService} The singleton FieldSyncService instance
+ * @example
+ * const syncService = getFieldSyncService();
+ * await syncService.initialize();
  */
 export function getFieldSyncService(config?: FieldSyncConfig): FieldSyncService {
   return FieldSyncService.getInstance(config || DEFAULT_FIELD_SYNC_CONFIG);
