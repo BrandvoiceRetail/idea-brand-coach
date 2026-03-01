@@ -61,6 +61,27 @@ const LOCAL_FEATURE_FLAGS: Record<string, FeatureFlag> = {
 };
 
 /**
+ * Subscribers for flag updates (for reactive UI)
+ */
+type FlagSubscriber = () => void;
+const flagSubscribers = new Set<FlagSubscriber>();
+
+/**
+ * Subscribe to flag updates
+ */
+function subscribeFlagUpdates(callback: FlagSubscriber): () => void {
+  flagSubscribers.add(callback);
+  return () => flagSubscribers.delete(callback);
+}
+
+/**
+ * Notify all subscribers of flag updates
+ */
+function notifyFlagUpdates(): void {
+  flagSubscribers.forEach(callback => callback());
+}
+
+/**
  * Get or create a session ID for anonymous users
  * Persists in sessionStorage for the duration of the browser session
  */
@@ -216,11 +237,66 @@ export function useFeatureFlagData(flagName: string): FeatureFlag | null {
 
 /**
  * Hook to list all feature flags (for admin UI)
+ * Re-renders when flags are updated
  *
  * @returns Array of all feature flags
  */
 export function useAllFeatureFlags(): FeatureFlag[] {
+  const [, setUpdateTrigger] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = subscribeFlagUpdates(() => {
+      setUpdateTrigger(prev => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
+
   return Object.values(LOCAL_FEATURE_FLAGS);
+}
+
+/**
+ * Update a feature flag's enabled state
+ *
+ * @param flagName - Feature flag name
+ * @param enabled - New enabled state
+ */
+export function updateFeatureFlagEnabled(flagName: string, enabled: boolean): void {
+  const flag = LOCAL_FEATURE_FLAGS[flagName];
+  if (!flag) {
+    throw new Error(`Feature flag "${flagName}" not found`);
+  }
+
+  flag.enabled = enabled;
+  notifyFlagUpdates();
+}
+
+/**
+ * Update a feature flag's percentage rollout
+ *
+ * @param flagName - Feature flag name
+ * @param percentageType - Type of percentage ('percentage' for user-based, 'sessionPercentage' for session-based)
+ * @param value - Percentage value (0-100)
+ */
+export function updateFeatureFlagPercentage(
+  flagName: string,
+  percentageType: 'percentage' | 'sessionPercentage',
+  value: number
+): void {
+  const flag = LOCAL_FEATURE_FLAGS[flagName];
+  if (!flag) {
+    throw new Error(`Feature flag "${flagName}" not found`);
+  }
+
+  // Ensure targeting_rules exists
+  if (!flag.targeting_rules) {
+    flag.targeting_rules = {};
+  }
+
+  // Clamp value between 0 and 100
+  const clampedValue = Math.max(0, Math.min(100, value));
+  flag.targeting_rules[percentageType] = clampedValue;
+
+  notifyFlagUpdates();
 }
 
 /**

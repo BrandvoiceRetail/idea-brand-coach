@@ -2,8 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import { FEATURES, getCurrentPhase, type DeploymentPhase, type Feature } from "@/config/features";
-import { useAllFeatureFlags } from "@/hooks/useFeatureFlag";
+import { useAllFeatureFlags, updateFeatureFlagEnabled, updateFeatureFlagPercentage } from "@/hooks/useFeatureFlag";
 import { CheckCircle, XCircle, Clock, Settings } from "lucide-react";
 
 /**
@@ -289,62 +292,110 @@ export default function FeatureFlagAdmin() {
                   No dynamic feature flags configured
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Flag Name</TableHead>
-                      <TableHead>Targeting Rules</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dynamicFlags.map((flag) => (
-                      <TableRow key={flag.name}>
-                        <TableCell>
+                <div className="space-y-6">
+                  {dynamicFlags.map((flag) => (
+                    <div key={flag.name} className="border rounded-lg p-6 space-y-4">
+                      {/* Flag Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <code className="text-sm font-mono font-semibold">{flag.name}</code>
                           {flag.enabled ? (
-                            <Badge variant="default" className="gap-1">
+                            <Badge variant="default" className="gap-1 ml-3">
                               <CheckCircle className="w-3 h-3" />
                               Enabled
                             </Badge>
                           ) : (
-                            <Badge variant="secondary" className="gap-1">
+                            <Badge variant="secondary" className="gap-1 ml-3">
                               <XCircle className="w-3 h-3" />
                               Disabled
                             </Badge>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          <code className="text-sm font-mono">{flag.name}</code>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            {flag.targeting_rules?.userIds && flag.targeting_rules.userIds.length > 0 && (
-                              <div className="text-sm">
-                                <span className="font-medium">User IDs:</span>{' '}
-                                {flag.targeting_rules.userIds.join(', ')}
-                              </div>
-                            )}
-                            {flag.targeting_rules?.percentage !== undefined && (
-                              <div className="text-sm">
-                                <span className="font-medium">User Rollout:</span>{' '}
-                                {flag.targeting_rules.percentage}%
-                              </div>
-                            )}
-                            {flag.targeting_rules?.sessionPercentage !== undefined && (
-                              <div className="text-sm">
-                                <span className="font-medium">Session Rollout:</span>{' '}
-                                {flag.targeting_rules.sessionPercentage}%
-                              </div>
-                            )}
-                            {!flag.targeting_rules || Object.keys(flag.targeting_rules).length === 0 ? (
-                              <span className="text-sm text-muted-foreground">No targeting rules</span>
-                            ) : null}
+                        </div>
+
+                        {/* Enable/Disable Toggle */}
+                        <div className="flex items-center gap-3">
+                          <Label htmlFor={`${flag.name}-enabled`} className="text-sm font-medium">
+                            Enabled
+                          </Label>
+                          <Switch
+                            id={`${flag.name}-enabled`}
+                            checked={flag.enabled}
+                            onCheckedChange={(checked) => updateFeatureFlagEnabled(flag.name, checked)}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Targeting Rules */}
+                      <div className="space-y-4 pt-4 border-t">
+                        <h4 className="text-sm font-semibold">Targeting Rules</h4>
+
+                        {/* User IDs */}
+                        {flag.targeting_rules?.userIds && flag.targeting_rules.userIds.length > 0 && (
+                          <div className="text-sm">
+                            <span className="font-medium">User IDs:</span>{' '}
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {flag.targeting_rules.userIds.join(', ')}
+                            </code>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        )}
+
+                        {/* User Percentage Rollout */}
+                        {flag.targeting_rules?.percentage !== undefined && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor={`${flag.name}-user-percentage`} className="text-sm">
+                                User Rollout Percentage
+                              </Label>
+                              <span className="text-sm font-medium">
+                                {flag.targeting_rules.percentage}%
+                              </span>
+                            </div>
+                            <Slider
+                              id={`${flag.name}-user-percentage`}
+                              value={[flag.targeting_rules.percentage]}
+                              onValueChange={(values) =>
+                                updateFeatureFlagPercentage(flag.name, 'percentage', values[0])
+                              }
+                              min={0}
+                              max={100}
+                              step={1}
+                              className="w-full"
+                            />
+                          </div>
+                        )}
+
+                        {/* Session Percentage Rollout */}
+                        {flag.targeting_rules?.sessionPercentage !== undefined && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor={`${flag.name}-session-percentage`} className="text-sm">
+                                Session Rollout Percentage
+                              </Label>
+                              <span className="text-sm font-medium">
+                                {flag.targeting_rules.sessionPercentage}%
+                              </span>
+                            </div>
+                            <Slider
+                              id={`${flag.name}-session-percentage`}
+                              value={[flag.targeting_rules.sessionPercentage]}
+                              onValueChange={(values) =>
+                                updateFeatureFlagPercentage(flag.name, 'sessionPercentage', values[0])
+                              }
+                              min={0}
+                              max={100}
+                              step={1}
+                              className="w-full"
+                            />
+                          </div>
+                        )}
+
+                        {!flag.targeting_rules || Object.keys(flag.targeting_rules).length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No targeting rules configured</p>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>
