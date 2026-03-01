@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAvatarTabs } from '@/hooks/useAvatarTabs';
+import type { Avatar } from '@/types/avatar';
 
 export interface BrandData {
   // IDEA Strategic Brand Framework™ Data
@@ -152,6 +154,14 @@ interface BrandContextType {
   getRecommendedNextStep: () => string;
   syncWithDatabase: (payload: SyncPayload) => Promise<void>;
   isInitializing: boolean;
+  // Multi-avatar support
+  currentAvatarId: string | null;
+  avatarsList: Avatar[];
+  switchAvatar: (id: string) => void;
+  createAvatar: (data: { name: string; metadata?: any }) => Promise<Avatar>;
+  updateAvatar: (id: string, update: { name?: string; completion_percentage?: number; last_accessed_at?: string; metadata?: any }) => Promise<void>;
+  deleteAvatar: (id: string) => Promise<void>;
+  isLoadingAvatars: boolean;
 }
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
@@ -160,6 +170,17 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [brandData, setBrandData] = useState<BrandData>(initialBrandData);
   const [isInitializing, setIsInitializing] = useState(true);
   const { user, loading: authLoading } = useAuth();
+
+  // Multi-avatar support
+  const {
+    avatars,
+    activeAvatarId,
+    isLoading: isLoadingAvatars,
+    createAvatar,
+    updateAvatar,
+    deleteAvatar,
+    switchAvatar,
+  } = useAvatarTabs();
 
   // Load diagnostic status from database on mount
   useEffect(() => {
@@ -288,6 +309,14 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       getRecommendedNextStep,
       syncWithDatabase,
       isInitializing,
+      // Multi-avatar support
+      currentAvatarId: activeAvatarId,
+      avatarsList: avatars,
+      switchAvatar,
+      createAvatar,
+      updateAvatar,
+      deleteAvatar,
+      isLoadingAvatars,
     }}>
       {children}
     </BrandContext.Provider>
