@@ -74,38 +74,6 @@ export const PanelCommunicationProvider: React.FC<{ children: ReactNode }> = ({ 
   const [listeners, setListeners] = useState<Set<MessageListener>>(new Set());
 
   /**
-   * Select a field and notify all panels
-   */
-  const selectField = useCallback((fieldId: string, section: string, panel: 'left' | 'center' | 'right'): void => {
-    const selection: FieldSelection = {
-      fieldId,
-      section,
-      panel,
-      timestamp: Date.now(),
-    };
-
-    setSelectedField(selection);
-
-    // Broadcast field selection message
-    sendMessage({
-      type: 'field_selected',
-      sourcePanel: panel,
-      targetPanel: 'all',
-      payload: {
-        fieldId,
-        section,
-      },
-    });
-  }, [sendMessage]);
-
-  /**
-   * Clear current field selection
-   */
-  const clearFieldSelection = useCallback((): void => {
-    setSelectedField(null);
-  }, []);
-
-  /**
    * Send a message to other panels
    */
   const sendMessage = useCallback((message: Omit<PanelMessage, 'timestamp'>): void => {
@@ -145,6 +113,38 @@ export const PanelCommunicationProvider: React.FC<{ children: ReactNode }> = ({ 
         return next;
       });
     };
+  }, []);
+
+  /**
+   * Select a field and notify all panels
+   */
+  const selectField = useCallback((fieldId: string, section: string, panel: 'left' | 'center' | 'right'): void => {
+    const selection: FieldSelection = {
+      fieldId,
+      section,
+      panel,
+      timestamp: Date.now(),
+    };
+
+    setSelectedField(selection);
+
+    // Broadcast field selection message
+    sendMessage({
+      type: 'field_selected',
+      sourcePanel: panel,
+      targetPanel: 'all',
+      payload: {
+        fieldId,
+        section,
+      },
+    });
+  }, [sendMessage]);
+
+  /**
+   * Clear current field selection
+   */
+  const clearFieldSelection = useCallback((): void => {
+    setSelectedField(null);
   }, []);
 
   /**
