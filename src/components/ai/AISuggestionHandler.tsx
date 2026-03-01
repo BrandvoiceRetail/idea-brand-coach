@@ -3,27 +3,66 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AISuggestionPreview } from '@/components/AISuggestionPreview';
 
+/**
+ * Props for the AISuggestionHandler component
+ */
 interface AISuggestionHandlerProps {
+  /** Type of field being generated (e.g., "tagline", "missionStatement") */
   fieldType: string;
+  /** Current value of the field before AI generation */
   currentValue: string;
+  /** IDEA framework data used to contextualize AI suggestions */
   ideaFramework: {
+    /** Market insight from the Identify phase */
     intent?: string;
+    /** Consumer insight from the Identify phase */
     motivation?: string;
+    /** Emotional connection triggers from the Discover phase */
     triggers?: string;
+    /** Shopper/customer needs from the Discover phase */
     shopper?: string;
+    /** Target audience demographics */
     demographics?: string;
   };
+  /** Avatar/persona data for the brand */
   avatar: any;
+  /** Brand canvas data including positioning and values */
   brandCanvas: any;
+  /** Callback function when a suggestion is accepted */
   onSuggestion: (suggestion: string) => void;
 }
 
+/**
+ * Ref interface for imperative handle methods
+ */
 export interface AISuggestionHandlerRef {
+  /** Triggers AI content generation */
   generate: () => Promise<void>;
+  /** Indicates if content is currently being generated */
   isLoading: boolean;
+  /** Indicates if there's a suggestion waiting for user review */
   hasPendingSuggestion: boolean;
 }
 
+/**
+ * AISuggestionHandler component for managing AI-generated content suggestions
+ *
+ * This component handles the lifecycle of AI content generation including:
+ * - Calling the brand-ai-assistant Supabase function
+ * - Displaying suggestions for user review
+ * - Handling accept/reject actions
+ * - Managing loading and error states
+ *
+ * Exposes imperative methods via ref for parent control.
+ *
+ * @param fieldType - Type of field being generated
+ * @param currentValue - Current field value
+ * @param ideaFramework - IDEA framework context data
+ * @param avatar - Brand avatar/persona data
+ * @param brandCanvas - Brand canvas positioning data
+ * @param onSuggestion - Callback when suggestion is accepted
+ * @param ref - Forwarded ref for imperative handle
+ */
 export const AISuggestionHandler = forwardRef<AISuggestionHandlerRef, AISuggestionHandlerProps>(
   ({ fieldType, currentValue, ideaFramework, avatar, brandCanvas, onSuggestion }, ref) => {
     const [isLoading, setIsLoading] = useState(false);
