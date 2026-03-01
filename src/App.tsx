@@ -44,6 +44,7 @@ import { StartHere } from "./pages/StartHere";
 import PricingPaywall from "./pages/PricingPaywall";
 import { BrandCoachV2 } from "./pages/v2/BrandCoachV2";
 import FeatureGate from "@/components/FeatureGate";
+import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -211,9 +212,9 @@ const App = () => {
                   </Layout>
                 } />
 
-                <Route path="/v2" element={
+                <Route path={ROUTES.FEATURE_FLAG_ADMIN} element={
                   <Layout>
-                    <V2Interface />
+                    <FeatureFlagAdmin />
                   </Layout>
                 } />
 

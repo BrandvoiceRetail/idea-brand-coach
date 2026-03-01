@@ -20,6 +20,9 @@ export const ROUTES = {
 
   /** Brand Copy Generator */
   COPY_GENERATOR: '/copy-generator',
+
+  /** Feature Flag Admin */
+  FEATURE_FLAG_ADMIN: '/admin/feature-flags',
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
