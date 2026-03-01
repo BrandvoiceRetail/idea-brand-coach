@@ -30,8 +30,7 @@ interface FeatureFlag {
 
 // Local feature flags configuration
 const LOCAL_FEATURE_FLAGS: Record<string, FeatureFlag> = {
-  // Add feature flags here as needed
-  // 'brand_analytics': { name: 'brand_analytics', enabled: false },
+  'v2-multi-avatar': { name: 'v2-multi-avatar', enabled: false },
 };
 
 /**
