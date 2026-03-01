@@ -28,8 +28,21 @@ export function TwoPanelTemplate({
   footer,
 }: TwoPanelTemplateProps) {
   return (
-    <div>
-      {/* Component implementation to be added in subsequent subtasks */}
+    <div className="flex flex-col h-screen">
+      {header && <div className="flex-shrink-0">{header}</div>}
+
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full grid grid-cols-1 md:grid-cols-2 gap-0">
+          <div className="overflow-auto">
+            {leftPanel}
+          </div>
+          <div className="overflow-auto">
+            {rightPanel}
+          </div>
+        </div>
+      </div>
+
+      {footer && <div className="flex-shrink-0">{footer}</div>}
     </div>
   );
 }
