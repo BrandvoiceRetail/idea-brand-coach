@@ -33,7 +33,7 @@ export function TwoPanelTemplate({
 
       <div className="flex-1 overflow-hidden">
         <div className="h-full grid grid-cols-1 md:grid-cols-2 gap-0">
-          <div className="overflow-auto">
+          <div className="flex flex-col h-full overflow-auto">
             {leftPanel}
           </div>
           <div className="overflow-auto">
