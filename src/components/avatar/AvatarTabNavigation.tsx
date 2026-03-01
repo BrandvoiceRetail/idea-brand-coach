@@ -12,6 +12,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useBrand } from '@/contexts/BrandContext';
 import { AvatarTabItem } from './AvatarTabItem';
+import { AvatarContextMenu } from './AvatarContextMenu';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -140,12 +141,13 @@ export function AvatarTabNavigation({
               </div>
             ) : (
               avatarsList.map((avatar) => (
-                <AvatarTabItem
-                  key={avatar.id}
-                  avatar={avatar}
-                  isActive={avatar.id === currentAvatarId}
-                  onClick={() => handleSwitchAvatar(avatar.id)}
-                />
+                <AvatarContextMenu key={avatar.id} avatar={avatar}>
+                  <AvatarTabItem
+                    avatar={avatar}
+                    isActive={avatar.id === currentAvatarId}
+                    onClick={() => handleSwitchAvatar(avatar.id)}
+                  />
+                </AvatarContextMenu>
               ))
             )}
           </div>
