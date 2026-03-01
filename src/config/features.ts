@@ -316,6 +316,21 @@ export const FEATURES: Record<string, Feature> = {
     requiresAuth: true,
   },
 
+  BRAND_COACH_V2: {
+    id: 'BRAND_COACH_V2',
+    name: 'Brand Coach V2',
+    shortDescription: 'Enhanced two-panel coaching interface',
+    fullDescription: 'Experience the next generation of brand coaching with an enhanced two-panel responsive interface. Improved layout and user experience for more effective brand strategy sessions.',
+    phase: 'P1',
+    route: '/coach-v2',
+    icon: Brain,
+    statusMessage: 'Coming Soon',
+    estimatedRelease: 'Q1 2026',
+    showInNav: true,
+    category: 'consultant',
+    requiresAuth: true,
+  },
+
   // ========================================
   // P2 Features - Advanced Analytics
   // ========================================
