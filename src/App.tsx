@@ -42,6 +42,7 @@ import NotFound from "./pages/NotFound";
 import { TestOfflineSync } from "./pages/TestOfflineSync";
 import { StartHere } from "./pages/StartHere";
 import PricingPaywall from "./pages/PricingPaywall";
+import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -200,6 +201,12 @@ const App = () => {
                 <Route path="/test/offline-sync" element={
                   <Layout>
                     <TestOfflineSync />
+                  </Layout>
+                } />
+
+                <Route path="/admin/feature-flags" element={
+                  <Layout>
+                    <FeatureFlagAdmin />
                   </Layout>
                 } />
 
