@@ -42,7 +42,8 @@ import NotFound from "./pages/NotFound";
 import { TestOfflineSync } from "./pages/TestOfflineSync";
 import { StartHere } from "./pages/StartHere";
 import PricingPaywall from "./pages/PricingPaywall";
-import { V2Interface } from "./pages/V2Interface";
+import { BrandCoachV2 } from "./pages/v2/BrandCoachV2";
+import FeatureGate from "@/components/FeatureGate";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -133,6 +134,12 @@ const App = () => {
                 } />
 
                 <Route path="/brand-coach" element={<Navigate to="/idea/consultant" replace />} />
+
+                <Route path="/v2/coach" element={
+                  <FeatureGate feature="BRAND_COACH_V2">
+                    <BrandCoachV2 />
+                  </FeatureGate>
+                } />
 
                 <Route path="/conversations" element={
                   <Layout>
