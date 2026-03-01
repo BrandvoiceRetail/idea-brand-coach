@@ -3,13 +3,13 @@
   "spec": "019-multi-avatar-database-schema",
   "state": "building",
   "subtasks": {
-    "completed": 1,
+    "completed": 3,
     "total": 7,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Avatars Table",
+    "current": "Link Chat Sessions to Avatars",
     "id": null,
     "total": 1
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
+    "number": 5,
     "started_at": "2026-02-28T22:48:31.476759"
   },
-  "last_update": "2026-02-28T22:54:14.007798"
+  "last_update": "2026-02-28T22:57:43.402947"
 }
