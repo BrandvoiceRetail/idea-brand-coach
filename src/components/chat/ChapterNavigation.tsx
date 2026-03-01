@@ -4,10 +4,25 @@
  * Allows users to skip/revisit any chapter in the book-guided workflow
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   BookOpen,
   CheckCircle2,
@@ -126,17 +141,40 @@ export function ChapterNavigation({
   const chapters = DEFAULT_BOOK_STRUCTURE.chapters;
   const groupedChapters = groupChaptersByCategory(chapters);
 
+  // State for chapter summary dialog
+  const [selectedChapterForSummary, setSelectedChapterForSummary] = useState<Chapter | null>(null);
+  const [isSummaryDialogOpen, setIsSummaryDialogOpen] = useState(false);
+
   // Category order for display
   const categoryOrder = ['introduction', 'insight', 'distinctive', 'empathetic', 'authentic', 'integration'];
 
   const handleChapterClick = (chapterId: ChapterId): void => {
-    onSelectChapter(chapterId);
+    // Find the chapter data
+    const chapter = chapters.find(ch => ch.id === chapterId);
+    if (chapter) {
+      // Show summary dialog before proceeding
+      setSelectedChapterForSummary(chapter);
+      setIsSummaryDialogOpen(true);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, chapterId: ChapterId): void => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      onSelectChapter(chapterId);
+      handleChapterClick(chapterId);
+    }
+  };
+
+  const handleDismissSummary = (): void => {
+    setIsSummaryDialogOpen(false);
+    setSelectedChapterForSummary(null);
+  };
+
+  const handleProceedToChapter = (): void => {
+    if (selectedChapterForSummary) {
+      onSelectChapter(selectedChapterForSummary.id);
+      setIsSummaryDialogOpen(false);
+      setSelectedChapterForSummary(null);
     }
   };
 
@@ -274,6 +312,93 @@ export function ChapterNavigation({
           </span>
         </div>
       </div>
+
+      {/* Chapter Summary Dialog */}
+      <Dialog open={isSummaryDialogOpen} onOpenChange={setIsSummaryDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          {selectedChapterForSummary && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-baseline gap-2">
+                  <span className={cn(
+                    'text-sm font-medium',
+                    getCategoryColor(selectedChapterForSummary.category)
+                  )}>
+                    Chapter {selectedChapterForSummary.number}
+                  </span>
+                  <span className="text-lg">{selectedChapterForSummary.title}</span>
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedChapterForSummary.description}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
+                {/* Chapter metadata */}
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4" />
+                    <span>Estimated time: {formatTime(selectedChapterForSummary.estimated_time)}</span>
+                  </div>
+                  <span>•</span>
+                  <span>{selectedChapterForSummary.key_questions.length} key questions</span>
+                </div>
+
+                <Separator />
+
+                {/* Key questions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Key Questions</CardTitle>
+                    <CardDescription>
+                      You'll explore these questions in this chapter
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {selectedChapterForSummary.key_questions.map((question, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <span className="text-muted-foreground mt-1">•</span>
+                          <span>{question}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Learning objectives */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Learning Objectives</CardTitle>
+                    <CardDescription>
+                      What you'll learn in this chapter
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {selectedChapterForSummary.learning_objectives.map((objective, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <span className="text-muted-foreground mt-1">•</span>
+                          <span>{objective}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={handleDismissSummary}>
+                  Cancel
+                </Button>
+                <Button onClick={handleProceedToChapter}>
+                  Start Chapter
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
