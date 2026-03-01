@@ -147,28 +147,31 @@ const KEY_CONCEPTS: BookExcerpt[] = [
 
 export function IdeaBookPanel() {
   const { useSystemKB: systemKBEnabled } = useSystemKB();
-  const { messages } = usePanelCommunication();
+  const { lastMessage, subscribeToMessages } = usePanelCommunication();
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
 
   // Listen for messages from other panels
   useEffect(() => {
-    const latestMessage = messages[messages.length - 1];
-    if (latestMessage?.type === 'topic-selected') {
-      // When a topic is selected in chat, show relevant book content
-      const topic = latestMessage.payload.topic?.toLowerCase();
-      if (topic?.includes('insight') || topic?.includes('identify')) {
-        setActiveTab('identify');
-      } else if (topic?.includes('distinctive') || topic?.includes('discover')) {
-        setActiveTab('discover');
-      } else if (topic?.includes('empathy') || topic?.includes('execute')) {
-        setActiveTab('execute');
-      } else if (topic?.includes('authentic') || topic?.includes('analyze')) {
-        setActiveTab('analyze');
+    const unsubscribe = subscribeToMessages((message) => {
+      if (message?.type === 'topic-selected') {
+        // When a topic is selected in chat, show relevant book content
+        const topic = message.payload.topic?.toLowerCase();
+        if (topic?.includes('insight') || topic?.includes('identify')) {
+          setActiveTab('identify');
+        } else if (topic?.includes('distinctive') || topic?.includes('discover')) {
+          setActiveTab('discover');
+        } else if (topic?.includes('empathy') || topic?.includes('execute')) {
+          setActiveTab('execute');
+        } else if (topic?.includes('authentic') || topic?.includes('analyze')) {
+          setActiveTab('analyze');
+        }
       }
-    }
-  }, [messages]);
+    });
+
+    return unsubscribe;
+  }, [subscribeToMessages]);
 
   // Filter excerpts based on search query
   const filteredExcerpts = useMemo(() => {
