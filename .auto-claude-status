@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "008-interactive-onboarding-tour",
+  "spec": "024-avatar-tab-navigation",
   "state": "building",
   "subtasks": {
-    "completed": 11,
-    "total": 14,
+    "completed": 1,
+    "total": 17,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Testing and Verification",
+    "current": "Type Definitions & Utilities",
     "id": null,
-    "total": 3
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 12,
-    "started_at": "2025-12-27T08:48:10.905587"
+    "number": 3,
+    "started_at": "2026-03-01T07:55:42.028906"
   },
-  "last_update": "2025-12-27T09:14:34.818239"
+  "last_update": "2026-03-01T08:03:27.772876"
 }
