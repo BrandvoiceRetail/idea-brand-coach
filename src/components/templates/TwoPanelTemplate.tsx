@@ -14,7 +14,19 @@ import React from 'react';
  * - Maximum reuse of shadcn-ui components
  */
 
-export function TwoPanelTemplate() {
+interface TwoPanelTemplateProps {
+  leftPanel: React.ReactNode;
+  rightPanel: React.ReactNode;
+  header?: React.ReactNode;
+  footer?: React.ReactNode;
+}
+
+export function TwoPanelTemplate({
+  leftPanel,
+  rightPanel,
+  header,
+  footer,
+}: TwoPanelTemplateProps) {
   return (
     <div>
       {/* Component implementation to be added in subsequent subtasks */}
