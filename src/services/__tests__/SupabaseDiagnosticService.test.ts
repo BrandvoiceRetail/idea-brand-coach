@@ -178,7 +178,7 @@ describe('SupabaseDiagnosticService', () => {
       const result = await service.syncFromLocalStorage();
 
       expect(result).toBeDefined();
-      expect(mockRemoveItem).toHaveBeenCalledWith('diagnostic_results');
+      expect(mockRemoveItem).toHaveBeenCalledWith('diagnosticData');
     });
 
     it('should return null if no localStorage data', async () => {
@@ -258,7 +258,7 @@ describe('SupabaseDiagnosticService', () => {
 
       expect(result).toBeDefined();
       expect(result?.scores?.overall).toBe(75);
-      expect(mockRemoveItem).toHaveBeenCalledWith('diagnostic_results');
+      expect(mockRemoveItem).toHaveBeenCalledWith('diagnosticData');
     });
   });
 

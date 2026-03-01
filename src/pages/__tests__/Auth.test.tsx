@@ -5,8 +5,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Auth from '../Auth';
 import { useAuth } from '@/hooks/useAuth';
+import { useDiagnostic } from '@/hooks/useDiagnostic';
 
 vi.mock('@/hooks/useAuth');
+vi.mock('@/hooks/useDiagnostic');
+vi.mock('@/services/ServiceProvider');
 vi.mock('@/components/BetaNavigationWidget', () => ({
   BetaNavigationWidget: () => <div>Beta Navigation</div>
 }));
@@ -26,9 +29,20 @@ describe('Auth', () => {
         mutations: { retry: false },
       },
     });
-    
+
     vi.clearAllMocks();
-    
+
+    // Mock useDiagnostic
+    vi.mocked(useDiagnostic).mockReturnValue({
+      latestDiagnostic: null,
+      diagnosticHistory: [],
+      isLoadingLatest: false,
+      isLoadingHistory: false,
+      saveDiagnostic: vi.fn(),
+      syncFromLocalStorage: vi.fn(),
+      calculateScores: vi.fn(),
+    } as any);
+
     vi.mock('react-router-dom', async () => {
       const actual = await vi.importActual('react-router-dom');
       return {
