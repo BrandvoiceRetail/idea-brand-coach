@@ -17,14 +17,24 @@ import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Feature flag configuration (local-only for now)
+ *
+ * TARGETING RULES EXPLAINED (for v2-multi-avatar rollout):
+ * - userIds: Array of specific user IDs to enable (useful for beta testers)
+ * - percentage: User-based rollout (0-100), for authenticated users
+ * - sessionPercentage: Session-based rollout (0-100), for anonymous users
+ *
+ * For v2-multi-avatar, we use sessionPercentage because:
+ * - Avatar builder is accessed by anonymous users (before signup)
+ * - No user ID available, so we use browser session ID instead
+ * - Allows gradual rollout: 0% → 10% → 50% → 100%
  */
 interface FeatureFlag {
   name: string;
-  enabled: boolean;
+  enabled: boolean; // Master on/off switch
   targeting_rules?: {
-    userIds?: string[];
-    percentage?: number;
-    sessionPercentage?: number;
+    userIds?: string[]; // Explicit user IDs to enable (overrides percentage)
+    percentage?: number; // User-based rollout percentage (0-100)
+    sessionPercentage?: number; // Session-based rollout percentage (0-100) - used for v2-multi-avatar
   };
 }
 
@@ -48,14 +58,34 @@ interface FeatureFlag {
  * - Disabled:     enabled: false (or sessionPercentage: 0)
  */
 const LOCAL_FEATURE_FLAGS: Record<string, FeatureFlag> = {
+  /**
+   * V2 Multi-Avatar Flag Configuration
+   *
+   * Controls rollout of the new multi-avatar builder interface.
+   *
+   * ROLLOUT STRATEGY:
+   * - Session-based percentage rollout (not user-based)
+   * - Why session-based? Avatar builder is used by anonymous users pre-signup
+   * - Each browser session gets a deterministic flag evaluation based on session ID
+   * - Same session always sees same version (V1 or V2) for consistency
+   * - Different sessions may see different versions based on percentage setting
+   *
+   * ROLLOUT PHASES:
+   * 1. Internal testing: sessionPercentage: 0 (disabled, all see V1)
+   * 2. Alpha: sessionPercentage: 10 (10% of sessions see V2)
+   * 3. Beta: sessionPercentage: 50 (50% of sessions see V2)
+   * 4. Full rollout: sessionPercentage: 100 (all sessions see V2)
+   *
+   * CURRENT STATUS: Internal testing (0% - all users see V1 single avatar builder)
+   */
   'v2-multi-avatar': {
     name: 'v2-multi-avatar',
-    enabled: true,
+    enabled: true, // Master switch - must be true for rollout to work
     targeting_rules: {
       // Session-based percentage rollout (for anonymous users)
       // Change this value to test different rollout percentages: 10, 50, 100
       // Set to 0 to disable rollout (all users see V1)
-      sessionPercentage: 0,
+      sessionPercentage: 0, // Current: 0% rollout (internal testing phase)
     },
   },
 };
@@ -84,12 +114,23 @@ function notifyFlagUpdates(): void {
 /**
  * Get or create a session ID for anonymous users
  * Persists in sessionStorage for the duration of the browser session
+ *
+ * FOR V2-MULTI-AVATAR ROLLOUT:
+ * - Creates unique session ID for each browser session (tab/window)
+ * - ID persists across page reloads within same session
+ * - Used to deterministically evaluate session-based percentage rollout
+ * - Same session ID = same flag evaluation = consistent user experience
+ * - Clearing sessionStorage creates new ID = potentially different flag evaluation
+ *
+ * Format: 'anon_<timestamp>_<random>' ensures uniqueness and debuggability
  */
 function getOrCreateSessionId(): string {
   const SESSION_KEY = 'ff_session_id';
 
+  // Check for existing session ID
   let sessionId = sessionStorage.getItem(SESSION_KEY);
   if (!sessionId) {
+    // Create new session ID: timestamp ensures uniqueness, random adds entropy
     sessionId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
     sessionStorage.setItem(SESSION_KEY, sessionId);
   }
@@ -140,10 +181,15 @@ export function useFeatureFlag(
   }, []);
 
   // Determine user/session ID for evaluation
+  // FOR V2-MULTI-AVATAR ROLLOUT:
+  // - If user is authenticated (has userId), use user-based evaluation
+  // - If user is anonymous (no userId), use session-based evaluation
+  // - This allows v2-multi-avatar to roll out to anonymous users via sessionPercentage
+  // - Authenticated users could be targeted via percentage or userIds if needed
   const evaluationContext = useMemo(() => {
     return {
-      userId: options.userId || userId,
-      sessionId: options.sessionId || (!userId ? getOrCreateSessionId() : undefined),
+      userId: options.userId || userId, // User ID if authenticated
+      sessionId: options.sessionId || (!userId ? getOrCreateSessionId() : undefined), // Session ID only for anonymous users
     };
   }, [userId, options.userId, options.sessionId]);
 
@@ -165,63 +211,92 @@ export function useFeatureFlag(
 
 /**
  * Evaluate a feature flag based on targeting rules
+ *
+ * FOR V2-MULTI-AVATAR ROLLOUT:
+ * 1. Check if flag is globally enabled (master switch)
+ * 2. If no targeting rules, return global enabled state (100% rollout)
+ * 3. Apply targeting rules in order: userIds → percentage → sessionPercentage
+ * 4. For v2-multi-avatar, sessionPercentage is used since users are anonymous
+ * 5. Hash-based distribution ensures consistent evaluation per session
  */
 function evaluateFlag(
   flag: FeatureFlag,
   context: { userId?: string; sessionId?: string }
 ): boolean {
-  // If flag is disabled globally, return false
+  // Step 1: Check master switch - if disabled globally, flag is off for everyone
   if (!flag.enabled) {
     return false;
   }
 
-  // If no targeting rules, return global enabled state
+  // Step 2: No targeting rules means 100% rollout to everyone
   if (!flag.targeting_rules || Object.keys(flag.targeting_rules).length === 0) {
     return flag.enabled;
   }
 
   const rules = flag.targeting_rules;
 
-  // User ID targeting
+  // Step 3a: User ID targeting (explicit list of user IDs to enable)
+  // Not used for v2-multi-avatar, but available for targeting specific test users
   if (rules.userIds && rules.userIds.length > 0 && context.userId) {
     if (rules.userIds.includes(context.userId)) {
       return true;
     }
   }
 
-  // Percentage rollout (user-based)
+  // Step 3b: Percentage rollout (user-based)
+  // Not used for v2-multi-avatar since users are anonymous
+  // Could be used later if we want to roll out to authenticated users
   if (rules.percentage !== undefined && context.userId) {
     const hash = simpleHash(context.userId);
-    const userPercentage = (hash % 100) + 1;
+    const userPercentage = (hash % 100) + 1; // 1-100 range
     if (userPercentage <= rules.percentage) {
       return true;
     }
   }
 
-  // Session-based percentage rollout
+  // Step 3c: Session-based percentage rollout
+  // PRIMARY MECHANISM FOR V2-MULTI-AVATAR ROLLOUT
+  // - Used because avatar builder users are anonymous (pre-signup)
+  // - Hash ensures same session ID always gets same result (deterministic)
+  // - sessionPercentage controls what % of sessions see the new feature
+  // Example: sessionPercentage: 50 means ~50% of unique sessions see V2
   if (rules.sessionPercentage !== undefined && context.sessionId) {
-    const hash = simpleHash(context.sessionId);
-    const sessionPercentage = (hash % 100) + 1;
+    const hash = simpleHash(context.sessionId); // Deterministic hash
+    const sessionPercentage = (hash % 100) + 1; // Maps hash to 1-100 range
     if (sessionPercentage <= rules.sessionPercentage) {
-      return true;
+      return true; // This session is in the rollout percentage
     }
   }
 
-  // Default to disabled if no rules matched
+  // Step 4: Default to disabled if no rules matched
   return false;
 }
 
 /**
  * Simple hash function for consistent percentage rollouts
+ *
+ * CRITICAL FOR V2-MULTI-AVATAR ROLLOUT:
+ * - Converts session ID (or user ID) to deterministic number
+ * - Same input ALWAYS produces same hash = consistent flag evaluation
+ * - Hash % 100 maps to 1-100 range for percentage comparison
+ * - Ensures users don't flip-flop between V1 and V2 on each page load
+ *
+ * Example:
+ * - sessionId: "anon_123_abc" → hash: 42 → percentage bucket: 42
+ * - If sessionPercentage: 50, this session sees V2 (42 <= 50)
+ * - If sessionPercentage: 30, this session sees V1 (42 > 30)
+ * - Same sessionId will ALWAYS map to bucket 42 (deterministic)
+ *
+ * Algorithm: Simple DJB2-style hash (fast, good distribution for strings)
  */
 function simpleHash(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = ((hash << 5) - hash) + char; // hash * 31 + char (DJB2 variant)
     hash = hash & hash; // Convert to 32bit integer
   }
-  return Math.abs(hash);
+  return Math.abs(hash); // Return positive number
 }
 
 /**
