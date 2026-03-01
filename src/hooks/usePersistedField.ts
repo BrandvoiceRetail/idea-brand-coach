@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { KnowledgeRepository } from '@/lib/knowledge-base/knowledge-repository';
 import { SupabaseSyncService } from '@/lib/knowledge-base/supabase-sync-service';
 import type { KnowledgeCategory, SyncStatus } from '@/lib/knowledge-base/interfaces';
+import type { EditSource } from '@/types/field-metadata';
 
 /**
  * Configuration for the persisted field hook
@@ -19,6 +20,7 @@ interface UsePersistedFieldConfig {
   defaultValue?: string;
   syncInterval?: number; // milliseconds
   debounceDelay?: number; // milliseconds
+  editSource?: EditSource; // Source of field edits (manual or AI)
 }
 
 /**
@@ -26,11 +28,12 @@ interface UsePersistedFieldConfig {
  */
 interface UsePersistedFieldReturn {
   value: string;
-  onChange: (newValue: string) => void;
+  onChange: (newValue: string, editSource?: EditSource) => void;
   syncStatus: SyncStatus;
   isLoading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
+  editSource?: EditSource; // Current edit source for this field
 }
 
 // Singleton repository instance
@@ -72,12 +75,14 @@ export function usePersistedField({
   category,
   defaultValue = '',
   syncInterval = 30000,
-  debounceDelay = 500
+  debounceDelay = 500,
+  editSource: defaultEditSource
 }: UsePersistedFieldConfig): UsePersistedFieldReturn {
   const [value, setValue] = useState<string>(defaultValue);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('synced');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [editSource, setEditSource] = useState<EditSource | undefined>(defaultEditSource);
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -110,10 +115,14 @@ export function usePersistedField({
       setValue('');
 
       // Load from local IndexedDB (instant)
-      const storedValue = await repo.getField(userId, fieldIdentifier);
+      const entry = await repo.getFieldEntry(userId, fieldIdentifier);
 
-      if (storedValue !== null) {
-        setValue(storedValue);
+      if (entry) {
+        setValue(entry.content);
+        // Load editSource from metadata if available
+        if (entry.metadata?.editSource) {
+          setEditSource(entry.metadata.editSource);
+        }
       } else {
         // No local value, use default
         setValue(defaultValue);
@@ -124,13 +133,12 @@ export function usePersistedField({
       syncServiceRef.current = sync;
 
       // Check if we need to sync from remote
-      const entry = await repo.getFieldEntry(userId, fieldIdentifier);
       if (!entry || !entry.lastSyncedAt) {
         // Try to get from remote on first load
         setSyncStatus('syncing');
         try {
           const remoteValue = await sync.fetchFromSupabase(userId, fieldIdentifier);
-          if (remoteValue && remoteValue !== storedValue) {
+          if (remoteValue && remoteValue !== entry?.content) {
             setValue(remoteValue);
             await repo.saveField(userId, fieldIdentifier, remoteValue, category);
           }
@@ -155,7 +163,7 @@ export function usePersistedField({
   /**
    * Save value locally and queue for sync
    */
-  const saveValue = useCallback(async (newValue: string) => {
+  const saveValue = useCallback(async (newValue: string, source?: EditSource) => {
     if (!userId) {
       return;
     }
@@ -164,8 +172,29 @@ export function usePersistedField({
       const repo = repositoryRef.current || await getRepository();
       const sync = syncServiceRef.current || getSyncService(repo);
 
+      // Determine the effective edit source
+      const effectiveEditSource = source || editSource;
+
       // Save locally immediately (<10ms)
-      await repo.saveField(userId, fieldIdentifier, newValue, category);
+      if (effectiveEditSource) {
+        // Save with metadata when editSource is provided
+        await repo.saveFieldWithMetadata({
+          userId,
+          fieldIdentifier,
+          category,
+          content: newValue,
+          metadata: {
+            editSource: effectiveEditSource
+          },
+          version: 1, // Repository will handle versioning
+          isCurrentVersion: true,
+          localChanges: true
+        });
+        setEditSource(effectiveEditSource);
+      } else {
+        // Save without metadata
+        await repo.saveField(userId, fieldIdentifier, newValue, category);
+      }
       setValue(newValue);
 
       // Queue for background sync
@@ -187,12 +216,12 @@ export function usePersistedField({
         variant: 'destructive'
       });
     }
-  }, [userId, fieldIdentifier, category, toast]);
+  }, [userId, fieldIdentifier, category, editSource, toast]);
 
   /**
    * Handle value change with debouncing
    */
-  const handleChange = useCallback((newValue: string) => {
+  const handleChange = useCallback((newValue: string, source?: EditSource) => {
     // Update local state immediately for responsive UI
     setValue(newValue);
 
@@ -203,7 +232,7 @@ export function usePersistedField({
 
     // Set new debounced save
     saveTimerRef.current = setTimeout(() => {
-      saveValue(newValue);
+      saveValue(newValue, source);
     }, debounceDelay);
   }, [saveValue, debounceDelay]);
 
@@ -313,7 +342,8 @@ export function usePersistedField({
     syncStatus,
     isLoading,
     error,
-    refresh
+    refresh,
+    editSource
   };
 }
 
