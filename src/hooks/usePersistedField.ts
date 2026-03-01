@@ -380,58 +380,9 @@ export function usePersistedField<T = string>({
   };
 }
 
-/**
- * Hook for persisted array fields
- * Stores arrays with automatic JSON serialization
- */
-export function usePersistedArrayField({
-  fieldIdentifier,
-  category,
-  defaultValue = [],
-  debounceDelay = 500
-}: {
-  fieldIdentifier: string;
-  category: KnowledgeCategory;
-  defaultValue?: string[];
-  debounceDelay?: number;
-}): {
-  value: string[];
-  add: (item: string) => void;
-  remove: (index: number) => void;
-  set: (items: string[]) => void;
-  syncStatus: SyncStatus;
-  isLoading: boolean;
-} {
-  const field = usePersistedField<string[]>({
-    fieldIdentifier,
-    category,
-    defaultValue,
-    debounceDelay
-  });
-
-  const add = useCallback((item: string) => {
-    if (item.trim() && !field.value.includes(item.trim())) {
-      field.onChange([...field.value, item.trim()]);
-    }
-  }, [field]);
-
-  const remove = useCallback((index: number) => {
-    field.onChange(field.value.filter((_, i) => i !== index));
-  }, [field]);
-
-  const set = useCallback((items: string[]) => {
-    field.onChange(items);
-  }, [field]);
-
-  return {
-    value: field.value,
-    add,
-    remove,
-    set,
-    syncStatus: field.syncStatus,
-    isLoading: field.isLoading
-  };
-}
+// Re-export usePersistedArrayField for backward compatibility
+export { usePersistedArrayField } from './usePersistedArrayField';
+export type { UsePersistedArrayFieldConfig, UsePersistedArrayFieldReturn } from './usePersistedArrayField';
 
 /**
  * Hook for batch persisted fields
