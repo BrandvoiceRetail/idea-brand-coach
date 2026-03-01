@@ -151,6 +151,7 @@ export class SupabaseChatService implements IChatService {
             role: msg.role,
             content: msg.content,
           })),
+          metadata: message.metadata, // Pass metadata which includes images
         },
       }
     );

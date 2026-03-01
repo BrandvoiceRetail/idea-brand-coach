@@ -40,3 +40,4 @@ supabase/.temp/
 .auto-claude-status
 .security-key
 logs/security/
+auto-claude-backup-keys.txt

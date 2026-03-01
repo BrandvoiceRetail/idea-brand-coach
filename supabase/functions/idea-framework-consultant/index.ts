@@ -568,12 +568,16 @@ serve(async (req) => {
       }
     }
 
-    const { message, context, chat_history } = await req.json();
+    const { message, context, chat_history, metadata } = await req.json();
+    const messageImages = metadata?.images || [];
+
     console.log('IDEA Framework Consultant request:', {
       message,
       hasManualContext: !!context,
       hasChatHistory: !!chat_history,
       chatHistoryLength: chat_history?.length || 0,
+      hasImages: messageImages.length > 0,
+      imageCount: messageImages.length,
       userId
     });
 
@@ -707,7 +711,29 @@ When user knowledge base information is provided below, YOU MUST:
 - Point out gaps or opportunities based on their documented information
 - Never give generic advice when specific user data is available
 
-Always encourage iterative refinement and ask clarifying questions when input lacks detail for optimal strategic guidance.`;
+Always encourage iterative refinement and ask clarifying questions when input lacks detail for optimal strategic guidance.
+
+IMAGE ANALYSIS CAPABILITIES:
+When images are provided by the user, YOU MUST:
+- Analyze visual branding elements including color schemes, typography, imagery, and overall design aesthetic
+- Evaluate brand consistency across different visual materials
+- Assess emotional impact and psychological triggers in visual design
+- Compare visual execution against stated brand positioning and IDEA Framework principles
+- Identify opportunities for visual differentiation from competitors
+- Provide specific, actionable feedback on visual brand expression
+- Consider cultural and demographic appropriateness of visual elements
+- Evaluate visual hierarchy and information architecture in marketing materials
+- Analyze product presentation and packaging design effectiveness
+- Review visual storytelling and narrative consistency
+
+For Amazon listings and e-commerce imagery specifically:
+- Evaluate hero image effectiveness and click-through potential
+- Analyze lifestyle images for emotional connection and aspiration building
+- Review infographic clarity and benefit communication
+- Assess A+ content or Enhanced Brand Content visual strategy
+- Check compliance with platform requirements while maximizing brand expression
+- Evaluate mobile vs desktop visual optimization
+- Analyze competitive visual positioning in category context`;
 
     // Build user prompt with all available context
     let userPrompt = message;
@@ -734,8 +760,18 @@ Always encourage iterative refinement and ask clarifying questions when input la
     }
 
     // Combine all context with the question
-    if (contextParts.length > 0) {
-      userPrompt = `${contextParts.join('\n\n---\n\n')}\n\n---\n\nQUESTION: ${message}\n\nIMPORTANT: Use ALL the context information above to provide personalized, specific advice. Reference their actual brand information, uploaded documents, and previous inputs when relevant.`;
+    if (contextParts.length > 0 || messageImages.length > 0) {
+      let promptSuffix = `\n\n---\n\nQUESTION: ${message}\n\nIMPORTANT: Use ALL the context information above to provide personalized, specific advice. Reference their actual brand information, uploaded documents, and previous inputs when relevant.`;
+
+      if (messageImages.length > 0) {
+        promptSuffix += `\n\nVISUAL ANALYSIS: The user has provided ${messageImages.length} image(s) for analysis. Please analyze these images in the context of their brand strategy and IDEA Framework positioning. Provide specific visual feedback and recommendations.`;
+      }
+
+      if (contextParts.length > 0) {
+        userPrompt = `${contextParts.join('\n\n---\n\n')}${promptSuffix}`;
+      } else {
+        userPrompt = message + promptSuffix;
+      }
     }
 
     console.log('Making OpenAI API request with model: gpt-4.1-2025-04-14');
@@ -767,10 +803,35 @@ Always encourage iterative refinement and ask clarifying questions when input la
       }
 
       // Add current user message with all context
-      messages.push({
-        role: 'user',
-        content: userPrompt
-      });
+      // If there are images, create a multimodal message for GPT-4 Vision
+      if (messageImages.length > 0) {
+        const contentParts: any[] = [
+          { type: 'text', text: userPrompt }
+        ];
+
+        // Add images to the message content
+        messageImages.forEach((img: any) => {
+          contentParts.push({
+            type: 'image_url',
+            image_url: {
+              url: img.url,
+              detail: 'high' // Use 'high' for detailed analysis, 'low' for faster/cheaper
+            }
+          });
+        });
+
+        messages.push({
+          role: 'user',
+          content: contentParts
+        });
+
+        console.log(`Added ${messageImages.length} images to user message for GPT-4 Vision analysis`);
+      } else {
+        messages.push({
+          role: 'user',
+          content: userPrompt
+        });
+      }
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',

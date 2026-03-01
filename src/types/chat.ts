@@ -20,6 +20,44 @@ export type ChatRole = 'user' | 'assistant' | 'system';
 export type ChatbotType = 'idea-framework-consultant';
 
 /**
+ * Image attachment metadata for chat messages
+ */
+export interface ChatImageAttachment {
+  /** Unique identifier for the image */
+  id: string;
+  /** Public URL or signed URL for the image */
+  url: string;
+  /** Original filename */
+  filename: string;
+  /** MIME type of the image */
+  mime_type?: string;
+  /** File size in bytes (after compression if applied) */
+  file_size?: number;
+  /** Original file size before compression (in bytes) */
+  original_file_size?: number;
+  /** Compression ratio as percentage (e.g., 60 means 60% smaller) */
+  compression_ratio?: number;
+  /** Whether compression was applied to this image */
+  was_compressed?: boolean;
+  /** GPT-4 Vision analysis cache (optional) */
+  analysis?: string;
+}
+
+/**
+ * Metadata that can be attached to chat messages
+ */
+export interface ChatMessageMetadata {
+  /** Optional follow-up question suggestions */
+  suggestions?: string[];
+  /** Optional source citations */
+  sources?: string[];
+  /** Optional image attachments */
+  images?: ChatImageAttachment[];
+  /** Any other metadata */
+  [key: string]: any;
+}
+
+/**
  * Complete chat message with all metadata.
  * Represents a persisted message in the conversation history.
  */
@@ -42,8 +80,8 @@ export interface ChatMessage {
   /** Type of chatbot this message belongs to */
   chatbot_type?: ChatbotType;
 
-  /** Optional metadata (suggestions, sources, etc.) */
-  metadata?: Record<string, any>;
+  /** Optional metadata (suggestions, sources, images, etc.) */
+  metadata?: ChatMessageMetadata;
 
   /** ISO 8601 timestamp when message was created */
   created_at: string;
@@ -71,7 +109,7 @@ export interface ChatMessageCreate {
   chatbot_type?: ChatbotType;
 
   /** Optional metadata to attach to the message */
-  metadata?: Record<string, any>;
+  metadata?: ChatMessageMetadata;
 }
 
 /**
@@ -83,7 +121,7 @@ export interface ChatMessageUpdate {
   content?: string;
 
   /** Updated metadata */
-  metadata?: Record<string, any>;
+  metadata?: ChatMessageMetadata;
 }
 
 /**

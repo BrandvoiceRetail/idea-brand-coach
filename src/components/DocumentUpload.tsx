@@ -119,13 +119,19 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
       'application/pdf',
       'text/plain',
       'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      // Image types
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp'
     ];
 
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Invalid File Type",
-        description: "Please upload PDF, DOC, DOCX, or TXT files only",
+        description: "Please upload PDF, DOC, DOCX, TXT, or image files (JPG, PNG, GIF, WEBP) only",
         variant: "destructive",
       });
       return;
@@ -374,14 +380,14 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  I can work with PDF, DOC, DOCX, and TXT files up to 20MB - whatever works best for you!
+                  I can work with PDF, DOC, DOCX, TXT, and image files (JPG, PNG, GIF, WEBP) up to 20MB - whatever works best for you!
                 </p>
               </div>
             </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.doc,.docx,.txt"
+              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
               onChange={handleFileSelect}
               className="hidden"
               disabled={isUploading}
@@ -499,7 +505,7 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
                 How it works
               </p>
               <p className="text-xs text-blue-700 dark:text-blue-200">
-                Upload your brand books, strategy documents, or research materials. The content will be processed and integrated into your IDEA Framework consultations to provide personalized, context-aware guidance based on your specific knowledge base.
+                Upload your brand books, strategy documents, research materials, or visual brand assets (logos, product images, marketing materials). The content will be processed and integrated into your IDEA Framework consultations to provide personalized, context-aware guidance based on your specific knowledge base.
               </p>
             </div>
           </div>
