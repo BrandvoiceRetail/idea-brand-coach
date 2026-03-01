@@ -114,6 +114,8 @@ export class SupabaseChatService implements IChatService {
         content: message.content,
         chatbot_type: chatbotType,
         session_id: sessionId,
+        chapter_id: message.chapter_id,
+        chapter_metadata: message.chapter_metadata,
         metadata: message.metadata,
       })
       .select()
@@ -175,6 +177,8 @@ export class SupabaseChatService implements IChatService {
         content: responseData.response,
         chatbot_type: chatbotType,
         session_id: sessionId,
+        chapter_id: message.chapter_id,
+        chapter_metadata: message.chapter_metadata,
         metadata: {
           suggestions: responseData.suggestions,
           sources: responseData.sources,
@@ -322,6 +326,8 @@ export class SupabaseChatService implements IChatService {
         field_id: sessionData?.field_id,
         field_label: sessionData?.field_label,
         page_context: sessionData?.page_context,
+        chapter_id: sessionData?.chapter_id,
+        chapter_metadata: sessionData?.chapter_metadata,
       })
       .select()
       .single();
@@ -367,12 +373,26 @@ export class SupabaseChatService implements IChatService {
   async updateSession(sessionId: string, update: ChatSessionUpdate): Promise<ChatSession> {
     const userId = await this.getUserId();
 
+    // Build update object with only provided fields
+    const updateData: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (update.title !== undefined) {
+      updateData.title = update.title;
+    }
+
+    if (update.chapter_id !== undefined) {
+      updateData.chapter_id = update.chapter_id;
+    }
+
+    if (update.chapter_metadata !== undefined) {
+      updateData.chapter_metadata = update.chapter_metadata;
+    }
+
     const { data, error } = await supabase
       .from('chat_sessions')
-      .update({
-        title: update.title,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', sessionId)
       .eq('user_id', userId)
       .select()
@@ -556,6 +576,8 @@ export class SupabaseChatService implements IChatService {
       role: item.role as 'user' | 'assistant' | 'system',
       content: item.content as string,
       chatbot_type: item.chatbot_type as ChatbotType,
+      chapter_id: item.chapter_id as any,
+      chapter_metadata: item.chapter_metadata as any,
       metadata: (item.metadata as Record<string, unknown>) || {},
       created_at: item.created_at as string,
       updated_at: item.updated_at as string,
@@ -575,6 +597,8 @@ export class SupabaseChatService implements IChatService {
       field_id: item.field_id as string | undefined,
       field_label: item.field_label as string | undefined,
       page_context: item.page_context as string | undefined,
+      chapter_id: item.chapter_id as any,
+      chapter_metadata: item.chapter_metadata as any,
       created_at: item.created_at as string,
       updated_at: item.updated_at as string,
     };
