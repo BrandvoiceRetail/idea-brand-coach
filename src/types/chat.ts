@@ -5,6 +5,8 @@
  * These types define the data structures used across all chat service implementations.
  */
 
+import type { ChapterId, ChapterMetadata } from './chapter';
+
 /**
  * Role of a chat message participant
  * - user: Message from the user
@@ -42,6 +44,12 @@ export interface ChatMessage {
   /** Type of chatbot this message belongs to */
   chatbot_type?: ChatbotType;
 
+  /** Optional chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Optional chapter metadata for context-aware responses */
+  chapter_metadata?: ChapterMetadata;
+
   /** Optional metadata (suggestions, sources, etc.) */
   metadata?: Record<string, any>;
 
@@ -69,6 +77,12 @@ export interface ChatMessageCreate {
 
   /** Type of chatbot (defaults to 'idea-framework-consultant') */
   chatbot_type?: ChatbotType;
+
+  /** Optional chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Optional chapter metadata for context-aware responses */
+  chapter_metadata?: ChapterMetadata;
 
   /** Optional metadata to attach to the message */
   metadata?: Record<string, any>;
@@ -140,6 +154,12 @@ export interface ChatSession {
   /** Page context where conversation started */
   page_context?: string;
 
+  /** Optional chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Optional chapter metadata for tracking book progress */
+  chapter_metadata?: ChapterMetadata;
+
   /** ISO 8601 timestamp when session was created */
   created_at: string;
 
@@ -168,6 +188,12 @@ export interface ChatSessionCreate {
 
   /** Page context where conversation started */
   page_context?: string;
+
+  /** Optional chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Optional chapter metadata for tracking book progress */
+  chapter_metadata?: ChapterMetadata;
 }
 
 /**
@@ -176,4 +202,10 @@ export interface ChatSessionCreate {
 export interface ChatSessionUpdate {
   /** Updated title */
   title?: string;
+
+  /** Updated chapter ID for book-guided chat workflow */
+  chapter_id?: ChapterId;
+
+  /** Updated chapter metadata for tracking book progress */
+  chapter_metadata?: ChapterMetadata;
 }
