@@ -1,9 +1,9 @@
 import { V2StateProvider } from '@/v2/contexts/V2StateContext';
 import { PanelCommunicationProvider } from '@/v2/contexts/PanelCommunicationContext';
 import { ThreePanelTemplate } from '@/v2/components/ThreePanelTemplate';
-import { EnhancedChatInterface } from '@/v2/components/EnhancedChatInterface';
+import { V2ChatPanel } from '@/v2/components/V2ChatPanel';
 import { IdeaBookPanel } from '@/v2/components/IdeaBookPanel';
-import { BrandsList } from '@/v2/components/BrandsList';
+import { SimpleBrandPanel } from '@/v2/components/SimpleBrandPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -26,8 +26,8 @@ export function V2Interface() {
 
             <TabsContent value="workspace" className="h-[calc(100%-3rem)] m-0">
               <ThreePanelTemplate
-                leftPanel={<BrandsList />}
-                middlePanel={<EnhancedChatInterface />}
+                leftPanel={<SimpleBrandPanel />}
+                middlePanel={<V2ChatPanel />}
                 rightPanel={<IdeaBookPanel />}
               />
             </TabsContent>

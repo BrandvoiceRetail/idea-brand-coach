@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useBrand } from '@/contexts/BrandContext';
 import { usePanelCommunication } from '@/v2/contexts/PanelCommunicationContext';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Search,
@@ -143,6 +144,7 @@ function BrandItem({
 export function BrandsList() {
   const { brandData, updateBrandData } = useBrand();
   const { sendMessage } = usePanelCommunication();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrandId, setSelectedBrandId] = useState<string>('default');
 
@@ -206,15 +208,8 @@ export function BrandsList() {
   };
 
   const handleCreateNewBrand = () => {
-    // Send message to open brand creation in the center panel
-    sendMessage({
-      type: 'action',
-      payload: {
-        action: 'create-new-brand',
-      },
-      source: 'left',
-      target: 'center',
-    });
+    // Navigate to the brand diagnostic page to start creating a new brand
+    navigate('/diagnostic');
   };
 
   return (
