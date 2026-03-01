@@ -161,16 +161,381 @@ src/
 ├── components/        # React components
 │   ├── ui/           # shadcn-ui components
 │   ├── brand/        # Brand-specific components
+│   ├── ai/           # AI assistant components
 │   └── research/     # Research tools
 ├── contexts/         # React Context providers
 ├── hooks/            # Custom React hooks
 ├── integrations/     # External service integrations (Supabase)
 ├── lib/              # Utility libraries
+│   └── sync/         # Sync service utilities
 ├── pages/            # Route pages
+├── services/         # Business logic services
+│   ├── chat/         # Chat-specific services
+│   └── interfaces/   # Service interfaces
 ├── types/            # TypeScript type definitions
 ├── utils/            # Helper functions
 └── test/             # Test setup and utilities
 ```
+
+## Refactoring Patterns
+
+These patterns were established during the Pre-Implementation Refactoring Sprint (Task 017) and should be followed when refactoring existing code.
+
+### Service Extraction Pattern
+
+**When to apply:** Services exceeding 300 lines or handling multiple responsibilities
+
+**Pattern:**
+1. Extract specialized services for distinct responsibilities
+2. Keep orchestration in the main service
+3. Use dependency injection for service composition
+4. Each service implements a focused interface
+
+**Example: SupabaseChatService Refactoring**
+```typescript
+// Before: 583-line monolithic service
+class SupabaseChatService {
+  // Message CRUD + Session CRUD + Title generation + Orchestration
+}
+
+// After: Extracted to focused services (each ~200-270 lines)
+class ChatMessageService {
+  // Only message CRUD operations
+  async saveMessage(message: Message): Promise<MessageResult<Message>>
+  async getRecentMessages(limit: number): Promise<MessageResult<Message[]>>
+  async getSessionMessages(sessionId: string): Promise<MessageResult<Message[]>>
+}
+
+class ChatSessionService {
+  // Only session CRUD operations
+  async createSession(userId: string): Promise<SessionResult<Session>>
+  async getSessions(userId: string): Promise<SessionResult<Session[]>>
+  async updateSession(sessionId: string, data: Partial<Session>): Promise<SessionResult<Session>>
+}
+
+class ChatTitleService {
+  // Only title generation logic
+  async maybeUpdateSessionTitle(sessionId: string): Promise<TitleResult<void>>
+  async generateSessionTitle(messages: Message[]): Promise<TitleResult<string>>
+}
+
+// Orchestrator delegates to specialized services (351 lines)
+class SupabaseChatService implements IChatService {
+  constructor(
+    private messageService: ChatMessageService,
+    private sessionService: ChatSessionService,
+    private titleService: ChatTitleService
+  ) {}
+
+  async sendMessage(message: string): Promise<void> {
+    // Coordinate message save, edge function call, title generation
+    await this.messageService.saveMessage(message);
+    const response = await this.callEdgeFunction(message);
+    await this.messageService.saveAssistantMessage(response);
+    await this.titleService.maybeUpdateSessionTitle(this.currentSessionId);
+  }
+}
+```
+
+**Results:**
+- SupabaseChatService reduced from 583 to 351 lines (40% reduction)
+- Each service has a single, clear responsibility
+- Easier to test and maintain
+- Better code reusability
+
+### Field Sync Architecture
+
+**When to apply:** Managing local-first persistence with backend sync
+
+**Pattern:**
+1. Extract shared sync logic to a service (FieldSyncService)
+2. Create generic hooks with type parameters
+3. Separate concerns: state management vs. sync logic
+4. Use singleton pattern for sync service to avoid multiple instances
+
+**Example: Field Persistence Refactoring**
+```typescript
+// Before: 464-line hook with mixed concerns
+function usePersistedField(key: string) {
+  // State + IndexedDB + Sync + Singleton management all mixed together
+}
+
+// After: Extracted architecture
+
+// 1. Shared sync service (singleton, 327 lines)
+class FieldSyncService {
+  private static instance: FieldSyncService;
+
+  async saveField<T>(key: string, value: T): Promise<void>
+  async loadField<T>(key: string): Promise<T | null>
+  registerConnectionListener(callback: (isOnline: boolean) => void): void
+  cleanup(): void
+}
+
+// 2. Generic sync hook (344 lines)
+interface UseFieldSyncConfig<T> {
+  key: string;
+  defaultValue: T;
+  serialize?: (value: T) => string;
+  deserialize?: (value: string) => T;
+}
+
+function useFieldSync<T>(config: UseFieldSyncConfig<T>) {
+  const [value, setValue] = useState<T>(config.defaultValue);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
+  // Uses FieldSyncService for persistence
+  // Returns: { value, setValue, isSyncing, isOnline }
+}
+
+// 3. Specialized hooks using generics
+function usePersistedField<T = string>(
+  key: string,
+  defaultValue: T,
+  serialize?: (value: T) => string,
+  deserialize?: (value: string) => T
+): UsePersistedFieldResult<T>
+
+// 4. Extracted type-specific hooks (separate files)
+// src/hooks/usePersistedArrayField.ts
+function usePersistedArrayField<T>(
+  key: string,
+  defaultValue: T[]
+): UsePersistedArrayFieldResult<T>
+```
+
+**Type Safety with Generics:**
+```typescript
+// String field (default)
+const [name, setName] = usePersistedField<string>('name', '');
+
+// Array field
+const [tags, setTags] = usePersistedArrayField<string>('tags', []);
+
+// Object field with custom serialization
+const [profile, setProfile] = usePersistedField<UserProfile>(
+  'profile',
+  defaultProfile,
+  (obj) => JSON.stringify(obj),
+  (str) => JSON.parse(str)
+);
+```
+
+**Results:**
+- Clear separation between sync service and state hooks
+- Type-safe with TypeScript generics
+- Reusable sync logic across all field types
+- Better testability and maintainability
+- Reduced complexity by splitting concerns
+
+### Component Composition Pattern
+
+**When to apply:** Components exceeding 100 lines or handling multiple UI concerns
+
+**Pattern:**
+1. Extract focused sub-components for distinct UI responsibilities
+2. Use composition to build the full component
+3. Expose imperative handles with `forwardRef` when needed
+4. Keep props interfaces minimal and focused
+
+**Example: AIAssistant Component Split**
+```typescript
+// Before: 115-line component with mixed concerns
+function AIAssistant({ prompt, onAccept }) {
+  // Button UI + Loading state + Edge function invocation + Suggestion preview
+}
+
+// After: Extracted composition
+
+// 1. Focused button component (37 lines)
+interface AIButtonProps {
+  onGenerate: () => void;
+  isLoading: boolean;
+}
+
+export function AIButton({ onGenerate, isLoading }: AIButtonProps): JSX.Element {
+  return (
+    <Button onClick={onGenerate} disabled={isLoading}>
+      {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles />}
+      Generate
+    </Button>
+  );
+}
+
+// 2. Suggestion handler component (105 lines)
+export interface AISuggestionHandlerRef {
+  generate: () => Promise<void>;
+  isLoading: boolean;
+}
+
+interface AISuggestionHandlerProps {
+  prompt: string;
+  onAccept: (value: string) => void;
+  onReject?: () => void;
+}
+
+export const AISuggestionHandler = forwardRef<AISuggestionHandlerRef, AISuggestionHandlerProps>(
+  ({ prompt, onAccept, onReject }, ref) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [pendingSuggestion, setPendingSuggestion] = useState<string | null>(null);
+
+    const handleGenerate = async (): Promise<void> => {
+      setIsLoading(true);
+      try {
+        const result = await invokeEdgeFunction({ prompt });
+        setPendingSuggestion(result);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    useImperativeHandle(ref, () => ({
+      generate: handleGenerate,
+      isLoading
+    }));
+
+    return pendingSuggestion ? (
+      <AISuggestionPreview
+        suggestion={pendingSuggestion}
+        onAccept={() => {
+          onAccept(pendingSuggestion);
+          setPendingSuggestion(null);
+        }}
+        onReject={() => {
+          onReject?.();
+          setPendingSuggestion(null);
+        }}
+      />
+    ) : null;
+  }
+);
+
+// 3. Composed orchestrator component (54 lines)
+export function AIAssistant({ prompt, onAccept }: AIAssistantProps): JSX.Element {
+  const handlerRef = useRef<AISuggestionHandlerRef>(null);
+
+  return (
+    <div>
+      <AIButton
+        onGenerate={() => handlerRef.current?.generate()}
+        isLoading={handlerRef.current?.isLoading ?? false}
+      />
+      <AISuggestionHandler ref={handlerRef} prompt={prompt} onAccept={onAccept} />
+    </div>
+  );
+}
+```
+
+**Results:**
+- AIAssistant reduced from 115 to 54 lines (53% reduction)
+- AIButton is reusable across different contexts
+- AISuggestionHandler can be used independently
+- Clear separation of concerns: UI vs. state vs. orchestration
+- Better testability (each component can be tested in isolation)
+
+### Refactoring Checklist
+
+**Before starting a refactor:**
+- [ ] Identify single responsibility violations (file > 300 lines is a red flag)
+- [ ] Look for duplicated logic that can be extracted
+- [ ] Check for mixed concerns (UI + business logic, state + sync, etc.)
+- [ ] Verify existing tests to ensure backward compatibility
+- [ ] Document current behavior before changes
+
+**During refactoring:**
+- [ ] Extract one responsibility at a time
+- [ ] Add TypeScript types and generics for type safety
+- [ ] Maintain backward compatibility (re-export from original location if needed)
+- [ ] Write or update tests for extracted code
+- [ ] Add comprehensive JSDoc documentation
+- [ ] Run tests frequently to catch regressions early
+
+**After refactoring:**
+- [ ] Verify all tests pass
+- [ ] Check TypeScript compilation (`npx tsc --noEmit`)
+- [ ] Run linter (`npm run lint`)
+- [ ] Verify bundle size hasn't increased significantly
+- [ ] Update documentation (CLAUDE.md, component docs)
+- [ ] Create migration guide if breaking changes are unavoidable
+
+### Code Smell Indicators
+
+Watch for these patterns that indicate refactoring is needed:
+
+**Service Smells:**
+- File exceeds 300 lines
+- More than 10 public methods
+- Private methods that could be separate services
+- Multiple concerns in method names (e.g., `saveAndSyncAndNotify`)
+- God object pattern (service knows too much)
+- Duplicate code across methods
+
+**Hook Smells:**
+- File exceeds 200 lines
+- Managing multiple independent pieces of state
+- Mixing singleton logic with hook logic
+- No generic type parameters for reusable data structures
+- Multiple `useEffect` hooks with unrelated dependencies
+- Complex conditional logic inside effects
+
+**Component Smells:**
+- File exceeds 150 lines
+- Multiple `useEffect` hooks with different concerns
+- Deeply nested JSX (> 3 levels)
+- Business logic mixed with UI rendering
+- Props drilling through multiple levels
+- Large prop interfaces (> 10 props)
+
+### Service Organization Pattern
+
+When creating new services or refactoring existing ones:
+
+**Directory Structure:**
+```
+src/services/
+├── interfaces/           # Service contracts
+│   ├── IChatService.ts
+│   └── IAuthService.ts
+├── chat/                # Chat domain services
+│   ├── ChatMessageService.ts
+│   ├── ChatSessionService.ts
+│   └── ChatTitleService.ts
+├── SupabaseChatService.ts   # Main orchestrator
+└── SupabaseAuthService.ts   # Single-responsibility service
+```
+
+**Service Interface Pattern:**
+```typescript
+// Define contract first
+export interface IChatService {
+  sendMessage(message: string): Promise<void>;
+  getChatHistory(limit?: number): Promise<Message[]>;
+  clearChatHistory(): Promise<void>;
+}
+
+// Implement with composition
+export class SupabaseChatService implements IChatService {
+  constructor(
+    private messageService: ChatMessageService,
+    private sessionService: ChatSessionService,
+    private titleService: ChatTitleService,
+    private supabaseClient: SupabaseClient
+  ) {}
+
+  // Orchestrate specialized services
+  async sendMessage(message: string): Promise<void> {
+    // Delegate to specialized services
+  }
+}
+```
+
+**Benefits:**
+- Clear contracts via interfaces
+- Easy to test with mocks
+- Can swap implementations
+- Single Responsibility Principle (SRP)
+- Open/Closed Principle (OCP)
 
 ## Testing Requirements
 
