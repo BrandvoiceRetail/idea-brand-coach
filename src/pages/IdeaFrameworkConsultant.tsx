@@ -6,13 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeft, Copy, Check, ChevronDown, ChevronUp, Menu, Upload, Settings2 } from 'lucide-react';
+import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Trash2, PanelLeft, Copy, Check, ChevronDown, ChevronUp, Menu, Upload, Settings2, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { usePersistedSessionForm } from '@/hooks/usePersistedSessionField';
+import { useChapterProgress } from '@/hooks/useChapterProgress';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
+import { ChapterProgress } from '@/components/chat/ChapterProgress';
+import { ChapterNavigation } from '@/components/chat/ChapterNavigation';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,6 +51,15 @@ const IdeaFrameworkConsultant = () => {
   // System KB state (always enabled)
   const { useSystemKB: isSystemKBEnabled } = useSystemKB();
 
+  // Chapter progress management
+  const {
+    progress,
+    currentChapter,
+    allChapters,
+    navigateToChapter,
+    isLoading: isLoadingChapter,
+  } = useChapterProgress({ sessionId: currentSessionId });
+
   // Per-session input storage
   const {
     message,
@@ -65,6 +77,7 @@ const IdeaFrameworkConsultant = () => {
   // UI state
   const [hasUserTyped, setHasUserTyped] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isChapterNavOpen, setIsChapterNavOpen] = useState(false);
   const [isFrameworkExpanded, setIsFrameworkExpanded] = useState(true);
   const [showContextField, setShowContextField] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
@@ -99,6 +112,16 @@ const IdeaFrameworkConsultant = () => {
     setIsSidebarOpen(false);
   };
 
+  // Handle chapter selection
+  const handleChapterSelect = async (chapterId: string) => {
+    try {
+      await navigateToChapter(chapterId as any);
+      setIsChapterNavOpen(false);
+    } catch (error) {
+      console.error('Error navigating to chapter:', error);
+    }
+  };
+
   const handleConsultation = async () => {
     if (!message.trim()) return;
 
@@ -107,13 +130,22 @@ const IdeaFrameworkConsultant = () => {
       : message;
 
     try {
+      // Include chapter metadata if available
+      const chapterMetadata = currentChapter ? {
+        chapter_id: currentChapter.id,
+        chapter_number: currentChapter.number,
+        chapter_title: currentChapter.title,
+        chapter_category: currentChapter.category,
+      } : undefined;
+
       await sendMessage(
         fullMessage,
         'user',
         {
           userDocuments,
           useSystemKB: isSystemKBEnabled,
-          latestDiagnostic: latestDiagnostic || undefined
+          latestDiagnostic: latestDiagnostic || undefined,
+          chapterMetadata,
         }
       );
       setMessage('');
@@ -244,6 +276,24 @@ const IdeaFrameworkConsultant = () => {
 
           {/* Header Actions */}
           <div className="flex items-center gap-2">
+            {/* Chapter Navigation */}
+            <Sheet open={isChapterNavOpen} onOpenChange={setIsChapterNavOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  <span className="hidden sm:inline">Chapters</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="p-0 w-96">
+                <ChapterNavigation
+                  currentChapterId={currentChapter?.id}
+                  chapterStatuses={progress?.chapter_statuses}
+                  onSelectChapter={handleChapterSelect}
+                  isLoading={isLoadingChapter}
+                />
+              </SheetContent>
+            </Sheet>
+
             {messages.length > 0 && (
               <>
                 <Button
@@ -274,6 +324,18 @@ const IdeaFrameworkConsultant = () => {
             )}
           </div>
         </div>
+
+        {/* Chapter Progress (if available) */}
+        {currentChapter && progress && (
+          <div className="border-t bg-muted/30 px-4 py-3">
+            <ChapterProgress
+              currentChapter={currentChapter}
+              totalChapters={progress.total_chapters}
+              completedChapters={progress.completed_chapters}
+              compact
+            />
+          </div>
+        )}
 
         {/* IDEA Framework Bar (Collapsible) */}
         <div className="border-t bg-muted/50">
