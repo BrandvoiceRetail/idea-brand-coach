@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { BrandContext } from '@/contexts/BrandContext';
+import { useThreePanelState } from '@/v2/hooks/useThreePanelState';
 
 /**
  * V2-specific panel state for three-panel layout
@@ -36,31 +37,17 @@ const initialPanelState: PanelState = {
 };
 
 export const V2StateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [panelState, setPanelState] = useState<PanelState>(initialPanelState);
-
-  const updatePanelState = (updates: Partial<PanelState>): void => {
-    setPanelState(prev => ({
-      ...prev,
-      ...updates,
-    }));
-  };
-
-  const setPanelWidth = (panel: 'left' | 'right', width: number): void => {
-    const key = panel === 'left' ? 'leftWidth' : 'rightWidth';
-    updatePanelState({ [key]: width });
-  };
-
-  const togglePanelCollapse = (panel: 'left' | 'right'): void => {
-    const key = panel === 'left' ? 'isLeftCollapsed' : 'isRightCollapsed';
-    setPanelState(prev => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
-  const setFocusedPanel = (panel: 'left' | 'center' | 'right' | null): void => {
-    updatePanelState({ focusedPanel: panel });
-  };
+  // Use the existing hook instead of duplicating logic
+  const {
+    panelState,
+    setPanelWidth,
+    togglePanelCollapse,
+    setFocusedPanel,
+    updatePanelState,
+  } = useThreePanelState({
+    fieldIdentifier: 'v2-global-panel-state',
+    defaultState: initialPanelState,
+  });
 
   const value: V2StateContextType = {
     panelState,

@@ -96,7 +96,7 @@ export const PanelCommunicationProvider: React.FC<{ children: ReactNode }> = ({ 
         section,
       },
     });
-  }, []);
+  }, [sendMessage]);
 
   /**
    * Clear current field selection
