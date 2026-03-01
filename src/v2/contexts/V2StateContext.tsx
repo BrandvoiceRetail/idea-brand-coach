@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { BrandContext } from '@/contexts/BrandContext';
+import { useBrand } from '@/contexts/BrandContext';
 import { useThreePanelState } from '@/v2/hooks/useThreePanelState';
 
 /**
@@ -81,12 +81,8 @@ export const useV2State = (): V2StateContextType => {
  * Convenience hook for components that need both
  */
 export const useBrandV2State = () => {
-  const brandContext = useContext(BrandContext);
+  const brandContext = useBrand();
   const v2Context = useV2State();
-
-  if (brandContext === undefined) {
-    throw new Error('useBrandV2State must be used within a BrandProvider');
-  }
 
   return {
     ...brandContext,
