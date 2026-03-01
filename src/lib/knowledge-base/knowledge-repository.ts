@@ -163,6 +163,7 @@ export class KnowledgeRepository implements IKnowledgeRepository {
 
   /**
    * Save field with complete metadata
+   * Preserves manual edits over AI suggestions
    */
   async saveFieldWithMetadata(
     entry: Omit<KnowledgeEntry, 'id' | 'createdAt' | 'updatedAt'>
@@ -174,6 +175,22 @@ export class KnowledgeRepository implements IKnowledgeRepository {
         entry.userId,
         entry.fieldIdentifier
       );
+
+      // Preserve manual edits over AI suggestions
+      if (existingEntry?.metadata?.editSource === 'manual' && entry.metadata?.editSource === 'ai') {
+        // Don't overwrite manual edits with AI suggestions
+        // Instead, save the AI suggestion as a non-current version for reference
+        const aiSuggestion: KnowledgeEntry = {
+          ...entry,
+          id: uuidv4(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          isCurrentVersion: false, // Keep existing manual edit as current
+          localChanges: true
+        };
+        await this.dbService.put(aiSuggestion);
+        return;
+      }
 
       if (existingEntry) {
         // Mark existing as old version
