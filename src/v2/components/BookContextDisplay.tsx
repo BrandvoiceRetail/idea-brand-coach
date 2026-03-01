@@ -39,7 +39,7 @@ export interface BookExcerpt {
 
 interface BookContextDisplayProps {
   /** Array of book excerpts to display */
-  excerpts: BookExcerpt[];
+  excerpts?: BookExcerpt[];
   /** Optional title for the entire context display */
   title?: string;
   /** Optional description/subtitle */
@@ -93,7 +93,7 @@ const PHASE_COLORS: Record<IdeaPhase, string> = {
  * ```
  */
 export function BookContextDisplay({
-  excerpts,
+  excerpts = [],
   title = 'IDEA Framework Context',
   description,
   maxHeight = '600px',
@@ -101,7 +101,7 @@ export function BookContextDisplay({
   showSectionBadges = true,
   showPageReferences = true,
 }: BookContextDisplayProps): JSX.Element {
-  if (excerpts.length === 0) {
+  if (!excerpts || excerpts.length === 0) {
     return (
       <Card className={cn('w-full', className)}>
         <CardHeader>
