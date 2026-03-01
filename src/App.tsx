@@ -8,6 +8,7 @@ import { migrateDiagnosticData } from "@/utils/diagnosticDataMigration";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
+import { AvatarProvider } from "@/contexts/AvatarContext";
 import { ServiceProvider } from "@/services/ServiceProvider";
 import { SystemKBProvider } from "@/contexts/SystemKBContext";
 import { OnboardingTourProvider } from "@/contexts/OnboardingTourContext";
@@ -69,9 +70,10 @@ const App = () => {
         <AuthProvider>
           <AuthGate>
             <BrandProvider>
-              <SystemKBProvider>
-                <OnboardingTourProvider>
-                  <TooltipProvider>
+              <AvatarProvider>
+                <SystemKBProvider>
+                  <OnboardingTourProvider>
+                    <TooltipProvider>
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
@@ -222,14 +224,15 @@ const App = () => {
 
                     </Routes>
                   </BrowserRouter>
-                </TooltipProvider>
-              </OnboardingTourProvider>
-            </SystemKBProvider>
-          </BrandProvider>
-        </AuthGate>
-      </AuthProvider>
-    </ServiceProvider>
-  </QueryClientProvider>
+                    </TooltipProvider>
+                  </OnboardingTourProvider>
+                </SystemKBProvider>
+              </AvatarProvider>
+            </BrandProvider>
+          </AuthGate>
+        </AuthProvider>
+      </ServiceProvider>
+    </QueryClientProvider>
   );
 };
 export default App;
