@@ -1,6 +1,6 @@
 /**
  * useAvatars Hook
- * React hook for avatar CRUD operations
+ * React hook for customer avatar operations
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,29 +15,28 @@ export const useAvatars = () => {
 
   // Query: Get all avatars
   const {
-    data: avatars,
-    isLoading: isLoadingAvatars,
-    error: avatarsError,
+    data: avatars = [],
+    isLoading,
+    error,
   } = useQuery({
     queryKey: ['avatars'],
-    queryFn: () => avatarService.getAvatars(),
+    queryFn: () => avatarService.getAll(),
     retry: 1,
   });
 
   // Query: Get avatar templates
   const {
-    data: templates,
+    data: templates = [],
     isLoading: isLoadingTemplates,
-    error: templatesError,
   } = useQuery({
     queryKey: ['avatars', 'templates'],
-    queryFn: () => avatarService.getAvatarTemplates(),
+    queryFn: () => avatarService.getTemplates(),
     retry: 1,
   });
 
   // Mutation: Create avatar
   const createAvatarMutation = useMutation({
-    mutationFn: (data: AvatarCreate) => avatarService.createAvatar(data),
+    mutationFn: (avatar: AvatarCreate) => avatarService.create(avatar),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['avatars'] });
       toast({
@@ -56,8 +55,8 @@ export const useAvatars = () => {
 
   // Mutation: Update avatar
   const updateAvatarMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: AvatarUpdate }) =>
-      avatarService.updateAvatar(id, data),
+    mutationFn: ({ id, update }: { id: string; update: AvatarUpdate }) =>
+      avatarService.update(id, update),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['avatars'] });
       toast({
@@ -76,7 +75,7 @@ export const useAvatars = () => {
 
   // Mutation: Delete avatar
   const deleteAvatarMutation = useMutation({
-    mutationFn: (id: string) => avatarService.deleteAvatar(id),
+    mutationFn: (id: string) => avatarService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['avatars'] });
       toast({
@@ -93,10 +92,25 @@ export const useAvatars = () => {
     },
   });
 
-  // Helper: Get single avatar by ID
-  const getAvatar = async (id: string) => {
-    return avatarService.getAvatar(id);
-  };
+  // Mutation: Duplicate avatar
+  const duplicateAvatarMutation = useMutation({
+    mutationFn: ({ id, newName }: { id: string; newName?: string }) =>
+      avatarService.duplicate(id, newName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['avatars'] });
+      toast({
+        title: 'Avatar Duplicated',
+        description: 'Your avatar has been duplicated successfully.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error Duplicating Avatar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
 
   return {
     // Data
@@ -104,12 +118,11 @@ export const useAvatars = () => {
     templates,
 
     // Loading states
-    isLoadingAvatars,
+    isLoading,
     isLoadingTemplates,
 
-    // Errors
-    avatarsError,
-    templatesError,
+    // Error
+    error,
 
     // Mutations
     createAvatar: createAvatarMutation.mutate,
@@ -121,7 +134,7 @@ export const useAvatars = () => {
     deleteAvatar: deleteAvatarMutation.mutate,
     isDeleting: deleteAvatarMutation.isPending,
 
-    // Helpers
-    getAvatar,
+    duplicateAvatar: duplicateAvatarMutation.mutate,
+    isDuplicating: duplicateAvatarMutation.isPending,
   };
 };
