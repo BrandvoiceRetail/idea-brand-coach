@@ -29,8 +29,35 @@ interface FeatureFlag {
 }
 
 // Local feature flags configuration
+/**
+ * TESTING PERCENTAGE ROLLOUT:
+ *
+ * To test the v2-multi-avatar flag at different rollout percentages:
+ *
+ * 1. Set enabled: true and sessionPercentage to desired percentage (10, 50, or 100)
+ * 2. Open browser and navigate to http://localhost:5173/avatar
+ * 3. Clear sessionStorage: sessionStorage.clear() in browser console
+ * 4. Reload page multiple times - each reload creates a new session ID
+ * 5. Observe that approximately X% of sessions see V2 interface (multi-avatar)
+ * 6. The rest see V1 interface (single avatar builder)
+ *
+ * Example configurations:
+ * - 10% rollout:  enabled: true, sessionPercentage: 10
+ * - 50% rollout:  enabled: true, sessionPercentage: 50
+ * - 100% rollout: enabled: true, sessionPercentage: 100
+ * - Disabled:     enabled: false (or sessionPercentage: 0)
+ */
 const LOCAL_FEATURE_FLAGS: Record<string, FeatureFlag> = {
-  'v2-multi-avatar': { name: 'v2-multi-avatar', enabled: false },
+  'v2-multi-avatar': {
+    name: 'v2-multi-avatar',
+    enabled: true,
+    targeting_rules: {
+      // Session-based percentage rollout (for anonymous users)
+      // Change this value to test different rollout percentages: 10, 50, 100
+      // Set to 0 to disable rollout (all users see V1)
+      sessionPercentage: 0,
+    },
+  },
 };
 
 /**
@@ -194,4 +221,55 @@ export function useFeatureFlagData(flagName: string): FeatureFlag | null {
  */
 export function useAllFeatureFlags(): FeatureFlag[] {
   return Object.values(LOCAL_FEATURE_FLAGS);
+}
+
+/**
+ * TESTING UTILITY: Simulate percentage rollout distribution
+ *
+ * This function helps verify that the hash-based percentage rollout
+ * produces the expected distribution across many sessions.
+ *
+ * Usage in browser console:
+ * ```javascript
+ * import { testPercentageDistribution } from '@/hooks/useFeatureFlag';
+ * testPercentageDistribution(50, 1000); // Test 50% rollout with 1000 sessions
+ * ```
+ *
+ * @param targetPercentage - Target rollout percentage (0-100)
+ * @param sampleSize - Number of sessions to simulate (default: 1000)
+ * @returns Distribution statistics
+ */
+export function testPercentageDistribution(
+  targetPercentage: number,
+  sampleSize: number = 1000
+): {
+  targetPercentage: number;
+  sampleSize: number;
+  enabledCount: number;
+  actualPercentage: number;
+  deviation: number;
+} {
+  let enabledCount = 0;
+
+  // Simulate many different session IDs
+  for (let i = 0; i < sampleSize; i++) {
+    const sessionId = `test_session_${i}_${Math.random().toString(36).substring(2)}`;
+    const hash = simpleHash(sessionId);
+    const sessionPercentage = (hash % 100) + 1;
+
+    if (sessionPercentage <= targetPercentage) {
+      enabledCount++;
+    }
+  }
+
+  const actualPercentage = (enabledCount / sampleSize) * 100;
+  const deviation = Math.abs(actualPercentage - targetPercentage);
+
+  return {
+    targetPercentage,
+    sampleSize,
+    enabledCount,
+    actualPercentage: parseFloat(actualPercentage.toFixed(2)),
+    deviation: parseFloat(deviation.toFixed(2)),
+  };
 }
