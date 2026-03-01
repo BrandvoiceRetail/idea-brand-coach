@@ -60,7 +60,7 @@ export function TwoPanelTemplate({
             <SheetTrigger asChild>
               <Button
                 size="lg"
-                className="h-14 w-14 rounded-full shadow-lg"
+                className="h-11 w-11 rounded-full shadow-lg"
                 aria-label="Open panel"
               >
                 <PanelLeft className="h-6 w-6" />
