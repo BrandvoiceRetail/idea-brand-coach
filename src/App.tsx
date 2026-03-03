@@ -215,7 +215,6 @@ const App = () => {
                   </Layout>
                 } />
 
-<<<<<<< HEAD
                 <Route path={ROUTES.FEATURE_FLAG_ADMIN} element={
                   <Layout>
                     <FeatureFlagAdmin />

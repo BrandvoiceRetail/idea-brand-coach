@@ -19,7 +19,7 @@ import { FloatingChatWidget } from "@/components/FloatingChatWidget";
 import { usePersistedField } from "@/hooks/usePersistedField";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
-import { MultiAvatarInterface } from "@/components/avatar/MultiAvatarInterface";
+import { AvatarTabNavigation } from "@/components/avatar/AvatarTabNavigation";
 
 /**
  * Sync status indicator for the header
@@ -48,28 +48,9 @@ function SyncStatusIndicator({ status }: { status: SyncStatus }) {
 }
 
 export default function AvatarBuilder() {
-  // Feature flag check for V2 multi-avatar interface
-  const isV2Enabled = useFeatureFlag('v2-multi-avatar', false);
+  // Feature flag check for multi-avatar tab navigation
+  const isMultiAvatarEnabled = useFeatureFlag('multi-avatar-tabs', true); // Default to true since it's merging
 
-  // Render V2 multi-avatar interface when enabled
-  if (isV2Enabled) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-            <Target className="w-8 h-8 text-secondary-foreground" />
-          </div>
-          <h1 className="text-3xl font-bold mb-2">Multi-Avatar Builder</h1>
-          <p className="text-muted-foreground">
-            Manage multiple customer personas for your brand strategy
-          </p>
-        </div>
-        <MultiAvatarInterface />
-      </div>
-    );
-  }
-
-  // V1 single avatar builder (existing implementation)
   const { toast } = useToast();
   const { brandData, updateBrandData } = useBrand();
 
@@ -294,6 +275,9 @@ export default function AvatarBuilder() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8" data-tour="avatar-builder">
+      {/* Avatar tab navigation - switches between multiple avatars */}
+      {isMultiAvatarEnabled && <AvatarTabNavigation />}
+
       <div className="text-center">
         <div className="w-16 h-16 bg-gradient-secondary rounded-full flex items-center justify-center mx-auto mb-4">
           <Target className="w-8 h-8 text-secondary-foreground" />

@@ -60,6 +60,47 @@ export interface AvatarBuyingBehavior {
 }
 
 /**
+ * Avatar metadata for UI customization and tracking.
+ * Used for tab navigation and visual distinction.
+ */
+export interface AvatarMetadata {
+  /** Color theme for the avatar tab */
+  color?: string;
+
+  /** Icon identifier for the avatar tab */
+  icon?: string;
+
+  /** Brief description of the avatar */
+  description?: string;
+
+  /** Additional custom metadata */
+  [key: string]: any;
+}
+
+/**
+ * Avatar completion status tracking.
+ * Used to display progress in the multi-avatar UI.
+ */
+export interface AvatarCompletionStatus {
+  /** Overall completion percentage (0-100) */
+  percentage: number;
+
+  /** Number of fields that have been filled */
+  filledFields: number;
+
+  /** Total number of fields in the avatar */
+  totalFields: number;
+
+  /** Completion percentages by section */
+  sectionCompletions?: {
+    demographics: number;
+    psychographics: number;
+    behavior: number;
+    voice: number;
+  };
+}
+
+/**
  * Complete avatar entity with all metadata.
  * Represents a customer persona used for brand strategy and marketing.
  */
@@ -91,11 +132,20 @@ export interface Avatar {
   /** Whether this avatar is a template (e.g., 'Weekend Warrior', 'Budget Conscious') */
   is_template: boolean;
 
+  /** Overall completion percentage for multi-avatar tracking (0-100) */
+  completion_percentage: number;
+
   /** ISO 8601 timestamp when avatar was created */
   created_at: string;
 
   /** ISO 8601 timestamp when avatar was last updated */
   updated_at: string;
+
+  /** ISO 8601 timestamp when avatar was last accessed (for tab sorting) */
+  last_accessed_at?: string;
+
+  /** UI metadata for tab customization */
+  metadata?: AvatarMetadata;
 }
 
 /**
@@ -124,6 +174,9 @@ export interface AvatarCreate {
 
   /** Whether this avatar is a template (defaults to false) */
   is_template?: boolean;
+
+  /** UI metadata for tab customization */
+  metadata?: AvatarMetadata;
 }
 
 /**
@@ -151,4 +204,13 @@ export interface AvatarUpdate {
 
   /** Updated template status */
   is_template?: boolean;
+
+  /** Updated completion percentage */
+  completion_percentage?: number;
+
+  /** Updated last accessed timestamp */
+  last_accessed_at?: string;
+
+  /** Updated UI metadata */
+  metadata?: AvatarMetadata;
 }
