@@ -3,6 +3,8 @@
  * Following SOLID principles and clean architecture patterns
  */
 
+import type { EditSource } from '../../types/field-metadata';
+
 /**
  * Represents a single knowledge entry for a user field
  */
@@ -33,6 +35,7 @@ export interface KnowledgeMetadata {
   parentEntryId?: string;
   confidence?: number;
   source?: string;
+  editSource?: EditSource;
 }
 
 /**
