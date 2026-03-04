@@ -521,4 +521,4 @@ const BrandCoachV2 = (): JSX.Element => {
   );
 };
 
-export default BrandCoachV2;
+export { BrandCoachV2 };
