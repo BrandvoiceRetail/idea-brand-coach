@@ -1,84 +1,87 @@
-import React, { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { PanelLeft } from 'lucide-react';
-
-/**
- * TwoPanelTemplate Component
- *
- * A responsive two-panel layout template optimized for mobile and desktop.
- * On mobile: panels stack vertically with collapsible right panel (Sheet)
- * On desktop: panels display side-by-side
- *
- * Features:
- * - Responsive breakpoints (stacked mobile, side-by-side desktop)
- * - Collapsible field panel for mobile
- * - Touch-friendly interactions (44x44px minimum targets)
- * - Maximum reuse of shadcn-ui components
- */
+import * as React from "react"
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable"
+import { cn } from "@/lib/utils"
 
 interface TwoPanelTemplateProps {
-  leftPanel: React.ReactNode;
-  rightPanel: React.ReactNode;
-  rightPanelTitle?: string;
-  header?: React.ReactNode;
-  footer?: React.ReactNode;
+  leftPanel: React.ReactNode
+  rightPanel: React.ReactNode
+  rightPanelTitle?: string
+  leftPanelDefaultSize?: number
+  rightPanelDefaultSize?: number
+  className?: string
 }
 
+/**
+ * TwoPanelTemplate - A responsive two-panel layout with resizable panels
+ *
+ * Desktop: Displays left and right panels side-by-side with a resizable divider
+ * Mobile: Stacks panels vertically with the right panel as the primary view
+ *
+ * @param leftPanel - Content for the left panel (typically accordion or navigation)
+ * @param rightPanel - Content for the right panel (typically chat or main content)
+ * @param rightPanelTitle - Optional title for the right panel
+ * @param leftPanelDefaultSize - Default size percentage for left panel (default: 35)
+ * @param rightPanelDefaultSize - Default size percentage for right panel (default: 65)
+ * @param className - Additional CSS classes for the container
+ */
 export function TwoPanelTemplate({
   leftPanel,
   rightPanel,
-  rightPanelTitle = 'Panel',
-  header,
-  footer,
-}: TwoPanelTemplateProps) {
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-
+  rightPanelTitle,
+  leftPanelDefaultSize = 35,
+  rightPanelDefaultSize = 65,
+  className,
+}: TwoPanelTemplateProps): JSX.Element {
   return (
-    <div className="flex flex-col h-screen">
-      {header && <div className="flex-shrink-0">{header}</div>}
-
-      <div className="flex-1 overflow-hidden relative">
-        {/* Mobile: Left panel only, with Sheet trigger */}
-        <div className="md:hidden h-full flex flex-col overflow-auto">
-          {leftPanel}
-        </div>
-
-        {/* Desktop: Two-panel grid */}
-        <div className="hidden md:grid h-full grid-cols-2 gap-0">
-          <div className="flex flex-col h-full overflow-auto">
+    <div className={cn("flex-1 overflow-hidden", className)}>
+      {/* Desktop: Resizable two-panel layout */}
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="h-full w-full"
+      >
+        {/* Left Panel */}
+        <ResizablePanel
+          defaultSize={leftPanelDefaultSize}
+          minSize={25}
+          maxSize={50}
+          className="hidden lg:block"
+        >
+          <div className="h-full overflow-y-auto">
             {leftPanel}
           </div>
-          <div className="flex flex-col h-full overflow-auto border-l">
-            {rightPanel}
-          </div>
-        </div>
+        </ResizablePanel>
 
-        {/* Mobile: Floating Sheet trigger button */}
-        <div className="md:hidden fixed bottom-6 right-6 z-40">
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetTrigger asChild>
-              <Button
-                size="lg"
-                className="h-11 w-11 rounded-full shadow-lg"
-                aria-label="Open panel"
-              >
-                <PanelLeft className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md p-0">
-              <SheetHeader className="p-6 pb-4">
-                <SheetTitle>{rightPanelTitle}</SheetTitle>
-              </SheetHeader>
-              <div className="flex-1 overflow-auto px-6 pb-6">
-                {rightPanel}
+        {/* Resizable Handle (Desktop only) */}
+        <ResizableHandle withHandle className="hidden lg:flex" />
+
+        {/* Right Panel */}
+        <ResizablePanel
+          defaultSize={rightPanelDefaultSize}
+          minSize={50}
+        >
+          <div className="flex flex-col h-full">
+            {/* Optional Title Header */}
+            {rightPanelTitle && (
+              <div className="flex-shrink-0 border-b px-4 py-3">
+                <h2 className="font-semibold text-lg">{rightPanelTitle}</h2>
               </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
+            )}
 
-      {footer && <div className="flex-shrink-0">{footer}</div>}
+            {/* Right Panel Content */}
+            <div className="flex-1 overflow-y-auto">
+              {rightPanel}
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
+      {/* Mobile: Left panel accessible via sheet or bottom nav (to be implemented) */}
+      {/* For now, right panel is primary on mobile, left panel hidden */}
+      {/* Future: Add Sheet or Drawer for left panel on mobile */}
     </div>
-  );
+  )
 }
