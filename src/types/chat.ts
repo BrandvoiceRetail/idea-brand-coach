@@ -117,6 +117,14 @@ export interface ChatResponse {
   /** Optional source citations (e.g., IDEA Framework docs) */
   sources?: string[];
 
+  /** Extracted field values from AI response */
+  extractedFields?: Array<{
+    fieldId: string;
+    value: string | string[];
+    confidence?: number;
+    context?: string;
+  }>;
+
   /** Promise that resolves when title generation completes (for cache invalidation) */
   titlePromise?: Promise<void>;
 }

@@ -5,6 +5,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { IChatService } from './interfaces/IChatService';
+import { ChatFieldExtractionService } from './ChatFieldExtractionService';
 import {
   ChatMessage,
   ChatMessageCreate,
@@ -21,6 +22,17 @@ export class SupabaseChatService implements IChatService {
   private chatbotType: ChatbotType = 'idea-framework-consultant';
   private currentSessionId: string | undefined;
   private useSystemKB: boolean = true;
+  private competitiveInsightsContext: string | null = null;
+  private fieldExtractionService = new ChatFieldExtractionService();
+
+  /**
+   * Set competitive analysis context to be included in chat messages.
+   * When set, this context is appended to edge function calls so the
+   * AI consultant can reference competitive insights in responses.
+   */
+  setCompetitiveInsightsContext(context: string | null): void {
+    this.competitiveInsightsContext = context;
+  }
 
   /**
    * Set the chatbot type for filtering messages
@@ -62,10 +74,10 @@ export class SupabaseChatService implements IChatService {
 
   /**
    * Get the edge function name for the current chatbot type
-   * Always uses the test function with System KB enabled
+   * Uses the main edge function with System KB enabled
    */
   private getEdgeFunctionName(): string {
-    const functionName = 'idea-framework-consultant-test';
+    const functionName = 'idea-framework-consultant';
     console.log(`[ChatService] Using edge function: ${functionName} (System KB: enabled)`);
     return functionName;
   }
@@ -154,6 +166,7 @@ export class SupabaseChatService implements IChatService {
             content: msg.content,
           })),
           chapterContext: message.chapterContext,
+          competitiveInsights: this.competitiveInsightsContext,
         },
       }
     );
@@ -169,13 +182,20 @@ export class SupabaseChatService implements IChatService {
       hasSources: !!responseData?.sources,
     });
 
-    // 4. Save assistant response to database
+    // 3.5. Extract fields and clean response content
+    const extraction = this.fieldExtractionService.processResponse(responseData.response);
+
+    if (extraction.extractedFields.length > 0) {
+      console.log('📝 Extracted fields:', extraction.extractedFields);
+    }
+
+    // 4. Save assistant response to database (with cleaned content)
     const { data: assistantMessage, error: assistantError } = await supabase
       .from('chat_messages')
       .insert({
         user_id: userId,
         role: 'assistant',
-        content: responseData.response,
+        content: extraction.cleanedContent, // Use cleaned content without extraction blocks
         chatbot_type: chatbotType,
         session_id: sessionId,
         chapter_id: message.chapter_id,
@@ -183,6 +203,7 @@ export class SupabaseChatService implements IChatService {
         metadata: {
           suggestions: responseData.suggestions,
           sources: responseData.sources,
+          extractedFields: extraction.extractedFields, // Store extracted fields in metadata
         },
       })
       .select()
@@ -210,6 +231,7 @@ export class SupabaseChatService implements IChatService {
       },
       suggestions: responseData.suggestions,
       sources: responseData.sources,
+      extractedFields: extraction.extractedFields, // Return extracted fields
       titlePromise,
     };
   }
