@@ -72,6 +72,9 @@ export interface ChatMessageCreate {
 
   /** Optional metadata to attach to the message */
   metadata?: Record<string, any>;
+
+  /** Optional chapter context for persona-based responses */
+  chapterContext?: string;
 }
 
 /**
