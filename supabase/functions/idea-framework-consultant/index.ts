@@ -741,12 +741,14 @@ serve(async (req) => {
       }
     }
 
-    const { message, context, chat_history } = await req.json();
+    const { message, context, chat_history, chapterContext } = await req.json();
     console.log('IDEA Framework Consultant request:', {
       message,
       hasManualContext: !!context,
       hasChatHistory: !!chat_history,
       chatHistoryLength: chat_history?.length || 0,
+      hasChapterContext: !!chapterContext,
+      chapterContext,
       userId
     });
 
@@ -807,6 +809,12 @@ serve(async (req) => {
     // Add manually provided context
     if (context) {
       contextParts.push(`ADDITIONAL CONTEXT:\n${context}`);
+    }
+
+    // Add chapter context if provided
+    if (chapterContext) {
+      const chapterInfo = `CURRENT CHAPTER CONTEXT:\nChapter ${chapterContext.chapter}: ${chapterContext.chapterName || 'Unknown'}`;
+      contextParts.push(chapterInfo);
     }
 
     // Combine all context with the question
