@@ -439,8 +439,9 @@ async function retrieveUserContext(
  * Generate Trevor persona system prompt
  * Trevor is the BMAD brand coach with domain-specific tone adaptations
  * @param extractionFields - Optional array of field identifiers to extract from the conversation
+ * @param isFirstMessage - Whether this is the first message in a new session
  */
-function generateTrevorSystemPrompt(extractionFields?: string[]): string {
+function generateTrevorSystemPrompt(extractionFields?: string[], isFirstMessage?: boolean): string {
   let basePrompt = `You are Trevor, an expert BMAD brand coach and author who has developed the IDEA framework—a comprehensive brand development methodology.
 
 PERSONA OVERVIEW:
@@ -607,6 +608,41 @@ You guide users through structured brand development across 11 chapters:
 11. Value Proposition Development (Canvas)
 
 Always encourage iterative refinement and ask clarifying questions when input lacks detail for optimal strategic guidance.`;
+
+  // Add first message introduction instructions if this is a new session
+  if (isFirstMessage) {
+    basePrompt += `
+
+---
+
+FIRST SESSION INTRODUCTION PROTOCOL (ACTIVE FOR THIS MESSAGE):
+
+This is the first message in a new session. You MUST introduce yourself by name and set expectations for the conversation.
+
+**Use this introduction template:**
+
+Hi, I'm Trevor, your BMAD brand coach.
+
+I'm here to guide you through a comprehensive brand development journey using my IDEA framework—a proven methodology that's helped countless businesses build powerful, distinctive brands.
+
+The IDEA framework covers four key areas:
+- IDENTIFY: Assess your current brand position and competitive landscape
+- DISCOVER: Understand your target audience deeply through persona development
+- EXECUTE: Design your business model and strategic execution plan
+- ANALYZE: Create content and marketing strategies that amplify your brand
+
+We can work through the full 11-chapter BMAD program, or I can help with specific brand challenges you're facing right now. What would be most valuable to you today?
+
+**Introduction Principles:**
+- Always use first name: "Hi, I'm Trevor" (not "I'm an AI" or "I'm a brand coach named Trevor")
+- Set clear expectations: Explain the IDEA framework and 11-chapter structure
+- Establish credibility: Reference frameworks and expertise without bragging
+- Offer flexibility: Make it clear users can do full program OR ad-hoc coaching
+- Ask an opening question: Give the user clear direction for how to respond
+- Be warm but professional: Friendly expert, not overly casual
+
+IMPORTANT: Only introduce yourself in the FIRST message of a session. Do NOT reintroduce in subsequent messages.`;
+  }
 
   // Add field extraction instructions if chapter context with extraction fields is provided
   if (extractionFields && extractionFields.length > 0) {
@@ -809,7 +845,11 @@ serve(async (req) => {
       }
     }
 
-    const { message, context, chat_history, chapterContext } = await req.json();
+    const { message, context, chat_history, chapterContext, isFirstMessage } = await req.json();
+
+    // Detect first message: either explicit flag OR empty/undefined chat history
+    const isFirst = isFirstMessage === true || !chat_history || chat_history.length === 0;
+
     console.log('IDEA Framework Consultant request:', {
       message,
       hasManualContext: !!context,
@@ -817,6 +857,7 @@ serve(async (req) => {
       chatHistoryLength: chat_history?.length || 0,
       hasChapterContext: !!chapterContext,
       chapterContext,
+      isFirstMessage: isFirst,
       userId
     });
 
@@ -852,12 +893,15 @@ serve(async (req) => {
       });
     }
 
-    // Generate Trevor persona system prompt with optional field extraction
+    // Generate Trevor persona system prompt with optional field extraction and first message detection
     const extractionFields = chapterContext?.extractionFields;
     if (extractionFields && extractionFields.length > 0) {
       console.log(`[Field Extraction] Active with ${extractionFields.length} fields: ${extractionFields.join(', ')}`);
     }
-    const systemPrompt = generateTrevorSystemPrompt(extractionFields);
+    if (isFirst) {
+      console.log('[First Message] Trevor introduction protocol active');
+    }
+    const systemPrompt = generateTrevorSystemPrompt(extractionFields, isFirst);
 
     // Build user prompt with all available context
     let userPrompt = message;
