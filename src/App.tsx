@@ -203,6 +203,109 @@ const App = () => {
                   </Layout>
                 } />
 
+                {/* V1 Routes - Legacy support */}
+                <Route path="/v1/start-here" element={
+                  <Layout>
+                    <StartHere />
+                  </Layout>
+                } />
+
+                <Route path="/v1/journey" element={
+                  <Layout>
+                    <Index />
+                  </Layout>
+                } />
+
+                <Route path="/v1/diagnostic" element={<FreeDiagnostic />} />
+
+                <Route path="/v1/subscribe" element={<PricingPaywall />} />
+
+                <Route path="/v1/diagnostic/results" element={<DiagnosticResults />} />
+
+                <Route path="/v1/dashboard" element={
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                } />
+
+                <Route path="/v1/brand-diagnostic" element={
+                  <Layout>
+                    <BrandDiagnostic />
+                  </Layout>
+                } />
+
+                <Route path="/v1/idea-diagnostic" element={
+                  <Layout>
+                    <IdeaDiagnostic />
+                  </Layout>
+                } />
+
+                <Route path="/v1/idea" element={
+                  <Layout>
+                    <IdeaFramework />
+                  </Layout>
+                } />
+
+                <Route path="/v1/idea/consultant" element={
+                  <Layout>
+                    <IdeaFrameworkConsultant />
+                  </Layout>
+                } />
+
+                <Route path="/v1/conversations" element={
+                  <Layout>
+                    <ConversationHistory />
+                  </Layout>
+                } />
+
+                <Route path="/v1/idea/insight" element={
+                  <Layout>
+                    <IdeaInsight />
+                  </Layout>
+                } />
+
+                <Route path="/v1/idea/distinctive" element={
+                  <Layout>
+                    <IdeaDistinctive />
+                  </Layout>
+                } />
+
+                <Route path="/v1/idea/empathy" element={
+                  <Layout>
+                    <IdeaEmpathy />
+                  </Layout>
+                } />
+
+                <Route path="/v1/idea/authenticity" element={
+                  <Layout>
+                    <IdeaAuthenticity />
+                  </Layout>
+                } />
+
+                <Route path="/v1/avatar" element={
+                  <Layout>
+                    <AvatarBuilder />
+                  </Layout>
+                } />
+
+                <Route path="/v1/canvas" element={
+                  <Layout>
+                    <BrandCanvas />
+                  </Layout>
+                } />
+
+                <Route path="/v1/copy-generator" element={
+                  <Layout>
+                    <BrandCopyGenerator />
+                  </Layout>
+                } />
+
+                <Route path="/v1/research-learning" element={
+                  <Layout>
+                    <ResearchLearning />
+                  </Layout>
+                } />
+
                 <Route path="*" element={<NotFound />} />
 
                     </Routes>
