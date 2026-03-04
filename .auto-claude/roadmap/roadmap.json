@@ -1,0 +1,928 @@
+{
+  "id": "roadmap-avatar-system-2026",
+  "project_name": "IDEA Brand Coach Multi-Avatar System",
+  "version": "3.0",
+  "vision": "Enable ecommerce brands to test and optimize multiple customer avatars with AI-powered coaching guided by the IDEA framework book",
+  "description": "Comprehensive multi-avatar management system with book-guided chat workflow, manual field editing, performance tracking, and ROI measurement. Following Trevor's 11-chapter IDEA framework for systematic avatar development.",
+  "phases": [
+    {
+      "id": "phase-0-refactoring",
+      "name": "Phase 0: Technical Debt Refactoring",
+      "description": "Clean technical debt blocking V2 implementation before starting new features",
+      "status": "completed",
+      "duration": "1 week",
+      "features": [
+        "tech-debt-cleanup",
+        "test-coverage-improvement"
+      ]
+    },
+    {
+      "id": "phase-1-foundation",
+      "name": "Phase 1: Foundation & Infrastructure",
+      "description": "Database setup, core services, and UI foundation for multi-avatar system",
+      "status": "completed",
+      "duration": "2 weeks",
+      "features": [
+        "database-migration",
+        "avatar-management-service",
+        "ui-foundation-two-panel",
+        "feature-flag-setup"
+      ]
+    },
+    {
+      "id": "phase-2-core-avatar",
+      "name": "Phase 2: Core Multi-Avatar Features",
+      "description": "Avatar CRUD, switching, field editing, and chat integration",
+      "status": "completed",
+      "duration": "2 weeks",
+      "features": [
+        "avatar-crud-operations",
+        "avatar-tab-switching",
+        "field-editor-manual",
+        "book-guided-chat",
+        "field-extraction-pipeline"
+      ]
+    },
+    {
+      "id": "phase-2-5-v2-chat-first",
+      "name": "Phase 2.5: V2 Chat-First UX Redesign",
+      "description": "Invert V2 layout to chat-primary (right) + chapter accordion (left). BMAD Trevor persona, chapter-driven coaching, field extraction from AI responses, avatar header dropdown, V1 route migration.",
+      "status": "in_progress",
+      "features": [
+        "v1-route-migration",
+        "bmad-coach-agent",
+        "chapter-section-accordion",
+        "avatar-header-dropdown",
+        "field-extraction-hook",
+        "v2-layout-rework"
+      ]
+    },
+    {
+      "id": "phase-3-advanced",
+      "name": "Phase 3: Advanced Features",
+      "description": "Performance tracking, document generation, and polish",
+      "status": "planned",
+      "duration": "2 weeks",
+      "features": [
+        "performance-metrics",
+        "roi-calculator",
+        "document-generation",
+        "avatar-comparison",
+        "mobile-optimization"
+      ]
+    },
+    {
+      "id": "phase-4-testing",
+      "name": "Phase 4: Testing & QA",
+      "description": "Comprehensive testing, security audit, and beta preparation",
+      "status": "planned",
+      "duration": "2 weeks",
+      "features": [
+        "test-suite-complete",
+        "security-audit",
+        "performance-testing",
+        "documentation",
+        "beta-preparation"
+      ]
+    },
+    {
+      "id": "phase-5-beta",
+      "name": "Phase 5: Beta Launch",
+      "description": "Gradual rollout to beta users with monitoring and iteration",
+      "status": "planned",
+      "duration": "2 weeks",
+      "features": [
+        "beta-rollout",
+        "monitoring-setup",
+        "testimonial-collection",
+        "iteration-fixes"
+      ]
+    }
+  ],
+  "features": [
+    {
+      "id": "tech-debt-cleanup",
+      "title": "Pre-Implementation Refactoring Sprint",
+      "description": "Refactor critical paths that block V2 implementation, focusing on chat service, field hooks, and component architecture",
+      "rationale": "Technical debt is blocking efficient V2 development and causing maintenance issues",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [],
+      "status": "completed",
+      "acceptance_criteria": [
+        "Refactor SupabaseChatService.ts - extract methods, reduce complexity by 30%",
+        "Add type safety improvements to usePersistedField hook",
+        "Split AIAssistant.tsx into smaller, focused components",
+        "Extract shared sync service for field updates",
+        "Eliminate 50%+ of identified code smells",
+        "Document all refactored components"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "017-pre-implementation-refactoring-sprint"
+    },
+    {
+      "id": "test-coverage-improvement",
+      "title": "Test Coverage Enhancement",
+      "description": "Add characterization tests for legacy code and improve coverage on critical paths",
+      "rationale": "Current test coverage insufficient for safe refactoring and feature development",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "high",
+      "dependencies": [],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Achieve 70%+ test coverage on critical paths",
+        "Add characterization tests for legacy components",
+        "Create test fixtures for avatar data",
+        "Set up integration test suite",
+        "Configure test coverage reporting"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "database-migration",
+      "title": "Multi-Avatar Database Schema",
+      "description": "Create database tables for brands, avatars, and performance metrics with RLS policies",
+      "rationale": "Need persistent storage for multiple avatars per user with proper security",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "tech-debt-cleanup"
+      ],
+      "status": "completed",
+      "acceptance_criteria": [
+        "Create brands table with user association",
+        "Create avatars table with brand association",
+        "Create performance_metrics table for ROI tracking",
+        "Implement Row-Level Security (RLS) policies",
+        "Additive migrations only - no breaking changes",
+        "Create default brand for existing users",
+        "Migrate existing chat sessions to first avatar"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "019-multi-avatar-database-schema"
+    },
+    {
+      "id": "avatar-management-service",
+      "title": "Avatar Management Service Layer",
+      "description": "Build service layer for avatar CRUD operations with React Query integration",
+      "rationale": "Centralized avatar management logic with caching and optimistic updates",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "database-migration"
+      ],
+      "status": "completed",
+      "acceptance_criteria": [
+        "Create AvatarService with CRUD methods",
+        "Implement React Query hooks for avatar operations",
+        "Add optimistic updates for UI responsiveness",
+        "Create AvatarContext for state management",
+        "Support unlimited avatars per brand",
+        "Implement avatar templates for quick starts"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "021-avatar-management-service-layer"
+    },
+    {
+      "id": "ui-foundation-two-panel",
+      "title": "Two-Panel Responsive UI Foundation",
+      "description": "Adapt UI to two-panel layout (chat + fields) optimized for mobile and desktop",
+      "rationale": "Simplified from three-panel design for better mobile experience and reduced complexity",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "high",
+      "dependencies": [],
+      "status": "completed",
+      "acceptance_criteria": [
+        "Create TwoPanelTemplate component",
+        "Implement responsive breakpoints (mobile: stacked, desktop: side-by-side)",
+        "Add collapsible field panel for mobile",
+        "Ensure touch-friendly interactions (44x44px targets)",
+        "Set up /v2/* routes with feature flags",
+        "Maximum reuse of existing shadcn-ui components"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "018-two-panel-responsive-ui-foundation"
+    },
+    {
+      "id": "feature-flag-setup",
+      "title": "Feature Flag Configuration",
+      "description": "Configure feature flags for gradual V2 rollout",
+      "rationale": "Enable safe, gradual rollout with instant rollback capability",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "medium",
+      "dependencies": [],
+      "status": "completed",
+      "acceptance_criteria": [
+        "Use existing useFeatureFlag hook",
+        "Configure v2-multi-avatar flag",
+        "Set up percentage-based rollout",
+        "Implement fallback to V1 interface",
+        "Add feature flag admin UI",
+        "Document flag usage patterns"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "020-feature-flag-configuration"
+    },
+    {
+      "id": "avatar-crud-operations",
+      "title": "Avatar CRUD Operations",
+      "description": "Complete create, read, update, delete functionality for avatars",
+      "rationale": "Core functionality for managing multiple avatars",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "avatar-management-service",
+        "ui-foundation-two-panel"
+      ],
+      "status": "completed",
+      "acceptance_criteria": [
+        "Create avatar with name and initial fields",
+        "Edit avatar name and description",
+        "Delete avatar with confirmation",
+        "Duplicate avatar for variation testing",
+        "Auto-generate unique names if not provided",
+        "Maintain creation/modification timestamps",
+        "Support avatar templates (Weekend Warrior, Budget Conscious, etc.)"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "022-avatar-crud-operations"
+    },
+    {
+      "id": "avatar-tab-switching",
+      "title": "Avatar Tab Navigation",
+      "description": "Tab-based UI for switching between avatars seamlessly",
+      "rationale": "Quick access to multiple avatars for comparison and testing",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "high",
+      "dependencies": [
+        "avatar-crud-operations"
+      ],
+      "status": "completed",
+      "acceptance_criteria": [
+        "Display avatar tabs (bottom on mobile, top on desktop)",
+        "Visual highlight for active avatar",
+        "Show completion percentage in tab",
+        "Preserve or reset chat context on switch (user choice)",
+        "Lazy load avatar data on switch",
+        "Support 100+ avatars without performance degradation"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "024-avatar-tab-navigation"
+    },
+    {
+      "id": "field-editor-manual",
+      "title": "Manual Field Editor with Sync",
+      "description": "Inline field editing with auto-save, validation, and manual edit prioritization",
+      "rationale": "Users need full control over avatar fields with AI assistance",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "avatar-crud-operations"
+      ],
+      "status": "completed",
+      "acceptance_criteria": [
+        "Inline editing for all field types",
+        "Auto-save with 500ms debounce",
+        "Field validation (email, URL, ranges)",
+        "Visual indicators for manual edits (✏️) vs AI (🤖)",
+        "Preserve manual edits when AI suggests updates",
+        "Field-specific help text and examples",
+        "Rich text support for long-form fields",
+        "Edit history per field per avatar"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "025-manual-field-editor-with-sync"
+    },
+    {
+      "id": "book-guided-chat",
+      "title": "Book-Guided Chat Workflow",
+      "description": "Chat system following Trevor's 11-chapter IDEA framework progression",
+      "rationale": "Systematic avatar development using proven IDEA methodology",
+      "priority": "must",
+      "complexity": "high",
+      "impact": "high",
+      "dependencies": [
+        "avatar-management-service"
+      ],
+      "status": "completed",
+      "acceptance_criteria": [
+        "Follow 11-chapter book progression",
+        "Display current chapter position (3 of 11)",
+        "Stage-appropriate questions based on chapter",
+        "Allow skip/revisit any stage",
+        "Provide chapter summaries before each stage",
+        "Reference book excerpts via existing RAG (vector store: vs_6948707b318c81918a90e9b44970a99e)",
+        "Track progress per avatar",
+        "Adapt to uploaded brand documents"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "023-book-guided-chat-workflow"
+    },
+    {
+      "id": "field-extraction-pipeline",
+      "title": "AI Field Extraction from Chat",
+      "description": "Structured field extraction from Trevor's chat responses using the ---FIELD_EXTRACTION_JSON--- delimiter protocol. The edge function (spec 033) injects extraction instructions per chapter; the useFieldExtraction hook (spec 036) parses, persists, and protects manual edits. Phase 3 adds: confidence scoring, field-update animations, and chat-to-field mapping reference.",
+      "rationale": "Reduce manual data entry — Trevor's structured responses auto-populate the chapter accordion fields while preserving user edits.",
+      "priority": "must",
+      "complexity": "high",
+      "impact": "high",
+      "dependencies": [
+        "book-guided-chat",
+        "field-editor-manual"
+      ],
+      "status": "in_progress",
+      "acceptance_criteria": [
+        "Extract field values from Trevor's structured ---FIELD_EXTRACTION_JSON--- delimiter block (implemented in spec 036)",
+        "Map extracted values to chapter accordion fields in real time (implemented in spec 036)",
+        "Never overwrite manual edits (source='manual' takes priority over source='ai') (implemented in spec 036)",
+        "Confidence scoring on extracted fields: high/medium/low shown as indicator (Phase 3 enhancement)",
+        "Field highlight animation when AI populates or updates a field (Phase 3 enhancement)",
+        "Chat-to-field mapping: user can see which message sourced each field value (Phase 3 enhancement)"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "v1-route-migration",
+      "title": "V1 Route Migration",
+      "description": "Move all legacy routes to /v1/* prefix. Add V1_ROUTES constant to routes.ts. Add <Navigate replace> redirects from legacy paths to V1 equivalents. No page component changes — routing only.",
+      "rationale": "V2 users must never encounter V1 pages. Clean URL namespace separation lets V2 own the experience completely.",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "high",
+      "dependencies": [],
+      "status": "completed",
+      "acceptance_criteria": [
+        "V1_ROUTES constant exported from src/config/routes.ts",
+        "/start-here redirects to /v1/start-here",
+        "/avatar redirects to /v1/avatar",
+        "/canvas redirects to /v1/canvas",
+        "All other legacy paths redirect to /v1/* equivalents",
+        "/auth stays at /auth (OAuth callback compatibility)",
+        "/v2/coach unchanged",
+        "ROUTES.HOME_PAGE updated to /v1/start-here",
+        "All V1 pages still render at their /v1/* paths"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "bmad-coach-agent",
+      "title": "BMAD Coach Agent — Trevor Persona",
+      "description": "Create src/agents/trevor-brand-coach.md with full Trevor BMAD persona spec. Extend edge function to embed Trevor persona as base system prompt and inject chapter-specific field extraction instructions when chapterContext is present in request body.",
+      "rationale": "Trevor needs a formal BMAD agent definition to ensure consistent voice, chapter-by-chapter workflow, and structured field extraction. The edge function must support the extraction protocol.",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [],
+      "status": "completed",
+      "acceptance_criteria": [
+        "src/agents/trevor-brand-coach.md created with persona, 11-chapter workflow, checkpoint protocol",
+        "Edge function reads optional chapterContext from request body",
+        "When chapterContext present, extraction instructions appended to system prompt",
+        "Extraction block format: ---FIELD_EXTRACTION_JSON---\\n{fields:[...]}",
+        "Trevor persona replaces generic IDEA GPT system prompt",
+        "All existing behavior preserved (System KB, User KB, OpenAI call)",
+        "Trevor introduces himself by name in first message of a session"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "chapter-section-accordion",
+      "title": "Chapter Section Accordion",
+      "description": "Create ChapterSectionAccordion, ChapterFieldSet, and CHAPTER_FIELDS_MAP for the V2 left panel. Shows all 11 chapters with active chapter open + fields, completed chapters collapsed with summary, future chapters locked.",
+      "rationale": "The V2 left panel replaces the static brand form with a dynamic, chapter-driven accordion that shows coach-managed fields for user review and editing.",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [],
+      "status": "completed",
+      "acceptance_criteria": [
+        "src/components/v2/ChapterSectionAccordion.tsx created",
+        "src/components/v2/ChapterFieldSet.tsx created",
+        "src/config/chapterFields.ts created with CHAPTER_FIELDS_MAP for all 11 chapters",
+        "Active chapter auto-expanded; future chapters disabled",
+        "Completed chapters show first captured value as summary",
+        "Proceed to Next Section button calls onProceed(chapterId)",
+        "Field source indicators: Bot icon for AI, Pencil icon for manual",
+        "Uses existing accordion.tsx, badge.tsx, button.tsx, textarea.tsx, input.tsx, label.tsx"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "avatar-header-dropdown",
+      "title": "Avatar Header Dropdown",
+      "description": "Create AvatarHeaderDropdown component for V2 header. Shows current avatar name, dropdown to switch avatars, create new avatar option with dialog.",
+      "rationale": "V2 has no sidebar so avatar switching lives in the header. Dropdown pattern gives quick access without consuming panel space.",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "high",
+      "dependencies": [],
+      "status": "completed",
+      "acceptance_criteria": [
+        "src/components/v2/AvatarHeaderDropdown.tsx created",
+        "Uses useBrand() for currentAvatarId, avatarsList, switchAvatar, createAvatar, isLoadingAvatars",
+        "Dropdown lists all avatars with checkmark on active + completion percentage",
+        "Create New Avatar option opens Dialog with name input",
+        "Loading state shows spinner in trigger",
+        "Uses existing dropdown-menu.tsx, dialog.tsx, button.tsx, input.tsx"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "field-extraction-hook",
+      "title": "Field Extraction Hook",
+      "description": "Create useFieldExtraction hook that parses ---FIELD_EXTRACTION_JSON--- delimiter from AI responses, strips it from display text, saves field values with source tracking, and persists to localStorage with avatar-scoped keys.",
+      "rationale": "Bridges the edge function's structured extraction output with the frontend accordion. Manual edits always win over AI extractions.",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "bmad-coach-agent",
+        "chapter-section-accordion"
+      ],
+      "status": "completed",
+      "acceptance_criteria": [
+        "src/hooks/useFieldExtraction.ts created",
+        "extractFields(rawResponse) strips block and returns clean display text",
+        "Valid extraction block → field values saved with source='ai'",
+        "setFieldManual sets source='manual' and blocks AI overwrites for that field",
+        "Malformed JSON → logs error, returns full original response",
+        "localStorage persistence with avatar-scoped keys (v2_field_values_{avatarId})",
+        "clearFields() resets all values and sources",
+        "Unit tests cover: delimiter parsing, manual override, malformed JSON, clearFields"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "v2-layout-rework",
+      "title": "V2 Layout Rework — BrandCoachV2",
+      "description": "Full rework of BrandCoachV2.tsx: chat moves to RIGHT, ChapterSectionAccordion in LEFT, AvatarHeaderDropdown in header, field extraction wired end-to-end, handleProceed advances chapters and sends Trevor transition messages, chapterContext included in sendMessage metadata.",
+      "rationale": "Integrates all Phase 2.5 components into a cohesive chat-first experience. This is the final assembly step.",
+      "priority": "must",
+      "complexity": "high",
+      "impact": "high",
+      "dependencies": [
+        "v1-route-migration",
+        "bmad-coach-agent",
+        "chapter-section-accordion",
+        "avatar-header-dropdown",
+        "field-extraction-hook"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Chat interface on RIGHT panel (moved from left)",
+        "ChapterSectionAccordion on LEFT panel",
+        "AvatarHeaderDropdown + chapter progress badge in header",
+        "useFieldExtraction intercepts AI responses, strips extraction block before display",
+        "sendMessage includes chapterContext metadata for current chapter",
+        "handleProceed: completeCurrentChapter() + Trevor chapter-transition system message",
+        "System messages (isSystemMessage=true) filtered from chat display",
+        "Avatar switch triggers clearFields()",
+        "All existing chat features preserved (session sidebar, copy, download, clear)",
+        "Verify whether useChat returns raw or stored content (critical investigation before build)"
+      ],
+      "user_stories": [],
+      "linked_spec_id": "038-v2-layout-rework-brandcoachv2"
+    },
+    {
+      "id": "v2-field-population-integration",
+      "title": "V2 Field Population Integration",
+      "description": "Wire extracted fields from ChatFieldExtractionService into BrandCoachV2 component to populate chapter fields. Implement field accumulator for batch updates at chapter completion, connect useChat response to field extraction flow, and enable progressive field population as users converse with Trevor.",
+      "rationale": "Field extraction at the source is complete (ChatFieldExtractionService intercepts raw responses). Now need to connect this data flow to the UI components so fields actually populate in the chapter accordion as users progress through conversations.",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "critical",
+      "dependencies": [
+        "v2-layout-rework",
+        "field-extraction-hook",
+        "chapter-section-accordion"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "useChat hook exposes extractedFields from ChatResponse",
+        "BrandCoachV2 monitors chat responses for extracted fields",
+        "useFieldAccumulator hook accumulates fields during chapter conversation",
+        "Accumulated fields NOT immediately applied (batch at chapter end)",
+        "Visual indicator shows when fields are pending/accumulating",
+        "handleProceed applies accumulated fields via batch update",
+        "Field sources tracked (AI vs manual) to prevent overwrites",
+        "Manual edits block AI updates for that specific field",
+        "Chapter completion clears accumulator for next chapter",
+        "Field values persist in localStorage with avatar scope",
+        "Switching avatars clears/loads appropriate field set",
+        "Field extraction works with Trevor's BMAD chapter prompts",
+        "Integration test confirms end-to-end field population flow"
+      ],
+      "user_stories": [
+        "As a user, I want my chat responses to automatically populate the chapter fields so I don't have to manually copy information",
+        "As a user, I want to review extracted fields before they're applied so I maintain control over my brand data",
+        "As a user, I want manual edits to be preserved even if the AI suggests different values",
+        "As a user, I want field values to accumulate during a chapter conversation and apply all at once when I proceed"
+      ],
+      "linked_spec_id": "039-v2-field-population-integration"
+    },
+    {
+      "id": "performance-metrics",
+      "title": "Performance Metrics Tracking",
+      "description": "Manual entry and tracking of avatar performance metrics by channel",
+      "rationale": "Measure ROI and identify winning avatars based on real campaign data",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "avatar-crud-operations"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Manual metric entry forms per avatar",
+        "Support standard metrics (CTR, CPA, ROAS, Conversion Rate)",
+        "Custom metric definitions",
+        "Track by deployment channel (Facebook, Email, TikTok)",
+        "Bulk import via CSV",
+        "Before/after comparison",
+        "Performance trend visualization"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "roi-calculator",
+      "title": "ROI Calculation & Reporting",
+      "description": "Calculate and visualize return on investment for each avatar",
+      "rationale": "Prove value of avatar testing with concrete ROI data",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "high",
+      "dependencies": [
+        "performance-metrics"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Calculate performance lift vs baseline",
+        "Generate ROI reports per avatar",
+        "Identify winning avatars automatically",
+        "Create testimonial templates from results",
+        "Export reports as PDF/CSV",
+        "Support A/B test comparisons"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "document-generation",
+      "title": "Strategy Document Generation",
+      "description": "Generate comprehensive brand strategy documents per avatar",
+      "rationale": "Provide actionable deliverables for implementation",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "book-guided-chat",
+        "field-editor-manual"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Generate strategy doc with all 11 book chapters",
+        "Include relevant book excerpts and frameworks",
+        "Prioritize manually edited fields in output",
+        "Multiple export formats (PDF, Markdown)",
+        "Maintain document version history",
+        "Complete generation in <5 seconds",
+        "Include brand assets and uploaded documents"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "avatar-comparison",
+      "title": "Avatar Comparison View",
+      "description": "Side-by-side comparison of multiple avatars",
+      "rationale": "Enable quick identification of differences and optimization opportunities",
+      "priority": "should",
+      "complexity": "low",
+      "impact": "medium",
+      "dependencies": [
+        "avatar-crud-operations"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Side-by-side comparison of 2-4 avatars",
+        "Highlight field differences",
+        "Show performance metrics comparison",
+        "Export comparison reports",
+        "Bulk field editing across avatars",
+        "Visual diff highlighting"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "mobile-optimization",
+      "title": "Mobile Experience Optimization",
+      "description": "Optimize UI/UX specifically for mobile devices",
+      "rationale": "Majority of users will access via mobile (Trevor's audience)",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "ui-foundation-two-panel"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Fully functional on screens ≥375px",
+        "Touch-optimized interactions",
+        "Bottom sheet for field editing",
+        "Swipe gestures for avatar switching",
+        "Appropriate mobile keyboards for inputs",
+        "Progressive enhancement for low-end devices",
+        "Offline mode for field editing"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "test-suite-complete",
+      "title": "Comprehensive Test Suite",
+      "description": "Unit, integration, and E2E tests for all features",
+      "rationale": "Ensure quality and prevent regressions",
+      "priority": "must",
+      "complexity": "high",
+      "impact": "high",
+      "dependencies": [
+        "phase-2-core-avatar",
+        "phase-3-advanced"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "80% unit test coverage",
+        "Integration tests for critical flows",
+        "E2E tests for avatar creation journey",
+        "Performance test suite",
+        "Mobile device testing",
+        "Cross-browser compatibility tests"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "security-audit",
+      "title": "Security Audit & Hardening",
+      "description": "Comprehensive security review and fixes",
+      "rationale": "Protect user data and maintain trust",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "phase-2-core-avatar"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Penetration testing completed",
+        "RLS policies verified",
+        "Input sanitization audit",
+        "Prompt injection prevention",
+        "File upload scanning",
+        "GDPR/CCPA compliance verified",
+        "Security headers configured"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "performance-testing",
+      "title": "Performance Testing & Optimization",
+      "description": "Load testing and performance optimization",
+      "rationale": "Ensure scalability and responsiveness",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "phase-2-core-avatar",
+        "phase-3-advanced"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Page load <3s on 4G",
+        "Chat response <2s (95th percentile)",
+        "Support 1000+ concurrent users",
+        "Handle 100+ avatars per user",
+        "Bundle size <500KB initial",
+        "Lighthouse score >85 performance"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "documentation",
+      "title": "User Documentation & Help",
+      "description": "Complete documentation for users and developers",
+      "rationale": "Reduce support burden and enable self-service",
+      "priority": "should",
+      "complexity": "low",
+      "impact": "medium",
+      "dependencies": [
+        "phase-3-advanced"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "User guide for avatar creation",
+        "Video tutorials (3-5 videos)",
+        "API documentation",
+        "Developer setup guide",
+        "FAQ section",
+        "In-app help tooltips"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "beta-preparation",
+      "title": "Beta Launch Preparation",
+      "description": "Prepare infrastructure and processes for beta",
+      "rationale": "Ensure smooth beta launch with proper monitoring",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "high",
+      "dependencies": [
+        "test-suite-complete",
+        "security-audit"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Analytics configured (PostHog/Mixpanel)",
+        "Error monitoring setup (Sentry)",
+        "Feature flags configured",
+        "Beta tester recruitment (10+ users)",
+        "Support channel established",
+        "Feedback collection process"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "beta-rollout",
+      "title": "Gradual Beta Rollout",
+      "description": "Phased rollout to beta users",
+      "rationale": "Validate with real users before full launch",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "high",
+      "dependencies": [
+        "beta-preparation"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Internal testing complete (Days 1-2)",
+        "10% rollout to beta testers (Days 3-5)",
+        "50% rollout if metrics positive",
+        "Monitor key metrics continuously",
+        "Rollback capability tested",
+        "V1 fallback available for 30 days"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "monitoring-setup",
+      "title": "Production Monitoring",
+      "description": "Set up comprehensive monitoring and alerting",
+      "rationale": "Proactive issue detection and resolution",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "medium",
+      "dependencies": [
+        "beta-rollout"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Application performance monitoring",
+        "Error rate tracking",
+        "API latency monitoring",
+        "User behavior analytics",
+        "Custom dashboards created",
+        "Alert thresholds configured"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "testimonial-collection",
+      "title": "ROI Testimonial Collection",
+      "description": "Gather and document success stories from beta users",
+      "rationale": "Social proof critical for adoption",
+      "priority": "should",
+      "complexity": "low",
+      "impact": "high",
+      "dependencies": [
+        "beta-rollout"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "10+ verified ROI testimonials",
+        "Document before/after metrics",
+        "5+ detailed case studies",
+        "Permission for public use",
+        "Video testimonials (3+)",
+        "Integration into marketing site"
+      ],
+      "user_stories": []
+    },
+    {
+      "id": "iteration-fixes",
+      "title": "Beta Feedback Iteration",
+      "description": "Priority fixes based on beta user feedback",
+      "rationale": "Polish before general availability",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "dependencies": [
+        "beta-rollout"
+      ],
+      "status": "planned",
+      "acceptance_criteria": [
+        "Address all critical bugs",
+        "Implement top 5 feature requests",
+        "UI/UX improvements based on usage data",
+        "Performance optimizations",
+        "Documentation updates",
+        "Final Trevor approval"
+      ],
+      "user_stories": []
+    }
+  ],
+  "success_metrics": {
+    "business": {
+      "mau_target": 1000,
+      "mau_timeline": "6 months",
+      "avatars_per_user": 3,
+      "session_duration": "25+ minutes",
+      "framework_completion": "40% complete IDEA framework",
+      "retention_rate": "60% monthly",
+      "testimonials": "10+ verified ROI stories"
+    },
+    "technical": {
+      "chat_response_time": "< 2 seconds",
+      "page_load_time": "< 3 seconds",
+      "field_save_time": "< 500ms",
+      "document_generation": "< 5 seconds",
+      "uptime": "99.5%",
+      "test_coverage": "80%+",
+      "lighthouse_performance": "> 85"
+    },
+    "adoption": {
+      "first_avatar_completion": "70% of users",
+      "multi_avatar_creation": "60% create 2+ avatars",
+      "field_edit_rate": "40% manually edit fields",
+      "document_export_rate": "80% export strategy docs",
+      "performance_tracking": "75% log metrics"
+    }
+  },
+  "technical_constraints": {
+    "existing_patterns": [
+      "usePersistedField hook for field persistence",
+      "React Query for server state",
+      "Supabase for backend",
+      "shadcn-ui components",
+      "Tailwind CSS styling"
+    ],
+    "architecture": {
+      "frontend": "React 18 with TypeScript",
+      "state_management": "React Query + Context",
+      "backend": "Supabase (PostgreSQL + Auth + Realtime)",
+      "ai": "OpenAI API with streaming",
+      "hosting": "Vercel or Netlify",
+      "book_rag": "OpenAI Vector Store (vs_6948707b318c81918a90e9b44970a99e)"
+    },
+    "performance_budget": {
+      "initial_bundle": "< 500KB",
+      "per_route": "< 200KB",
+      "images": "WebP with lazy loading",
+      "api_calls": "Debounced and cached"
+    }
+  },
+  "risks": {
+    "technical_debt": {
+      "level": "high",
+      "mitigation": "Week 0 dedicated refactoring sprint"
+    },
+    "user_adoption": {
+      "level": "high",
+      "mitigation": "Gradual rollout with fallback to V1"
+    },
+    "ai_reliability": {
+      "level": "medium",
+      "mitigation": "Manual overrides, caching, fallbacks"
+    },
+    "data_migration": {
+      "level": "low",
+      "mitigation": "Additive migrations only"
+    }
+  },
+  "metadata": {
+    "created_at": "2026-02-28T21:30:00Z",
+    "updated_at": "2026-03-04T19:15:42.219Z",
+    "based_on_prd": "/Users/matthewkerns/workspace/ai-agency-development-os/claude-code-os-implementation/02-operations/project-management/active-projects/idea-brand-coach/v2-02-28/prd.md",
+    "repository": "/Users/matthewkerns/workspace/ecommerce-tools/brand-systems/idea-brand-coach",
+    "branch": "main-v2",
+    "total_duration": "10 weeks",
+    "team_size": "2-3 developers",
+    "optimization_strategy": "maximum_component_reuse",
+    "backwards_compatibility": "maintained_with_feature_flags"
+  }
+}
