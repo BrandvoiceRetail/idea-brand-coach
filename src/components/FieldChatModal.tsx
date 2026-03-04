@@ -150,6 +150,7 @@ export function FieldChatModal({
       await sendMessage({
         content: contextualMessage,
         role: 'user',
+        chapterContext: field.fieldId
       });
     } catch (error) {
       console.error('Error sending message:', error);

@@ -153,6 +153,7 @@ export class SupabaseChatService implements IChatService {
             role: msg.role,
             content: msg.content,
           })),
+          chapterContext: message.chapterContext,
         },
       }
     );

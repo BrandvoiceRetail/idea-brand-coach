@@ -138,16 +138,17 @@ const IdeaFrameworkConsultant = () => {
         chapter_category: currentChapter.category,
       } : undefined;
 
-      await sendMessage(
-        fullMessage,
-        'user',
-        {
+      await sendMessage({
+        content: fullMessage,
+        role: 'user',
+        metadata: {
           userDocuments,
           useSystemKB: isSystemKBEnabled,
           latestDiagnostic: latestDiagnostic || undefined,
           chapterMetadata,
-        }
-      );
+        },
+        chapterContext: 'idea-framework-consultant'
+      });
       setMessage('');
       setContext('');
       setShowContextField(false);
