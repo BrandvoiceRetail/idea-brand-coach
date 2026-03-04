@@ -353,7 +353,8 @@ const BrandCoachV2 = (): JSX.Element => {
         leftPanel={
           <div className="h-full overflow-y-auto p-4">
             <ChapterSectionAccordion
-              chapters={allChapters?.map(bookChapter => {
+              chapters={(() => {
+                const mappedChapters = allChapters?.map((bookChapter, index) => {
                 // Map book chapter numbers to CHAPTER_FIELDS_MAP keys
                 const chapterFieldsMap: Record<number, string> = {
                   1: 'BRAND_FOUNDATION',
@@ -385,13 +386,38 @@ const BrandCoachV2 = (): JSX.Element => {
                   pillar: bookChapter.category
                 };
 
+                // Determine chapter status
+                let chapterStatus: 'completed' | 'active' | 'future';
+                if (progress?.chapter_statuses?.[bookChapter.id]) {
+                  // Map progress status to valid accordion status
+                  const progressStatus = progress.chapter_statuses[bookChapter.id];
+                  if (progressStatus === 'not_started') {
+                    // First not_started chapter should be active, rest are future
+                    const firstNotStartedIndex = allChapters.findIndex(
+                      ch => progress.chapter_statuses[ch.id] === 'not_started'
+                    );
+                    chapterStatus = index === firstNotStartedIndex ? 'active' : 'future';
+                  } else if (progressStatus === 'in_progress') {
+                    chapterStatus = 'active';
+                  } else {
+                    // Use the status as-is if it's already valid (completed, active, future)
+                    chapterStatus = progressStatus as 'completed' | 'active' | 'future';
+                  }
+                } else {
+                  // Default: first chapter is active, rest are future
+                  chapterStatus = index === 0 ? 'active' : 'future';
+                }
+
                 return {
                   chapter: mergedChapter,
-                  status: progress?.chapter_statuses?.[bookChapter.id] || 'future',
+                  status: chapterStatus,
                   fieldValues: fieldValues,
                   fieldSources: fieldSources,
                 };
-              }) || []}
+              }) || [];
+
+                return mappedChapters;
+              })()}
               activeChapterId={progress?.current_chapter_id ?? 'chapter-01-introduction'}
               onProceed={handleProceed}
               onFieldChange={(chapterId, fieldId, value) => {
