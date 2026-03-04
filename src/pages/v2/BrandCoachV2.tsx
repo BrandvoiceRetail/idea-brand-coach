@@ -353,13 +353,18 @@ const BrandCoachV2 = (): JSX.Element => {
         leftPanel={
           <div className="h-full overflow-y-auto p-4">
             <ChapterSectionAccordion
-              chapters={allChapters}
-              currentChapterId={progress?.current_chapter_id ?? 'chapter-01-introduction'}
-              chapterStatuses={progress?.chapter_statuses ?? {}}
-              fieldValues={fieldValues}
-              fieldSources={fieldSources}
+              chapters={allChapters?.map(chapter => ({
+                chapter,
+                status: progress?.chapter_statuses?.[chapter.id] || 'future',
+                fieldValues: fieldValues,
+                fieldSources: fieldSources,
+              })) || []}
+              activeChapterId={progress?.current_chapter_id ?? 'chapter-01-introduction'}
               onProceed={handleProceed}
-              onFieldChange={setFieldManual}
+              onFieldChange={(chapterId, fieldId, value) => {
+                // setFieldManual expects just fieldId and value, not chapterId
+                setFieldManual(fieldId, value);
+              }}
             />
           </div>
         }

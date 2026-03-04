@@ -85,7 +85,7 @@ const LOCAL_FEATURE_FLAGS: Record<string, FeatureFlag> = {
       // Session-based percentage rollout (for anonymous users)
       // Change this value to test different rollout percentages: 10, 50, 100
       // Set to 0 to disable rollout (all users see V1)
-      sessionPercentage: 0, // Current: 0% rollout (internal testing phase)
+      sessionPercentage: 100, // Current: 100% rollout (feature fully enabled)
     },
   },
 
@@ -104,6 +104,22 @@ const LOCAL_FEATURE_FLAGS: Record<string, FeatureFlag> = {
     },
   },
 };
+
+/**
+ * Cached user ID to prevent repeated auth requests
+ * Shared across all useFeatureFlag instances
+ */
+let cachedUserId: string | undefined | null = undefined;
+let userIdPromise: Promise<string | null> | null = null;
+
+// Set up auth state listener to clear cache when auth changes
+if (typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange(() => {
+    // Clear cached user ID when auth state changes
+    cachedUserId = undefined;
+    userIdPromise = null;
+  });
+}
 
 /**
  * Subscribers for flag updates (for reactive UI)
@@ -186,13 +202,33 @@ export function useFeatureFlag(
   const [flagValue, setFlagValue] = useState<boolean>(options.defaultValue ?? defaultValue);
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
-  // Get current user ID from Supabase auth
+  // Get current user ID from Supabase auth (with caching)
   useEffect(() => {
-    const getUser = async (): Promise<void> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user?.id);
+    const getUserId = async (): Promise<void> => {
+      // If we already have a cached value (even if null), use it
+      if (cachedUserId !== undefined) {
+        setUserId(cachedUserId || undefined);
+        return;
+      }
+
+      // If a request is already in progress, wait for it
+      if (userIdPromise) {
+        const id = await userIdPromise;
+        setUserId(id || undefined);
+        return;
+      }
+
+      // Make the request and cache the promise to prevent race conditions
+      userIdPromise = supabase.auth.getUser().then(({ data: { user } }) => {
+        cachedUserId = user?.id || null;
+        userIdPromise = null; // Clear the promise after resolution
+        return cachedUserId;
+      });
+
+      const id = await userIdPromise;
+      setUserId(id || undefined);
     };
-    getUser();
+    getUserId();
   }, []);
 
   // Determine user/session ID for evaluation

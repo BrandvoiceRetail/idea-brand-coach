@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAvatarTabs } from '@/hooks/useAvatarTabs';
 import type { Avatar } from '@/types/avatar';
+import type { CompetitiveAnalysis } from '@/types/competitive-analysis';
 
 export interface BrandData {
   // IDEA Strategic Brand Framework™ Data
@@ -143,6 +144,7 @@ interface SyncPayload {
   diagnosticCompleted?: boolean;
   avatarCompleted?: boolean;
   insightsCompleted?: boolean;
+  competitiveAnalysisCompleted?: boolean;
 }
 
 interface BrandContextType {
@@ -154,6 +156,9 @@ interface BrandContextType {
   getRecommendedNextStep: () => string;
   syncWithDatabase: (payload: SyncPayload) => Promise<void>;
   isInitializing: boolean;
+  // Competitive analysis
+  competitiveAnalysis: CompetitiveAnalysis | null;
+  setCompetitiveAnalysis: (analysis: CompetitiveAnalysis | null) => void;
   // Multi-avatar support
   currentAvatarId: string | null;
   avatarsList: Avatar[];
@@ -169,6 +174,7 @@ const BrandContext = createContext<BrandContextType | undefined>(undefined);
 export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [brandData, setBrandData] = useState<BrandData>(initialBrandData);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [competitiveAnalysis, setCompetitiveAnalysis] = useState<CompetitiveAnalysis | null>(null);
   const { user, loading: authLoading } = useAuth();
 
   // Multi-avatar support
@@ -198,7 +204,7 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             .from('diagnostic_submissions')
             .select('id')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
 
           if (data) {
             setBrandData(prev => ({
@@ -295,6 +301,10 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         updated.insight = { ...updated.insight, completed: payload.insightsCompleted };
       }
 
+      if (payload.competitiveAnalysisCompleted !== undefined) {
+        updated.distinctive = { ...updated.distinctive, completed: payload.competitiveAnalysisCompleted };
+      }
+
       return updated;
     });
   };
@@ -309,6 +319,9 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       getRecommendedNextStep,
       syncWithDatabase,
       isInitializing,
+      // Competitive analysis
+      competitiveAnalysis,
+      setCompetitiveAnalysis,
       // Multi-avatar support
       currentAvatarId: activeAvatarId,
       avatarsList: avatars,

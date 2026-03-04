@@ -1,5 +1,5 @@
 -- Create storage bucket for document uploads
-INSERT INTO storage.buckets (id, name, public) VALUES ('documents', 'documents', false);
+INSERT INTO storage.buckets (id, name) VALUES ('documents', 'documents') ON CONFLICT DO NOTHING;
 
 -- Create table to track uploaded documents
 CREATE TABLE public.uploaded_documents (

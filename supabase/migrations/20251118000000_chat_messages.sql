@@ -12,18 +12,25 @@ CREATE TABLE IF NOT EXISTS public.chat_messages (
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
+-- Add chatbot_type if table already existed without it
+ALTER TABLE public.chat_messages
+  ADD COLUMN IF NOT EXISTS chatbot_type TEXT;
+
 -- Enable RLS
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "Users can view their own chat messages" ON public.chat_messages;
 CREATE POLICY "Users can view their own chat messages"
 ON public.chat_messages FOR SELECT
 USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own chat messages" ON public.chat_messages;
 CREATE POLICY "Users can insert their own chat messages"
 ON public.chat_messages FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own chat messages" ON public.chat_messages;
 CREATE POLICY "Users can delete their own chat messages"
 ON public.chat_messages FOR DELETE
 USING (auth.uid() = user_id);

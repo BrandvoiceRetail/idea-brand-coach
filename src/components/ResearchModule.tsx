@@ -24,6 +24,7 @@ import { Link } from "react-router-dom";
 import { CustomerReviewAnalyzer } from "@/components/research/CustomerReviewAnalyzer";
 import { BuyerIntentResearch } from "@/components/BuyerIntentResearch";
 import { useBrand } from "@/contexts/BrandContext";
+import { useCompetitiveAnalysis } from "@/hooks/useCompetitiveAnalysis";
 
 interface Step {
   id: number;
@@ -91,7 +92,22 @@ export function ResearchModule() {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState("learning");
-  const { updateBrandData } = useBrand();
+  const { updateBrandData, brandData } = useBrand();
+  const {
+    isAnalyzing,
+    isComplete: isAnalysisComplete,
+    progress: analysisProgress,
+    startAnalysis,
+  } = useCompetitiveAnalysis();
+
+  // Auto-trigger competitive analysis when user enters the tools tab
+  // and has an industry set but no analysis running
+  const handleToolsTabActivation = (tab: string): void => {
+    setActiveTab(tab);
+    if (tab === 'tools' && brandData.userInfo.industry && !isAnalyzing && !isAnalysisComplete) {
+      startAnalysis({ market_category: brandData.userInfo.industry });
+    }
+  };
 
   const progress = (completedSteps.size / steps.length) * 100;
 
@@ -157,7 +173,7 @@ export function ResearchModule() {
           </div>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleToolsTabActivation} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="learning" className="flex items-center gap-2">
               <Lightbulb className="h-4 w-4" />
@@ -335,6 +351,33 @@ export function ResearchModule() {
       {/* IDEA Research Tools */}
       {activeTab === "tools" && (
         <div className="space-y-8">
+          {/* Competitive Analysis Progress */}
+          {isAnalyzing && analysisProgress && (
+            <Card className="border-l-4 border-l-primary">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <TrendingUp className="h-5 w-5 text-primary animate-pulse" />
+                  <span className="font-medium">Competitive Analysis Running</span>
+                  <Badge variant="secondary">{analysisProgress.currentStep}</Badge>
+                </div>
+                <Progress value={analysisProgress.percentComplete} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {analysisProgress.competitorsFound} competitors found, {analysisProgress.reviewsAnalyzed} reviews analyzed
+                </p>
+              </CardContent>
+            </Card>
+          )}
+          {isAnalysisComplete && (
+            <Card className="border-l-4 border-l-green-500">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="font-medium">Competitive Analysis Complete</span>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">Done</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
               <CardHeader>

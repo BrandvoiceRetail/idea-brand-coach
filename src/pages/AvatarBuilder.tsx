@@ -49,7 +49,7 @@ function SyncStatusIndicator({ status }: { status: SyncStatus }) {
 
 export default function AvatarBuilder() {
   // Feature flag check for multi-avatar tab navigation
-  const isMultiAvatarEnabled = useFeatureFlag('multi-avatar-tabs', true); // Default to true since it's merging
+  const isMultiAvatarEnabled = useFeatureFlag('v2-multi-avatar', true); // Using the v2-multi-avatar flag
 
   const { toast } = useToast();
   const { brandData, updateBrandData } = useBrand();

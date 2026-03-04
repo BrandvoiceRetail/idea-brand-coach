@@ -37,6 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('Setting up auth state listener');
 
     // Set up auth state listener
+    // onAuthStateChange will fire immediately with the current session
+    // so we don't need a separate getSession() call
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state changed:', event, session);
@@ -45,14 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -71,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           variant: "destructive",
         });
       } else {
-        const isConfirmed = newUser?.email_confirmed_at !== undefined;
+        const isConfirmed = !!newUser?.email_confirmed_at;
         
         toast({
           title: "Success!",

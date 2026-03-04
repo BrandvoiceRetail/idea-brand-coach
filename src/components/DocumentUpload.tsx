@@ -151,18 +151,37 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
     setUploadProgress(0);
 
     try {
-      // Create file path with user ID
+      // Create file path with user ID and add random string for uniqueness
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}-${file.name}`;
+      const randomId = Math.random().toString(36).substring(2, 15);
+      const timestamp = Date.now();
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const fileName = `${user.id}/${timestamp}-${randomId}-${safeFileName}`;
 
       // Upload file to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      let { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
         .upload(fileName, file, {
-          upsert: false
+          upsert: true  // Changed to true to handle retries gracefully
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        // Handle specific error cases
+        if (uploadError.message && uploadError.message.includes('409')) {
+          // If conflict, retry with a new unique name
+          const retryFileName = `${user.id}/${Date.now()}-retry-${Math.random().toString(36).substring(2, 15)}-${safeFileName}`;
+          const { data: retryData, error: retryError } = await supabase.storage
+            .from('documents')
+            .upload(retryFileName, file, {
+              upsert: true
+            });
+
+          if (retryError) throw retryError;
+          uploadData = retryData;
+        } else {
+          throw uploadError;
+        }
+      }
 
       setUploadProgress(50);
 

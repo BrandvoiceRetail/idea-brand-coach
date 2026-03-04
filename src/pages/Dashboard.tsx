@@ -32,6 +32,9 @@ import {
 import { InteractiveEmotionalTriggers } from "@/components/InteractiveEmotionalTriggers";
 import { CollapsibleDescription } from "@/components/CollapsibleDescription";
 import { FrameworkSubmissionsList } from "@/components/FrameworkSubmissionsList";
+import { PDFGenerationButtons } from "@/components/brand/PDFGenerationButtons";
+import { usePDFGeneration } from "@/hooks/usePDFGeneration";
+import { useCompetitiveAnalysis } from "@/hooks/useCompetitiveAnalysis";
 
 const coreModules = [
   {
@@ -154,6 +157,15 @@ export default function Dashboard() {
   // Use database-aware hooks for real data
   const { latestDiagnostic } = useDiagnostic();
   const { avatarStatus } = useModuleCompletionStatus();
+
+  // PDF generation and competitive analysis
+  const {
+    isGeneratingBrand,
+    isGeneratingCompetitor,
+    generateBrandPDF,
+    generateCompetitorPDF,
+  } = usePDFGeneration();
+  const { isComplete: competitiveAnalysisComplete } = useCompetitiveAnalysis();
 
   // Use real data from database hooks
   const avatarsCreated = avatarStatus === 'completed' ? 1 : 0;
@@ -489,6 +501,28 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
+
+          {/* PDF Generation */}
+          {hasStarted && (
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Generate Reports</h2>
+              <Card className="bg-gradient-card shadow-card">
+                <CardContent className="p-6">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Export your brand strategy and competitive analysis as professional PDF reports.
+                  </p>
+                  <PDFGenerationButtons
+                    brandDataComplete={diagnosticCompleted && avatarsCreated > 0}
+                    competitiveAnalysisComplete={competitiveAnalysisComplete}
+                    isGeneratingBrand={isGeneratingBrand}
+                    isGeneratingCompetitor={isGeneratingCompetitor}
+                    onGenerateBrandPDF={() => generateBrandPDF(brandData.userInfo.userId)}
+                    onGenerateCompetitorPDF={() => generateCompetitorPDF(brandData.userInfo.userId)}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}

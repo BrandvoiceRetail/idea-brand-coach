@@ -26,10 +26,13 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://lovable.app"]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["https://lovable.app", "http://localhost:3000"]
 jwt_expiry = 3600
 enable_signup = true
+
+[auth.email]
+enable_confirmations = false
 
 [edge_runtime]
 enabled = true
