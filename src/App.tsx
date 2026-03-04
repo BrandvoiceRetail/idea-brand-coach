@@ -15,7 +15,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { AuthGate } from "@/components/AuthGate";
 import { BetaFeedbackWidget } from "@/components/BetaFeedbackWidget";
-import { ROUTES } from "@/config/routes";
+import { ROUTES, V1_ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
@@ -83,113 +83,49 @@ const App = () => {
 
                 <Route path="/auth" element={<Auth />} />
 
-                <Route path="/start-here" element={
-                  <Layout>
-                    <StartHere />
-                  </Layout>
-                } />
+                <Route path="/start-here" element={<Navigate to="/v1/start-here" replace />} />
 
-                <Route path="/journey" element={
-                  <Layout>
-                    <Index />
-                  </Layout>
-                } />
+                <Route path="/journey" element={<Navigate to="/v1/journey" replace />} />
 
-                <Route path="/diagnostic" element={<FreeDiagnostic />} />
+                <Route path="/diagnostic" element={<Navigate to="/v1/diagnostic" replace />} />
 
-                <Route path="/subscribe" element={<PricingPaywall />} />
+                <Route path="/subscribe" element={<Navigate to="/v1/subscribe" replace />} />
 
-                <Route path="/diagnostic/results" element={<DiagnosticResults />} />
+                <Route path="/diagnostic/results" element={<Navigate to="/v1/diagnostic/results" replace />} />
 
-                <Route path="/dashboard" element={
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                } />
+                <Route path="/dashboard" element={<Navigate to="/v1/dashboard" replace />} />
 
-                <Route path="/brand-diagnostic" element={
-                  <Layout>
-                    <BrandDiagnostic />
-                  </Layout>
-                } />
+                <Route path="/brand-diagnostic" element={<Navigate to="/v1/brand-diagnostic" replace />} />
 
-                <Route path="/idea-diagnostic" element={
-                  <Layout>
-                    <IdeaDiagnostic />
-                  </Layout>
-                } />
+                <Route path="/idea-diagnostic" element={<Navigate to="/v1/idea-diagnostic" replace />} />
 
-                <Route path="/idea" element={
-                  <Layout>
-                    <IdeaFramework />
-                  </Layout>
-                } />
+                <Route path="/idea" element={<Navigate to="/v1/idea" replace />} />
 
-                <Route path="/idea/consultant" element={
-                  <Layout>
-                    <IdeaFrameworkConsultant />
-                  </Layout>
-                } />
+                <Route path="/idea/consultant" element={<Navigate to="/v1/idea/consultant" replace />} />
 
-                <Route path="/brand-coach" element={<Navigate to="/idea/consultant" replace />} />
+                <Route path="/brand-coach" element={<Navigate to="/v1/idea/consultant" replace />} />
 
-                <Route path="/conversations" element={
-                  <Layout>
-                    <ConversationHistory />
-                  </Layout>
-                } />
+                <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
-                <Route path="/idea/insight" element={
-                  <Layout>
-                    <IdeaInsight />
-                  </Layout>
-                } />
+                <Route path="/idea/insight" element={<Navigate to="/v1/idea/insight" replace />} />
 
-                <Route path="/idea/distinctive" element={
-                  <Layout>
-                    <IdeaDistinctive />
-                  </Layout>
-                } />
+                <Route path="/idea/distinctive" element={<Navigate to="/v1/idea/distinctive" replace />} />
 
-                <Route path="/idea/empathy" element={
-                  <Layout>
-                    <IdeaEmpathy />
-                  </Layout>
-                } />
+                <Route path="/idea/empathy" element={<Navigate to="/v1/idea/empathy" replace />} />
 
-                <Route path="/idea/authenticity" element={
-                  <Layout>
-                    <IdeaAuthenticity />
-                  </Layout>
-                } />
+                <Route path="/idea/authenticity" element={<Navigate to="/v1/idea/authenticity" replace />} />
 
-                <Route path="/avatar" element={
-                  <Layout>
-                    <AvatarBuilder />
-                  </Layout>
-                } />
+                <Route path="/avatar" element={<Navigate to="/v1/avatar" replace />} />
 
-                <Route path="/canvas" element={
-                  <Layout>
-                    <BrandCanvas />
-                  </Layout>
-                } />
+                <Route path="/canvas" element={<Navigate to="/v1/canvas" replace />} />
 
-                <Route path="/copy-generator" element={
-                  <Layout>
-                    <BrandCopyGenerator />
-                  </Layout>
-                } />
+                <Route path="/copy-generator" element={<Navigate to="/v1/copy-generator" replace />} />
 
-                <Route path="/research-learning" element={
-                  <Layout>
-                    <ResearchLearning />
-                  </Layout>
-                } />
+                <Route path="/research-learning" element={<Navigate to="/v1/research-learning" replace />} />
 
                 <Route path="/app" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
 
-                <Route path="/value-lens" element={<Navigate to="/copy-generator" replace />} />
+                <Route path="/value-lens" element={<Navigate to="/v1/copy-generator" replace />} />
 
                 <Route path="/beta" element={<BetaWelcome />} />
 
