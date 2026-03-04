@@ -3,7 +3,7 @@
   "spec": "034-chapter-section-accordion",
   "state": "building",
   "subtasks": {
-    "completed": 1,
+    "completed": 3,
     "total": 5,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
+    "number": 5,
     "started_at": "2026-03-03T17:44:25.650569"
   },
-  "last_update": "2026-03-03T17:53:59.510206"
+  "last_update": "2026-03-03T18:59:55.761870"
 }
