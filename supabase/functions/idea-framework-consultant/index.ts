@@ -438,9 +438,10 @@ async function retrieveUserContext(
 /**
  * Generate Trevor persona system prompt
  * Trevor is the BMAD brand coach with domain-specific tone adaptations
+ * @param extractionFields - Optional array of field identifiers to extract from the conversation
  */
-function generateTrevorSystemPrompt(): string {
-  return `You are Trevor, an expert BMAD brand coach and author who has developed the IDEA framework—a comprehensive brand development methodology.
+function generateTrevorSystemPrompt(extractionFields?: string[]): string {
+  let basePrompt = `You are Trevor, an expert BMAD brand coach and author who has developed the IDEA framework—a comprehensive brand development methodology.
 
 PERSONA OVERVIEW:
 You are a specialized strategic branding consultant with deep expertise in:
@@ -606,6 +607,73 @@ You guide users through structured brand development across 11 chapters:
 11. Value Proposition Development (Canvas)
 
 Always encourage iterative refinement and ask clarifying questions when input lacks detail for optimal strategic guidance.`;
+
+  // Add field extraction instructions if chapter context with extraction fields is provided
+  if (extractionFields && extractionFields.length > 0) {
+    basePrompt += `
+
+---
+
+FIELD EXTRACTION PROTOCOL (ACTIVE FOR THIS CONVERSATION):
+
+You must include a structured field extraction block at the END of your response when you identify information relevant to the following fields:
+
+**Fields to Extract:**
+${extractionFields.map(field => `- ${field}`).join('\n')}
+
+**Extraction Block Format:**
+At the very end of your response, include:
+
+---FIELD_EXTRACTION_JSON---
+{
+  "fields": [
+    {
+      "identifier": "field_identifier_here",
+      "value": "extracted content here",
+      "confidence": 0.95,
+      "source": "user_stated",
+      "context": "Brief explanation of extraction context"
+    }
+  ]
+}
+
+**Field Object Requirements:**
+- identifier (required): The field identifier from the list above
+- value (required): The extracted content (string, array, or object)
+- confidence (required): Extraction confidence score (0.0 - 1.0)
+  - 0.90 - 1.0: User explicitly stated
+  - 0.70 - 0.89: Strong inference from context
+  - 0.50 - 0.69: Moderate inference
+  - Below 0.50: Do not extract
+- source (required): How the value was obtained
+  - "user_stated": User explicitly provided this information
+  - "user_confirmed": User confirmed your inference
+  - "inferred_strong": Strong inference from multiple conversation points
+  - "inferred_moderate": Reasonable inference, may need validation
+- context (optional): Brief explanation of extraction context
+
+**Extraction Guidelines:**
+WHEN TO EXTRACT:
+- User explicitly states information relevant to a field
+- User confirms your summary or inference
+- Sufficient context exists to infer with confidence ≥ 0.70
+- Within the scope of the current chapter's field list
+
+WHEN NOT TO EXTRACT:
+- Confidence score would be below 0.70
+- Field is not in the list above
+- Information is too vague or ambiguous
+- User is brainstorming without commitment
+
+IMPORTANT:
+- Include ONE extraction block per response (at the very end)
+- ONLY extract fields from the list above
+- Be conservative with confidence scores
+- Preserve user's language when possible
+- Validate before extracting (ask clarifying questions if uncertain)`;
+  }
+
+  return basePrompt;
 }
 
 /**
@@ -784,8 +852,12 @@ serve(async (req) => {
       });
     }
 
-    // Generate Trevor persona system prompt
-    const systemPrompt = generateTrevorSystemPrompt();
+    // Generate Trevor persona system prompt with optional field extraction
+    const extractionFields = chapterContext?.extractionFields;
+    if (extractionFields && extractionFields.length > 0) {
+      console.log(`[Field Extraction] Active with ${extractionFields.length} fields: ${extractionFields.join(', ')}`);
+    }
+    const systemPrompt = generateTrevorSystemPrompt(extractionFields);
 
     // Build user prompt with all available context
     let userPrompt = message;
