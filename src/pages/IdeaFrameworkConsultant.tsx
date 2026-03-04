@@ -107,15 +107,16 @@ const IdeaFrameworkConsultant = () => {
       : message;
 
     try {
-      await sendMessage(
-        fullMessage,
-        'user',
-        {
+      await sendMessage({
+        content: fullMessage,
+        role: 'user',
+        metadata: {
           userDocuments,
           useSystemKB: isSystemKBEnabled,
           latestDiagnostic: latestDiagnostic || undefined
-        }
-      );
+        },
+        chapterContext: 'idea-framework-consultant'
+      });
       setMessage('');
       setContext('');
       setShowContextField(false);
