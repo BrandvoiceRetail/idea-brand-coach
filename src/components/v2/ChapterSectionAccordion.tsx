@@ -76,6 +76,11 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
     const getChapterSummary = (chapterData: ChapterData): string => {
       const { chapter, fieldValues } = chapterData;
 
+      // Safety check: ensure fields exist
+      if (!chapter.fields || !Array.isArray(chapter.fields)) {
+        return 'No data captured';
+      }
+
       // Find the first field with a value
       for (const field of chapter.fields) {
         const value = fieldValues[field.id];
@@ -129,9 +134,12 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
     const renderChapterFields = (chapterData: ChapterData): JSX.Element => {
       const { chapter, fieldValues, fieldSources } = chapterData;
 
+      // Safety check: ensure fields exist
+      const fields = chapter.fields || [];
+
       return (
         <div className="space-y-6">
-          {chapter.fields.map((field) => (
+          {fields.map((field) => (
             <ChapterFieldSet
               key={field.id}
               field={field}

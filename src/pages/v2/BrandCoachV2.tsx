@@ -353,12 +353,45 @@ const BrandCoachV2 = (): JSX.Element => {
         leftPanel={
           <div className="h-full overflow-y-auto p-4">
             <ChapterSectionAccordion
-              chapters={allChapters?.map(chapter => ({
-                chapter,
-                status: progress?.chapter_statuses?.[chapter.id] || 'future',
-                fieldValues: fieldValues,
-                fieldSources: fieldSources,
-              })) || []}
+              chapters={allChapters?.map(bookChapter => {
+                // Map book chapter numbers to CHAPTER_FIELDS_MAP keys
+                const chapterFieldsMap: Record<number, string> = {
+                  1: 'BRAND_FOUNDATION',
+                  2: 'BRAND_VALUES',
+                  3: 'CUSTOMER_AVATAR',
+                  4: 'MARKET_INSIGHT',
+                  5: 'BUYER_INTENT',
+                  6: 'POSITIONING',
+                  7: 'BRAND_PERSONALITY',
+                  8: 'EMOTIONAL_CONNECTION',
+                  9: 'CUSTOMER_EXPERIENCE',
+                  10: 'BRAND_AUTHORITY',
+                  11: 'BRAND_AUTHENTICITY'
+                };
+
+                // Get the chapter with fields from CHAPTER_FIELDS_MAP
+                const chapterKey = chapterFieldsMap[bookChapter.number];
+                const chapterWithFields = chapterKey ? CHAPTER_FIELDS_MAP[chapterKey] : undefined;
+
+                // Merge book chapter data with fields
+                const mergedChapter = chapterWithFields ? {
+                  ...bookChapter,
+                  ...chapterWithFields,
+                  id: bookChapter.id, // Keep the book chapter ID for consistency
+                  fields: chapterWithFields.fields || []
+                } : {
+                  ...bookChapter,
+                  fields: [], // Fallback empty fields if no match
+                  pillar: bookChapter.category
+                };
+
+                return {
+                  chapter: mergedChapter,
+                  status: progress?.chapter_statuses?.[bookChapter.id] || 'future',
+                  fieldValues: fieldValues,
+                  fieldSources: fieldSources,
+                };
+              }) || []}
               activeChapterId={progress?.current_chapter_id ?? 'chapter-01-introduction'}
               onProceed={handleProceed}
               onFieldChange={(chapterId, fieldId, value) => {
