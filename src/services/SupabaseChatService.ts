@@ -153,6 +153,19 @@ export class SupabaseChatService implements IChatService {
       throw new Error('No active session found');
     }
 
+    // Check if user has uploaded documents
+    let hasUploadedDocuments = false;
+    try {
+      const { data: uploadedDocs } = await supabase
+        .from('uploaded_documents')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
+      hasUploadedDocuments = (uploadedDocs && uploadedDocs.length > 0) || false;
+    } catch (error) {
+      console.warn('Failed to check for uploaded documents:', error);
+    }
+
     const { data: responseData, error: functionError } = await supabase.functions.invoke(
       edgeFunctionName,
       {
@@ -167,6 +180,10 @@ export class SupabaseChatService implements IChatService {
           })),
           chapterContext: message.chapterContext,
           competitiveInsights: this.competitiveInsightsContext,
+          metadata: {
+            ...message.metadata,
+            hasUploadedDocuments,
+          },
         },
       }
     );

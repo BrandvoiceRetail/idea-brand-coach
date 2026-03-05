@@ -195,7 +195,8 @@ async function retrieveVectorStoreContext(
   query: string
 ): Promise<string> {
   try {
-    console.log("[retrieveVectorStoreContext] Fetching user vector stores...");
+    console.log("[retrieveVectorStoreContext] Starting vector store search for user:", userId);
+    console.log("[retrieveVectorStoreContext] Query:", query.substring(0, 100) + "...");
 
     // Get user's vector store IDs
     const { data: stores, error } = await supabaseClient
@@ -204,7 +205,12 @@ async function retrieveVectorStoreContext(
       .eq("user_id", userId)
       .single();
 
-    if (error || !stores?.core_store_id) {
+    if (error) {
+      console.log("[retrieveVectorStoreContext] Database error:", error.message);
+      return "";
+    }
+
+    if (!stores?.core_store_id) {
       console.log("[retrieveVectorStoreContext] No vector stores found for user");
       return "";
     }
@@ -215,8 +221,11 @@ async function retrieveVectorStoreContext(
     const content = await searchVectorStore(stores.core_store_id, query);
 
     if (!content) {
+      console.log("[retrieveVectorStoreContext] No content found in vector store");
       return "";
     }
+
+    console.log(`[retrieveVectorStoreContext] Retrieved ${content.length} chars of document content`);
 
     return `
 <UPLOADED_DOCUMENTS_CONTEXT>
@@ -370,19 +379,32 @@ function getFieldLabel(fieldIdentifier: string, category: string): string {
 async function retrieveUserContext(
   supabaseClient: any,
   userId: string,
-  query: string
+  query: string,
+  minimal: boolean = false
 ): Promise<string> {
   try {
-    console.log('[retrieveUserContext] Fetching knowledge for user:', userId);
+    console.log(`[retrieveUserContext] Fetching knowledge for user (${minimal ? 'minimal' : 'full'}):`, userId);
 
-    // Get all current knowledge base entries for this user
-    const { data: entries, error } = await supabaseClient
+    // For minimal mode, only get essential fields for current conversation
+    const selectFields = minimal
+      ? 'field_identifier, content'  // Just the basics for field extraction
+      : 'field_identifier, category, content, subcategory';  // Full context
+
+    // Get knowledge base entries for this user
+    const query = supabaseClient
       .from('user_knowledge_base')
-      .select('field_identifier, category, content, subcategory')
+      .select(selectFields)
       .eq('user_id', userId)
       .eq('is_current', true)
       .not('content', 'is', null)
       .gt('content', ''); // Only entries with content
+
+    // In minimal mode, limit to most recent entries
+    if (minimal) {
+      query.limit(10).order('updated_at', { ascending: false });
+    }
+
+    const { data: entries, error } = await query;
 
     if (error) {
       console.error('[retrieveUserContext] Error fetching knowledge:', error);
@@ -442,7 +464,109 @@ async function retrieveUserContext(
  * @param extractionFields - Optional array of field identifiers to extract from the conversation
  * @param isFirstMessage - Whether this is the first message in a new session
  */
-function generateTrevorSystemPrompt(extractionFields?: string[], isFirstMessage?: boolean): string {
+/**
+ * Generate a concise, conversational system prompt for Trevor
+ * Focuses on guiding users through one thing at a time with focused questions
+ */
+function generateConversationalTrevorPrompt(
+  extractionFields?: string[],
+  focusedField?: any,
+  isFirstMessage?: boolean,
+  hasUploadedDocuments?: boolean
+): string {
+  // Base conversational prompt - focused and brief
+  let prompt = `You are Trevor, a BMAD brand coach helping users build powerful brands through conversation.
+
+CORE INSTRUCTION: Focus on ONE thing at a time. Guide discovery through questions, not lectures.
+
+CONVERSATION STYLE:
+- Ask ONE focused question per response
+- Keep responses under 100 words (3-4 sentences max)
+- Build on what the user shares
+- Reference specific context when helpful
+- Use natural, conversational language
+- Never provide multiple recommendations at once
+- Use empathy and active listening
+
+RESPONSE PATTERN:
+1. Acknowledge briefly (1 sentence)
+2. Ask one clarifying or discovery question (1-2 sentences)
+3. Provide minimal context only if essential (1 sentence max)
+
+TONE:
+- Conversational and friendly
+- Professional but accessible
+- Encouraging and patient
+- Direct and honest
+- Never use asterisks or markdown formatting
+- Use CAPITAL LETTERS for emphasis when needed`;
+
+  // Add document awareness if user has uploaded documents
+  if (hasUploadedDocuments) {
+    prompt += `
+
+DOCUMENT AWARENESS:
+You have access to the user's uploaded brand documents. When relevant to their questions or when filling out fields, reference specific sections from their documents. Use phrases like:
+- "Based on your brand strategy document..."
+- "I see in your uploaded materials that..."
+- "Your document mentions..."
+This helps users understand that their uploads are being utilized effectively.`;
+  }
+
+  // Add focused field context if available
+  if (focusedField) {
+    prompt += `
+
+CURRENT FOCUS:
+You're helping the user complete: "${focusedField.label}"
+Purpose: ${focusedField.helpText || 'Help user articulate this clearly'}
+Type: ${focusedField.type}
+
+Stay focused on THIS specific field. Guide the conversation to gather the information needed for this field. Don't move to other topics until it has a solid answer.`;
+  }
+
+  // Brief introduction for first message
+  if (isFirstMessage) {
+    prompt += `
+
+FIRST MESSAGE:
+Introduce yourself as Trevor in one sentence, then ask what specific area they'd like to work on today. Keep it brief and welcoming.`;
+  }
+
+  // Add extraction instructions if fields are provided
+  if (extractionFields && extractionFields.length > 0) {
+    prompt += `
+
+FIELD EXTRACTION:
+Only extract field values when the user provides a COMPLETE, committed answer.
+- Minimum confidence: 0.85 for extraction
+- Extract ONE field at a time as it becomes clear
+- Don't push for all fields at once
+
+At the END of your response when you identify clear field information, include:
+
+---FIELD_EXTRACTION_JSON---
+{
+  "fields": [
+    {
+      "identifier": "field_id",
+      "value": "extracted content",
+      "confidence": 0.90,
+      "source": "user_stated",
+      "context": "Brief context"
+    }
+  ]
+}`;
+  }
+
+  return prompt;
+}
+
+/**
+ * Original comprehensive system prompt for Trevor (kept for backward compatibility)
+ * This is the detailed version used when comprehensive responses are needed
+ */
+function generateTrevorSystemPrompt(extractionFields?: string[], isFirstMessage?: boolean, hasUploadedDocuments?: boolean): string {
   let basePrompt = `You are Trevor, an expert BMAD brand coach and author who has developed the IDEA framework—a comprehensive brand development methodology.
 
 PERSONA OVERVIEW:
@@ -462,7 +586,17 @@ COACHING STYLE:
 - Practical and action-oriented
 - Educational—teach frameworks while coaching
 - Supportive and empathetic to business challenges
-- Personalized using user knowledge base when available
+- Personalized using user knowledge base when available`;
+
+  // Add document awareness if user has uploaded documents
+  if (hasUploadedDocuments) {
+    basePrompt += `
+
+UPLOADED DOCUMENT INTEGRATION:
+You have access to the user's uploaded brand strategy documents. Actively reference and incorporate insights from these documents to provide personalized, contextual guidance. Use specific quotes and examples from their materials to demonstrate understanding and add value.`;
+  }
+
+  basePrompt += `
 
 IDEA FRAMEWORK - DOMAIN-SPECIFIC TONE ADAPTATIONS:
 
@@ -848,6 +982,11 @@ serve(async (req) => {
 
     const { message, context, chat_history, metadata, chapterContext, isFirstMessage } = await req.json();
     const messageImages = metadata?.images || [];
+    const userDocuments = metadata?.userDocuments || [];
+    const hasUploadedDocuments = userDocuments.length > 0 || metadata?.hasUploadedDocuments === true;
+
+    // Start timing for performance monitoring
+    const startTime = Date.now();
 
     // Detect first message: either explicit flag OR empty/undefined chat history
     const isFirst = isFirstMessage === true || !chat_history || chat_history.length === 0;
@@ -862,8 +1001,17 @@ serve(async (req) => {
       hasChapterContext: !!chapterContext,
       chapterContext,
       isFirstMessage: isFirst,
+      hasUploadedDocuments,
+      userDocumentsCount: userDocuments.length,
       userId
     });
+
+    // Determine if we need heavy context retrieval
+    const useComprehensiveMode = chapterContext?.comprehensiveMode === true;
+    const isSimpleGreeting = message.toLowerCase().match(/^(hi|hello|hey|good\s+(morning|afternoon|evening))[\s!.?]*$/i);
+    const isShortMessage = message.length < 50;
+    // IMPORTANT: Always retrieve context when user has uploaded documents
+    const needsFullContext = !isSimpleGreeting && (!isShortMessage || useComprehensiveMode || hasUploadedDocuments);
 
     // Retrieve user's knowledge base context (structured data)
     let userKnowledgeContext = '';
@@ -874,19 +1022,42 @@ serve(async (req) => {
     let sources: string[] = [];
 
     if (userId && supabaseClient) {
-      // Run all retrievals in parallel for better performance
-      const [knowledgeResult, semanticResult, vectorStoreResult] = await Promise.all([
-        retrieveUserContext(supabaseClient, userId, message),
-        retrieveSemanticContext(supabaseClient, userId, message),
-        retrieveVectorStoreContext(supabaseClient, userId, message)
-      ]);
+      if (needsFullContext) {
+        // Full context retrieval for comprehensive responses or complex queries
+        console.log('[Performance] Full context retrieval for complex query');
+        console.log('[Document Retrieval] Triggering vector store search due to:', {
+          isShortMessage,
+          useComprehensiveMode,
+          hasUploadedDocuments,
+          needsFullContext
+        });
+        const startTime = Date.now();
 
-      userKnowledgeContext = knowledgeResult;
-      semanticContext = semanticResult.content;
-      vectorStoreContext = vectorStoreResult;
-      sources = semanticResult.sources;
+        const [knowledgeResult, semanticResult, vectorStoreResult] = await Promise.all([
+          retrieveUserContext(supabaseClient, userId, message),
+          retrieveSemanticContext(supabaseClient, userId, message),
+          retrieveVectorStoreContext(supabaseClient, userId, message)
+        ]);
+
+        userKnowledgeContext = knowledgeResult;
+        semanticContext = semanticResult.content;
+        vectorStoreContext = vectorStoreResult;
+        sources = semanticResult.sources;
+
+        console.log(`[Performance] Full context retrieval took ${Date.now() - startTime}ms`);
+      } else {
+        // Minimal context for conversational responses
+        console.log('[Performance] Minimal context retrieval for conversational query');
+        const startTime = Date.now();
+
+        // Only get basic user context for field extraction
+        userKnowledgeContext = await retrieveUserContext(supabaseClient, userId, message, true);
+
+        console.log(`[Performance] Minimal context retrieval took ${Date.now() - startTime}ms`);
+      }
 
       console.log('Context retrieval complete:', {
+        mode: needsFullContext ? 'full' : 'minimal',
         hasKnowledgeContext: !!userKnowledgeContext,
         knowledgeContextLength: userKnowledgeContext.length,
         hasSemanticContext: !!semanticContext,
@@ -898,14 +1069,25 @@ serve(async (req) => {
     }
 
     // Generate Trevor persona system prompt with optional field extraction and first message detection
-    const extractionFields = chapterContext?.extractionFields;
+    const extractionFields = chapterContext?.fieldsToCapture || chapterContext?.extractionFields;
+    const focusedField = chapterContext?.focusedField;
+    const currentFieldDetails = chapterContext?.currentFieldDetails;
+
     if (extractionFields && extractionFields.length > 0) {
       console.log(`[Field Extraction] Active with ${extractionFields.length} fields: ${extractionFields.join(', ')}`);
+    }
+    if (focusedField) {
+      console.log(`[Focused Field] Active on field: ${focusedField}`);
     }
     if (isFirst) {
       console.log('[First Message] Trevor introduction protocol active');
     }
-    const systemPrompt = generateTrevorSystemPrompt(extractionFields, isFirst);
+
+    // Use conversational prompt by default, with option to use comprehensive prompt
+    // useComprehensiveMode already declared above at line 974
+    const systemPrompt = useComprehensiveMode
+      ? generateTrevorSystemPrompt(extractionFields, isFirst, hasUploadedDocuments)
+      : generateConversationalTrevorPrompt(extractionFields, currentFieldDetails, isFirst, hasUploadedDocuments);
 
     // Build user prompt with all available context
     let userPrompt = message;
@@ -970,14 +1152,16 @@ serve(async (req) => {
         }
       ];
 
-      // Add chat history for conversation continuity (last 10 messages)
+      // Add chat history for conversation continuity
+      // Reduce history for conversational mode to improve performance
       if (chat_history && Array.isArray(chat_history)) {
-        const recentHistory = chat_history.slice(-10);
+        const historyLimit = useComprehensiveMode ? 10 : 5;
+        const recentHistory = chat_history.slice(-historyLimit);
         messages.push(...recentHistory.map((msg: any) => ({
           role: msg.role,
           content: msg.content
         })));
-        console.log(`Added ${recentHistory.length} messages from chat history`);
+        console.log(`Added ${recentHistory.length} messages from chat history (limit: ${historyLimit})`);
       }
 
       // Add current user message with all context
@@ -1011,6 +1195,13 @@ serve(async (req) => {
         });
       }
 
+      // Adjust max_tokens based on conversation mode
+      const comprehensiveModeForTokens = chapterContext?.comprehensiveMode === true;
+      const maxTokens = comprehensiveModeForTokens ? 1500 : 200; // Reduced for conversational mode
+
+      console.log(`[Performance] Starting OpenAI API call (max_tokens: ${maxTokens})`);
+      const openAIStartTime = Date.now();
+
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -1021,7 +1212,7 @@ serve(async (req) => {
           model: 'gpt-4.1-2025-04-14',
           messages,
           temperature: 0.7,
-          max_tokens: 1500
+          max_tokens: maxTokens
         })
       });
 
@@ -1034,14 +1225,24 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      console.log('OpenAI API response received successfully');
+      const openAITime = Date.now() - openAIStartTime;
+      console.log(`[Performance] OpenAI API response received in ${openAITime}ms`);
 
       const consultantResponse = data.choices[0].message.content;
       console.log('IDEA Framework consultation completed successfully');
 
-      // Generate contextual follow-up suggestions
-      const suggestions = generateFollowUpSuggestions(message, consultantResponse);
-      console.log(`Generated ${suggestions.length} follow-up suggestions`);
+      // Skip follow-up suggestions for conversational mode (faster response)
+      const suggestions = comprehensiveModeForTokens
+        ? generateFollowUpSuggestions(message, consultantResponse)
+        : [];
+
+      if (suggestions.length > 0) {
+        console.log(`Generated ${suggestions.length} follow-up suggestions`);
+      }
+
+      // Log total response time
+      const totalTime = Date.now() - startTime;
+      console.log(`[Performance] Total response time: ${totalTime}ms (mode: ${comprehensiveModeForTokens ? 'comprehensive' : 'conversational'})`);
 
       return new Response(JSON.stringify({
         response: consultantResponse,
