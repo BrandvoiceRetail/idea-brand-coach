@@ -604,9 +604,12 @@ Introduce yourself as Trevor in one sentence, then ask what specific area they'd
     prompt += `
 
 FIELD EXTRACTION:
-Only extract field values when the user provides a COMPLETE, committed answer.
-- Minimum confidence: 0.85 for extraction
+Extract field values when you have high confidence from either:
+1. User explicitly provides or confirms an answer (confidence: 0.85+)
+2. Clear information found in uploaded documents (confidence: 0.80+)
+
 - Extract ONE field at a time as it becomes clear
+- When extracting from documents, mention the source
 - Don't push for all fields at once
 
 At the END of your response when you identify clear field information, include:
@@ -618,8 +621,8 @@ At the END of your response when you identify clear field information, include:
       "identifier": "field_id",
       "value": "extracted content",
       "confidence": 0.90,
-      "source": "user_stated",
-      "context": "Brief context"
+      "source": "user_stated" or "document",
+      "context": "Brief context or document reference"
     }
   ]
 }`;
