@@ -158,13 +158,38 @@ export class SupabaseChatService implements IChatService {
     try {
       const { data: uploadedDocs } = await supabase
         .from('uploaded_documents')
-        .select('id')
+        .select('id, openai_file_id')
         .eq('user_id', userId)
         .limit(1);
       hasUploadedDocuments = (uploadedDocs && uploadedDocs.length > 0) || false;
+      console.log('📄 Document check:', {
+        hasDocuments: hasUploadedDocuments,
+        documentCount: uploadedDocs?.length || 0,
+        hasOpenAIFileId: uploadedDocs?.[0]?.openai_file_id ? true : false
+      });
     } catch (error) {
       console.warn('Failed to check for uploaded documents:', error);
     }
+
+    const edgeFunctionBody = {
+      message: message.content,
+      chat_history: recentMessages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+      chapterContext: message.chapterContext,
+      competitiveInsights: this.competitiveInsightsContext,
+      metadata: {
+        ...message.metadata,
+        hasUploadedDocuments,
+      },
+    };
+
+    console.log('📨 Edge function request:', {
+      hasUploadedDocuments,
+      metadataKeys: Object.keys(edgeFunctionBody.metadata || {}),
+      fullMetadata: edgeFunctionBody.metadata
+    });
 
     const { data: responseData, error: functionError } = await supabase.functions.invoke(
       edgeFunctionName,
@@ -172,19 +197,7 @@ export class SupabaseChatService implements IChatService {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: {
-          message: message.content,
-          chat_history: recentMessages.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          })),
-          chapterContext: message.chapterContext,
-          competitiveInsights: this.competitiveInsightsContext,
-          metadata: {
-            ...message.metadata,
-            hasUploadedDocuments,
-          },
-        },
+        body: edgeFunctionBody,
       }
     );
 

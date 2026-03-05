@@ -5,16 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { MessageSquare, Loader2, Download, Trash2, Copy, Check, Menu, Send } from 'lucide-react';
+import { MessageSquare, Loader2, Download, Trash2, Copy, Check, Menu, Send, Paperclip } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useChapterProgress } from '@/hooks/useChapterProgress';
-import { useFieldExtraction } from '@/hooks/useFieldExtraction';
+import { useFieldExtractionV2 } from '@/hooks/useFieldExtractionV2';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemKB } from '@/contexts/SystemKBContext';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
+import { DocumentUpload } from '@/components/DocumentUpload';
 import { TwoPanelTemplate } from '@/components/templates/TwoPanelTemplate';
 import { ChapterSectionAccordion } from '@/components/v2/ChapterSectionAccordion';
 import { AvatarHeaderDropdown } from '@/components/v2/AvatarHeaderDropdown';
@@ -93,7 +94,7 @@ const BrandCoachV2 = (): JSX.Element => {
     setFieldManual,
     extractedCount,
     clearFields,
-  } = useFieldExtraction(currentAvatarId);
+  } = useFieldExtractionV2(currentAvatarId);
 
   // Chat for current session
   const { messages, sendMessage, isSending, clearChat } = useChat({
@@ -105,6 +106,14 @@ const BrandCoachV2 = (): JSX.Element => {
   const [message, setMessage] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+
+  // User documents state (uploaded documents from DocumentUpload component)
+  const [userDocuments, setUserDocuments] = useState<any[]>([]);
+
+  // Field focus tracking for conversational guidance
+  const [focusedFieldId, setFocusedFieldId] = useState<string | null>(null);
+  const [fieldInteractionCounts, setFieldInteractionCounts] = useState<Record<string, number>>({});
 
   // Chat container ref for auto-scrolling
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -171,26 +180,64 @@ const BrandCoachV2 = (): JSX.Element => {
   const handleSendMessage = async (): Promise<void> => {
     if (!message.trim()) return;
 
-    // Build chapter context for metadata
-    const chapterFields = currentChapter
-      ? CHAPTER_FIELDS_MAP[currentChapter.id] ?? []
-      : [];
+    // Build context with ALL fields from ALL chapters for comprehensive extraction
+    // This allows the AI to update any field based on the conversation or documents
+    const allFieldsToCapture: string[] = [];
+    const allFieldLabels: Record<string, string> = {};
 
-    const chapterContext: ChapterContext | undefined = currentChapter
-      ? {
-          chapterId: currentChapter.id,
-          chapterTitle: currentChapter.title,
-          chapterNumber: currentChapter.number,
-          fieldsToCapture: chapterFields.map(f => f.id),
-          fieldLabels: Object.fromEntries(chapterFields.map(f => [f.id, f.label])),
+    // Collect all fields from all chapters
+    Object.values(CHAPTER_FIELDS_MAP).forEach(chapter => {
+      if (chapter.fields) {
+        chapter.fields.forEach(field => {
+          allFieldsToCapture.push(field.id);
+          allFieldLabels[field.id] = field.label;
+        });
+      }
+    });
+
+    // Get focused field details if one is selected
+    let currentFieldDetails = null;
+    if (focusedFieldId) {
+      // Find the field in the chapter fields map
+      for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
+        const field = chapter.fields?.find(f => f.id === focusedFieldId);
+        if (field) {
+          currentFieldDetails = {
+            id: field.id,
+            label: field.label,
+            type: field.type,
+            helpText: field.helpText,
+          };
+          break;
         }
-      : undefined;
+      }
+
+      // Track interaction count for this field
+      setFieldInteractionCounts(prev => ({
+        ...prev,
+        [focusedFieldId]: (prev[focusedFieldId] || 0) + 1,
+      }));
+    }
+
+    // Always provide all fields for extraction, but include focused field context
+    const chapterContext: ChapterContext = {
+      chapterId: 'all-chapters',
+      chapterTitle: 'All Chapters',
+      chapterNumber: 0,
+      fieldsToCapture: allFieldsToCapture,
+      fieldLabels: allFieldLabels,
+      focusedField: focusedFieldId,
+      currentFieldDetails,
+      // Enable conversational mode by default
+      comprehensiveMode: false,
+    };
 
     try {
       await sendMessage({
         content: message,
         role: 'user',
         metadata: {
+          userDocuments, // Include uploaded documents
           useSystemKB: isSystemKBEnabled,
           latestDiagnostic: latestDiagnostic || undefined,
           chapterContext,
@@ -207,10 +254,27 @@ const BrandCoachV2 = (): JSX.Element => {
    */
   const handleProceed = async (chapterId: ChapterId): Promise<void> => {
     try {
-      // 1. Mark chapter complete and advance to next
+      // 1. First validate that all required fields are filled
+      const currentChapterFields = CHAPTER_FIELDS_MAP[chapterId] ?? [];
+      const emptyFields = currentChapterFields.filter(field => {
+        const value = fieldValues[field.id];
+        return !value || value.trim() === '';
+      });
+
+      if (emptyFields.length > 0) {
+        // Show helpful guidance instead of generic error
+        toast({
+          title: 'Complete Required Fields',
+          description: 'Please chat with Trevor to complete all fields before marking this chapter complete. The AI coach will help you develop meaningful responses for each field.',
+          variant: 'default',
+        });
+        return;
+      }
+
+      // 2. Mark chapter complete and advance to next
       await completeCurrentChapter();
 
-      // 2. Get next chapter
+      // 3. Get next chapter
       const currentIndex = allChapters.findIndex(ch => ch.id === chapterId);
       const nextChapter = allChapters[currentIndex + 1];
 
@@ -224,20 +288,12 @@ const BrandCoachV2 = (): JSX.Element => {
         return;
       }
 
-      // 3. Send Trevor a system message to transition to next chapter
-      const nextChapterFields = CHAPTER_FIELDS_MAP[nextChapter.id] ?? [];
+      // 3. Send Trevor a system message acknowledging chapter completion
       await sendMessage({
-        content: `[SYSTEM] User approved chapter ${currentIndex + 1} and is ready to proceed to Chapter ${nextChapter.number}: ${nextChapter.title}.`,
+        content: `[SYSTEM] User has marked Chapter ${currentIndex + 1}: ${allChapters[currentIndex].title} as complete. Great progress on their brand journey!`,
         role: 'user',
         metadata: {
           isSystemMessage: true,
-          chapterContext: {
-            chapterId: nextChapter.id,
-            chapterTitle: nextChapter.title,
-            chapterNumber: nextChapter.number,
-            fieldsToCapture: nextChapterFields.map(f => f.id),
-            fieldLabels: Object.fromEntries(nextChapterFields.map(f => [f.id, f.label])),
-          },
         },
       });
     } catch (error) {
@@ -386,26 +442,19 @@ const BrandCoachV2 = (): JSX.Element => {
                   pillar: bookChapter.category
                 };
 
-                // Determine chapter status
+                // Determine chapter status - all chapters are now accessible
                 let chapterStatus: 'completed' | 'active' | 'future';
                 if (progress?.chapter_statuses?.[bookChapter.id]) {
-                  // Map progress status to valid accordion status
                   const progressStatus = progress.chapter_statuses[bookChapter.id];
-                  if (progressStatus === 'not_started') {
-                    // First not_started chapter should be active, rest are future
-                    const firstNotStartedIndex = allChapters.findIndex(
-                      ch => progress.chapter_statuses[ch.id] === 'not_started'
-                    );
-                    chapterStatus = index === firstNotStartedIndex ? 'active' : 'future';
-                  } else if (progressStatus === 'in_progress') {
-                    chapterStatus = 'active';
+                  if (progressStatus === 'completed') {
+                    chapterStatus = 'completed';
                   } else {
-                    // Use the status as-is if it's already valid (completed, active, future)
-                    chapterStatus = progressStatus as 'completed' | 'active' | 'future';
+                    // All non-completed chapters are active (accessible)
+                    chapterStatus = 'active';
                   }
                 } else {
-                  // Default: first chapter is active, rest are future
-                  chapterStatus = index === 0 ? 'active' : 'future';
+                  // Default: all chapters are active
+                  chapterStatus = 'active';
                 }
 
                 return {
@@ -423,6 +472,10 @@ const BrandCoachV2 = (): JSX.Element => {
               onFieldChange={(chapterId, fieldId, value) => {
                 // setFieldManual expects just fieldId and value, not chapterId
                 setFieldManual(fieldId, value);
+              }}
+              onFieldFocus={(fieldId) => {
+                // Track which field the user is focusing on for conversational guidance
+                setFocusedFieldId(fieldId);
               }}
             />
           </div>
@@ -547,9 +600,57 @@ const BrandCoachV2 = (): JSX.Element => {
               )}
             </div>
 
+            {/* Document Upload Panel (collapsible) */}
+            {showDocumentUpload && (
+              <div className="flex-shrink-0 border-t bg-muted/30">
+                <div className="p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium">Upload Documents</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowDocumentUpload(false)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    <DocumentUpload onDocumentsChange={setUserDocuments} />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Chat Input */}
             <div className="flex-shrink-0 border-t p-4">
+              {/* Document context indicator */}
+              {userDocuments.length > 0 && !showDocumentUpload && (
+                <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Paperclip className="h-3 w-3" />
+                  <span>{userDocuments.length} document(s) will be included for context</span>
+                </div>
+              )}
               <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowDocumentUpload(!showDocumentUpload)}
+                  className="h-[60px] w-[60px]"
+                  title={showDocumentUpload ? "Hide document upload" : "Upload documents"}
+                >
+                  <Paperclip className={cn(
+                    "h-5 w-5",
+                    userDocuments.length > 0 && "text-primary"
+                  )} />
+                  {userDocuments.length > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center"
+                    >
+                      {userDocuments.length}
+                    </Badge>
+                  )}
+                </Button>
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}

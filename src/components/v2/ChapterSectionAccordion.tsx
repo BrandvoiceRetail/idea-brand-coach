@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Lock } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -45,6 +44,9 @@ export interface ChapterSectionAccordionProps {
   /** Callback when "Proceed to Next Section" is clicked */
   onProceed: (chapterId: string) => void;
 
+  /** Callback when a field receives focus (for conversational guidance) */
+  onFieldFocus?: (fieldId: string) => void;
+
   /** Additional CSS class names */
   className?: string;
 }
@@ -69,7 +71,7 @@ export interface ChapterSectionAccordionProps {
  * ```
  */
 export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterSectionAccordionProps>(
-  ({ chapters, activeChapterId, onFieldChange, onProceed, className }, ref) => {
+  ({ chapters, activeChapterId, onFieldChange, onProceed, onFieldFocus, className }, ref) => {
     /**
      * Get the first captured value from a chapter for summary display
      */
@@ -117,12 +119,8 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
             </Badge>
           );
         case 'future':
-          return (
-            <Badge variant="outline" className="ml-2 gap-1">
-              <Lock className="h-3 w-3" />
-              <span>Locked</span>
-            </Badge>
-          );
+          // This case shouldn't happen anymore, but keeping for safety
+          return null;
         default:
           return null;
       }
@@ -146,6 +144,7 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
               value={fieldValues[field.id]}
               source={fieldSources?.[field.id]}
               onChange={(fieldId, value) => onFieldChange(chapter.id, fieldId, value)}
+              onFocus={() => onFieldFocus?.(field.id)}
               disabled={chapterData.status !== 'active'}
             />
           ))}
@@ -154,11 +153,11 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
             <div className="pt-4 border-t">
               <Button
                 onClick={() => onProceed(chapter.id)}
-                variant="brand"
+                variant="outline"
                 size="lg"
                 className="w-full"
               >
-                Proceed to Next Section
+                Mark Chapter Complete
               </Button>
             </div>
           )}
@@ -180,43 +179,40 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
     };
 
     /**
-     * Render locked chapter message
+     * Render empty state for chapters without fields
      */
-    const renderLockedMessage = (): JSX.Element => {
+    const renderEmptyState = (): JSX.Element => {
       return (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Lock className="h-4 w-4" />
-          <span>Complete previous chapters to unlock this section</span>
+          <span>Chat with Trevor to populate fields for this chapter</span>
         </div>
       );
     };
 
     /**
      * Determine accordion value (which items are open)
-     * Auto-expand active chapter
+     * Open all chapters by default for easy access
      */
-    const [accordionValue, setAccordionValue] = React.useState<string | undefined>(
-      activeChapterId
+    const [accordionValue, setAccordionValue] = React.useState<string[]>(
+      chapters.map(ch => ch.chapter.id)
     );
 
-    // Update accordion value when activeChapterId changes
+    // Update accordion value when chapters change
     React.useEffect(() => {
-      if (activeChapterId) {
-        setAccordionValue(activeChapterId);
-      }
-    }, [activeChapterId]);
+      // Keep all chapters expanded by default
+      setAccordionValue(chapters.map(ch => ch.chapter.id));
+    }, [chapters]);
 
     return (
       <div ref={ref} className={cn("w-full", className)}>
         <Accordion
-          type="single"
-          collapsible
+          type="multiple"
           value={accordionValue}
           onValueChange={setAccordionValue}
         >
           {chapters.map((chapterData) => {
             const { chapter, status } = chapterData;
-            const isDisabled = status === 'future';
+            const isDisabled = false; // All chapters are now accessible
 
             return (
               <AccordionItem
@@ -248,9 +244,7 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
                 </AccordionTrigger>
 
                 <AccordionContent className="pt-4 pb-6">
-                  {status === 'active' && renderChapterFields(chapterData)}
-                  {status === 'completed' && renderCompletedSummary(chapterData)}
-                  {status === 'future' && renderLockedMessage()}
+                  {status === 'completed' ? renderCompletedSummary(chapterData) : renderChapterFields(chapterData)}
                 </AccordionContent>
               </AccordionItem>
             );

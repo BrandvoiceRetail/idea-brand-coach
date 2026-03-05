@@ -146,6 +146,44 @@ export interface ChapterMetadata {
 }
 
 /**
+ * Chapter context passed to the AI for field extraction and conversation guidance.
+ * This context helps the AI understand what fields to extract and what to focus on.
+ */
+export interface ChapterContext {
+  /** Chapter ID for context */
+  chapterId: ChapterId | 'all-chapters';
+
+  /** Chapter title for display */
+  chapterTitle: string;
+
+  /** Chapter number (0 for all chapters) */
+  chapterNumber: number;
+
+  /** Fields the AI should extract from the conversation */
+  fieldsToCapture: string[];
+
+  /** Human-readable labels for each field */
+  fieldLabels: Record<string, string>;
+
+  /** Currently focused field ID (for conversational guidance) */
+  focusedField?: string | null;
+
+  /** Details about the currently focused field */
+  currentFieldDetails?: {
+    id: string;
+    label: string;
+    type: string;
+    helpText?: string;
+  } | null;
+
+  /** Whether to use comprehensive mode (default false for conversational) */
+  comprehensiveMode?: boolean;
+
+  /** Backward compatibility field name */
+  extractionFields?: string[];
+}
+
+/**
  * Chapter navigation event payload for analytics.
  */
 export interface ChapterNavigationEvent {

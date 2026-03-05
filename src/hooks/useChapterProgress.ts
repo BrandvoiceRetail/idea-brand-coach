@@ -53,7 +53,8 @@ export const useChapterProgress = (options: UseChapterProgressOptions = {}): Use
     // If session has existing chapter progress in metadata, use it
     if (session.chapter_metadata) {
       // Build progress from session metadata
-      const currentChapterId = session.chapter_id || 'chapter-01-introduction';
+      // Try to get chapter_id from metadata first (for backward compatibility)
+      const currentChapterId = session.chapter_metadata?.chapter_id || session.chapter_id || 'chapter-01-introduction';
       const currentChapterNumber = allChapters.find(ch => ch.id === currentChapterId)?.number || 1;
 
       // Initialize all chapters as not_started

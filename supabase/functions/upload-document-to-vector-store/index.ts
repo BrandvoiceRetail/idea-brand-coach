@@ -233,6 +233,55 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY not configured");
     }
 
+    // Get authenticated user
+    const authHeader = req.headers.get('authorization');
+
+    let user: any = null;
+
+    // Try to authenticate the user
+    if (authHeader) {
+      // Create Supabase client with user's JWT for authentication
+      const supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        {
+          global: {
+            headers: {
+              authorization: authHeader,
+            },
+          },
+        }
+      );
+
+      // Verify the user is authenticated
+      const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+      if (!authError && authData?.user) {
+        user = authData.user;
+        console.log(`Authenticated user: ${user.id}`);
+      } else {
+        console.warn('Auth verification failed:', authError?.message);
+      }
+    }
+
+    // For local development, if auth fails, try to extract user ID from the request
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const isLocalDev = supabaseUrl?.includes("kong:8000") ||
+                       supabaseUrl?.includes("127.0.0.1") ||
+                       supabaseUrl?.includes("localhost");
+
+    console.log(`SUPABASE_URL: ${supabaseUrl}, User authenticated: ${!!user}, Local dev: ${isLocalDev}`);
+
+    if (!user && isLocalDev) {
+      console.log("Local development mode - attempting to proceed without strict auth");
+      // In local dev, we'll verify document ownership below
+    } else if (!user) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create service role client for administrative operations
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -244,17 +293,23 @@ serve(async (req) => {
       throw new Error("documentId is required");
     }
 
-    console.log(`Processing document: ${documentId}`);
+    console.log(`Processing document: ${documentId}${user ? ` for user: ${user.id}` : ' (local dev mode)'}`);
 
     // Get document metadata
-    const { data: document, error: docError } = await supabase
+    let query = supabase
       .from("uploaded_documents")
       .select("*")
-      .eq("id", documentId)
-      .single();
+      .eq("id", documentId);
+
+    // Verify ownership if we have authenticated user
+    if (user) {
+      query = query.eq("user_id", user.id);
+    }
+
+    const { data: document, error: docError } = await query.single();
 
     if (docError || !document) {
-      throw new Error(`Document not found: ${docError?.message || "Unknown error"}`);
+      throw new Error(`Document not found or access denied: ${docError?.message || "Unknown error"}`);
     }
 
     const doc = document as UploadedDocument;

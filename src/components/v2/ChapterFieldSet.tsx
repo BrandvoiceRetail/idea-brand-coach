@@ -23,6 +23,9 @@ export interface ChapterFieldSetProps {
   /** Change handler for field updates */
   onChange: (fieldId: string, value: string | string[]) => void;
 
+  /** Focus handler for field (for conversational guidance) */
+  onFocus?: () => void;
+
   /** Whether the field is disabled */
   disabled?: boolean;
 
@@ -47,7 +50,7 @@ export interface ChapterFieldSetProps {
  * ```
  */
 export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetProps>(
-  ({ field, value, source, onChange, disabled = false, className }, ref) => {
+  ({ field, value, source, onChange, onFocus, disabled = false, className }, ref) => {
     /**
      * Handle input change for text and textarea fields
      */
@@ -113,6 +116,7 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
               id={field.id}
               value={stringValue || ''}
               onChange={handleInputChange}
+              onFocus={onFocus}
               placeholder={field.placeholder}
               disabled={disabled}
               required={field.required}
@@ -125,6 +129,7 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
               id={field.id}
               value={stringValue || ''}
               onChange={handleInputChange}
+              onFocus={onFocus}
               placeholder={field.placeholder}
               disabled={disabled}
               required={field.required}
@@ -138,6 +143,7 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
               id={field.id}
               value={arrayValueToString(value)}
               onChange={handleArrayChange}
+              onFocus={onFocus}
               placeholder={`${field.placeholder}\n(One item per line)`}
               disabled={disabled}
               required={field.required}
@@ -151,6 +157,7 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
               id={field.id}
               value={stringValue || ''}
               onChange={handleInputChange}
+              onFocus={onFocus}
               placeholder={field.placeholder}
               disabled={disabled}
               required={field.required}

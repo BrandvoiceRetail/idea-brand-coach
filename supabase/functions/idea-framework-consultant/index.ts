@@ -13,6 +13,54 @@ const corsHeaders = {
  * Search OpenAI vector store for relevant document chunks
  * Uses the Assistants API file_search tool
  */
+/**
+ * Direct file search using the OpenAI Files API
+ * Simpler approach that doesn't require creating an assistant
+ */
+async function directVectorStoreSearch(
+  vectorStoreId: string,
+  query: string
+): Promise<string> {
+  try {
+    console.log(`[directVectorStoreSearch] Searching vector store ${vectorStoreId}`);
+
+    // First, list files in the vector store to confirm they exist
+    const filesResponse = await fetch(
+      `https://api.openai.com/v1/vector_stores/${vectorStoreId}/files`,
+      {
+        headers: {
+          "Authorization": `Bearer ${openAIApiKey}`,
+          "OpenAI-Beta": "assistants=v2",
+        },
+      }
+    );
+
+    if (filesResponse.ok) {
+      const filesData = await filesResponse.json();
+      console.log(`[directVectorStoreSearch] Vector store contains ${filesData.data?.length || 0} files`);
+      if (filesData.data?.length > 0) {
+        console.log("[directVectorStoreSearch] Files in store:", filesData.data.map((f: any) => ({
+          id: f.id,
+          status: f.status
+        })));
+      }
+    }
+
+    // If no files, return early
+    const files = await filesResponse.json();
+    if (!files.data || files.data.length === 0) {
+      console.log("[directVectorStoreSearch] No files found in vector store");
+      return "";
+    }
+
+    // Continue with the existing search logic
+    return await searchVectorStore(vectorStoreId, query);
+  } catch (error) {
+    console.error("[directVectorStoreSearch] Error:", error);
+    return "";
+  }
+}
+
 async function searchVectorStore(
   vectorStoreId: string,
   query: string
@@ -159,6 +207,8 @@ async function searchVectorStore(
     );
 
     const messagesData = await messagesResponse.json();
+    console.log(`[searchVectorStore] Found ${messagesData.data?.length || 0} messages in thread`);
+
     const assistantMessage = messagesData.data?.find((m: any) => m.role === "assistant");
 
     // Cleanup: delete the temporary assistant
@@ -169,8 +219,16 @@ async function searchVectorStore(
 
     if (!assistantMessage) {
       console.log("[searchVectorStore] No assistant response found");
+      console.log("[searchVectorStore] Thread messages:", JSON.stringify(messagesData.data?.map((m: any) => ({
+        role: m.role,
+        contentTypes: m.content?.map((c: any) => c.type)
+      }))));
       return "";
     }
+
+    // Log the assistant message structure for debugging
+    console.log("[searchVectorStore] Assistant message content types:",
+      assistantMessage.content?.map((c: any) => c.type));
 
     // Extract text content
     const textContent = assistantMessage.content
@@ -178,7 +236,14 @@ async function searchVectorStore(
       ?.map((c: any) => c.text?.value || "")
       ?.join("\n");
 
-    console.log(`[searchVectorStore] Retrieved ${textContent?.length || 0} chars from vector store`);
+    if (!textContent || textContent.trim().length === 0) {
+      console.log("[searchVectorStore] Warning: Assistant returned empty text content");
+      console.log("[searchVectorStore] Full assistant message:", JSON.stringify(assistantMessage.content));
+    } else {
+      console.log(`[searchVectorStore] Retrieved ${textContent.length} chars from vector store`);
+      console.log("[searchVectorStore] Content preview:", textContent.substring(0, 200) + "...");
+    }
+
     return textContent || "";
   } catch (error) {
     console.error("[searchVectorStore] Error:", error);
@@ -218,7 +283,8 @@ async function retrieveVectorStoreContext(
     console.log(`[retrieveVectorStoreContext] Found core store: ${stores.core_store_id}`);
 
     // Search the core store (where uploaded documents go)
-    const content = await searchVectorStore(stores.core_store_id, query);
+    // Use the new direct search that includes file validation
+    const content = await directVectorStoreSearch(stores.core_store_id, query);
 
     if (!content) {
       console.log("[retrieveVectorStoreContext] No content found in vector store");

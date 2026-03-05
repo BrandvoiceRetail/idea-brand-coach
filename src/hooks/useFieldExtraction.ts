@@ -157,10 +157,30 @@ export function parseFieldExtraction(rawResponse: string): ExtractFieldsResult {
 
   // Parse JSON
   try {
-    const extractedFields = JSON.parse(jsonBlock) as Record<string, string>;
+    const parsed = JSON.parse(jsonBlock);
+    let extractedFields: Record<string, string> = {};
+
+    // Handle two formats:
+    // 1. New format from conversational AI: { fields: [{identifier, value, confidence}] }
+    // 2. Legacy format: { field_id: "value" }
+
+    if (parsed.fields && Array.isArray(parsed.fields)) {
+      // New format with field array
+      for (const field of parsed.fields) {
+        if (field.identifier && field.value && field.confidence >= 0.7) {
+          // Only extract fields with sufficient confidence
+          extractedFields[field.identifier] = field.value;
+          console.log(`[Field Extraction] Extracted ${field.identifier} with confidence ${field.confidence}`);
+        }
+      }
+    } else if (typeof parsed === 'object') {
+      // Legacy flat format
+      extractedFields = parsed as Record<string, string>;
+    }
+
     return {
       displayText,
-      extractedFields,
+      extractedFields: Object.keys(extractedFields).length > 0 ? extractedFields : null,
       success: true,
     };
   } catch (error) {
