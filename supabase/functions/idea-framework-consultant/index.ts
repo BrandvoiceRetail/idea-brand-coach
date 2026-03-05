@@ -35,8 +35,9 @@ async function directVectorStoreSearch(
       }
     );
 
+    let filesData: any = null;
     if (filesResponse.ok) {
-      const filesData = await filesResponse.json();
+      filesData = await filesResponse.json();
       console.log(`[directVectorStoreSearch] Vector store contains ${filesData.data?.length || 0} files`);
       if (filesData.data?.length > 0) {
         console.log("[directVectorStoreSearch] Files in store:", filesData.data.map((f: any) => ({
@@ -47,8 +48,7 @@ async function directVectorStoreSearch(
     }
 
     // If no files, return early
-    const files = await filesResponse.json();
-    if (!files.data || files.data.length === 0) {
+    if (!filesData || !filesData.data || filesData.data.length === 0) {
       console.log("[directVectorStoreSearch] No files found in vector store");
       return "";
     }
