@@ -604,25 +604,29 @@ Introduce yourself as Trevor in one sentence, then ask what specific area they'd
     prompt += `
 
 FIELD EXTRACTION:
-Extract field values when you have high confidence from either:
-1. User explicitly provides or confirms an answer (confidence: 0.85+)
-2. Clear information found in uploaded documents (confidence: 0.80+)
+ALWAYS extract field values when you:
+1. Find clear information in uploaded documents (confidence: 0.80+)
+2. User confirms or provides an answer (confidence: 0.85+)
+3. Discuss a specific field value that seems final
 
-- Extract ONE field at a time as it becomes clear
-- When extracting from documents, mention the source
-- Don't push for all fields at once
+Key field identifiers you're tracking:
+- brandPurpose: The brand's core purpose/why
+- brandVision: The future vision
+- brandMission: How to achieve the vision
+- brandValues: Core values and principles
 
+When you mention a field value in your response, ALWAYS extract it.
 At the END of your response when you identify clear field information, include:
 
 ---FIELD_EXTRACTION_JSON---
 {
   "fields": [
     {
-      "identifier": "field_id",
-      "value": "extracted content",
+      "identifier": "brandPurpose",
+      "value": "To be an essential, empowering tool that elevates the gaming experience",
       "confidence": 0.90,
-      "source": "user_stated" or "document",
-      "context": "Brief context or document reference"
+      "source": "document",
+      "context": "Extracted from uploaded brand strategy document"
     }
   ]
 }`;
