@@ -1,15 +1,18 @@
 /**
- * useFieldExtractionRefactored Hook
+ * useFieldExtraction Hook - Unified Version
  *
- * Refactored version following best practices guide:
- * - Small, focused functions (Single Responsibility)
- * - Clear separation of concerns
- * - Rich error context
- * - Testable components
- * - Strong type safety
+ * Complete field extraction system with ALL features in one place:
+ * - Robust JSON parsing with truncation recovery
+ * - Field locking to prevent AI overwrites
+ * - Manual field editing with source tracking
+ * - Automatic persistence to localStorage
+ * - Toast notifications for user feedback
+ *
+ * No more V1 vs V2 confusion - this is THE field extraction hook!
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { toast } from 'sonner';
 
 // ============================================================================
 // Constants
@@ -19,10 +22,11 @@ const FIELD_EXTRACTION_START = '---FIELD_EXTRACTION_JSON---';
 const FIELD_EXTRACTION_END = '---FIELD_EXTRACTION_JSON---';
 const FIELD_EXTRACTION_END_ALT = '---END_FIELD_EXTRACTION_JSON---';
 const STORAGE_KEY_PREFIX = 'v2_field_values_';
+const LOCK_STORAGE_PREFIX = 'v2_field_locks_';
 const MIN_CONFIDENCE = 0.7;
 
 // ============================================================================
-// Types - Strong typing for better maintainability
+// Types - Complete type system for all features
 // ============================================================================
 
 export type FieldSource = 'ai' | 'manual';
@@ -36,7 +40,17 @@ export interface FieldValue {
 export type FieldValuesStore = Record<string, FieldValue>;
 
 /**
- * Extraction block found in response - clear data structure
+ * Complete field metadata including lock state
+ */
+export interface FieldMetadata {
+  value: string | string[];
+  source: FieldSource;
+  isLocked: boolean;
+  timestamp?: string;
+}
+
+/**
+ * Extraction block found in response
  */
 interface ExtractionBlock {
   found: boolean;
@@ -50,18 +64,7 @@ interface ExtractionBlock {
 }
 
 /**
- * Field data from JSON - supports both formats
- */
-interface FieldData {
-  identifier: string;
-  value: string | string[];
-  confidence?: number;
-  source?: string;
-  context?: string;
-}
-
-/**
- * Recovery strategy result - tracks how fields were recovered
+ * Recovery strategy result
  */
 interface RecoveryResult {
   fields: Record<string, string>;
@@ -75,23 +78,34 @@ export interface ExtractFieldsResult {
   success: boolean;
 }
 
+/**
+ * Complete unified hook return type with ALL features
+ */
 export interface UseFieldExtractionReturn {
-  extractFields: (rawResponse: string) => ExtractFieldsResult;
-  fieldValues: FieldValuesStore;
-  setFieldManual: (fieldId: string, value: string) => void;
-  getField: (fieldId: string) => FieldValue | undefined;
-  getFlatFieldValues: () => Record<string, string>;
+  // Core extraction
+  extractFields: (rawResponse: string) => string;
+
+  // Field values and metadata
+  fieldValues: Record<string, string | string[]>;
+  fieldSources: Record<string, FieldSource>;
+  fieldMetadata: Record<string, FieldMetadata>;
+
+  // Field manipulation
+  setFieldManual: (fieldId: string, value: string | string[]) => void;
   clearFields: () => void;
+
+  // Field locking (no longer in separate V2!)
+  setFieldLock: (fieldId: string, locked: boolean) => void;
+  isFieldLocked: (fieldId: string) => boolean;
+
+  // Stats
+  extractedCount: number;
 }
 
 // ============================================================================
-// Delimiter Detection - Single Responsibility: Find extraction boundaries
+// Delimiter Detection - Find extraction boundaries
 // ============================================================================
 
-/**
- * Find extraction block in response text
- * ~20 lines - focused on delimiter detection only
- */
 function findExtractionBlock(rawResponse: string): ExtractionBlock {
   const startIndex = rawResponse.indexOf(FIELD_EXTRACTION_START);
 
@@ -108,14 +122,13 @@ function findExtractionBlock(rawResponse: string): ExtractionBlock {
     };
   }
 
-  // Check for standard end delimiter
+  // Check both delimiter formats
   let endIndex = rawResponse.indexOf(
     FIELD_EXTRACTION_END,
     startIndex + FIELD_EXTRACTION_START.length
   );
   let endDelimiterLength = FIELD_EXTRACTION_END.length;
 
-  // Check for alternative end delimiter
   if (endIndex === -1) {
     endIndex = rawResponse.indexOf(
       FIELD_EXTRACTION_END_ALT,
@@ -146,17 +159,13 @@ function findExtractionBlock(rawResponse: string): ExtractionBlock {
 }
 
 // ============================================================================
-// JSON Parsing - Single Responsibility: Convert JSON to fields
+// JSON Parsing - Convert JSON to fields
 // ============================================================================
 
-/**
- * Parse field array from JSON data
- * ~25 lines - focused on data transformation only
- */
 function parseFieldArray(data: any): Record<string, string> {
   const fields: Record<string, string> = {};
 
-  // New format: { fields: [{identifier, value, confidence}] }
+  // Handle { fields: [{identifier, value, confidence}] }
   if (data.fields && Array.isArray(data.fields)) {
     for (const field of data.fields) {
       if (!isValidField(field)) continue;
@@ -168,7 +177,7 @@ function parseFieldArray(data: any): Record<string, string> {
       }
     }
   }
-  // Legacy format: direct object
+  // Handle legacy flat format
   else if (typeof data === 'object' && data !== null) {
     Object.entries(data).forEach(([key, value]) => {
       const normalized = normalizeFieldValue(value);
@@ -181,20 +190,12 @@ function parseFieldArray(data: any): Record<string, string> {
   return fields;
 }
 
-/**
- * Validate field meets extraction criteria
- * ~10 lines - single check
- */
 function isValidField(field: any): boolean {
   if (!field.identifier || !field.value) return false;
   if (field.confidence !== undefined && field.confidence < MIN_CONFIDENCE) return false;
   return true;
 }
 
-/**
- * Normalize field value to string
- * ~10 lines - single transformation
- */
 function normalizeFieldValue(value: any): string | null {
   if (!value) return null;
   if (Array.isArray(value)) return value.filter(Boolean).join(', ');
@@ -203,23 +204,15 @@ function normalizeFieldValue(value: any): string | null {
   return null;
 }
 
-/**
- * Log field extraction for debugging
- * ~5 lines - single purpose logging
- */
 function logFieldExtraction(identifier: string, confidence?: number): void {
   const confidenceInfo = confidence ? ` (confidence: ${confidence})` : '';
   console.log(`[Field Extraction] Extracted: ${identifier}${confidenceInfo}`);
 }
 
 // ============================================================================
-// Complete Extraction - Single Responsibility: Handle well-formed JSON
+// Complete Extraction - Handle well-formed JSON
 // ============================================================================
 
-/**
- * Parse complete extraction with proper JSON
- * ~20 lines - focused on success path
- */
 function parseCompleteExtraction(extraction: ExtractionBlock): ExtractFieldsResult {
   const displayText = buildDisplayText(extraction);
 
@@ -228,7 +221,7 @@ function parseCompleteExtraction(extraction: ExtractionBlock): ExtractFieldsResu
     const fields = parseFieldArray(parsed);
 
     if (Object.keys(fields).length > 0) {
-      logExtractionSuccess(Object.keys(fields).length);
+      console.log(`[Field Extraction] Success: ${Object.keys(fields).length} fields extracted`);
       return {
         displayText,
         extractedFields: fields,
@@ -242,7 +235,11 @@ function parseCompleteExtraction(extraction: ExtractionBlock): ExtractFieldsResu
       success: false
     };
   } catch (error) {
-    logExtractionError(error, extraction.jsonContent);
+    console.error('[Field Extraction] Parse error:', {
+      error: (error as Error).message,
+      jsonLength: extraction.jsonContent.length,
+      preview: extraction.jsonContent.substring(0, 100) + '...'
+    });
     return {
       displayText,
       extractedFields: null,
@@ -251,27 +248,19 @@ function parseCompleteExtraction(extraction: ExtractionBlock): ExtractFieldsResu
   }
 }
 
-/**
- * Build clean display text from extraction
- * ~5 lines - single text operation
- */
 function buildDisplayText(extraction: ExtractionBlock): string {
   const parts = [extraction.beforeContent, extraction.afterContent].filter(Boolean);
   return parts.join('\n\n').trim();
 }
 
 // ============================================================================
-// Truncation Recovery - Single Responsibility: Handle incomplete JSON
+// Truncation Recovery - Handle incomplete JSON
 // ============================================================================
 
-/**
- * Recover fields from truncated extraction
- * ~20 lines - orchestrates recovery strategies
- */
 function recoverFromTruncation(extraction: ExtractionBlock): ExtractFieldsResult {
   console.warn('[Field Extraction] Attempting truncation recovery');
 
-  // Try each recovery strategy in order
+  // Try each recovery strategy
   const recoveryStrategies = [
     () => recoverViaJsonRepair(extraction.jsonContent),
     () => recoverViaRegex(extraction.jsonContent)
@@ -280,7 +269,11 @@ function recoverFromTruncation(extraction: ExtractionBlock): ExtractFieldsResult
   for (const strategy of recoveryStrategies) {
     const result = strategy();
     if (result.method !== 'failed' && Object.keys(result.fields).length > 0) {
-      logRecoverySuccess(result);
+      console.warn(`[Field Extraction] Recovery succeeded:`, {
+        method: result.method,
+        fieldCount: Object.keys(result.fields).length,
+        confidence: result.confidence
+      });
       return {
         displayText: extraction.beforeContent,
         extractedFields: result.fields,
@@ -293,10 +286,6 @@ function recoverFromTruncation(extraction: ExtractionBlock): ExtractFieldsResult
   return createFallbackResponse(extraction);
 }
 
-/**
- * Try to repair and parse truncated JSON
- * ~20 lines - focused on JSON repair
- */
 function recoverViaJsonRepair(jsonContent: string): RecoveryResult {
   const repaired = attemptJsonRepair(jsonContent);
 
@@ -318,14 +307,10 @@ function recoverViaJsonRepair(jsonContent: string): RecoveryResult {
   }
 }
 
-/**
- * Extract fields using regex patterns
- * ~25 lines - focused on regex extraction
- */
 function recoverViaRegex(jsonContent: string): RecoveryResult {
   const fields: Record<string, string> = {};
 
-  // Pattern for standard field objects
+  // Extract standard field objects
   const fieldPattern = /\{\s*"identifier"\s*:\s*"([^"]+)"\s*,\s*"value"\s*:\s*"([^"]+)"/g;
   let match;
 
@@ -336,7 +321,7 @@ function recoverViaRegex(jsonContent: string): RecoveryResult {
     }
   }
 
-  // Pattern for array values
+  // Extract array values
   const arrayPattern = /\{\s*"identifier"\s*:\s*"([^"]+)"\s*,\s*"value"\s*:\s*\[([^\]]+)\]/g;
 
   while ((match = arrayPattern.exec(jsonContent)) !== null) {
@@ -356,30 +341,20 @@ function recoverViaRegex(jsonContent: string): RecoveryResult {
   };
 }
 
-/**
- * Extract array values from string
- * ~10 lines - single extraction purpose
- */
 function extractArrayValues(arrayContent: string): string[] {
   const matches = arrayContent.match(/"([^"]+)"/g) || [];
   return matches.map(s => s.replace(/"/g, ''));
 }
 
-/**
- * Attempt to repair truncated JSON
- * ~15 lines - focused on repair logic
- */
 function attemptJsonRepair(jsonContent: string): string | null {
   const content = jsonContent.trim();
 
-  // Check for truncated fields array
   if (content.includes('"fields"') && content.includes('[')) {
     const lastCompleteField = content.lastIndexOf('},');
 
     if (lastCompleteField > 0) {
       const repaired = content.substring(0, lastCompleteField + 1) + ']}';
 
-      // Validate repair
       try {
         JSON.parse(repaired);
         return repaired;
@@ -392,10 +367,6 @@ function attemptJsonRepair(jsonContent: string): string | null {
   return null;
 }
 
-/**
- * Create fallback response when recovery fails
- * ~10 lines - single fallback creation
- */
 function createFallbackResponse(extraction: ExtractionBlock): ExtractFieldsResult {
   console.error('[Field Extraction] All recovery strategies failed');
 
@@ -411,51 +382,15 @@ function createFallbackResponse(extraction: ExtractionBlock): ExtractFieldsResul
 }
 
 // ============================================================================
-// Logging Utilities - Single Responsibility: Diagnostic output
+// Main Parsing Function - Orchestrator
 // ============================================================================
 
 /**
- * Log successful extraction
- */
-function logExtractionSuccess(fieldCount: number): void {
-  console.log(`[Field Extraction] Success: ${fieldCount} fields extracted`);
-}
-
-/**
- * Log extraction error with context
- */
-function logExtractionError(error: any, jsonContent: string): void {
-  console.error('[Field Extraction] Parse error:', {
-    error: error.message,
-    jsonLength: jsonContent.length,
-    preview: jsonContent.substring(0, 100) + '...'
-  });
-}
-
-/**
- * Log successful recovery
- */
-function logRecoverySuccess(result: RecoveryResult): void {
-  console.warn(`[Field Extraction] Recovery succeeded:`, {
-    method: result.method,
-    fieldCount: Object.keys(result.fields).length,
-    confidence: result.confidence
-  });
-}
-
-// ============================================================================
-// Main Orchestrator - Single Responsibility: Coordinate extraction flow
-// ============================================================================
-
-/**
- * Main extraction function - orchestrates the process
- * ~15 lines - pure orchestration
+ * Parse field extraction from AI response
  */
 export function parseFieldExtraction(rawResponse: string): ExtractFieldsResult {
-  // Step 1: Find extraction boundaries
   const extraction = findExtractionBlock(rawResponse);
 
-  // Step 2: No extraction found
   if (!extraction.found) {
     return {
       displayText: rawResponse,
@@ -464,23 +399,17 @@ export function parseFieldExtraction(rawResponse: string): ExtractFieldsResult {
     };
   }
 
-  // Step 3: Complete extraction
   if (extraction.hasEndDelimiter) {
     return parseCompleteExtraction(extraction);
   }
 
-  // Step 4: Truncated extraction
   return recoverFromTruncation(extraction);
 }
 
 // ============================================================================
-// Storage Functions - Single Responsibility: Persistence
+// Storage Functions - Persistence for values and locks
 // ============================================================================
 
-/**
- * Load field values from localStorage
- * ~15 lines - focused on retrieval
- */
 function loadFieldValues(avatarId: string): FieldValuesStore {
   try {
     const key = `${STORAGE_KEY_PREFIX}${avatarId}`;
@@ -490,7 +419,6 @@ function loadFieldValues(avatarId: string): FieldValuesStore {
 
     const parsed = JSON.parse(stored);
 
-    // Validate structure
     if (typeof parsed !== 'object') {
       console.warn('[Field Storage] Invalid stored data, resetting');
       return {};
@@ -503,10 +431,6 @@ function loadFieldValues(avatarId: string): FieldValuesStore {
   }
 }
 
-/**
- * Save field values to localStorage
- * ~10 lines - focused on persistence
- */
 function saveFieldValues(avatarId: string, values: FieldValuesStore): void {
   try {
     const key = `${STORAGE_KEY_PREFIX}${avatarId}`;
@@ -516,92 +440,223 @@ function saveFieldValues(avatarId: string, values: FieldValuesStore): void {
   }
 }
 
+function loadFieldLocks(avatarId: string): Set<string> {
+  try {
+    const key = `${LOCK_STORAGE_PREFIX}${avatarId}`;
+    const stored = localStorage.getItem(key);
+
+    if (!stored) return new Set();
+
+    const parsed = JSON.parse(stored);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch (error) {
+    console.error('[Field Locks] Load failed:', error);
+    return new Set();
+  }
+}
+
+function saveFieldLocks(avatarId: string, locks: Set<string>): void {
+  try {
+    const key = `${LOCK_STORAGE_PREFIX}${avatarId}`;
+    localStorage.setItem(key, JSON.stringify([...locks]));
+  } catch (error) {
+    console.error('[Field Locks] Save failed:', error);
+  }
+}
+
 // ============================================================================
-// React Hook - Main interface
+// THE ONE HOOK - Complete unified interface
 // ============================================================================
 
 /**
- * Hook for managing field extraction from AI responses
+ * THE Field Extraction Hook - All features in one place!
  *
- * Following best practices:
- * - Small, focused internal functions
- * - Clear separation of concerns
- * - Rich error context in logging
- * - Strong type safety throughout
+ * No more V1 vs V2 confusion. This hook has everything:
+ * - Robust extraction with recovery strategies
+ * - Field locking to prevent AI overwrites
+ * - Manual editing with source tracking
+ * - Automatic persistence
+ * - Toast notifications
+ *
+ * @param avatarId - Avatar ID for scoping (null = 'default')
  */
-export function useFieldExtraction(avatarId: string): UseFieldExtractionReturn {
+export function useFieldExtraction(avatarId: string | null): UseFieldExtractionReturn {
+  const resolvedAvatarId = avatarId || 'default';
+
+  // Field values with source tracking
   const [fieldValues, setFieldValues] = useState<FieldValuesStore>(() => {
-    return loadFieldValues(avatarId);
+    return loadFieldValues(resolvedAvatarId);
   });
 
-  const extractFields = useCallback((rawResponse: string): ExtractFieldsResult => {
+  // Locked fields that can't be overwritten by AI
+  const [lockedFields, setLockedFields] = useState<Set<string>>(() => {
+    return loadFieldLocks(resolvedAvatarId);
+  });
+
+  // Count of AI-extracted fields
+  const [extractedCount, setExtractedCount] = useState(0);
+
+  // Transform to flat values for components
+  const flatFieldValues = useMemo(() => {
+    const values: Record<string, string | string[]> = {};
+    Object.entries(fieldValues).forEach(([key, field]) => {
+      values[key] = field.value;
+    });
+    return values;
+  }, [fieldValues]);
+
+  // Extract sources for display
+  const fieldSources = useMemo(() => {
+    const sources: Record<string, FieldSource> = {};
+    Object.entries(fieldValues).forEach(([key, field]) => {
+      sources[key] = field.source;
+    });
+    return sources;
+  }, [fieldValues]);
+
+  // Build complete metadata
+  const fieldMetadata = useMemo(() => {
+    const metadata: Record<string, FieldMetadata> = {};
+    Object.entries(fieldValues).forEach(([key, field]) => {
+      metadata[key] = {
+        value: field.value,
+        source: field.source,
+        isLocked: lockedFields.has(key),
+        timestamp: field.timestamp
+      };
+    });
+    return metadata;
+  }, [fieldValues, lockedFields]);
+
+  // Update extracted count when sources change
+  useEffect(() => {
+    const aiFieldCount = Object.values(fieldSources).filter(s => s === 'ai').length;
+    setExtractedCount(aiFieldCount);
+  }, [fieldSources]);
+
+  // Extract and process fields from AI response
+  const extractFields = useCallback((rawResponse: string): string => {
     const result = parseFieldExtraction(rawResponse);
 
     if (result.success && result.extractedFields) {
-      updateFieldValues(result.extractedFields, 'ai');
-    }
+      const updates: FieldValuesStore = { ...fieldValues };
+      const skippedFields: string[] = [];
+      const appliedFields: string[] = [];
 
-    return result;
-  }, [avatarId]);
+      // Process each extracted field
+      for (const [fieldId, value] of Object.entries(result.extractedFields)) {
+        // Skip if field is locked
+        if (lockedFields.has(fieldId)) {
+          skippedFields.push(fieldId);
+          console.log(`[Field Extraction] Skipped locked field: ${fieldId}`);
+        } else if (!updates[fieldId] || updates[fieldId].value !== value) {
+          // Update if new or different
+          updates[fieldId] = {
+            value,
+            source: 'ai',
+            timestamp: new Date().toISOString()
+          };
+          appliedFields.push(fieldId);
+        }
+      }
 
-  const updateFieldValues = useCallback((
-    fields: Record<string, string>,
-    source: FieldSource
-  ): void => {
-    const updates: FieldValuesStore = { ...fieldValues };
-    let hasUpdates = false;
+      // Apply updates if any
+      if (appliedFields.length > 0) {
+        setFieldValues(updates);
+        saveFieldValues(resolvedAvatarId, updates);
+      }
 
-    for (const [fieldId, value] of Object.entries(fields)) {
-      if (!updates[fieldId] || updates[fieldId].value !== value) {
-        updates[fieldId] = {
-          value,
-          source,
-          timestamp: new Date().toISOString()
-        };
-        hasUpdates = true;
+      // Show user feedback via toasts
+      if (appliedFields.length > 0 && skippedFields.length > 0) {
+        toast.success(
+          `Updated ${appliedFields.length} field${appliedFields.length !== 1 ? 's' : ''}. ` +
+          `${skippedFields.length} locked field${skippedFields.length !== 1 ? 's' : ''} protected.`
+        );
+      } else if (appliedFields.length > 0) {
+        toast.success(
+          `Extracted ${appliedFields.length} field${appliedFields.length !== 1 ? 's' : ''} from response.`
+        );
+      } else if (skippedFields.length > 0) {
+        toast.info(
+          `All ${skippedFields.length} extracted field${skippedFields.length !== 1 ? 's were' : ' was'} locked. No updates made.`
+        );
       }
     }
 
-    if (hasUpdates) {
-      setFieldValues(updates);
-      saveFieldValues(avatarId, updates);
+    return result.displayText;
+  }, [fieldValues, lockedFields, resolvedAvatarId]);
+
+  // Set field value manually
+  const setFieldManual = useCallback((fieldId: string, value: string | string[]): void => {
+    const normalizedValue = Array.isArray(value) ? value.join('\n') : value;
+
+    const updates = {
+      ...fieldValues,
+      [fieldId]: {
+        value: normalizedValue,
+        source: 'manual' as FieldSource,
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    setFieldValues(updates);
+    saveFieldValues(resolvedAvatarId, updates);
+  }, [fieldValues, resolvedAvatarId]);
+
+  // Lock or unlock a field
+  const setFieldLock = useCallback((fieldId: string, locked: boolean): void => {
+    const updated = new Set(lockedFields);
+
+    if (locked) {
+      updated.add(fieldId);
+      toast.info(`Field locked: AI won't overwrite this value`);
+    } else {
+      updated.delete(fieldId);
+      toast.info(`Field unlocked: AI can update this value`);
     }
-  }, [avatarId, fieldValues]);
 
-  const setFieldManual = useCallback((fieldId: string, value: string): void => {
-    updateFieldValues({ [fieldId]: value }, 'manual');
-  }, [updateFieldValues]);
+    setLockedFields(updated);
+    saveFieldLocks(resolvedAvatarId, updated);
+  }, [lockedFields, resolvedAvatarId]);
 
-  const getField = useCallback((fieldId: string): FieldValue | undefined => {
-    return fieldValues[fieldId];
-  }, [fieldValues]);
+  // Check if field is locked
+  const isFieldLocked = useCallback((fieldId: string): boolean => {
+    return lockedFields.has(fieldId);
+  }, [lockedFields]);
 
-  const getFlatFieldValues = useCallback((): Record<string, string> => {
-    const flat: Record<string, string> = {};
-    for (const [id, field] of Object.entries(fieldValues)) {
-      flat[id] = field.value;
-    }
-    return flat;
-  }, [fieldValues]);
-
+  // Clear all fields
   const clearFields = useCallback((): void => {
     setFieldValues({});
-    saveFieldValues(avatarId, {});
+    saveFieldValues(resolvedAvatarId, {});
     console.log('[Field Extraction] Cleared all fields');
-  }, [avatarId]);
+  }, [resolvedAvatarId]);
 
-  // Sync on avatar change
-  useMemo(() => {
-    const stored = loadFieldValues(avatarId);
-    setFieldValues(stored);
-  }, [avatarId]);
+  // Sync when avatar changes
+  useEffect(() => {
+    const values = loadFieldValues(resolvedAvatarId);
+    const locks = loadFieldLocks(resolvedAvatarId);
+    setFieldValues(values);
+    setLockedFields(locks);
+  }, [resolvedAvatarId]);
 
   return {
     extractFields,
-    fieldValues,
+    fieldValues: flatFieldValues,
+    fieldSources,
+    fieldMetadata,
     setFieldManual,
-    getField,
-    getFlatFieldValues,
-    clearFields
+    clearFields,
+    setFieldLock,
+    isFieldLocked,
+    extractedCount
   };
 }
+
+// ============================================================================
+// Backward Compatibility - Can be removed after migration
+// ============================================================================
+
+/**
+ * @deprecated Use useFieldExtraction instead - V2 is now unified into main hook
+ */
+export const useFieldExtractionV2 = useFieldExtraction;

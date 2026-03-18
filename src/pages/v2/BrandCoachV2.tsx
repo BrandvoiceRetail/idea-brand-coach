@@ -10,8 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useChapterProgress } from '@/hooks/useChapterProgress';
-import { useFieldExtractionV2 } from '@/hooks/useFieldExtractionV2';
-import { parseFieldExtraction } from '@/hooks/useFieldExtraction';
+import { useFieldExtraction, parseFieldExtraction } from '@/hooks/useFieldExtraction';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemKB } from '@/contexts/SystemKBContext';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
@@ -121,7 +120,7 @@ const BrandCoachV2 = (): JSX.Element => {
     extractedCount,
     clearFields,
     isFieldLocked,
-  } = useFieldExtractionV2(currentAvatar?.id || null);
+  } = useFieldExtraction(currentAvatar?.id || null);
 
   // Field review context for mobile-first review experience
   const {
@@ -136,12 +135,18 @@ const BrandCoachV2 = (): JSX.Element => {
     setActiveReviewFieldId,
   } = useFieldReview();
 
-  // Wire the field accept handler to setFieldManual so accepted fields persist
+  // Keep a stable ref to the latest setFieldManual so we only register once
+  const setFieldManualRef = useRef(setFieldManual);
+  setFieldManualRef.current = setFieldManual;
+
+  // Wire the field accept handler to setFieldManual so accepted fields persist.
+  // Using a ref avoids re-registering (and thus re-triggering context state updates)
+  // every time setFieldManual's identity changes.
   useEffect(() => {
     registerFieldAcceptHandler((fieldId: string, value: string | string[]) => {
-      setFieldManual(fieldId, value);
+      setFieldManualRef.current(fieldId, value);
     });
-  }, [registerFieldAcceptHandler, setFieldManual]);
+  }, [registerFieldAcceptHandler]); // intentionally omit setFieldManual — accessed via ref
 
   // Sync fields to database for persistence
   const { savedFieldCount } = useSimpleFieldSync({
