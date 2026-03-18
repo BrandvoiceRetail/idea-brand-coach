@@ -30,8 +30,9 @@ describe('useFieldExtraction', () => {
       }),
     });
 
-    // Mock console.error to avoid noise in tests
+    // Mock console.error and console.warn to avoid noise in tests
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -75,7 +76,7 @@ describe('useFieldExtraction', () => {
       const aiResponse = `Here is some text.
 ---FIELD_EXTRACTION_JSON---
 {"demographics.age": "25-34", "demographics.gender": "Female"}
----FIELD_EXTRACTION_JSON---
+---END_FIELD_EXTRACTION_JSON---
 More text here.`;
 
       let extractResult;
@@ -133,7 +134,7 @@ More text here.`;
       // Try to overwrite with AI extraction
       const aiResponse = `---FIELD_EXTRACTION_JSON---
 {"demographics.age": "25-34", "demographics.gender": "Female"}
----FIELD_EXTRACTION_JSON---`;
+---END_FIELD_EXTRACTION_JSON---`;
 
       act(() => {
         result.current.extractFields(aiResponse);
@@ -156,7 +157,7 @@ More text here.`;
       // First AI extraction
       const firstResponse = `---FIELD_EXTRACTION_JSON---
 {"demographics.age": "25-34"}
----FIELD_EXTRACTION_JSON---`;
+---END_FIELD_EXTRACTION_JSON---`;
 
       act(() => {
         result.current.extractFields(firstResponse);
@@ -170,7 +171,7 @@ More text here.`;
       // Second AI extraction with different value
       const secondResponse = `---FIELD_EXTRACTION_JSON---
 {"demographics.age": "35-44"}
----FIELD_EXTRACTION_JSON---`;
+---END_FIELD_EXTRACTION_JSON---`;
 
       act(() => {
         result.current.extractFields(secondResponse);
@@ -187,7 +188,7 @@ More text here.`;
 
       const malformedResponse = `---FIELD_EXTRACTION_JSON---
 {invalid json here}
----FIELD_EXTRACTION_JSON---`;
+---END_FIELD_EXTRACTION_JSON---`;
 
       let extractResult;
       act(() => {
@@ -210,22 +211,19 @@ More text here.`;
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
       const incompleteResponse = `---FIELD_EXTRACTION_JSON---
-{"demographics.age": "25-34"}`;
+{"fields": [{"identifier": "demographics.age", "value": "25-34", "confidence": 0.9}]}`;
 
       let extractResult;
       act(() => {
         extractResult = result.current.extractFields(incompleteResponse);
       });
 
+      // Should recover from truncation and extract fields
       expect(extractResult).toEqual({
-        displayText: incompleteResponse,
-        extractedFields: null,
-        success: false,
+        displayText: '', // JSON should be removed from display
+        extractedFields: { 'demographics.age': '25-34' },
+        success: true,
       });
-
-      expect(console.error).toHaveBeenCalledWith(
-        'Field extraction block missing end delimiter'
-      );
     });
 
     it('should save extracted fields to localStorage', () => {
@@ -233,7 +231,7 @@ More text here.`;
 
       const aiResponse = `---FIELD_EXTRACTION_JSON---
 {"demographics.age": "25-34"}
----FIELD_EXTRACTION_JSON---`;
+---END_FIELD_EXTRACTION_JSON---`;
 
       act(() => {
         result.current.extractFields(aiResponse);
@@ -268,7 +266,7 @@ More text here.`;
       // First set AI value
       const aiResponse = `---FIELD_EXTRACTION_JSON---
 {"demographics.age": "25-34"}
----FIELD_EXTRACTION_JSON---`;
+---END_FIELD_EXTRACTION_JSON---`;
 
       act(() => {
         result.current.extractFields(aiResponse);
@@ -396,6 +394,7 @@ More text here.`;
 describe('parseFieldExtraction', () => {
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -406,7 +405,7 @@ describe('parseFieldExtraction', () => {
     const input = `Text before
 ---FIELD_EXTRACTION_JSON---
 {"field1": "value1", "field2": "value2"}
----FIELD_EXTRACTION_JSON---
+---END_FIELD_EXTRACTION_JSON---
 Text after`;
 
     const result = parseFieldExtraction(input);
@@ -435,24 +434,22 @@ Text after`;
 
   it('should handle missing end delimiter', () => {
     const input = `---FIELD_EXTRACTION_JSON---
-{"field1": "value1"}`;
+{"fields": [{"identifier": "field1", "value": "value1", "confidence": 0.9}]}`;
 
     const result = parseFieldExtraction(input);
 
+    // Should recover from truncation
     expect(result).toEqual({
-      displayText: input,
-      extractedFields: null,
-      success: false,
+      displayText: '', // JSON removed from display
+      extractedFields: { field1: 'value1' },
+      success: true,
     });
-    expect(console.error).toHaveBeenCalledWith(
-      'Field extraction block missing end delimiter'
-    );
   });
 
   it('should handle malformed JSON', () => {
     const input = `---FIELD_EXTRACTION_JSON---
 {invalid json}
----FIELD_EXTRACTION_JSON---`;
+---END_FIELD_EXTRACTION_JSON---`;
 
     const result = parseFieldExtraction(input);
 
@@ -470,14 +467,14 @@ Text after`;
   it('should handle empty JSON object', () => {
     const input = `---FIELD_EXTRACTION_JSON---
 {}
----FIELD_EXTRACTION_JSON---`;
+---END_FIELD_EXTRACTION_JSON---`;
 
     const result = parseFieldExtraction(input);
 
     expect(result).toEqual({
       displayText: '',
-      extractedFields: {},
-      success: true,
+      extractedFields: null,  // Empty object means no fields extracted
+      success: false,
     });
   });
 
@@ -485,7 +482,7 @@ Text after`;
     const input = `  Text before
 ---FIELD_EXTRACTION_JSON---
   {"field1": "value1"}
----FIELD_EXTRACTION_JSON---
+---END_FIELD_EXTRACTION_JSON---
   Text after  `;
 
     const result = parseFieldExtraction(input);

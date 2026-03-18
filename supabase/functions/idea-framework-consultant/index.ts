@@ -2,8 +2,10 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-// For local development, fallback to hardcoded key if env var not available
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY') || 'REDACTED_API_KEY';
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+if (!openAIApiKey) {
+  throw new Error('OPENAI_API_KEY environment variable is required');
+}
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
@@ -390,6 +392,205 @@ ${contextParts.join("\n\n---\n\n")}
 }
 
 /**
+ * Comprehensive map of ALL 35 brand fields across 11 chapters.
+ * Used for proactive extraction during conversations and document processing.
+ * Structure: chapterKey -> { title, pillar, fields[] }
+ */
+const ALL_FIELDS_MAP: Record<string, { title: string; pillar: string; fields: Array<{ id: string; label: string; type: string; helpText: string }> }> = {
+  BRAND_FOUNDATION: {
+    title: 'Brand Foundation',
+    pillar: 'foundation',
+    fields: [
+      { id: 'brandPurpose', label: 'Brand Purpose', type: 'textarea', helpText: 'Why does your brand exist beyond making money?' },
+      { id: 'brandVision', label: 'Brand Vision', type: 'textarea', helpText: 'What future do you want to create?' },
+      { id: 'brandMission', label: 'Brand Mission', type: 'textarea', helpText: 'How will you achieve your vision?' },
+    ]
+  },
+  BRAND_VALUES: {
+    title: 'Brand Values',
+    pillar: 'foundation',
+    fields: [
+      { id: 'brandValues', label: 'Core Values', type: 'array', helpText: 'Fundamental beliefs and principles guiding your brand' },
+      { id: 'brandStory', label: 'Brand Story', type: 'textarea', helpText: 'The narrative connecting your past, present, and future' },
+      { id: 'brandPromise', label: 'Brand Promise', type: 'textarea', helpText: 'The commitment you make to customers every time' },
+    ]
+  },
+  CUSTOMER_AVATAR: {
+    title: 'Customer Avatar',
+    pillar: 'insight',
+    fields: [
+      { id: 'demographics', label: 'Demographics', type: 'textarea', helpText: 'Age, gender, income, location, occupation' },
+      { id: 'psychographics', label: 'Psychographics', type: 'textarea', helpText: 'Interests, values, lifestyle, personality traits' },
+      { id: 'painPoints', label: 'Pain Points', type: 'array', helpText: 'Challenges or frustrations they face' },
+      { id: 'goals', label: 'Goals & Aspirations', type: 'array', helpText: 'Outcomes and desires that motivate them' },
+    ]
+  },
+  MARKET_INSIGHT: {
+    title: 'Market Insight',
+    pillar: 'insight',
+    fields: [
+      { id: 'marketInsight', label: 'Market Analysis', type: 'textarea', helpText: 'Trends, gaps, and opportunities in your market' },
+      { id: 'consumerInsight', label: 'Consumer Behavior', type: 'textarea', helpText: 'What drives customer decisions and behaviors' },
+    ]
+  },
+  BUYER_INTENT: {
+    title: 'Buyer Intent',
+    pillar: 'insight',
+    fields: [
+      { id: 'functionalIntent', label: 'Functional Intent', type: 'textarea', helpText: 'What practical problem are they solving?' },
+      { id: 'emotionalIntent', label: 'Emotional Intent', type: 'textarea', helpText: 'How do they want to feel?' },
+      { id: 'identityIntent', label: 'Identity Intent', type: 'textarea', helpText: 'Who do they want to become?' },
+      { id: 'socialIntent', label: 'Social Intent', type: 'textarea', helpText: 'How do they want to be perceived?' },
+    ]
+  },
+  POSITIONING: {
+    title: 'Brand Positioning',
+    pillar: 'distinctive',
+    fields: [
+      { id: 'positioningStatement', label: 'Positioning Statement', type: 'textarea', helpText: 'How you want to be perceived vs. competitors' },
+      { id: 'uniqueValue', label: 'Unique Value Proposition', type: 'textarea', helpText: 'The specific value only you can deliver' },
+      { id: 'differentiators', label: 'Key Differentiators', type: 'array', helpText: 'Advantages that distinguish you in the market' },
+    ]
+  },
+  BRAND_PERSONALITY: {
+    title: 'Brand Personality & Voice',
+    pillar: 'distinctive',
+    fields: [
+      { id: 'brandPersonality', label: 'Personality Traits', type: 'array', helpText: 'Human characteristics defining your brand character' },
+      { id: 'brandVoice', label: 'Brand Voice', type: 'textarea', helpText: 'How your brand communicates (tone, style, language)' },
+      { id: 'brandArchetype', label: 'Brand Archetype', type: 'text', helpText: 'Universal character pattern your brand embodies' },
+    ]
+  },
+  EMOTIONAL_CONNECTION: {
+    title: 'Emotional Connection',
+    pillar: 'empathy',
+    fields: [
+      { id: 'emotionalConnection', label: 'Emotional Hook', type: 'textarea', helpText: 'The primary emotion you want to evoke' },
+      { id: 'emotionalTriggers', label: 'Emotional Triggers', type: 'array', helpText: 'Specific triggers that activate emotional responses' },
+      { id: 'customerNeeds', label: 'Deep Customer Needs', type: 'array', helpText: 'Fundamental human needs your brand addresses' },
+    ]
+  },
+  CUSTOMER_EXPERIENCE: {
+    title: 'Customer Experience',
+    pillar: 'empathy',
+    fields: [
+      { id: 'customerJourney', label: 'Customer Journey', type: 'textarea', helpText: 'Key touchpoints from awareness to advocacy' },
+      { id: 'experiencePillars', label: 'Experience Pillars', type: 'array', helpText: 'Core elements shaping customer interactions' },
+      { id: 'preferredChannels', label: 'Preferred Channels', type: 'array', helpText: 'Platforms and channels your audience prefers' },
+    ]
+  },
+  BRAND_AUTHORITY: {
+    title: 'Brand Authority',
+    pillar: 'authentic',
+    fields: [
+      { id: 'expertise', label: 'Areas of Expertise', type: 'array', helpText: 'Domains where you have deep knowledge and credibility' },
+      { id: 'credibilityMarkers', label: 'Credibility Markers', type: 'array', helpText: 'Evidence that validates your expertise' },
+      { id: 'thoughtLeadership', label: 'Thought Leadership', type: 'textarea', helpText: 'Unique perspectives you bring to your industry' },
+    ]
+  },
+  BRAND_AUTHENTICITY: {
+    title: 'Brand Authenticity',
+    pillar: 'authentic',
+    fields: [
+      { id: 'authenticityPrinciples', label: 'Authenticity Principles', type: 'array', helpText: 'Core truths that make your brand real and believable' },
+      { id: 'transparency', label: 'Transparency Commitment', type: 'textarea', helpText: 'Your approach to open, honest communication' },
+      { id: 'socialProof', label: 'Social Proof', type: 'array', helpText: 'Evidence you deliver on your promises' },
+      { id: 'brandConsistency', label: 'Brand Consistency', type: 'textarea', helpText: 'Strategy for maintaining coherence across touchpoints' },
+    ]
+  },
+};
+
+/**
+ * Get a flat list of all field IDs with their labels for extraction prompts
+ */
+function getAllFieldsList(): string {
+  const lines: string[] = [];
+  for (const [, chapter] of Object.entries(ALL_FIELDS_MAP)) {
+    lines.push(`\n${chapter.title}:`);
+    for (const field of chapter.fields) {
+      lines.push(`  - ${field.id}: ${field.label} (${field.helpText})`);
+    }
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Build the proactive extraction prompt section for the system message.
+ * Includes all fields, confidence thresholds, and document extraction triggers.
+ */
+function buildExtractionPrompt(extractionFields?: string[], hasDocumentContext?: boolean): string {
+  // Determine which fields to show: scoped chapter fields or all fields
+  const fieldsList = extractionFields && extractionFields.length > 0
+    ? extractionFields.map(f => `- ${f}`).join('\n')
+    : getAllFieldsList();
+
+  let prompt = `
+FIELD EXTRACTION PROTOCOL - PROACTIVE EXTRACTION REQUIRED:
+
+You are responsible for extracting brand field values from EVERY conversation turn. Do NOT wait for the user to explicitly say "my brand purpose is X." Instead, proactively identify when the user shares information that maps to any field below.
+
+CONFIDENCE THRESHOLDS:
+- 0.90+: User directly states or confirms a value (source: "user_stated" or "user_confirmed")
+- 0.85+: Clear information found in uploaded documents (source: "document")
+- 0.70+: Strong inference from conversational context (source: "inferred_strong")
+- Below 0.70: Do NOT extract - ask clarifying questions instead
+
+FIELDS TO EXTRACT:
+${fieldsList}
+
+EXTRACTION RULES:
+1. Extract from EVERY message where relevant information appears
+2. For array fields (type: array), extract as JSON arrays: ["item1", "item2"]
+3. For textarea fields, preserve the user's natural language
+4. Match confidence to source:
+   - Direct statement: 0.90-1.0
+   - Document reference: 0.85-0.95
+   - Conversational inference: 0.70-0.85
+5. Always include the "source" field to track provenance
+6. Extract MULTIPLE fields per turn when multiple are discussed
+7. If the user mentions something that could fill a field, extract it - do not wait for perfect phrasing
+
+EXTRACTION FORMAT:
+At the END of your response, include:
+
+---FIELD_EXTRACTION_JSON---
+{
+  "fields": [
+    {
+      "identifier": "brandPurpose",
+      "value": "To empower small businesses to build memorable brands",
+      "confidence": 0.92,
+      "source": "user_stated",
+      "context": "User directly described their brand purpose"
+    }
+  ]
+}
+---END_FIELD_EXTRACTION_JSON---
+
+WHEN TO EXTRACT:
+- User shares any brand-related information (even casually)
+- User confirms or refines a suggestion you made
+- User describes their business, customers, or market
+- User talks about their values, goals, or challenges
+- Document context contains clear field values`;
+
+  // Add document-specific extraction trigger
+  if (hasDocumentContext) {
+    prompt += `
+
+DOCUMENT CONTEXT EXTRACTION (ACTIVE):
+Uploaded documents are available in this conversation. You MUST:
+1. Scan document context for ALL extractable field values
+2. Extract with confidence 0.85+ for clear document references
+3. Use source: "document" and include the specific section referenced
+4. Extract as many fields as the document supports in a single turn
+5. Inform the user which fields were populated from their documents`;
+  }
+
+  return prompt;
+}
+
+/**
  * Human-readable labels for field identifiers
  * Maps semantic field names to descriptive labels for AI context
  */
@@ -599,37 +800,11 @@ FIRST MESSAGE:
 Introduce yourself as Trevor in one sentence, then ask what specific area they'd like to work on today. Keep it brief and welcoming.`;
   }
 
-  // Add extraction instructions if fields are provided
-  if (extractionFields && extractionFields.length > 0) {
-    prompt += `
-
-FIELD EXTRACTION:
-ALWAYS extract field values when you:
-1. Find clear information in uploaded documents (confidence: 0.80+)
-2. User confirms or provides an answer (confidence: 0.85+)
-3. Discuss a specific field value that seems final
-
-Key field identifiers you're tracking:
-- brandPurpose: The brand's core purpose/why
-- brandVision: The future vision
-- brandMission: How to achieve the vision
-- brandValues: Core values and principles
-
-When you mention a field value in your response, ALWAYS extract it.
-At the END of your response when you identify clear field information, include:
-
----FIELD_EXTRACTION_JSON---
-{
-  "fields": [
-    {
-      "identifier": "brandPurpose",
-      "value": "To be an essential, empowering tool that elevates the gaming experience",
-      "confidence": 0.90,
-      "source": "document",
-      "context": "Extracted from uploaded brand strategy document"
-    }
-  ]
-}`;
+  // Add proactive extraction instructions - uses comprehensive field list
+  // Always include extraction when fields are provided OR when document context is available
+  const shouldExtract = (extractionFields && extractionFields.length > 0) || hasUploadedDocuments;
+  if (shouldExtract) {
+    prompt += buildExtractionPrompt(extractionFields, hasUploadedDocuments);
   }
 
   return prompt;
@@ -852,69 +1027,10 @@ We can work through the full 11-chapter BMAD program, or I can help with specifi
 IMPORTANT: Only introduce yourself in the FIRST message of a session. Do NOT reintroduce in subsequent messages.`;
   }
 
-  // Add field extraction instructions if chapter context with extraction fields is provided
-  if (extractionFields && extractionFields.length > 0) {
-    basePrompt += `
-
----
-
-FIELD EXTRACTION PROTOCOL (ACTIVE FOR THIS CONVERSATION):
-
-You must include a structured field extraction block at the END of your response when you identify information relevant to the following fields:
-
-**Fields to Extract:**
-${extractionFields.map(field => `- ${field}`).join('\n')}
-
-**Extraction Block Format:**
-At the very end of your response, include:
-
----FIELD_EXTRACTION_JSON---
-{
-  "fields": [
-    {
-      "identifier": "field_identifier_here",
-      "value": "extracted content here",
-      "confidence": 0.95,
-      "source": "user_stated",
-      "context": "Brief explanation of extraction context"
-    }
-  ]
-}
-
-**Field Object Requirements:**
-- identifier (required): The field identifier from the list above
-- value (required): The extracted content (string, array, or object)
-- confidence (required): Extraction confidence score (0.0 - 1.0)
-  - 0.90 - 1.0: User explicitly stated
-  - 0.70 - 0.89: Strong inference from context
-  - 0.50 - 0.69: Moderate inference
-  - Below 0.50: Do not extract
-- source (required): How the value was obtained
-  - "user_stated": User explicitly provided this information
-  - "user_confirmed": User confirmed your inference
-  - "inferred_strong": Strong inference from multiple conversation points
-  - "inferred_moderate": Reasonable inference, may need validation
-- context (optional): Brief explanation of extraction context
-
-**Extraction Guidelines:**
-WHEN TO EXTRACT:
-- User explicitly states information relevant to a field
-- User confirms your summary or inference
-- Sufficient context exists to infer with confidence ≥ 0.70
-- Within the scope of the current chapter's field list
-
-WHEN NOT TO EXTRACT:
-- Confidence score would be below 0.70
-- Field is not in the list above
-- Information is too vague or ambiguous
-- User is brainstorming without commitment
-
-IMPORTANT:
-- Include ONE extraction block per response (at the very end)
-- ONLY extract fields from the list above
-- Be conservative with confidence scores
-- Preserve user's language when possible
-- Validate before extracting (ask clarifying questions if uncertain)`;
+  // Add proactive extraction instructions - uses comprehensive field list
+  const shouldExtract = (extractionFields && extractionFields.length > 0) || hasUploadedDocuments;
+  if (shouldExtract) {
+    basePrompt += '\n\n---\n' + buildExtractionPrompt(extractionFields, hasUploadedDocuments);
   }
 
   return basePrompt;
@@ -1158,9 +1274,11 @@ serve(async (req) => {
 
     // Use conversational prompt by default, with option to use comprehensive prompt
     // useComprehensiveMode already declared above at line 974
+    // Treat vector store context availability as document upload signal for extraction
+    const hasDocuments = hasUploadedDocuments || !!vectorStoreContext;
     const systemPrompt = useComprehensiveMode
-      ? generateTrevorSystemPrompt(extractionFields, isFirst, hasUploadedDocuments)
-      : generateConversationalTrevorPrompt(extractionFields, currentFieldDetails, isFirst, hasUploadedDocuments);
+      ? generateTrevorSystemPrompt(extractionFields, isFirst, hasDocuments)
+      : generateConversationalTrevorPrompt(extractionFields, currentFieldDetails, isFirst, hasDocuments);
 
     // Build user prompt with all available context
     let userPrompt = message;
@@ -1269,8 +1387,13 @@ serve(async (req) => {
       }
 
       // Adjust max_tokens based on conversation mode
+      // Document extraction can produce large JSON blocks (5000+ chars), need sufficient tokens
       const comprehensiveModeForTokens = chapterContext?.comprehensiveMode === true;
-      const maxTokens = comprehensiveModeForTokens ? 1500 : 200; // Reduced for conversational mode
+      const hasActiveExtraction = (extractionFields && extractionFields.length > 0) || hasDocuments;
+      // Document extraction needs 3000+ tokens for response + large JSON extraction block
+      // Regular extraction needs 1500, basic conversation needs 800
+      const conversationalTokens = hasDocuments ? 3500 : (hasActiveExtraction ? 2000 : 800);
+      const maxTokens = comprehensiveModeForTokens ? 4000 : conversationalTokens;
 
       console.log(`[Performance] Starting OpenAI API call (max_tokens: ${maxTokens})`);
       const openAIStartTime = Date.now();
@@ -1301,7 +1424,18 @@ serve(async (req) => {
       const openAITime = Date.now() - openAIStartTime;
       console.log(`[Performance] OpenAI API response received in ${openAITime}ms`);
 
-      const consultantResponse = data.choices[0].message.content;
+      // Check if response was truncated due to token limit
+      let consultantResponse = data.choices[0].message.content;
+      const finishReason = data.choices[0].finish_reason;
+
+      if (finishReason === 'length') {
+        console.warn('Response truncated due to token limit - may be missing extraction delimiter');
+        // Append a warning marker that won't affect extraction
+        consultantResponse += '\n[Response may be incomplete]';
+      } else {
+        console.log(`Response completed normally (finish_reason: ${finishReason})`);
+      }
+
       console.log('IDEA Framework consultation completed successfully');
 
       // Skip follow-up suggestions for conversational mode (faster response)

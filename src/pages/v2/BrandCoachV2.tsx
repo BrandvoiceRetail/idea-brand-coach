@@ -5,25 +5,37 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { MessageSquare, Loader2, Download, Trash2, Copy, Check, Menu, Send, Paperclip } from 'lucide-react';
+import { MessageSquare, Loader2, Download, Trash2, Copy, Check, Menu, Send, Paperclip, Plus, Sparkles, Edit2, Lock, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useChapterProgress } from '@/hooks/useChapterProgress';
 import { useFieldExtractionV2 } from '@/hooks/useFieldExtractionV2';
+import { parseFieldExtraction } from '@/hooks/useFieldExtraction';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemKB } from '@/contexts/SystemKBContext';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
+import { useAvatarService } from '@/hooks/useAvatarService';
+import { useDefaultAvatar } from '@/hooks/useDefaultAvatar';
+import { useAvatarFieldSync } from '@/hooks/useAvatarFieldSync';
+import { useSimpleFieldSync } from '@/hooks/useSimpleFieldSync';
+import { supabase } from '@/integrations/supabase/client';
+import { SupabaseBrandService } from '@/services/SupabaseBrandService';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { TwoPanelTemplate } from '@/components/templates/TwoPanelTemplate';
 import { ChapterSectionAccordion } from '@/components/v2/ChapterSectionAccordion';
 import { AvatarHeaderDropdown } from '@/components/v2/AvatarHeaderDropdown';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
+import { FieldExtractionBadges } from '@/components/v2/FieldExtractionBadges';
+import type { ExtractedField } from '@/components/v2/FieldExtractionBadges';
 import { CHAPTER_FIELDS_MAP } from '@/config/chapterFields';
 import type { ChapterId, ChapterContext } from '@/types/chapter';
 import type { ChatMessage } from '@/types/chat';
+import { useFieldReview } from '@/contexts/FieldReviewContext';
+import type { PendingField, MessageExtractionMeta } from '@/contexts/FieldReviewContext';
 import { cn } from '@/lib/utils';
+import { VersionSwitcher } from '@/components/VersionSwitcher';
 
 /**
  * ChapterProgressBadge - Inline component showing "Chapter X of 11"
@@ -49,16 +61,27 @@ function ChapterProgressBadge({ current, total }: { current: number; total: numb
 const BrandCoachV2 = (): JSX.Element => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: isLoadingAuth } = useAuth();
   const { latestDiagnostic } = useDiagnostic();
   const { useSystemKB: isSystemKBEnabled } = useSystemKB();
 
-  // Avatar state (placeholder - will be replaced with proper avatar management)
-  const [currentAvatarId, setCurrentAvatarId] = useState<string | null>('default-avatar');
-  const [avatars] = useState<AvatarData[]>([
-    { id: 'default-avatar', name: 'My Brand', image_url: null },
-  ]);
-  const currentAvatar = avatars.find(a => a.id === currentAvatarId) ?? null;
+  // Avatar management
+  const {
+    avatars,
+    currentAvatar,
+    isLoading: isLoadingAvatars,
+    createAvatar,
+    updateAvatar,
+    deleteAvatar,
+    selectAvatarById,
+  } = useAvatarService();
+
+  // Convert avatars to AvatarData format for the dropdown component
+  const avatarData: AvatarData[] = avatars.map(avatar => ({
+    id: avatar.id,
+    name: avatar.name,
+    image_url: avatar.image_url,
+  }));
 
   // Session management
   const {
@@ -72,7 +95,10 @@ const BrandCoachV2 = (): JSX.Element => {
     deleteSession,
     regenerateTitle,
     switchToSession,
-  } = useChatSessions({ chatbotType: 'idea-framework-consultant' });
+  } = useChatSessions({
+    chatbotType: 'idea-framework-consultant',
+    avatarId: currentAvatar?.id,
+  });
 
   // Chapter progress
   const {
@@ -94,7 +120,41 @@ const BrandCoachV2 = (): JSX.Element => {
     setFieldManual,
     extractedCount,
     clearFields,
-  } = useFieldExtractionV2(currentAvatarId);
+    isFieldLocked,
+  } = useFieldExtractionV2(currentAvatar?.id || null);
+
+  // Field review context for mobile-first review experience
+  const {
+    enqueueFields,
+    setMessageExtraction,
+    registerFieldAcceptHandler,
+    pendingCount,
+    acceptField,
+    rejectField,
+    acceptAllFields,
+    messageExtractions,
+    setActiveReviewFieldId,
+  } = useFieldReview();
+
+  // Wire the field accept handler to setFieldManual so accepted fields persist
+  useEffect(() => {
+    registerFieldAcceptHandler((fieldId: string, value: string | string[]) => {
+      setFieldManual(fieldId, value);
+    });
+  }, [registerFieldAcceptHandler, setFieldManual]);
+
+  // Sync fields to database for persistence
+  const { savedFieldCount } = useSimpleFieldSync({
+    avatarId: currentAvatar?.id || null,
+    fieldValues,
+    fieldSources,
+    onFieldsLoaded: (loadedFields) => {
+      // Set loaded fields into the UI
+      Object.entries(loadedFields).forEach(([fieldId, value]) => {
+        setFieldManual(fieldId, value);
+      });
+    },
+  });
 
   // Chat for current session
   const { messages, sendMessage, isSending, clearChat } = useChat({
@@ -107,6 +167,7 @@ const BrandCoachV2 = (): JSX.Element => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [isExtractingFromDoc, setIsExtractingFromDoc] = useState(false);
 
   // User documents state (uploaded documents from DocumentUpload component)
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
@@ -118,32 +179,98 @@ const BrandCoachV2 = (): JSX.Element => {
   // Chat container ref for auto-scrolling
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Process messages to extract fields from AI responses
+  // Track which message IDs have already had side effects (extractFields, enqueueFields, etc.)
+  const processedMessageIds = useRef<Set<string>>(new Set());
+
+  // Side-effect: extract fields from NEW assistant messages only
+  useEffect(() => {
+    messages.forEach((msg) => {
+      if (
+        msg.role !== 'assistant' ||
+        processedMessageIds.current.has(msg.id) ||
+        !msg.content.includes('---FIELD_EXTRACTION_JSON---')
+      ) return;
+
+      processedMessageIds.current.add(msg.id);
+
+      // extractFields has side effects (setState, localStorage, toasts)
+      extractFields(msg.content);
+
+      // Parse extracted fields for the review context
+      const parsed = parseFieldExtraction(msg.content);
+      const extractedFields = parsed.extractedFields;
+
+      if (extractedFields && Object.keys(extractedFields).length > 0) {
+        const meta: MessageExtractionMeta = {
+          messageId: msg.id,
+          extractedFields,
+          fieldCount: Object.keys(extractedFields).length,
+          allAccepted: false,
+        };
+        setMessageExtraction(meta);
+
+        // Build pending fields for the review queue
+        const pending: PendingField[] = Object.entries(extractedFields).map(([fieldId, value]) => {
+          let fieldLabel = fieldId;
+          for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
+            const field = chapter.fields?.find((f: { id: string }) => f.id === fieldId);
+            if (field) {
+              fieldLabel = field.label;
+              break;
+            }
+          }
+
+          return {
+            fieldId,
+            fieldLabel,
+            value,
+            messageId: msg.id,
+            extractedAt: msg.created_at,
+          };
+        });
+
+        enqueueFields(pending);
+      }
+    });
+  }, [messages, extractFields, setMessageExtraction, enqueueFields]);
+
+  // Pure display transformation — no side effects
   const processedMessages = useMemo(() => {
     return messages.map((msg) => {
       if (msg.role !== 'assistant') return msg;
 
-      // Only process if message contains extraction delimiter
       if (msg.content.includes('---FIELD_EXTRACTION_JSON---')) {
-        const cleanContent = extractFields(msg.content);
-        return { ...msg, content: cleanContent };
+        const parsed = parseFieldExtraction(msg.content);
+        const extractedFields = parsed.extractedFields || {};
+
+        let finalContent = parsed.displayText;
+        if (Object.keys(extractedFields).length > 0 && parsed.displayText.includes('document')) {
+          const fieldCount = Object.keys(extractedFields).length;
+          finalContent = `${parsed.displayText}\n\n✨ **Success!** I've extracted ${fieldCount} brand element${fieldCount !== 1 ? 's' : ''} from your document. Click the green badges below to review each one!`;
+        }
+
+        return {
+          ...msg,
+          content: finalContent,
+          extractedFields,
+        };
       }
 
       return msg;
     });
-  }, [messages, extractFields]);
+  }, [messages]);
 
   // Filter system messages from display
   const displayMessages = useMemo(() => {
     return processedMessages.filter((msg) => !msg.metadata?.isSystemMessage);
   }, [processedMessages]);
 
-  // Redirect to auth if not logged in
+  // Redirect to auth if not logged in (but only after auth check completes)
   useEffect(() => {
-    if (!user) {
+    if (!isLoadingAuth && !user) {
       navigate('/auth');
     }
-  }, [user, navigate]);
+  }, [isLoadingAuth, user, navigate]);
 
   // Initialize chapter progress if needed
   useEffect(() => {
@@ -152,6 +279,14 @@ const BrandCoachV2 = (): JSX.Element => {
     }
   }, [isLoadingChapter, progress, currentSessionId, isInitializing, initializeProgress]);
 
+  // Handle default avatar creation (extracted to follow SRP)
+  useDefaultAvatar({
+    user,
+    avatars,
+    isLoadingAvatars,
+    createAvatar,
+  });
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -159,14 +294,11 @@ const BrandCoachV2 = (): JSX.Element => {
     }
   }, [displayMessages]);
 
-  // Clear fields when avatar changes
-  const prevAvatarId = useRef(currentAvatarId);
-  useEffect(() => {
-    if (prevAvatarId.current !== currentAvatarId && currentAvatarId !== null) {
-      clearFields();
-      prevAvatarId.current = currentAvatarId;
-    }
-  }, [currentAvatarId, clearFields]);
+  // Handle field clearing on avatar switch (extracted to follow SRP)
+  useAvatarFieldSync({
+    currentAvatarId: currentAvatar?.id,
+    clearFields,
+  });
 
   // Auto-close sidebar on session selection
   const handleSessionSelect = (sessionId: string): void => {
@@ -363,21 +495,116 @@ const BrandCoachV2 = (): JSX.Element => {
   };
 
   /**
+   * Handle document upload completion - trigger bulk field extraction
+   */
+  const handleDocumentUploadComplete = async (document: { id: string; filename: string }): Promise<void> => {
+    // Collect all fields for extraction context
+    const allFieldsToCapture: string[] = [];
+    const allFieldLabels: Record<string, string> = {};
+
+    Object.values(CHAPTER_FIELDS_MAP).forEach(chapter => {
+      if (chapter.fields) {
+        chapter.fields.forEach(field => {
+          allFieldsToCapture.push(field.id);
+          allFieldLabels[field.id] = field.label;
+        });
+      }
+    });
+
+    const chapterContext: ChapterContext = {
+      chapterId: 'all-chapters',
+      chapterTitle: 'All Chapters',
+      chapterNumber: 0,
+      fieldsToCapture: allFieldsToCapture,
+      fieldLabels: allFieldLabels,
+      comprehensiveMode: true,
+    };
+
+    setIsExtractingFromDoc(true);
+
+    try {
+      await sendMessage({
+        content: `[SYSTEM] User uploaded document "${document.filename}". Analyze the document content and extract as many brand profile fields as possible. Be thorough and proactive — fill in every field you can infer from the document.`,
+        role: 'user',
+        metadata: {
+          isSystemMessage: true,
+          triggerBulkExtraction: true,
+          documentId: document.id,
+          documentFilename: document.filename,
+          userDocuments,
+          useSystemKB: isSystemKBEnabled,
+          latestDiagnostic: latestDiagnostic || undefined,
+          chapterContext,
+        },
+      });
+
+      toast({
+        title: 'Document Sent',
+        description: `"${document.filename}" is being analyzed by Trevor`,
+      });
+    } catch (error) {
+      console.error('Error triggering bulk extraction:', error);
+      toast({
+        title: 'Extraction Error',
+        description: 'Failed to analyze document for field extraction',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExtractingFromDoc(false);
+    }
+  };
+
+  /**
    * Avatar dropdown handlers
    */
   const handleAvatarSelect = (avatarId: string): void => {
-    setCurrentAvatarId(avatarId);
+    selectAvatarById(avatarId);
   };
 
-  const handleCreateAvatar = (): void => {
-    toast({
-      title: 'Coming Soon',
-      description: 'Avatar creation will be available in a future update',
-    });
+  const handleCreateAvatar = async (): Promise<void> => {
+    try {
+      // Get or create default brand
+      const brandService = new SupabaseBrandService(supabase);
+      const { data: brand, error: brandError } = await brandService.getOrCreateDefaultBrand();
+
+      if (brandError || !brand) {
+        toast({
+          title: 'Error',
+          description: 'Failed to create avatar: Could not get brand',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Create new avatar with the brand
+      const newAvatar = await createAvatar({
+        name: `Avatar ${avatars.length + 1}`,
+        brand_id: brand.id,
+        demographics: {},
+        psychographics: {},
+        behavioral_traits: {},
+        status: 'active',
+      });
+
+      if (newAvatar) {
+        selectAvatarById(newAvatar.id);
+        toast({
+          title: 'Avatar Created',
+          description: 'Your new avatar has been created',
+        });
+      }
+    } catch (error) {
+      console.error('Error creating avatar:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create avatar',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Loading state
-  if (isLoadingChapter || isLoadingSessions) {
+  if (isLoadingAuth || isLoadingChapter || isLoadingSessions || isLoadingAvatars) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -395,13 +622,49 @@ const BrandCoachV2 = (): JSX.Element => {
             current={progress?.current_chapter_number ?? 1}
             total={11}
           />
+          {savedFieldCount > 0 && (
+            <Badge variant="outline" className="text-xs text-muted-foreground">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              {savedFieldCount} fields saved
+            </Badge>
+          )}
+          {(() => {
+            // Calculate overall completion percentage
+            const totalFields = Object.values(CHAPTER_FIELDS_MAP).reduce(
+              (sum, chapter) => sum + (chapter.fields?.length || 0),
+              0
+            );
+            const filledFields = Object.values(fieldValues).filter(
+              v => v && String(v).trim()
+            ).length;
+            const completionRate = totalFields > 0
+              ? Math.round((filledFields / totalFields) * 100)
+              : 0;
+
+            return completionRate > 0 && (
+              <Badge
+                variant={completionRate > 75 ? "default" : completionRate > 50 ? "secondary" : "outline"}
+                className="text-xs"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                {completionRate}% complete
+              </Badge>
+            );
+          })()}
         </div>
-        <AvatarHeaderDropdown
-          currentAvatar={currentAvatar}
-          avatars={avatars}
-          onAvatarSelect={handleAvatarSelect}
-          onCreateAvatar={handleCreateAvatar}
-        />
+        <div className="flex items-center gap-2">
+          <VersionSwitcher />
+          <AvatarHeaderDropdown
+            currentAvatar={currentAvatar ? {
+              id: currentAvatar.id,
+              name: currentAvatar.name,
+              image_url: currentAvatar.image_url,
+            } : null}
+            avatars={avatarData}
+            onAvatarSelect={handleAvatarSelect}
+            onCreateAvatar={handleCreateAvatar}
+          />
+        </div>
       </header>
 
       {/* Two-panel body */}
@@ -513,6 +776,18 @@ const BrandCoachV2 = (): JSX.Element => {
               </div>
 
               <div className="flex items-center gap-2">
+                {pendingCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
+                    onClick={acceptAllFields}
+                    title={`Accept all ${pendingCount} pending field(s)`}
+                  >
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    {pendingCount} pending
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -580,6 +855,49 @@ const BrandCoachV2 = (): JSX.Element => {
                     >
                       <CardContent className="p-3">
                         <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+
+                        {/* Show extracted fields using the FieldExtractionBadges component */}
+                        {msg.extractedFields && Object.keys(msg.extractedFields).length > 0 && (
+                          <div className="mt-3 pt-2 border-t border-border/30">
+                            <FieldExtractionBadges
+                              fields={Object.entries(msg.extractedFields).map(([fieldId, value]): ExtractedField => {
+                                // Find the field label from the chapter fields map
+                                let fieldLabel = fieldId;
+                                for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
+                                  const field = chapter.fields?.find((f: { id: string }) => f.id === fieldId);
+                                  if (field) {
+                                    fieldLabel = field.label;
+                                    break;
+                                  }
+                                }
+
+                                // Check if this field has been accepted via the review context
+                                const msgMeta = messageExtractions[msg.id];
+                                const isAccepted = msgMeta?.allAccepted || fieldValues[fieldId] !== undefined;
+                                const isLocked = isFieldLocked(fieldId);
+
+                                return {
+                                  fieldId,
+                                  label: fieldLabel,
+                                  value: value as string,
+                                  isReviewed: isAccepted,
+                                  isLocked,
+                                  confidence: 0.95 // High confidence since it was extracted
+                                };
+                              })}
+                              onFieldClick={(fieldId) => setActiveReviewFieldId(fieldId)}
+                              onAcceptAll={() => {
+                                // Accept all fields from this message
+                                if (msg.extractedFields) {
+                                  Object.entries(msg.extractedFields).forEach(([fieldId, value]) => {
+                                    setFieldManual(fieldId, value as string);
+                                  });
+                                }
+                              }}
+                            />
+                          </div>
+                        )}
+
                         <div className="text-xs opacity-70 mt-1">
                           {new Date(msg.created_at).toLocaleTimeString()}
                         </div>
@@ -589,11 +907,16 @@ const BrandCoachV2 = (): JSX.Element => {
                 ))
               )}
 
-              {isSending && (
+              {(isSending || isExtractingFromDoc) && (
                 <div className="flex justify-start">
                   <Card className="bg-muted">
-                    <CardContent className="p-3">
+                    <CardContent className="p-3 flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
+                      {isExtractingFromDoc && (
+                        <span className="text-xs text-muted-foreground">
+                          Analyzing document and extracting fields...
+                        </span>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -615,7 +938,10 @@ const BrandCoachV2 = (): JSX.Element => {
                     </Button>
                   </div>
                   <div className="max-h-[300px] overflow-y-auto">
-                    <DocumentUpload onDocumentsChange={setUserDocuments} />
+                    <DocumentUpload
+                      onDocumentsChange={setUserDocuments}
+                      onUploadComplete={handleDocumentUploadComplete}
+                    />
                   </div>
                 </div>
               </div>
