@@ -515,6 +515,50 @@ function getAllFieldsList(): string {
 }
 
 /**
+ * Build a summary of the current field state to give Trevor awareness of
+ * what's already captured vs. what still needs to be collected.
+ */
+function buildFieldStateContext(
+  currentFieldValues: Record<string, unknown>,
+  fieldLabels: Record<string, string>,
+  fieldsToCapture: string[]
+): string {
+  const filled: string[] = [];
+  const empty: string[] = [];
+
+  for (const fieldId of fieldsToCapture) {
+    const value = currentFieldValues[fieldId];
+    const label = fieldLabels[fieldId] || fieldId;
+    const hasValue = value !== undefined && value !== null && String(value).trim() !== '' && value !== '[]';
+    if (hasValue) {
+      const displayValue = Array.isArray(value)
+        ? (value as string[]).slice(0, 3).join(', ') + (value.length > 3 ? '...' : '')
+        : String(value).substring(0, 80) + (String(value).length > 80 ? '...' : '');
+      filled.push(`✓ ${label}: ${displayValue}`);
+    } else {
+      empty.push(`○ ${label}`);
+    }
+  }
+
+  const lines: string[] = ['CURRENT BRAND PROFILE STATE:'];
+  lines.push(`${filled.length} of ${fieldsToCapture.length} fields captured.\n`);
+
+  if (filled.length > 0) {
+    lines.push('ALREADY CAPTURED:');
+    lines.push(...filled);
+  }
+
+  if (empty.length > 0) {
+    lines.push('\nSTILL NEEDED:');
+    lines.push(...empty);
+  }
+
+  lines.push('\nUse this to guide the conversation toward missing fields and avoid re-asking for information already captured.');
+
+  return lines.join('\n');
+}
+
+/**
  * Build the proactive extraction prompt section for the system message.
  * Includes all fields, confidence thresholds, and document extraction triggers.
  */
@@ -1304,10 +1348,14 @@ serve(async (req) => {
       contextParts.push(`ADDITIONAL CONTEXT:\n${context}`);
     }
 
-    // Add chapter context if provided
-    if (chapterContext) {
-      const chapterInfo = `CURRENT CHAPTER CONTEXT:\nChapter ${chapterContext.chapter}: ${chapterContext.chapterName || 'Unknown'}`;
-      contextParts.push(chapterInfo);
+    // Add field state context so Trevor knows what's filled vs. missing
+    if (chapterContext?.currentFieldValues && chapterContext?.fieldsToCapture?.length > 0) {
+      const fieldStateContext = buildFieldStateContext(
+        chapterContext.currentFieldValues,
+        chapterContext.fieldLabels || {},
+        chapterContext.fieldsToCapture
+      );
+      contextParts.push(fieldStateContext);
     }
 
     // Combine all context with the question

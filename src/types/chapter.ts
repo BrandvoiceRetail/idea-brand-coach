@@ -143,6 +143,9 @@ export interface ChapterMetadata {
 
   /** Question index within the chapter (if applicable) */
   question_index?: number;
+
+  /** Persisted completion status for each chapter */
+  chapter_statuses?: Partial<Record<ChapterId, ChapterStatus>>;
 }
 
 /**
@@ -181,6 +184,9 @@ export interface ChapterContext {
 
   /** Backward compatibility field name */
   extractionFields?: string[];
+
+  /** Current values of already-filled fields — lets the AI know what's captured vs. missing */
+  currentFieldValues?: Record<string, string | string[]>;
 }
 
 /**

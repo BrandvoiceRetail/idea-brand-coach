@@ -13,6 +13,7 @@ import {
   createContext,
   useContext,
   useState,
+  useRef,
   useCallback,
   useMemo,
   ReactNode,
@@ -85,8 +86,6 @@ export interface FieldReviewContextValue {
   autoAcceptEnabled: boolean;
   /** Toggle auto-accept preference */
   setAutoAcceptEnabled: (enabled: boolean) => void;
-  /** Callback fired when a field is accepted — consumers wire this to setFieldManual */
-  onFieldAccepted: ((fieldId: string, value: string | string[]) => void) | null;
   /** Register the field acceptance handler */
   registerFieldAcceptHandler: (handler: (fieldId: string, value: string | string[]) => void) => void;
   /** Currently selected field for detailed review (null if none) */
@@ -130,9 +129,8 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
   const [pendingFields, setPendingFields] = useState<PendingField[]>([]);
   const [messageExtractions, setMessageExtractions] = useState<Record<string, MessageExtractionMeta>>({});
   const [autoAcceptEnabled, setAutoAcceptEnabledState] = useState<boolean>(getStoredAutoAccept);
-  const [fieldAcceptHandler, setFieldAcceptHandler] = useState<
-    ((fieldId: string, value: string | string[]) => void) | null
-  >(null);
+  // Use a ref so registering a handler does not trigger context re-renders (observer pattern)
+  const fieldAcceptHandlerRef = useRef<((fieldId: string, value: string | string[]) => void) | null>(null);
   const [activeReviewFieldId, setActiveReviewFieldId] = useState<string | null>(null);
 
   const pendingCount = pendingFields.length;
@@ -144,17 +142,17 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
 
   const registerFieldAcceptHandler = useCallback(
     (handler: (fieldId: string, value: string | string[]) => void): void => {
-      setFieldAcceptHandler(() => handler);
+      fieldAcceptHandlerRef.current = handler;  // ref write — no re-render
     },
     []
   );
 
   const enqueueFields = useCallback(
     (fields: PendingField[]): void => {
-      if (autoAcceptEnabled && fieldAcceptHandler) {
+      if (autoAcceptEnabled && fieldAcceptHandlerRef.current) {
         // Auto-accept: apply fields immediately without queuing
         for (const field of fields) {
-          fieldAcceptHandler(field.fieldId, field.value);
+          fieldAcceptHandlerRef.current(field.fieldId, field.value);
         }
         return;
       }
@@ -166,7 +164,7 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
         return [...filtered, ...fields];
       });
     },
-    [autoAcceptEnabled, fieldAcceptHandler]
+    [autoAcceptEnabled]
   );
 
   const acceptField = useCallback(
@@ -174,13 +172,10 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
       const field = pendingFields.find((f) => f.fieldId === fieldId);
       if (!field) return;
 
-      if (fieldAcceptHandler) {
-        fieldAcceptHandler(field.fieldId, field.value);
-      }
-
+      fieldAcceptHandlerRef.current?.(field.fieldId, field.value);
       setPendingFields((current) => current.filter((f) => f.fieldId !== fieldId));
     },
-    [pendingFields, fieldAcceptHandler]
+    [pendingFields]
   );
 
   const rejectField = useCallback((fieldId: string): void => {
@@ -188,13 +183,13 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
   }, []);
 
   const acceptAllFields = useCallback((): void => {
-    if (fieldAcceptHandler) {
+    if (fieldAcceptHandlerRef.current) {
       for (const field of pendingFields) {
-        fieldAcceptHandler(field.fieldId, field.value);
+        fieldAcceptHandlerRef.current(field.fieldId, field.value);
       }
     }
     setPendingFields([]);
-  }, [pendingFields, fieldAcceptHandler]);
+  }, [pendingFields]);
 
   const rejectAllFields = useCallback((): void => {
     setPendingFields([]);
@@ -231,7 +226,6 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
       setMessageExtraction,
       autoAcceptEnabled,
       setAutoAcceptEnabled,
-      onFieldAccepted: fieldAcceptHandler,
       registerFieldAcceptHandler,
       activeReviewFieldId,
       setActiveReviewFieldId,
@@ -249,7 +243,6 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
       setMessageExtraction,
       autoAcceptEnabled,
       setAutoAcceptEnabled,
-      fieldAcceptHandler,
       registerFieldAcceptHandler,
       activeReviewFieldId,
       markMessageAccepted,

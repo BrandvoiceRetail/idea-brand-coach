@@ -11,7 +11,7 @@
  * No more V1 vs V2 confusion - this is THE field extraction hook!
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -496,6 +496,19 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
   // Count of AI-extracted fields
   const [extractedCount, setExtractedCount] = useState(0);
 
+  // Always-current refs — reading these in callbacks avoids stale closures
+  // without adding fieldValues/lockedFields as deps (which would cause cascading re-runs)
+  const fieldValuesRef = useRef(fieldValues);
+  fieldValuesRef.current = fieldValues;
+
+  const lockedFieldsRef = useRef(lockedFields);
+  lockedFieldsRef.current = lockedFields;
+
+  // Dedicated persistence effect — replaces saveFieldValues calls inside callbacks
+  useEffect(() => {
+    saveFieldValues(resolvedAvatarId, fieldValues);
+  }, [fieldValues, resolvedAvatarId]);
+
   // Transform to flat values for components
   const flatFieldValues = useMemo(() => {
     const values: Record<string, string | string[]> = {};
@@ -539,14 +552,16 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
     const result = parseFieldExtraction(rawResponse);
 
     if (result.success && result.extractedFields) {
-      const updates: FieldValuesStore = { ...fieldValues };
+      const currentValues = fieldValuesRef.current;
+      const currentLocked = lockedFieldsRef.current;
+      const updates: FieldValuesStore = { ...currentValues };
       const skippedFields: string[] = [];
       const appliedFields: string[] = [];
 
       // Process each extracted field
       for (const [fieldId, value] of Object.entries(result.extractedFields)) {
         // Skip if field is locked
-        if (lockedFields.has(fieldId)) {
+        if (currentLocked.has(fieldId)) {
           skippedFields.push(fieldId);
           console.log(`[Field Extraction] Skipped locked field: ${fieldId}`);
         } else if (!updates[fieldId] || updates[fieldId].value !== value) {
@@ -560,10 +575,9 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
         }
       }
 
-      // Apply updates if any
+      // Apply updates if any — persistence handled by dedicated useEffect
       if (appliedFields.length > 0) {
         setFieldValues(updates);
-        saveFieldValues(resolvedAvatarId, updates);
       }
 
       // Show user feedback via toasts
@@ -584,45 +598,42 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
     }
 
     return result.displayText;
-  }, [fieldValues, lockedFields, resolvedAvatarId]);
+  }, []);
 
-  // Set field value manually
+  // Set field value manually — functional setState so no stale closure on fieldValues
   const setFieldManual = useCallback((fieldId: string, value: string | string[]): void => {
     const normalizedValue = Array.isArray(value) ? value.join('\n') : value;
-
-    const updates = {
-      ...fieldValues,
+    setFieldValues(prev => ({
+      ...prev,
       [fieldId]: {
         value: normalizedValue,
         source: 'manual' as FieldSource,
         timestamp: new Date().toISOString()
       }
-    };
+    }));
+    // persistence handled by dedicated useEffect
+  }, []);
 
-    setFieldValues(updates);
-    saveFieldValues(resolvedAvatarId, updates);
-  }, [fieldValues, resolvedAvatarId]);
-
-  // Lock or unlock a field
+  // Lock or unlock a field — functional setState so no stale closure on lockedFields
   const setFieldLock = useCallback((fieldId: string, locked: boolean): void => {
-    const updated = new Set(lockedFields);
+    setLockedFields(prev => {
+      const updated = new Set(prev);
+      if (locked) {
+        updated.add(fieldId);
+        toast.info(`Field locked: AI won't overwrite this value`);
+      } else {
+        updated.delete(fieldId);
+        toast.info(`Field unlocked: AI can update this value`);
+      }
+      saveFieldLocks(resolvedAvatarId, updated);
+      return updated;
+    });
+  }, [resolvedAvatarId]);
 
-    if (locked) {
-      updated.add(fieldId);
-      toast.info(`Field locked: AI won't overwrite this value`);
-    } else {
-      updated.delete(fieldId);
-      toast.info(`Field unlocked: AI can update this value`);
-    }
-
-    setLockedFields(updated);
-    saveFieldLocks(resolvedAvatarId, updated);
-  }, [lockedFields, resolvedAvatarId]);
-
-  // Check if field is locked
+  // Check if field is locked — reads from always-current ref, truly stable
   const isFieldLocked = useCallback((fieldId: string): boolean => {
-    return lockedFields.has(fieldId);
-  }, [lockedFields]);
+    return lockedFieldsRef.current.has(fieldId);
+  }, []);
 
   // Clear all fields
   const clearFields = useCallback((): void => {

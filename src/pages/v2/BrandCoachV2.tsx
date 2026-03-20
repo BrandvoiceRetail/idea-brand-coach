@@ -181,6 +181,56 @@ const BrandCoachV2 = (): JSX.Element => {
   const [focusedFieldId, setFocusedFieldId] = useState<string | null>(null);
   const [fieldInteractionCounts, setFieldInteractionCounts] = useState<Record<string, number>>({});
 
+  // Track which chapter IDs should auto-expand because the AI just updated a field inside them.
+  // Built by comparing previous fieldValues to current and checking for AI-sourced changes.
+  const [recentlyUpdatedChapterIds, setRecentlyUpdatedChapterIds] = useState<string[]>([]);
+  const prevFieldValuesRef = useRef<Record<string, string | string[]>>({});
+  const isFirstFieldLoadRef = useRef(true);
+
+  // Reverse lookup: fieldId → book chapter ID (e.g. 'brandPurpose' → 'chapter-01-introduction')
+  const fieldToBookChapterId = useMemo<Record<string, string>>(() => {
+    const chapterFieldsMap: Record<number, string> = {
+      1: 'BRAND_FOUNDATION', 2: 'BRAND_VALUES', 3: 'CUSTOMER_AVATAR',
+      4: 'MARKET_INSIGHT', 5: 'BUYER_INTENT', 6: 'POSITIONING',
+      7: 'BRAND_PERSONALITY', 8: 'EMOTIONAL_CONNECTION', 9: 'CUSTOMER_EXPERIENCE',
+      10: 'BRAND_AUTHORITY', 11: 'BRAND_AUTHENTICITY',
+    };
+    const map: Record<string, string> = {};
+    allChapters.forEach(bookChapter => {
+      const key = chapterFieldsMap[bookChapter.number];
+      if (key && CHAPTER_FIELDS_MAP[key]) {
+        CHAPTER_FIELDS_MAP[key].fields.forEach(field => {
+          map[field.id] = bookChapter.id;
+        });
+      }
+    });
+    return map;
+  }, [allChapters]);
+
+  // Detect AI field changes and expand the relevant chapters
+  useEffect(() => {
+    if (isFirstFieldLoadRef.current) {
+      isFirstFieldLoadRef.current = false;
+      prevFieldValuesRef.current = { ...fieldValues };
+      return;
+    }
+    const prev = prevFieldValuesRef.current;
+    const updatedChapterIds = new Set<string>();
+    Object.entries(fieldValues).forEach(([fieldId, value]) => {
+      if (
+        fieldSources[fieldId] === 'ai' &&
+        JSON.stringify(value) !== JSON.stringify(prev[fieldId])
+      ) {
+        const chapterId = fieldToBookChapterId[fieldId];
+        if (chapterId) updatedChapterIds.add(chapterId);
+      }
+    });
+    if (updatedChapterIds.size > 0) {
+      setRecentlyUpdatedChapterIds(Array.from(updatedChapterIds));
+    }
+    prevFieldValuesRef.current = { ...fieldValues };
+  }, [fieldValues]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Chat container ref for auto-scrolling
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -367,17 +417,19 @@ const BrandCoachV2 = (): JSX.Element => {
       currentFieldDetails,
       // Enable conversational mode by default
       comprehensiveMode: false,
+      // Pass current field state so Trevor knows what's filled vs. missing
+      currentFieldValues: fieldValues,
     };
 
     try {
       await sendMessage({
         content: message,
         role: 'user',
+        chapterContext,
         metadata: {
           userDocuments, // Include uploaded documents
           useSystemKB: isSystemKBEnabled,
           latestDiagnostic: latestDiagnostic || undefined,
-          chapterContext,
         },
       });
       setMessage('');
@@ -531,6 +583,7 @@ const BrandCoachV2 = (): JSX.Element => {
       await sendMessage({
         content: `[SYSTEM] User uploaded document "${document.filename}". Analyze the document content and extract as many brand profile fields as possible. Be thorough and proactive — fill in every field you can infer from the document.`,
         role: 'user',
+        chapterContext,
         metadata: {
           isSystemMessage: true,
           triggerBulkExtraction: true,
@@ -539,7 +592,6 @@ const BrandCoachV2 = (): JSX.Element => {
           userDocuments,
           useSystemKB: isSystemKBEnabled,
           latestDiagnostic: latestDiagnostic || undefined,
-          chapterContext,
         },
       });
 
@@ -736,6 +788,7 @@ const BrandCoachV2 = (): JSX.Element => {
                 return mappedChapters;
               })()}
               activeChapterId={progress?.current_chapter_id ?? 'chapter-01-introduction'}
+              recentlyUpdatedChapterIds={recentlyUpdatedChapterIds}
               onProceed={handleProceed}
               onFieldChange={(chapterId, fieldId, value) => {
                 // setFieldManual expects just fieldId and value, not chapterId

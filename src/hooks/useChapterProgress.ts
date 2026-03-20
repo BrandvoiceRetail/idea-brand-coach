@@ -57,14 +57,15 @@ export const useChapterProgress = (options: UseChapterProgressOptions = {}): Use
       const currentChapterId = session.chapter_metadata?.chapter_id || session.chapter_id || 'chapter-01-introduction';
       const currentChapterNumber = allChapters.find(ch => ch.id === currentChapterId)?.number || 1;
 
-      // Initialize all chapters as not_started
+      // Restore chapter statuses from saved metadata, defaulting to not_started
+      const savedStatuses = session.chapter_metadata?.chapter_statuses;
       const chapterStatuses: Record<ChapterId, ChapterStatus> = {} as Record<ChapterId, ChapterStatus>;
       allChapters.forEach(ch => {
-        chapterStatuses[ch.id] = 'not_started';
+        chapterStatuses[ch.id] = savedStatuses?.[ch.id] || 'not_started';
       });
 
       // Count completed chapters
-      let completedCount = 0;
+      const completedCount = Object.values(chapterStatuses).filter(s => s === 'completed').length;
 
       return {
         session_id: sessionId,
@@ -123,6 +124,7 @@ export const useChapterProgress = (options: UseChapterProgressOptions = {}): Use
           chapter_number: chapter.number,
           chapter_title: chapter.title,
           chapter_category: chapter.category,
+          chapter_statuses: statuses,
         },
       });
     },

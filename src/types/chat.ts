@@ -5,7 +5,7 @@
  * These types define the data structures used across all chat service implementations.
  */
 
-import type { ChapterId, ChapterMetadata } from './chapter';
+import type { ChapterId, ChapterContext, ChapterMetadata } from './chapter';
 
 /**
  * Role of a chat message participant
@@ -88,7 +88,7 @@ export interface ChatMessageCreate {
   metadata?: Record<string, any>;
 
   /** Optional chapter context for persona-based responses */
-  chapterContext?: string;
+  chapterContext?: ChapterContext;
 }
 
 /**

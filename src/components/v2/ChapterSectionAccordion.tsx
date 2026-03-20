@@ -38,6 +38,9 @@ export interface ChapterSectionAccordionProps {
   /** Currently active chapter ID */
   activeChapterId?: string;
 
+  /** Chapter IDs that should be expanded because a field was recently updated by AI */
+  recentlyUpdatedChapterIds?: string[];
+
   /** Callback when a field value changes */
   onFieldChange: (chapterId: string, fieldId: string, value: string | string[]) => void;
 
@@ -71,7 +74,7 @@ export interface ChapterSectionAccordionProps {
  * ```
  */
 export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterSectionAccordionProps>(
-  ({ chapters, activeChapterId, onFieldChange, onProceed, onFieldFocus, className }, ref) => {
+  ({ chapters, activeChapterId, recentlyUpdatedChapterIds, onFieldChange, onProceed, onFieldFocus, className }, ref) => {
     /**
      * Get the first captured value from a chapter for summary display
      */
@@ -157,7 +160,7 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
                 size="lg"
                 className="w-full"
               >
-                Mark Chapter Complete
+                Complete & Continue
               </Button>
             </div>
           )}
@@ -190,18 +193,35 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
     };
 
     /**
-     * Determine accordion value (which items are open)
-     * Open all chapters by default for easy access
+     * Accordion open state — only the active chapter is open by default.
+     * Additional chapters open when: user clicks them, activeChapterId advances,
+     * or the AI updates a field within them.
      */
     const [accordionValue, setAccordionValue] = React.useState<string[]>(
-      chapters.map(ch => ch.chapter.id)
+      activeChapterId ? [activeChapterId] : chapters.slice(0, 1).map(ch => ch.chapter.id)
     );
 
-    // Update accordion value when chapters change
+    // Expand the newly active chapter when the user advances (without closing others)
     React.useEffect(() => {
-      // Keep all chapters expanded by default
-      setAccordionValue(chapters.map(ch => ch.chapter.id));
-    }, [chapters]);
+      if (activeChapterId) {
+        setAccordionValue(prev =>
+          prev.includes(activeChapterId) ? prev : [...prev, activeChapterId]
+        );
+      }
+    }, [activeChapterId]);
+
+    // Expand chapters that contain recently AI-updated fields
+    React.useEffect(() => {
+      if (recentlyUpdatedChapterIds && recentlyUpdatedChapterIds.length > 0) {
+        setAccordionValue(prev => {
+          const next = [...prev];
+          recentlyUpdatedChapterIds.forEach(id => {
+            if (!next.includes(id)) next.push(id);
+          });
+          return next;
+        });
+      }
+    }, [recentlyUpdatedChapterIds]);
 
     return (
       <div ref={ref} className={cn("w-full", className)}>
