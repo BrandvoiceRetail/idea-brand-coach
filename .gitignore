@@ -35,9 +35,13 @@ dist-ssr
 # Supabase CLI temp files
 supabase/.temp/
 
+# Supabase edge function secrets (contain API keys)
+supabase/functions/.env
+
 # Auto Claude generated files
 .auto-claude-security.json
 .auto-claude-status
 .security-key
 logs/security/
 auto-claude-backup-keys.txt
+.env
