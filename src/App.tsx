@@ -9,9 +9,11 @@ import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { AvatarProvider } from "@/contexts/AvatarContext";
+import { VersionProvider } from "@/contexts/VersionContext";
 import { ServiceProvider } from "@/services/ServiceProvider";
 import { SystemKBProvider } from "@/contexts/SystemKBContext";
 import { OnboardingTourProvider } from "@/contexts/OnboardingTourContext";
+import { FieldReviewProvider } from "@/contexts/FieldReviewContext";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { AuthGate } from "@/components/AuthGate";
@@ -45,6 +47,7 @@ import { StartHere } from "./pages/StartHere";
 import PricingPaywall from "./pages/PricingPaywall";
 import { BrandCoachV2 } from "./pages/v2/BrandCoachV2";
 import FeatureGate from "@/components/FeatureGate";
+import { VersionGate } from "@/components/VersionGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
 const queryClient = new QueryClient({
@@ -70,11 +73,13 @@ const App = () => {
       <ServiceProvider>
         <AuthProvider>
           <AuthGate>
-            <BrandProvider>
+            <VersionProvider>
+              <BrandProvider>
               <AvatarProvider>
                 <SystemKBProvider>
-                  <OnboardingTourProvider>
-                    <TooltipProvider>
+                  <FieldReviewProvider>
+                    <OnboardingTourProvider>
+                      <TooltipProvider>
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
@@ -83,7 +88,7 @@ const App = () => {
                       <BetaFeedbackWidget />
 
                     <Routes>
-                <Route path="/" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
+                <Route path="/" element={<VersionGate />} />
 
                 <Route path="/welcome" element={<Landing />} />
 
@@ -270,11 +275,13 @@ const App = () => {
 
                     </Routes>
                   </BrowserRouter>
-                    </TooltipProvider>
-                  </OnboardingTourProvider>
+                      </TooltipProvider>
+                    </OnboardingTourProvider>
+                  </FieldReviewProvider>
                 </SystemKBProvider>
               </AvatarProvider>
-            </BrandProvider>
+              </BrandProvider>
+            </VersionProvider>
           </AuthGate>
         </AuthProvider>
       </ServiceProvider>
