@@ -79,25 +79,21 @@ export function VersionSwitcher(): JSX.Element {
 
   return (
     <DropdownMenu onOpenChange={(open) => { if (open) dismissNudge(); }}>
-      {showNudge ? (
-        <Tooltip open={showNudge}>
-          <TooltipTrigger asChild>
-            {triggerButton}
-          </TooltipTrigger>
-          <TooltipContent
-            side="bottom"
-            className="bg-primary text-primary-foreground cursor-pointer"
-            onClick={dismissNudge}
-          >
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3" />
-              Try the new Brand Coach experience
-            </span>
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        triggerButton
-      )}
+      <Tooltip open={showNudge} onOpenChange={() => {}}>
+        <TooltipTrigger asChild>
+          {triggerButton}
+        </TooltipTrigger>
+        <TooltipContent
+          side="bottom"
+          className="bg-primary text-primary-foreground cursor-pointer"
+          onClick={dismissNudge}
+        >
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3" />
+            Try the new Brand Coach experience
+          </span>
+        </TooltipContent>
+      </Tooltip>
 
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem
