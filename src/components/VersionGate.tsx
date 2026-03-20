@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Sparkles, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,17 +49,32 @@ export function VersionGate(): JSX.Element | null {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted px-4">
-      <div className="max-w-lg w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="space-y-3">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="max-w-lg w-full text-center space-y-8"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className="space-y-3"
+        >
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
           </h1>
           <p className="text-muted-foreground text-lg">
             Choose how you'd like to work on your brand today.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4, duration: 0.4 }}
+          className="space-y-4"
+        >
           <Button
             variant="brand"
             size="lg"
@@ -78,8 +94,8 @@ export function VersionGate(): JSX.Element | null {
             <Clock className="h-4 w-4" />
             Use Classic Version
           </Button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
