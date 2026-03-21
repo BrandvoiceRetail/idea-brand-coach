@@ -203,22 +203,10 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
 
       setUploadProgress(75);
 
-      // Get the current session to pass auth token
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        console.error('No access token available for edge function call');
-        // Continue anyway - document is still saved
-      } else {
-        console.log('Calling edge function with auth token');
-      }
-
-      // Upload document directly to OpenAI vector store (bypasses local text extraction)
+      // Upload document directly to OpenAI vector store
+      // supabase.functions.invoke automatically includes auth headers from the current session
       const { data: vectorResult, error: vectorError } = await supabase.functions.invoke('upload-document-to-vector-store', {
         body: { documentId: docData.id },
-        headers: session?.access_token ? {
-          Authorization: `Bearer ${session.access_token}`,
-        } : undefined,
       });
 
       if (vectorError) {
