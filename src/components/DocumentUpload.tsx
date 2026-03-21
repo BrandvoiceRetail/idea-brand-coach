@@ -25,7 +25,7 @@ interface DocumentUploadProps {
 
 export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -204,9 +204,16 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
       setUploadProgress(75);
 
       // Upload document directly to OpenAI vector store
-      // supabase.functions.invoke automatically includes auth headers from the current session
+      if (!session?.access_token) {
+        console.error('No auth session available for edge function call');
+        throw new Error('Authentication session not available. Please try refreshing the page.');
+      }
+
       const { data: vectorResult, error: vectorError } = await supabase.functions.invoke('upload-document-to-vector-store', {
         body: { documentId: docData.id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (vectorError) {
