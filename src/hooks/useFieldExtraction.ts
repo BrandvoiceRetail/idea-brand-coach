@@ -68,7 +68,7 @@ export interface UseFieldExtractionReturn {
   clearFields: () => void;
 
   // Field locking (no longer in separate V2!)
-  setFieldLock: (fieldId: string, locked: boolean) => void;
+  setFieldLock: (fieldId: string, locked: boolean, silent?: boolean) => void;
   isFieldLocked: (fieldId: string) => boolean;
 
   // Stats
@@ -285,15 +285,15 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
 
   // Lock or unlock a field — functional setState so no stale closure on lockedFields
   const setFieldLock = useCallback(
-    (fieldId: string, locked: boolean): void => {
+    (fieldId: string, locked: boolean, silent = false): void => {
       setLockedFields(prev => {
         const updated = new Set(prev);
         if (locked) {
           updated.add(fieldId);
-          toast.info(`Field locked: AI won't overwrite this value`);
+          if (!silent) toast.info(`Field locked: AI won't overwrite this value`);
         } else {
           updated.delete(fieldId);
-          toast.info(`Field unlocked: AI can update this value`);
+          if (!silent) toast.info(`Field unlocked: AI can update this value`);
         }
         saveFieldLocks(resolvedAvatarId, updated);
         return updated;

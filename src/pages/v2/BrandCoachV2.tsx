@@ -121,7 +121,7 @@ const BrandCoachV2 = (): JSX.Element => {
     onFieldsLoaded: (loadedFields) => {
       Object.entries(loadedFields).forEach(([fieldId, { value, isLocked }]) => {
         setFieldManual(fieldId, value);
-        if (isLocked) setFieldLock(fieldId, true);
+        if (isLocked) setFieldLock(fieldId, true, true);
       });
     },
   });
