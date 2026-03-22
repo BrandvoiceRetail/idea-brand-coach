@@ -40,6 +40,12 @@ export interface ExtractedField {
 
   /** Whether this field is locked from AI updates */
   isLocked?: boolean;
+
+  /** Chapter title (e.g., "Brand Foundation") */
+  chapterTitle?: string;
+
+  /** IDEA framework relevance explanation */
+  ideaRelevance?: string;
 }
 
 /**
@@ -51,6 +57,9 @@ export interface FieldExtractionBadgesProps {
 
   /** Callback when a field badge is clicked */
   onFieldClick?: (field: ExtractedField) => void;
+
+  /** Callback to accept all extracted fields */
+  onAcceptAll?: () => void;
 
   /** Whether to show the celebratory animation */
   showAnimation?: boolean;
@@ -91,6 +100,7 @@ function formatPreviewValue(value: string | string[]): string {
 export const FieldExtractionBadges: React.FC<FieldExtractionBadgesProps> = ({
   fields,
   onFieldClick,
+  onAcceptAll,
   showAnimation = true,
   className,
 }) => {
@@ -131,27 +141,33 @@ export const FieldExtractionBadges: React.FC<FieldExtractionBadgesProps> = ({
             }}
           >
             {isMobile ? (
-              // Mobile: Simple clickable badge
+              // Mobile: Clickable badge with value preview and chapter context
               <Badge
                 variant="outline"
                 className={cn(
                   'cursor-pointer transition-all hover:scale-105 active:scale-95',
                   'bg-gradient-to-r from-green-500/10 to-emerald-500/10',
                   'text-green-700 border-green-500/30 hover:border-green-500/50',
-                  'px-2.5 py-1 text-xs font-medium',
+                  'px-2.5 py-1.5 text-xs font-medium',
                   field.isReviewed && 'opacity-80',
                   field.isLocked && 'border-amber-500/30 bg-amber-500/10 text-amber-700'
                 )}
                 onClick={() => onFieldClick?.(field)}
               >
-                <span className="flex items-center gap-1">
-                  {field.label}
-                  {field.confidence && field.confidence < 0.7 && (
-                    <span className="text-[10px] opacity-60">
-                      ({Math.round(field.confidence * 100)}%)
-                    </span>
-                  )}
-                  <ChevronRight className="h-3 w-3 opacity-50" />
+                <span className="flex flex-col items-start gap-0.5">
+                  <span className="flex items-center gap-1">
+                    {field.chapterTitle && (
+                      <span className="text-[9px] uppercase tracking-wider opacity-60">
+                        {field.chapterTitle} &rsaquo;
+                      </span>
+                    )}
+                    {field.label}
+                    {field.isReviewed && <span className="text-green-600">&#10003;</span>}
+                    <ChevronRight className="h-3 w-3 opacity-50" />
+                  </span>
+                  <span className="text-[10px] opacity-70 font-normal truncate max-w-[200px]">
+                    {formatPreviewValue(field.value).slice(0, 40)}
+                  </span>
                 </span>
               </Badge>
             ) : (
@@ -159,6 +175,7 @@ export const FieldExtractionBadges: React.FC<FieldExtractionBadgesProps> = ({
               <TooltipProvider>
                 <Tooltip delayDuration={200}>
                   <TooltipTrigger asChild>
+                    <span>
                     <Badge
                       variant="outline"
                       className={cn(
@@ -184,17 +201,28 @@ export const FieldExtractionBadges: React.FC<FieldExtractionBadgesProps> = ({
                         )}
                       </span>
                     </Badge>
+                    </span>
                   </TooltipTrigger>
                   <TooltipContent
                     side="top"
-                    className="max-w-xs p-3 space-y-2"
+                    className="max-w-xs p-3 space-y-1.5"
                   >
+                    {field.chapterTitle && (
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                        {field.chapterTitle}
+                      </div>
+                    )}
                     <div className="font-semibold text-sm">{field.label}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground line-clamp-2">
                       {formatPreviewValue(field.value)}
                     </div>
+                    {field.ideaRelevance && (
+                      <div className="text-[10px] text-primary/70 pt-1 border-t italic">
+                        {field.ideaRelevance}
+                      </div>
+                    )}
                     <div className="text-xs text-primary/60 pt-1 border-t">
-                      Click to review or edit
+                      Click to navigate to chapter
                     </div>
                   </TooltipContent>
                 </Tooltip>
