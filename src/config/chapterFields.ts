@@ -58,6 +58,9 @@ export interface ChapterField {
 
   /** Help text or description */
   helpText?: string;
+
+  /** IDEA framework relevance — explains why this field matters in the framework */
+  ideaRelevance?: string;
 }
 
 /**
@@ -105,7 +108,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'Why does your brand exist beyond making money?',
         required: true,
-        helpText: 'Your brand\'s reason for being and the impact you want to make'
+        helpText: 'Your brand\'s reason for being and the impact you want to make',
+        ideaRelevance: 'Defines the "why" — foundation for every brand decision'
       },
       {
         id: 'brandVision',
@@ -113,7 +117,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'What future do you want to create?',
         required: true,
-        helpText: 'Your aspirational view of the future you\'re working toward'
+        helpText: 'Your aspirational view of the future you\'re working toward',
+        ideaRelevance: 'Sets your brand\'s aspirational north star (Foundation)'
       },
       {
         id: 'brandMission',
@@ -121,7 +126,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'How will you achieve your vision?',
         required: true,
-        helpText: 'The practical steps and approach to fulfilling your purpose'
+        helpText: 'The practical steps and approach to fulfilling your purpose',
+        ideaRelevance: 'Translates purpose into actionable strategy (Foundation)'
       }
     ]
   },
@@ -139,7 +145,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'Enter your brand values (e.g., Innovation, Integrity, Excellence)',
         required: true,
-        helpText: 'The fundamental beliefs and principles that guide your brand decisions'
+        helpText: 'The fundamental beliefs and principles that guide your brand decisions',
+        ideaRelevance: 'Guiding principles that shape all brand behavior (Foundation)'
       },
       {
         id: 'brandStory',
@@ -147,7 +154,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'Tell the story of how your brand came to be and what drives you',
         required: true,
-        helpText: 'The narrative that connects your past, present, and future'
+        helpText: 'The narrative that connects your past, present, and future',
+        ideaRelevance: 'Narrative that makes your brand memorable and relatable (Foundation)'
       },
       {
         id: 'brandPromise',
@@ -155,7 +163,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'What do you promise to deliver to your customers every time?',
         required: true,
-        helpText: 'The commitment you make to your customers that sets expectations'
+        helpText: 'The commitment you make to your customers that sets expectations',
+        ideaRelevance: 'The commitment customers can count on (Foundation)'
       }
     ]
   },
@@ -177,7 +186,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'Age, gender, income, location, occupation',
         required: true,
-        helpText: 'Quantifiable characteristics of your target audience'
+        helpText: 'Quantifiable characteristics of your target audience',
+        ideaRelevance: 'Data-driven understanding of who you serve (Insight pillar)'
       },
       {
         id: 'psychographics',
@@ -185,7 +195,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'Interests, values, lifestyle, personality traits',
         required: true,
-        helpText: 'Psychological attributes and lifestyle characteristics'
+        helpText: 'Psychological attributes and lifestyle characteristics',
+        ideaRelevance: 'Reveals the deeper motivations behind customer behavior (Insight pillar)'
       },
       {
         id: 'painPoints',
@@ -193,7 +204,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What challenges or frustrations do they face?',
         required: true,
-        helpText: 'The problems your customers are trying to solve'
+        helpText: 'The problems your customers are trying to solve',
+        ideaRelevance: 'Problems your brand exists to solve (Insight pillar)'
       },
       {
         id: 'goals',
@@ -201,7 +213,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What are they trying to achieve?',
         required: true,
-        helpText: 'The outcomes and desires that motivate your customers'
+        helpText: 'The outcomes and desires that motivate your customers',
+        ideaRelevance: 'Aspirations that align your brand with customer success (Insight pillar)'
       }
     ]
   },
@@ -219,7 +232,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'What trends, gaps, and opportunities exist in your market?',
         required: true,
-        helpText: 'Key market dynamics, trends, and competitive landscape'
+        helpText: 'Key market dynamics, trends, and competitive landscape',
+        ideaRelevance: 'Market intelligence that informs strategic positioning (Insight pillar)'
       },
       {
         id: 'consumerInsight',
@@ -227,7 +241,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'What drives your customers\' decisions and behaviors?',
         required: true,
-        helpText: 'Deep understanding of customer motivations and decision-making'
+        helpText: 'Deep understanding of customer motivations and decision-making',
+        ideaRelevance: 'Behavioral patterns that shape your brand messaging (Insight pillar)'
       }
     ]
   },
@@ -245,7 +260,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'What practical problem are they solving?',
         required: true,
-        helpText: 'The rational, functional reasons for purchase'
+        helpText: 'The rational, functional reasons for purchase',
+        ideaRelevance: 'The practical "what" behind purchase decisions (Insight pillar)'
       },
       {
         id: 'emotionalIntent',
@@ -253,7 +269,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'How do they want to feel?',
         required: true,
-        helpText: 'The emotional outcomes they seek'
+        helpText: 'The emotional outcomes they seek',
+        ideaRelevance: 'The feeling customers chase when choosing your brand (Insight pillar)'
       },
       {
         id: 'identityIntent',
@@ -261,7 +278,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'Who do they want to become?',
         required: true,
-        helpText: 'The identity transformation they desire'
+        helpText: 'The identity transformation they desire',
+        ideaRelevance: 'The aspirational self your brand helps customers become (Insight pillar)'
       },
       {
         id: 'socialIntent',
@@ -269,7 +287,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'How do they want to be perceived?',
         required: true,
-        helpText: 'The social signals and status they seek'
+        helpText: 'The social signals and status they seek',
+        ideaRelevance: 'The social currency your brand provides (Insight pillar)'
       }
     ]
   },
@@ -291,7 +310,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'For [target], [brand] is the [category] that [unique benefit] because [reason to believe]',
         required: true,
-        helpText: 'A clear statement of how you want to be perceived vs. competitors'
+        helpText: 'A clear statement of how you want to be perceived vs. competitors',
+        ideaRelevance: 'How you stand apart in the market (Distinctive pillar)'
       },
       {
         id: 'uniqueValue',
@@ -299,7 +319,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'What makes you uniquely valuable to your customers?',
         required: true,
-        helpText: 'The specific value only you can deliver'
+        helpText: 'The specific value only you can deliver',
+        ideaRelevance: 'The one thing only your brand can deliver (Distinctive pillar)'
       },
       {
         id: 'differentiators',
@@ -307,7 +328,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What sets you apart from competitors?',
         required: true,
-        helpText: 'Specific advantages that distinguish you in the market'
+        helpText: 'Specific advantages that distinguish you in the market',
+        ideaRelevance: 'Competitive advantages that make you unmistakable (Distinctive pillar)'
       }
     ]
   },
@@ -325,7 +347,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'Describe your brand as if it were a person (e.g., Bold, Innovative, Caring)',
         required: true,
-        helpText: 'Human characteristics that define your brand\'s character'
+        helpText: 'Human characteristics that define your brand\'s character',
+        ideaRelevance: 'Human traits that make your brand relatable (Distinctive pillar)'
       },
       {
         id: 'brandVoice',
@@ -333,7 +356,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'How does your brand communicate? (tone, style, language)',
         required: true,
-        helpText: 'The consistent way you express your brand through words'
+        helpText: 'The consistent way you express your brand through words',
+        ideaRelevance: 'Consistent tone that builds recognition across channels (Distinctive pillar)'
       },
       {
         id: 'brandArchetype',
@@ -341,7 +365,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'text',
         placeholder: 'Which archetype best represents your brand? (e.g., Hero, Sage, Creator)',
         required: false,
-        helpText: 'The universal character pattern your brand embodies'
+        helpText: 'The universal character pattern your brand embodies',
+        ideaRelevance: 'Universal story pattern that deepens brand resonance (Distinctive pillar)'
       }
     ]
   },
@@ -363,7 +388,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'What emotion do you want to evoke in your customers?',
         required: true,
-        helpText: 'The primary emotional response you aim to create'
+        helpText: 'The primary emotional response you aim to create',
+        ideaRelevance: 'Creates the emotional bond that drives loyalty (Empathy pillar)'
       },
       {
         id: 'emotionalTriggers',
@@ -371,7 +397,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What specific triggers activate emotional responses?',
         required: true,
-        helpText: 'Specific moments or messages that resonate emotionally'
+        helpText: 'Specific moments or messages that resonate emotionally',
+        ideaRelevance: 'Moments that spark emotional connection with your audience (Empathy pillar)'
       },
       {
         id: 'customerNeeds',
@@ -379,7 +406,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What underlying needs are you fulfilling?',
         required: true,
-        helpText: 'The fundamental human needs your brand addresses'
+        helpText: 'The fundamental human needs your brand addresses',
+        ideaRelevance: 'Unspoken needs your brand fulfills at a human level (Empathy pillar)'
       }
     ]
   },
@@ -397,7 +425,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'Map the key touchpoints in your customer experience',
         required: true,
-        helpText: 'The path customers take from awareness to advocacy'
+        helpText: 'The path customers take from awareness to advocacy',
+        ideaRelevance: 'Maps every touchpoint where empathy shapes the experience (Empathy pillar)'
       },
       {
         id: 'experiencePillars',
@@ -405,7 +434,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What are the core elements of your customer experience?',
         required: true,
-        helpText: 'The foundational components that shape customer interactions'
+        helpText: 'The foundational components that shape customer interactions',
+        ideaRelevance: 'Core principles that ensure consistent, empathetic interactions (Empathy pillar)'
       },
       {
         id: 'preferredChannels',
@@ -413,7 +443,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'Where do your customers want to engage with you?',
         required: true,
-        helpText: 'The platforms and channels your audience prefers'
+        helpText: 'The platforms and channels your audience prefers',
+        ideaRelevance: 'Meeting customers where they are builds genuine connection (Empathy pillar)'
       }
     ]
   },
@@ -435,7 +466,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What are you uniquely qualified to speak about?',
         required: true,
-        helpText: 'The specific domains where you have deep knowledge and credibility'
+        helpText: 'The specific domains where you have deep knowledge and credibility',
+        ideaRelevance: 'Domains where your brand has earned the right to lead (Authentic pillar)'
       },
       {
         id: 'credibilityMarkers',
@@ -443,7 +475,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What proves your authority? (awards, certifications, results, testimonials)',
         required: true,
-        helpText: 'Evidence that validates your expertise and reliability'
+        helpText: 'Evidence that validates your expertise and reliability',
+        ideaRelevance: 'Proof points that back up your brand claims (Authentic pillar)'
       },
       {
         id: 'thoughtLeadership',
@@ -451,7 +484,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'What unique perspectives or insights do you bring to your industry?',
         required: false,
-        helpText: 'Your distinctive point of view that shapes industry conversations'
+        helpText: 'Your distinctive point of view that shapes industry conversations',
+        ideaRelevance: 'Unique perspective that positions you as an industry voice (Authentic pillar)'
       }
     ]
   },
@@ -469,7 +503,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What makes your brand genuinely you?',
         required: true,
-        helpText: 'The core truths that make your brand real and believable'
+        helpText: 'The core truths that make your brand real and believable',
+        ideaRelevance: 'Builds trust through genuine self-expression (Authentic pillar)'
       },
       {
         id: 'transparency',
@@ -477,7 +512,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'How will you be transparent with your customers?',
         required: true,
-        helpText: 'Your approach to open, honest communication'
+        helpText: 'Your approach to open, honest communication',
+        ideaRelevance: 'Openness that earns long-term customer trust (Authentic pillar)'
       },
       {
         id: 'socialProof',
@@ -485,7 +521,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'array',
         placeholder: 'What evidence shows you deliver on your promises?',
         required: true,
-        helpText: 'Customer stories, results, and validation that build trust'
+        helpText: 'Customer stories, results, and validation that build trust',
+        ideaRelevance: 'Real results that validate your brand authentically (Authentic pillar)'
       },
       {
         id: 'brandConsistency',
@@ -493,7 +530,8 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
         type: 'textarea',
         placeholder: 'How will you ensure consistent brand experiences?',
         required: false,
-        helpText: 'Your strategy for maintaining coherence across all touchpoints'
+        helpText: 'Your strategy for maintaining coherence across all touchpoints',
+        ideaRelevance: 'Consistency across touchpoints reinforces authenticity (Authentic pillar)'
       }
     ]
   }
@@ -550,4 +588,25 @@ export function getRequiredFieldCount(chapterId: string): number {
   const chapter = getChapterById(chapterId);
   if (!chapter) return 0;
   return chapter.fields.filter(field => field.required).length;
+}
+
+/**
+ * Get the chapter that contains a given field
+ */
+export function getChapterForField(fieldId: string): Chapter | undefined {
+  for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
+    if (chapter.fields.some(f => f.id === fieldId)) return chapter;
+  }
+  return undefined;
+}
+
+/**
+ * Get IDEA framework relevance string for a field
+ */
+export function getFieldIdeaRelevance(fieldId: string): string | undefined {
+  for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
+    const field = chapter.fields.find(f => f.id === fieldId);
+    if (field?.ideaRelevance) return field.ideaRelevance;
+  }
+  return undefined;
 }

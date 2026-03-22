@@ -4,6 +4,8 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { useDeviceType } from "@/hooks/useDeviceType"
 import { cn } from "@/lib/utils"
 
 interface TwoPanelTemplateProps {
@@ -13,20 +15,19 @@ interface TwoPanelTemplateProps {
   leftPanelDefaultSize?: number
   rightPanelDefaultSize?: number
   className?: string
+  /** Control mobile sheet open state externally */
+  mobileSheetOpen?: boolean
+  /** Callback when mobile sheet open state changes */
+  onMobileSheetOpenChange?: (open: boolean) => void
+  /** Title for the mobile sheet */
+  mobileSheetTitle?: string
 }
 
 /**
  * TwoPanelTemplate - A responsive two-panel layout with resizable panels
  *
  * Desktop: Displays left and right panels side-by-side with a resizable divider
- * Mobile: Stacks panels vertically with the right panel as the primary view
- *
- * @param leftPanel - Content for the left panel (typically accordion or navigation)
- * @param rightPanel - Content for the right panel (typically chat or main content)
- * @param rightPanelTitle - Optional title for the right panel
- * @param leftPanelDefaultSize - Default size percentage for left panel (default: 35)
- * @param rightPanelDefaultSize - Default size percentage for right panel (default: 65)
- * @param className - Additional CSS classes for the container
+ * Mobile: Right panel is primary; left panel accessible via Sheet overlay
  */
 export function TwoPanelTemplate({
   leftPanel,
@@ -35,7 +36,12 @@ export function TwoPanelTemplate({
   leftPanelDefaultSize = 35,
   rightPanelDefaultSize = 65,
   className,
+  mobileSheetOpen,
+  onMobileSheetOpenChange,
+  mobileSheetTitle = "Brand Chapters",
 }: TwoPanelTemplateProps): JSX.Element {
+  const { isMobile } = useDeviceType()
+
   return (
     <div className={cn("flex-1 overflow-hidden", className)}>
       {/* Desktop: Resizable two-panel layout */}
@@ -79,9 +85,19 @@ export function TwoPanelTemplate({
         </ResizablePanel>
       </ResizablePanelGroup>
 
-      {/* Mobile: Left panel accessible via sheet or bottom nav (to be implemented) */}
-      {/* For now, right panel is primary on mobile, left panel hidden */}
-      {/* Future: Add Sheet or Drawer for left panel on mobile */}
+      {/* Mobile: Left panel accessible via Sheet overlay */}
+      {isMobile && (
+        <Sheet open={mobileSheetOpen} onOpenChange={onMobileSheetOpenChange}>
+          <SheetContent side="left" className="w-[85vw] max-w-md p-0 overflow-y-auto">
+            <SheetHeader className="px-4 py-3 border-b">
+              <SheetTitle>{mobileSheetTitle}</SheetTitle>
+            </SheetHeader>
+            <div className="p-4">
+              {leftPanel}
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   )
 }

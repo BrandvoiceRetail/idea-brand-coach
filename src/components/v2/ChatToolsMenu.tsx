@@ -7,9 +7,11 @@ import { ReviewAnalyzerModal } from './ReviewAnalyzerModal';
 interface ChatToolsMenuProps {
   onSendReviewContext: (contextString: string) => void;
   onEnrichmentComplete?: (contextString: string, totalReviews: number) => void;
+  /** Optional class name for the trigger button (e.g., for mobile sizing) */
+  triggerClassName?: string;
 }
 
-export function ChatToolsMenu({ onSendReviewContext, onEnrichmentComplete }: ChatToolsMenuProps): JSX.Element {
+export function ChatToolsMenu({ onSendReviewContext, onEnrichmentComplete, triggerClassName }: ChatToolsMenuProps): JSX.Element {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -22,7 +24,7 @@ export function ChatToolsMenu({ onSendReviewContext, onEnrichmentComplete }: Cha
     <>
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-[60px] w-[60px]" title="Tools">
+          <Button variant="ghost" size="icon" className={triggerClassName ?? "h-[60px] w-[60px]"} title="Tools">
             <Wrench className="h-5 w-5" />
           </Button>
         </PopoverTrigger>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { MessageSquare, Loader2, Download, Trash2, Copy, Check, Menu, Send, Paperclip, Plus, Sparkles, Edit2, Lock, CheckCircle, Search } from 'lucide-react';
+import { MessageSquare, Loader2, Download, Trash2, Copy, Check, Menu, Send, Paperclip, Plus, Sparkles, Edit2, Lock, CheckCircle, Search, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
@@ -24,6 +24,8 @@ import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { TwoPanelTemplate } from '@/components/templates/TwoPanelTemplate';
 import { ChapterSectionAccordion } from '@/components/v2/ChapterSectionAccordion';
+import type { ChapterAccordionHandle } from '@/components/v2/ChapterSectionAccordion';
+import { useDeviceType } from '@/hooks/useDeviceType';
 import { AvatarHeaderDropdown } from '@/components/v2/AvatarHeaderDropdown';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
 import { FieldExtractionBadges } from '@/components/v2/FieldExtractionBadges';
@@ -201,6 +203,19 @@ const BrandCoachV2 = (): JSX.Element => {
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [isExtractingFromDoc, setIsExtractingFromDoc] = useState(false);
 
+  // Optimistic message display — shows user message immediately before backend confirms
+  const [pendingUserMessage, setPendingUserMessage] = useState<{
+    id: string;
+    content: string;
+    role: 'user';
+    created_at: string;
+  } | null>(null);
+
+  // Mobile accordion sheet state
+  const [mobileAccordionOpen, setMobileAccordionOpen] = useState(false);
+  const { isMobile } = useDeviceType();
+  const accordionRef = useRef<ChapterAccordionHandle>(null);
+
   // User documents state (uploaded documents from DocumentUpload component)
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
 
@@ -357,6 +372,28 @@ const BrandCoachV2 = (): JSX.Element => {
     return processedMessages.filter((msg) => !msg.metadata?.isSystemMessage);
   }, [processedMessages]);
 
+  // Merge pending optimistic message with display messages
+  const messagesWithPending = useMemo(() => {
+    if (!pendingUserMessage) return displayMessages;
+    const alreadyShown = displayMessages.some(
+      m => m.role === 'user' && m.content === pendingUserMessage.content
+    );
+    if (alreadyShown) return displayMessages;
+    return [...displayMessages, pendingUserMessage];
+  }, [displayMessages, pendingUserMessage]);
+
+  // Clear pending message once the real message appears in displayMessages
+  useEffect(() => {
+    if (pendingUserMessage && displayMessages.length > 0) {
+      const lastUserMsg = [...displayMessages]
+        .reverse()
+        .find(m => m.role === 'user');
+      if (lastUserMsg && lastUserMsg.content === pendingUserMessage.content) {
+        setPendingUserMessage(null);
+      }
+    }
+  }, [displayMessages, pendingUserMessage]);
+
   // Pre-compute chapter accordion data (avoids IIFE in JSX)
   const chapterAccordionData = useMemo(() =>
     allChapters?.map(bookChapter => {
@@ -411,7 +448,7 @@ const BrandCoachV2 = (): JSX.Element => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [displayMessages, streamingContent]);
+  }, [messagesWithPending, streamingContent]);
 
   // Handle field clearing on avatar switch (extracted to follow SRP)
   useAvatarFieldSync({
@@ -498,12 +535,21 @@ const BrandCoachV2 = (): JSX.Element => {
           latestDiagnostic: latestDiagnostic || undefined,
         },
       };
+
+      // Show message optimistically before backend round-trip
+      setPendingUserMessage({
+        id: `pending-${Date.now()}`,
+        content: message,
+        role: 'user',
+        created_at: new Date().toISOString(),
+      });
       setMessage('');
 
       // Use streaming for interactive chat messages
       await sendMessageStreaming(messagePayload);
     } catch (error) {
       console.error('Error sending message:', error);
+      setPendingUserMessage(null);
     }
   };
 
@@ -798,19 +844,21 @@ const BrandCoachV2 = (): JSX.Element => {
 
       {/* Two-panel body */}
       <TwoPanelTemplate
+        mobileSheetOpen={mobileAccordionOpen}
+        onMobileSheetOpenChange={setMobileAccordionOpen}
+        mobileSheetTitle="Brand Chapters"
         leftPanel={
           <div className="h-full overflow-y-auto p-4">
             <ChapterSectionAccordion
+              ref={accordionRef}
               chapters={chapterAccordionData}
               activeChapterId={progress?.current_chapter_id ?? 'chapter-01-introduction'}
               recentlyUpdatedChapterIds={recentlyUpdatedChapterIds}
               onProceed={handleProceed}
               onFieldChange={(chapterId, fieldId, value) => {
-                // setFieldManual expects just fieldId and value, not chapterId
                 setFieldManual(fieldId, value);
               }}
               onFieldFocus={(fieldId) => {
-                // Track which field the user is focusing on for conversational guidance
                 setFocusedFieldId(fieldId);
               }}
             />
@@ -846,6 +894,17 @@ const BrandCoachV2 = (): JSX.Element => {
                   </SheetContent>
                 </Sheet>
                 <span className="font-medium">Trevor</span>
+                {isMobile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setMobileAccordionOpen(true)}
+                    className="lg:hidden ml-2"
+                  >
+                    <BookOpen className="h-4 w-4 mr-1" />
+                    Chapters
+                  </Button>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -900,7 +959,7 @@ const BrandCoachV2 = (): JSX.Element => {
               ref={chatContainerRef}
               className="flex-1 overflow-y-auto p-4 space-y-4"
             >
-              {displayMessages.length === 0 ? (
+              {messagesWithPending.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">Welcome to Brand Coach</h3>
@@ -910,7 +969,7 @@ const BrandCoachV2 = (): JSX.Element => {
                   </p>
                 </div>
               ) : (
-                displayMessages.map((msg) => (
+                messagesWithPending.map((msg) => (
                   <div
                     key={msg.id}
                     className={cn(
@@ -923,7 +982,8 @@ const BrandCoachV2 = (): JSX.Element => {
                         'max-w-[80%]',
                         msg.role === 'user'
                           ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
+                          : 'bg-muted',
+                        msg.id.startsWith('pending-') && 'opacity-80'
                       )}
                     >
                       <CardContent className="p-3">
@@ -934,12 +994,16 @@ const BrandCoachV2 = (): JSX.Element => {
                           <div className="mt-3 pt-2 border-t border-border/30">
                             <FieldExtractionBadges
                               fields={Object.entries(msg.extractedFields).map(([fieldId, value]): ExtractedField => {
-                                // Find the field label from the chapter fields map
+                                // Find field label, chapter title, and IDEA relevance
                                 let fieldLabel = fieldId;
+                                let chapterTitle: string | undefined;
+                                let ideaRelevance: string | undefined;
                                 for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
                                   const field = chapter.fields?.find((f: { id: string }) => f.id === fieldId);
                                   if (field) {
                                     fieldLabel = field.label;
+                                    chapterTitle = chapter.title;
+                                    ideaRelevance = field.ideaRelevance;
                                     break;
                                   }
                                 }
@@ -953,12 +1017,26 @@ const BrandCoachV2 = (): JSX.Element => {
                                   fieldId,
                                   label: fieldLabel,
                                   value: value as string,
+                                  chapterTitle,
+                                  ideaRelevance,
                                   isReviewed: isAccepted,
                                   isLocked,
-                                  confidence: 0.95 // High confidence since it was extracted
+                                  confidence: 0.95,
                                 };
                               })}
-                              onFieldClick={(fieldId) => setActiveReviewFieldId(fieldId)}
+                              onFieldClick={(field) => {
+                                setActiveReviewFieldId(field.fieldId);
+                                // Navigate to the chapter in the accordion
+                                const bookChapterId = fieldToBookChapterId[field.fieldId];
+                                if (bookChapterId) {
+                                  if (isMobile) {
+                                    setMobileAccordionOpen(true);
+                                    setTimeout(() => accordionRef.current?.focusChapter(bookChapterId), 300);
+                                  } else {
+                                    accordionRef.current?.focusChapter(bookChapterId);
+                                  }
+                                }
+                              }}
                               onAcceptAll={() => {
                                 // Accept all fields from this message
                                 if (msg.extractedFields) {
@@ -1067,28 +1145,8 @@ const BrandCoachV2 = (): JSX.Element => {
                   </button>
                 </div>
               )}
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowDocumentUpload(!showDocumentUpload)}
-                  className="h-[60px] w-[60px]"
-                  title={showDocumentUpload ? "Hide document upload" : "Upload documents"}
-                >
-                  <Paperclip className={cn(
-                    "h-5 w-5",
-                    userDocuments.length > 0 && "text-primary"
-                  )} />
-                  {userDocuments.length > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center"
-                    >
-                      {userDocuments.length}
-                    </Badge>
-                  )}
-                </Button>
-                <ChatToolsMenu onSendReviewContext={handleSendReviewContext} onEnrichmentComplete={handleEnrichmentComplete} />
+              <div className="flex gap-2 items-end">
+                {/* Textarea first — gets maximum width */}
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -1099,21 +1157,50 @@ const BrandCoachV2 = (): JSX.Element => {
                     }
                   }}
                   placeholder="Type your message..."
-                  className="min-h-[60px] resize-none"
+                  className="min-h-[60px] resize-none flex-1"
                   disabled={isSending}
                 />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!message.trim() || isSending}
-                  size="icon"
-                  className="h-[60px] w-[60px]"
-                >
-                  {isSending ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Send className="h-5 w-5" />
-                  )}
-                </Button>
+
+                {/* Action icons grouped next to send */}
+                <div className="flex gap-1 lg:gap-2 flex-shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowDocumentUpload(!showDocumentUpload)}
+                    className="relative h-10 w-10 lg:h-[60px] lg:w-[60px]"
+                    title={showDocumentUpload ? "Hide document upload" : "Upload documents"}
+                  >
+                    <Paperclip className={cn(
+                      "h-4 w-4 lg:h-5 lg:w-5",
+                      userDocuments.length > 0 && "text-primary"
+                    )} />
+                    {userDocuments.length > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 p-0 flex items-center justify-center text-[10px]"
+                      >
+                        {userDocuments.length}
+                      </Badge>
+                    )}
+                  </Button>
+                  <ChatToolsMenu
+                    onSendReviewContext={handleSendReviewContext}
+                    onEnrichmentComplete={handleEnrichmentComplete}
+                    triggerClassName="h-10 w-10 lg:h-[60px] lg:w-[60px]"
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!message.trim() || isSending}
+                    size="icon"
+                    className="h-10 w-10 lg:h-[60px] lg:w-[60px]"
+                  >
+                    {isSending ? (
+                      <Loader2 className="h-4 w-4 lg:h-5 lg:w-5 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4 lg:h-5 lg:w-5" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

@@ -13,6 +13,14 @@ import { ChapterFieldSet } from "./ChapterFieldSet";
 import type { Chapter, ChapterStatus, FieldSource } from "@/config/chapterFields";
 
 /**
+ * Imperative handle for programmatic accordion control
+ */
+export interface ChapterAccordionHandle {
+  /** Expand a specific chapter (closing others) and scroll it into view */
+  focusChapter: (chapterId: string) => void;
+}
+
+/**
  * Chapter data with runtime values and status
  */
 export interface ChapterData {
@@ -74,8 +82,9 @@ export interface ChapterSectionAccordionProps {
  * />
  * ```
  */
-export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterSectionAccordionProps>(
+export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, ChapterSectionAccordionProps>(
   ({ chapters, activeChapterId, recentlyUpdatedChapterIds, onFieldChange, onProceed, onFieldFocus, className }, ref) => {
+    const internalRef = React.useRef<HTMLDivElement>(null);
     /**
      * A chapter is "complete" if its fields contain at least 5 words total
      */
@@ -230,8 +239,19 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
       }
     }, [recentlyUpdatedChapterIds]);
 
+    // Expose imperative handle for programmatic chapter navigation
+    React.useImperativeHandle(ref, () => ({
+      focusChapter: (chapterId: string) => {
+        setAccordionValue([chapterId]);
+        setTimeout(() => {
+          const el = internalRef.current?.querySelector(`[data-chapter-id="${chapterId}"]`);
+          el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      },
+    }));
+
     return (
-      <div ref={ref} className={cn("w-full", className)}>
+      <div ref={internalRef} className={cn("w-full", className)}>
         <Accordion
           type="multiple"
           value={accordionValue}
@@ -247,6 +267,7 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
               <AccordionItem
                 key={chapter.id}
                 value={chapter.id}
+                data-chapter-id={chapter.id}
                 className={cn(
                   "border-b",
                   isDisabled && "opacity-50"
