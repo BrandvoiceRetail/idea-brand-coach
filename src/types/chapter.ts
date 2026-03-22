@@ -187,6 +187,9 @@ export interface ChapterContext {
 
   /** Current values of already-filled fields — lets the AI know what's captured vs. missing */
   currentFieldValues?: Record<string, string | string[]>;
+
+  /** Key into ALL_FIELDS_MAP for the current chapter (e.g. 'BRAND_FOUNDATION') — used for tiered context */
+  currentChapterKey?: string;
 }
 
 /**

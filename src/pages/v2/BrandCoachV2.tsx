@@ -189,7 +189,7 @@ const BrandCoachV2 = (): JSX.Element => {
   });
 
   // Chat for current session
-  const { messages, sendMessage, isSending, clearChat } = useChat({
+  const { messages, sendMessage, sendMessageStreaming, isSending, isStreaming, streamingContent, clearChat } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
   });
@@ -406,12 +406,12 @@ const BrandCoachV2 = (): JSX.Element => {
     createAvatar,
   });
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or streaming content updates
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [displayMessages]);
+  }, [displayMessages, streamingContent]);
 
   // Handle field clearing on avatar switch (extracted to follow SRP)
   useAvatarFieldSync({
@@ -488,17 +488,20 @@ const BrandCoachV2 = (): JSX.Element => {
     };
 
     try {
-      await sendMessage({
+      const messagePayload = {
         content: message,
-        role: 'user',
+        role: 'user' as const,
         chapterContext,
         metadata: {
           userDocuments, // Include uploaded documents
           useSystemKB: isSystemKBEnabled,
           latestDiagnostic: latestDiagnostic || undefined,
         },
-      });
+      };
       setMessage('');
+
+      // Use streaming for interactive chat messages
+      await sendMessageStreaming(messagePayload);
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -977,7 +980,19 @@ const BrandCoachV2 = (): JSX.Element => {
                 ))
               )}
 
-              {(isSending || isExtractingFromDoc) && (
+              {/* Streaming response */}
+              {isStreaming && streamingContent && (
+                <div className="flex justify-start">
+                  <Card className="bg-muted max-w-[85%]">
+                    <CardContent className="p-3">
+                      <div className="text-sm whitespace-pre-wrap">{streamingContent}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Loading indicator (non-streaming sends or document extraction) */}
+              {((isSending && !isStreaming && !streamingContent) || isExtractingFromDoc) && (
                 <div className="flex justify-start">
                   <Card className="bg-muted">
                     <CardContent className="p-3 flex items-center gap-2">

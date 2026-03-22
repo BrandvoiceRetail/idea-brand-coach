@@ -39,6 +39,22 @@ export interface IChatService {
   sendMessage(message: ChatMessageCreate): Promise<ChatResponse>;
 
   /**
+   * Send a message with streaming response via SSE.
+   *
+   * @param message - The message to send
+   * @param callbacks - Streaming event callbacks
+   */
+  sendMessageStreaming(
+    message: ChatMessageCreate,
+    callbacks: {
+      onTextDelta: (delta: string) => void;
+      onExtractedFields: (fields: Array<{ identifier: string; value: unknown; confidence: number; source: string; context?: string }>) => void;
+      onComplete: (responseId?: string) => void;
+      onError: (error: Error) => void;
+    }
+  ): Promise<void>;
+
+  /**
    * Retrieve chat conversation history.
    *
    * @param limit - Maximum number of messages to retrieve (default: 50)

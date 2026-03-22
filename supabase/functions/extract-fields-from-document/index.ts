@@ -139,7 +139,9 @@ interface ExtractedField {
 }
 
 /**
- * Search vector store for field-specific content
+ * Search vector store for field-specific content using the Responses API file_search tool.
+ * Replaces the deprecated Assistants API approach (thread → message → assistant → run → poll → read → cleanup)
+ * with a single API call.
  */
 async function searchVectorStoreForField(
   vectorStoreId: string,
@@ -153,141 +155,41 @@ async function searchVectorStoreForField(
                    If found, return ONLY the extracted value without commentary.
                    If not found or unclear, respond with exactly: NOT_FOUND`;
 
-    // Create a temporary thread with the vector store attached
-    const threadResponse = await fetch("https://api.openai.com/v1/threads", {
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${openaiKey}`,
         "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
-      },
-      body: JSON.stringify({
-        tool_resources: {
-          file_search: {
-            vector_store_ids: [vectorStoreId],
-          },
-        },
-      }),
-    });
-
-    if (!threadResponse.ok) {
-      console.error("Failed to create thread for field extraction");
-      return null;
-    }
-
-    const thread = await threadResponse.json();
-
-    // Add the extraction query as a message
-    const messageResponse = await fetch(
-      `https://api.openai.com/v1/threads/${thread.id}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${openaiKey}`,
-          "Content-Type": "application/json",
-          "OpenAI-Beta": "assistants=v2",
-        },
-        body: JSON.stringify({
-          role: "user",
-          content: query,
-        }),
-      }
-    );
-
-    if (!messageResponse.ok) {
-      return null;
-    }
-
-    // Create extraction assistant
-    const assistantResponse = await fetch("https://api.openai.com/v1/assistants", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openaiKey}`,
-        "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
         instructions: `You are a precise extraction assistant. Extract only the requested brand field value from the document.
                        Be concise and specific. Return ONLY the extracted value, not a full sentence.
                        If the information is not found, respond with exactly: NOT_FOUND`,
-        tools: [{ type: "file_search" }],
+        input: query,
+        tools: [{
+          type: "file_search",
+          vector_store_ids: [vectorStoreId],
+          max_num_results: 5,
+        }],
+        store: false,
       }),
     });
 
-    if (!assistantResponse.ok) {
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[searchVectorStoreForField] Responses API error for ${fieldLabel}:`, response.status, errorText);
       return null;
     }
 
-    const assistant = await assistantResponse.json();
+    const data = await response.json();
 
-    // Run the assistant
-    const runResponse = await fetch(
-      `https://api.openai.com/v1/threads/${thread.id}/runs`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${openaiKey}`,
-          "Content-Type": "application/json",
-          "OpenAI-Beta": "assistants=v2",
-        },
-        body: JSON.stringify({
-          assistant_id: assistant.id,
-        }),
-      }
-    );
-
-    if (!runResponse.ok) {
-      await cleanupAssistant(assistant.id, openaiKey);
-      return null;
-    }
-
-    const run = await runResponse.json();
-
-    // Poll for completion (max 20 seconds per field)
-    let attempts = 0;
-    let runStatus = run.status;
-    while (runStatus !== "completed" && runStatus !== "failed" && attempts < 20) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const statusResponse = await fetch(
-        `https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`,
-        {
-          headers: {
-            "Authorization": `Bearer ${openaiKey}`,
-            "OpenAI-Beta": "assistants=v2",
-          },
-        }
-      );
-      const statusData = await statusResponse.json();
-      runStatus = statusData.status;
-      attempts++;
-    }
-
-    // Get the response
-    const messagesResponse = await fetch(
-      `https://api.openai.com/v1/threads/${thread.id}/messages`,
-      {
-        headers: {
-          "Authorization": `Bearer ${openaiKey}`,
-          "OpenAI-Beta": "assistants=v2",
-        },
-      }
-    );
-
-    const messagesData = await messagesResponse.json();
-    const assistantMessage = messagesData.data?.find((m: any) => m.role === "assistant");
-
-    // Cleanup
-    await cleanupAssistant(assistant.id, openaiKey);
-
-    if (!assistantMessage) {
-      return null;
-    }
-
-    // Extract text content
-    const textContent = assistantMessage.content
-      ?.filter((c: any) => c.type === "text")
-      ?.map((c: any) => c.text?.value || "")
+    // Extract text from output items
+    const textContent = data.output
+      ?.filter((item: any) => item.type === "message")
+      ?.flatMap((item: any) => item.content || [])
+      ?.filter((c: any) => c.type === "output_text")
+      ?.map((c: any) => c.text || "")
       ?.join(" ")
       ?.trim();
 
@@ -299,17 +201,6 @@ async function searchVectorStoreForField(
   } catch (error) {
     console.error(`Error extracting field ${fieldLabel}:`, error);
     return null;
-  }
-}
-
-async function cleanupAssistant(assistantId: string, openaiKey: string): Promise<void> {
-  try {
-    await fetch(`https://api.openai.com/v1/assistants/${assistantId}`, {
-      method: "DELETE",
-      headers: { "Authorization": `Bearer ${openaiKey}`, "OpenAI-Beta": "assistants=v2" },
-    });
-  } catch {
-    // Ignore cleanup errors
   }
 }
 

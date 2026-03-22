@@ -171,19 +171,44 @@ export class SupabaseChatService implements IChatService {
       console.warn('Failed to check for uploaded documents:', error);
     }
 
-    const edgeFunctionBody = {
+    // Look up previous response ID for conversation chaining
+    let previousResponseId: string | undefined;
+    if (sessionId) {
+      try {
+        const { data: sessionData } = await supabase
+          .from('chat_sessions')
+          .select('openai_response_id')
+          .eq('id', sessionId)
+          .single();
+        previousResponseId = sessionData?.openai_response_id || undefined;
+        if (previousResponseId) {
+          console.log('🔗 Chaining conversation via previous_response_id:', previousResponseId);
+        }
+      } catch (error) {
+        console.warn('Failed to look up previous response ID:', error);
+      }
+    }
+
+    const edgeFunctionBody: Record<string, unknown> = {
       message: message.content,
-      chat_history: recentMessages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      })),
       chapterContext: message.chapterContext,
       competitiveInsights: this.competitiveInsightsContext,
       metadata: {
         ...message.metadata,
         hasUploadedDocuments,
       },
+      // Feature flag: use OpenAI Responses API instead of Chat Completions
+      useResponsesApi: true,
+      previousResponseId,
     };
+
+    // Only send chat_history when not chaining (first message or no previous response)
+    if (!previousResponseId) {
+      edgeFunctionBody.chat_history = recentMessages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+    }
 
     console.log('📨 Edge function request:', {
       hasUploadedDocuments,
@@ -212,7 +237,21 @@ export class SupabaseChatService implements IChatService {
       hasSources: !!responseData?.sources,
     });
 
-    // 3.5. Extract fields from structured tool call response
+    // 3.5. Save response ID for conversation chaining
+    if (sessionId && responseData.responseId) {
+      console.log('💾 Saving response ID for conversation chaining:', responseData.responseId);
+      await supabase
+        .from('chat_sessions')
+        .update({ openai_response_id: responseData.responseId })
+        .eq('id', sessionId)
+        .then(({ error: updateError }) => {
+          if (updateError) {
+            console.warn('Failed to save response ID:', updateError);
+          }
+        });
+    }
+
+    // 3.6. Extract fields from structured tool call response
     const extractedFields = responseData.extractedFields || [];
 
     if (extractedFields.length > 0) {
@@ -265,6 +304,201 @@ export class SupabaseChatService implements IChatService {
       extractedFields,
       titlePromise,
     };
+  }
+
+  /**
+   * Send a message with streaming response.
+   * Uses raw fetch() since supabase.functions.invoke() doesn't support SSE streaming.
+   */
+  async sendMessageStreaming(
+    message: ChatMessageCreate,
+    callbacks: {
+      onTextDelta: (delta: string) => void;
+      onExtractedFields: (fields: Array<{ identifier: string; value: unknown; confidence: number; source: string; context?: string }>) => void;
+      onComplete: (responseId?: string) => void;
+      onError: (error: Error) => void;
+    }
+  ): Promise<void> {
+    const userId = await this.getUserId();
+    const chatbotType = message.chatbot_type || this.chatbotType;
+    const sessionId = message.session_id || this.currentSessionId;
+
+    // Save user message to database
+    const { error: saveError } = await supabase
+      .from('chat_messages')
+      .insert({
+        user_id: userId,
+        role: message.role,
+        content: message.content,
+        chatbot_type: chatbotType,
+        session_id: sessionId,
+        chapter_id: message.chapter_id,
+        chapter_metadata: message.chapter_metadata,
+        metadata: message.metadata,
+      })
+      .select()
+      .single();
+
+    if (saveError) throw saveError;
+
+    // Auto-update session title
+    if (sessionId) {
+      await this.maybeUpdateSessionTitle(sessionId, message.content);
+    }
+
+    // Look up previous response ID for conversation chaining
+    let previousResponseId: string | undefined;
+    if (sessionId) {
+      try {
+        const { data: sessionData } = await supabase
+          .from('chat_sessions')
+          .select('openai_response_id')
+          .eq('id', sessionId)
+          .single();
+        previousResponseId = sessionData?.openai_response_id || undefined;
+      } catch {
+        // Continue without chaining
+      }
+    }
+
+    // Get auth session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No active session found');
+
+    // Check for uploaded documents
+    let hasUploadedDocuments = false;
+    try {
+      const { data: uploadedDocs } = await supabase
+        .from('uploaded_documents')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
+      hasUploadedDocuments = (uploadedDocs && uploadedDocs.length > 0) || false;
+    } catch {
+      // Continue without document check
+    }
+
+    // Build request body (same as sendMessage but with stream: true)
+    const edgeFunctionBody: Record<string, unknown> = {
+      message: message.content,
+      chapterContext: message.chapterContext,
+      competitiveInsights: this.competitiveInsightsContext,
+      metadata: {
+        ...message.metadata,
+        hasUploadedDocuments,
+      },
+      useResponsesApi: true,
+      previousResponseId,
+      stream: true,
+    };
+
+    if (!previousResponseId) {
+      const recentMessages = await this.getRecentMessages(10);
+      edgeFunctionBody.chat_history = recentMessages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+    }
+
+    // Use raw fetch for SSE streaming (supabase.functions.invoke doesn't support streaming)
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? 'https://ecdrxtbclxfpkknasmrw.supabase.co';
+    const url = `${supabaseUrl}/functions/v1/idea-framework-consultant`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '',
+      },
+      body: JSON.stringify(edgeFunctionBody),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Edge function error: ${response.status} - ${errorText}`);
+    }
+
+    // Parse SSE stream
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+    let streamedExtractedFields: Array<{ identifier: string; value: unknown; confidence: number; source: string; context?: string }> = [];
+    let streamedResponseId: string | undefined;
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6).trim();
+          if (!payload) continue;
+
+          try {
+            const event = JSON.parse(payload);
+
+            if (event.type === 'text_delta') {
+              fullText += event.delta;
+              callbacks.onTextDelta(event.delta);
+            } else if (event.type === 'extracted_fields') {
+              streamedExtractedFields = event.fields || [];
+              callbacks.onExtractedFields(streamedExtractedFields);
+            } else if (event.type === 'done') {
+              streamedResponseId = event.responseId;
+            } else if (event.type === 'error') {
+              callbacks.onError(new Error(event.message || 'Stream error'));
+              return;
+            }
+          } catch {
+            // Skip unparseable events
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    // Save assistant response to database
+    const { error: assistantError } = await supabase
+      .from('chat_messages')
+      .insert({
+        user_id: userId,
+        role: 'assistant',
+        content: fullText,
+        chatbot_type: chatbotType,
+        session_id: sessionId,
+        chapter_id: message.chapter_id,
+        chapter_metadata: message.chapter_metadata,
+        metadata: {
+          extractedFields: streamedExtractedFields,
+        },
+      });
+
+    if (assistantError) {
+      console.warn('Failed to save streamed assistant message:', assistantError);
+    }
+
+    // Save response ID for conversation chaining
+    if (sessionId && streamedResponseId) {
+      await supabase
+        .from('chat_sessions')
+        .update({ openai_response_id: streamedResponseId })
+        .eq('id', sessionId);
+    }
+
+    // Generate title for new sessions
+    if (sessionId) {
+      this.generateSessionTitle(sessionId, message.content, fullText).catch(() => {});
+    }
+
+    callbacks.onComplete(streamedResponseId);
   }
 
   async getChatHistory(limit: number = 50): Promise<ChatMessage[]> {
@@ -442,6 +676,10 @@ export class SupabaseChatService implements IChatService {
 
     if (update.chapter_metadata !== undefined) {
       updateData.chapter_metadata = update.chapter_metadata;
+    }
+
+    if (update.openai_response_id !== undefined) {
+      updateData.openai_response_id = update.openai_response_id;
     }
 
     const { data, error } = await supabase
@@ -653,6 +891,7 @@ export class SupabaseChatService implements IChatService {
       page_context: item.page_context as string | undefined,
       chapter_id: item.chapter_id as any,
       chapter_metadata: item.chapter_metadata as any,
+      openai_response_id: item.openai_response_id as string | undefined,
       created_at: item.created_at as string,
       updated_at: item.updated_at as string,
     };

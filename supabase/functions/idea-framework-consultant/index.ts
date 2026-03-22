@@ -12,57 +12,10 @@ const corsHeaders = {
 };
 
 /**
- * Search OpenAI vector store for relevant document chunks
- * Uses the Assistants API file_search tool
+ * Search OpenAI vector store using the Responses API file_search tool.
+ * Replaces the deprecated Assistants API approach (thread → message → assistant → run → poll → read → cleanup)
+ * with a single API call.
  */
-/**
- * Direct file search using the OpenAI Files API
- * Simpler approach that doesn't require creating an assistant
- */
-async function directVectorStoreSearch(
-  vectorStoreId: string,
-  query: string
-): Promise<string> {
-  try {
-    console.log(`[directVectorStoreSearch] Searching vector store ${vectorStoreId}`);
-
-    // First, list files in the vector store to confirm they exist
-    const filesResponse = await fetch(
-      `https://api.openai.com/v1/vector_stores/${vectorStoreId}/files`,
-      {
-        headers: {
-          "Authorization": `Bearer ${openAIApiKey}`,
-          "OpenAI-Beta": "assistants=v2",
-        },
-      }
-    );
-
-    let filesData: any = null;
-    if (filesResponse.ok) {
-      filesData = await filesResponse.json();
-      console.log(`[directVectorStoreSearch] Vector store contains ${filesData.data?.length || 0} files`);
-      if (filesData.data?.length > 0) {
-        console.log("[directVectorStoreSearch] Files in store:", filesData.data.map((f: any) => ({
-          id: f.id,
-          status: f.status
-        })));
-      }
-    }
-
-    // If no files, return early
-    if (!filesData || !filesData.data || filesData.data.length === 0) {
-      console.log("[directVectorStoreSearch] No files found in vector store");
-      return "";
-    }
-
-    // Continue with the existing search logic
-    return await searchVectorStore(vectorStoreId, query);
-  } catch (error) {
-    console.error("[directVectorStoreSearch] Error:", error);
-    return "";
-  }
-}
-
 async function searchVectorStore(
   vectorStoreId: string,
   query: string
@@ -70,183 +23,50 @@ async function searchVectorStore(
   try {
     console.log(`[searchVectorStore] Searching vector store ${vectorStoreId} for: "${query.substring(0, 50)}..."`);
 
-    // Create a temporary thread with the vector store attached
-    const threadResponse = await fetch("https://api.openai.com/v1/threads", {
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${openAIApiKey}`,
         "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
-      },
-      body: JSON.stringify({
-        tool_resources: {
-          file_search: {
-            vector_store_ids: [vectorStoreId],
-          },
-        },
-      }),
-    });
-
-    if (!threadResponse.ok) {
-      const error = await threadResponse.text();
-      console.error("[searchVectorStore] Failed to create thread:", error);
-      return "";
-    }
-
-    const thread = await threadResponse.json();
-    console.log(`[searchVectorStore] Created thread: ${thread.id}`);
-
-    // Add the search query as a message
-    const messageResponse = await fetch(
-      `https://api.openai.com/v1/threads/${thread.id}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${openAIApiKey}`,
-          "Content-Type": "application/json",
-          "OpenAI-Beta": "assistants=v2",
-        },
-        body: JSON.stringify({
-          role: "user",
-          content: `Search for information relevant to: ${query}`,
-        }),
-      }
-    );
-
-    if (!messageResponse.ok) {
-      console.error("[searchVectorStore] Failed to add message");
-      return "";
-    }
-
-    // Create a simple assistant to run file_search
-    const assistantResponse = await fetch("https://api.openai.com/v1/assistants", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openAIApiKey}`,
-        "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
         instructions: "Extract and return only the relevant text chunks from the user's documents. Return the raw content without commentary.",
-        tools: [{ type: "file_search" }],
+        input: `Search for information relevant to: ${query}`,
+        tools: [{
+          type: "file_search",
+          vector_store_ids: [vectorStoreId],
+          max_num_results: 5,
+        }],
+        store: false,
       }),
     });
 
-    if (!assistantResponse.ok) {
-      console.error("[searchVectorStore] Failed to create assistant");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[searchVectorStore] Responses API error:", response.status, errorText);
       return "";
     }
 
-    const assistant = await assistantResponse.json();
-    console.log(`[searchVectorStore] Created temp assistant: ${assistant.id}`);
+    const data = await response.json();
 
-    // Run the assistant
-    const runResponse = await fetch(
-      `https://api.openai.com/v1/threads/${thread.id}/runs`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${openAIApiKey}`,
-          "Content-Type": "application/json",
-          "OpenAI-Beta": "assistants=v2",
-        },
-        body: JSON.stringify({
-          assistant_id: assistant.id,
-        }),
-      }
-    );
-
-    if (!runResponse.ok) {
-      console.error("[searchVectorStore] Failed to create run");
-      // Cleanup
-      await fetch(`https://api.openai.com/v1/assistants/${assistant.id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${openAIApiKey}`, "OpenAI-Beta": "assistants=v2" },
-      });
-      return "";
-    }
-
-    const run = await runResponse.json();
-
-    // Poll for completion (max 30 seconds)
-    let attempts = 0;
-    let runStatus = run.status;
-    while (runStatus !== "completed" && runStatus !== "failed" && attempts < 30) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const statusResponse = await fetch(
-        `https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`,
-        {
-          headers: {
-            "Authorization": `Bearer ${openAIApiKey}`,
-            "OpenAI-Beta": "assistants=v2",
-          },
-        }
-      );
-      const statusData = await statusResponse.json();
-      runStatus = statusData.status;
-      attempts++;
-    }
-
-    if (runStatus !== "completed") {
-      console.error(`[searchVectorStore] Run did not complete: ${runStatus}`);
-      await fetch(`https://api.openai.com/v1/assistants/${assistant.id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${openAIApiKey}`, "OpenAI-Beta": "assistants=v2" },
-      });
-      return "";
-    }
-
-    // Get messages from the thread
-    const messagesResponse = await fetch(
-      `https://api.openai.com/v1/threads/${thread.id}/messages`,
-      {
-        headers: {
-          "Authorization": `Bearer ${openAIApiKey}`,
-          "OpenAI-Beta": "assistants=v2",
-        },
-      }
-    );
-
-    const messagesData = await messagesResponse.json();
-    console.log(`[searchVectorStore] Found ${messagesData.data?.length || 0} messages in thread`);
-
-    const assistantMessage = messagesData.data?.find((m: any) => m.role === "assistant");
-
-    // Cleanup: delete the temporary assistant
-    await fetch(`https://api.openai.com/v1/assistants/${assistant.id}`, {
-      method: "DELETE",
-      headers: { "Authorization": `Bearer ${openAIApiKey}`, "OpenAI-Beta": "assistants=v2" },
-    });
-
-    if (!assistantMessage) {
-      console.log("[searchVectorStore] No assistant response found");
-      console.log("[searchVectorStore] Thread messages:", JSON.stringify(messagesData.data?.map((m: any) => ({
-        role: m.role,
-        contentTypes: m.content?.map((c: any) => c.type)
-      }))));
-      return "";
-    }
-
-    // Log the assistant message structure for debugging
-    console.log("[searchVectorStore] Assistant message content types:",
-      assistantMessage.content?.map((c: any) => c.type));
-
-    // Extract text content
-    const textContent = assistantMessage.content
-      ?.filter((c: any) => c.type === "text")
-      ?.map((c: any) => c.text?.value || "")
+    // Extract text from output items
+    const textContent = data.output
+      ?.filter((item: any) => item.type === "message")
+      ?.flatMap((item: any) => item.content || [])
+      ?.filter((c: any) => c.type === "output_text")
+      ?.map((c: any) => c.text || "")
       ?.join("\n");
 
     if (!textContent || textContent.trim().length === 0) {
-      console.log("[searchVectorStore] Warning: Assistant returned empty text content");
-      console.log("[searchVectorStore] Full assistant message:", JSON.stringify(assistantMessage.content));
-    } else {
-      console.log(`[searchVectorStore] Retrieved ${textContent.length} chars from vector store`);
-      console.log("[searchVectorStore] Content preview:", textContent.substring(0, 200) + "...");
+      console.log("[searchVectorStore] No content returned from file_search");
+      return "";
     }
 
-    return textContent || "";
+    console.log(`[searchVectorStore] Retrieved ${textContent.length} chars from vector store`);
+    console.log("[searchVectorStore] Content preview:", textContent.substring(0, 200) + "...");
+
+    return textContent;
   } catch (error) {
     console.error("[searchVectorStore] Error:", error);
     return "";
@@ -285,8 +105,7 @@ async function retrieveVectorStoreContext(
     console.log(`[retrieveVectorStoreContext] Found core store: ${stores.core_store_id}`);
 
     // Search the core store (where uploaded documents go)
-    // Use the new direct search that includes file validation
-    const content = await directVectorStoreSearch(stores.core_store_id, query);
+    const content = await searchVectorStore(stores.core_store_id, query);
 
     if (!content) {
       console.log("[retrieveVectorStoreContext] No content found in vector store");
@@ -515,47 +334,75 @@ function getAllFieldsList(): string {
 }
 
 /**
- * Build a summary of the current field state to give Trevor awareness of
- * what's already captured vs. what still needs to be collected.
+ * Build a tiered field state context that sends only relevant information.
+ *
+ * Tier 1 (always): Compact summary — "15 of 35 fields captured."
+ * Tier 2 (current chapter): Full field labels + value previews for focused chapter
+ * Other chapters get only filled/empty counts, not full listings.
+ *
+ * This reduces per-turn context from ~2000 tokens (all 35 fields) to ~300 tokens.
+ */
+function buildTieredFieldContext(
+  currentFieldValues: Record<string, unknown>,
+  currentChapterKey?: string
+): string {
+  // Count totals across all chapters
+  let totalFields = 0;
+  let totalFilled = 0;
+
+  // Per-chapter summaries
+  const chapterSummaries: string[] = [];
+
+  for (const [chapterKey, chapter] of Object.entries(ALL_FIELDS_MAP)) {
+    const chapterFilled: string[] = [];
+    const chapterEmpty: string[] = [];
+
+    for (const field of chapter.fields) {
+      totalFields++;
+      const value = currentFieldValues[field.id];
+      const hasValue = value !== undefined && value !== null && String(value).trim() !== '' && value !== '[]';
+      if (hasValue) {
+        totalFilled++;
+        const displayValue = Array.isArray(value)
+          ? (value as string[]).slice(0, 3).join(', ') + (value.length > 3 ? '...' : '')
+          : String(value).substring(0, 80) + (String(value).length > 80 ? '...' : '');
+        chapterFilled.push(`  ✓ ${field.label}: ${displayValue}`);
+      } else {
+        chapterEmpty.push(`  ○ ${field.label}`);
+      }
+    }
+
+    // Tier 2: Full details for current chapter
+    if (chapterKey === currentChapterKey) {
+      chapterSummaries.push(`\n${chapter.title} (CURRENT FOCUS — ${chapterFilled.length}/${chapter.fields.length} filled):`);
+      if (chapterFilled.length > 0) chapterSummaries.push(...chapterFilled);
+      if (chapterEmpty.length > 0) chapterSummaries.push(...chapterEmpty);
+    } else {
+      // Other chapters: one-line summary only
+      chapterSummaries.push(`${chapter.title}: ${chapterFilled.length}/${chapter.fields.length} filled`);
+    }
+  }
+
+  // Tier 1: Compact summary
+  const lines: string[] = [
+    `BRAND PROFILE: ${totalFilled} of ${totalFields} fields captured.`,
+    ...chapterSummaries,
+    '\nGuide conversation toward empty fields in the current chapter. Don\'t re-ask for captured information.',
+  ];
+
+  return lines.join('\n');
+}
+
+/**
+ * @deprecated Use buildTieredFieldContext instead
  */
 function buildFieldStateContext(
   currentFieldValues: Record<string, unknown>,
   fieldLabels: Record<string, string>,
   fieldsToCapture: string[]
 ): string {
-  const filled: string[] = [];
-  const empty: string[] = [];
-
-  for (const fieldId of fieldsToCapture) {
-    const value = currentFieldValues[fieldId];
-    const label = fieldLabels[fieldId] || fieldId;
-    const hasValue = value !== undefined && value !== null && String(value).trim() !== '' && value !== '[]';
-    if (hasValue) {
-      const displayValue = Array.isArray(value)
-        ? (value as string[]).slice(0, 3).join(', ') + (value.length > 3 ? '...' : '')
-        : String(value).substring(0, 80) + (String(value).length > 80 ? '...' : '');
-      filled.push(`✓ ${label}: ${displayValue}`);
-    } else {
-      empty.push(`○ ${label}`);
-    }
-  }
-
-  const lines: string[] = ['CURRENT BRAND PROFILE STATE:'];
-  lines.push(`${filled.length} of ${fieldsToCapture.length} fields captured.\n`);
-
-  if (filled.length > 0) {
-    lines.push('ALREADY CAPTURED:');
-    lines.push(...filled);
-  }
-
-  if (empty.length > 0) {
-    lines.push('\nSTILL NEEDED:');
-    lines.push(...empty);
-  }
-
-  lines.push('\nUse this to guide the conversation toward missing fields and avoid re-asking for information already captured.');
-
-  return lines.join('\n');
+  // Delegate to tiered context with no chapter focus (backward compat)
+  return buildTieredFieldContext(currentFieldValues);
 }
 
 /**
@@ -566,19 +413,41 @@ function buildFieldStateContext(
  * Build the OpenAI tool definition for structured field extraction.
  * Uses tool calling instead of prompt-based delimiters for reliable extraction.
  */
-function buildExtractionTool(extractionFields?: string[]): object {
-  // Build a description that lists valid field IDs so the model knows what to extract
-  const validFields = extractionFields && extractionFields.length > 0
-    ? extractionFields
-    : Object.values(ALL_FIELDS_MAP).flatMap(ch => ch.fields.map(f => f.id));
+function buildExtractionTool(extractionFields?: string[], scopeChapterKey?: string): object {
+  // When a chapter is focused, only list that chapter's fields in detail.
+  // This reduces the tool description from ~35 field descriptions (~1200 tokens)
+  // to ~3-6 field descriptions (~200 tokens) + a one-line fallback note.
+  let fieldDescriptions: string;
+  let allFieldIds: string[];
 
-  const fieldDescriptions = validFields.map(fieldId => {
-    for (const chapter of Object.values(ALL_FIELDS_MAP)) {
-      const field = chapter.fields.find(f => f.id === fieldId);
-      if (field) return `  - ${field.id} (${field.type}): ${field.label} — ${field.helpText}`;
-    }
-    return `  - ${fieldId}`;
-  }).join('\n');
+  if (scopeChapterKey && ALL_FIELDS_MAP[scopeChapterKey]) {
+    const focusedChapter = ALL_FIELDS_MAP[scopeChapterKey];
+    const focusedDescriptions = focusedChapter.fields
+      .map(f => `  - ${f.id} (${f.type}): ${f.label} — ${f.helpText}`)
+      .join('\n');
+
+    // Collect all other field IDs for the fallback note
+    const otherFieldIds = Object.entries(ALL_FIELDS_MAP)
+      .filter(([key]) => key !== scopeChapterKey)
+      .flatMap(([, ch]) => ch.fields.map(f => f.id));
+
+    fieldDescriptions = `Current chapter — ${focusedChapter.title}:\n${focusedDescriptions}\n\nOther field IDs (extract if mentioned): ${otherFieldIds.join(', ')}`;
+    allFieldIds = [...focusedChapter.fields.map(f => f.id), ...otherFieldIds];
+  } else {
+    // No chapter focus: list all fields (used for document extraction / comprehensive mode)
+    const validFields = extractionFields && extractionFields.length > 0
+      ? extractionFields
+      : Object.values(ALL_FIELDS_MAP).flatMap(ch => ch.fields.map(f => f.id));
+
+    fieldDescriptions = validFields.map(fieldId => {
+      for (const chapter of Object.values(ALL_FIELDS_MAP)) {
+        const field = chapter.fields.find(f => f.id === fieldId);
+        if (field) return `  - ${field.id} (${field.type}): ${field.label} — ${field.helpText}`;
+      }
+      return `  - ${fieldId}`;
+    }).join('\n');
+    allFieldIds = validFields;
+  }
 
   return {
     type: "function",
@@ -1213,7 +1082,7 @@ serve(async (req) => {
       }
     }
 
-    const { message, context, chat_history, metadata, chapterContext, isFirstMessage } = await req.json();
+    const { message, context, chat_history, metadata, chapterContext, isFirstMessage, useResponsesApi, previousResponseId, stream: streamRequested } = await req.json();
     const messageImages = metadata?.images || [];
     const userDocuments = metadata?.userDocuments || [];
     const hasUploadedDocuments = userDocuments.length > 0 || metadata?.hasUploadedDocuments === true;
@@ -1325,35 +1194,35 @@ serve(async (req) => {
       : generateConversationalTrevorPrompt(extractionFields, currentFieldDetails, isFirst, hasDocuments);
 
     // Build user prompt with all available context
+    // Build context parts ordered for prompt caching optimization:
+    // Stable/rarely-changing context first → dynamic per-turn context last.
+    // OpenAI caches matching prefixes (1024+ tokens) at 50% discount + 80% latency reduction.
     let userPrompt = message;
     const contextParts: string[] = [];
 
-    // Add structured knowledge base context
+    // 1. Knowledge base context (changes rarely — good cache candidate)
     if (userKnowledgeContext) {
       contextParts.push(userKnowledgeContext);
     }
 
-    // Add semantic search context (relevant document chunks from local embeddings)
-    if (semanticContext) {
-      contextParts.push(semanticContext);
-    }
-
-    // Add uploaded documents context from OpenAI vector store
-    if (vectorStoreContext) {
-      contextParts.push(vectorStoreContext);
-    }
-
-    // Add manually provided context
+    // 2. Manually provided context (semi-static)
     if (context) {
       contextParts.push(`ADDITIONAL CONTEXT:\n${context}`);
     }
 
-    // Add field state context so Trevor knows what's filled vs. missing
-    if (chapterContext?.currentFieldValues && chapterContext?.fieldsToCapture?.length > 0) {
-      const fieldStateContext = buildFieldStateContext(
+    // 3. Retrieved document context (changes per-query)
+    if (semanticContext) {
+      contextParts.push(semanticContext);
+    }
+    if (vectorStoreContext) {
+      contextParts.push(vectorStoreContext);
+    }
+
+    // 4. Field state context (changes per-turn — last before user message)
+    if (chapterContext?.currentFieldValues) {
+      const fieldStateContext = buildTieredFieldContext(
         chapterContext.currentFieldValues,
-        chapterContext.fieldLabels || {},
-        chapterContext.fieldsToCapture
+        chapterContext.currentChapterKey
       );
       contextParts.push(fieldStateContext);
     }
@@ -1441,75 +1310,316 @@ serve(async (req) => {
       const conversationalTokens = hasDocuments ? 2500 : (hasActiveExtraction ? 1500 : 800);
       const maxTokens = comprehensiveModeForTokens ? 4000 : conversationalTokens;
 
-      // Build request body with optional tool calling for field extraction
-      const requestBody: Record<string, unknown> = {
-        model: 'gpt-4.1-2025-04-14',
-        messages,
-        temperature: 0.7,
-        max_tokens: maxTokens
-      };
+      // Build extraction tool
+      const scopeChapterKey = chapterContext?.currentChapterKey;
+      const extractionTool = hasActiveExtraction
+        ? buildExtractionTool(extractionFields, scopeChapterKey)
+        : null;
 
-      // Add extraction tool when extraction is active
-      if (hasActiveExtraction) {
-        const extractionTool = buildExtractionTool(extractionFields);
-        requestBody.tools = [extractionTool];
-        requestBody.tool_choice = "auto";
-        requestBody.parallel_tool_calls = true;
-      }
-
-      console.log(`[Performance] Starting OpenAI API call (max_tokens: ${maxTokens}, tools: ${hasActiveExtraction ? 'extract_brand_fields' : 'none'})`);
+      console.log(`[Performance] Starting OpenAI API call (max_tokens: ${maxTokens}, tools: ${hasActiveExtraction ? 'extract_brand_fields' : 'none'}, api: ${useResponsesApi ? 'responses' : 'completions'})`);
       const openAIStartTime = Date.now();
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      console.log('OpenAI API response status:', response.status);
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('OpenAI API error response:', errorBody);
-        throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`);
-      }
-
-      const data = await response.json();
-      const openAITime = Date.now() - openAIStartTime;
-      console.log(`[Performance] OpenAI API response received in ${openAITime}ms`);
-
-      // Extract conversational response
-      let consultantResponse = data.choices[0].message.content || '';
-      const finishReason = data.choices[0].finish_reason;
-
-      if (finishReason === 'length') {
-        console.warn('Response truncated due to token limit');
-        consultantResponse += '\n[Response may be incomplete]';
-      } else {
-        console.log(`Response completed normally (finish_reason: ${finishReason})`);
-      }
-
-      // Parse extracted fields from tool calls
-      const toolCalls = data.choices[0].message.tool_calls || [];
+      let consultantResponse: string;
       let extractedFields: Array<{ identifier: string; value: unknown; confidence: number; source: string; context?: string }> = [];
+      let responseId: string | undefined;
 
-      for (const toolCall of toolCalls) {
-        if (toolCall.function?.name === 'extract_brand_fields') {
-          try {
-            const args = JSON.parse(toolCall.function.arguments);
-            extractedFields = args.fields || [];
-            console.log(`[Field Extraction] Tool call extracted ${extractedFields.length} fields:`, extractedFields.map((f: { identifier: string }) => f.identifier).join(', '));
-          } catch (e) {
-            console.error('[Field Extraction] Failed to parse tool call arguments:', e);
+      if (useResponsesApi) {
+        // ─── Responses API path ───
+        // Transform tool format: remove nested `function` wrapper, add `strict: true`
+        const responsesTools: object[] = [];
+        if (extractionTool) {
+          const toolDef = (extractionTool as any).function;
+          responsesTools.push({
+            type: "function",
+            name: toolDef.name,
+            description: toolDef.description,
+            parameters: toolDef.parameters,
+            strict: false, // value field lacks strict typing (string | array)
+          });
+        }
+
+        // Build input array
+        // When chaining via previous_response_id, OpenAI maintains history server-side — skip chat_history
+        const inputItems: Array<{ role: string; content: unknown }> = [];
+        if (!previousResponseId && chat_history && Array.isArray(chat_history)) {
+          const historyLimit = useComprehensiveMode ? 10 : 5;
+          const recentHistory = chat_history.slice(-historyLimit);
+          inputItems.push(...recentHistory.map((msg: any) => ({
+            role: msg.role,
+            content: msg.content
+          })));
+        }
+        // Current user message
+        if (messageImages.length > 0) {
+          const contentParts: any[] = [
+            { type: 'input_text', text: userPrompt }
+          ];
+          messageImages.forEach((img: any) => {
+            contentParts.push({
+              type: 'input_image',
+              image_url: img.url,
+            });
+          });
+          inputItems.push({ role: 'user', content: contentParts });
+        } else {
+          inputItems.push({ role: 'user', content: userPrompt });
+        }
+
+        const responsesBody: Record<string, unknown> = {
+          model: 'gpt-4.1-2025-04-14',
+          instructions: systemPrompt,
+          input: inputItems,
+          temperature: 0.7,
+          max_output_tokens: maxTokens,
+          store: true,
+        };
+
+        // Chain conversation turns via previous_response_id (server-managed history)
+        if (previousResponseId) {
+          responsesBody.previous_response_id = previousResponseId;
+          console.log(`[Conversations] Chaining to previous response: ${previousResponseId}`);
+        }
+
+        if (responsesTools.length > 0) {
+          responsesBody.tools = responsesTools;
+          responsesBody.tool_choice = "auto";
+          responsesBody.parallel_tool_calls = true;
+        }
+
+        // ─── Streaming SSE path ───
+        if (streamRequested) {
+          responsesBody.stream = true;
+
+          const openAIResponse = await fetch('https://api.openai.com/v1/responses', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(responsesBody)
+          });
+
+          if (!openAIResponse.ok) {
+            const errorBody = await openAIResponse.text();
+            console.error('OpenAI Responses API streaming error:', errorBody);
+            throw new Error(`OpenAI Responses API error: ${openAIResponse.status} - ${errorBody}`);
+          }
+
+          // Stream SSE events from OpenAI → client
+          const encoder = new TextEncoder();
+          const decoder = new TextDecoder();
+          let functionCallArgs = '';
+          let functionCallName = '';
+          let streamedResponseId = '';
+
+          const stream = new ReadableStream({
+            async start(controller) {
+              const reader = openAIResponse.body!.getReader();
+              let buffer = '';
+
+              try {
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+
+                  buffer += decoder.decode(value, { stream: true });
+                  const lines = buffer.split('\n');
+                  buffer = lines.pop() || '';
+
+                  for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    const payload = line.slice(6).trim();
+                    if (!payload || payload === '[DONE]') continue;
+
+                    try {
+                      const event = JSON.parse(payload);
+
+                      // Capture response ID
+                      if (event.type === 'response.created' && event.response?.id) {
+                        streamedResponseId = event.response.id;
+                      }
+
+                      // Text delta → forward to client
+                      if (event.type === 'response.output_text.delta') {
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_delta', delta: event.delta })}\n\n`));
+                      }
+
+                      // Function call arguments accumulating
+                      if (event.type === 'response.function_call_arguments.delta') {
+                        functionCallArgs += event.delta || '';
+                      }
+                      if (event.type === 'response.output_item.added' && event.item?.type === 'function_call') {
+                        functionCallName = event.item.name || '';
+                        functionCallArgs = '';
+                      }
+
+                      // Function call complete → parse and send extracted fields
+                      if (event.type === 'response.function_call_arguments.done') {
+                        if (functionCallName === 'extract_brand_fields') {
+                          try {
+                            const args = JSON.parse(functionCallArgs);
+                            const fields = args.fields || [];
+                            console.log(`[Field Extraction] Streamed extraction: ${fields.length} fields`);
+                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'extracted_fields', fields })}\n\n`));
+                          } catch (e) {
+                            console.error('[Field Extraction] Failed to parse streamed function call:', e);
+                          }
+                        }
+                        functionCallArgs = '';
+                        functionCallName = '';
+                      }
+
+                      // Response completed → send done signal
+                      if (event.type === 'response.completed') {
+                        const usage = event.response?.usage;
+                        if (usage) {
+                          const cached = usage.prompt_tokens_details?.cached_tokens || 0;
+                          console.log(`[Usage] Input: ${usage.input_tokens} (cached: ${cached}), Output: ${usage.output_tokens}`);
+                        }
+                        const totalTime = Date.now() - startTime;
+                        console.log(`[Performance] Streaming complete in ${totalTime}ms`);
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', responseId: streamedResponseId })}\n\n`));
+                      }
+                    } catch {
+                      // Skip unparseable lines
+                    }
+                  }
+                }
+              } catch (err) {
+                console.error('[Streaming] Error reading OpenAI stream:', err);
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Stream interrupted' })}\n\n`));
+              } finally {
+                controller.close();
+              }
+            }
+          });
+
+          return new Response(stream, {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+            }
+          });
+        }
+
+        // ─── Non-streaming Responses API path ───
+        const response = await fetch('https://api.openai.com/v1/responses', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(responsesBody)
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          console.error('OpenAI Responses API error:', errorBody);
+          throw new Error(`OpenAI Responses API error: ${response.status} - ${errorBody}`);
+        }
+
+        const data = await response.json();
+        const openAITime = Date.now() - openAIStartTime;
+        console.log(`[Performance] Responses API response received in ${openAITime}ms`);
+
+        // Capture response ID for conversation chaining
+        responseId = data.id;
+        if (responseId) {
+          console.log(`[Conversations] Response ID: ${responseId}`);
+        }
+
+        // Parse Responses API output
+        consultantResponse = '';
+        for (const item of (data.output || [])) {
+          if (item.type === 'message' && item.role === 'assistant') {
+            for (const part of (item.content || [])) {
+              if (part.type === 'output_text') {
+                consultantResponse += part.text;
+              }
+            }
+          } else if (item.type === 'function_call' && item.name === 'extract_brand_fields') {
+            try {
+              const args = JSON.parse(item.arguments);
+              extractedFields = args.fields || [];
+              console.log(`[Field Extraction] Responses API extracted ${extractedFields.length} fields:`, extractedFields.map((f: { identifier: string }) => f.identifier).join(', '));
+            } catch (e) {
+              console.error('[Field Extraction] Failed to parse function call arguments:', e);
+            }
           }
         }
-      }
 
-      if (toolCalls.length === 0 && hasActiveExtraction) {
-        console.log('[Field Extraction] No tool call made — model did not detect extractable information');
+        // Log usage with cache info
+        if (data.usage) {
+          const cached = data.usage.prompt_tokens_details?.cached_tokens || 0;
+          console.log(`[Usage] Input: ${data.usage.input_tokens} (cached: ${cached}), Output: ${data.usage.output_tokens}`);
+        }
+
+        if (data.status === 'incomplete') {
+          console.warn('Response incomplete');
+          consultantResponse += '\n[Response may be incomplete]';
+        }
+      } else {
+        // ─── Chat Completions API path (legacy) ───
+        const requestBody: Record<string, unknown> = {
+          model: 'gpt-4.1-2025-04-14',
+          messages,
+          temperature: 0.7,
+          max_tokens: maxTokens
+        };
+
+        if (extractionTool) {
+          requestBody.tools = [extractionTool];
+          requestBody.tool_choice = "auto";
+          requestBody.parallel_tool_calls = true;
+        }
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          console.error('OpenAI API error response:', errorBody);
+          throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`);
+        }
+
+        const data = await response.json();
+        const openAITime = Date.now() - openAIStartTime;
+        console.log(`[Performance] OpenAI API response received in ${openAITime}ms`);
+
+        consultantResponse = data.choices[0].message.content || '';
+        const finishReason = data.choices[0].finish_reason;
+
+        if (finishReason === 'length') {
+          console.warn('Response truncated due to token limit');
+          consultantResponse += '\n[Response may be incomplete]';
+        } else {
+          console.log(`Response completed normally (finish_reason: ${finishReason})`);
+        }
+
+        const toolCalls = data.choices[0].message.tool_calls || [];
+        for (const toolCall of toolCalls) {
+          if (toolCall.function?.name === 'extract_brand_fields') {
+            try {
+              const args = JSON.parse(toolCall.function.arguments);
+              extractedFields = args.fields || [];
+              console.log(`[Field Extraction] Tool call extracted ${extractedFields.length} fields:`, extractedFields.map((f: { identifier: string }) => f.identifier).join(', '));
+            } catch (e) {
+              console.error('[Field Extraction] Failed to parse tool call arguments:', e);
+            }
+          }
+        }
+
+        if (toolCalls.length === 0 && hasActiveExtraction) {
+          console.log('[Field Extraction] No tool call made — model did not detect extractable information');
+        }
       }
 
       console.log('IDEA Framework consultation completed successfully');
@@ -1531,7 +1641,8 @@ serve(async (req) => {
         response: consultantResponse,
         extractedFields,
         suggestions,
-        sources
+        sources,
+        responseId,
       }), {
         headers: {
           ...corsHeaders,

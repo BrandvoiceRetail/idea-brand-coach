@@ -171,6 +171,9 @@ export interface ChatSession {
   /** Optional chapter metadata for tracking book progress */
   chapter_metadata?: ChapterMetadata;
 
+  /** Last OpenAI Responses API response ID for conversation chaining */
+  openai_response_id?: string;
+
   /** ISO 8601 timestamp when session was created */
   created_at: string;
 
@@ -219,4 +222,7 @@ export interface ChatSessionUpdate {
 
   /** Updated chapter metadata for tracking book progress */
   chapter_metadata?: ChapterMetadata;
+
+  /** Updated OpenAI Responses API response ID for conversation chaining */
+  openai_response_id?: string;
 }

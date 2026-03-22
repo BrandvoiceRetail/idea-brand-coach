@@ -569,6 +569,42 @@ How to use this document as a living reference. What should be reviewed quarterl
 ];
 
 // ============================================================================
+// RETRY & DELAY UTILITIES
+// ============================================================================
+
+const delay = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
+
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries: number = 3,
+  label: string = 'fetch'
+): Promise<Response> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options);
+
+    if (response.ok) return response;
+
+    // Rate limited (429) or server error (5xx) — retry with backoff
+    if ((response.status === 429 || response.status >= 500) && attempt < maxRetries) {
+      const retryAfter = response.headers.get('retry-after');
+      const backoffMs = retryAfter
+        ? parseInt(retryAfter, 10) * 1000
+        : Math.min(2000 * Math.pow(2, attempt), 30000); // 2s, 4s, 8s...
+      console.warn(`[${label}] ${response.status} on attempt ${attempt + 1}, retrying in ${backoffMs}ms...`);
+      await delay(backoffMs);
+      continue;
+    }
+
+    // Non-retryable error — return as-is
+    return response;
+  }
+
+  // Should not reach here, but satisfy TypeScript
+  throw new Error(`[${label}] All ${maxRetries + 1} attempts failed`);
+}
+
+// ============================================================================
 // SKILLS VECTOR STORE SEARCH
 // Uses the direct OpenAI vector store search endpoint
 // ============================================================================
@@ -586,7 +622,7 @@ async function searchSkillsVectorStore(
     const allResults: Array<{ content: string; score: number }> = [];
 
     for (const query of queries) {
-      const response = await fetch(
+      const response = await fetchWithRetry(
         `https://api.openai.com/v1/vector_stores/${skillsVectorStoreId}/search`,
         {
           method: 'POST',
@@ -599,7 +635,9 @@ async function searchSkillsVectorStore(
             query,
             max_num_results: maxResults,
           }),
-        }
+        },
+        2,
+        'searchSkills'
       );
 
       if (!response.ok) {
@@ -902,23 +940,28 @@ ${previousContext ? `## Context from Previous Sections\n${previousContext}` : ''
 
 Generate the complete section now.`;
 
-  // 4. Call GPT-4o
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
+  // 4. Call GPT-4o with retry
+  const response = await fetchWithRetry(
+    'https://api.openai.com/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 2500,
+      }),
     },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 2500,
-    }),
-  });
+    3,
+    `generateSection:${section.id}`
+  );
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -942,7 +985,7 @@ async function runCoherencePass(
 ): Promise<string> {
   console.log('[coherencePass] Running final coherence pass...');
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${openAIApiKey}`,
@@ -976,7 +1019,7 @@ Rules:
       temperature: 0.3,
       max_tokens: 16000,
     }),
-  });
+  }, 3, 'coherencePass');
 
   if (!response.ok) {
     console.error('[coherencePass] Failed, returning unedited document');
@@ -1079,9 +1122,15 @@ serve(async (req) => {
     // Process batches in order
     const sortedBatches = [...sectionsByBatch.keys()].sort((a, b) => a - b);
 
+    let batchIndex = 0;
     for (const batchNum of sortedBatches) {
       const batchSections = sectionsByBatch.get(batchNum)!;
       console.log(`[v2] Processing batch ${batchNum}: ${batchSections.map(s => s.id).join(', ')}`);
+
+      // Stagger batches to avoid rate limiting (skip delay for the first batch)
+      if (batchIndex > 0) {
+        await delay(2000);
+      }
 
       // Generate sections in this batch in parallel
       const results = await Promise.all(
@@ -1105,6 +1154,8 @@ serve(async (req) => {
       for (const result of results) {
         generatedSections[result.id] = result.content;
       }
+
+      batchIndex++;
     }
 
     // ========================================================================
