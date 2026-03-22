@@ -193,11 +193,13 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
       setUploadProgress(50);
 
       // Save document metadata to database
+      // Only pass avatar_id if it's a valid UUID (local avatar IDs use a different format)
+      const isValidUuid = currentAvatarId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentAvatarId);
       const { data: docData, error: docError } = await supabase
         .from('uploaded_documents')
         .insert({
           user_id: user.id,
-          avatar_id: currentAvatarId || null,
+          avatar_id: isValidUuid ? currentAvatarId : null,
           filename: file.name,
           file_path: uploadData.path,
           file_size: file.size,

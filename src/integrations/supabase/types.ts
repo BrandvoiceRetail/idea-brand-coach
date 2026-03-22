@@ -268,6 +268,7 @@ export type Database = {
           field_id: string | null
           field_label: string | null
           id: string
+          openai_response_id: string | null
           page_context: string | null
           title: string
           updated_at: string
@@ -281,6 +282,7 @@ export type Database = {
           field_id?: string | null
           field_label?: string | null
           id?: string
+          openai_response_id?: string | null
           page_context?: string | null
           title?: string
           updated_at?: string
@@ -294,6 +296,7 @@ export type Database = {
           field_id?: string | null
           field_label?: string | null
           id?: string
+          openai_response_id?: string | null
           page_context?: string | null
           title?: string
           updated_at?: string
@@ -448,8 +451,14 @@ export type Database = {
       }
       uploaded_documents: {
         Row: {
+          avatar_id: string | null
           created_at: string
           extracted_content: string | null
+          extraction_completed_at: string | null
+          extraction_error: string | null
+          extraction_started_at: string | null
+          extraction_status: string | null
+          fields_extracted: number | null
           file_path: string
           file_size: number
           filename: string
@@ -461,8 +470,14 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          avatar_id?: string | null
           created_at?: string
           extracted_content?: string | null
+          extraction_completed_at?: string | null
+          extraction_error?: string | null
+          extraction_started_at?: string | null
+          extraction_status?: string | null
+          fields_extracted?: number | null
           file_path: string
           file_size: number
           filename: string
@@ -474,8 +489,14 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          avatar_id?: string | null
           created_at?: string
           extracted_content?: string | null
+          extraction_completed_at?: string | null
+          extraction_error?: string | null
+          extraction_started_at?: string | null
+          extraction_status?: string | null
+          fields_extracted?: number | null
           file_path?: string
           file_size?: number
           filename?: string
