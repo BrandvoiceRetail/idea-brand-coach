@@ -42,8 +42,7 @@ describe('useChat', () => {
       getSessionMessages: vi.fn().mockResolvedValue([]),
       generateSessionTitle: vi.fn().mockResolvedValue(undefined),
       regenerateSessionTitle: vi.fn().mockResolvedValue(null),
-      setUseSystemKB: vi.fn(),
-      getUseSystemKB: vi.fn().mockReturnValue(false),
+      sendMessageStreaming: vi.fn(),
     };
 
     vi.mocked(useServices).mockReturnValue({

@@ -8,6 +8,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ChatMessage, ChatbotType } from '@/types/chat';
+import type { ChapterId, ChapterMetadata } from '@/types/chapter';
 
 /**
  * Parameters for saving a message to the database
@@ -18,7 +19,9 @@ export interface SaveMessageParams {
   content: string;
   chatbot_type: ChatbotType;
   session_id?: string;
-  metadata?: Record<string, any>;
+  chapter_id?: ChapterId;
+  chapter_metadata?: ChapterMetadata;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -46,6 +49,8 @@ export class ChatMessageService {
         content: params.content,
         chatbot_type: params.chatbot_type,
         session_id: params.session_id,
+        chapter_id: params.chapter_id,
+        chapter_metadata: params.chapter_metadata,
         metadata: params.metadata,
       })
       .select()
@@ -77,7 +82,7 @@ export class ChatMessageService {
     content: string,
     chatbotType: ChatbotType,
     sessionId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<MessageResult<ChatMessage>> {
     return this.saveMessage({
       user_id: userId,
@@ -105,7 +110,7 @@ export class ChatMessageService {
     content: string,
     chatbotType: ChatbotType,
     sessionId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<MessageResult<ChatMessage>> {
     return this.saveMessage({
       user_id: userId,
@@ -310,6 +315,8 @@ export class ChatMessageService {
       role: item.role as 'user' | 'assistant' | 'system',
       content: item.content as string,
       chatbot_type: item.chatbot_type as ChatbotType,
+      chapter_id: item.chapter_id as ChapterId | undefined,
+      chapter_metadata: item.chapter_metadata as ChapterMetadata | undefined,
       metadata: (item.metadata as Record<string, unknown>) || {},
       created_at: item.created_at as string,
       updated_at: item.updated_at as string,

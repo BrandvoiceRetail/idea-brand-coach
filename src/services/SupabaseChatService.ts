@@ -1,11 +1,22 @@
 /**
  * SupabaseChatService
- * Implements IChatService for Supabase backend
+ * Orchestrator implementing IChatService by delegating to focused sub-services.
+ *
+ * Sub-services:
+ * - ChatMessageService: message CRUD
+ * - ChatSessionService: session CRUD
+ * - ChatTitleService: AI title generation
+ * - ChatEdgeFunctionService: auth, document checks, edge function calls
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { IChatService } from './interfaces/IChatService';
-import { ChatFieldExtractionService } from './ChatFieldExtractionService';
+import { ChatMessageService } from './chat/ChatMessageService';
+import { ChatSessionService } from './chat/ChatSessionService';
+import { ChatTitleService } from './chat/ChatTitleService';
+import { ChatEdgeFunctionService, CHAT_CONSTANTS } from './chat/ChatEdgeFunctionService';
+import { parseSSEStream } from './chat/ChatStreamParser';
+import { forceSyncUserData } from '@/lib/knowledge-base/sync-service-instance';
+import { supabase } from '@/integrations/supabase/client';
 import {
   ChatMessage,
   ChatMessageCreate,
@@ -14,291 +25,135 @@ import {
   ChatSession,
   ChatSessionCreate,
   ChatSessionUpdate,
-  ConversationType,
 } from '@/types/chat';
-import { forceSyncUserData } from '@/lib/knowledge-base/sync-service-instance';
 
 export class SupabaseChatService implements IChatService {
   private chatbotType: ChatbotType = 'idea-framework-consultant';
   private currentSessionId: string | undefined;
-  private useSystemKB: boolean = true;
   private competitiveInsightsContext: string | null = null;
-  private fieldExtractionService = new ChatFieldExtractionService();
+
+  private messageService = new ChatMessageService();
+  private sessionService = new ChatSessionService();
+  private titleService = new ChatTitleService();
+  private edgeFunctionService = new ChatEdgeFunctionService();
 
   /**
    * Set competitive analysis context to be included in chat messages.
-   * When set, this context is appended to edge function calls so the
-   * AI consultant can reference competitive insights in responses.
    */
   setCompetitiveInsightsContext(context: string | null): void {
     this.competitiveInsightsContext = context;
   }
 
-  /**
-   * Set the chatbot type for filtering messages
-   */
   setChatbotType(chatbotType: ChatbotType): void {
     this.chatbotType = chatbotType;
   }
 
-  /**
-   * Set the current active session for message operations
-   */
   setCurrentSession(sessionId: string | undefined): void {
     this.currentSessionId = sessionId;
   }
 
-  /**
-   * Get the current active session ID
-   */
   getCurrentSessionId(): string | undefined {
     return this.currentSessionId;
   }
 
-  /**
-   * Enable/disable System KB integration (uses test function)
-   * @deprecated System KB is now always enabled
-   */
-  setUseSystemKB(enabled: boolean): void {
-    // No-op: System KB is always enabled
-    console.log('[ChatService] System KB integration: ALWAYS ENABLED');
-  }
-
-  /**
-   * Check if System KB integration is enabled
-   * @deprecated System KB is now always enabled
-   */
-  getUseSystemKB(): boolean {
-    return true; // Always enabled
-  }
-
-  /**
-   * Get the edge function name for the current chatbot type
-   * Uses the main edge function with System KB enabled
-   */
-  private getEdgeFunctionName(): string {
-    const functionName = 'idea-framework-consultant';
-    console.log(`[ChatService] Using edge function: ${functionName} (System KB: enabled)`);
-    return functionName;
-  }
-
-  /**
-   * Get current authenticated user ID
-   * @throws Error if user is not authenticated
-   */
-  private async getUserId(): Promise<string> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-    return user.id;
-  }
+  // ==========================================
+  // Core messaging
+  // ==========================================
 
   async sendMessage(message: ChatMessageCreate): Promise<ChatResponse> {
     const userId = await this.getUserId();
     const chatbotType = message.chatbot_type || this.chatbotType;
-
-    console.log('📤 Sending message:', {
-      userId,
-      chatbotType,
-      messageLength: message.content.length
-    });
-
-    // 0. Force sync all local data to Supabase before sending
-    // This ensures the edge function has access to all user knowledge base data
-    console.log('🔄 Syncing local data to Supabase...');
-    try {
-      await forceSyncUserData(userId);
-      console.log('✅ Sync completed');
-    } catch (error) {
-      console.warn('⚠️ Sync failed, continuing anyway:', error);
-      // Continue even if sync fails - offline data will be used
-    }
-
-    // Use provided session_id or current session
     const sessionId = message.session_id || this.currentSessionId;
-    console.log('[sendMessage] Using session_id:', sessionId, '(from message:', message.session_id, ', current:', this.currentSessionId, ')');
 
-    // 1. Save user message to database
-    const { data: userMessage, error: saveError } = await supabase
-      .from('chat_messages')
-      .insert({
-        user_id: userId,
-        role: message.role,
-        content: message.content,
-        chatbot_type: chatbotType,
-        session_id: sessionId,
-        chapter_id: message.chapter_id,
-        chapter_metadata: message.chapter_metadata,
-        metadata: message.metadata,
-      })
-      .select()
-      .single();
+    console.log('📤 Sending message:', { userId, chatbotType, messageLength: message.content.length });
 
+    // Sync local data so edge function has latest knowledge base
+    await this.syncLocalData(userId);
+
+    // 1. Save user message
+    const { data: _userMsg, error: saveError } = await this.messageService.saveMessage({
+      user_id: userId,
+      role: message.role,
+      content: message.content,
+      chatbot_type: chatbotType,
+      session_id: sessionId,
+      chapter_id: message.chapter_id,
+      chapter_metadata: message.chapter_metadata,
+      metadata: message.metadata,
+    });
     if (saveError) throw saveError;
 
-    // Auto-update session title if this is the first message
+    // 2. Auto-update session title for first message
     if (sessionId) {
-      await this.maybeUpdateSessionTitle(sessionId, message.content);
+      await this.titleService.maybeUpdateSessionTitle(sessionId, message.content);
     }
 
-    // 2. Get recent chat history for context
-    const recentMessages = await this.getRecentMessages(10);
+    // 3. Prepare edge function call
+    const recentMessages = await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT);
+    const authSession = await this.edgeFunctionService.getAuthSession();
+    const hasUploadedDocuments = await this.edgeFunctionService.checkUploadedDocuments(userId);
+    const previousResponseId = sessionId
+      ? await this.edgeFunctionService.lookupPreviousResponseId(sessionId)
+      : undefined;
 
-    // 3. Call appropriate Edge Function
-    const edgeFunctionName = this.getEdgeFunctionName();
-    console.log(`🤖 Calling ${edgeFunctionName} Edge Function...`);
-
-    // Get current session to pass auth token explicitly
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      throw new Error('No active session found');
-    }
-
-    // Check if user has uploaded documents
-    let hasUploadedDocuments = false;
-    try {
-      const { data: uploadedDocs } = await supabase
-        .from('uploaded_documents')
-        .select('id, openai_file_id')
-        .eq('user_id', userId)
-        .limit(1);
-      hasUploadedDocuments = (uploadedDocs && uploadedDocs.length > 0) || false;
-      console.log('📄 Document check:', {
-        hasDocuments: hasUploadedDocuments,
-        documentCount: uploadedDocs?.length || 0,
-        hasOpenAIFileId: uploadedDocs?.[0]?.openai_file_id ? true : false
-      });
-    } catch (error) {
-      console.warn('Failed to check for uploaded documents:', error);
-    }
-
-    // Look up previous response ID for conversation chaining
-    let previousResponseId: string | undefined;
-    if (sessionId) {
-      try {
-        const { data: sessionData } = await supabase
-          .from('chat_sessions')
-          .select('openai_response_id')
-          .eq('id', sessionId)
-          .single();
-        previousResponseId = sessionData?.openai_response_id || undefined;
-        if (previousResponseId) {
-          console.log('🔗 Chaining conversation via previous_response_id:', previousResponseId);
-        }
-      } catch (error) {
-        console.warn('Failed to look up previous response ID:', error);
-      }
-    }
-
-    const edgeFunctionBody: Record<string, unknown> = {
+    const body = this.edgeFunctionService.buildRequestBody({
       message: message.content,
       chapterContext: message.chapterContext,
       competitiveInsights: this.competitiveInsightsContext,
-      metadata: {
-        ...message.metadata,
-        hasUploadedDocuments,
-      },
-      // Feature flag: use OpenAI Responses API instead of Chat Completions
-      useResponsesApi: true,
+      metadata: message.metadata,
+      hasUploadedDocuments,
       previousResponseId,
-    };
-
-    // Only send chat_history when not chaining (first message or no previous response)
-    if (!previousResponseId) {
-      edgeFunctionBody.chat_history = recentMessages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      }));
-    }
+      chatHistory: !previousResponseId
+        ? recentMessages.map(msg => ({ role: msg.role, content: msg.content }))
+        : undefined,
+    });
 
     console.log('📨 Edge function request:', {
       hasUploadedDocuments,
-      metadataKeys: Object.keys(edgeFunctionBody.metadata || {}),
-      fullMetadata: edgeFunctionBody.metadata
+      metadataKeys: Object.keys(body.metadata as Record<string, unknown> || {}),
     });
 
-    const { data: responseData, error: functionError } = await supabase.functions.invoke(
-      edgeFunctionName,
-      {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: edgeFunctionBody,
-      }
-    );
+    // 4. Call edge function
+    const responseData = await this.edgeFunctionService.callConsultant(body, authSession.access_token);
 
-    if (functionError) {
-      console.error('❌ Edge Function error:', functionError);
-      throw functionError;
-    }
-
-    console.log('✅ Received response:', {
-      responseLength: responseData?.response?.length || 0,
-      hasSuggestions: !!responseData?.suggestions,
-      hasSources: !!responseData?.sources,
-    });
-
-    // 3.5. Save response ID for conversation chaining
+    // 5. Save response ID for chaining
     if (sessionId && responseData.responseId) {
-      console.log('💾 Saving response ID for conversation chaining:', responseData.responseId);
-      await supabase
-        .from('chat_sessions')
-        .update({ openai_response_id: responseData.responseId })
-        .eq('id', sessionId)
-        .then(({ error: updateError }) => {
-          if (updateError) {
-            console.warn('Failed to save response ID:', updateError);
-          }
-        });
+      await this.edgeFunctionService.saveResponseId(sessionId, responseData.responseId);
     }
 
-    // 3.6. Extract fields from structured tool call response
+    // 6. Handle extracted fields
     const extractedFields = responseData.extractedFields || [];
-
     if (extractedFields.length > 0) {
-      console.log('📝 Extracted fields (tool call):', extractedFields.map((f: { identifier: string }) => f.identifier));
+      console.log('📝 Extracted fields (tool call):', extractedFields.map(f => f.identifier));
     }
 
-    // 4. Save assistant response to database
-    // Response content is clean — extraction data comes via tool calls, not inline text
-    const { data: assistantMessage, error: assistantError } = await supabase
-      .from('chat_messages')
-      .insert({
-        user_id: userId,
-        role: 'assistant',
-        content: responseData.response,
-        chatbot_type: chatbotType,
-        session_id: sessionId,
-        chapter_id: message.chapter_id,
-        chapter_metadata: message.chapter_metadata,
-        metadata: {
-          suggestions: responseData.suggestions,
-          sources: responseData.sources,
-          extractedFields,
-        },
-      })
-      .select()
-      .single();
-
+    // 7. Save assistant response
+    const { data: assistantMessage, error: assistantError } = await this.messageService.saveMessage({
+      user_id: userId,
+      role: 'assistant',
+      content: responseData.response,
+      chatbot_type: chatbotType,
+      session_id: sessionId,
+      chapter_id: message.chapter_id,
+      chapter_metadata: message.chapter_metadata,
+      metadata: {
+        suggestions: responseData.suggestions,
+        sources: responseData.sources,
+        extractedFields,
+      },
+    });
     if (assistantError) throw assistantError;
 
-    // Generate AI title for new sessions (return promise for cache invalidation)
+    // 8. Generate AI title (non-blocking)
     const titlePromise = sessionId
-      ? this.generateSessionTitle(sessionId, message.content, responseData.response).catch(() => {
-          // Silently ignore - title generation is not critical
-        })
+      ? this.titleService
+          .generateSessionTitle(sessionId, message.content, responseData.response)
+          .then(() => undefined)
+          .catch(() => undefined)
       : undefined;
 
     return {
-      message: {
-        id: assistantMessage.id,
-        user_id: assistantMessage.user_id,
-        role: assistantMessage.role as 'assistant',
-        content: assistantMessage.content,
-        chatbot_type: assistantMessage.chatbot_type as ChatbotType,
-        metadata: (assistantMessage.metadata as Record<string, any>) || {},
-        created_at: assistantMessage.created_at,
-        updated_at: assistantMessage.updated_at,
-      },
+      message: assistantMessage!,
       suggestions: responseData.suggestions,
       sources: responseData.sources,
       extractedFields,
@@ -306,10 +161,6 @@ export class SupabaseChatService implements IChatService {
     };
   }
 
-  /**
-   * Send a message with streaming response.
-   * Uses raw fetch() since supabase.functions.invoke() doesn't support SSE streaming.
-   */
   async sendMessageStreaming(
     message: ChatMessageCreate,
     callbacks: {
@@ -323,577 +174,213 @@ export class SupabaseChatService implements IChatService {
     const chatbotType = message.chatbot_type || this.chatbotType;
     const sessionId = message.session_id || this.currentSessionId;
 
-    // Save user message to database
-    const { error: saveError } = await supabase
-      .from('chat_messages')
-      .insert({
-        user_id: userId,
-        role: message.role,
-        content: message.content,
-        chatbot_type: chatbotType,
-        session_id: sessionId,
-        chapter_id: message.chapter_id,
-        chapter_metadata: message.chapter_metadata,
-        metadata: message.metadata,
-      })
-      .select()
-      .single();
-
+    // Save user message
+    const { error: saveError } = await this.messageService.saveMessage({
+      user_id: userId,
+      role: message.role,
+      content: message.content,
+      chatbot_type: chatbotType,
+      session_id: sessionId,
+      chapter_id: message.chapter_id,
+      chapter_metadata: message.chapter_metadata,
+      metadata: message.metadata,
+    });
     if (saveError) throw saveError;
 
     // Auto-update session title
     if (sessionId) {
-      await this.maybeUpdateSessionTitle(sessionId, message.content);
+      await this.titleService.maybeUpdateSessionTitle(sessionId, message.content);
     }
 
-    // Look up previous response ID for conversation chaining
-    let previousResponseId: string | undefined;
-    if (sessionId) {
-      try {
-        const { data: sessionData } = await supabase
-          .from('chat_sessions')
-          .select('openai_response_id')
-          .eq('id', sessionId)
-          .single();
-        previousResponseId = sessionData?.openai_response_id || undefined;
-      } catch {
-        // Continue without chaining
-      }
-    }
+    // Prepare edge function call
+    const previousResponseId = sessionId
+      ? await this.edgeFunctionService.lookupPreviousResponseId(sessionId)
+      : undefined;
+    const authSession = await this.edgeFunctionService.getAuthSession();
+    const hasUploadedDocuments = await this.edgeFunctionService.checkUploadedDocuments(userId);
 
-    // Get auth session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No active session found');
+    const chatHistory = !previousResponseId
+      ? (await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT)).map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        }))
+      : undefined;
 
-    // Check for uploaded documents
-    let hasUploadedDocuments = false;
-    try {
-      const { data: uploadedDocs } = await supabase
-        .from('uploaded_documents')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1);
-      hasUploadedDocuments = (uploadedDocs && uploadedDocs.length > 0) || false;
-    } catch {
-      // Continue without document check
-    }
-
-    // Build request body (same as sendMessage but with stream: true)
-    const edgeFunctionBody: Record<string, unknown> = {
+    const body = this.edgeFunctionService.buildRequestBody({
       message: message.content,
       chapterContext: message.chapterContext,
       competitiveInsights: this.competitiveInsightsContext,
-      metadata: {
-        ...message.metadata,
-        hasUploadedDocuments,
-      },
-      useResponsesApi: true,
+      metadata: message.metadata,
+      hasUploadedDocuments,
       previousResponseId,
+      chatHistory,
       stream: true,
-    };
-
-    if (!previousResponseId) {
-      const recentMessages = await this.getRecentMessages(10);
-      edgeFunctionBody.chat_history = recentMessages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      }));
-    }
-
-    // Use raw fetch for SSE streaming (supabase.functions.invoke doesn't support streaming)
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? 'https://ecdrxtbclxfpkknasmrw.supabase.co';
-    const url = `${supabaseUrl}/functions/v1/idea-framework-consultant`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '',
-      },
-      body: JSON.stringify(edgeFunctionBody),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Edge function error: ${response.status} - ${errorText}`);
-    }
+    // Call streaming edge function
+    const response = await this.edgeFunctionService.callConsultantStreaming(
+      body,
+      authSession.access_token
+    );
 
     // Parse SSE stream
     const reader = response.body!.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let fullText = '';
-    let streamedExtractedFields: Array<{ identifier: string; value: unknown; confidence: number; source: string; context?: string }> = [];
-    let streamedResponseId: string | undefined;
+    const result = await parseSSEStream(reader, {
+      onTextDelta: callbacks.onTextDelta,
+      onExtractedFields: callbacks.onExtractedFields,
+      onError: callbacks.onError,
+    });
 
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+    // Save assistant response
+    await this.messageService.saveMessage({
+      user_id: userId,
+      role: 'assistant',
+      content: result.fullText,
+      chatbot_type: chatbotType,
+      session_id: sessionId,
+      chapter_id: message.chapter_id,
+      chapter_metadata: message.chapter_metadata,
+      metadata: { extractedFields: result.extractedFields },
+    });
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const payload = line.slice(6).trim();
-          if (!payload) continue;
-
-          try {
-            const event = JSON.parse(payload);
-
-            if (event.type === 'text_delta') {
-              fullText += event.delta;
-              callbacks.onTextDelta(event.delta);
-            } else if (event.type === 'extracted_fields') {
-              streamedExtractedFields = event.fields || [];
-              callbacks.onExtractedFields(streamedExtractedFields);
-            } else if (event.type === 'done') {
-              streamedResponseId = event.responseId;
-            } else if (event.type === 'error') {
-              callbacks.onError(new Error(event.message || 'Stream error'));
-              return;
-            }
-          } catch {
-            // Skip unparseable events
-          }
-        }
-      }
-    } finally {
-      reader.releaseLock();
-    }
-
-    // Save assistant response to database
-    const { error: assistantError } = await supabase
-      .from('chat_messages')
-      .insert({
-        user_id: userId,
-        role: 'assistant',
-        content: fullText,
-        chatbot_type: chatbotType,
-        session_id: sessionId,
-        chapter_id: message.chapter_id,
-        chapter_metadata: message.chapter_metadata,
-        metadata: {
-          extractedFields: streamedExtractedFields,
-        },
-      });
-
-    if (assistantError) {
-      console.warn('Failed to save streamed assistant message:', assistantError);
-    }
-
-    // Save response ID for conversation chaining
-    if (sessionId && streamedResponseId) {
-      await supabase
-        .from('chat_sessions')
-        .update({ openai_response_id: streamedResponseId })
-        .eq('id', sessionId);
+    // Save response ID for chaining
+    if (sessionId && result.responseId) {
+      await this.edgeFunctionService.saveResponseId(sessionId, result.responseId);
     }
 
     // Generate title for new sessions
     if (sessionId) {
-      this.generateSessionTitle(sessionId, message.content, fullText).catch(() => {});
+      this.titleService
+        .generateSessionTitle(sessionId, message.content, result.fullText)
+        .catch(() => {});
     }
 
-    callbacks.onComplete(streamedResponseId);
+    callbacks.onComplete(result.responseId);
   }
 
-  async getChatHistory(limit: number = 50): Promise<ChatMessage[]> {
+  // ==========================================
+  // Message queries (delegate to messageService)
+  // ==========================================
+
+  async getChatHistory(limit: number = CHAT_CONSTANTS.DEFAULT_HISTORY_LIMIT): Promise<ChatMessage[]> {
     const userId = await this.getUserId();
-
-    let query = supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('chatbot_type', this.chatbotType);
-
-    // Filter by session if set
-    if (this.currentSessionId) {
-      query = query.eq('session_id', this.currentSessionId);
-    }
-
-    const { data, error } = await query
-      .order('created_at', { ascending: true })
-      .limit(limit);
-
+    const { data, error } = await this.messageService.getAllMessages(
+      userId,
+      this.chatbotType,
+      limit,
+      this.currentSessionId
+    );
     if (error) throw error;
-
-    return data.map(item => this.mapMessageFromDb(item));
+    return data || [];
   }
 
   async clearChatHistory(): Promise<void> {
-    const userId = await this.getUserId();
-
-    // SAFETY: Only clear if we have a current session ID
-    // This prevents accidentally clearing all messages across all sessions
     if (!this.currentSessionId) {
       throw new Error('Cannot clear chat history: No active session');
     }
-
-    console.log('🗑️ Clearing chat history for session:', this.currentSessionId);
-
-    // First, get count of messages to be deleted for verification
-    const { count: beforeCount } = await supabase
-      .from('chat_messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('chatbot_type', this.chatbotType)
-      .eq('session_id', this.currentSessionId);
-
-    console.log(`📊 Found ${beforeCount || 0} messages to delete`);
-
-    // Delete messages
-    const { error } = await supabase
-      .from('chat_messages')
-      .delete()
-      .eq('user_id', userId)
-      .eq('chatbot_type', this.chatbotType)
-      .eq('session_id', this.currentSessionId);
-
-    if (error) {
-      console.error('❌ Delete failed:', error);
-      throw error;
-    }
-
-    // Verify deletion
-    const { count: afterCount } = await supabase
-      .from('chat_messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('chatbot_type', this.chatbotType)
-      .eq('session_id', this.currentSessionId);
-
-    console.log(`✅ Delete successful! Deleted ${beforeCount || 0} messages. Remaining: ${afterCount || 0}`);
-
-    if (afterCount && afterCount > 0) {
-      console.warn('⚠️ Warning: Some messages may not have been deleted');
-    }
+    const userId = await this.getUserId();
+    const { error } = await this.messageService.clearMessages(
+      userId,
+      this.chatbotType,
+      this.currentSessionId
+    );
+    if (error) throw error;
   }
 
   async getRecentMessages(count: number): Promise<ChatMessage[]> {
     const userId = await this.getUserId();
-
-    let query = supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('chatbot_type', this.chatbotType);
-
-    // Filter by session if set
-    if (this.currentSessionId) {
-      query = query.eq('session_id', this.currentSessionId);
-    }
-
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .limit(count);
-
+    const { data, error } = await this.messageService.getRecentMessages(
+      userId,
+      this.chatbotType,
+      count,
+      this.currentSessionId
+    );
     if (error) throw error;
-
-    // Reverse to get chronological order
-    return data.reverse().map(item => this.mapMessageFromDb(item));
+    return data || [];
   }
 
   // ==========================================
-  // Session Management Methods
+  // Session management (delegate to sessionService)
   // ==========================================
 
   async createSession(sessionData?: ChatSessionCreate): Promise<ChatSession> {
     const userId = await this.getUserId();
-
-    const { data, error } = await supabase
-      .from('chat_sessions')
-      .insert({
-        user_id: userId,
-        chatbot_type: sessionData?.chatbot_type || this.chatbotType,
-        title: sessionData?.title || 'New Chat',
-        conversation_type: sessionData?.conversation_type || 'general',
-        field_id: sessionData?.field_id,
-        field_label: sessionData?.field_label,
-        page_context: sessionData?.page_context,
-        chapter_id: sessionData?.chapter_id,
-        chapter_metadata: sessionData?.chapter_metadata,
-      })
-      .select()
-      .single();
-
+    const { data, error } = await this.sessionService.createSession(
+      userId,
+      this.chatbotType,
+      sessionData
+    );
     if (error) throw error;
-
-    return this.mapSessionFromDb(data);
+    return data!;
   }
 
   async getSessions(): Promise<ChatSession[]> {
     const userId = await this.getUserId();
-
-    const { data, error } = await supabase
-      .from('chat_sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('chatbot_type', this.chatbotType)
-      .order('updated_at', { ascending: false });
-
+    const { data, error } = await this.sessionService.getSessions(userId, this.chatbotType);
     if (error) throw error;
-
-    return data.map(item => this.mapSessionFromDb(item));
+    return data || [];
   }
 
   async getSession(sessionId: string): Promise<ChatSession | null> {
     const userId = await this.getUserId();
-
-    const { data, error } = await supabase
-      .from('chat_sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .eq('user_id', userId)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
-      throw error;
-    }
-
-    return this.mapSessionFromDb(data);
+    const { data, error } = await this.sessionService.getSession(sessionId, userId);
+    if (error) throw error;
+    return data;
   }
 
   async updateSession(sessionId: string, update: ChatSessionUpdate): Promise<ChatSession> {
     const userId = await this.getUserId();
-
-    // Build update object with only provided fields
-    const updateData: Record<string, any> = {
-      updated_at: new Date().toISOString(),
-    };
-
-    if (update.title !== undefined) {
-      updateData.title = update.title;
-    }
-
-    if (update.chapter_id !== undefined) {
-      updateData.chapter_id = update.chapter_id;
-    }
-
-    if (update.chapter_metadata !== undefined) {
-      updateData.chapter_metadata = update.chapter_metadata;
-    }
-
-    if (update.openai_response_id !== undefined) {
-      updateData.openai_response_id = update.openai_response_id;
-    }
-
-    const { data, error } = await supabase
-      .from('chat_sessions')
-      .update(updateData)
-      .eq('id', sessionId)
-      .eq('user_id', userId)
-      .select()
-      .single();
-
+    const { data, error } = await this.sessionService.updateSession(sessionId, userId, update);
     if (error) throw error;
-
-    return this.mapSessionFromDb(data);
+    return data!;
   }
 
   async deleteSession(sessionId: string): Promise<void> {
     const userId = await this.getUserId();
-
-    // Messages will be cascade deleted due to FK constraint
-    const { error } = await supabase
-      .from('chat_sessions')
-      .delete()
-      .eq('id', sessionId)
-      .eq('user_id', userId);
-
+    const { error } = await this.sessionService.deleteSession(sessionId, userId);
     if (error) throw error;
-
-    // Clear current session if it was deleted
     if (this.currentSessionId === sessionId) {
       this.currentSessionId = undefined;
     }
   }
 
-  async getSessionMessages(sessionId: string, limit: number = 50): Promise<ChatMessage[]> {
+  async getSessionMessages(sessionId: string, limit: number = CHAT_CONSTANTS.DEFAULT_HISTORY_LIMIT): Promise<ChatMessage[]> {
     const userId = await this.getUserId();
-
-    const { data, error } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: true })
-      .limit(limit);
-
+    const { data, error } = await this.messageService.getSessionMessages(userId, sessionId, limit);
     if (error) throw error;
-
-    return data.map(item => this.mapMessageFromDb(item));
+    return data || [];
   }
 
   // ==========================================
-  // Private Helper Methods
+  // Title management (delegate to titleService)
   // ==========================================
 
-  /**
-   * Auto-update session title based on first user message
-   * Uses a placeholder initially, then generates AI title after response
-   */
-  private async maybeUpdateSessionTitle(sessionId: string, content: string): Promise<void> {
-    try {
-      console.log('[maybeUpdateSessionTitle] Checking session:', sessionId);
-      // Check if session still has default title
-      const session = await this.getSession(sessionId);
-      console.log('[maybeUpdateSessionTitle] Session found:', session?.title);
-
-      if (!session || session.title !== 'New Chat') {
-        console.log('[maybeUpdateSessionTitle] Skipping - title already set or session not found');
-        return;
-      }
-
-      // Set a temporary title from first ~40 chars while AI generates better one
-      const tempTitle = content.length > 40
-        ? content.substring(0, 37) + '...'
-        : content;
-
-      console.log('[maybeUpdateSessionTitle] Setting temp title:', tempTitle);
-      await this.updateSession(sessionId, { title: tempTitle });
-    } catch (error) {
-      console.warn('Failed to auto-update session title:', error);
-      // Don't throw - this is not critical
-    }
-  }
-
-  /**
-   * Regenerate session title based on entire conversation history
-   * Used when user wants to update title to reflect evolved conversation
-   */
-  async regenerateSessionTitle(sessionId: string): Promise<string | null> {
-    try {
-      const messages = await this.getSessionMessages(sessionId, 20);
-      if (messages.length === 0) return null;
-
-      // Build conversation summary for title generation
-      const conversationSummary = messages
-        .slice(-6) // Use last 6 messages for context
-        .map(m => `${m.role}: ${m.content.substring(0, 200)}`)
-        .join('\n');
-
-      // Get auth session
-      const { data: { session: authSession } } = await supabase.auth.getSession();
-      if (!authSession) return null;
-
-      // Call edge function to generate title
-      const { data, error } = await supabase.functions.invoke('generate-session-title', {
-        headers: {
-          Authorization: `Bearer ${authSession.access_token}`,
-        },
-        body: {
-          user_message: conversationSummary,
-          assistant_response: '', // Empty since we're using full conversation
-          regenerate: true, // Flag to indicate full conversation context
-        },
-      });
-
-      if (error) {
-        console.warn('Failed to regenerate AI title:', error);
-        return null;
-      }
-
-      if (data?.title) {
-        await this.updateSession(sessionId, { title: data.title });
-        console.log('✅ Regenerated session title:', data.title);
-        return data.title;
-      }
-
-      return null;
-    } catch (error) {
-      console.warn('Failed to regenerate session title:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Generate an AI-powered session title after first exchange
-   */
   async generateSessionTitle(sessionId: string, userMessage: string, assistantResponse: string): Promise<void> {
+    await this.titleService.generateSessionTitle(sessionId, userMessage, assistantResponse);
+  }
+
+  async regenerateSessionTitle(sessionId: string): Promise<string | null> {
+    const { data } = await this.titleService.regenerateSessionTitle(sessionId);
+    return data;
+  }
+
+  // ==========================================
+  // Private helpers
+  // ==========================================
+
+  private async getUserId(): Promise<string> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+    return user.id;
+  }
+
+  private async syncLocalData(userId: string): Promise<void> {
+    console.log('🔄 Syncing local data to Supabase...');
     try {
-      const session = await this.getSession(sessionId);
-      if (!session) return;
-
-      // Only generate title on first exchange (2 messages = user + assistant)
-      // This prevents overwriting manually renamed sessions
-      const messages = await this.getSessionMessages(sessionId, 3);
-      if (messages.length > 2) {
-        console.log('[generateSessionTitle] Skipping - not first exchange (has', messages.length, 'messages)');
-        return;
-      }
-
-      // Get current session to pass auth token
-      const { data: { session: authSession } } = await supabase.auth.getSession();
-      if (!authSession) return;
-
-      // Call edge function to generate title
-      const { data, error } = await supabase.functions.invoke('generate-session-title', {
-        headers: {
-          Authorization: `Bearer ${authSession.access_token}`,
-        },
-        body: {
-          user_message: userMessage,
-          assistant_response: assistantResponse.substring(0, 500), // Limit context size
-        },
-      });
-
-      if (error) {
-        console.warn('Failed to generate AI title:', error);
-        return;
-      }
-
-      if (data?.title) {
-        await this.updateSession(sessionId, { title: data.title });
-        console.log('✅ Generated session title:', data.title);
-      }
+      await forceSyncUserData(userId);
+      console.log('✅ Sync completed');
     } catch (error) {
-      console.warn('Failed to generate session title:', error);
-      // Don't throw - this is not critical
+      console.warn('⚠️ Sync failed, continuing anyway:', error);
     }
-  }
-
-  /**
-   * Map database row to ChatMessage
-   */
-  private mapMessageFromDb(item: Record<string, unknown>): ChatMessage {
-    return {
-      id: item.id as string,
-      user_id: item.user_id as string,
-      session_id: item.session_id as string | undefined,
-      role: item.role as 'user' | 'assistant' | 'system',
-      content: item.content as string,
-      chatbot_type: item.chatbot_type as ChatbotType,
-      chapter_id: item.chapter_id as any,
-      chapter_metadata: item.chapter_metadata as any,
-      metadata: (item.metadata as Record<string, unknown>) || {},
-      created_at: item.created_at as string,
-      updated_at: item.updated_at as string,
-    };
-  }
-
-  /**
-   * Map database row to ChatSession
-   */
-  private mapSessionFromDb(item: Record<string, unknown>): ChatSession {
-    return {
-      id: item.id as string,
-      user_id: item.user_id as string,
-      chatbot_type: item.chatbot_type as ChatbotType,
-      title: item.title as string,
-      conversation_type: (item.conversation_type as ConversationType) || 'general',
-      field_id: item.field_id as string | undefined,
-      field_label: item.field_label as string | undefined,
-      page_context: item.page_context as string | undefined,
-      chapter_id: item.chapter_id as any,
-      chapter_metadata: item.chapter_metadata as any,
-      openai_response_id: item.openai_response_id as string | undefined,
-      created_at: item.created_at as string,
-      updated_at: item.updated_at as string,
-    };
   }
 }

@@ -171,22 +171,4 @@ export interface IChatService {
    */
   regenerateSessionTitle(sessionId: string): Promise<string | null>;
 
-  // ==========================================
-  // System KB Integration (Test Feature)
-  // ==========================================
-
-  /**
-   * Enable/disable System KB integration.
-   * When enabled, uses the test function with IDEA Framework knowledge base.
-   *
-   * @param enabled - Whether to enable System KB integration
-   */
-  setUseSystemKB(enabled: boolean): void;
-
-  /**
-   * Check if System KB integration is enabled.
-   *
-   * @returns Whether System KB integration is enabled
-   */
-  getUseSystemKB(): boolean;
 }
