@@ -9,6 +9,18 @@ const corsHeaders = {
 };
 
 const RATE_LIMIT_MS = 2000;
+const MAX_ASINS = 5;
+const MAX_PAGES_PER_STAR = 3;
+
+const STAR_FILTER_MAP: Record<string, string> = {
+  '1': 'one_star',
+  '2': 'two_star',
+  '3': 'three_star',
+  '4': 'four_star',
+  '5': 'five_star',
+};
+
+const ALL_STAR_FILTERS = ['1', '2', '3', '4', '5'];
 
 interface ScrapedReview {
   reviewerName: string;
@@ -20,9 +32,16 @@ interface ScrapedReview {
   source: string;
 }
 
-interface ScrapeResult {
-  url: string;
+interface DeepScrapeRequest {
+  asins: string[];
+  pagesPerStar?: number;
+  starFilters?: string[];
+}
+
+interface AsinResult {
+  asin: string;
   reviews: ScrapedReview[];
+  starDistribution: Record<string, number>;
   error?: string;
 }
 
@@ -35,10 +54,7 @@ interface FirecrawlResponse {
   creditsUsed?: number;
 }
 
-/**
- * Scrape a single URL using the Firecrawl API.
- * Adapted from firecrawl-amazon.ts patterns.
- */
+/** Scrape a single URL using the Firecrawl API. */
 async function scrapeUrl(url: string): Promise<{ markdown: string; html: string } | null> {
   try {
     const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
@@ -82,17 +98,11 @@ async function scrapeUrl(url: string): Promise<{ markdown: string; html: string 
   }
 }
 
-/**
- * Extract reviews from Amazon-style pages.
- * Uses patterns adapted from firecrawl-amazon.ts.
- */
+/** Extract reviews from Amazon HTML using data-hook and id-based patterns, with markdown fallback. */
 function parseAmazonReviews(markdown: string, html: string, sourceUrl: string): ScrapedReview[] {
   const reviews: ScrapedReview[] = [];
 
-  // Strategy 1: Parse structured review blocks from HTML
-  // Primary pattern: data-hook="review" is more resilient to DOM depth changes
   const primaryPattern = /<div[^>]*data-hook="review"[^>]*>([\s\S]*?)(?=<div[^>]*data-hook="review"|<\/body|$)/gi;
-  // Secondary fallback: id="customer_review" with generous capture
   const fallbackPattern = /<div[^>]*id="customer_review[^"]*"[^>]*>([\s\S]*?)(?=<div[^>]*id="customer_review|<div[^>]*data-hook="review"|$)/gi;
 
   let htmlBlocks = [...html.matchAll(primaryPattern)];
@@ -123,11 +133,9 @@ function parseAmazonReviews(markdown: string, html: string, sourceUrl: string): 
     }
   }
 
-  // Strategy 2: Fallback/supplement with markdown pattern matching
   if (reviews.length < 5) {
     const markdownReviews = parseReviewsFromMarkdown(markdown, sourceUrl);
     for (const mdReview of markdownReviews) {
-      // Deduplicate: skip if a substring of the body already exists in HTML-parsed reviews
       const isDuplicate = reviews.some((existing) =>
         mdReview.body.length > 20 &&
         existing.body.includes(mdReview.body.substring(0, 80))
@@ -141,15 +149,10 @@ function parseAmazonReviews(markdown: string, html: string, sourceUrl: string): 
   return reviews;
 }
 
-/**
- * Extract reviews from generic review pages via markdown patterns.
- * Works as a fallback for non-Amazon sites.
- */
+/** Extract reviews from markdown patterns as a fallback parsing strategy. */
 function parseReviewsFromMarkdown(markdown: string, sourceUrl: string): ScrapedReview[] {
   const reviews: ScrapedReview[] = [];
 
-  // Pattern: Rating followed by review text
-  // Matches patterns like "5.0 out of 5 stars" or "4 stars" or "Rating: 3/5"
   const ratingBlockPattern = /(?:(\d+(?:\.\d+)?)\s*(?:out\s*of\s*5\s*)?(?:stars?|\/5|★))[^\n]*\n+([\s\S]*?)(?=(?:\d+(?:\.\d+)?)\s*(?:out\s*of\s*5\s*)?(?:stars?|\/5|★)|$)/gi;
 
   const blocks = markdown.matchAll(ratingBlockPattern);
@@ -159,7 +162,6 @@ function parseReviewsFromMarkdown(markdown: string, sourceUrl: string): ScrapedR
 
     if (content.length < 10 || rating > 5) continue;
 
-    // Try to extract title from first line
     const lines = content.split('\n').filter((l) => l.trim().length > 0);
     const title = lines[0]?.length < 200 ? lines[0].trim() : '';
     const body = lines.slice(title ? 1 : 0).join('\n').trim().substring(0, 2000);
@@ -177,7 +179,6 @@ function parseReviewsFromMarkdown(markdown: string, sourceUrl: string): ScrapedR
     }
   }
 
-  // Pattern: Structured reviews with headers (common on review sites)
   if (reviews.length === 0) {
     const headerReviewPattern = /#{1,3}\s+(.+)\n+([\s\S]*?)(?=#{1,3}\s+|$)/g;
     const headerBlocks = markdown.matchAll(headerReviewPattern);
@@ -186,7 +187,6 @@ function parseReviewsFromMarkdown(markdown: string, sourceUrl: string): ScrapedR
       const title = block[1].trim();
       const content = block[2].trim();
 
-      // Look for rating within the content
       const ratingInContent = content.match(/(\d+(?:\.\d+)?)\s*(?:out\s*of\s*5|\/5|stars?|★)/i);
 
       if (content.length > 30) {
@@ -206,11 +206,117 @@ function parseReviewsFromMarkdown(markdown: string, sourceUrl: string): ScrapedR
   return reviews;
 }
 
-/**
- * Delay execution for rate limiting.
- */
+/** Generate a normalized dedup key from the first 100 chars of review body text. */
+function deduplicationKey(body: string): string {
+  return body
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 100);
+}
+
+/** Deduplicate reviews by comparing normalized body text prefixes. */
+function deduplicateReviews(reviews: ScrapedReview[]): ScrapedReview[] {
+  const seen = new Set<string>();
+  const unique: ScrapedReview[] = [];
+
+  for (const review of reviews) {
+    if (!review.body || review.body.length < 10) {
+      unique.push(review);
+      continue;
+    }
+
+    const key = deduplicationKey(review.body);
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(review);
+    }
+  }
+
+  return unique;
+}
+
+/** Build the Amazon review URL for a given ASIN, star filter, and page number. */
+function buildReviewUrl(asin: string, starFilter: string, pageNumber: number): string {
+  const filterValue = STAR_FILTER_MAP[starFilter];
+  return `https://www.amazon.com/product-reviews/${asin}?filterByStar=${filterValue}&pageNumber=${pageNumber}`;
+}
+
+/** Compute star distribution from a list of reviews. */
+function computeStarDistribution(reviews: ScrapedReview[]): Record<string, number> {
+  const distribution: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+  for (const review of reviews) {
+    const rounded = Math.round(review.rating);
+    if (rounded >= 1 && rounded <= 5) {
+      distribution[String(rounded)]++;
+    }
+  }
+  return distribution;
+}
+
+/** Delay execution for rate limiting. */
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Scrape all reviews for a single ASIN across star filters and pages. */
+async function scrapeAsin(
+  asin: string,
+  starFilters: string[],
+  pagesPerStar: number,
+): Promise<AsinResult> {
+  const allReviews: ScrapedReview[] = [];
+  let totalScrapes = 0;
+  let failedScrapes = 0;
+
+  for (const star of starFilters) {
+    for (let page = 1; page <= pagesPerStar; page++) {
+      const url = buildReviewUrl(asin, star, page);
+      console.log(`  Scraping ASIN ${asin} | ${star}-star | page ${page}: ${url}`);
+
+      try {
+        const scraped = await scrapeUrl(url);
+
+        if (scraped) {
+          const reviews = parseAmazonReviews(scraped.markdown, scraped.html, url);
+          allReviews.push(...reviews);
+          console.log(`    Found ${reviews.length} reviews`);
+        } else {
+          failedScrapes++;
+          console.warn(`    Failed to scrape ${url}`);
+        }
+      } catch (error) {
+        failedScrapes++;
+        console.error(`    Error scraping ${url}:`, error);
+      }
+
+      totalScrapes++;
+
+      // Rate limit between requests
+      await delay(RATE_LIMIT_MS);
+    }
+  }
+
+  const totalExpected = starFilters.length * pagesPerStar;
+  if (failedScrapes >= totalExpected) {
+    return {
+      asin,
+      reviews: [],
+      starDistribution: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 },
+      error: `All ${totalExpected} scrape attempts failed for ASIN ${asin}`,
+    };
+  }
+
+  const dedupedReviews = deduplicateReviews(allReviews);
+  const starDistribution = computeStarDistribution(dedupedReviews);
+
+  console.log(`  ASIN ${asin} complete: ${allReviews.length} raw → ${dedupedReviews.length} unique reviews`);
+
+  return {
+    asin,
+    reviews: dedupedReviews,
+    starDistribution,
+  };
 }
 
 serve(async (req) => {
@@ -223,74 +329,48 @@ serve(async (req) => {
       throw new Error('Missing FIRECRAWL_API_KEY environment variable');
     }
 
-    const { urls, maxReviewsPerUrl = 20 } = await req.json();
+    const body: DeepScrapeRequest = await req.json();
+    const { asins, pagesPerStar: rawPagesPerStar, starFilters: rawStarFilters } = body;
 
-    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+    if (!asins || !Array.isArray(asins) || asins.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'urls array is required and must not be empty' }),
+        JSON.stringify({ error: 'asins array is required and must not be empty' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Cap the number of URLs to prevent excessive API usage
-    const cappedUrls = urls.slice(0, 10);
-    console.log(`Review scraper request: ${cappedUrls.length} URLs`);
+    const cappedAsins = asins.slice(0, MAX_ASINS);
+    const pagesPerStar = Math.min(Math.max(rawPagesPerStar || 1, 1), MAX_PAGES_PER_STAR);
+    const starFilters = (rawStarFilters && rawStarFilters.length > 0)
+      ? rawStarFilters.filter((s) => STAR_FILTER_MAP[s])
+      : ALL_STAR_FILTERS;
 
-    const results: ScrapeResult[] = [];
+    const totalCalls = cappedAsins.length * starFilters.length * pagesPerStar;
+    console.log(
+      `Deep review scraper: ${cappedAsins.length} ASINs × ${starFilters.length} stars × ${pagesPerStar} pages = ${totalCalls} requests`
+    );
 
-    for (let i = 0; i < cappedUrls.length; i++) {
-      const url = cappedUrls[i];
-      console.log(`Scraping (${i + 1}/${cappedUrls.length}): ${url}`);
+    const results: AsinResult[] = [];
 
-      try {
-        const scraped = await scrapeUrl(url);
-
-        if (!scraped) {
-          results.push({ url, reviews: [], error: 'Failed to scrape URL' });
-        } else {
-          // Determine parsing strategy based on URL
-          let reviews: ScrapedReview[];
-          if (url.includes('amazon.com')) {
-            reviews = parseAmazonReviews(scraped.markdown, scraped.html, url);
-          } else {
-            reviews = parseReviewsFromMarkdown(scraped.markdown, url);
-          }
-
-          results.push({
-            url,
-            reviews: reviews.slice(0, maxReviewsPerUrl),
-          });
-
-          console.log(`  Found ${reviews.length} reviews from ${url}`);
-        }
-      } catch (scrapeError) {
-        console.error(`Error scraping ${url}:`, scrapeError);
-        results.push({
-          url,
-          reviews: [],
-          error: scrapeError instanceof Error ? scrapeError.message : String(scrapeError),
-        });
-      }
-
-      // Rate limit: 2-second delay between requests
-      if (i < cappedUrls.length - 1) {
-        await delay(RATE_LIMIT_MS);
-      }
+    for (const asin of cappedAsins) {
+      console.log(`Processing ASIN: ${asin}`);
+      const result = await scrapeAsin(asin, starFilters, pagesPerStar);
+      results.push(result);
     }
 
     const totalReviews = results.reduce((sum, r) => sum + r.reviews.length, 0);
-    console.log(`Review scraper completed: ${totalReviews} reviews from ${results.length} URLs`);
+    console.log(`Deep review scraper completed: ${totalReviews} total reviews from ${results.length} ASINs`);
 
     return new Response(
       JSON.stringify({
         results,
         totalReviews,
-        urlsProcessed: results.length,
+        asinsProcessed: results.length,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in review-scraper function:', error);
+    console.error('Error in review-scraper-deep function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

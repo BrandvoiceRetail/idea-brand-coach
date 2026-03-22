@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { MessageSquare, Loader2, Download, Trash2, Copy, Check, Menu, Send, Paperclip, Plus, Sparkles, Edit2, Lock, CheckCircle } from 'lucide-react';
+import { MessageSquare, Loader2, Download, Trash2, Copy, Check, Menu, Send, Paperclip, Plus, Sparkles, Edit2, Lock, CheckCircle, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
@@ -35,6 +35,9 @@ import { useFieldReview } from '@/contexts/FieldReviewContext';
 import type { PendingField, MessageExtractionMeta } from '@/contexts/FieldReviewContext';
 import { cn } from '@/lib/utils';
 import { VersionSwitcher } from '@/components/VersionSwitcher';
+import { ChatToolsMenu } from '@/components/v2/ChatToolsMenu';
+import { BrandMarkdownExport } from '@/components/export/BrandMarkdownExport';
+import { useServices } from '@/services/ServiceProvider';
 
 /**
  * ChapterProgressBadge - Inline component showing "Chapter X of 11"
@@ -61,6 +64,26 @@ const BrandCoachV2 = (): JSX.Element => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading: isLoadingAuth } = useAuth();
+  const { chatService } = useServices();
+  const [reviewContextActive, setReviewContextActive] = useState(false);
+  const [reviewEnrichmentStatus, setReviewEnrichmentStatus] = useState<'none' | 'pending' | 'complete'>('none');
+  const [reviewCount, setReviewCount] = useState(0);
+
+  const handleSendReviewContext = (contextString: string): void => {
+    chatService.setCompetitiveInsightsContext(contextString);
+    setReviewContextActive(true);
+    setReviewEnrichmentStatus('pending');
+    toast({
+      title: 'Review data shared with Trevor',
+      description: 'Competitor analysis context is now available in chat.',
+    });
+  };
+
+  const handleEnrichmentComplete = (contextString: string, totalReviews: number): void => {
+    chatService.setCompetitiveInsightsContext(contextString);
+    setReviewEnrichmentStatus('complete');
+    setReviewCount(totalReviews);
+  };
   const { latestDiagnostic } = useDiagnostic();
   const { useSystemKB: isSystemKBEnabled } = useSystemKB();
 
@@ -408,12 +431,15 @@ const BrandCoachV2 = (): JSX.Element => {
   const handleSendMessage = async (): Promise<void> => {
     if (!message.trim()) return;
 
-    // Build context with ALL fields from ALL chapters for comprehensive extraction
-    // This allows the AI to update any field based on the conversation or documents
+    // Determine current chapter key for scoped context
+    const currentChapterKey = currentChapter
+      ? BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY[currentChapter.number]
+      : undefined;
+
+    // Collect all field IDs for extraction (AI can still extract any field)
     const allFieldsToCapture: string[] = [];
     const allFieldLabels: Record<string, string> = {};
 
-    // Collect all fields from all chapters
     Object.values(CHAPTER_FIELDS_MAP).forEach(chapter => {
       if (chapter.fields) {
         chapter.fields.forEach(field => {
@@ -426,7 +452,6 @@ const BrandCoachV2 = (): JSX.Element => {
     // Get focused field details if one is selected
     let currentFieldDetails = null;
     if (focusedFieldId) {
-      // Find the field in the chapter fields map
       for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
         const field = chapter.fields?.find(f => f.id === focusedFieldId);
         if (field) {
@@ -440,26 +465,26 @@ const BrandCoachV2 = (): JSX.Element => {
         }
       }
 
-      // Track interaction count for this field
       setFieldInteractionCounts(prev => ({
         ...prev,
         [focusedFieldId]: (prev[focusedFieldId] || 0) + 1,
       }));
     }
 
-    // Always provide all fields for extraction, but include focused field context
+    // Build chapter context — fieldValues still sent for the edge function's
+    // tiered context builder, but the edge function only sends detailed state
+    // for the current chapter (others get compact summaries)
     const chapterContext: ChapterContext = {
-      chapterId: 'all-chapters',
-      chapterTitle: 'All Chapters',
-      chapterNumber: 0,
+      chapterId: currentChapter?.id || 'all-chapters',
+      chapterTitle: currentChapter?.title || 'All Chapters',
+      chapterNumber: currentChapter?.number || 0,
       fieldsToCapture: allFieldsToCapture,
       fieldLabels: allFieldLabels,
       focusedField: focusedFieldId,
       currentFieldDetails,
-      // Enable conversational mode by default
       comprehensiveMode: false,
-      // Pass current field state so Trevor knows what's filled vs. missing
       currentFieldValues: fieldValues,
+      currentChapterKey,
     };
 
     try {
@@ -753,6 +778,7 @@ const BrandCoachV2 = (): JSX.Element => {
           })()}
         </div>
         <div className="flex items-center gap-2">
+          <BrandMarkdownExport variant="outline" size="sm" />
           <VersionSwitcher />
           <AvatarHeaderDropdown
             currentAvatar={currentAvatar ? {
@@ -1000,6 +1026,32 @@ const BrandCoachV2 = (): JSX.Element => {
                   <span>{userDocuments.length} document(s) will be included for context</span>
                 </div>
               )}
+              {reviewContextActive && (
+                <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground italic">
+                  <Search className="h-3 w-3" />
+                  <span>
+                    Review data shared with Trevor
+                    {reviewEnrichmentStatus === 'pending' && (
+                      <> · <Loader2 className="inline h-3 w-3 animate-spin" /> Enriching...</>
+                    )}
+                    {reviewEnrichmentStatus === 'complete' && (
+                      <> · {reviewCount} reviews analyzed</>
+                    )}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      chatService.setCompetitiveInsightsContext(null);
+                      setReviewContextActive(false);
+                      setReviewEnrichmentStatus('none');
+                      setReviewCount(0);
+                    }}
+                    className="ml-auto text-xs underline hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
               <div className="flex gap-2">
                 <Button
                   variant="ghost"
@@ -1021,6 +1073,7 @@ const BrandCoachV2 = (): JSX.Element => {
                     </Badge>
                   )}
                 </Button>
+                <ChatToolsMenu onSendReviewContext={handleSendReviewContext} onEnrichmentComplete={handleEnrichmentComplete} />
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
