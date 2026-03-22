@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChapterFieldSet } from "./ChapterFieldSet";
 import type { Chapter, ChapterStatus, FieldSource } from "@/config/chapterFields";
@@ -75,6 +76,23 @@ export interface ChapterSectionAccordionProps {
  */
 export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterSectionAccordionProps>(
   ({ chapters, activeChapterId, recentlyUpdatedChapterIds, onFieldChange, onProceed, onFieldFocus, className }, ref) => {
+    /**
+     * A chapter is "complete" if its fields contain at least 5 words total
+     */
+    const isChapterComplete = (chapterData: ChapterData): boolean => {
+      const { chapter, fieldValues } = chapterData;
+      if (!chapter.fields || !Array.isArray(chapter.fields)) return false;
+      let wordCount = 0;
+      for (const field of chapter.fields) {
+        const value = fieldValues[field.id];
+        if (!value) continue;
+        const text = Array.isArray(value) ? value.join(' ') : String(value);
+        wordCount += text.trim().split(/\s+/).filter(Boolean).length;
+        if (wordCount >= 5) return true;
+      }
+      return false;
+    };
+
     /**
      * Get the first captured value from a chapter for summary display
      */
@@ -182,17 +200,6 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
     };
 
     /**
-     * Render empty state for chapters without fields
-     */
-    const renderEmptyState = (): JSX.Element => {
-      return (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Chat with Trevor to populate fields for this chapter</span>
-        </div>
-      );
-    };
-
-    /**
      * Accordion open state — only the active chapter is open by default.
      * Additional chapters open when: user clicks them, activeChapterId advances,
      * or the AI updates a field within them.
@@ -233,6 +240,8 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
           {chapters.map((chapterData) => {
             const { chapter, status } = chapterData;
             const isDisabled = false; // All chapters are now accessible
+            const isOpen = accordionValue.includes(chapter.id);
+            const complete = isChapterComplete(chapterData);
 
             return (
               <AccordionItem
@@ -251,14 +260,21 @@ export const ChapterSectionAccordion = React.forwardRef<HTMLDivElement, ChapterS
                   disabled={isDisabled}
                 >
                   <div className="flex items-center justify-between w-full pr-4">
-                    <div className="flex flex-col items-start">
-                      <div className="flex items-center">
-                        <span className="font-semibold">{chapter.title}</span>
-                        {renderStatusBadge(status)}
+                    <div className="flex items-center gap-3">
+                      {!isOpen && (
+                        complete
+                          ? <CheckCircle className="h-4 w-4 shrink-0 text-green-500" />
+                          : <Circle className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+                      )}
+                      <div className="flex flex-col items-start">
+                        <div className="flex items-center">
+                          <span className="font-semibold">{chapter.title}</span>
+                          {renderStatusBadge(status)}
+                        </div>
+                        <span className="text-sm text-muted-foreground font-normal mt-1">
+                          {chapter.description}
+                        </span>
                       </div>
-                      <span className="text-sm text-muted-foreground font-normal mt-1">
-                        {chapter.description}
-                      </span>
                     </div>
                   </div>
                 </AccordionTrigger>

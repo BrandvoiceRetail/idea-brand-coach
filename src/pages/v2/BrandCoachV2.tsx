@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useChapterProgress } from '@/hooks/useChapterProgress';
-import { useFieldExtraction, parseFieldExtraction } from '@/hooks/useFieldExtraction';
+import { useFieldExtraction } from '@/hooks/useFieldExtraction';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemKB } from '@/contexts/SystemKBContext';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
@@ -28,7 +28,7 @@ import { AvatarHeaderDropdown } from '@/components/v2/AvatarHeaderDropdown';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
 import { FieldExtractionBadges } from '@/components/v2/FieldExtractionBadges';
 import type { ExtractedField } from '@/components/v2/FieldExtractionBadges';
-import { CHAPTER_FIELDS_MAP } from '@/config/chapterFields';
+import { CHAPTER_FIELDS_MAP, BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY } from '@/config/chapterFields';
 import type { ChapterId, ChapterContext } from '@/types/chapter';
 import type { ChatMessage } from '@/types/chat';
 import { useFieldReview } from '@/contexts/FieldReviewContext';
@@ -117,6 +117,7 @@ const BrandCoachV2 = (): JSX.Element => {
     fieldValues,
     fieldSources,
     setFieldManual,
+    setFieldLock,
     extractedCount,
     clearFields,
     isFieldLocked,
@@ -154,9 +155,12 @@ const BrandCoachV2 = (): JSX.Element => {
     fieldValues,
     fieldSources,
     onFieldsLoaded: (loadedFields) => {
-      // Set loaded fields into the UI
-      Object.entries(loadedFields).forEach(([fieldId, value]) => {
+      // Set loaded fields into the UI, restoring both value and lock state from DB
+      Object.entries(loadedFields).forEach(([fieldId, { value, isLocked }]) => {
         setFieldManual(fieldId, value);
+        if (isLocked) {
+          setFieldLock(fieldId, true);
+        }
       });
     },
   });
@@ -189,15 +193,9 @@ const BrandCoachV2 = (): JSX.Element => {
 
   // Reverse lookup: fieldId → book chapter ID (e.g. 'brandPurpose' → 'chapter-01-introduction')
   const fieldToBookChapterId = useMemo<Record<string, string>>(() => {
-    const chapterFieldsMap: Record<number, string> = {
-      1: 'BRAND_FOUNDATION', 2: 'BRAND_VALUES', 3: 'CUSTOMER_AVATAR',
-      4: 'MARKET_INSIGHT', 5: 'BUYER_INTENT', 6: 'POSITIONING',
-      7: 'BRAND_PERSONALITY', 8: 'EMOTIONAL_CONNECTION', 9: 'CUSTOMER_EXPERIENCE',
-      10: 'BRAND_AUTHORITY', 11: 'BRAND_AUTHENTICITY',
-    };
     const map: Record<string, string> = {};
     allChapters.forEach(bookChapter => {
-      const key = chapterFieldsMap[bookChapter.number];
+      const key = BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY[bookChapter.number];
       if (key && CHAPTER_FIELDS_MAP[key]) {
         CHAPTER_FIELDS_MAP[key].fields.forEach(field => {
           map[field.id] = bookChapter.id;
@@ -238,24 +236,34 @@ const BrandCoachV2 = (): JSX.Element => {
   const processedMessageIds = useRef<Set<string>>(new Set());
 
   // Side-effect: extract fields from NEW assistant messages only
+  // Fields arrive via msg.metadata.extractedFields (from OpenAI tool calls)
   useEffect(() => {
     messages.forEach((msg) => {
+      const metaFields = (msg.metadata as Record<string, unknown>)?.extractedFields as Array<{ identifier: string; value: unknown }> | undefined;
+
       if (
         msg.role !== 'assistant' ||
         processedMessageIds.current.has(msg.id) ||
-        !msg.content.includes('---FIELD_EXTRACTION_JSON---')
+        !metaFields?.length
       ) return;
 
       processedMessageIds.current.add(msg.id);
 
-      // extractFields has side effects (setState, localStorage, toasts)
-      extractFields(msg.content);
+      // Build field values from structured metadata (no delimiter parsing needed)
+      const extractedFields: Record<string, string> = {};
+      for (const field of metaFields) {
+        extractedFields[field.identifier] = Array.isArray(field.value)
+          ? field.value.join('\n')
+          : String(field.value);
+      }
 
-      // Parse extracted fields for the review context
-      const parsed = parseFieldExtraction(msg.content);
-      const extractedFields = parsed.extractedFields;
+      // Apply extracted fields to state via extractFields-compatible path
+      // extractFields expects raw response with delimiters, so we use setFieldManual instead
+      for (const [fieldId, value] of Object.entries(extractedFields)) {
+        setFieldManual(fieldId, value);
+      }
 
-      if (extractedFields && Object.keys(extractedFields).length > 0) {
+      if (Object.keys(extractedFields).length > 0) {
         const meta: MessageExtractionMeta = {
           messageId: msg.id,
           extractedFields,
@@ -287,21 +295,27 @@ const BrandCoachV2 = (): JSX.Element => {
         enqueueFields(pending);
       }
     });
-  }, [messages, extractFields, setMessageExtraction, enqueueFields]);
+  }, [messages, setFieldManual, setMessageExtraction, enqueueFields]);
 
   // Pure display transformation — no side effects
   const processedMessages = useMemo(() => {
     return messages.map((msg) => {
       if (msg.role !== 'assistant') return msg;
 
-      if (msg.content.includes('---FIELD_EXTRACTION_JSON---')) {
-        const parsed = parseFieldExtraction(msg.content);
-        const extractedFields = parsed.extractedFields || {};
+      const metaFields = (msg.metadata as Record<string, unknown>)?.extractedFields as Array<{ identifier: string; value: unknown }> | undefined;
 
-        let finalContent = parsed.displayText;
-        if (Object.keys(extractedFields).length > 0 && parsed.displayText.includes('document')) {
+      if (metaFields?.length) {
+        const extractedFields: Record<string, string> = {};
+        for (const field of metaFields) {
+          extractedFields[field.identifier] = Array.isArray(field.value)
+            ? field.value.join(', ')
+            : String(field.value);
+        }
+
+        let finalContent = msg.content;
+        if (Object.keys(extractedFields).length > 0 && msg.content.includes('document')) {
           const fieldCount = Object.keys(extractedFields).length;
-          finalContent = `${parsed.displayText}\n\n✨ **Success!** I've extracted ${fieldCount} brand element${fieldCount !== 1 ? 's' : ''} from your document. Click the green badges below to review each one!`;
+          finalContent = `${msg.content}\n\n✨ **Success!** I've extracted ${fieldCount} brand element${fieldCount !== 1 ? 's' : ''} from your document. Click the green badges below to review each one!`;
         }
 
         return {
@@ -319,6 +333,33 @@ const BrandCoachV2 = (): JSX.Element => {
   const displayMessages = useMemo(() => {
     return processedMessages.filter((msg) => !msg.metadata?.isSystemMessage);
   }, [processedMessages]);
+
+  // Pre-compute chapter accordion data (avoids IIFE in JSX)
+  const chapterAccordionData = useMemo(() =>
+    allChapters?.map(bookChapter => {
+      const key = BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY[bookChapter.number];
+      const chapterWithFields = key ? CHAPTER_FIELDS_MAP[key] : undefined;
+      const mergedChapter = chapterWithFields ? {
+        ...bookChapter,
+        ...chapterWithFields,
+        id: bookChapter.id,
+        fields: chapterWithFields.fields || [],
+      } : {
+        ...bookChapter,
+        fields: [],
+        pillar: bookChapter.category,
+      };
+
+      let chapterStatus: 'completed' | 'active' | 'future';
+      if (progress?.chapter_statuses?.[bookChapter.id] === 'completed') {
+        chapterStatus = 'completed';
+      } else {
+        chapterStatus = 'active';
+      }
+
+      return { chapter: mergedChapter, status: chapterStatus, fieldValues, fieldSources };
+    }) ?? [],
+  [allChapters, progress, fieldValues, fieldSources]);
 
   // Redirect to auth if not logged in (but only after auth check completes)
   useEffect(() => {
@@ -444,10 +485,12 @@ const BrandCoachV2 = (): JSX.Element => {
   const handleProceed = async (chapterId: ChapterId): Promise<void> => {
     try {
       // 1. First validate that all required fields are filled
-      const currentChapterFields = CHAPTER_FIELDS_MAP[chapterId] ?? [];
+      const bookChapter = allChapters.find(ch => ch.id === chapterId);
+      const fieldsKey = bookChapter ? BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY[bookChapter.number] : undefined;
+      const currentChapterFields = fieldsKey ? (CHAPTER_FIELDS_MAP[fieldsKey]?.fields ?? []) : [];
       const emptyFields = currentChapterFields.filter(field => {
         const value = fieldValues[field.id];
-        return !value || value.trim() === '';
+        return !value || String(value).trim() === '';
       });
 
       if (emptyFields.length > 0) {
@@ -729,64 +772,7 @@ const BrandCoachV2 = (): JSX.Element => {
         leftPanel={
           <div className="h-full overflow-y-auto p-4">
             <ChapterSectionAccordion
-              chapters={(() => {
-                const mappedChapters = allChapters?.map((bookChapter, index) => {
-                // Map book chapter numbers to CHAPTER_FIELDS_MAP keys
-                const chapterFieldsMap: Record<number, string> = {
-                  1: 'BRAND_FOUNDATION',
-                  2: 'BRAND_VALUES',
-                  3: 'CUSTOMER_AVATAR',
-                  4: 'MARKET_INSIGHT',
-                  5: 'BUYER_INTENT',
-                  6: 'POSITIONING',
-                  7: 'BRAND_PERSONALITY',
-                  8: 'EMOTIONAL_CONNECTION',
-                  9: 'CUSTOMER_EXPERIENCE',
-                  10: 'BRAND_AUTHORITY',
-                  11: 'BRAND_AUTHENTICITY'
-                };
-
-                // Get the chapter with fields from CHAPTER_FIELDS_MAP
-                const chapterKey = chapterFieldsMap[bookChapter.number];
-                const chapterWithFields = chapterKey ? CHAPTER_FIELDS_MAP[chapterKey] : undefined;
-
-                // Merge book chapter data with fields
-                const mergedChapter = chapterWithFields ? {
-                  ...bookChapter,
-                  ...chapterWithFields,
-                  id: bookChapter.id, // Keep the book chapter ID for consistency
-                  fields: chapterWithFields.fields || []
-                } : {
-                  ...bookChapter,
-                  fields: [], // Fallback empty fields if no match
-                  pillar: bookChapter.category
-                };
-
-                // Determine chapter status - all chapters are now accessible
-                let chapterStatus: 'completed' | 'active' | 'future';
-                if (progress?.chapter_statuses?.[bookChapter.id]) {
-                  const progressStatus = progress.chapter_statuses[bookChapter.id];
-                  if (progressStatus === 'completed') {
-                    chapterStatus = 'completed';
-                  } else {
-                    // All non-completed chapters are active (accessible)
-                    chapterStatus = 'active';
-                  }
-                } else {
-                  // Default: all chapters are active
-                  chapterStatus = 'active';
-                }
-
-                return {
-                  chapter: mergedChapter,
-                  status: chapterStatus,
-                  fieldValues: fieldValues,
-                  fieldSources: fieldSources,
-                };
-              }) || [];
-
-                return mappedChapters;
-              })()}
+              chapters={chapterAccordionData}
               activeChapterId={progress?.current_chapter_id ?? 'chapter-01-introduction'}
               recentlyUpdatedChapterIds={recentlyUpdatedChapterIds}
               onProceed={handleProceed}

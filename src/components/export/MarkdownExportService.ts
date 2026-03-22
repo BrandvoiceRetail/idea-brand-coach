@@ -26,6 +26,9 @@ export interface ExportOptions {
 
   /** Export format: full detailed export or summary */
   format: 'full' | 'summary';
+
+  /** Export version: v1 (single-pass) or v2 (skills-enhanced, section-by-section) */
+  version?: 'v1' | 'v2';
 }
 
 /**
@@ -103,8 +106,11 @@ export class MarkdownExportService {
       // Collect data from all sources
       const aggregatedData = await this.collectData(userId);
 
-      // Generate markdown content using AI
-      const markdown = await this.generateMarkdownWithAI(aggregatedData, options);
+      // Generate markdown content using appropriate version
+      const useV2 = (options.version ?? 'v2') === 'v2';
+      const markdown = useV2
+        ? await this.generateMarkdownWithSkills(aggregatedData, options, userId)
+        : await this.generateMarkdownWithAI(aggregatedData, options);
 
       // Create filename
       const filename = this.generateFilename(this.brandData.userInfo.company);
@@ -311,6 +317,158 @@ export class MarkdownExportService {
 
     console.log('✅ AI document generated successfully');
     return response.document;
+  }
+
+  /**
+   * Generate markdown content using the V2 skills-enhanced edge function.
+   * Section-by-section generation with IDEA framework skills retrieval.
+   */
+  private async generateMarkdownWithSkills(
+    data: AggregatedData,
+    options: ExportOptions,
+    userId: string
+  ): Promise<string> {
+    // Prepare canvas, avatar, and insights data (same as V1)
+    const canvasData: Record<string, string> = {};
+    for (const entry of data.canvas) {
+      const key = entry.fieldIdentifier.replace('canvas_', '');
+      canvasData[key] = entry.content;
+    }
+
+    const avatarData: Record<string, string> = {};
+    for (const entry of data.avatar) {
+      avatarData[entry.fieldIdentifier] = entry.content;
+    }
+
+    const insightsData: Record<string, string> = {};
+    const allInsights = [
+      ...data.ideaFramework.insight,
+      ...data.ideaFramework.distinctive,
+      ...data.ideaFramework.empathy,
+      ...data.ideaFramework.authentic,
+    ];
+    for (const entry of allInsights) {
+      insightsData[entry.fieldIdentifier] = entry.content;
+    }
+
+    // Collect avatar field values from the V2 chapter workflow
+    const avatarFieldValues = await this.collectAvatarFieldValues(userId);
+
+    // Prepare chat insights (same as V1)
+    const chatInsights: Array<{ title: string; excerpt: string }> = [];
+    if (options.includeChats) {
+      const recentSessions = [...data.chatSessions]
+        .sort((a, b) => {
+          const aTime = new Date(a.session.updated_at).getTime();
+          const bTime = new Date(b.session.updated_at).getTime();
+          return bTime - aTime;
+        })
+        .slice(0, options.maxChatExcerpts || 10);
+
+      for (const session of recentSessions) {
+        const conversationParts: string[] = [];
+        for (const msg of session.messages) {
+          if (msg.role === 'user') {
+            conversationParts.push(`User: ${msg.content}`);
+          } else if (msg.role === 'assistant') {
+            const content = msg.content.length > 800
+              ? msg.content.substring(0, 800) + '...'
+              : msg.content;
+            conversationParts.push(`Coach: ${content}`);
+          }
+        }
+
+        if (conversationParts.length > 0) {
+          let excerpt = conversationParts.join('\n\n');
+          if (excerpt.length > 3000) {
+            excerpt = excerpt.substring(0, 3000) + '\n\n[Conversation truncated...]';
+          }
+          chatInsights.push({
+            title: session.session.title || 'Strategic Conversation',
+            excerpt,
+          });
+        }
+      }
+    }
+
+    console.log('📝 Calling V2 skills-enhanced document generation...');
+
+    const { data: response, error } = await supabase.functions.invoke(
+      'generate-brand-strategy-document-v2',
+      {
+        body: {
+          companyName: this.brandData.userInfo.company || 'Your Brand',
+          canvas: canvasData,
+          avatar: avatarData,
+          insights: insightsData,
+          avatarFieldValues,
+          chatInsights,
+        },
+      }
+    );
+
+    if (error) {
+      console.error('V2 document generation failed:', error);
+      throw new Error(`Failed to generate document: ${error.message}`);
+    }
+
+    if (!response?.success || !response?.document) {
+      console.error('V2 document generation returned invalid response:', response);
+      throw new Error(response?.error || 'Failed to generate document');
+    }
+
+    console.log('✅ V2 document generated successfully');
+    return response.document;
+  }
+
+  /**
+   * Collect avatar field values from the V2 chapter workflow.
+   * Queries the user's active avatar and its field values.
+   */
+  private async collectAvatarFieldValues(
+    userId: string
+  ): Promise<Record<string, string>> {
+    try {
+      // Find the user's most recent avatar
+      const { data: avatars, error: avatarError } = await supabase
+        .from('avatars')
+        .select('id')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      if (avatarError || !avatars?.length) {
+        console.log('No avatar found for user, skipping field values');
+        return {};
+      }
+
+      const avatarId = avatars[0].id;
+
+      // Fetch all field values for this avatar
+      const { data: fieldValues, error: fieldError } = await supabase
+        .from('avatar_field_values')
+        .select('field_id, field_value')
+        .eq('avatar_id', avatarId);
+
+      if (fieldError || !fieldValues) {
+        console.log('No field values found for avatar');
+        return {};
+      }
+
+      // Map to Record<string, string>
+      const result: Record<string, string> = {};
+      for (const row of fieldValues) {
+        if (row.field_value) {
+          result[row.field_id] = row.field_value;
+        }
+      }
+
+      console.log(`📊 Collected ${Object.keys(result).length} avatar field values`);
+      return result;
+    } catch (error) {
+      console.error('Failed to collect avatar field values:', error);
+      return {};
+    }
   }
 
   /**

@@ -165,7 +165,7 @@ describe('ChapterSectionAccordion', () => {
       expect(screen.getByText('Active')).toBeInTheDocument();
     });
 
-    it('should render locked status badge for future chapters', () => {
+    it('should not render a status badge for future chapters', () => {
       const chapters: ChapterData[] = [
         createChapterData(mockChapter1, 'future'),
       ];
@@ -178,7 +178,7 @@ describe('ChapterSectionAccordion', () => {
         />
       );
 
-      expect(screen.getByText('Locked')).toBeInTheDocument();
+      expect(screen.queryByText('Locked')).not.toBeInTheDocument();
     });
   });
 
@@ -237,7 +237,7 @@ describe('ChapterSectionAccordion', () => {
       expect(screen.getByTestId('field-brandValues')).toBeInTheDocument();
     });
 
-    it('should disable future chapter triggers', () => {
+    it('should not disable future chapter triggers (all chapters accessible)', () => {
       const chapters: ChapterData[] = [
         createChapterData(mockChapter1, 'future'),
       ];
@@ -251,7 +251,7 @@ describe('ChapterSectionAccordion', () => {
       );
 
       const trigger = screen.getByRole('button', { name: /Brand Foundation/i });
-      expect(trigger).toBeDisabled();
+      expect(trigger).not.toBeDisabled();
     });
 
     it('should not disable active chapter triggers', () => {
@@ -292,7 +292,7 @@ describe('ChapterSectionAccordion', () => {
       expect(screen.getByTestId('field-brandVision')).toBeInTheDocument();
     });
 
-    it('should render "Proceed to Next Section" button for active chapter', () => {
+    it('should render "Complete & Continue" button for active chapter', () => {
       const chapters: ChapterData[] = [
         createChapterData(mockChapter1, 'active'),
       ];
@@ -306,10 +306,10 @@ describe('ChapterSectionAccordion', () => {
         />
       );
 
-      expect(screen.getByText('Proceed to Next Section')).toBeInTheDocument();
+      expect(screen.getByText('Complete & Continue')).toBeInTheDocument();
     });
 
-    it('should not render "Proceed to Next Section" button for non-active chapters', () => {
+    it('should not render "Complete & Continue" button for non-active chapters', () => {
       const chapters: ChapterData[] = [
         createChapterData(mockChapter1, 'completed', { brandPurpose: 'Test' }),
       ];
@@ -322,7 +322,7 @@ describe('ChapterSectionAccordion', () => {
         />
       );
 
-      expect(screen.queryByText('Proceed to Next Section')).not.toBeInTheDocument();
+      expect(screen.queryByText('Complete & Continue')).not.toBeInTheDocument();
     });
 
     it('should pass disabled prop to fields in non-active chapters', () => {
@@ -464,8 +464,8 @@ describe('ChapterSectionAccordion', () => {
     });
   });
 
-  describe('future chapter locked message', () => {
-    it('should display locked message for future chapters', () => {
+  describe('future chapter behavior', () => {
+    it('should render future chapters without a locked badge', () => {
       const chapters: ChapterData[] = [
         createChapterData(mockChapter1, 'future'),
       ];
@@ -478,8 +478,9 @@ describe('ChapterSectionAccordion', () => {
         />
       );
 
-      // Attempt to click the disabled trigger (won't expand, but we can check content)
-      expect(screen.getByText('Locked')).toBeInTheDocument();
+      // Future chapters are accessible — no locked badge
+      expect(screen.queryByText('Locked')).not.toBeInTheDocument();
+      expect(screen.getByText('Brand Foundation')).toBeInTheDocument();
     });
   });
 
@@ -532,7 +533,7 @@ describe('ChapterSectionAccordion', () => {
       );
     });
 
-    it('should call onProceed when "Proceed to Next Section" button is clicked', () => {
+    it('should call onProceed when "Complete & Continue" button is clicked', () => {
       const chapters: ChapterData[] = [
         createChapterData(mockChapter1, 'active'),
       ];
@@ -546,7 +547,7 @@ describe('ChapterSectionAccordion', () => {
         />
       );
 
-      const button = screen.getByText('Proceed to Next Section');
+      const button = screen.getByText('Complete & Continue');
       fireEvent.click(button);
 
       expect(mockOnProceed).toHaveBeenCalledWith('brand-foundation');
@@ -566,7 +567,7 @@ describe('ChapterSectionAccordion', () => {
         />
       );
 
-      const button = screen.getByText('Proceed to Next Section');
+      const button = screen.getByText('Complete & Continue');
       fireEvent.click(button);
 
       expect(mockOnProceed).toHaveBeenCalledWith('brand-values');
@@ -655,7 +656,7 @@ describe('ChapterSectionAccordion', () => {
 
       expect(screen.getByText('Completed')).toBeInTheDocument();
       expect(screen.getByText('Active')).toBeInTheDocument();
-      expect(screen.getByText('Locked')).toBeInTheDocument();
+      expect(screen.queryByText('Locked')).not.toBeInTheDocument();
     });
 
     it('should only show active chapter fields initially', () => {
@@ -734,7 +735,7 @@ describe('ChapterSectionAccordion', () => {
       );
 
       expect(screen.getByText('Brand Foundation')).toBeInTheDocument();
-      expect(screen.getByText('Proceed to Next Section')).toBeInTheDocument();
+      expect(screen.getByText('Complete & Continue')).toBeInTheDocument();
     });
 
     it('should handle fieldSources prop', () => {

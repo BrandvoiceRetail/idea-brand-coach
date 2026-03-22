@@ -118,6 +118,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear local state immediately
       setUser(null);
       setSession(null);
+      // Clear all user-specific localStorage data to prevent cross-user data leaks
+      try {
+        const keysToRemove = Object.keys(localStorage).filter(k =>
+          k.startsWith('v2_field_values_') ||
+          k.startsWith('v2_field_locks_') ||
+          k.startsWith('brandCoach_') ||
+          k === 'betaProgress' ||
+          k === 'betaTesterInfo' ||
+          k === 'diagnosticData'
+        );
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+      } catch {
+        // localStorage access failure — still proceed with sign-out
+      }
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",

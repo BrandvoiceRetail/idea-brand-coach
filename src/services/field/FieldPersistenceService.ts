@@ -40,20 +40,21 @@ export class FieldPersistenceService {
     field: FieldUpdate
   ): Promise<{ data: AvatarFieldValue | null; error: Error | null }> {
     try {
-      // Check if field is locked before updating
-      const { data: existingField } = await this.supabaseClient
-        .from('avatar_field_values')
-        .select('is_locked')
-        .eq('avatar_id', avatarId)
-        .eq('field_id', field.field_id)
-        .single();
+      // Only check lock state for AI updates — manual edits always proceed
+      if (field.field_source === 'ai') {
+        const { data: existingField } = await this.supabaseClient
+          .from('avatar_field_values')
+          .select('is_locked')
+          .eq('avatar_id', avatarId)
+          .eq('field_id', field.field_id)
+          .single();
 
-      // If field exists and is locked, and the update is from AI, skip
-      if (existingField?.is_locked && field.field_source === 'ai') {
-        return {
-          data: null,
-          error: new Error(`Field ${field.field_id} is locked and cannot be updated by AI`)
-        };
+        if (existingField?.is_locked) {
+          return {
+            data: null,
+            error: new Error(`Field ${field.field_id} is locked and cannot be updated by AI`)
+          };
+        }
       }
 
       const { data, error } = await this.supabaseClient
@@ -269,11 +270,6 @@ export class FieldPersistenceService {
       // Store in localStorage with avatar-specific key
       const storageKey = `brandCoach_avatar_${avatarId}_fields`;
       localStorage.setItem(storageKey, JSON.stringify(fieldMap));
-
-      // Also update the legacy format for backward compatibility
-      Object.entries(fieldMap).forEach(([fieldId, value]) => {
-        localStorage.setItem(`brandCoach_field_${fieldId}`, value);
-      });
     } catch (error) {
       console.error('Error syncing with localStorage:', error);
     }

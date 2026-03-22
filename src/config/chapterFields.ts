@@ -500,6 +500,17 @@ export const CHAPTER_FIELDS_MAP: Record<string, Chapter> = {
 };
 
 /**
+ * Maps book chapter number (1–11) to the CHAPTER_FIELDS_MAP key.
+ * Single source of truth — replaces inline copies in BrandCoachV2.tsx.
+ */
+export const BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY: Record<number, string> = {
+  1: 'BRAND_FOUNDATION',  2: 'BRAND_VALUES',        3: 'CUSTOMER_AVATAR',
+  4: 'MARKET_INSIGHT',    5: 'BUYER_INTENT',         6: 'POSITIONING',
+  7: 'BRAND_PERSONALITY', 8: 'EMOTIONAL_CONNECTION', 9: 'CUSTOMER_EXPERIENCE',
+  10: 'BRAND_AUTHORITY',  11: 'BRAND_AUTHENTICITY',
+};
+
+/**
  * Get chapters in order
  */
 export function getChaptersInOrder(): Chapter[] {

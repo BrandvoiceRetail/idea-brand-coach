@@ -5,7 +5,7 @@
  * Integrates with MarkdownExportService and handles user interactions.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,18 @@ import { useBrand } from '@/contexts/BrandContext';
 import { MarkdownExportService } from './MarkdownExportService';
 import { KnowledgeBaseFactory } from '@/lib/knowledge-base';
 import { SupabaseChatService } from '@/services/SupabaseChatService';
+
+/** Progress stages shown during V2 document generation */
+const PROGRESS_STAGES = [
+  'Collecting your brand data...',
+  'Retrieving IDEA framework skills...',
+  'Analysing customer insights...',
+  'Crafting brand canvas sections...',
+  'Applying the 4 IDEA Tests...',
+  'Building narrative framework...',
+  'Running coherence pass...',
+  'Finalising your document...',
+] as const;
 
 interface BrandMarkdownExportProps {
   /** Company name for filename */
@@ -43,6 +55,31 @@ export function BrandMarkdownExport({
   const { user } = useAuth();
   const { brandData } = useBrand();
   const [isExporting, setIsExporting] = useState(false);
+  const [progressStage, setProgressStage] = useState(0);
+  const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cycle through progress stages while exporting
+  useEffect(() => {
+    if (isExporting) {
+      setProgressStage(0);
+      progressInterval.current = setInterval(() => {
+        setProgressStage((prev) =>
+          prev < PROGRESS_STAGES.length - 1 ? prev + 1 : prev
+        );
+      }, 8000); // ~8s per stage across ~60-90s generation
+    } else {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+        progressInterval.current = null;
+      }
+    }
+
+    return () => {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    };
+  }, [isExporting]);
 
   const handleExport = async (): Promise<void> => {
     if (!user) {
@@ -115,24 +152,31 @@ export function BrandMarkdownExport({
   };
 
   return (
-    <Button
-      onClick={handleExport}
-      variant={variant}
-      size={size}
-      className={fullWidth ? 'w-full' : ''}
-      disabled={isExporting}
-    >
-      {isExporting ? (
-        <>
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          Generating...
-        </>
-      ) : (
-        <>
-          <Download className="w-4 h-4 mr-2" />
-          Export as Markdown
-        </>
+    <div className={fullWidth ? 'w-full' : ''}>
+      <Button
+        onClick={handleExport}
+        variant={variant}
+        size={size}
+        className={fullWidth ? 'w-full' : ''}
+        disabled={isExporting}
+      >
+        {isExporting ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Generating...
+          </>
+        ) : (
+          <>
+            <Download className="w-4 h-4 mr-2" />
+            Export Brand Strategy
+          </>
+        )}
+      </Button>
+      {isExporting && (
+        <p className="mt-2 text-sm text-muted-foreground animate-pulse">
+          {PROGRESS_STAGES[progressStage]}
+        </p>
       )}
-    </Button>
+    </div>
   );
 }

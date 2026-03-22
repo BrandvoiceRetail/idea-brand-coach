@@ -562,73 +562,73 @@ function buildFieldStateContext(
  * Build the proactive extraction prompt section for the system message.
  * Includes all fields, confidence thresholds, and document extraction triggers.
  */
-function buildExtractionPrompt(extractionFields?: string[], hasDocumentContext?: boolean): string {
-  // Determine which fields to show: scoped chapter fields or all fields
-  const fieldsList = extractionFields && extractionFields.length > 0
-    ? extractionFields.map(f => `- ${f}`).join('\n')
-    : getAllFieldsList();
+/**
+ * Build the OpenAI tool definition for structured field extraction.
+ * Uses tool calling instead of prompt-based delimiters for reliable extraction.
+ */
+function buildExtractionTool(extractionFields?: string[]): object {
+  // Build a description that lists valid field IDs so the model knows what to extract
+  const validFields = extractionFields && extractionFields.length > 0
+    ? extractionFields
+    : Object.values(ALL_FIELDS_MAP).flatMap(ch => ch.fields.map(f => f.id));
 
-  let prompt = `
-FIELD EXTRACTION PROTOCOL - PROACTIVE EXTRACTION REQUIRED:
-
-You are responsible for extracting brand field values from EVERY conversation turn. Do NOT wait for the user to explicitly say "my brand purpose is X." Instead, proactively identify when the user shares information that maps to any field below.
-
-CONFIDENCE THRESHOLDS:
-- 0.90+: User directly states or confirms a value (source: "user_stated" or "user_confirmed")
-- 0.85+: Clear information found in uploaded documents (source: "document")
-- 0.70+: Strong inference from conversational context (source: "inferred_strong")
-- Below 0.70: Do NOT extract - ask clarifying questions instead
-
-FIELDS TO EXTRACT:
-${fieldsList}
-
-EXTRACTION RULES:
-1. Extract from EVERY message where relevant information appears
-2. For array fields (type: array), extract as JSON arrays: ["item1", "item2"]
-3. For textarea fields, preserve the user's natural language
-4. Match confidence to source:
-   - Direct statement: 0.90-1.0
-   - Document reference: 0.85-0.95
-   - Conversational inference: 0.70-0.85
-5. Always include the "source" field to track provenance
-6. Extract MULTIPLE fields per turn when multiple are discussed
-7. If the user mentions something that could fill a field, extract it - do not wait for perfect phrasing
-
-EXTRACTION FORMAT:
-At the END of your response, include:
-
----FIELD_EXTRACTION_JSON---
-{
-  "fields": [
-    {
-      "identifier": "brandPurpose",
-      "value": "To empower small businesses to build memorable brands",
-      "confidence": 0.92,
-      "source": "user_stated",
-      "context": "User directly described their brand purpose"
+  const fieldDescriptions = validFields.map(fieldId => {
+    for (const chapter of Object.values(ALL_FIELDS_MAP)) {
+      const field = chapter.fields.find(f => f.id === fieldId);
+      if (field) return `  - ${field.id} (${field.type}): ${field.label} — ${field.helpText}`;
     }
-  ]
+    return `  - ${fieldId}`;
+  }).join('\n');
+
+  return {
+    type: "function",
+    function: {
+      name: "extract_brand_fields",
+      description: `Extract brand field values detected in the user's message. Call this whenever the user shares information that maps to any brand field. Valid fields:\n${fieldDescriptions}`,
+      parameters: {
+        type: "object",
+        properties: {
+          fields: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                identifier: { type: "string", description: "The field ID from the valid fields list" },
+                value: {
+                  description: "The extracted value — string for text/textarea fields, array of strings for array fields",
+                },
+                confidence: { type: "number", description: "Confidence score: 0.90+ for direct statements, 0.85+ for documents, 0.70+ for strong inferences" },
+                source: { type: "string", enum: ["user_stated", "user_confirmed", "inferred_strong", "document"] },
+                context: { type: "string", description: "Brief explanation of why this was extracted" }
+              },
+              required: ["identifier", "value", "confidence", "source"]
+            }
+          }
+        },
+        required: ["fields"]
+      }
+    }
+  };
 }
----END_FIELD_EXTRACTION_JSON---
 
-WHEN TO EXTRACT:
-- User shares any brand-related information (even casually)
-- User confirms or refines a suggestion you made
-- User describes their business, customers, or market
-- User talks about their values, goals, or challenges
-- Document context contains clear field values`;
+/**
+ * Build a brief extraction instruction for the system prompt.
+ * The heavy lifting is done by the tool definition; this just tells the model when to use it.
+ */
+function buildExtractionPrompt(extractionFields?: string[], hasDocumentContext?: boolean): string {
+  let prompt = `
+FIELD EXTRACTION:
+When the user shares information that maps to a brand field, use the extract_brand_fields tool to capture it.
+- Extract from EVERY message where relevant information appears
+- For array fields, pass an array of strings as the value
+- Use confidence 0.90+ for direct statements, 0.70+ for strong inferences
+- Extract MULTIPLE fields per turn when multiple are discussed
+- Do not wait for perfect phrasing — if the user mentions something relevant, extract it`;
 
-  // Add document-specific extraction trigger
   if (hasDocumentContext) {
     prompt += `
-
-DOCUMENT CONTEXT EXTRACTION (ACTIVE):
-Uploaded documents are available in this conversation. You MUST:
-1. Scan document context for ALL extractable field values
-2. Extract with confidence 0.85+ for clear document references
-3. Use source: "document" and include the specific section referenced
-4. Extract as many fields as the document supports in a single turn
-5. Inform the user which fields were populated from their documents`;
+- Scan document context for ALL extractable field values (confidence 0.85+, source: "document")
+- Inform the user which fields were populated from their documents`;
   }
 
   return prompt;
@@ -1435,15 +1435,29 @@ serve(async (req) => {
       }
 
       // Adjust max_tokens based on conversation mode
-      // Document extraction can produce large JSON blocks (5000+ chars), need sufficient tokens
       const comprehensiveModeForTokens = chapterContext?.comprehensiveMode === true;
       const hasActiveExtraction = (extractionFields && extractionFields.length > 0) || hasDocuments;
-      // Document extraction needs 3000+ tokens for response + large JSON extraction block
-      // Regular extraction needs 1500, basic conversation needs 800
-      const conversationalTokens = hasDocuments ? 3500 : (hasActiveExtraction ? 2000 : 800);
+      // Tool calling handles extraction separately, so response tokens are just for conversation
+      const conversationalTokens = hasDocuments ? 2500 : (hasActiveExtraction ? 1500 : 800);
       const maxTokens = comprehensiveModeForTokens ? 4000 : conversationalTokens;
 
-      console.log(`[Performance] Starting OpenAI API call (max_tokens: ${maxTokens})`);
+      // Build request body with optional tool calling for field extraction
+      const requestBody: Record<string, unknown> = {
+        model: 'gpt-4.1-2025-04-14',
+        messages,
+        temperature: 0.7,
+        max_tokens: maxTokens
+      };
+
+      // Add extraction tool when extraction is active
+      if (hasActiveExtraction) {
+        const extractionTool = buildExtractionTool(extractionFields);
+        requestBody.tools = [extractionTool];
+        requestBody.tool_choice = "auto";
+        requestBody.parallel_tool_calls = true;
+      }
+
+      console.log(`[Performance] Starting OpenAI API call (max_tokens: ${maxTokens}, tools: ${hasActiveExtraction ? 'extract_brand_fields' : 'none'})`);
       const openAIStartTime = Date.now();
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1452,12 +1466,7 @@ serve(async (req) => {
           'Authorization': `Bearer ${openAIApiKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          model: 'gpt-4.1-2025-04-14',
-          messages,
-          temperature: 0.7,
-          max_tokens: maxTokens
-        })
+        body: JSON.stringify(requestBody)
       });
 
       console.log('OpenAI API response status:', response.status);
@@ -1472,16 +1481,35 @@ serve(async (req) => {
       const openAITime = Date.now() - openAIStartTime;
       console.log(`[Performance] OpenAI API response received in ${openAITime}ms`);
 
-      // Check if response was truncated due to token limit
-      let consultantResponse = data.choices[0].message.content;
+      // Extract conversational response
+      let consultantResponse = data.choices[0].message.content || '';
       const finishReason = data.choices[0].finish_reason;
 
       if (finishReason === 'length') {
-        console.warn('Response truncated due to token limit - may be missing extraction delimiter');
-        // Append a warning marker that won't affect extraction
+        console.warn('Response truncated due to token limit');
         consultantResponse += '\n[Response may be incomplete]';
       } else {
         console.log(`Response completed normally (finish_reason: ${finishReason})`);
+      }
+
+      // Parse extracted fields from tool calls
+      const toolCalls = data.choices[0].message.tool_calls || [];
+      let extractedFields: Array<{ identifier: string; value: unknown; confidence: number; source: string; context?: string }> = [];
+
+      for (const toolCall of toolCalls) {
+        if (toolCall.function?.name === 'extract_brand_fields') {
+          try {
+            const args = JSON.parse(toolCall.function.arguments);
+            extractedFields = args.fields || [];
+            console.log(`[Field Extraction] Tool call extracted ${extractedFields.length} fields:`, extractedFields.map((f: { identifier: string }) => f.identifier).join(', '));
+          } catch (e) {
+            console.error('[Field Extraction] Failed to parse tool call arguments:', e);
+          }
+        }
+      }
+
+      if (toolCalls.length === 0 && hasActiveExtraction) {
+        console.log('[Field Extraction] No tool call made — model did not detect extractable information');
       }
 
       console.log('IDEA Framework consultation completed successfully');
@@ -1501,6 +1529,7 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({
         response: consultantResponse,
+        extractedFields,
         suggestions,
         sources
       }), {

@@ -395,6 +395,39 @@ serve(async (req) => {
 
     console.log(`✅ Document ${doc.filename} successfully uploaded to vector store`);
 
+    // Trigger automatic field extraction
+    // This runs asynchronously - we don't wait for it to complete
+    try {
+      const extractionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/extract-fields-from-document`;
+      console.log(`🔄 Triggering automatic field extraction for document ${documentId}`);
+      console.log(`🔗 Extraction URL: ${extractionUrl}`);
+      const extractionResponse = await fetch(
+        extractionUrl,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            documentId,
+            // avatarId will be read from the document record if available
+          }),
+        }
+      );
+
+      if (!extractionResponse.ok) {
+        const errorText = await extractionResponse.text();
+        console.warn('Field extraction trigger failed:', errorText);
+      } else {
+        const extractionResult = await extractionResponse.json();
+        console.log('✅ Field extraction completed:', extractionResult);
+      }
+    } catch (err) {
+      console.warn('Failed to trigger field extraction:', err);
+      // Don't throw - document upload was successful, extraction is optional
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

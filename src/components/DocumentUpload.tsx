@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, FileText, X, CheckCircle, AlertCircle, Trash2, MessageSquare } from 'lucide-react';
+import { Upload, FileText, X, CheckCircle, AlertCircle, Trash2, MessageSquare, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { DesktopOnlyFeature } from '@/components/DesktopOnlyFeature';
+import { useBrand } from '@/contexts/BrandContext';
 
 interface UploadedDocument {
   id: string;
@@ -17,6 +18,10 @@ interface UploadedDocument {
   created_at: string;
   extracted_content?: string;
   openai_file_id?: string;
+  avatar_id?: string;
+  extraction_status?: 'pending' | 'extracting' | 'completed' | 'failed' | 'skipped';
+  fields_extracted?: number;
+  extraction_error?: string;
 }
 
 interface DocumentUploadProps {
@@ -26,6 +31,7 @@ interface DocumentUploadProps {
 export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
   const { toast } = useToast();
   const { user, session } = useAuth();
+  const { currentAvatarId } = useBrand();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -39,10 +45,11 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
     }
   }, [user]);
 
-  // Poll for document status updates while any are processing
+  // Poll for document status updates while any are processing or extracting
   useEffect(() => {
     const processingDocs = documents.filter(doc =>
-      ['uploading', 'processing', 'indexing'].includes(doc.status)
+      ['uploading', 'processing', 'indexing'].includes(doc.status) ||
+      doc.extraction_status === 'extracting'
     );
 
     if (processingDocs.length === 0) return;
@@ -190,11 +197,13 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
         .from('uploaded_documents')
         .insert({
           user_id: user.id,
+          avatar_id: currentAvatarId || null,
           filename: file.name,
           file_path: uploadData.path,
           file_size: file.size,
           mime_type: file.type,
-          status: 'processing'
+          status: 'processing',
+          extraction_status: 'pending'
         })
         .select()
         .single();
@@ -473,9 +482,20 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
               </div>
             )}
 
+            {/* Show extraction in progress message */}
+            {documents.some(doc => doc.extraction_status === 'extracting') && (
+              <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-950/50 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div className="flex items-center gap-2 text-sm text-purple-700 dark:text-purple-300">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Auto-populating brand fields from your documents...</span>
+                </div>
+              </div>
+            )}
+
             {/* Show ready message for recently ready documents */}
             {documents.some(doc => doc.status === 'ready') &&
-             !documents.some(doc => ['uploading', 'processing', 'indexing'].includes(doc.status)) && (
+             !documents.some(doc => ['uploading', 'processing', 'indexing'].includes(doc.status)) &&
+             !documents.some(doc => doc.extraction_status === 'extracting') && (
               <div className="mb-4 p-3 bg-green-50 dark:bg-green-950/50 rounded-lg border border-green-200 dark:border-green-800">
                 <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-300">
                   <CheckCircle className="w-4 h-4" />
@@ -505,6 +525,25 @@ export const DocumentUpload = ({ onDocumentsChange }: DocumentUploadProps) => {
                           {getStatusLabel(doc.status)}
                         </span>
                       </p>
+                      {/* Extraction status display */}
+                      {doc.status === 'ready' && doc.extraction_status === 'extracting' && (
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-purple-600 dark:text-purple-400">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Extracting brand fields...</span>
+                        </div>
+                      )}
+                      {doc.extraction_status === 'completed' && doc.fields_extracted && doc.fields_extracted > 0 && (
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-purple-600 dark:text-purple-400">
+                          <Sparkles className="h-3 w-3" />
+                          <span>{doc.fields_extracted} field{doc.fields_extracted !== 1 ? 's' : ''} auto-populated</span>
+                        </div>
+                      )}
+                      {doc.extraction_status === 'failed' && (
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-amber-600 dark:text-amber-400">
+                          <AlertCircle className="h-3 w-3" />
+                          <span>Field extraction failed</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Button

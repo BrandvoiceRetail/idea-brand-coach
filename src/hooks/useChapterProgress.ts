@@ -260,6 +260,21 @@ export const useChapterProgress = (options: UseChapterProgressOptions = {}): Use
     return progress.chapter_statuses[chapterId] === 'completed';
   }, [progress]);
 
+  // Initialize chapter progress for a new session
+  const initializeProgress = useCallback(async (): Promise<void> => {
+    if (!sessionId) return;
+    const firstChapter = allChapters[0];
+    const initialStatuses: Record<ChapterId, ChapterStatus> = {} as Record<ChapterId, ChapterStatus>;
+    allChapters.forEach(ch => { initialStatuses[ch.id] = 'not_started'; });
+    await updateProgressMutation.mutateAsync({
+      chapterId: firstChapter.id,
+      statuses: initialStatuses,
+    });
+  }, [sessionId, allChapters, updateProgressMutation]);
+
+  // True while the initialization mutation is in flight
+  const isInitializing = updateProgressMutation.isPending;
+
   return {
     // Data
     progress,
@@ -268,6 +283,7 @@ export const useChapterProgress = (options: UseChapterProgressOptions = {}): Use
 
     // Loading states
     isLoading: isLoadingSession,
+    isInitializing,
 
     // Error
     error: sessionError as Error | null,
@@ -277,6 +293,7 @@ export const useChapterProgress = (options: UseChapterProgressOptions = {}): Use
     completeCurrentChapter,
     markChapterComplete,
     resetProgress,
+    initializeProgress,
 
     // Utilities
     getChapterById,

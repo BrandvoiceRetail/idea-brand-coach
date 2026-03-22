@@ -21,9 +21,14 @@ export function useBetaMode() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   
-  const [betaProgress, setBetaProgress] = useState<BetaProgress>(() => {
-    const saved = localStorage.getItem('betaProgress');
-    return saved ? JSON.parse(saved) : null;
+  const [betaProgress, setBetaProgress] = useState<BetaProgress | null>(() => {
+    try {
+      const saved = localStorage.getItem('betaProgress');
+      return saved ? (JSON.parse(saved) as BetaProgress) : null;
+    } catch {
+      localStorage.removeItem('betaProgress'); // clear corrupted data
+      return null;
+    }
   });
 
   // Check if user is in beta mode
@@ -93,10 +98,10 @@ export function useBetaMode() {
     }
   };
 
-  // Mark step as complete
-  const completeStep = (stepId: string) => {
+  // Mark step as complete and sync to Supabase
+  const completeStep = async (stepId: string) => {
     if (!betaProgress) return;
-    
+
     const updatedProgress = {
       ...betaProgress,
       completedSteps: [...new Set([...betaProgress.completedSteps, stepId])]
@@ -104,6 +109,25 @@ export function useBetaMode() {
 
     setBetaProgress(updatedProgress);
     localStorage.setItem('betaProgress', JSON.stringify(updatedProgress));
+
+    // Persist to Supabase in background
+    try {
+      const betaTesterInfo = getBetaTesterInfo();
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.functions.invoke('save-beta-comment', {
+        body: {
+          stepId,
+          pageUrl: location.pathname,
+          comment: '__step_completed__',
+          timestamp: new Date().toISOString(),
+          userId: user?.id || null,
+          betaTesterId: betaTesterInfo?.id || null,
+          isStepCompletion: true,
+        }
+      });
+    } catch (error) {
+      console.error('Error syncing step completion to Supabase:', error);
+    }
   };
 
   // Clear beta mode

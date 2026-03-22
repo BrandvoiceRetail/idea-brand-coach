@@ -302,6 +302,12 @@ export interface UseChapterProgressReturn {
 
   /** Check if a chapter is completed */
   isChapterCompleted: (chapterId: ChapterId) => boolean;
+
+  /** Initialize chapter progress for a new session (persists default state to DB) */
+  initializeProgress: () => Promise<void>;
+
+  /** True while initial progress save is in flight */
+  isInitializing: boolean;
 }
 
 /**

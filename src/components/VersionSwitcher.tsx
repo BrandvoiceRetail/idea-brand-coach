@@ -79,7 +79,7 @@ export function VersionSwitcher(): JSX.Element {
 
   return (
     <DropdownMenu onOpenChange={(open) => { if (open) dismissNudge(); }}>
-      <Tooltip open={showNudge} onOpenChange={() => {}}>
+      <Tooltip open={showNudge} onOpenChange={(open) => { if (!open) setShowNudge(false); }}>
         <TooltipTrigger asChild>
           {triggerButton}
         </TooltipTrigger>

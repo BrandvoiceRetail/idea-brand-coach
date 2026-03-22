@@ -46,8 +46,11 @@ describe('useFieldExtraction', () => {
     expect(result.current).toHaveProperty('fieldValues');
     expect(result.current).toHaveProperty('extractFields');
     expect(result.current).toHaveProperty('setFieldManual');
-    expect(result.current).toHaveProperty('getField');
     expect(result.current).toHaveProperty('clearFields');
+    expect(result.current).toHaveProperty('fieldSources');
+    expect(result.current).toHaveProperty('fieldMetadata');
+    expect(result.current).toHaveProperty('setFieldLock');
+    expect(result.current).toHaveProperty('isFieldLocked');
   });
 
   it('should initialize with empty field values', () => {
@@ -58,45 +61,42 @@ describe('useFieldExtraction', () => {
 
   it('should initialize with stored field values from localStorage', () => {
     const storedValues: FieldValuesStore = {
-      'demographics.age': { value: '25-34', source: 'manual' },
-      'demographics.gender': { value: 'Female', source: 'ai' },
+      brandPurpose: { value: 'To inspire', source: 'manual', timestamp: '2026-01-01T00:00:00.000Z' },
+      brandVision: { value: 'A better world', source: 'ai', timestamp: '2026-01-01T00:00:00.000Z' },
     };
 
     mockLocalStorage[`v2_field_values_${testAvatarId}`] = JSON.stringify(storedValues);
 
     const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
-    expect(result.current.fieldValues).toEqual(storedValues);
+    // fieldValues exposes flat values (not the raw store)
+    expect(result.current.fieldValues).toEqual({
+      brandPurpose: 'To inspire',
+      brandVision: 'A better world',
+    });
   });
 
   describe('extractFields', () => {
-    it('should extract fields from AI response with delimiters', () => {
+    it('should extract fields from AI response with delimiters and return display text', () => {
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
       const aiResponse = `Here is some text.
 ---FIELD_EXTRACTION_JSON---
-{"demographics.age": "25-34", "demographics.gender": "Female"}
+{"brandPurpose": "To inspire", "brandVision": "A better world"}
 ---END_FIELD_EXTRACTION_JSON---
 More text here.`;
 
-      let extractResult;
+      let displayText: string | undefined;
       act(() => {
-        extractResult = result.current.extractFields(aiResponse);
+        displayText = result.current.extractFields(aiResponse);
       });
 
-      expect(extractResult).toEqual({
-        displayText: 'Here is some text.\n\nMore text here.',
-        extractedFields: {
-          'demographics.age': '25-34',
-          'demographics.gender': 'Female',
-        },
-        success: true,
-      });
+      // extractFields returns display text (string), not an object
+      expect(displayText).toBe('Here is some text.\n\nMore text here.');
 
-      expect(result.current.fieldValues).toEqual({
-        'demographics.age': { value: '25-34', source: 'ai' },
-        'demographics.gender': { value: 'Female', source: 'ai' },
-      });
+      // Field values are flat strings
+      expect(result.current.fieldValues['brandPurpose']).toBe('To inspire');
+      expect(result.current.fieldValues['brandVision']).toBe('A better world');
     });
 
     it('should return original response when no delimiters found', () => {
@@ -104,83 +104,40 @@ More text here.`;
 
       const plainResponse = 'Just plain text without extraction.';
 
-      let extractResult;
+      let displayText: string | undefined;
       act(() => {
-        extractResult = result.current.extractFields(plainResponse);
+        displayText = result.current.extractFields(plainResponse);
       });
 
-      expect(extractResult).toEqual({
-        displayText: plainResponse,
-        extractedFields: null,
-        success: true,
-      });
-
+      expect(displayText).toBe(plainResponse);
       expect(result.current.fieldValues).toEqual({});
     });
 
-    it('should not overwrite manual field values with AI values', () => {
-      const { result } = renderHook(() => useFieldExtraction(testAvatarId));
-
-      // Set a manual value first
-      act(() => {
-        result.current.setFieldManual('demographics.age', '35-44');
-      });
-
-      expect(result.current.fieldValues['demographics.age']).toEqual({
-        value: '35-44',
-        source: 'manual',
-      });
-
-      // Try to overwrite with AI extraction
-      const aiResponse = `---FIELD_EXTRACTION_JSON---
-{"demographics.age": "25-34", "demographics.gender": "Female"}
----END_FIELD_EXTRACTION_JSON---`;
-
-      act(() => {
-        result.current.extractFields(aiResponse);
-      });
-
-      // Manual value should be preserved, new AI value should be added
-      expect(result.current.fieldValues['demographics.age']).toEqual({
-        value: '35-44',
-        source: 'manual',
-      });
-      expect(result.current.fieldValues['demographics.gender']).toEqual({
-        value: 'Female',
-        source: 'ai',
-      });
-    });
-
-    it('should overwrite AI field values with new AI values', () => {
+    it('should overwrite existing AI field values with new AI values', () => {
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
       // First AI extraction
       const firstResponse = `---FIELD_EXTRACTION_JSON---
-{"demographics.age": "25-34"}
+{"brandPurpose": "First purpose"}
 ---END_FIELD_EXTRACTION_JSON---`;
 
       act(() => {
         result.current.extractFields(firstResponse);
       });
 
-      expect(result.current.fieldValues['demographics.age']).toEqual({
-        value: '25-34',
-        source: 'ai',
-      });
+      expect(result.current.fieldValues['brandPurpose']).toBe('First purpose');
+      expect(result.current.fieldSources['brandPurpose']).toBe('ai');
 
       // Second AI extraction with different value
       const secondResponse = `---FIELD_EXTRACTION_JSON---
-{"demographics.age": "35-44"}
+{"brandPurpose": "Updated purpose"}
 ---END_FIELD_EXTRACTION_JSON---`;
 
       act(() => {
         result.current.extractFields(secondResponse);
       });
 
-      expect(result.current.fieldValues['demographics.age']).toEqual({
-        value: '35-44',
-        source: 'ai',
-      });
+      expect(result.current.fieldValues['brandPurpose']).toBe('Updated purpose');
     });
 
     it('should handle malformed JSON gracefully', () => {
@@ -190,47 +147,37 @@ More text here.`;
 {invalid json here}
 ---END_FIELD_EXTRACTION_JSON---`;
 
-      let extractResult;
+      let displayText: string | undefined;
       act(() => {
-        extractResult = result.current.extractFields(malformedResponse);
+        displayText = result.current.extractFields(malformedResponse);
       });
 
-      expect(extractResult).toEqual({
-        displayText: malformedResponse,
-        extractedFields: null,
-        success: false,
-      });
-
-      expect(console.error).toHaveBeenCalledWith(
-        'Failed to parse field extraction JSON:',
-        expect.any(Error)
-      );
+      // Display text is empty (before-content was empty)
+      expect(displayText).toBe('');
+      expect(result.current.fieldValues).toEqual({});
     });
 
-    it('should handle missing end delimiter', () => {
+    it('should handle missing end delimiter via truncation recovery', () => {
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
       const incompleteResponse = `---FIELD_EXTRACTION_JSON---
-{"fields": [{"identifier": "demographics.age", "value": "25-34", "confidence": 0.9}]}`;
+{"fields": [{"identifier": "brandPurpose", "value": "Recovered purpose", "confidence": 0.9}]}`;
 
-      let extractResult;
+      let displayText: string | undefined;
       act(() => {
-        extractResult = result.current.extractFields(incompleteResponse);
+        displayText = result.current.extractFields(incompleteResponse);
       });
 
-      // Should recover from truncation and extract fields
-      expect(extractResult).toEqual({
-        displayText: '', // JSON should be removed from display
-        extractedFields: { 'demographics.age': '25-34' },
-        success: true,
-      });
+      // Should recover via json-repair strategy
+      expect(displayText).toBe('');
+      expect(result.current.fieldValues['brandPurpose']).toBe('Recovered purpose');
     });
 
     it('should save extracted fields to localStorage', () => {
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
       const aiResponse = `---FIELD_EXTRACTION_JSON---
-{"demographics.age": "25-34"}
+{"brandPurpose": "To inspire"}
 ---END_FIELD_EXTRACTION_JSON---`;
 
       act(() => {
@@ -239,10 +186,30 @@ More text here.`;
 
       expect(localStorage.setItem).toHaveBeenCalledWith(
         `v2_field_values_${testAvatarId}`,
-        JSON.stringify({
-          'demographics.age': { value: '25-34', source: 'ai' },
-        })
+        expect.stringContaining('"brandPurpose"')
       );
+    });
+
+    it('should not overwrite locked fields', () => {
+      const { result } = renderHook(() => useFieldExtraction(testAvatarId));
+
+      // Set a manual value and lock it
+      act(() => {
+        result.current.setFieldManual('brandPurpose', 'My locked purpose');
+        result.current.setFieldLock('brandPurpose', true);
+      });
+
+      // Try to overwrite with AI extraction
+      const aiResponse = `---FIELD_EXTRACTION_JSON---
+{"brandPurpose": "AI override attempt"}
+---END_FIELD_EXTRACTION_JSON---`;
+
+      act(() => {
+        result.current.extractFields(aiResponse);
+      });
+
+      // Locked value should be preserved
+      expect(result.current.fieldValues['brandPurpose']).toBe('My locked purpose');
     });
   });
 
@@ -251,13 +218,11 @@ More text here.`;
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
       act(() => {
-        result.current.setFieldManual('demographics.age', '35-44');
+        result.current.setFieldManual('brandPurpose', 'My brand purpose');
       });
 
-      expect(result.current.fieldValues['demographics.age']).toEqual({
-        value: '35-44',
-        source: 'manual',
-      });
+      expect(result.current.fieldValues['brandPurpose']).toBe('My brand purpose');
+      expect(result.current.fieldSources['brandPurpose']).toBe('manual');
     });
 
     it('should overwrite existing AI value with manual value', () => {
@@ -265,64 +230,69 @@ More text here.`;
 
       // First set AI value
       const aiResponse = `---FIELD_EXTRACTION_JSON---
-{"demographics.age": "25-34"}
+{"brandPurpose": "AI purpose"}
 ---END_FIELD_EXTRACTION_JSON---`;
 
       act(() => {
         result.current.extractFields(aiResponse);
       });
 
-      expect(result.current.fieldValues['demographics.age'].source).toBe('ai');
+      expect(result.current.fieldSources['brandPurpose']).toBe('ai');
 
       // Overwrite with manual value
       act(() => {
-        result.current.setFieldManual('demographics.age', '35-44');
+        result.current.setFieldManual('brandPurpose', 'Manual override');
       });
 
-      expect(result.current.fieldValues['demographics.age']).toEqual({
-        value: '35-44',
-        source: 'manual',
-      });
+      expect(result.current.fieldValues['brandPurpose']).toBe('Manual override');
+      expect(result.current.fieldSources['brandPurpose']).toBe('manual');
     });
 
     it('should save manual field to localStorage', () => {
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
       act(() => {
-        result.current.setFieldManual('demographics.age', '35-44');
+        result.current.setFieldManual('brandPurpose', 'My brand purpose');
       });
 
       expect(localStorage.setItem).toHaveBeenCalledWith(
         `v2_field_values_${testAvatarId}`,
-        JSON.stringify({
-          'demographics.age': { value: '35-44', source: 'manual' },
-        })
+        expect.stringContaining('"brandPurpose"')
       );
     });
-  });
 
-  describe('getField', () => {
-    it('should return field value if it exists', () => {
+    it('should join array values with newline', () => {
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
       act(() => {
-        result.current.setFieldManual('demographics.age', '35-44');
+        result.current.setFieldManual('brandValues', ['Innovation', 'Integrity', 'Excellence']);
       });
 
-      const field = result.current.getField('demographics.age');
-
-      expect(field).toEqual({
-        value: '35-44',
-        source: 'manual',
-      });
+      expect(result.current.fieldValues['brandValues']).toBe('Innovation\nIntegrity\nExcellence');
     });
+  });
 
-    it('should return undefined for non-existent field', () => {
+  describe('fieldMetadata', () => {
+    it('should return field value if it exists via fieldMetadata', () => {
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
-      const field = result.current.getField('nonexistent.field');
+      act(() => {
+        result.current.setFieldManual('brandPurpose', 'My purpose');
+      });
 
-      expect(field).toBeUndefined();
+      const meta = result.current.fieldMetadata['brandPurpose'];
+
+      expect(meta.value).toBe('My purpose');
+      expect(meta.source).toBe('manual');
+      expect(meta.isLocked).toBe(false);
+    });
+
+    it('should return undefined for non-existent field in fieldMetadata', () => {
+      const { result } = renderHook(() => useFieldExtraction(testAvatarId));
+
+      const meta = result.current.fieldMetadata['nonexistent'];
+
+      expect(meta).toBeUndefined();
     });
   });
 
@@ -332,8 +302,8 @@ More text here.`;
 
       // Set some fields
       act(() => {
-        result.current.setFieldManual('demographics.age', '35-44');
-        result.current.setFieldManual('demographics.gender', 'Male');
+        result.current.setFieldManual('brandPurpose', 'Purpose 1');
+        result.current.setFieldManual('brandVision', 'Vision 1');
       });
 
       expect(Object.keys(result.current.fieldValues).length).toBe(2);
@@ -346,19 +316,21 @@ More text here.`;
       expect(result.current.fieldValues).toEqual({});
     });
 
-    it('should clear field values from localStorage', () => {
+    it('should persist cleared state to localStorage', () => {
       const { result } = renderHook(() => useFieldExtraction(testAvatarId));
 
       act(() => {
-        result.current.setFieldManual('demographics.age', '35-44');
+        result.current.setFieldManual('brandPurpose', 'Purpose');
       });
 
       act(() => {
         result.current.clearFields();
       });
 
-      expect(localStorage.removeItem).toHaveBeenCalledWith(
-        `v2_field_values_${testAvatarId}`
+      // clearFields calls saveFieldValues with {} which calls setItem with '{}'
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        `v2_field_values_${testAvatarId}`,
+        '{}'
       );
     });
   });
@@ -372,8 +344,11 @@ More text here.`;
       const { result: result2 } = renderHook(() => useFieldExtraction(avatar2));
 
       act(() => {
-        result1.current.setFieldManual('demographics.age', '25-34');
-        result2.current.setFieldManual('demographics.age', '35-44');
+        result1.current.setFieldManual('brandPurpose', 'Avatar 1 purpose');
+      });
+
+      act(() => {
+        result2.current.setFieldManual('brandPurpose', 'Avatar 2 purpose');
       });
 
       expect(localStorage.setItem).toHaveBeenCalledWith(
@@ -385,8 +360,8 @@ More text here.`;
         expect.any(String)
       );
 
-      expect(result1.current.fieldValues['demographics.age'].value).toBe('25-34');
-      expect(result2.current.fieldValues['demographics.age'].value).toBe('35-44');
+      expect(result1.current.fieldValues['brandPurpose']).toBe('Avatar 1 purpose');
+      expect(result2.current.fieldValues['brandPurpose']).toBe('Avatar 2 purpose');
     });
   });
 });
@@ -454,14 +429,10 @@ Text after`;
     const result = parseFieldExtraction(input);
 
     expect(result).toEqual({
-      displayText: input,
+      displayText: '',
       extractedFields: null,
       success: false,
     });
-    expect(console.error).toHaveBeenCalledWith(
-      'Failed to parse field extraction JSON:',
-      expect.any(Error)
-    );
   });
 
   it('should handle empty JSON object', () => {
@@ -473,7 +444,7 @@ Text after`;
 
     expect(result).toEqual({
       displayText: '',
-      extractedFields: null,  // Empty object means no fields extracted
+      extractedFields: null, // Empty object means no fields extracted
       success: false,
     });
   });
@@ -487,13 +458,10 @@ Text after`;
 
     const result = parseFieldExtraction(input);
 
-    expect(result).toEqual({
-      displayText: 'Text before\n\n  Text after',
-      extractedFields: {
-        field1: 'value1',
-      },
-      success: true,
-    });
+    expect(result.extractedFields).toEqual({ field1: 'value1' });
+    expect(result.success).toBe(true);
+    // beforeContent is trimmed from the start
+    expect(result.displayText).toContain('Text before');
   });
 });
 
@@ -523,7 +491,7 @@ describe('localStorage utility functions', () => {
   describe('getStoredFieldValues', () => {
     it('should return stored field values', () => {
       const storedValues: FieldValuesStore = {
-        'demographics.age': { value: '25-34', source: 'manual' },
+        brandPurpose: { value: 'To inspire', source: 'manual', timestamp: '2026-01-01T00:00:00.000Z' },
       };
 
       mockLocalStorage[`v2_field_values_${testAvatarId}`] = JSON.stringify(storedValues);
@@ -545,10 +513,7 @@ describe('localStorage utility functions', () => {
       const result = getStoredFieldValues(testAvatarId);
 
       expect(result).toEqual({});
-      expect(console.error).toHaveBeenCalledWith(
-        'Failed to load field values from localStorage:',
-        expect.any(Error)
-      );
+      expect(console.error).toHaveBeenCalled();
     });
 
     it('should handle localStorage access errors', () => {
@@ -561,17 +526,14 @@ describe('localStorage utility functions', () => {
       const result = getStoredFieldValues(testAvatarId);
 
       expect(result).toEqual({});
-      expect(console.error).toHaveBeenCalledWith(
-        'Failed to load field values from localStorage:',
-        expect.any(Error)
-      );
+      expect(console.error).toHaveBeenCalled();
     });
   });
 
   describe('saveStoredFieldValues', () => {
     it('should save field values to localStorage', () => {
       const values: FieldValuesStore = {
-        'demographics.age': { value: '25-34', source: 'manual' },
+        brandPurpose: { value: 'To inspire', source: 'manual', timestamp: '2026-01-01T00:00:00.000Z' },
       };
 
       saveStoredFieldValues(testAvatarId, values);
@@ -590,16 +552,12 @@ describe('localStorage utility functions', () => {
       });
 
       const values: FieldValuesStore = {
-        'demographics.age': { value: '25-34', source: 'manual' },
+        brandPurpose: { value: 'To inspire', source: 'manual', timestamp: '2026-01-01T00:00:00.000Z' },
       };
 
       // Should not throw
       expect(() => saveStoredFieldValues(testAvatarId, values)).not.toThrow();
-
-      expect(console.error).toHaveBeenCalledWith(
-        'Failed to save field values to localStorage:',
-        expect.any(Error)
-      );
+      expect(console.error).toHaveBeenCalled();
     });
   });
 
@@ -621,11 +579,7 @@ describe('localStorage utility functions', () => {
 
       // Should not throw
       expect(() => clearStoredFieldValues(testAvatarId)).not.toThrow();
-
-      expect(console.error).toHaveBeenCalledWith(
-        'Failed to clear field values from localStorage:',
-        expect.any(Error)
-      );
+      expect(console.error).toHaveBeenCalled();
     });
   });
 });

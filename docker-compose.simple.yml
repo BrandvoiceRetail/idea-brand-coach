@@ -1,0 +1,30 @@
+# Simpler Docker Compose - Uses Supabase CLI for backend
+#
+# Prerequisites:
+#   1. Install Supabase CLI: brew install supabase/tap/supabase
+#   2. Start Supabase: supabase start
+#   3. Then run: docker-compose -f docker-compose.simple.yml up
+#
+# This approach is recommended because:
+#   - Supabase CLI handles complex orchestration of 12+ services
+#   - Your migrations are automatically applied
+#   - Edge functions work out of the box
+#   - Better aligned with production behavior
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_SUPABASE_URL=http://localhost:54321
+      - VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      - VITE_DEPLOYMENT_PHASE=P0
+      - VITE_ENABLE_BETA_FEEDBACK=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

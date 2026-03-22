@@ -17,7 +17,7 @@ interface UseSimpleFieldSyncProps {
   /** Source of each field (ai or manual) */
   fieldSources: Record<string, 'ai' | 'manual'>;
   /** Optional callback when fields are loaded from DB */
-  onFieldsLoaded?: (fields: Record<string, string>) => void;
+  onFieldsLoaded?: (fields: Record<string, { value: string; isLocked: boolean }>) => void;
 }
 
 export function useSimpleFieldSync({
@@ -32,6 +32,23 @@ export function useSimpleFieldSync({
   // Store callback in ref to avoid re-running effects when it changes
   const onFieldsLoadedRef = useRef(onFieldsLoaded);
   onFieldsLoadedRef.current = onFieldsLoaded;
+
+  // Track save timeouts per field for cleanup on unmount
+  const saveTimeouts = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  // Keep a stable ref to fieldValues for use inside the logging interval
+  const fieldValuesRef = useRef(fieldValues);
+  fieldValuesRef.current = fieldValues;
+
+  // Reset hasLoadedInitial when avatarId changes so fields reload for the new avatar
+  const prevAvatarId = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevAvatarId.current !== null && prevAvatarId.current !== avatarId) {
+      hasLoadedInitial.current = false;
+      lastSavedValues.current = {};
+    }
+    prevAvatarId.current = avatarId;
+  }, [avatarId]);
 
   /**
    * Save a single field to database
@@ -83,11 +100,14 @@ export function useSimpleFieldSync({
         if (fields && fields.length > 0) {
           console.log(`[FieldSync] Loaded ${fields.length} fields from database`);
 
-          // Convert to simple object for callback
-          const loadedFields: Record<string, string> = {};
+          // Convert to object with value + lock state for callback
+          const loadedFields: Record<string, { value: string; isLocked: boolean }> = {};
           fields.forEach(field => {
             if (field.field_value) {
-              loadedFields[field.field_id] = field.field_value;
+              loadedFields[field.field_id] = {
+                value: field.field_value,
+                isLocked: field.is_locked,
+              };
               lastSavedValues.current[field.field_id] = field.field_value;
             }
           });
@@ -109,10 +129,13 @@ export function useSimpleFieldSync({
             // Reload after migration
             const { data: migratedFields } = await fieldService.current.loadFields(avatarId);
             if (migratedFields && onFieldsLoadedRef.current) {
-              const loadedFields: Record<string, string> = {};
+              const loadedFields: Record<string, { value: string; isLocked: boolean }> = {};
               migratedFields.forEach(field => {
                 if (field.field_value) {
-                  loadedFields[field.field_id] = field.field_value;
+                  loadedFields[field.field_id] = {
+                    value: field.field_value,
+                    isLocked: field.is_locked,
+                  };
                 }
               });
               onFieldsLoadedRef.current(loadedFields);
@@ -143,21 +166,32 @@ export function useSimpleFieldSync({
 
       // Save if value exists and has changed
       if (stringValue && stringValue.trim() && lastSavedValues.current[fieldId] !== stringValue) {
-        // Use setTimeout to debounce rapid changes
-        setTimeout(() => {
+        // Debounce rapid changes — clear any pending save for this field first
+        const existing = saveTimeouts.current.get(fieldId);
+        if (existing) clearTimeout(existing);
+        const id = setTimeout(() => {
           saveField(fieldId, stringValue, source);
+          saveTimeouts.current.delete(fieldId);
         }, 500);
+        saveTimeouts.current.set(fieldId, id);
       }
     });
+
+    // Capture the Map reference for cleanup (avoids stale-ref lint warning)
+    const timeouts = saveTimeouts.current;
+    return () => {
+      timeouts.forEach(id => clearTimeout(id));
+      timeouts.clear();
+    };
   }, [fieldValues, fieldSources, avatarId, saveField]);
 
   /**
-   * Log summary of field sync status
+   * Log summary of field sync status (stable interval — no fieldValues dep)
    */
   useEffect(() => {
     const interval = setInterval(() => {
       const savedCount = Object.keys(lastSavedValues.current).length;
-      const currentCount = Object.keys(fieldValues).length;
+      const currentCount = Object.keys(fieldValuesRef.current).length;
 
       if (savedCount > 0 || currentCount > 0) {
         console.log(`[FieldSync] Status: ${savedCount} fields saved, ${currentCount} fields in UI`);
@@ -165,7 +199,7 @@ export function useSimpleFieldSync({
     }, 30000); // Log every 30 seconds
 
     return () => clearInterval(interval);
-  }, [fieldValues]);
+  }, []); // stable — fieldValues accessed via ref
 
   return {
     saveField,

@@ -212,20 +212,21 @@ export class SupabaseChatService implements IChatService {
       hasSources: !!responseData?.sources,
     });
 
-    // 3.5. Extract fields and clean response content
-    const extraction = this.fieldExtractionService.processResponse(responseData.response);
+    // 3.5. Extract fields from structured tool call response
+    const extractedFields = responseData.extractedFields || [];
 
-    if (extraction.extractedFields.length > 0) {
-      console.log('📝 Extracted fields:', extraction.extractedFields);
+    if (extractedFields.length > 0) {
+      console.log('📝 Extracted fields (tool call):', extractedFields.map((f: { identifier: string }) => f.identifier));
     }
 
-    // 4. Save assistant response to database (with cleaned content)
+    // 4. Save assistant response to database
+    // Response content is clean — extraction data comes via tool calls, not inline text
     const { data: assistantMessage, error: assistantError } = await supabase
       .from('chat_messages')
       .insert({
         user_id: userId,
         role: 'assistant',
-        content: extraction.cleanedContent, // Use cleaned content without extraction blocks
+        content: responseData.response,
         chatbot_type: chatbotType,
         session_id: sessionId,
         chapter_id: message.chapter_id,
@@ -233,7 +234,7 @@ export class SupabaseChatService implements IChatService {
         metadata: {
           suggestions: responseData.suggestions,
           sources: responseData.sources,
-          extractedFields: extraction.extractedFields, // Store extracted fields in metadata
+          extractedFields,
         },
       })
       .select()
@@ -261,7 +262,7 @@ export class SupabaseChatService implements IChatService {
       },
       suggestions: responseData.suggestions,
       sources: responseData.sources,
-      extractedFields: extraction.extractedFields, // Return extracted fields
+      extractedFields,
       titlePromise,
     };
   }

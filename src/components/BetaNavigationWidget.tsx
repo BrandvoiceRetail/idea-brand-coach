@@ -50,13 +50,14 @@ export function BetaNavigationWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [comment, setComment] = useState('');
 
-  // Auto-initialize beta mode for logged-in users if not already initialized
+  // Auto-initialize beta mode only for users on beta URLs — not all logged-in users
   useEffect(() => {
-    if (user && !betaProgress) {
-      // Initialize with 'quick' mode by default for all logged-in users
+    const isBetaUrl = location.pathname.startsWith('/beta') ||
+      new URLSearchParams(window.location.search).get('beta') === 'true';
+    if (user && !betaProgress && isBetaUrl) {
       initializeBetaMode('quick');
     }
-  }, [user, betaProgress, initializeBetaMode]);
+  }, [user, betaProgress, location.pathname]); // intentionally omit initializeBetaMode — not stable
 
   // Always show for logged-in users (beta testing phase)
   // Hide on beta-specific pages to avoid duplication
