@@ -8,7 +8,7 @@
  * - Background sync to Supabase (handled by KnowledgeRepository)
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import type { Avatar, AvatarCreate, AvatarUpdate } from '@/types/avatar';
@@ -19,6 +19,10 @@ import {
   sortAvatarsByDate,
   findAvatarById,
 } from '@/lib/avatar-utils';
+import {
+  LocalStorageAvatarAdapter,
+  type IAvatarStorageAdapter,
+} from '@/lib/AvatarStorageAdapter';
 
 /**
  * Configuration for the avatar tabs hook
@@ -62,63 +66,11 @@ interface UseAvatarTabsReturn {
   refresh: () => void;
 }
 
-// LocalStorage key for avatar list
-const AVATARS_STORAGE_KEY = 'idea-brand-coach:avatars';
-const ACTIVE_AVATAR_STORAGE_KEY = 'idea-brand-coach:activeAvatarId';
-
 /**
- * Load avatars from localStorage
+ * Normalize an unknown error into an Error object with a fallback message.
  */
-function loadAvatarsFromStorage(): Avatar[] {
-  try {
-    const stored = localStorage.getItem(AVATARS_STORAGE_KEY);
-    if (!stored) return [];
-
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.error('[useAvatarTabs] Failed to load avatars from localStorage:', error);
-    return [];
-  }
-}
-
-/**
- * Save avatars to localStorage
- */
-function saveAvatarsToStorage(avatars: Avatar[]): void {
-  try {
-    localStorage.setItem(AVATARS_STORAGE_KEY, JSON.stringify(avatars));
-  } catch (error) {
-    console.error('[useAvatarTabs] Failed to save avatars to localStorage:', error);
-    throw new Error('Failed to save avatar list');
-  }
-}
-
-/**
- * Load active avatar ID from localStorage
- */
-function loadActiveAvatarId(): string | null {
-  try {
-    return localStorage.getItem(ACTIVE_AVATAR_STORAGE_KEY);
-  } catch (error) {
-    console.error('[useAvatarTabs] Failed to load active avatar ID:', error);
-    return null;
-  }
-}
-
-/**
- * Save active avatar ID to localStorage
- */
-function saveActiveAvatarId(id: string | null): void {
-  try {
-    if (id === null) {
-      localStorage.removeItem(ACTIVE_AVATAR_STORAGE_KEY);
-    } else {
-      localStorage.setItem(ACTIVE_AVATAR_STORAGE_KEY, id);
-    }
-  } catch (error) {
-    console.error('[useAvatarTabs] Failed to save active avatar ID:', error);
-  }
+function toError(err: unknown, fallbackMessage: string): Error {
+  return err instanceof Error ? err : new Error(fallbackMessage);
 }
 
 /**
@@ -135,65 +87,84 @@ export function useAvatarTabs(config: UseAvatarTabsConfig = {}): UseAvatarTabsRe
 
   const { user } = useAuth();
   const { toast } = useToast();
-  const hasInitializedRef = useRef<boolean>(false);
-  const isAutoCreatingRef = useRef<boolean>(false);
+
+  const storage: IAvatarStorageAdapter = useMemo(() => new LocalStorageAvatarAdapter(), []);
+
+  // Eagerly-synchronized refs so callbacks always read the latest state,
+  // even within the same React batch (before re-render).
+  const avatarsRef = useRef<Avatar[]>(avatars);
+  const activeAvatarIdRef = useRef(activeAvatarId);
+
+  // Keep refs in sync on every render
+  avatarsRef.current = avatars;
+  activeAvatarIdRef.current = activeAvatarId;
 
   /**
-   * Load initial avatars from localStorage
+   * Update avatars state and eagerly sync the ref so subsequent calls
+   * within the same batch see the new value.
+   */
+  const updateAvatars = useCallback((newAvatars: Avatar[]): void => {
+    avatarsRef.current = newAvatars;
+    setAvatars(newAvatars);
+  }, []);
+
+  /**
+   * Set active avatar ID (state + ref + storage)
+   */
+  const setActiveAvatarId = useCallback(
+    (id: string | null): void => {
+      activeAvatarIdRef.current = id;
+      setActiveAvatarIdState(id);
+      storage.saveActiveAvatarId(id);
+    },
+    [storage],
+  );
+
+  /**
+   * Load initial avatars from localStorage.
+   * Idempotent: re-running simply overwrites state with the same localStorage data.
    */
   useEffect(() => {
-    if (hasInitializedRef.current) return;
-    hasInitializedRef.current = true;
-
     setIsLoading(true);
     try {
-      // Load avatars from localStorage
-      const storedAvatars = loadAvatarsFromStorage();
+      const storedAvatars = storage.loadAvatars();
       const sortedAvatars = sortAvatarsByDate(storedAvatars);
-      setAvatars(sortedAvatars);
 
-      // Load active avatar ID
-      const storedActiveId = loadActiveAvatarId();
+      const storedActiveId = storage.loadActiveAvatarId();
 
-      // If stored active ID exists and is valid, use it
       if (storedActiveId && findAvatarById(sortedAvatars, storedActiveId)) {
+        updateAvatars(sortedAvatars);
         setActiveAvatarIdState(storedActiveId);
+        activeAvatarIdRef.current = storedActiveId;
       } else if (sortedAvatars.length > 0) {
-        // Otherwise, use first avatar
+        updateAvatars(sortedAvatars);
         const firstId = sortedAvatars[0].id;
-        setActiveAvatarIdState(firstId);
-        saveActiveAvatarId(firstId);
-      } else if (autoCreate && !isAutoCreatingRef.current) {
-        // No avatars exist and autoCreate is enabled - create one
-        isAutoCreatingRef.current = true;
+        setActiveAvatarId(firstId);
+      } else if (autoCreate) {
         const newAvatar = getDefaultAvatar(defaultAvatarName);
         const newAvatars = [newAvatar];
-        setAvatars(newAvatars);
-        setActiveAvatarIdState(newAvatar.id);
-        saveAvatarsToStorage(newAvatars);
-        saveActiveAvatarId(newAvatar.id);
-        isAutoCreatingRef.current = false;
+        updateAvatars(newAvatars);
+        storage.saveAvatars(newAvatars);
+        setActiveAvatarId(newAvatar.id);
+      } else {
+        updateAvatars(sortedAvatars);
       }
     } catch (err) {
       console.error('[useAvatarTabs] Failed to load avatars:', err);
-      setError(err instanceof Error ? err : new Error('Failed to load avatars'));
+      setError(toError(err, 'Failed to load avatars'));
     } finally {
       setIsLoading(false);
     }
-  }, [autoCreate, defaultAvatarName]);
-
-  /**
-   * Set active avatar ID (both state and localStorage)
-   */
-  const setActiveAvatarId = useCallback((id: string | null) => {
-    setActiveAvatarIdState(id);
-    saveActiveAvatarId(id);
+    // Run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
    * Get currently active avatar object
    */
-  const activeAvatar = activeAvatarId ? findAvatarById(avatars, activeAvatarId) || null : null;
+  const activeAvatar = activeAvatarId
+    ? findAvatarById(avatars, activeAvatarId) || null
+    : null;
 
   /**
    * Create a new avatar
@@ -201,13 +172,9 @@ export function useAvatarTabs(config: UseAvatarTabsConfig = {}): UseAvatarTabsRe
   const createAvatar = useCallback(
     async (data: AvatarCreate): Promise<Avatar> => {
       try {
-        // Validate name
         const nameError = validateAvatarName(data.name);
-        if (nameError) {
-          throw new Error(nameError);
-        }
+        if (nameError) throw new Error(nameError);
 
-        // Create new avatar with default values
         const newAvatar: Avatar = {
           id: generateAvatarId(),
           name: data.name,
@@ -216,20 +183,16 @@ export function useAvatarTabs(config: UseAvatarTabsConfig = {}): UseAvatarTabsRe
           updated_at: new Date().toISOString(),
           last_accessed_at: new Date().toISOString(),
           metadata: {
-            color: '#6366f1', // Default indigo
-            icon: '👤',
+            color: '#6366f1',
+            icon: '\u{1F464}',
             ...data.metadata,
           },
         };
 
-        // Add to avatars list using functional update
-        setAvatars((currentAvatars) => {
-          const updatedAvatars = [newAvatar, ...currentAvatars];
-          saveAvatarsToStorage(updatedAvatars);
-          return updatedAvatars;
-        });
-
-        // Switch to new avatar
+        // Read from ref (always latest, even within same batch)
+        const updatedAvatars = [newAvatar, ...avatarsRef.current];
+        updateAvatars(updatedAvatars);
+        storage.saveAvatars(updatedAvatars);
         setActiveAvatarId(newAvatar.id);
 
         toast({
@@ -240,17 +203,17 @@ export function useAvatarTabs(config: UseAvatarTabsConfig = {}): UseAvatarTabsRe
         return newAvatar;
       } catch (err) {
         console.error('[useAvatarTabs] Failed to create avatar:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to create avatar';
-        setError(err instanceof Error ? err : new Error(errorMessage));
+        const errorObj = toError(err, 'Failed to create avatar');
+        setError(errorObj);
         toast({
           title: 'Error Creating Avatar',
-          description: errorMessage,
+          description: errorObj.message,
           variant: 'destructive',
         });
         throw err;
       }
     },
-    [setActiveAvatarId, toast]
+    [updateAvatars, setActiveAvatarId, toast, storage],
   );
 
   /**
@@ -259,37 +222,27 @@ export function useAvatarTabs(config: UseAvatarTabsConfig = {}): UseAvatarTabsRe
   const updateAvatar = useCallback(
     async (id: string, update: AvatarUpdate): Promise<void> => {
       try {
-        // Validate name if provided
         if (update.name !== undefined) {
           const nameError = validateAvatarName(update.name);
-          if (nameError) {
-            throw new Error(nameError);
-          }
+          if (nameError) throw new Error(nameError);
         }
 
-        setAvatars((currentAvatars) => {
-          // Find avatar to update
-          const avatarIndex = currentAvatars.findIndex((a) => a.id === id);
-          if (avatarIndex === -1) {
-            throw new Error('Avatar not found');
-          }
+        const currentAvatars = avatarsRef.current;
+        const avatarIndex = currentAvatars.findIndex((a) => a.id === id);
+        if (avatarIndex === -1) throw new Error('Avatar not found');
 
-          // Update avatar
-          const updatedAvatar: Avatar = {
-            ...currentAvatars[avatarIndex],
-            ...update,
-            updated_at: new Date().toISOString(),
-          };
+        const updatedAvatar: Avatar = {
+          ...currentAvatars[avatarIndex],
+          ...update,
+          updated_at: new Date().toISOString(),
+        };
 
-          const updatedAvatars = [...currentAvatars];
-          updatedAvatars[avatarIndex] = updatedAvatar;
+        const updatedAvatars = [...currentAvatars];
+        updatedAvatars[avatarIndex] = updatedAvatar;
+        const sortedAvatars = sortAvatarsByDate(updatedAvatars);
 
-          // Re-sort after update (in case updated_at changed the order)
-          const sortedAvatars = sortAvatarsByDate(updatedAvatars);
-          saveAvatarsToStorage(sortedAvatars);
-
-          return sortedAvatars;
-        });
+        updateAvatars(sortedAvatars);
+        storage.saveAvatars(sortedAvatars);
 
         if (update.name) {
           toast({
@@ -299,121 +252,102 @@ export function useAvatarTabs(config: UseAvatarTabsConfig = {}): UseAvatarTabsRe
         }
       } catch (err) {
         console.error('[useAvatarTabs] Failed to update avatar:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to update avatar';
-        setError(err instanceof Error ? err : new Error(errorMessage));
+        const errorObj = toError(err, 'Failed to update avatar');
+        setError(errorObj);
         toast({
           title: 'Error Updating Avatar',
-          description: errorMessage,
+          description: errorObj.message,
           variant: 'destructive',
         });
         throw err;
       }
     },
-    [toast]
+    [updateAvatars, toast, storage],
   );
 
   /**
-   * Delete an avatar
+   * Delete an avatar.
+   * All state reads use refs; all side effects happen after state computation.
    */
   const deleteAvatar = useCallback(
     async (id: string): Promise<void> => {
-      setAvatars((currentAvatars) => {
-        try {
-          const avatarToDelete = findAvatarById(currentAvatars, id);
-          if (!avatarToDelete) {
-            throw new Error('Avatar not found');
-          }
+      try {
+        const currentAvatars = avatarsRef.current;
+        const avatarToDelete = findAvatarById(currentAvatars, id);
+        if (!avatarToDelete) throw new Error('Avatar not found');
 
-          // Remove from list
-          const updatedAvatars = currentAvatars.filter((a) => a.id !== id);
-          saveAvatarsToStorage(updatedAvatars);
+        const updatedAvatars = currentAvatars.filter((a) => a.id !== id);
+        updateAvatars(updatedAvatars);
+        storage.saveAvatars(updatedAvatars);
 
-          // If deleted avatar was active, switch to another
-          if (activeAvatarId === id) {
-            if (updatedAvatars.length > 0) {
-              setActiveAvatarId(updatedAvatars[0].id);
-            } else {
-              setActiveAvatarId(null);
-            }
-          }
-
-          toast({
-            title: 'Avatar Deleted',
-            description: `"${avatarToDelete.name}" has been deleted.`,
-          });
-
-          return updatedAvatars;
-        } catch (err) {
-          console.error('[useAvatarTabs] Failed to delete avatar:', err);
-          const errorMessage = err instanceof Error ? err.message : 'Failed to delete avatar';
-          setError(err instanceof Error ? err : new Error(errorMessage));
-          toast({
-            title: 'Error Deleting Avatar',
-            description: errorMessage,
-            variant: 'destructive',
-          });
-          throw err;
+        if (activeAvatarIdRef.current === id) {
+          setActiveAvatarId(updatedAvatars[0]?.id ?? null);
         }
-      });
+
+        toast({
+          title: 'Avatar Deleted',
+          description: `"${avatarToDelete.name}" has been deleted.`,
+        });
+      } catch (err) {
+        console.error('[useAvatarTabs] Failed to delete avatar:', err);
+        const errorObj = toError(err, 'Failed to delete avatar');
+        setError(errorObj);
+        toast({
+          title: 'Error Deleting Avatar',
+          description: errorObj.message,
+          variant: 'destructive',
+        });
+        throw err;
+      }
     },
-    [activeAvatarId, setActiveAvatarId, toast]
+    [updateAvatars, setActiveAvatarId, toast, storage],
   );
 
   /**
    * Switch to a different avatar
    */
   const switchAvatar = useCallback(
-    (id: string) => {
-      setAvatars((currentAvatars) => {
-        const avatar = findAvatarById(currentAvatars, id);
-        if (!avatar) {
-          console.error('[useAvatarTabs] Attempted to switch to non-existent avatar:', id);
-          toast({
-            title: 'Error',
-            description: 'Avatar not found.',
-            variant: 'destructive',
-          });
-          return currentAvatars;
-        }
+    (id: string): void => {
+      const currentAvatars = avatarsRef.current;
+      const avatar = findAvatarById(currentAvatars, id);
+      if (!avatar) {
+        console.error('[useAvatarTabs] Attempted to switch to non-existent avatar:', id);
+        toast({
+          title: 'Error',
+          description: 'Avatar not found.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
-        // Update last_accessed_at for the avatar
-        const now = new Date().toISOString();
-        const updatedAvatars = currentAvatars.map((a) =>
-          a.id === id ? { ...a, last_accessed_at: now } : a
-        );
-        saveAvatarsToStorage(updatedAvatars);
-
-        // Switch active avatar
-        setActiveAvatarId(id);
-
-        return updatedAvatars;
-      });
+      const now = new Date().toISOString();
+      const updatedAvatars = currentAvatars.map((a) =>
+        a.id === id ? { ...a, last_accessed_at: now } : a,
+      );
+      updateAvatars(updatedAvatars);
+      storage.saveAvatars(updatedAvatars);
+      setActiveAvatarId(id);
     },
-    [setActiveAvatarId, toast]
+    [updateAvatars, setActiveAvatarId, toast, storage],
   );
 
   /**
    * Refresh avatars from localStorage
    */
-  const refresh = useCallback(() => {
+  const refresh = useCallback((): void => {
     try {
-      const storedAvatars = loadAvatarsFromStorage();
+      const storedAvatars = storage.loadAvatars();
       const sortedAvatars = sortAvatarsByDate(storedAvatars);
-      setAvatars(sortedAvatars);
+      updateAvatars(sortedAvatars);
 
-      // Verify active avatar still exists
-      if (activeAvatarId && !findAvatarById(sortedAvatars, activeAvatarId)) {
-        if (sortedAvatars.length > 0) {
-          setActiveAvatarId(sortedAvatars[0].id);
-        } else {
-          setActiveAvatarId(null);
-        }
+      if (activeAvatarIdRef.current && !findAvatarById(sortedAvatars, activeAvatarIdRef.current)) {
+        setActiveAvatarId(sortedAvatars[0]?.id ?? null);
       }
     } catch (err) {
       console.error('[useAvatarTabs] Failed to refresh avatars:', err);
-      setError(err instanceof Error ? err : new Error('Failed to refresh avatars'));
+      setError(toError(err, 'Failed to refresh avatars'));
     }
-  }, [activeAvatarId, setActiveAvatarId]);
+  }, [updateAvatars, setActiveAvatarId, storage]);
 
   return {
     avatars,
