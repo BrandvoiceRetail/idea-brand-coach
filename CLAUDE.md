@@ -1,6 +1,6 @@
 # Claude Code Instructions - IDEA Brand Coach
 
-> This file is mirrored across CLAUDE.md, AGENTS.md, and GEMINI.md so the same instructions load in any AI environment.
+> AI coding assistant instructions for the IDEA Brand Coach project.
 
 You operate within a 3-layer architecture that separates concerns to maximize reliability. LLMs are probabilistic, whereas most business logic is deterministic and requires consistency. This system fixes that mismatch.
 
@@ -53,7 +53,7 @@ React/TypeScript/Vite application for AI-powered brand consulting using IDEA fra
 
 **Tech Stack:** React 18, TypeScript, Vite, Supabase, shadcn-ui, Tailwind CSS, LangChain
 **Architecture:** Frontend SPA with Supabase backend (Auth, Database, Edge Functions)
-**Status:** P0 Beta Launch (~60% complete) - See `P0_BETA_LAUNCH_ROADMAP.md`
+**Status:** P0 Beta Launch (~60% complete) - See `docs/P0_FEATURES.md`
 
 ## Development Environment
 
@@ -678,7 +678,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Project-Specific Patterns
 
 ### P0 Beta Launch Features
-Current focus (see `P0_BETA_LAUNCH_ROADMAP.md`):
+Current focus (see `docs/P0_FEATURES.md`):
 1. **Brand Diagnostic Flow** - 6-question IDEA assessment
 2. **Authentication System** - Email/password + Google OAuth
 3. **Brand Coach GPT with RAG** - AI consultant with personalized responses
@@ -774,7 +774,7 @@ npx tsc --noEmit            # Type check without build
 
 ## References
 
-- **Project Roadmap:** `P0_BETA_LAUNCH_ROADMAP.md`
+- **Project Roadmap:** `docs/P0_FEATURES.md`
 - **Technical Architecture:** `docs/TECHNICAL_ARCHITECTURE.md`
 - **P0 Features:** `docs/P0_FEATURES.md`
 - **Implementation Plan:** `docs/P0_IMPLEMENTATION_PLAN.md`

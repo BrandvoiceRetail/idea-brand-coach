@@ -261,7 +261,7 @@ All edge functions follow a consistent pattern:
 - Error handling with structured responses
 - Logging for debugging and monitoring
 
-See [API.md](./API.md) for complete API documentation.
+See the [docs/](./docs/) directory for additional documentation.
 
 ### OpenAI Integration
 
@@ -411,12 +411,12 @@ While the codebase currently has minimal automated tests, recommended testing ap
 
 ## Related Documentation
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - Detailed system architecture
-- [API.md](./API.md) - Complete API documentation
-- [DATABASE.md](./DATABASE.md) - Database schema and relationships
-- [DEVELOPMENT.md](./DEVELOPMENT.md) - Developer setup guide
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
-- [docs/](./docs/) - Feature guides and troubleshooting
+- [docs/TECHNICAL_ARCHITECTURE.md](./docs/TECHNICAL_ARCHITECTURE.md) - System architecture and data flows
+- [docs/P0_FEATURES.md](./docs/P0_FEATURES.md) - P0 feature definitions and status
+- [docs/P0_IMPLEMENTATION_PLAN.md](./docs/P0_IMPLEMENTATION_PLAN.md) - Implementation plan and milestones
+- [docs/FEATURE_GATING.md](./docs/FEATURE_GATING.md) - Feature flag and phase gating guide
+- [docs/TESTING_STRATEGY.md](./docs/TESTING_STRATEGY.md) - Testing strategy and procedures
+- [CLAUDE.md](./CLAUDE.md) - AI assistant coding instructions
 
 ## License
 
