@@ -164,8 +164,30 @@ export class ChatEdgeFunctionService {
     );
 
     if (error) {
-      console.error('❌ Edge Function error:', error);
-      throw error;
+      // supabase.functions.invoke wraps HTTP errors — extract the response body for debugging
+      let errorBody: string | undefined;
+      try {
+        if (error.context?.body) {
+          const reader = error.context.body.getReader?.();
+          if (reader) {
+            const { value } = await reader.read();
+            errorBody = new TextDecoder().decode(value);
+          }
+        }
+      } catch {
+        // ignore body read failure
+      }
+      console.error('❌ Edge Function error:', {
+        message: error.message,
+        name: error.name,
+        status: error.context?.status,
+        responseBody: errorBody,
+      });
+      throw new Error(
+        errorBody
+          ? `Edge function error (${error.context?.status}): ${errorBody}`
+          : error.message
+      );
     }
 
     console.log('✅ Received response:', {
@@ -194,7 +216,7 @@ export class ChatEdgeFunctionService {
       headers: {
         Authorization: `Bearer ${authToken}`,
         'Content-Type': 'application/json',
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '',
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjZHJ4dGJjbHhmcGtrbmFzbXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5ODE5ODYsImV4cCI6MjA2OTU1Nzk4Nn0.yPlOSq4l4PMD9RlchTBeXs5EBmzggGQGp7A8B3qGAAk',
       },
       body: JSON.stringify(body),
     });

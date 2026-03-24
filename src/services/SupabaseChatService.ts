@@ -225,17 +225,43 @@ export class SupabaseChatService implements IChatService {
 
     // Parse SSE stream
     const reader = response.body!.getReader();
+    let streamError = false;
     const result = await parseSSEStream(reader, {
       onTextDelta: callbacks.onTextDelta,
       onExtractedFields: callbacks.onExtractedFields,
-      onError: callbacks.onError,
+      onError: (err) => {
+        streamError = true;
+        callbacks.onError(err);
+      },
     });
+
+    // Don't save an empty assistant message if the stream errored
+    if (streamError && !result.fullText.trim()) {
+      console.warn('Stream error with no text output — skipping assistant message save');
+      return;
+    }
+
+    // Fallback: if model produced only tool calls with no text, generate a summary
+    let assistantContent = result.fullText;
+    if (!assistantContent.trim() && result.extractedFields.length > 0) {
+      const fieldNames = result.extractedFields.map(f => f.identifier.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim());
+      assistantContent = `I found ${result.extractedFields.length} field${result.extractedFields.length !== 1 ? 's' : ''} from your input: ${fieldNames.join(', ')}. These have been added to your brand profile.`;
+      // Push fallback text to the UI so the user sees it
+      callbacks.onTextDelta(assistantContent);
+    }
+
+    // Don't save empty assistant messages (stream ended without text or fields)
+    if (!assistantContent.trim()) {
+      console.warn('Stream completed with no text output — skipping assistant message save');
+      callbacks.onError(new Error('No response received from consultant'));
+      return;
+    }
 
     // Save assistant response
     await this.messageService.saveMessage({
       user_id: userId,
       role: 'assistant',
-      content: result.fullText,
+      content: assistantContent,
       chatbot_type: chatbotType,
       session_id: sessionId,
       chapter_id: message.chapter_id,

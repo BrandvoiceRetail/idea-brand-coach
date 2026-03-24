@@ -1316,7 +1316,16 @@ serve(async (req) => {
         ? buildExtractionTool(extractionFields, scopeChapterKey)
         : null;
 
-      console.log(`[Performance] Starting OpenAI API call (max_tokens: ${maxTokens}, tools: ${hasActiveExtraction ? 'extract_brand_fields' : 'none'}, api: ${useResponsesApi ? 'responses' : 'completions'})`);
+      console.log(`[Performance] Starting OpenAI API call (max_tokens: ${maxTokens}, tools: ${hasActiveExtraction ? 'extract_brand_fields' : 'none'}, api: ${useResponsesApi ? 'responses' : 'completions'}, stream: ${!!streamRequested})`);
+      console.log('[Request State]', {
+        promptLength: userPrompt.length,
+        systemPromptLength: systemPrompt.length,
+        chatHistoryLength: chat_history?.length || 0,
+        previousResponseId: previousResponseId || 'none',
+        hasUploadedDocuments,
+        comprehensiveMode: useComprehensiveMode,
+        isFirstMessage: isFirst,
+      });
       const openAIStartTime = Date.now();
 
       let consultantResponse: string;
@@ -1386,11 +1395,31 @@ serve(async (req) => {
           responsesBody.parallel_tool_calls = true;
         }
 
+        /** Check whether an OpenAI error indicates a stale conversation chain (e.g. unresolved tool calls). */
+        const isStaleChainError = (status: number, body: string): boolean =>
+          status === 400 && (body.includes('pending') || body.includes('tool') || body.includes('previous_response_id'));
+
+        /** Strip chaining fields so the next request starts a fresh conversation turn. */
+        const retryWithoutChaining = (): void => {
+          console.warn('[Conversations] Stale chain detected — retrying without previous_response_id');
+          delete responsesBody.previous_response_id;
+          // Re-inject chat history since we can no longer rely on server-side history
+          if (chat_history && Array.isArray(chat_history)) {
+            const historyLimit = useComprehensiveMode ? 10 : 5;
+            const recentHistory = chat_history.slice(-historyLimit);
+            (responsesBody.input as Array<{ role: string; content: unknown }>) = [
+              ...recentHistory.map((msg: any) => ({ role: msg.role, content: msg.content })),
+              ...(responsesBody.input as Array<{ role: string; content: unknown }>).slice(-1), // keep current user message
+            ];
+          }
+        };
+
         // ─── Streaming SSE path ───
         if (streamRequested) {
           responsesBody.stream = true;
+          console.log(`[Streaming] Starting stream request. previousResponseId: ${previousResponseId || 'none'}, tools: ${responsesTools.length}, inputItems: ${(responsesBody.input as unknown[]).length}`);
 
-          const openAIResponse = await fetch('https://api.openai.com/v1/responses', {
+          let openAIResponse = await fetch('https://api.openai.com/v1/responses', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${openAIApiKey}`,
@@ -1399,9 +1428,40 @@ serve(async (req) => {
             body: JSON.stringify(responsesBody)
           });
 
+          // Retry without chaining if previous response has unresolved tool calls
+          if (!openAIResponse.ok && previousResponseId) {
+            const errorBody = await openAIResponse.text();
+            console.error('[Streaming] First attempt failed:', {
+              status: openAIResponse.status,
+              previousResponseId,
+              errorBody: errorBody.substring(0, 500),
+              inputItemCount: (responsesBody.input as unknown[])?.length,
+            });
+            if (isStaleChainError(openAIResponse.status, errorBody)) {
+              retryWithoutChaining();
+              responsesBody.stream = true;
+              openAIResponse = await fetch('https://api.openai.com/v1/responses', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${openAIApiKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(responsesBody)
+              });
+            } else {
+              throw new Error(`OpenAI Responses API error: ${openAIResponse.status} - ${errorBody}`);
+            }
+          }
+
           if (!openAIResponse.ok) {
             const errorBody = await openAIResponse.text();
-            console.error('OpenAI Responses API streaming error:', errorBody);
+            console.error('[Streaming] Final attempt failed:', {
+              status: openAIResponse.status,
+              errorBody: errorBody.substring(0, 500),
+              hadPreviousResponseId: !!previousResponseId,
+              inputItemCount: (responsesBody.input as unknown[])?.length,
+              promptLength: userPrompt.length,
+            });
             throw new Error(`OpenAI Responses API error: ${openAIResponse.status} - ${errorBody}`);
           }
 
@@ -1410,12 +1470,145 @@ serve(async (req) => {
           const decoder = new TextDecoder();
           let functionCallArgs = '';
           let functionCallName = '';
+          let functionCallId = '';
           let streamedResponseId = '';
+          let hasTextOutput = false;
+          let textDeltaCount = 0;
+          let totalTextLength = 0;
+          const streamedToolCalls: Array<{ call_id: string; fields_count: number }> = [];
 
           const stream = new ReadableStream({
             async start(controller) {
               const reader = openAIResponse.body!.getReader();
               let buffer = '';
+              let receivedCompletedEvent = false;
+
+              /** Process a single SSE line from OpenAI and forward relevant events to the client. */
+              const processLine = async (line: string): Promise<void> => {
+                if (!line.startsWith('data: ')) return;
+                const payload = line.slice(6).trim();
+                if (!payload || payload === '[DONE]') return;
+
+                try {
+                  const event = JSON.parse(payload);
+                  console.log(`[SSE Event] type=${event.type}`);
+
+                  // Capture response ID
+                  if (event.type === 'response.created' && event.response?.id) {
+                    streamedResponseId = event.response.id;
+                  }
+
+                  // Text delta → forward to client
+                  if (event.type === 'response.output_text.delta') {
+                    hasTextOutput = true;
+                    textDeltaCount++;
+                    totalTextLength += (event.delta || '').length;
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_delta', delta: event.delta })}\n\n`));
+                  }
+
+                  // Function call arguments accumulating
+                  if (event.type === 'response.function_call_arguments.delta') {
+                    functionCallArgs += event.delta || '';
+                  }
+                  if (event.type === 'response.output_item.added' && event.item?.type === 'function_call') {
+                    functionCallName = event.item.name || '';
+                    functionCallId = event.item.call_id || event.item.id || '';
+                    functionCallArgs = '';
+                  }
+
+                  // Function call complete → parse and send extracted fields
+                  if (event.type === 'response.function_call_arguments.done') {
+                    let fieldsCount = 0;
+                    if (functionCallName === 'extract_brand_fields') {
+                      try {
+                        const args = JSON.parse(functionCallArgs);
+                        const fields = args.fields || [];
+                        fieldsCount = fields.length;
+                        console.log(`[Field Extraction] Streamed extraction: ${fields.length} fields`);
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'extracted_fields', fields })}\n\n`));
+                      } catch (e) {
+                        console.error('[Field Extraction] Failed to parse streamed function call:', e);
+                      }
+                    }
+                    // Track for tool output submission
+                    if (functionCallId) {
+                      streamedToolCalls.push({ call_id: functionCallId, fields_count: fieldsCount });
+                    }
+                    functionCallArgs = '';
+                    functionCallName = '';
+                    functionCallId = '';
+                  }
+
+                  // Response completed → submit tool outputs, then send done signal
+                  if (event.type === 'response.completed') {
+                    receivedCompletedEvent = true;
+                    const usage = event.response?.usage;
+                    if (usage) {
+                      const cached = usage.prompt_tokens_details?.cached_tokens || 0;
+                      console.log(`[Usage] Input: ${usage.input_tokens} (cached: ${cached}), Output: ${usage.output_tokens}`);
+                    }
+
+                    // Submit tool outputs to keep conversation chain valid
+                    let finalResponseId = streamedResponseId;
+                    if (streamedToolCalls.length > 0 && streamedResponseId) {
+                      try {
+                        console.log(`[Conversations] Submitting ${streamedToolCalls.length} streamed tool output(s)`);
+                        const toolOutputs = streamedToolCalls.map(tc => ({
+                          type: 'function_call_output',
+                          call_id: tc.call_id,
+                          output: JSON.stringify({ status: 'ok', fields_count: tc.fields_count }),
+                        }));
+                        const toolResp = await fetch('https://api.openai.com/v1/responses', {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${openAIApiKey}`,
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({
+                            model: 'gpt-4.1-2025-04-14',
+                            previous_response_id: streamedResponseId,
+                            input: toolOutputs,
+                            store: true,
+                            max_output_tokens: 1,
+                          })
+                        });
+                        if (toolResp.ok) {
+                          const toolData = await toolResp.json();
+                          finalResponseId = toolData.id || streamedResponseId;
+                          console.log(`[Conversations] Streamed tool outputs submitted. New response ID: ${finalResponseId}`);
+                        } else {
+                          console.error(`[Conversations] Failed to submit streamed tool outputs: ${toolResp.status}`);
+                        }
+                      } catch (toolErr) {
+                        console.error('[Conversations] Error submitting streamed tool outputs:', toolErr);
+                      }
+                    }
+
+                    console.log(`[Streaming Summary] textDeltas: ${textDeltaCount}, textLength: ${totalTextLength}, toolCalls: ${streamedToolCalls.length}, hasTextOutput: ${hasTextOutput}`);
+
+                    // Fallback: if model produced only tool calls with no text, inject a summary
+                    if (!hasTextOutput) {
+                      let fallback: string;
+                      if (streamedToolCalls.length > 0) {
+                        const totalFields = streamedToolCalls.reduce((sum, tc) => sum + tc.fields_count, 0);
+                        fallback = totalFields > 0
+                          ? `I found ${totalFields} field${totalFields !== 1 ? 's' : ''} from your input and added them to your brand profile. Let me know if you'd like to review or refine any of them!`
+                          : `I've processed your input. What would you like to work on next?`;
+                      } else {
+                        fallback = `I'm sorry, I wasn't able to generate a response. Could you try rephrasing your message?`;
+                      }
+                      console.log(`[Streaming] No text output detected — injecting fallback message`);
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_delta', delta: fallback })}\n\n`));
+                    }
+
+                    const totalTime = Date.now() - startTime;
+                    console.log(`[Performance] Streaming complete in ${totalTime}ms`);
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', responseId: finalResponseId })}\n\n`));
+                  }
+                } catch (parseErr) {
+                  console.warn(`[SSE Parse Error] ${parseErr}`, payload.substring(0, 200));
+                }
+              };
 
               try {
                 while (true) {
@@ -1427,66 +1620,39 @@ serve(async (req) => {
                   buffer = lines.pop() || '';
 
                   for (const line of lines) {
-                    if (!line.startsWith('data: ')) continue;
-                    const payload = line.slice(6).trim();
-                    if (!payload || payload === '[DONE]') continue;
-
-                    try {
-                      const event = JSON.parse(payload);
-
-                      // Capture response ID
-                      if (event.type === 'response.created' && event.response?.id) {
-                        streamedResponseId = event.response.id;
-                      }
-
-                      // Text delta → forward to client
-                      if (event.type === 'response.output_text.delta') {
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_delta', delta: event.delta })}\n\n`));
-                      }
-
-                      // Function call arguments accumulating
-                      if (event.type === 'response.function_call_arguments.delta') {
-                        functionCallArgs += event.delta || '';
-                      }
-                      if (event.type === 'response.output_item.added' && event.item?.type === 'function_call') {
-                        functionCallName = event.item.name || '';
-                        functionCallArgs = '';
-                      }
-
-                      // Function call complete → parse and send extracted fields
-                      if (event.type === 'response.function_call_arguments.done') {
-                        if (functionCallName === 'extract_brand_fields') {
-                          try {
-                            const args = JSON.parse(functionCallArgs);
-                            const fields = args.fields || [];
-                            console.log(`[Field Extraction] Streamed extraction: ${fields.length} fields`);
-                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'extracted_fields', fields })}\n\n`));
-                          } catch (e) {
-                            console.error('[Field Extraction] Failed to parse streamed function call:', e);
-                          }
-                        }
-                        functionCallArgs = '';
-                        functionCallName = '';
-                      }
-
-                      // Response completed → send done signal
-                      if (event.type === 'response.completed') {
-                        const usage = event.response?.usage;
-                        if (usage) {
-                          const cached = usage.prompt_tokens_details?.cached_tokens || 0;
-                          console.log(`[Usage] Input: ${usage.input_tokens} (cached: ${cached}), Output: ${usage.output_tokens}`);
-                        }
-                        const totalTime = Date.now() - startTime;
-                        console.log(`[Performance] Streaming complete in ${totalTime}ms`);
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', responseId: streamedResponseId })}\n\n`));
-                      }
-                    } catch {
-                      // Skip unparseable lines
-                    }
+                    await processLine(line);
                   }
+                }
+
+                // Flush remaining buffer — the last chunk from OpenAI may not end
+                // with a newline, leaving the final event (often response.completed)
+                // stuck in the buffer. Without this, no done/fallback events are sent.
+                if (buffer.trim()) {
+                  console.log(`[Streaming] Flushing remaining buffer (${buffer.length} chars)`);
+                  await processLine(buffer.trim());
+                }
+
+                // Safety net: if OpenAI stream ended without a response.completed event,
+                // send fallback + done so the client doesn't hang with empty text.
+                if (!receivedCompletedEvent) {
+                  console.warn('[Streaming] OpenAI stream ended without response.completed event');
+                  if (!hasTextOutput) {
+                    const fallback = streamedToolCalls.length > 0
+                      ? `I've processed your input and updated your brand profile. What would you like to work on next?`
+                      : `I'm sorry, I wasn't able to generate a response. Could you try rephrasing your message?`;
+                    console.log('[Streaming] Injecting safety-net fallback message');
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_delta', delta: fallback })}\n\n`));
+                  }
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', responseId: streamedResponseId })}\n\n`));
                 }
               } catch (err) {
                 console.error('[Streaming] Error reading OpenAI stream:', err);
+                // Even on error, send fallback text if we had no text output, so the client
+                // doesn't save an empty assistant message
+                if (!hasTextOutput) {
+                  const fallback = `I'm sorry, something went wrong while generating a response. Please try again.`;
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_delta', delta: fallback })}\n\n`));
+                }
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Stream interrupted' })}\n\n`));
               } finally {
                 controller.close();
@@ -1505,7 +1671,7 @@ serve(async (req) => {
         }
 
         // ─── Non-streaming Responses API path ───
-        const response = await fetch('https://api.openai.com/v1/responses', {
+        let response = await fetch('https://api.openai.com/v1/responses', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${openAIApiKey}`,
@@ -1514,9 +1680,40 @@ serve(async (req) => {
           body: JSON.stringify(responsesBody)
         });
 
+        // Retry without chaining if previous response has unresolved tool calls
+        if (!response.ok && previousResponseId) {
+          const errorBody = await response.text();
+          console.error('[Responses API] First attempt failed:', {
+            status: response.status,
+            previousResponseId,
+            errorBody: errorBody.substring(0, 500),
+            inputItemCount: (responsesBody.input as unknown[])?.length,
+            hasTools: !!(responsesBody.tools as unknown[])?.length,
+          });
+          if (isStaleChainError(response.status, errorBody)) {
+            retryWithoutChaining();
+            response = await fetch('https://api.openai.com/v1/responses', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${openAIApiKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(responsesBody)
+            });
+          } else {
+            throw new Error(`OpenAI Responses API error: ${response.status} - ${errorBody}`);
+          }
+        }
+
         if (!response.ok) {
           const errorBody = await response.text();
-          console.error('OpenAI Responses API error:', errorBody);
+          console.error('[Responses API] Final attempt failed:', {
+            status: response.status,
+            errorBody: errorBody.substring(0, 500),
+            hadPreviousResponseId: !!previousResponseId,
+            inputItemCount: (responsesBody.input as unknown[])?.length,
+            promptLength: userPrompt.length,
+          });
           throw new Error(`OpenAI Responses API error: ${response.status} - ${errorBody}`);
         }
 
@@ -1650,11 +1847,20 @@ serve(async (req) => {
         }
       });
     } catch (apiError) {
-      console.error('OpenAI API error:', apiError);
+      console.error('[FATAL] OpenAI API error:', {
+        message: apiError?.message,
+        name: apiError?.name,
+        stack: apiError?.stack?.split('\n').slice(0, 5).join('\n'),
+      });
       throw apiError;
     }
   } catch (error) {
-    console.error('Error in idea-framework-consultant function:', error);
+    const errorDetails = {
+      message: error?.message || String(error),
+      name: error?.name,
+      stack: error?.stack?.split('\n').slice(0, 5).join('\n'),
+    };
+    console.error('[FATAL] idea-framework-consultant unhandled error:', JSON.stringify(errorDetails));
     return new Response(JSON.stringify({
       error: `Consultation failed: ${error.message}`
     }), {
