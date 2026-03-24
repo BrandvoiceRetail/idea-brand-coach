@@ -3,7 +3,7 @@
  * Array-specific wrapper around usePersistedField for managing persisted string arrays
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { usePersistedField } from './usePersistedField';
 import type { KnowledgeCategory, SyncStatus } from '@/lib/knowledge-base/interfaces';
 
@@ -31,7 +31,7 @@ export interface UsePersistedArrayFieldReturn {
 
 /**
  * Hook for persisted array fields
- * Stores arrays with automatic JSON serialization
+ * Stores arrays as JSON strings with parsing/serialization
  *
  * @example
  * const { value, add, remove } = usePersistedArrayField({
@@ -55,29 +55,39 @@ export function usePersistedArrayField({
   defaultValue = [],
   debounceDelay = 500
 }: UsePersistedArrayFieldConfig): UsePersistedArrayFieldReturn {
-  const field = usePersistedField<string[]>({
+  const field = usePersistedField({
     fieldIdentifier,
     category,
-    defaultValue,
+    defaultValue: JSON.stringify(defaultValue),
     debounceDelay
   });
 
-  const add = useCallback((item: string) => {
-    if (item.trim() && !field.value.includes(item.trim())) {
-      field.onChange([...field.value, item.trim()]);
+  // Parse the stored JSON string to array
+  const value: string[] = useMemo(() => {
+    try {
+      const parsed = JSON.parse(field.value || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
     }
-  }, [field]);
+  }, [field.value]);
+
+  const add = useCallback((item: string) => {
+    if (item.trim() && !value.includes(item.trim())) {
+      field.onChange(JSON.stringify([...value, item.trim()]));
+    }
+  }, [value, field]);
 
   const remove = useCallback((index: number) => {
-    field.onChange(field.value.filter((_, i) => i !== index));
-  }, [field]);
+    field.onChange(JSON.stringify(value.filter((_, i) => i !== index)));
+  }, [value, field]);
 
   const set = useCallback((items: string[]) => {
-    field.onChange(items);
+    field.onChange(JSON.stringify(items));
   }, [field]);
 
   return {
-    value: field.value,
+    value,
     add,
     remove,
     set,

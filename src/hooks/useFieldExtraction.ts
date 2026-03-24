@@ -1,34 +1,34 @@
 /**
- * useFieldExtraction Hook - Unified Version
+ * useFieldExtraction Hook - Unified Orchestrator
  *
- * Complete field extraction system with ALL features in one place:
- * - Robust JSON parsing with truncation recovery (via fieldExtractionParser)
- * - Field locking to prevent AI overwrites
- * - Manual field editing with source tracking
- * - Automatic persistence to localStorage
- * - Toast notifications for user feedback
+ * Composes extracted concerns into the complete field extraction system:
+ * - FieldValueStorageService: localStorage persistence for values and locks
+ * - useFieldLocking: Lock/unlock state management
+ * - parseFieldExtraction: Robust JSON parsing with truncation recovery
  *
- * No more V1 vs V2 confusion - this is THE field extraction hook!
+ * This hook is the public API — same parameters and return type as before.
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { parseFieldExtraction } from '@/utils/fieldExtractionParser';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  loadFieldValues,
+  saveFieldValues,
+  clearFieldValues as clearStoredFieldValuesInternal,
+} from '@/services/field/FieldValueStorageService';
+import {
+  saveFieldLocks,
+} from '@/services/field/FieldValueStorageService';
+import { useFieldLocking } from '@/hooks/useFieldLocking';
 
 // Re-export for consumers that import parseFieldExtraction from this module
 export { parseFieldExtraction } from '@/utils/fieldExtractionParser';
 export type { ExtractFieldsResult } from '@/utils/fieldExtractionParser';
 
 // ============================================================================
-// Constants
-// ============================================================================
-
-const STORAGE_KEY_PREFIX = 'v2_field_values_';
-const LOCK_STORAGE_PREFIX = 'v2_field_locks_';
-
-// ============================================================================
-// Types
+// Types (unchanged public API)
 // ============================================================================
 
 export type FieldSource = 'ai' | 'manual';
@@ -67,7 +67,7 @@ export interface UseFieldExtractionReturn {
   setFieldManual: (fieldId: string, value: string | string[]) => void;
   clearFields: () => void;
 
-  // Field locking (no longer in separate V2!)
+  // Field locking
   setFieldLock: (fieldId: string, locked: boolean, silent?: boolean) => void;
   isFieldLocked: (fieldId: string) => boolean;
 
@@ -76,104 +76,44 @@ export interface UseFieldExtractionReturn {
 }
 
 // ============================================================================
-// Storage Functions - Persistence for values and locks
-// ============================================================================
-
-function loadFieldValues(avatarId: string): FieldValuesStore {
-  try {
-    const key = `${STORAGE_KEY_PREFIX}${avatarId}`;
-    const stored = localStorage.getItem(key);
-
-    if (!stored) return {};
-
-    const parsed = JSON.parse(stored);
-
-    if (typeof parsed !== 'object') {
-      console.warn('[Field Storage] Invalid stored data, resetting');
-      return {};
-    }
-
-    return parsed as FieldValuesStore;
-  } catch (error) {
-    console.error('[Field Storage] Load failed:', error);
-    return {};
-  }
-}
-
-function saveFieldValues(avatarId: string, values: FieldValuesStore): void {
-  try {
-    const key = `${STORAGE_KEY_PREFIX}${avatarId}`;
-    localStorage.setItem(key, JSON.stringify(values));
-  } catch (error) {
-    console.error('[Field Storage] Save failed:', error);
-  }
-}
-
-function loadFieldLocks(avatarId: string): Set<string> {
-  try {
-    const key = `${LOCK_STORAGE_PREFIX}${avatarId}`;
-    const stored = localStorage.getItem(key);
-
-    if (!stored) return new Set();
-
-    const parsed = JSON.parse(stored);
-    return new Set(Array.isArray(parsed) ? parsed : []);
-  } catch (error) {
-    console.error('[Field Locks] Load failed:', error);
-    return new Set();
-  }
-}
-
-function saveFieldLocks(avatarId: string, locks: Set<string>): void {
-  try {
-    const key = `${LOCK_STORAGE_PREFIX}${avatarId}`;
-    localStorage.setItem(key, JSON.stringify([...locks]));
-  } catch (error) {
-    console.error('[Field Locks] Save failed:', error);
-  }
-}
-
-// ============================================================================
-// THE ONE HOOK - Complete unified interface
+// THE ONE HOOK - Orchestrator composing extracted concerns
 // ============================================================================
 
 /**
  * THE Field Extraction Hook - All features in one place!
  *
- * No more V1 vs V2 confusion. This hook has everything:
- * - Robust extraction with recovery strategies
- * - Field locking to prevent AI overwrites
- * - Manual editing with source tracking
- * - Automatic persistence
- * - Toast notifications
+ * Composes:
+ * - FieldValueStorageService for localStorage persistence
+ * - useFieldLocking for lock state management
+ * - parseFieldExtraction for robust AI response parsing
  *
  * @param avatarId - Avatar ID for scoping (null = 'default')
  */
 export function useFieldExtraction(avatarId: string | null): UseFieldExtractionReturn {
   const resolvedAvatarId = avatarId || 'default';
 
-  // Field values with source tracking
+  // --- Field locking (delegated to extracted hook) ---
+  const {
+    lockedFields,
+    lockedFieldsRef,
+    setFieldLock,
+    isFieldLocked,
+    setLockedFields,
+  } = useFieldLocking(resolvedAvatarId);
+
+  // --- Field values with source tracking ---
   const [fieldValues, setFieldValues] = useState<FieldValuesStore>(() => {
     return loadFieldValues(resolvedAvatarId);
-  });
-
-  // Locked fields that can't be overwritten by AI
-  const [lockedFields, setLockedFields] = useState<Set<string>>(() => {
-    return loadFieldLocks(resolvedAvatarId);
   });
 
   // Count of AI-extracted fields
   const [extractedCount, setExtractedCount] = useState(0);
 
-  // Always-current refs — reading these in callbacks avoids stale closures
-  // without adding fieldValues/lockedFields as deps (which would cause cascading re-runs)
+  // Always-current ref for fieldValues — avoids stale closures in callbacks
   const fieldValuesRef = useRef(fieldValues);
   fieldValuesRef.current = fieldValues;
 
-  const lockedFieldsRef = useRef(lockedFields);
-  lockedFieldsRef.current = lockedFields;
-
-  // Dedicated persistence effect — replaces saveFieldValues calls inside callbacks
+  // Dedicated persistence effect — saves fieldValues to localStorage on change
   useEffect(() => {
     saveFieldValues(resolvedAvatarId, fieldValues);
   }, [fieldValues, resolvedAvatarId]);
@@ -280,31 +220,6 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
         timestamp: new Date().toISOString(),
       },
     }));
-    // persistence handled by dedicated useEffect
-  }, []);
-
-  // Lock or unlock a field — functional setState so no stale closure on lockedFields
-  const setFieldLock = useCallback(
-    (fieldId: string, locked: boolean, silent = false): void => {
-      setLockedFields(prev => {
-        const updated = new Set(prev);
-        if (locked) {
-          updated.add(fieldId);
-          if (!silent) toast.info(`Field locked: AI won't overwrite this value`);
-        } else {
-          updated.delete(fieldId);
-          if (!silent) toast.info(`Field unlocked: AI can update this value`);
-        }
-        saveFieldLocks(resolvedAvatarId, updated);
-        return updated;
-      });
-    },
-    [resolvedAvatarId]
-  );
-
-  // Check if field is locked — reads from always-current ref, truly stable
-  const isFieldLocked = useCallback((fieldId: string): boolean => {
-    return lockedFieldsRef.current.has(fieldId);
   }, []);
 
   // Clear all fields
@@ -317,20 +232,15 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
   // Sync when avatar changes
   useEffect(() => {
     const values = loadFieldValues(resolvedAvatarId);
-    const locks = loadFieldLocks(resolvedAvatarId);
     setFieldValues(values);
-    setLockedFields(locks);
   }, [resolvedAvatarId]);
 
   // Subscribe to realtime updates from avatar_field_values table
-  // This enables auto-population when document extraction completes
   useEffect(() => {
-    // Skip if no real avatar ID (using 'default')
     if (!avatarId || avatarId === 'default') {
       return;
     }
 
-    // Skip if supabase.channel is not available (e.g., in tests)
     if (typeof supabase.channel !== 'function') {
       console.log('[Field Extraction] Realtime not available, skipping subscription');
       return;
@@ -395,7 +305,7 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
       console.log(`[Field Extraction] Unsubscribing from realtime updates for avatar: ${avatarId}`);
       supabase.removeChannel(channel);
     };
-  }, [avatarId, resolvedAvatarId]);
+  }, [avatarId, resolvedAvatarId, lockedFieldsRef, setLockedFields]);
 
   return {
     extractFields,
@@ -431,9 +341,5 @@ export function saveStoredFieldValues(avatarId: string, values: FieldValuesStore
 }
 
 export function clearStoredFieldValues(avatarId: string): void {
-  try {
-    localStorage.removeItem(`${STORAGE_KEY_PREFIX}${avatarId}`);
-  } catch (error) {
-    console.error('[Field Storage] Clear failed:', error);
-  }
+  clearStoredFieldValuesInternal(avatarId);
 }

@@ -3,7 +3,7 @@
  * Local-first field persistence with background sync to Supabase
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { KnowledgeRepository } from '@/lib/knowledge-base/knowledge-repository';
@@ -43,7 +43,7 @@ let syncService: SupabaseSyncService | null = null;
 /**
  * Get or create repository instance
  */
-async function getRepository(): Promise<KnowledgeRepository> {
+export async function getRepository(): Promise<KnowledgeRepository> {
   if (!repository) {
     repository = new KnowledgeRepository({
       dbName: 'idea-brand-coach',
@@ -59,7 +59,7 @@ async function getRepository(): Promise<KnowledgeRepository> {
 /**
  * Get or create sync service instance
  */
-function getSyncService(repo: KnowledgeRepository): SupabaseSyncService {
+export function getSyncService(repo: KnowledgeRepository): SupabaseSyncService {
   if (!syncService) {
     syncService = new SupabaseSyncService(repo);
   }
@@ -347,148 +347,6 @@ export function usePersistedField({
   };
 }
 
-/**
- * Hook for persisted array fields
- * Stores arrays as JSON strings with parsing/serialization
- */
-export function usePersistedArrayField({
-  fieldIdentifier,
-  category,
-  defaultValue = [],
-  debounceDelay = 500
-}: {
-  fieldIdentifier: string;
-  category: KnowledgeCategory;
-  defaultValue?: string[];
-  debounceDelay?: number;
-}): {
-  value: string[];
-  add: (item: string) => void;
-  remove: (index: number) => void;
-  set: (items: string[]) => void;
-  syncStatus: SyncStatus;
-  isLoading: boolean;
-} {
-  const field = usePersistedField({
-    fieldIdentifier,
-    category,
-    defaultValue: JSON.stringify(defaultValue),
-    debounceDelay
-  });
-
-  // Parse the stored JSON string to array
-  const value: string[] = useMemo(() => {
-    try {
-      const parsed = JSON.parse(field.value || '[]');
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }, [field.value]);
-
-  const add = useCallback((item: string) => {
-    if (item.trim() && !value.includes(item.trim())) {
-      field.onChange(JSON.stringify([...value, item.trim()]));
-    }
-  }, [value, field]);
-
-  const remove = useCallback((index: number) => {
-    field.onChange(JSON.stringify(value.filter((_, i) => i !== index)));
-  }, [value, field]);
-
-  const set = useCallback((items: string[]) => {
-    field.onChange(JSON.stringify(items));
-  }, [field]);
-
-  return {
-    value,
-    add,
-    remove,
-    set,
-    syncStatus: field.syncStatus,
-    isLoading: field.isLoading
-  };
-}
-
-/**
- * Hook for batch persisted fields
- * Useful for forms with multiple fields
- */
-export function usePersistedForm(
-  fields: Array<{ identifier: string; category: KnowledgeCategory; defaultValue?: string }>
-) {
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('synced');
-  const [isLoading, setIsLoading] = useState(true);
-
-  const { user } = useAuth();
-  const userId = user?.id || '';
-
-  /**
-   * Load all field values
-   */
-  const loadAllFields = useCallback(async () => {
-    if (!userId) {
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const repo = await getRepository();
-      const loadedValues: Record<string, string> = {};
-
-      for (const field of fields) {
-        const value = await repo.getField(userId, field.identifier);
-        loadedValues[field.identifier] = value || field.defaultValue || '';
-      }
-
-      setValues(loadedValues);
-    } catch (err) {
-      console.error('Failed to load form fields:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId, fields]);
-
-  /**
-   * Save all field values
-   */
-  const saveAllFields = useCallback(async (newValues: Record<string, string>) => {
-    if (!userId) return;
-
-    try {
-      const repo = await getRepository();
-      const sync = getSyncService(repo);
-
-      setSyncStatus('syncing');
-
-      // Save all fields locally
-      for (const field of fields) {
-        const value = newValues[field.identifier];
-        if (value !== undefined) {
-          await repo.saveField(userId, field.identifier, value, field.category);
-        }
-      }
-
-      setValues(newValues);
-
-      // Queue batch sync
-      await sync.syncAllFields(userId);
-      setSyncStatus('synced');
-    } catch (err) {
-      console.error('Failed to save form fields:', err);
-      setSyncStatus('offline');
-    }
-  }, [userId, fields]);
-
-  useEffect(() => {
-    loadAllFields();
-  }, [loadAllFields]);
-
-  return {
-    values,
-    setValues: saveAllFields,
-    syncStatus,
-    isLoading
-  };
-}
+// Re-exports for backward compatibility
+export { usePersistedArrayField } from './usePersistedArrayField';
+export { usePersistedForm } from './usePersistedForm';

@@ -1,24 +1,34 @@
 /**
- * FieldReviewContext
+ * FieldReviewContext — Compatibility Wrapper
  *
  * Manages field review state for the mobile-first field editing experience.
- * Tracks pending review queue, extraction metadata per message, auto-accept
- * logic, and batch field acceptance.
+ * Composes two focused sub-contexts:
+ *   - FieldQueueContext: pending fields queue, enqueue/dequeue, accept/reject
+ *   - ExtractionMetaContext: message extraction tracking, metadata, auto-accept
+ *
+ * The original useFieldReview() hook still returns ALL 18 properties for
+ * backward compatibility. New consumers should prefer useFieldQueue() or
+ * useExtractionMeta() for focused access.
  *
  * Integrates with useFieldExtraction to provide a review layer between
  * AI extraction and field persistence.
  */
 
 import {
-  createContext,
-  useContext,
   useState,
   useRef,
   useCallback,
   useMemo,
   ReactNode,
 } from 'react';
-import type { FieldSource } from '@/hooks/useFieldExtraction';
+import { FieldQueueContext, useFieldQueue } from '@/contexts/FieldQueueContext';
+import type { FieldQueueContextValue } from '@/contexts/FieldQueueContext';
+import { ExtractionMetaContext, useExtractionMeta } from '@/contexts/ExtractionMetaContext';
+import type { ExtractionMetaContextValue } from '@/contexts/ExtractionMetaContext';
+
+// Re-export sub-context hooks for convenience
+export { useFieldQueue } from '@/contexts/FieldQueueContext';
+export { useExtractionMeta } from '@/contexts/ExtractionMetaContext';
 
 // localStorage key for auto-accept preference
 const AUTO_ACCEPT_STORAGE_KEY = 'field_review_auto_accept';
@@ -61,42 +71,11 @@ export interface MessageExtractionMeta {
 export type FieldReviewAction = 'accept' | 'reject' | 'edit';
 
 /**
- * Context value exposed to consumers
+ * Combined context value exposed to consumers via useFieldReview() (backward compat).
+ * This is the union of FieldQueueContextValue and ExtractionMetaContextValue,
+ * totaling 15 unique properties (some overlap removed).
  */
-export interface FieldReviewContextValue {
-  /** Queue of fields pending review */
-  pendingFields: PendingField[];
-  /** Add fields to the pending review queue */
-  enqueueFields: (fields: PendingField[]) => void;
-  /** Accept a single field (removes from queue) */
-  acceptField: (fieldId: string) => void;
-  /** Reject a single field (removes from queue without applying) */
-  rejectField: (fieldId: string) => void;
-  /** Accept all pending fields at once */
-  acceptAllFields: () => void;
-  /** Reject all pending fields at once */
-  rejectAllFields: () => void;
-  /** Number of fields awaiting review */
-  pendingCount: number;
-  /** Extraction metadata indexed by message ID */
-  messageExtractions: Record<string, MessageExtractionMeta>;
-  /** Record extraction metadata for a message */
-  setMessageExtraction: (meta: MessageExtractionMeta) => void;
-  /** Whether auto-accept is enabled */
-  autoAcceptEnabled: boolean;
-  /** Toggle auto-accept preference */
-  setAutoAcceptEnabled: (enabled: boolean) => void;
-  /** Register the field acceptance handler */
-  registerFieldAcceptHandler: (handler: (fieldId: string, value: string | string[]) => void) => void;
-  /** Currently selected field for detailed review (null if none) */
-  activeReviewFieldId: string | null;
-  /** Open detailed review for a specific field */
-  setActiveReviewFieldId: (fieldId: string | null) => void;
-  /** Mark a message's extractions as fully accepted */
-  markMessageAccepted: (messageId: string) => void;
-}
-
-const FieldReviewContext = createContext<FieldReviewContextValue | undefined>(undefined);
+export interface FieldReviewContextValue extends FieldQueueContextValue, ExtractionMetaContextValue {}
 
 interface FieldReviewProviderProps {
   children: ReactNode;
@@ -125,24 +104,50 @@ function saveAutoAccept(enabled: boolean): void {
   }
 }
 
+/**
+ * FieldReviewProvider composes FieldQueueContext and ExtractionMetaContext.
+ * All state lives here; sub-context values are derived and distributed.
+ */
 export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX.Element {
+  // ── Queue state ──────────────────────────────────────────────────────
   const [pendingFields, setPendingFields] = useState<PendingField[]>([]);
-  const [messageExtractions, setMessageExtractions] = useState<Record<string, MessageExtractionMeta>>({});
-  const [autoAcceptEnabled, setAutoAcceptEnabledState] = useState<boolean>(getStoredAutoAccept);
-  // Use a ref so registering a handler does not trigger context re-renders (observer pattern)
   const fieldAcceptHandlerRef = useRef<((fieldId: string, value: string | string[]) => void) | null>(null);
   const [activeReviewFieldId, setActiveReviewFieldId] = useState<string | null>(null);
 
+  // ── Extraction meta state ────────────────────────────────────────────
+  const [messageExtractions, setMessageExtractions] = useState<Record<string, MessageExtractionMeta>>({});
+  const [autoAcceptEnabled, setAutoAcceptEnabledState] = useState<boolean>(getStoredAutoAccept);
+
   const pendingCount = pendingFields.length;
 
+  // ── Extraction meta callbacks ────────────────────────────────────────
   const setAutoAcceptEnabled = useCallback((enabled: boolean): void => {
     setAutoAcceptEnabledState(enabled);
     saveAutoAccept(enabled);
   }, []);
 
+  const setMessageExtraction = useCallback((meta: MessageExtractionMeta): void => {
+    setMessageExtractions((current) => ({
+      ...current,
+      [meta.messageId]: meta,
+    }));
+  }, []);
+
+  const markMessageAccepted = useCallback((messageId: string): void => {
+    setMessageExtractions((current) => {
+      const existing = current[messageId];
+      if (!existing) return current;
+      return {
+        ...current,
+        [messageId]: { ...existing, allAccepted: true },
+      };
+    });
+  }, []);
+
+  // ── Queue callbacks ──────────────────────────────────────────────────
   const registerFieldAcceptHandler = useCallback(
     (handler: (fieldId: string, value: string | string[]) => void): void => {
-      fieldAcceptHandlerRef.current = handler;  // ref write — no re-render
+      fieldAcceptHandlerRef.current = handler;
     },
     []
   );
@@ -150,7 +155,6 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
   const enqueueFields = useCallback(
     (fields: PendingField[]): void => {
       if (autoAcceptEnabled && fieldAcceptHandlerRef.current) {
-        // Auto-accept: apply fields immediately without queuing
         for (const field of fields) {
           fieldAcceptHandlerRef.current(field.fieldId, field.value);
         }
@@ -158,7 +162,6 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
       }
 
       setPendingFields((current) => {
-        // Deduplicate by fieldId — newer extraction replaces older
         const existingIds = new Set(fields.map((f) => f.fieldId));
         const filtered = current.filter((f) => !existingIds.has(f.fieldId));
         return [...filtered, ...fields];
@@ -195,25 +198,8 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
     setPendingFields([]);
   }, []);
 
-  const setMessageExtraction = useCallback((meta: MessageExtractionMeta): void => {
-    setMessageExtractions((current) => ({
-      ...current,
-      [meta.messageId]: meta,
-    }));
-  }, []);
-
-  const markMessageAccepted = useCallback((messageId: string): void => {
-    setMessageExtractions((current) => {
-      const existing = current[messageId];
-      if (!existing) return current;
-      return {
-        ...current,
-        [messageId]: { ...existing, allAccepted: true },
-      };
-    });
-  }, []);
-
-  const value = useMemo<FieldReviewContextValue>(
+  // ── Build sub-context values ─────────────────────────────────────────
+  const queueValue = useMemo<FieldQueueContextValue>(
     () => ({
       pendingFields,
       enqueueFields,
@@ -222,14 +208,9 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
       acceptAllFields,
       rejectAllFields,
       pendingCount,
-      messageExtractions,
-      setMessageExtraction,
-      autoAcceptEnabled,
-      setAutoAcceptEnabled,
       registerFieldAcceptHandler,
       activeReviewFieldId,
       setActiveReviewFieldId,
-      markMessageAccepted,
     }),
     [
       pendingFields,
@@ -239,31 +220,49 @@ export function FieldReviewProvider({ children }: FieldReviewProviderProps): JSX
       acceptAllFields,
       rejectAllFields,
       pendingCount,
+      registerFieldAcceptHandler,
+      activeReviewFieldId,
+    ]
+  );
+
+  const extractionMetaValue = useMemo<ExtractionMetaContextValue>(
+    () => ({
       messageExtractions,
       setMessageExtraction,
       autoAcceptEnabled,
       setAutoAcceptEnabled,
-      registerFieldAcceptHandler,
-      activeReviewFieldId,
+      markMessageAccepted,
+    }),
+    [
+      messageExtractions,
+      setMessageExtraction,
+      autoAcceptEnabled,
+      setAutoAcceptEnabled,
       markMessageAccepted,
     ]
   );
 
   return (
-    <FieldReviewContext.Provider value={value}>
-      {children}
-    </FieldReviewContext.Provider>
+    <ExtractionMetaContext.Provider value={extractionMetaValue}>
+      <FieldQueueContext.Provider value={queueValue}>
+        {children}
+      </FieldQueueContext.Provider>
+    </ExtractionMetaContext.Provider>
   );
 }
 
 /**
- * Hook to access field review state and actions.
- * Must be used within a FieldReviewProvider.
+ * Hook to access the full field review state and actions (backward compat).
+ * Returns all 15 properties from both sub-contexts.
+ *
+ * New consumers should prefer useFieldQueue() or useExtractionMeta() for
+ * focused access and reduced re-render surface.
  */
 export function useFieldReview(): FieldReviewContextValue {
-  const context = useContext(FieldReviewContext);
-  if (!context) {
-    throw new Error('useFieldReview must be used within a FieldReviewProvider');
-  }
-  return context;
+  const queue = useFieldQueue();
+  const extractionMeta = useExtractionMeta();
+  return useMemo(
+    () => ({ ...queue, ...extractionMeta }),
+    [queue, extractionMeta]
+  );
 }
