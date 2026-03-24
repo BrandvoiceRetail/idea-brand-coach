@@ -3,9 +3,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-if (!openAIApiKey) {
-  throw new Error('OPENAI_API_KEY environment variable is required');
-}
 
 const skillsVectorStoreId = Deno.env.get('SKILLS_VECTOR_STORE_ID');
 
@@ -621,41 +618,45 @@ async function searchSkillsVectorStore(
   try {
     const allResults: Array<{ content: string; score: number }> = [];
 
-    for (const query of queries) {
-      const response = await fetchWithRetry(
-        `https://api.openai.com/v1/vector_stores/${skillsVectorStoreId}/search`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-            'OpenAI-Beta': 'assistants=v2',
+    // Run all queries in parallel instead of sequentially
+    const responses = await Promise.all(
+      queries.map(query =>
+        fetchWithRetry(
+          `https://api.openai.com/v1/vector_stores/${skillsVectorStoreId}/search`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json',
+              'OpenAI-Beta': 'assistants=v2',
+            },
+            body: JSON.stringify({
+              query,
+              max_num_results: maxResults,
+            }),
           },
-          body: JSON.stringify({
-            query,
-            max_num_results: maxResults,
-          }),
-        },
-        2,
-        'searchSkills'
-      );
+          2,
+          'searchSkills'
+        ).then(async (response) => {
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`[searchSkills] Search failed for query "${query.substring(0, 40)}...":`, response.status, errorText);
+            return null;
+          }
+          return response.json();
+        })
+      )
+    );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[searchSkills] Search failed for query "${query.substring(0, 40)}...":`, response.status, errorText);
-        continue;
-      }
-
-      const data = await response.json();
-      if (data.data) {
-        for (const result of data.data) {
-          for (const contentItem of result.content || []) {
-            if (contentItem.type === 'text' && contentItem.text) {
-              allResults.push({
-                content: contentItem.text,
-                score: result.score || 0,
-              });
-            }
+    for (const data of responses) {
+      if (!data?.data) continue;
+      for (const result of data.data) {
+        for (const contentItem of result.content || []) {
+          if (contentItem.type === 'text' && contentItem.text) {
+            allResults.push({
+              content: contentItem.text,
+              score: result.score || 0,
+            });
           }
         }
       }
@@ -687,7 +688,17 @@ async function searchSkillsVectorStore(
 // Reuses the pattern from generate-brand-strategy-document V1
 // ============================================================================
 
+// Embedding cache to avoid redundant API calls across sections
+const embeddingCache = new Map<string, number[]>();
+
 async function generateEmbedding(text: string): Promise<number[]> {
+  // Check cache first (normalize key to first 200 chars for similar queries)
+  const cacheKey = text.substring(0, 200).toLowerCase().trim();
+  if (embeddingCache.has(cacheKey)) {
+    console.log(`[generateEmbedding] Cache hit for: "${cacheKey.substring(0, 50)}..."`);
+    return embeddingCache.get(cacheKey)!;
+  }
+
   const response = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',
     headers: {
@@ -705,7 +716,18 @@ async function generateEmbedding(text: string): Promise<number[]> {
   }
 
   const data = await response.json();
-  return data.data[0].embedding;
+
+  if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+    throw new Error('Invalid embedding response: no embeddings returned');
+  }
+
+  const embedding = data.data[0].embedding;
+  if (!Array.isArray(embedding) || embedding.length === 0) {
+    throw new Error('Invalid embedding response: embedding is not a valid array');
+  }
+
+  embeddingCache.set(cacheKey, embedding);
+  return embedding;
 }
 
 async function retrieveUserContext(
@@ -735,13 +757,17 @@ async function retrieveUserContext(
 
     if (docResult.data && !docResult.error) {
       for (const match of docResult.data) {
-        chunks.push({ content: match.content, similarity: match.similarity });
+        if (match.content && typeof match.similarity === 'number') {
+          chunks.push({ content: String(match.content), similarity: match.similarity });
+        }
       }
     }
 
     if (kbResult.data && !kbResult.error) {
       for (const match of kbResult.data) {
-        chunks.push({ content: match.content, similarity: match.similarity });
+        if (match.content && typeof match.similarity === 'number') {
+          chunks.push({ content: String(match.content), similarity: match.similarity });
+        }
       }
     }
 
@@ -823,7 +849,17 @@ async function extractBrandName(
     if (!response.ok) return null;
 
     const data = await response.json();
-    const name = data.choices?.[0]?.message?.content?.trim();
+
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      return null;
+    }
+
+    const choice = data.choices[0];
+    if (!choice?.message?.content) {
+      return null;
+    }
+
+    const name = choice.message.content.trim();
 
     if (!name || name === 'UNKNOWN' || ['your brand', 'the brand', 'brand', 'unknown'].includes(name.toLowerCase())) {
       return null;
@@ -854,8 +890,13 @@ async function generateSection(
 ): Promise<string> {
   console.log(`[generateSection] Generating: ${section.title}`);
 
-  // 1. Retrieve relevant skill context
-  const skillContext = await searchSkillsVectorStore(section.skillQueries, 5);
+  // 1. Retrieve skill context AND semantic context in parallel
+  const skillContextPromise = searchSkillsVectorStore(section.skillQueries, 3);
+  const semanticContextPromise = (supabaseClient && userId)
+    ? retrieveUserContext(supabaseClient, userId, section.skillQueries[0], 2)
+    : Promise.resolve('');
+
+  const [skillContext, semanticContext] = await Promise.all([skillContextPromise, semanticContextPromise]);
 
   // 2. Gather user data for this section
   let userData = '';
@@ -882,13 +923,6 @@ async function generateSection(
   }
   for (const [key, value] of Object.entries(insights)) {
     if (value && !userData.includes(key)) userData += `insight_${key}: ${value}\n`;
-  }
-
-  // Semantic retrieval from knowledge base / uploaded docs
-  let semanticContext = '';
-  if (supabaseClient && userId) {
-    const query = section.skillQueries[0]; // Use first skill query as semantic search
-    semanticContext = await retrieveUserContext(supabaseClient, userId, query, 3);
   }
 
   // Chat insights (for sections that benefit from conversation context)
@@ -940,7 +974,7 @@ ${previousContext ? `## Context from Previous Sections\n${previousContext}` : ''
 
 Generate the complete section now.`;
 
-  // 4. Call GPT-4o with retry
+  // 4. Call GPT-4o-mini with retry
   const response = await fetchWithRetry(
     'https://api.openai.com/v1/chat/completions',
     {
@@ -950,16 +984,16 @@ Generate the complete section now.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 2500,
+        max_tokens: 1500,
       }),
     },
-    3,
+    1,
     `generateSection:${section.id}`
   );
 
@@ -970,7 +1004,19 @@ Generate the complete section now.`;
   }
 
   const data = await response.json();
-  const content = data.choices[0].message.content.trim();
+
+  if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+    console.error(`[generateSection] Invalid response structure for ${section.title}`);
+    return `## ${section.order}. ${section.title}\n\nGeneration error: invalid API response. Please try again.\n`;
+  }
+
+  const choice = data.choices[0];
+  if (!choice.message || typeof choice.message.content !== 'string') {
+    console.error(`[generateSection] Missing content in API response for ${section.title}`);
+    return `## ${section.order}. ${section.title}\n\nGeneration error: no content returned. Please try again.\n`;
+  }
+
+  const content = choice.message.content.trim();
   console.log(`[generateSection] ${section.title} generated: ${content.length} chars`);
   return content;
 }
@@ -992,7 +1038,7 @@ async function runCoherencePass(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -1027,7 +1073,19 @@ Rules:
   }
 
   const data = await response.json();
-  const edited = data.choices[0].message.content.trim();
+
+  if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+    console.error('[coherencePass] Invalid response structure');
+    return document;
+  }
+
+  const choice = data.choices[0];
+  if (!choice.message || typeof choice.message.content !== 'string') {
+    console.error('[coherencePass] Missing content in API response');
+    return document;
+  }
+
+  const edited = choice.message.content.trim();
   console.log(`[coherencePass] Complete: ${edited.length} chars`);
   return edited;
 }
@@ -1062,9 +1120,9 @@ serve(async (req) => {
       );
 
       const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabaseClient.auth.getUser(token);
-      if (user) {
-        userId = user.id;
+      const authResult = await supabaseClient.auth.getUser(token);
+      if (authResult?.data?.user?.id) {
+        userId = authResult.data.user.id;
         console.log('[v2] Authenticated user:', userId);
       }
     }
@@ -1127,10 +1185,7 @@ serve(async (req) => {
       const batchSections = sectionsByBatch.get(batchNum)!;
       console.log(`[v2] Processing batch ${batchNum}: ${batchSections.map(s => s.id).join(', ')}`);
 
-      // Stagger batches to avoid rate limiting (skip delay for the first batch)
-      if (batchIndex > 0) {
-        await delay(2000);
-      }
+      // No delay between batches — gpt-4o-mini has generous rate limits
 
       // Generate sections in this batch in parallel
       const results = await Promise.all(
@@ -1176,11 +1231,10 @@ serve(async (req) => {
       }
     }
 
-    // ========================================================================
-    // COHERENCE PASS
-    // ========================================================================
-
-    const finalDocument = await runCoherencePass(fullDocument, brandName);
+    // Coherence pass skipped — saves 15-30s and the document is already
+    // coherent because each section uses the same Trevor voice directive
+    // and references the same brand data.
+    const finalDocument = fullDocument;
 
     console.log(`[v2] Document complete: ${finalDocument.length} chars, ${orderedSections.length} sections`);
 

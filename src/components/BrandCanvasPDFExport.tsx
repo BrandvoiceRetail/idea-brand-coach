@@ -113,11 +113,16 @@ export const BrandCanvasPDFExport: React.FC<BrandCanvasPDFExportProps> = ({
       }
 
       // Convert markdown to PDF
-      const pdfExporter = new BrandStrategyPDFExporter(
-        result.markdown,
-        companyName
-      );
-      await pdfExporter.export();
+      try {
+        const pdfExporter = new BrandStrategyPDFExporter(
+          result.markdown,
+          companyName
+        );
+        await pdfExporter.export();
+      } catch (pdfError) {
+        console.error('Error during PDF conversion:', pdfError);
+        throw new Error(`PDF export failed: ${pdfError instanceof Error ? pdfError.message : 'Unknown error'}`);
+      }
 
       toast({
         title: "PDF Generated Successfully",

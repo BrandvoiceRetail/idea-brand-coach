@@ -280,7 +280,7 @@ function buildCompetitiveAnalysisSection(
       </p>`;
 
   // Competitors list
-  if (analysis.competitors.length > 0) {
+  if (Array.isArray(analysis.competitors) && analysis.competitors.length > 0) {
     html += `
       <h3>Identified Competitors</h3>
       <table>
@@ -292,11 +292,13 @@ function buildCompetitiveAnalysisSection(
         </thead>
         <tbody>`;
     for (const comp of analysis.competitors) {
-      html += `
+      if (comp && comp.name) {
+        html += `
           <tr>
             <td>${escapeHTML(comp.name)}</td>
             <td>${escapeHTML(comp.category || analysis.market_category)}</td>
           </tr>`;
+      }
     }
     html += `
         </tbody>
@@ -312,22 +314,22 @@ function buildCompetitiveAnalysisSection(
         <div class="field-content">${escapeHTML(analysis.market_insights.summary)}</div>
       </div>`;
 
-    if (analysis.market_insights.trends.length > 0) {
+    if (Array.isArray(analysis.market_insights.trends) && analysis.market_insights.trends.length > 0) {
       html += `
       <div class="field">
         <div class="field-label">Market Trends</div>
         <div class="field-content">
-          <ul>${analysis.market_insights.trends.map((t: string) => `<li>${escapeHTML(t)}</li>`).join('')}</ul>
+          <ul>${analysis.market_insights.trends.filter((t: any) => t).map((t: string) => `<li>${escapeHTML(t)}</li>`).join('')}</ul>
         </div>
       </div>`;
     }
 
-    if (analysis.market_insights.threats.length > 0) {
+    if (Array.isArray(analysis.market_insights.threats) && analysis.market_insights.threats.length > 0) {
       html += `
       <div class="field">
         <div class="field-label">Market Threats</div>
         <div class="field-content">
-          <ul>${analysis.market_insights.threats.map((t: string) => `<li>${escapeHTML(t)}</li>`).join('')}</ul>
+          <ul>${analysis.market_insights.threats.filter((t: any) => t).map((t: string) => `<li>${escapeHTML(t)}</li>`).join('')}</ul>
         </div>
       </div>`;
     }
@@ -336,7 +338,13 @@ function buildCompetitiveAnalysisSection(
   // SWOT / Competitive positioning
   if (analysis.competitive_positioning) {
     const pos = analysis.competitive_positioning;
-    html += `
+    const strengths = Array.isArray(pos.strengths) ? pos.strengths.filter((s: any) => s) : [];
+    const weaknesses = Array.isArray(pos.weaknesses) ? pos.weaknesses.filter((w: any) => w) : [];
+    const opportunities = Array.isArray(pos.opportunities) ? pos.opportunities.filter((o: any) => o) : [];
+    const threats = Array.isArray(pos.threats) ? pos.threats.filter((t: any) => t) : [];
+
+    if (strengths.length > 0 || weaknesses.length > 0 || opportunities.length > 0 || threats.length > 0) {
+      html += `
       <h3>Competitive Positioning (SWOT)</h3>
       <table class="swot-table">
         <thead>
@@ -344,8 +352,8 @@ function buildCompetitiveAnalysisSection(
         </thead>
         <tbody>
           <tr>
-            <td><ul>${pos.strengths.map((s: string) => `<li>${escapeHTML(s)}</li>`).join('')}</ul></td>
-            <td><ul>${pos.weaknesses.map((w: string) => `<li>${escapeHTML(w)}</li>`).join('')}</ul></td>
+            <td><ul>${strengths.map((s: string) => `<li>${escapeHTML(s)}</li>`).join('')}</ul></td>
+            <td><ul>${weaknesses.map((w: string) => `<li>${escapeHTML(w)}</li>`).join('')}</ul></td>
           </tr>
         </tbody>
         <thead>
@@ -353,15 +361,16 @@ function buildCompetitiveAnalysisSection(
         </thead>
         <tbody>
           <tr>
-            <td><ul>${pos.opportunities.map((o: string) => `<li>${escapeHTML(o)}</li>`).join('')}</ul></td>
-            <td><ul>${pos.threats.map((t: string) => `<li>${escapeHTML(t)}</li>`).join('')}</ul></td>
+            <td><ul>${opportunities.map((o: string) => `<li>${escapeHTML(o)}</li>`).join('')}</ul></td>
+            <td><ul>${threats.map((t: string) => `<li>${escapeHTML(t)}</li>`).join('')}</ul></td>
           </tr>
         </tbody>
       </table>`;
+    }
   }
 
   // Opportunity gaps
-  if (analysis.opportunity_gaps && analysis.opportunity_gaps.length > 0) {
+  if (Array.isArray(analysis.opportunity_gaps) && analysis.opportunity_gaps.length > 0) {
     html += `
       <h3>Opportunity Gaps</h3>
       <table>
@@ -370,12 +379,14 @@ function buildCompetitiveAnalysisSection(
         </thead>
         <tbody>`;
     for (const gap of analysis.opportunity_gaps) {
-      html += `
+      if (gap && gap.description && gap.impact && gap.effort) {
+        html += `
           <tr>
             <td>${escapeHTML(gap.description)}</td>
-            <td><span class="badge badge-${gap.impact}">${escapeHTML(gap.impact)}</span></td>
-            <td><span class="badge badge-${gap.effort}">${escapeHTML(gap.effort)}</span></td>
+            <td><span class="badge badge-${escapeHTML(gap.impact)}">${escapeHTML(gap.impact)}</span></td>
+            <td><span class="badge badge-${escapeHTML(gap.effort)}">${escapeHTML(gap.effort)}</span></td>
           </tr>`;
+      }
     }
     html += `
         </tbody>
@@ -383,19 +394,22 @@ function buildCompetitiveAnalysisSection(
   }
 
   // Customer segments from analysis
-  if (analysis.customer_segments && analysis.customer_segments.length > 0) {
+  if (Array.isArray(analysis.customer_segments) && analysis.customer_segments.length > 0) {
     html += `<h3>Customer Segments Identified</h3>`;
     for (const segment of analysis.customer_segments) {
-      html += `
+      if (segment && segment.name && segment.description) {
+        const segmentNeeds = Array.isArray(segment.needs) ? segment.needs.filter((n: any) => n) : [];
+        html += `
       <div class="field">
         <div class="field-label">${escapeHTML(segment.name)}</div>
         <div class="field-content">
           ${escapeHTML(segment.description)}
-          ${segment.needs.length > 0
-            ? `<br><strong>Key needs:</strong><ul>${segment.needs.map((n: string) => `<li>${escapeHTML(n)}</li>`).join('')}</ul>`
+          ${segmentNeeds.length > 0
+            ? `<br><strong>Key needs:</strong><ul>${segmentNeeds.map((n: string) => `<li>${escapeHTML(n)}</li>`).join('')}</ul>`
             : ''}
         </div>
       </div>`;
+      }
     }
   }
 

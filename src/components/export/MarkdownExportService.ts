@@ -258,6 +258,11 @@ export class MarkdownExportService {
         // Get all message pairs (user question + assistant response)
         for (let i = 0; i < session.messages.length; i++) {
           const msg = session.messages[i];
+          if (!msg || typeof msg.role !== 'string' || typeof msg.content !== 'string') {
+            console.warn('Invalid message structure encountered, skipping:', msg);
+            continue;
+          }
+
           if (msg.role === 'user') {
             conversationParts.push(`User: ${msg.content}`);
           } else if (msg.role === 'assistant') {

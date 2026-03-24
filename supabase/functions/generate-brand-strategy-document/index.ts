@@ -156,7 +156,17 @@ async function generateEmbedding(text: string): Promise<number[]> {
   }
 
   const data = await response.json();
-  return data.data[0].embedding;
+
+  if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+    throw new Error('Invalid embedding response: no embeddings returned');
+  }
+
+  const embedding = data.data[0].embedding;
+  if (!Array.isArray(embedding) || embedding.length === 0) {
+    throw new Error('Invalid embedding response: embedding is not a valid array');
+  }
+
+  return embedding;
 }
 
 /**
@@ -197,21 +207,25 @@ async function retrieveSectionContext(
 
         if (docResult.data && !docResult.error) {
           for (const match of docResult.data) {
-            chunks.push({
-              content: match.content,
-              similarity: match.similarity,
-              id: `doc_${match.id}`
-            });
+            if (match.content && typeof match.similarity === 'number' && match.id) {
+              chunks.push({
+                content: String(match.content),
+                similarity: match.similarity,
+                id: `doc_${match.id}`
+              });
+            }
           }
         }
 
         if (kbResult.data && !kbResult.error) {
           for (const match of kbResult.data) {
-            chunks.push({
-              content: match.content,
-              similarity: match.similarity,
-              id: `kb_${match.id}`
-            });
+            if (match.content && typeof match.similarity === 'number' && match.id) {
+              chunks.push({
+                content: String(match.content),
+                similarity: match.similarity,
+                id: `kb_${match.id}`
+              });
+            }
           }
         }
 
@@ -1145,7 +1159,17 @@ Generate the complete document now in Markdown format, ensuring all insights fro
     }
 
     const data = await response.json();
-    const document = data.choices[0].message.content.trim();
+
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      throw new Error('Invalid OpenAI response: no choices in response');
+    }
+
+    const choice = data.choices[0];
+    if (!choice.message || typeof choice.message.content !== 'string') {
+      throw new Error('Invalid OpenAI response: missing message content');
+    }
+
+    const document = choice.message.content.trim();
 
     console.log('Document generated successfully, length:', document.length);
 
