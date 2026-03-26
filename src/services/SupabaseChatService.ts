@@ -27,6 +27,18 @@ import {
   ChatSessionUpdate,
 } from '@/types/chat';
 
+/**
+ * Context object prepared before calling the edge function.
+ * Shared by both sendMessage() and sendMessageStreaming().
+ */
+interface MessageContext {
+  userId: string;
+  chatbotType: ChatbotType;
+  sessionId: string | undefined;
+  authToken: string;
+  body: Record<string, unknown>;
+}
+
 export class SupabaseChatService implements IChatService {
   private chatbotType: ChatbotType = 'idea-framework-consultant';
   private currentSessionId: string | undefined;
@@ -61,79 +73,39 @@ export class SupabaseChatService implements IChatService {
   // ==========================================
 
   async sendMessage(message: ChatMessageCreate): Promise<ChatResponse> {
-    const userId = await this.getUserId();
-    const chatbotType = message.chatbot_type || this.chatbotType;
-    const sessionId = message.session_id || this.currentSessionId;
+    const ctx = await this.prepareMessageContext(message);
 
-    console.log('📤 Sending message:', { userId, chatbotType, messageLength: message.content.length });
+    console.log('📤 Sending message:', { userId: ctx.userId, chatbotType: ctx.chatbotType, messageLength: message.content.length });
 
     // Sync local data so edge function has latest knowledge base
-    await this.syncLocalData(userId);
-
-    // 1. Save user message
-    const { data: _userMsg, error: saveError } = await this.messageService.saveMessage({
-      user_id: userId,
-      role: message.role,
-      content: message.content,
-      chatbot_type: chatbotType,
-      session_id: sessionId,
-      chapter_id: message.chapter_id,
-      chapter_metadata: message.chapter_metadata,
-      metadata: message.metadata,
-    });
-    if (saveError) throw saveError;
-
-    // 2. Auto-update session title for first message
-    if (sessionId) {
-      await this.titleService.maybeUpdateSessionTitle(sessionId, message.content);
-    }
-
-    // 3. Prepare edge function call
-    const recentMessages = await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT);
-    const authSession = await this.edgeFunctionService.getAuthSession();
-    const hasUploadedDocuments = await this.edgeFunctionService.checkUploadedDocuments(userId);
-    const previousResponseId = sessionId
-      ? await this.edgeFunctionService.lookupPreviousResponseId(sessionId)
-      : undefined;
-
-    const body = this.edgeFunctionService.buildRequestBody({
-      message: message.content,
-      chapterContext: message.chapterContext,
-      competitiveInsights: this.competitiveInsightsContext,
-      metadata: message.metadata,
-      hasUploadedDocuments,
-      previousResponseId,
-      chatHistory: !previousResponseId
-        ? recentMessages.map(msg => ({ role: msg.role, content: msg.content }))
-        : undefined,
-    });
+    await this.syncLocalData(ctx.userId);
 
     console.log('📨 Edge function request:', {
-      hasUploadedDocuments,
-      metadataKeys: Object.keys(body.metadata as Record<string, unknown> || {}),
+      hasUploadedDocuments: (ctx.body.metadata as Record<string, unknown>)?.hasUploadedDocuments,
+      metadataKeys: Object.keys(ctx.body.metadata as Record<string, unknown> || {}),
     });
 
-    // 4. Call edge function
-    const responseData = await this.edgeFunctionService.callConsultant(body, authSession.access_token);
+    // Call edge function
+    const responseData = await this.edgeFunctionService.callConsultant(ctx.body, ctx.authToken);
 
-    // 5. Save response ID for chaining
-    if (sessionId && responseData.responseId) {
-      await this.edgeFunctionService.saveResponseId(sessionId, responseData.responseId);
+    // Save response ID for chaining
+    if (ctx.sessionId && responseData.responseId) {
+      await this.edgeFunctionService.saveResponseId(ctx.sessionId, responseData.responseId);
     }
 
-    // 6. Handle extracted fields
+    // Handle extracted fields
     const extractedFields = responseData.extractedFields || [];
     if (extractedFields.length > 0) {
       console.log('📝 Extracted fields (tool call):', extractedFields.map(f => f.identifier));
     }
 
-    // 7. Save assistant response
+    // Save assistant response
     const { data: assistantMessage, error: assistantError } = await this.messageService.saveMessage({
-      user_id: userId,
+      user_id: ctx.userId,
       role: 'assistant',
       content: responseData.response,
-      chatbot_type: chatbotType,
-      session_id: sessionId,
+      chatbot_type: ctx.chatbotType,
+      session_id: ctx.sessionId,
       chapter_id: message.chapter_id,
       chapter_metadata: message.chapter_metadata,
       metadata: {
@@ -144,10 +116,10 @@ export class SupabaseChatService implements IChatService {
     });
     if (assistantError) throw assistantError;
 
-    // 8. Generate AI title (non-blocking)
-    const titlePromise = sessionId
+    // Generate AI title (non-blocking)
+    const titlePromise = ctx.sessionId
       ? this.titleService
-          .generateSessionTitle(sessionId, message.content, responseData.response)
+          .generateSessionTitle(ctx.sessionId, message.content, responseData.response)
           .then(() => undefined)
           .catch(() => undefined)
       : undefined;
@@ -170,57 +142,12 @@ export class SupabaseChatService implements IChatService {
       onError: (error: Error) => void;
     }
   ): Promise<void> {
-    const userId = await this.getUserId();
-    const chatbotType = message.chatbot_type || this.chatbotType;
-    const sessionId = message.session_id || this.currentSessionId;
-
-    // Save user message
-    const { error: saveError } = await this.messageService.saveMessage({
-      user_id: userId,
-      role: message.role,
-      content: message.content,
-      chatbot_type: chatbotType,
-      session_id: sessionId,
-      chapter_id: message.chapter_id,
-      chapter_metadata: message.chapter_metadata,
-      metadata: message.metadata,
-    });
-    if (saveError) throw saveError;
-
-    // Auto-update session title
-    if (sessionId) {
-      await this.titleService.maybeUpdateSessionTitle(sessionId, message.content);
-    }
-
-    // Prepare edge function call
-    const previousResponseId = sessionId
-      ? await this.edgeFunctionService.lookupPreviousResponseId(sessionId)
-      : undefined;
-    const authSession = await this.edgeFunctionService.getAuthSession();
-    const hasUploadedDocuments = await this.edgeFunctionService.checkUploadedDocuments(userId);
-
-    const chatHistory = !previousResponseId
-      ? (await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT)).map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        }))
-      : undefined;
-
-    const body = this.edgeFunctionService.buildRequestBody({
-      message: message.content,
-      chapterContext: message.chapterContext,
-      competitiveInsights: this.competitiveInsightsContext,
-      metadata: message.metadata,
-      hasUploadedDocuments,
-      previousResponseId,
-      chatHistory,
-      stream: true,
-    });
+    const ctx = await this.prepareMessageContext(message, true);
 
     // Call streaming edge function
     const response = await this.edgeFunctionService.callConsultantStreaming(
-      body,
-      authSession.access_token
+      ctx.body,
+      ctx.authToken
     );
 
     // Parse SSE stream
@@ -259,25 +186,25 @@ export class SupabaseChatService implements IChatService {
 
     // Save assistant response
     await this.messageService.saveMessage({
-      user_id: userId,
+      user_id: ctx.userId,
       role: 'assistant',
       content: assistantContent,
-      chatbot_type: chatbotType,
-      session_id: sessionId,
+      chatbot_type: ctx.chatbotType,
+      session_id: ctx.sessionId,
       chapter_id: message.chapter_id,
       chapter_metadata: message.chapter_metadata,
       metadata: { extractedFields: result.extractedFields },
     });
 
     // Save response ID for chaining
-    if (sessionId && result.responseId) {
-      await this.edgeFunctionService.saveResponseId(sessionId, result.responseId);
+    if (ctx.sessionId && result.responseId) {
+      await this.edgeFunctionService.saveResponseId(ctx.sessionId, result.responseId);
     }
 
     // Generate title for new sessions
-    if (sessionId) {
+    if (ctx.sessionId) {
       this.titleService
-        .generateSessionTitle(sessionId, message.content, result.fullText)
+        .generateSessionTitle(ctx.sessionId, message.content, result.fullText)
         .catch(() => {});
     }
 
@@ -289,40 +216,25 @@ export class SupabaseChatService implements IChatService {
   // ==========================================
 
   async getChatHistory(limit: number = CHAT_CONSTANTS.DEFAULT_HISTORY_LIMIT): Promise<ChatMessage[]> {
-    const userId = await this.getUserId();
-    const { data, error } = await this.messageService.getAllMessages(
-      userId,
-      this.chatbotType,
-      limit,
-      this.currentSessionId
-    );
-    if (error) throw error;
-    return data || [];
+    return this.withUserId((userId) =>
+      this.messageService.getAllMessages(userId, this.chatbotType, limit, this.currentSessionId)
+    , []);
   }
 
   async clearChatHistory(): Promise<void> {
     if (!this.currentSessionId) {
       throw new Error('Cannot clear chat history: No active session');
     }
-    const userId = await this.getUserId();
-    const { error } = await this.messageService.clearMessages(
-      userId,
-      this.chatbotType,
-      this.currentSessionId
+    const sessionId = this.currentSessionId;
+    await this.withUserId((userId) =>
+      this.messageService.clearMessages(userId, this.chatbotType, sessionId)
     );
-    if (error) throw error;
   }
 
   async getRecentMessages(count: number): Promise<ChatMessage[]> {
-    const userId = await this.getUserId();
-    const { data, error } = await this.messageService.getRecentMessages(
-      userId,
-      this.chatbotType,
-      count,
-      this.currentSessionId
-    );
-    if (error) throw error;
-    return data || [];
+    return this.withUserId((userId) =>
+      this.messageService.getRecentMessages(userId, this.chatbotType, count, this.currentSessionId)
+    , []);
   }
 
   // ==========================================
@@ -330,51 +242,42 @@ export class SupabaseChatService implements IChatService {
   // ==========================================
 
   async createSession(sessionData?: ChatSessionCreate): Promise<ChatSession> {
-    const userId = await this.getUserId();
-    const { data, error } = await this.sessionService.createSession(
-      userId,
-      this.chatbotType,
-      sessionData
+    return this.withUserId((userId) =>
+      this.sessionService.createSession(userId, this.chatbotType, sessionData)
     );
-    if (error) throw error;
-    return data!;
   }
 
   async getSessions(): Promise<ChatSession[]> {
-    const userId = await this.getUserId();
-    const { data, error } = await this.sessionService.getSessions(userId, this.chatbotType);
-    if (error) throw error;
-    return data || [];
+    return this.withUserId((userId) =>
+      this.sessionService.getSessions(userId, this.chatbotType)
+    , []);
   }
 
   async getSession(sessionId: string): Promise<ChatSession | null> {
-    const userId = await this.getUserId();
-    const { data, error } = await this.sessionService.getSession(sessionId, userId);
-    if (error) throw error;
-    return data;
+    return this.withUserId((userId) =>
+      this.sessionService.getSession(sessionId, userId)
+    , null);
   }
 
   async updateSession(sessionId: string, update: ChatSessionUpdate): Promise<ChatSession> {
-    const userId = await this.getUserId();
-    const { data, error } = await this.sessionService.updateSession(sessionId, userId, update);
-    if (error) throw error;
-    return data!;
+    return this.withUserId((userId) =>
+      this.sessionService.updateSession(sessionId, userId, update)
+    );
   }
 
   async deleteSession(sessionId: string): Promise<void> {
-    const userId = await this.getUserId();
-    const { error } = await this.sessionService.deleteSession(sessionId, userId);
-    if (error) throw error;
+    await this.withUserId((userId) =>
+      this.sessionService.deleteSession(sessionId, userId)
+    );
     if (this.currentSessionId === sessionId) {
       this.currentSessionId = undefined;
     }
   }
 
   async getSessionMessages(sessionId: string, limit: number = CHAT_CONSTANTS.DEFAULT_HISTORY_LIMIT): Promise<ChatMessage[]> {
-    const userId = await this.getUserId();
-    const { data, error } = await this.messageService.getSessionMessages(userId, sessionId, limit);
-    if (error) throw error;
-    return data || [];
+    return this.withUserId((userId) =>
+      this.messageService.getSessionMessages(userId, sessionId, limit)
+    , []);
   }
 
   // ==========================================
@@ -398,6 +301,88 @@ export class SupabaseChatService implements IChatService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
     return user.id;
+  }
+
+  /**
+   * Delegate to a sub-service method that returns { data, error }.
+   * Handles getUserId + error checking + default value in one place.
+   *
+   * @param operation - Async function receiving userId and returning { data, error }
+   * @param defaultValue - Value to return when data is null/undefined (default: throws if null)
+   */
+  private async withUserId<T>(
+    operation: (userId: string) => Promise<{ data: T | null; error: Error | null }>,
+    defaultValue?: T
+  ): Promise<T> {
+    const userId = await this.getUserId();
+    const { data, error } = await operation(userId);
+    if (error) throw error;
+    if (data === null || data === undefined) {
+      if (defaultValue !== undefined) return defaultValue;
+      return data as T;
+    }
+    return data;
+  }
+
+  /**
+   * Prepare shared context for both sendMessage and sendMessageStreaming.
+   * Saves the user message, updates session title, and builds the edge function request body.
+   *
+   * @param message - The chat message to send
+   * @param stream - Whether to request streaming response
+   * @returns Context object with userId, chatbotType, sessionId, authToken, and request body
+   */
+  private async prepareMessageContext(message: ChatMessageCreate, stream?: boolean): Promise<MessageContext> {
+    const userId = await this.getUserId();
+    const chatbotType = message.chatbot_type || this.chatbotType;
+    const sessionId = message.session_id || this.currentSessionId;
+
+    // Save user message
+    const { error: saveError } = await this.messageService.saveMessage({
+      user_id: userId,
+      role: message.role,
+      content: message.content,
+      chatbot_type: chatbotType,
+      session_id: sessionId,
+      chapter_id: message.chapter_id,
+      chapter_metadata: message.chapter_metadata,
+      metadata: message.metadata,
+    });
+    if (saveError) throw saveError;
+
+    // Auto-update session title for first message
+    if (sessionId) {
+      await this.titleService.maybeUpdateSessionTitle(sessionId, message.content);
+    }
+
+    // Gather edge function prerequisites in parallel
+    const [previousResponseId, authSession, hasUploadedDocuments] = await Promise.all([
+      sessionId
+        ? this.edgeFunctionService.lookupPreviousResponseId(sessionId)
+        : Promise.resolve(undefined),
+      this.edgeFunctionService.getAuthSession(),
+      this.edgeFunctionService.checkUploadedDocuments(userId),
+    ]);
+
+    const chatHistory = !previousResponseId
+      ? (await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT)).map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        }))
+      : undefined;
+
+    const body = this.edgeFunctionService.buildRequestBody({
+      message: message.content,
+      chapterContext: message.chapterContext,
+      competitiveInsights: this.competitiveInsightsContext,
+      metadata: message.metadata,
+      hasUploadedDocuments,
+      previousResponseId,
+      chatHistory,
+      stream,
+    });
+
+    return { userId, chatbotType, sessionId, authToken: authSession.access_token, body };
   }
 
   private async syncLocalData(userId: string): Promise<void> {
