@@ -118,15 +118,14 @@ export class ChatEdgeFunctionService {
         hasUploadedDocuments: params.hasUploadedDocuments,
       },
       useResponsesApi: true,
-      previousResponseId: params.previousResponseId,
     };
 
     if (params.stream) {
       body.stream = true;
     }
 
-    // Only send chat_history when not chaining (first message or no previous response)
-    if (!params.previousResponseId && params.chatHistory) {
+    // Always send chat_history — no server-side chaining (store: false)
+    if (params.chatHistory) {
       body.chat_history = params.chatHistory;
     }
 

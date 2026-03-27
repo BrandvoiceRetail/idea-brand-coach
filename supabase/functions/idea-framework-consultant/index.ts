@@ -1153,16 +1153,23 @@ serve(async (req) => {
         });
         const startTime = Date.now();
 
-        const [knowledgeResult, semanticResult, vectorStoreResult] = await Promise.all([
+        // Retrieve knowledge base context (structured data from Supabase)
+        // Skip semantic search — user_knowledge_chunks table is empty (dead code path).
+        // Skip vector store search unless user actually has uploaded documents.
+        const contextPromises: Promise<unknown>[] = [
           retrieveUserContext(supabaseClient, userId, message),
-          retrieveSemanticContext(supabaseClient, userId, message),
-          retrieveVectorStoreContext(supabaseClient, userId, message)
-        ]);
+        ];
+        // Only call OpenAI vector store search if user has uploaded documents
+        if (hasUploadedDocuments) {
+          contextPromises.push(retrieveVectorStoreContext(supabaseClient, userId, message));
+        }
 
-        userKnowledgeContext = knowledgeResult;
-        semanticContext = semanticResult.content;
-        vectorStoreContext = vectorStoreResult;
-        sources = semanticResult.sources;
+        const results = await Promise.all(contextPromises);
+        userKnowledgeContext = results[0] as string;
+        if (hasUploadedDocuments && results[1]) {
+          vectorStoreContext = results[1] as string;
+        }
+        // semanticContext intentionally skipped — no data in user_knowledge_chunks
 
         console.log(`[Performance] Full context retrieval took ${Date.now() - startTime}ms`);
       } else {
@@ -1366,10 +1373,9 @@ serve(async (req) => {
           });
         }
 
-        // Build input array
-        // When chaining via previous_response_id, OpenAI maintains history server-side — skip chat_history
+        // Build input array — always include chat history (no server-side chaining)
         const inputItems: Array<{ role: string; content: unknown }> = [];
-        if (!previousResponseId && chat_history && Array.isArray(chat_history)) {
+        if (chat_history && Array.isArray(chat_history)) {
           const historyLimit = useComprehensiveMode ? 10 : 5;
           const recentHistory = chat_history.slice(-historyLimit);
           inputItems.push(...recentHistory.map((msg: any) => ({
@@ -1399,14 +1405,11 @@ serve(async (req) => {
           input: inputItems,
           temperature: 0.7,
           max_output_tokens: maxTokens,
-          store: true,
+          store: false,
         };
 
-        // Chain conversation turns via previous_response_id (server-managed history)
-        if (previousResponseId) {
-          responsesBody.previous_response_id = previousResponseId;
-          console.log(`[Conversations] Chaining to previous response: ${previousResponseId}`);
-        }
+        // Chat history is always sent client-side via inputItems above.
+        // No need for server-side conversation chaining (store: false).
 
         if (responsesTools.length > 0) {
           responsesBody.tools = responsesTools;
@@ -1414,31 +1417,12 @@ serve(async (req) => {
           responsesBody.parallel_tool_calls = true;
         }
 
-        /** Check whether an OpenAI error indicates a stale conversation chain (e.g. unresolved tool calls). */
-        const isStaleChainError = (status: number, body: string): boolean =>
-          status === 400 && (body.includes('pending') || body.includes('tool') || body.includes('previous_response_id'));
-
-        /** Strip chaining fields so the next request starts a fresh conversation turn. */
-        const retryWithoutChaining = (): void => {
-          console.warn('[Conversations] Stale chain detected — retrying without previous_response_id');
-          delete responsesBody.previous_response_id;
-          // Re-inject chat history since we can no longer rely on server-side history
-          if (chat_history && Array.isArray(chat_history)) {
-            const historyLimit = useComprehensiveMode ? 10 : 5;
-            const recentHistory = chat_history.slice(-historyLimit);
-            (responsesBody.input as Array<{ role: string; content: unknown }>) = [
-              ...recentHistory.map((msg: any) => ({ role: msg.role, content: msg.content })),
-              ...(responsesBody.input as Array<{ role: string; content: unknown }>).slice(-1), // keep current user message
-            ];
-          }
-        };
-
         // ─── Streaming SSE path ───
         if (streamRequested) {
           responsesBody.stream = true;
-          console.log(`[Streaming] Starting stream request. previousResponseId: ${previousResponseId || 'none'}, tools: ${responsesTools.length}, inputItems: ${(responsesBody.input as unknown[]).length}`);
+          console.log(`[Streaming] Starting stream request. tools: ${responsesTools.length}, inputItems: ${(responsesBody.input as unknown[]).length}`);
 
-          let openAIResponse = await fetch('https://api.openai.com/v1/responses', {
+          const openAIResponse = await fetch('https://api.openai.com/v1/responses', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${openAIApiKey}`,
@@ -1447,37 +1431,11 @@ serve(async (req) => {
             body: JSON.stringify(responsesBody)
           });
 
-          // Retry without chaining if previous response has unresolved tool calls
-          if (!openAIResponse.ok && previousResponseId) {
-            const errorBody = await openAIResponse.text();
-            console.error('[Streaming] First attempt failed:', {
-              status: openAIResponse.status,
-              previousResponseId,
-              errorBody: errorBody.substring(0, 500),
-              inputItemCount: (responsesBody.input as unknown[])?.length,
-            });
-            if (isStaleChainError(openAIResponse.status, errorBody)) {
-              retryWithoutChaining();
-              responsesBody.stream = true;
-              openAIResponse = await fetch('https://api.openai.com/v1/responses', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${openAIApiKey}`,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(responsesBody)
-              });
-            } else {
-              throw new Error(`OpenAI Responses API error: ${openAIResponse.status} - ${errorBody}`);
-            }
-          }
-
           if (!openAIResponse.ok) {
             const errorBody = await openAIResponse.text();
-            console.error('[Streaming] Final attempt failed:', {
+            console.error('[Streaming] API call failed:', {
               status: openAIResponse.status,
               errorBody: errorBody.substring(0, 500),
-              hadPreviousResponseId: !!previousResponseId,
               inputItemCount: (responsesBody.input as unknown[])?.length,
               promptLength: userPrompt.length,
             });
@@ -1590,95 +1548,10 @@ serve(async (req) => {
                       console.log(`[Usage] Input: ${usage.input_tokens} (cached: ${cached}), Output: ${usage.output_tokens}`);
                     }
 
-                    // Submit tool outputs to keep conversation chain valid
-                    let finalResponseId = streamedResponseId;
-                    if (streamedToolCalls.length > 0 && streamedResponseId) {
-                      try {
-                        console.log(`[Conversations] Submitting ${streamedToolCalls.length} streamed tool output(s)`);
-                        const toolOutputs = streamedToolCalls.map(tc => ({
-                          type: 'function_call_output',
-                          call_id: tc.call_id,
-                          output: JSON.stringify({ status: 'ok', fields_count: tc.fields_count }),
-                        }));
-
-                        // When the model produced text alongside tool calls, just store the
-                        // outputs with minimal tokens to keep the chain valid.
-                        // When there was NO text, request a proper follow-up so the user
-                        // gets a natural acknowledgment instead of a static fallback.
-                        const needsFollowUp = !hasTextOutput;
-                        const followUpTokens = needsFollowUp ? 500 : 1;
-
-                        if (needsFollowUp) {
-                          console.log('[Conversations] No text output — requesting streamed follow-up from tool output submission');
-                        }
-
-                        const toolSubmitBody: Record<string, unknown> = {
-                          model: 'gpt-4.1-2025-04-14',
-                          previous_response_id: streamedResponseId,
-                          input: toolOutputs,
-                          store: true,
-                          max_output_tokens: followUpTokens,
-                        };
-
-                        if (needsFollowUp) {
-                          toolSubmitBody.stream = true;
-                        }
-
-                        const toolResp = await fetch('https://api.openai.com/v1/responses', {
-                          method: 'POST',
-                          headers: {
-                            'Authorization': `Bearer ${openAIApiKey}`,
-                            'Content-Type': 'application/json'
-                          },
-                          body: JSON.stringify(toolSubmitBody)
-                        });
-
-                        if (toolResp.ok) {
-                          if (needsFollowUp && toolResp.body) {
-                            // Stream the follow-up response text to the client
-                            const followReader = toolResp.body.getReader();
-                            let followBuffer = '';
-                            let followHasText = false;
-                            try {
-                              while (true) {
-                                const { done: fDone, value: fValue } = await followReader.read();
-                                if (fDone) break;
-                                followBuffer += decoder.decode(fValue, { stream: true });
-                                const fLines = followBuffer.split('\n');
-                                followBuffer = fLines.pop() || '';
-                                for (const fLine of fLines) {
-                                  if (!fLine.startsWith('data: ')) continue;
-                                  const fPayload = fLine.slice(6).trim();
-                                  if (!fPayload || fPayload === '[DONE]') continue;
-                                  try {
-                                    const fEvent = JSON.parse(fPayload);
-                                    if (fEvent.type === 'response.output_text.delta' && fEvent.delta) {
-                                      followHasText = true;
-                                      hasTextOutput = true;
-                                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_delta', delta: fEvent.delta })}\n\n`));
-                                    }
-                                    if (fEvent.type === 'response.completed' && fEvent.response?.id) {
-                                      finalResponseId = fEvent.response.id;
-                                    }
-                                  } catch { /* skip unparseable follow-up events */ }
-                                }
-                              }
-                            } catch (followErr) {
-                              console.error('[Conversations] Error streaming follow-up:', followErr);
-                            }
-                            console.log(`[Conversations] Follow-up streamed. hasText: ${followHasText}, newResponseId: ${finalResponseId}`);
-                          } else {
-                            const toolData = await toolResp.json();
-                            finalResponseId = toolData.id || streamedResponseId;
-                            console.log(`[Conversations] Streamed tool outputs submitted. New response ID: ${finalResponseId}`);
-                          }
-                        } else {
-                          console.error(`[Conversations] Failed to submit streamed tool outputs: ${toolResp.status}`);
-                        }
-                      } catch (toolErr) {
-                        console.error('[Conversations] Error submitting streamed tool outputs:', toolErr);
-                      }
-                    }
+                    // No tool output submission needed — store: false means no conversation
+                    // chain to maintain. The extracted fields are already sent to the client
+                    // via the extracted_fields SSE event above.
+                    const finalResponseId = streamedResponseId;
 
                     console.log(`[Streaming Summary] textDeltas: ${textDeltaCount}, textLength: ${totalTextLength}, toolCalls: ${streamedToolCalls.length}, hasTextOutput: ${hasTextOutput}, openAIError: ${openAIStreamError || 'none'}`);
 
