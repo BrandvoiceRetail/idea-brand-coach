@@ -14,6 +14,8 @@ import { useBrand } from '@/contexts/BrandContext';
 import { MarkdownExportService } from './MarkdownExportService';
 import { KnowledgeBaseFactory } from '@/lib/knowledge-base';
 import { SupabaseChatService } from '@/services/SupabaseChatService';
+import { useExportReadiness } from '@/hooks/v2/useExportReadiness';
+import { ExportReadinessModal } from '@/components/v2/ExportReadinessModal';
 
 /** Progress stages shown during V2 document generation */
 const PROGRESS_STAGES = [
@@ -42,6 +44,9 @@ interface BrandMarkdownExportProps {
 
   /** Include chat conversation insights */
   includeChats?: boolean;
+
+  /** Field values for export readiness check. When provided, shows readiness modal before export. */
+  fieldValues?: Record<string, string | string[]>;
 }
 
 export function BrandMarkdownExport({
@@ -50,13 +55,18 @@ export function BrandMarkdownExport({
   size = 'default',
   fullWidth = false,
   includeChats = true,
+  fieldValues,
 }: BrandMarkdownExportProps): JSX.Element {
   const { toast } = useToast();
   const { user } = useAuth();
   const { brandData } = useBrand();
   const [isExporting, setIsExporting] = useState(false);
   const [progressStage, setProgressStage] = useState(0);
+  const [showReadinessModal, setShowReadinessModal] = useState(false);
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Readiness assessment — only computed when fieldValues provided
+  const readiness = useExportReadiness(fieldValues ?? {});
 
   // Cycle through progress stages while exporting
   useEffect(() => {
@@ -151,10 +161,18 @@ export function BrandMarkdownExport({
     }
   };
 
+  const handleClick = (): void => {
+    if (fieldValues) {
+      setShowReadinessModal(true);
+    } else {
+      handleExport();
+    }
+  };
+
   return (
     <div className={fullWidth ? 'w-full' : ''}>
       <Button
-        onClick={handleExport}
+        onClick={handleClick}
         variant={variant}
         size={size}
         className={fullWidth ? 'w-full' : ''}
@@ -176,6 +194,18 @@ export function BrandMarkdownExport({
         <p className="mt-2 text-sm text-muted-foreground animate-pulse">
           {PROGRESS_STAGES[progressStage]}
         </p>
+      )}
+      {fieldValues && (
+        <ExportReadinessModal
+          open={showReadinessModal}
+          onOpenChange={setShowReadinessModal}
+          readiness={readiness}
+          onExportAnyway={() => {
+            setShowReadinessModal(false);
+            handleExport();
+          }}
+          onContinueBuilding={() => setShowReadinessModal(false)}
+        />
       )}
     </div>
   );

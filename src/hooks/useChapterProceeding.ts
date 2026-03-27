@@ -58,9 +58,11 @@ export function useChapterProceeding({
       });
 
       if (emptyFields.length > 0) {
+        const fieldNames = emptyFields.slice(0, 5).map(f => f.label).join(', ');
+        const extra = emptyFields.length > 5 ? ` and ${emptyFields.length - 5} more` : '';
         toast({
-          title: 'Complete Required Fields',
-          description: 'Please chat with Trevor to complete all fields before marking this chapter complete. The AI coach will help you develop meaningful responses for each field.',
+          title: `${emptyFields.length} Field${emptyFields.length > 1 ? 's' : ''} Remaining`,
+          description: `Missing: ${fieldNames}${extra}. Chat with Trevor to complete them.`,
           variant: 'default',
         });
         return;

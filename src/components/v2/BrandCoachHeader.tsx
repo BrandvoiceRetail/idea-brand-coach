@@ -10,7 +10,6 @@
  */
 
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Sparkles } from 'lucide-react';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { BrandMarkdownExport } from '@/components/export/BrandMarkdownExport';
 import { VersionSwitcher } from '@/components/VersionSwitcher';
@@ -89,27 +88,27 @@ export function BrandCoachHeader({
             current={chapterProgress?.current_chapter_number ?? 1}
             total={11}
           />
-          {savedFieldCount > 0 && (
-            <Badge variant="outline" className="text-xs text-muted-foreground">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              {isMobile ? savedFieldCount : `${savedFieldCount} fields saved`}
-            </Badge>
-          )}
-          {completionRate > 0 && (
-            <Badge
-              variant={completionRate > 75 ? 'default' : completionRate > 50 ? 'secondary' : 'outline'}
-              className="text-xs"
-            >
-              <Sparkles className="h-3 w-3 mr-1" />
-              {completionRate}% complete
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            <div className="relative h-2 w-24 lg:w-32 rounded-full bg-muted overflow-hidden">
+              {completionRate > 0 && (
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-progress-gradient transition-all duration-500 ease-out"
+                  style={{ width: `${Math.min(completionRate, 100)}%` }}
+                />
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {isMobile
+                ? `${filledFields}/35`
+                : `${filledFields} of 35 fields captured`}
+            </span>
+          </div>
         </div>
       </div>
 
       <div className={isMobile ? 'flex flex-col items-end gap-1' : 'flex items-center gap-2'}>
         <div className="flex items-center gap-2">
-          <BrandMarkdownExport variant="outline" size="sm" />
+          <BrandMarkdownExport variant="outline" size="sm" fieldValues={fieldValues} />
           <VersionSwitcher />
         </div>
         <AvatarHeaderDropdown
