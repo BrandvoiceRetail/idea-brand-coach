@@ -1577,24 +1577,78 @@ serve(async (req) => {
                           call_id: tc.call_id,
                           output: JSON.stringify({ status: 'ok', fields_count: tc.fields_count }),
                         }));
+
+                        // When the model produced text alongside tool calls, just store the
+                        // outputs with minimal tokens to keep the chain valid.
+                        // When there was NO text, request a proper follow-up so the user
+                        // gets a natural acknowledgment instead of a static fallback.
+                        const needsFollowUp = !hasTextOutput;
+                        const followUpTokens = needsFollowUp ? 500 : 1;
+
+                        if (needsFollowUp) {
+                          console.log('[Conversations] No text output — requesting streamed follow-up from tool output submission');
+                        }
+
+                        const toolSubmitBody: Record<string, unknown> = {
+                          model: 'gpt-4.1-2025-04-14',
+                          previous_response_id: streamedResponseId,
+                          input: toolOutputs,
+                          store: true,
+                          max_output_tokens: followUpTokens,
+                        };
+
+                        if (needsFollowUp) {
+                          toolSubmitBody.stream = true;
+                        }
+
                         const toolResp = await fetch('https://api.openai.com/v1/responses', {
                           method: 'POST',
                           headers: {
                             'Authorization': `Bearer ${openAIApiKey}`,
                             'Content-Type': 'application/json'
                           },
-                          body: JSON.stringify({
-                            model: 'gpt-4.1-2025-04-14',
-                            previous_response_id: streamedResponseId,
-                            input: toolOutputs,
-                            store: true,
-                            max_output_tokens: 1,
-                          })
+                          body: JSON.stringify(toolSubmitBody)
                         });
+
                         if (toolResp.ok) {
-                          const toolData = await toolResp.json();
-                          finalResponseId = toolData.id || streamedResponseId;
-                          console.log(`[Conversations] Streamed tool outputs submitted. New response ID: ${finalResponseId}`);
+                          if (needsFollowUp && toolResp.body) {
+                            // Stream the follow-up response text to the client
+                            const followReader = toolResp.body.getReader();
+                            let followBuffer = '';
+                            let followHasText = false;
+                            try {
+                              while (true) {
+                                const { done: fDone, value: fValue } = await followReader.read();
+                                if (fDone) break;
+                                followBuffer += decoder.decode(fValue, { stream: true });
+                                const fLines = followBuffer.split('\n');
+                                followBuffer = fLines.pop() || '';
+                                for (const fLine of fLines) {
+                                  if (!fLine.startsWith('data: ')) continue;
+                                  const fPayload = fLine.slice(6).trim();
+                                  if (!fPayload || fPayload === '[DONE]') continue;
+                                  try {
+                                    const fEvent = JSON.parse(fPayload);
+                                    if (fEvent.type === 'response.output_text.delta' && fEvent.delta) {
+                                      followHasText = true;
+                                      hasTextOutput = true;
+                                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_delta', delta: fEvent.delta })}\n\n`));
+                                    }
+                                    if (fEvent.type === 'response.completed' && fEvent.response?.id) {
+                                      finalResponseId = fEvent.response.id;
+                                    }
+                                  } catch { /* skip unparseable follow-up events */ }
+                                }
+                              }
+                            } catch (followErr) {
+                              console.error('[Conversations] Error streaming follow-up:', followErr);
+                            }
+                            console.log(`[Conversations] Follow-up streamed. hasText: ${followHasText}, newResponseId: ${finalResponseId}`);
+                          } else {
+                            const toolData = await toolResp.json();
+                            finalResponseId = toolData.id || streamedResponseId;
+                            console.log(`[Conversations] Streamed tool outputs submitted. New response ID: ${finalResponseId}`);
+                          }
                         } else {
                           console.error(`[Conversations] Failed to submit streamed tool outputs: ${toolResp.status}`);
                         }
@@ -1605,7 +1659,8 @@ serve(async (req) => {
 
                     console.log(`[Streaming Summary] textDeltas: ${textDeltaCount}, textLength: ${totalTextLength}, toolCalls: ${streamedToolCalls.length}, hasTextOutput: ${hasTextOutput}`);
 
-                    // Fallback: if model produced only tool calls with no text, inject a summary
+                    // Fallback: if model produced only tool calls with no text AND
+                    // the follow-up also failed to produce text, inject a static summary
                     if (!hasTextOutput) {
                       let fallback: string;
                       if (streamedToolCalls.length > 0) {
