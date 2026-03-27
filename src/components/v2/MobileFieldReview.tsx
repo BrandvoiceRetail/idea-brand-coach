@@ -103,9 +103,24 @@ export const MobileFieldReview: React.FC<MobileFieldReviewProps> = ({
     <div className="flex flex-col h-full">
       {/* Progress indicator */}
       <div className="flex items-center justify-between mb-4">
-        <Badge variant="secondary" className="text-xs">
-          {currentIndex + 1} of {totalFields}
-        </Badge>
+        <div className="flex items-center gap-1.5">
+          <Badge variant="secondary" className="text-xs">
+            {currentIndex + 1} of {totalFields}
+          </Badge>
+          {field.confidence != null && (
+            <Badge
+              variant="outline"
+              className={cn(
+                'text-xs',
+                field.confidence < 0.7
+                  ? 'text-amber-600 border-amber-500/30'
+                  : ''
+              )}
+            >
+              {Math.round(field.confidence * 100)}%
+            </Badge>
+          )}
+        </div>
         <div className="flex gap-1">
           {Array.from({ length: totalFields }).map((_, i) => (
             <div

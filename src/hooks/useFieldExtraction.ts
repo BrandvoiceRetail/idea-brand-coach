@@ -22,6 +22,7 @@ import {
   saveFieldLocks,
 } from '@/services/field/FieldValueStorageService';
 import { useFieldLocking } from '@/hooks/useFieldLocking';
+import { FieldPersistenceService, FieldUpdate } from '@/services/field/FieldPersistenceService';
 
 // Re-export for consumers that import parseFieldExtraction from this module
 export { parseFieldExtraction } from '@/utils/fieldExtractionParser';
@@ -52,6 +53,14 @@ export interface FieldMetadata {
 }
 
 /**
+ * Options for DB persistence when saving a field
+ */
+export interface SaveFieldDbOptions {
+  confidence_score?: number;
+  chapter_id?: string;
+}
+
+/**
  * Complete unified hook return type with ALL features
  */
 export interface UseFieldExtractionReturn {
@@ -64,8 +73,11 @@ export interface UseFieldExtractionReturn {
   fieldMetadata: Record<string, FieldMetadata>;
 
   // Field manipulation
-  setFieldManual: (fieldId: string, value: string | string[]) => void;
+  setFieldManual: (fieldId: string, value: string | string[], dbOptions?: SaveFieldDbOptions) => void;
   clearFields: () => void;
+
+  // Batch DB persistence (for Accept All operations)
+  batchSaveFieldsToDb: (fields: Array<FieldUpdate & { fieldId?: string }>) => Promise<void>;
 
   // Field locking
   setFieldLock: (fieldId: string, locked: boolean, silent?: boolean) => void;
@@ -91,6 +103,10 @@ export interface UseFieldExtractionReturn {
  */
 export function useFieldExtraction(avatarId: string | null): UseFieldExtractionReturn {
   const resolvedAvatarId = avatarId || 'default';
+  const hasRealAvatar = !!avatarId && avatarId !== 'default';
+
+  // --- FieldPersistenceService for DB writes ---
+  const fieldServiceRef = useRef(new FieldPersistenceService(supabase));
 
   // --- Field locking (delegated to extracted hook) ---
   const {
@@ -112,6 +128,9 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
   // Always-current ref for fieldValues — avoids stale closures in callbacks
   const fieldValuesRef = useRef(fieldValues);
   fieldValuesRef.current = fieldValues;
+
+  // Track whether DB load has been attempted for this avatar to avoid re-fetching
+  const dbLoadedForAvatarRef = useRef<string | null>(null);
 
   // Dedicated persistence effect — saves fieldValues to localStorage on change
   useEffect(() => {
@@ -187,6 +206,25 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
       // Apply updates if any — persistence handled by dedicated useEffect
       if (appliedFields.length > 0) {
         setFieldValues(updates);
+
+        // Persist AI-extracted fields to DB
+        if (hasRealAvatar && appliedFields.length > 0) {
+          const dbFields: FieldUpdate[] = appliedFields.map(fieldId => ({
+            field_id: fieldId,
+            field_value: updates[fieldId].value,
+            field_source: 'ai' as const,
+          }));
+          fieldServiceRef.current.batchSaveFields({
+            avatar_id: avatarId!,
+            fields: dbFields,
+          }).then(({ error }) => {
+            if (error) {
+              console.error('[Field Extraction] DB batch save for AI fields failed:', error.message);
+            } else {
+              console.log(`[Field Extraction] DB batch saved ${appliedFields.length} AI fields`);
+            }
+          });
+        }
       }
 
       // Show user feedback via toasts
@@ -209,8 +247,56 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
     return result.displayText;
   }, []);
 
+  /**
+   * Persist a single field to the DB (fire-and-forget).
+   * Only attempts write when a real avatar ID is available.
+   */
+  const saveFieldToDb = useCallback((
+    fieldId: string,
+    value: string,
+    source: FieldSource,
+    options?: SaveFieldDbOptions,
+  ): void => {
+    if (!hasRealAvatar) return;
+
+    fieldServiceRef.current.saveField(avatarId!, {
+      field_id: fieldId,
+      field_value: value,
+      field_source: source,
+      confidence_score: options?.confidence_score,
+      chapter_id: options?.chapter_id,
+    }).then(({ error }) => {
+      if (error) {
+        console.error(`[Field Extraction] DB save failed for ${fieldId}:`, error.message);
+      } else {
+        console.log(`[Field Extraction] DB saved field: ${fieldId} (source: ${source})`);
+      }
+    });
+  }, [avatarId, hasRealAvatar]);
+
+  /**
+   * Batch save multiple fields to DB (for Accept All operations).
+   * Only attempts write when a real avatar ID is available.
+   */
+  const batchSaveFieldsToDb = useCallback(async (
+    fields: Array<FieldUpdate & { fieldId?: string }>,
+  ): Promise<void> => {
+    if (!hasRealAvatar || fields.length === 0) return;
+
+    const { error } = await fieldServiceRef.current.batchSaveFields({
+      avatar_id: avatarId!,
+      fields,
+    });
+
+    if (error) {
+      console.error('[Field Extraction] Batch DB save failed:', error.message);
+    } else {
+      console.log(`[Field Extraction] Batch DB saved ${fields.length} fields`);
+    }
+  }, [avatarId, hasRealAvatar]);
+
   // Set field value manually — functional setState so no stale closure on fieldValues
-  const setFieldManual = useCallback((fieldId: string, value: string | string[]): void => {
+  const setFieldManual = useCallback((fieldId: string, value: string | string[], dbOptions?: SaveFieldDbOptions): void => {
     const normalizedValue = Array.isArray(value) ? value.join('\n') : value;
     setFieldValues(prev => ({
       ...prev,
@@ -220,7 +306,10 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
         timestamp: new Date().toISOString(),
       },
     }));
-  }, []);
+
+    // Also persist to DB
+    saveFieldToDb(fieldId, normalizedValue, 'manual', dbOptions);
+  }, [saveFieldToDb]);
 
   // Clear all fields
   const clearFields = useCallback((): void => {
@@ -229,11 +318,50 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
     console.log('[Field Extraction] Cleared all fields');
   }, [resolvedAvatarId]);
 
-  // Sync when avatar changes
+  // Sync when avatar changes — prefer DB data when avatar is available
   useEffect(() => {
-    const values = loadFieldValues(resolvedAvatarId);
-    setFieldValues(values);
-  }, [resolvedAvatarId]);
+    // Always load localStorage as immediate fallback
+    const localValues = loadFieldValues(resolvedAvatarId);
+    setFieldValues(localValues);
+
+    // If real avatar, load from DB and merge (DB wins)
+    if (hasRealAvatar && dbLoadedForAvatarRef.current !== avatarId) {
+      dbLoadedForAvatarRef.current = avatarId;
+      fieldServiceRef.current.loadFields(avatarId!).then(({ data: dbFields, error }) => {
+        if (error || !dbFields || dbFields.length === 0) {
+          if (error) console.error('[Field Extraction] DB load failed:', error.message);
+          return;
+        }
+
+        console.log(`[Field Extraction] Loaded ${dbFields.length} fields from DB for avatar: ${avatarId}`);
+
+        setFieldValues(prev => {
+          const merged = { ...prev };
+          for (const field of dbFields) {
+            if (field.field_value !== null) {
+              merged[field.field_id] = {
+                value: field.field_value,
+                source: (field.field_source as FieldSource) || 'ai',
+                timestamp: field.updated_at || new Date().toISOString(),
+              };
+            }
+          }
+          return merged;
+        });
+
+        // Also update lock state from DB
+        const dbLockedFields = dbFields.filter(f => f.is_locked).map(f => f.field_id);
+        if (dbLockedFields.length > 0) {
+          setLockedFields(prev => {
+            const updated = new Set(prev);
+            dbLockedFields.forEach(id => updated.add(id));
+            saveFieldLocks(resolvedAvatarId, updated);
+            return updated;
+          });
+        }
+      });
+    }
+  }, [resolvedAvatarId, avatarId, hasRealAvatar, setLockedFields]);
 
   // Subscribe to realtime updates from avatar_field_values table
   useEffect(() => {
@@ -314,6 +442,7 @@ export function useFieldExtraction(avatarId: string | null): UseFieldExtractionR
     fieldMetadata,
     setFieldManual,
     clearFields,
+    batchSaveFieldsToDb,
     setFieldLock,
     isFieldLocked,
     extractedCount,

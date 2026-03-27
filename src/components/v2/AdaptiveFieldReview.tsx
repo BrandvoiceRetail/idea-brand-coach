@@ -42,6 +42,9 @@ export interface ReviewField extends ChapterField {
 
   /** Whether field is locked */
   isLocked?: boolean;
+
+  /** Confidence score (0-1) from AI extraction */
+  confidence?: number;
 }
 
 /**

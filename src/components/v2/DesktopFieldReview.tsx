@@ -22,6 +22,7 @@ import {
   Keyboard,
   Sparkles,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { ReviewField } from './AdaptiveFieldReview';
 
 /**
@@ -126,11 +127,26 @@ export const DesktopFieldReview: React.FC<DesktopFieldReviewProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Current Field</h3>
-            {field.source === 'ai' && (
-              <Badge variant="secondary" className="text-xs">
-                AI Extracted
-              </Badge>
-            )}
+            <div className="flex items-center gap-1.5">
+              {field.source === 'ai' && (
+                <Badge variant="secondary" className="text-xs">
+                  AI Extracted
+                </Badge>
+              )}
+              {field.confidence != null && (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'text-xs',
+                    field.confidence < 0.7
+                      ? 'text-amber-600 border-amber-500/30'
+                      : ''
+                  )}
+                >
+                  {Math.round(field.confidence * 100)}%
+                </Badge>
+              )}
+            </div>
           </div>
 
           <ChapterFieldSet

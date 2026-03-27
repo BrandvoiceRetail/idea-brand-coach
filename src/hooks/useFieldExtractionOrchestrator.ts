@@ -4,6 +4,11 @@
  * Orchestrates field extraction from assistant messages and tracks
  * which chapters need to auto-expand when AI updates their fields.
  *
+ * AI-extracted fields are NOT auto-saved. Instead they are enqueued for
+ * user review via useExtractionQueue. Fields are only persisted when the
+ * user accepts them (handled by the parent/composer). Manual field edits
+ * bypass this hook entirely — they are saved directly in the form layer.
+ *
  * Extracted from BrandCoachV2.tsx to reduce component complexity.
  */
 
@@ -12,11 +17,21 @@ import { CHAPTER_FIELDS_MAP, BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY } from '@/config/
 import type { Chapter as BookChapter } from '@/types/chapter';
 import type { ChatMessage } from '@/types/chat';
 import type { FieldSource } from '@/hooks/useFieldExtraction';
-import type { PendingField, MessageExtractionMeta } from '@/contexts/FieldReviewContext';
+import type { PendingField } from '@/hooks/v2/useExtractionQueue';
+import type { MessageExtractionMeta } from '@/contexts/FieldReviewContext';
 
 // ============================================================================
 // Types
 // ============================================================================
+
+/** Shape of a single extracted field in message metadata (from the edge function). */
+interface MetaExtractedField {
+  identifier: string;
+  value: unknown;
+  confidence: number;
+  source: 'user_stated' | 'user_confirmed' | 'inferred_strong' | 'document';
+  context?: string;
+}
 
 interface UseFieldExtractionOrchestratorConfig {
   /** Chat messages from the current session */
@@ -27,11 +42,9 @@ interface UseFieldExtractionOrchestratorConfig {
   fieldValues: Record<string, string | string[]>;
   /** Source of each field (ai or manual) */
   fieldSources: Record<string, FieldSource>;
-  /** Callback to persist a field value */
-  setFieldManual: (fieldId: string, value: string | string[]) => void;
   /** Callback to set extraction metadata on a message */
   setMessageExtraction: (meta: MessageExtractionMeta) => void;
-  /** Callback to enqueue fields for review */
+  /** Callback to enqueue fields for review (AI extractions only) */
   enqueueFields: (fields: PendingField[]) => void;
 }
 
@@ -51,7 +64,6 @@ export function useFieldExtractionOrchestrator({
   allChapters,
   fieldValues,
   fieldSources,
-  setFieldManual,
   setMessageExtraction,
   enqueueFields,
 }: UseFieldExtractionOrchestratorConfig): UseFieldExtractionOrchestratorReturn {
@@ -101,12 +113,29 @@ export function useFieldExtractionOrchestrator({
     prevFieldValuesRef.current = { ...fieldValues };
   }, [fieldValues]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Side-effect: extract fields from NEW assistant messages only
-  // Fields arrive via msg.metadata.extractedFields (from OpenAI tool calls)
+  // Build a reverse lookup: fieldId -> { label, chapterKey, chapterTitle }
+  // Used to enrich PendingField objects with human-readable labels and chapter info.
+  const fieldMetaLookup = useMemo<Record<string, { label: string; chapterKey: string; chapterTitle: string }>>(() => {
+    const map: Record<string, { label: string; chapterKey: string; chapterTitle: string }> = {};
+    for (const [chapterKey, chapter] of Object.entries(CHAPTER_FIELDS_MAP)) {
+      for (const field of chapter.fields) {
+        map[field.id] = {
+          label: field.label,
+          chapterKey,
+          chapterTitle: chapter.title,
+        };
+      }
+    }
+    return map;
+  }, []);
+
+  // Side-effect: extract fields from NEW assistant messages and enqueue for review.
+  // Fields arrive via msg.metadata.extractedFields (from OpenAI tool calls).
+  // AI-extracted fields are NOT auto-saved — they enter the review queue instead.
   useEffect(() => {
     messages.forEach((msg) => {
       const metaFields = (msg.metadata as Record<string, unknown>)?.extractedFields as
-        | Array<{ identifier: string; value: unknown }>
+        | MetaExtractedField[]
         | undefined;
 
       if (
@@ -117,52 +146,51 @@ export function useFieldExtractionOrchestrator({
 
       processedMessageIds.current.add(msg.id);
 
-      // Build field values from structured metadata (no delimiter parsing needed)
-      const extractedFields: Record<string, string> = {};
+      // Build a flat map for MessageExtractionMeta (fieldId -> display value)
+      const extractedFieldsMap: Record<string, string | string[]> = {};
       for (const field of metaFields) {
-        extractedFields[field.identifier] = Array.isArray(field.value)
-          ? field.value.join('\n')
+        extractedFieldsMap[field.identifier] = Array.isArray(field.value)
+          ? (field.value as string[])
           : String(field.value);
       }
 
-      // Apply extracted fields to state
-      for (const [fieldId, value] of Object.entries(extractedFields)) {
-        setFieldManual(fieldId, value);
-      }
+      if (Object.keys(extractedFieldsMap).length === 0) return;
 
-      if (Object.keys(extractedFields).length > 0) {
-        const meta: MessageExtractionMeta = {
+      // Track extraction metadata on the message (for badge rendering)
+      const meta: MessageExtractionMeta = {
+        messageId: msg.id,
+        extractedFields: extractedFieldsMap,
+        fieldCount: Object.keys(extractedFieldsMap).length,
+        allAccepted: false,
+      };
+      setMessageExtraction(meta);
+
+      // Build PendingField objects with full metadata for the review queue
+      const pending: PendingField[] = metaFields.map((rawField) => {
+        const fieldId = rawField.identifier;
+        const fieldMeta = fieldMetaLookup[fieldId];
+        const bookChapterId = fieldToBookChapterId[fieldId] || '';
+
+        const value: string | string[] = Array.isArray(rawField.value)
+          ? (rawField.value as string[])
+          : String(rawField.value);
+
+        return {
+          fieldId,
+          label: fieldMeta?.label || fieldId,
+          value,
+          confidence: rawField.confidence,
+          source: rawField.source,
+          context: rawField.context,
+          chapterId: bookChapterId,
+          chapterTitle: fieldMeta?.chapterTitle || '',
           messageId: msg.id,
-          extractedFields,
-          fieldCount: Object.keys(extractedFields).length,
-          allAccepted: false,
         };
-        setMessageExtraction(meta);
+      });
 
-        // Build pending fields for the review queue
-        const pending: PendingField[] = Object.entries(extractedFields).map(([fieldId, value]) => {
-          let fieldLabel = fieldId;
-          for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
-            const field = chapter.fields?.find((f: { id: string }) => f.id === fieldId);
-            if (field) {
-              fieldLabel = field.label;
-              break;
-            }
-          }
-
-          return {
-            fieldId,
-            fieldLabel,
-            value,
-            messageId: msg.id,
-            extractedAt: msg.created_at,
-          };
-        });
-
-        enqueueFields(pending);
-      }
+      enqueueFields(pending);
     });
-  }, [messages, setFieldManual, setMessageExtraction, enqueueFields]);
+  }, [messages, setMessageExtraction, enqueueFields, fieldMetaLookup, fieldToBookChapterId]);
 
   return {
     recentlyUpdatedChapterIds,

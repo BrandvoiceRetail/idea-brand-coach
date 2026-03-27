@@ -9,11 +9,11 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Send, Paperclip, Search } from 'lucide-react';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { ChatToolsMenu } from '@/components/v2/ChatToolsMenu';
+import { GhostTextChatInput } from '@/components/v2/GhostTextChatInput';
 import { cn } from '@/lib/utils';
 
 interface ChatInputBarProps {
@@ -30,6 +30,7 @@ interface ChatInputBarProps {
   onClearReviewContext: () => void;
   onSendReviewContext: (contextString: string) => void;
   onEnrichmentComplete: (contextString: string, totalReviews: number) => void;
+  ghostSuggestion?: string | null;
 }
 
 export function ChatInputBar({
@@ -46,8 +47,9 @@ export function ChatInputBar({
   onClearReviewContext,
   onSendReviewContext,
   onEnrichmentComplete,
+  ghostSuggestion = null,
 }: ChatInputBarProps): JSX.Element {
-  const { isMobile } = useDeviceType();
+  const { isMobile, isTouchDevice } = useDeviceType();
   const [message, setMessage] = useState('');
 
   const handleSend = async (): Promise<void> => {
@@ -98,13 +100,14 @@ export function ChatInputBar({
       )}
 
       <div className="flex gap-2 items-end">
-        <Textarea
+        <GhostTextChatInput
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={setMessage}
           onKeyDown={handleKeyDown}
+          suggestion={ghostSuggestion}
+          onAcceptSuggestion={(accepted) => setMessage(accepted)}
           placeholder={placeholder}
           className={cn(
-            'resize-none flex-1',
             isMobile ? 'min-h-[44px] text-base' : 'min-h-[60px]'
           )}
           disabled={isSending}
@@ -118,7 +121,7 @@ export function ChatInputBar({
             onClick={onToggleUpload}
             className={cn(
               'relative',
-              isMobile ? 'h-11 w-11' : 'h-10 w-10 lg:h-[60px] lg:w-[60px]'
+              isTouchDevice ? 'h-11 w-11' : 'h-10 w-10 lg:h-[60px] lg:w-[60px]'
             )}
             title={showUploadPanel ? 'Hide document upload' : 'Upload documents'}
           >
@@ -138,13 +141,13 @@ export function ChatInputBar({
           <ChatToolsMenu
             onSendReviewContext={onSendReviewContext}
             onEnrichmentComplete={onEnrichmentComplete}
-            triggerClassName={isMobile ? 'h-11 w-11' : 'h-10 w-10 lg:h-[60px] lg:w-[60px]'}
+            triggerClassName={isTouchDevice ? 'h-11 w-11' : 'h-10 w-10 lg:h-[60px] lg:w-[60px]'}
           />
           <Button
             onClick={handleSend}
             disabled={!message.trim() || isSending}
             size="icon"
-            className={isMobile ? 'h-11 w-11' : 'h-10 w-10 lg:h-[60px] lg:w-[60px]'}
+            className={isTouchDevice ? 'h-11 w-11' : 'h-10 w-10 lg:h-[60px] lg:w-[60px]'}
           >
             {isSending ? (
               <Loader2 className="h-4 w-4 lg:h-5 lg:w-5 animate-spin" />

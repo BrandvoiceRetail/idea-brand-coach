@@ -52,6 +52,8 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				'heart-red': 'hsl(var(--heart-red))',
+				'gold-warm': 'hsl(var(--gold-warm))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -67,7 +69,8 @@ export default {
 				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-secondary': 'var(--gradient-secondary)',
 				'gradient-hero': 'var(--gradient-hero)',
-				'gradient-card': 'var(--gradient-card)'
+				'gradient-card': 'var(--gradient-card)',
+				'progress-gradient': 'linear-gradient(90deg, hsl(var(--heart-red)), hsl(var(--gold-warm)))'
 			},
 			boxShadow: {
 				'brand': 'var(--shadow-brand)',
@@ -95,11 +98,20 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'field-flash': {
+					'0%': {
+						backgroundColor: 'hsl(142 76% 36% / 0.2)'
+					},
+					'100%': {
+						backgroundColor: 'transparent'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'field-flash': 'field-flash 1.5s ease-out'
 			}
 		}
 	},
