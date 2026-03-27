@@ -21,13 +21,21 @@ The v2 interface uses a two-panel design that provides optimal experiences on bo
 │                 │                                │
 │   Left Panel    │       Right Panel              │
 │                 │                                │
-│  Field Editor   │     Chat Interface             │
+│  Chapter Editor │     Chat Interface             │
 │                 │                                │
-│  - Demographics │    [Book Context Badge]        │
-│  - Psychographics│                               │
-│  - Behaviors    │    Chat Messages               │
-│  - Values       │                                │
-│                 │    [📎] [Input] [Send]         │
+│  FOUNDATION     │    Trevor [Ch. 3]              │
+│  Ch 1: Brand    │                                │
+│  Ch 2: Values   │    Chat Messages               │
+│  INSIGHT        │                                │
+│  Ch 3: Avatar   │    [📎] [Input] [Send]         │
+│  Ch 4: Market   │                                │
+│  Ch 5: Intent   │                                │
+│  DISTINCTIVE    │                                │
+│  Ch 6-7: ...    │                                │
+│  EMPATHY        │                                │
+│  Ch 8-9: ...    │                                │
+│  AUTHENTIC      │                                │
+│  Ch 10-11: ...  │                                │
 │                 │                                │
 │  [Collapsible]  │                                │
 └─────────────────┴───────────────────────────────┘
@@ -74,14 +82,14 @@ The v2 interface uses a two-panel design that provides optimal experiences on bo
 ### Field Editor (Bottom Sheet)
 ```
 ┌──────────────────┐
-│   Field Editor   │
+│  Chapter Editor  │
 │    ───────       │
 │                  │
-│  Demographics    │
-│  Age: 25-35 ✏️   │
+│  FOUNDATION      │
+│  Ch 1: Brand...  │
 │                  │
-│  Psychographics  │
-│  Values: [...]   │
+│  INSIGHT         │
+│  Ch 3: Avatar... │
 │                  │
 │  [Swipe to Close]│
 └──────────────────┘
@@ -157,18 +165,18 @@ const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
 
 ### Mobile Bottom Sheet
 ```typescript
-const MobileFieldEditor: React.FC = () => {
+const MobileChapterEditor: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button className="fixed bottom-20 right-4">
-          Edit Fields
+          Chapters
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[60vh]">
-        <FieldEditor />
+        <ChapterSectionAccordion />
       </SheetContent>
     </Sheet>
   );
@@ -182,7 +190,7 @@ const MobileFieldEditor: React.FC = () => {
 interface PanelState {
   leftPanelCollapsed: boolean;
   leftPanelWidth: number;
-  activeFieldSection: string;
+  activeChapterId: string;
   scrollPositions: {
     chat: number;
     fields: number;
@@ -193,7 +201,7 @@ const usePanelState = () => {
   const [state, setState] = useLocalStorage<PanelState>('panel-state', {
     leftPanelCollapsed: false,
     leftPanelWidth: 400,
-    activeFieldSection: 'demographics',
+    activeChapterId: 'brand-foundation',
     scrollPositions: { chat: 0, fields: 0 }
   });
 
@@ -226,8 +234,8 @@ const keyboardShortcuts = {
 
 ### ARIA Labels
 ```html
-<div role="region" aria-label="Field Editor">
-  <!-- Left panel content -->
+<div role="region" aria-label="Chapter Editor">
+  <!-- Left panel: 11 IDEA chapters grouped by pillar -->
 </div>
 
 <div role="region" aria-label="Chat Interface">
@@ -263,7 +271,7 @@ const useFocusManagement = () => {
 
 ### Lazy Loading
 ```typescript
-const FieldEditor = lazy(() => import('./FieldEditor'));
+const ChapterSectionAccordion = lazy(() => import('./ChapterSectionAccordion'));
 const ChatInterface = lazy(() => import('./ChatInterface'));
 ```
 
@@ -291,10 +299,10 @@ const ChatMessages = ({ messages }) => {
 
 ### Memoization
 ```typescript
-const FieldSection = memo(({ section, fields }) => {
+const ChapterSection = memo(({ chapter, fields }) => {
   return (
-    <div className="field-section">
-      {/* Render fields */}
+    <div className="chapter-section">
+      {/* Render chapter fields */}
     </div>
   );
 }, (prev, next) => {
@@ -357,20 +365,20 @@ describe('TwoPanelLayout', () => {
   it('renders two panels on desktop', () => {
     mockViewport(1280, 800);
     render(<TwoPanelLayout />);
-    expect(screen.getByRole('region', { name: 'Field Editor' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Chapter Editor' })).toBeVisible();
     expect(screen.getByRole('region', { name: 'Chat Interface' })).toBeVisible();
   });
 
   it('renders bottom sheet on mobile', () => {
     mockViewport(375, 812);
     render(<TwoPanelLayout />);
-    expect(screen.getByRole('button', { name: 'Edit Fields' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Chapters' })).toBeVisible();
   });
 
   it('handles panel collapse', () => {
     const { getByRole } = render(<TwoPanelLayout />);
     fireEvent.click(getByRole('button', { name: 'Toggle Panel' }));
-    expect(screen.queryByRole('region', { name: 'Field Editor' })).not.toBeVisible();
+    expect(screen.queryByRole('region', { name: 'Chapter Editor' })).not.toBeVisible();
   });
 });
 ```
@@ -386,8 +394,8 @@ describe('TwoPanelLayout', () => {
 | v1 Component | v2 Component | Notes |
 |-------------|--------------|-------|
 | `ThreePanelLayout` | `TwoPanelLayout` | Simplified structure |
-| `BookExcerptPanel` | `ChatContextBadge` | Inline in chat |
-| `FieldSidebar` | `FieldEditor` | Enhanced editing |
+| `BookExcerptPanel` | `ChatContextBadge` | Inline badge in chat sub-header |
+| `FieldSidebar` | `ChapterSectionAccordion` | 11-chapter accordion with IDEA pillar grouping |
 | `ChatPanel` | `ChatInterface` | Book-aware chat |
 
 ## Performance Targets
@@ -402,5 +410,5 @@ describe('TwoPanelLayout', () => {
 
 ---
 
-**Last Updated:** February 28, 2026
+**Last Updated:** March 26, 2026
 **Status:** Ready for Implementation

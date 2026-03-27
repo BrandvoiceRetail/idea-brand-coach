@@ -1,6 +1,9 @@
 # MCP config (contains secrets)
 .mcp.json
 
+# Playwright test screenshots
+*.png
+
 # Logs
 logs
 *.log

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { SupabaseAvatarService } from '../services/SupabaseAvatarService';
 import { Database } from '../integrations/supabase/types';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 export type Avatar = Database['public']['Tables']['avatars']['Row'];
 export type AvatarInsert = Database['public']['Tables']['avatars']['Insert'];
@@ -30,6 +31,8 @@ interface UseAvatarServiceResult {
 }
 
 export function useAvatarService(): UseAvatarServiceResult {
+  const { user } = useAuth();
+  const userId = user?.id;
   const [avatarService] = useState(() => new SupabaseAvatarService(supabase));
 
   const [avatars, setAvatars] = useState<Avatar[]>([]);
@@ -210,10 +213,11 @@ export function useAvatarService(): UseAvatarServiceResult {
     await loadAvatars();
   }, [loadAvatars]);
 
-  // Load avatars on mount
+  // Load avatars on mount (guarded behind auth)
   useEffect(() => {
+    if (!userId) return;
     loadAvatars();
-  }, [loadAvatars]);
+  }, [userId, loadAvatars]);
 
   // Restore selected avatar from localStorage on mount
   useEffect(() => {
