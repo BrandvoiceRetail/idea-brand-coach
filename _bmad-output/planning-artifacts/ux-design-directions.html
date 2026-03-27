@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDEA Brand Coach — Field Extraction Feedback Design Directions</title>
+<style>
+  :root {
+    --bg-primary: hsl(220 13% 9%);
+    --bg-secondary: hsl(220 13% 13%);
+    --bg-tertiary: hsl(220 13% 17%);
+    --bg-card: hsl(220 13% 15%);
+    --text-primary: hsl(0 0% 100%);
+    --text-secondary: hsl(220 10% 70%);
+    --text-muted: hsl(220 10% 50%);
+    --border: hsl(220 13% 22%);
+    --heart-red: hsl(0 85% 50%);
+    --heart-red-dim: hsla(0, 85%, 50%, 0.15);
+    --gold: hsl(40 90% 55%);
+    --gold-dim: hsla(40, 90%, 55%, 0.15);
+    --green: hsl(142 71% 45%);
+    --green-dim: hsla(142, 71%, 45%, 0.1);
+    --green-flash: hsla(142, 71%, 45%, 0.2);
+    --green-text: hsl(142 60% 55%);
+    --blue-dim: hsla(217, 91%, 60%, 0.1);
+    --blue-text: hsl(217, 91%, 70%);
+    --ghost-opacity: 0.4;
+    --radius: 8px;
+    --radius-sm: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  /* Navigation */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 24px;
+  }
+  .nav h1 { font-size: 14px; font-weight: 600; margin-right: 16px; }
+  .nav-btn {
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-secondary); cursor: pointer; font-size: 13px;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .nav-btn.active {
+    background: var(--heart-red); border-color: var(--heart-red);
+    color: white; font-weight: 500;
+  }
+  .nav-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); margin-left: 12px;
+  }
+
+  /* Direction containers */
+  .direction { display: none; padding-top: 56px; min-height: 100vh; }
+  .direction.active { display: block; }
+
+  /* Direction header */
+  .dir-header {
+    padding: 32px 24px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dir-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .dir-header .subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; }
+  .dir-header .desc { color: var(--text-muted); font-size: 13px; max-width: 700px; line-height: 1.6; }
+  .tag {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 500; margin-right: 6px; margin-bottom: 8px;
+  }
+  .tag-green { background: var(--green-dim); color: var(--green-text); }
+  .tag-red { background: var(--heart-red-dim); color: var(--heart-red); }
+  .tag-gold { background: var(--gold-dim); color: var(--gold); }
+  .tag-blue { background: var(--blue-dim); color: var(--blue-text); }
+
+  /* Two-panel layout */
+  .two-panel {
+    display: grid; grid-template-columns: 340px 1fr;
+    height: calc(100vh - 170px); margin: 0 24px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  /* Left panel - chapters */
+  .left-panel {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto; padding: 0;
+  }
+  .pillar-header {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 16px 16px 6px; border-top: 1px solid var(--border);
+  }
+  .pillar-header:first-child { border-top: none; }
+  .chapter-section {
+    border-bottom: 1px solid var(--border);
+  }
+  .chapter-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; transition: background 0.2s;
+  }
+  .chapter-header:hover { background: var(--bg-tertiary); }
+  .chapter-title { font-size: 13px; font-weight: 500; }
+  .chapter-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 10px;
+    background: var(--bg-tertiary); color: var(--text-muted);
+  }
+  .chapter-badge.complete { background: var(--green-dim); color: var(--green-text); }
+  .chapter-fields { padding: 0 16px 12px; }
+  .field-row {
+    padding: 8px 12px; margin-bottom: 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    transition: all 0.3s;
+    position: relative;
+  }
+  .field-label {
+    font-size: 12px; font-weight: 500; margin-bottom: 2px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .field-value {
+    font-size: 12px; color: var(--text-secondary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 260px;
+  }
+  .field-value.empty { color: var(--text-muted); font-style: italic; }
+  .source-badge {
+    font-size: 9px; padding: 1px 6px; border-radius: 8px;
+    font-weight: 500;
+  }
+  .source-ai { background: var(--green-dim); color: var(--green-text); }
+  .source-manual { background: var(--blue-dim); color: var(--blue-text); }
+  .source-locked { background: var(--gold-dim); color: var(--gold); }
+
+  /* Right panel - chat */
+  .right-panel {
+    display: flex; flex-direction: column;
+    background: var(--bg-primary);
+  }
+  .chat-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+  }
+  .chat-header .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--heart-red); display: flex; align-items: center;
+    justify-content: center; font-size: 14px; font-weight: 700;
+  }
+  .chat-header .name { font-size: 14px; font-weight: 600; }
+  .chat-header .ch-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 6px;
+    border: 1px solid var(--border); color: var(--text-secondary);
+  }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 16px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .msg { max-width: 85%; }
+  .msg-user { align-self: flex-end; }
+  .msg-ai { align-self: flex-start; }
+  .msg-bubble {
+    padding: 10px 14px; border-radius: 12px; font-size: 13px;
+    line-height: 1.5;
+  }
+  .msg-user .msg-bubble {
+    background: var(--heart-red); color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .msg-ai .msg-bubble {
+    background: var(--bg-card); color: var(--text-primary);
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* Extraction badges */
+  .extraction-badges {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+  }
+  .ext-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 20px; font-size: 11px;
+    font-weight: 500; cursor: pointer; transition: all 0.2s;
+  }
+  .ext-badge:hover { transform: scale(1.05); }
+  .ext-badge-count {
+    background: var(--green-dim); color: var(--green-text);
+    border: 1px solid hsla(142, 71%, 45%, 0.3);
+  }
+  .ext-badge-field {
+    background: linear-gradient(135deg, var(--green-dim), hsla(160, 71%, 45%, 0.1));
+    color: var(--green-text);
+    border: 1px solid hsla(142, 71%, 45%, 0.3);
+  }
+
+  /* Chat input */
+  .chat-input-area {
+    padding: 12px 16px; border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+  }
+  .chat-input-wrapper {
+    display: flex; align-items: flex-end; gap: 8px;
+    background: var(--bg-primary); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 8px 12px;
+    position: relative;
+  }
+  .chat-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text-primary); font-size: 13px; resize: none;
+    min-height: 20px; font-family: inherit;
+  }
+  .chat-input::placeholder { color: var(--text-muted); }
+  .ghost-text-overlay {
+    position: absolute; left: 12px; top: 8px;
+    font-size: 13px; color: var(--text-secondary);
+    opacity: var(--ghost-opacity); pointer-events: none;
+    font-style: italic;
+  }
+  .send-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--heart-red); border: none; cursor: pointer;
+    color: white; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: transform 0.15s;
+  }
+  .send-btn:hover { transform: scale(1.1); }
+
+  /* Review modal - sidebar */
+  .review-sidebar {
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: 380px; background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+    z-index: 10;
+  }
+  .review-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .review-header h3 { font-size: 14px; font-weight: 600; }
+  .review-progress {
+    font-size: 11px; padding: 3px 10px; border-radius: 10px;
+    background: var(--bg-tertiary); color: var(--text-secondary);
+  }
+  .review-toggle {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--text-secondary);
+  }
+  .toggle-switch {
+    width: 36px; height: 20px; border-radius: 10px;
+    background: var(--bg-tertiary); position: relative;
+    cursor: pointer; transition: background 0.2s;
+    border: 1px solid var(--border);
+  }
+  .toggle-switch .toggle-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--text-muted); position: absolute;
+    top: 1px; left: 1px; transition: all 0.2s;
+  }
+  .toggle-switch.on { background: var(--green); border-color: var(--green); }
+  .toggle-switch.on .toggle-dot { left: 17px; background: white; }
+  .review-content { flex: 1; overflow-y: auto; padding: 16px; }
+  .review-field-card {
+    background: var(--bg-primary); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 14px; margin-bottom: 12px;
+  }
+  .review-field-chapter {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); margin-bottom: 4px;
+  }
+  .review-field-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .review-field-value {
+    background: var(--bg-secondary); border-radius: var(--radius-sm);
+    padding: 10px 12px; font-size: 13px; color: var(--text-secondary);
+    border: 1px solid var(--border); line-height: 1.5;
+    min-height: 60px;
+  }
+  .review-field-meta {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 8px; font-size: 11px; color: var(--text-muted);
+  }
+  .confidence-bar {
+    width: 60px; height: 4px; border-radius: 2px;
+    background: var(--bg-tertiary); overflow: hidden;
+  }
+  .confidence-fill { height: 100%; border-radius: 2px; background: var(--green); }
+  .review-actions {
+    padding: 14px 16px; border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .review-btn-row { display: flex; gap: 8px; }
+  .btn {
+    padding: 10px 16px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); font-size: 13px;
+    font-weight: 500; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    flex: 1;
+  }
+  .btn-accept { background: var(--green); border-color: var(--green); color: white; }
+  .btn-accept:hover { filter: brightness(1.1); }
+  .btn-reject { background: transparent; border-color: var(--heart-red); color: var(--heart-red); }
+  .btn-reject:hover { background: var(--heart-red-dim); }
+  .btn-accept-all {
+    background: transparent; border-color: var(--green-text);
+    color: var(--green-text); width: 100%;
+  }
+  .btn-accept-all:hover { background: var(--green-dim); }
+  .keyboard-hint {
+    font-size: 10px; color: var(--text-muted); text-align: center;
+    margin-top: 4px;
+  }
+  .keyboard-key {
+    display: inline-block; padding: 1px 5px; border-radius: 3px;
+    background: var(--bg-tertiary); border: 1px solid var(--border);
+    font-family: monospace; font-size: 10px; margin: 0 2px;
+  }
+
+  /* Field flash animations */
+  @keyframes fieldFlashSubtle {
+    0% { background-color: var(--green-flash); border-color: hsla(142, 71%, 45%, 0.3); }
+    100% { background-color: var(--bg-primary); border-color: var(--border); }
+  }
+  @keyframes fieldFlashActive {
+    0% { background-color: hsla(142, 71%, 45%, 0.25); border-color: hsla(142, 71%, 45%, 0.5); box-shadow: 0 0 12px hsla(142, 71%, 45%, 0.15); }
+    50% { background-color: hsla(142, 71%, 45%, 0.15); }
+    100% { background-color: var(--bg-primary); border-color: var(--border); box-shadow: none; }
+  }
+  @keyframes fieldFlashBold {
+    0% { background-color: hsla(142, 71%, 45%, 0.35); border-color: var(--green); box-shadow: 0 0 20px hsla(142, 71%, 45%, 0.25); transform: scale(1.02); }
+    30% { transform: scale(1); }
+    100% { background-color: var(--bg-primary); border-color: var(--border); box-shadow: none; }
+  }
+  @keyframes fieldFlashRed {
+    0% { background-color: hsla(0, 85%, 50%, 0.25); border-color: var(--heart-red); box-shadow: 0 0 20px hsla(0, 85%, 50%, 0.2); transform: scale(1.02); }
+    30% { transform: scale(1); }
+    100% { background-color: var(--bg-primary); border-color: var(--border); box-shadow: none; }
+  }
+  @keyframes badgePop {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes confettiPulse {
+    0% { box-shadow: 0 0 0 0 hsla(142, 71%, 45%, 0.4); }
+    70% { box-shadow: 0 0 0 10px hsla(142, 71%, 45%, 0); }
+    100% { box-shadow: 0 0 0 0 hsla(142, 71%, 45%, 0); }
+  }
+  @keyframes milestoneGlow {
+    0% { background: linear-gradient(135deg, var(--gold-dim), var(--heart-red-dim)); }
+    50% { background: linear-gradient(135deg, var(--heart-red-dim), var(--gold-dim)); }
+    100% { background: linear-gradient(135deg, var(--gold-dim), var(--heart-red-dim)); }
+  }
+
+  .flash-subtle { animation: fieldFlashSubtle 2s ease-out; }
+  .flash-active { animation: fieldFlashActive 1.5s ease-out; }
+  .flash-bold { animation: fieldFlashBold 1.8s ease-out; }
+  .flash-red { animation: fieldFlashRed 1.8s ease-out; }
+  .badge-pop { animation: badgePop 0.3s ease-out both; }
+  .confetti-pulse { animation: confettiPulse 1s ease-out; }
+
+  /* Ghost text in fields */
+  .field-ghost {
+    font-style: italic; opacity: var(--ghost-opacity);
+  }
+  .field-ghost-wrapper { position: relative; }
+  .field-ghost-hint {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    font-size: 9px; color: var(--text-muted); opacity: 0.6;
+    background: var(--bg-tertiary); padding: 1px 6px; border-radius: 3px;
+  }
+
+  /* Direction-specific: Celebratory badges */
+  .ext-badge-red {
+    background: linear-gradient(135deg, var(--heart-red-dim), hsla(0, 85%, 50%, 0.2));
+    color: var(--heart-red);
+    border: 1px solid hsla(0, 85%, 50%, 0.3);
+  }
+  .milestone-badge {
+    background: linear-gradient(135deg, var(--gold-dim), var(--heart-red-dim));
+    color: var(--gold); border: 1px solid hsla(40, 90%, 55%, 0.3);
+    padding: 6px 14px; font-size: 12px; font-weight: 600;
+    animation: milestoneGlow 3s ease-in-out infinite;
+  }
+
+  /* Demo controls */
+  .demo-controls {
+    padding: 16px 24px; display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .demo-btn {
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg-secondary);
+    color: var(--text-secondary); cursor: pointer; font-size: 12px;
+    transition: all 0.2s;
+  }
+  .demo-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .demo-btn.playing { background: var(--green-dim); color: var(--green-text); border-color: var(--green-text); }
+
+  /* Comparison view */
+  .comparison {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
+    padding: 24px; min-height: calc(100vh - 56px);
+  }
+  .comparison-card {
+    background: var(--bg-secondary); border-radius: var(--radius);
+    border: 1px solid var(--border); overflow: hidden;
+  }
+  .comparison-card h3 {
+    padding: 14px 16px; font-size: 14px; font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .comparison-item {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .comparison-item:last-child { border-bottom: none; }
+  .comparison-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .comparison-value { font-size: 13px; }
+
+  /* Relative positioning for review sidebar */
+  .panel-with-review { position: relative; overflow: hidden; }
+
+  /* Rejection chat message */
+  .msg-system .msg-bubble {
+    background: var(--heart-red-dim); color: var(--text-primary);
+    border: 1px solid hsla(0, 85%, 50%, 0.2);
+    border-bottom-left-radius: 4px; font-style: italic;
+  }
+
+  /* Progress bar */
+  .progress-bar-wrapper {
+    padding: 8px 16px; border-bottom: 1px solid var(--border);
+  }
+  .progress-label {
+    font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;
+    display: flex; justify-content: space-between;
+  }
+  .progress-bar {
+    height: 4px; border-radius: 2px; background: var(--bg-tertiary);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 2px; transition: width 0.5s ease;
+  }
+  .progress-fill-green { background: var(--green); }
+  .progress-fill-gradient { background: linear-gradient(90deg, var(--heart-red), var(--gold)); }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <h1>IDEA Brand Coach</h1>
+  <span class="nav-label">Directions:</span>
+  <button class="nav-btn active" onclick="showDirection('a')">A — Subtle & Ambient</button>
+  <button class="nav-btn" onclick="showDirection('b')">B — Active & Guided</button>
+  <button class="nav-btn" onclick="showDirection('c')">C — Celebratory & Bold</button>
+  <button class="nav-btn" onclick="showDirection('compare')" style="margin-left:auto; border-color: var(--gold); color: var(--gold);">Compare All</button>
+</nav>
+
+<!-- ============================================================ -->
+<!-- DIRECTION A: Subtle & Ambient -->
+<!-- ============================================================ -->
+<div id="dir-a" class="direction active">
+  <div class="dir-header">
+    <h2>Direction A: Subtle & Ambient</h2>
+    <div class="subtitle">Quiet, ambient, trust-forward. Like GitHub Copilot.</div>
+    <div>
+      <span class="tag tag-green">Ghost Text Primary</span>
+      <span class="tag tag-green">No Auto-Modal</span>
+      <span class="tag tag-green">Gentle Flash (2s)</span>
+      <span class="tag tag-blue">Badge Click → Review</span>
+    </div>
+    <p class="desc">Ghost text is the primary feedback mechanism. Fields show ghosted values that users Tab to accept. The review modal only appears when users click a badge — not automatically. The green flash is gentle and ambient. For users who want minimal interruption and maximum flow.</p>
+  </div>
+
+  <div class="demo-controls">
+    <button class="demo-btn" onclick="demoFlashA()">▶ Demo: Field Flash</button>
+    <button class="demo-btn" onclick="demoGhostA()">▶ Demo: Ghost Text Appear</button>
+    <button class="demo-btn" onclick="demoBadgesA()">▶ Demo: Badges Animate</button>
+  </div>
+
+  <div class="two-panel">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="progress-bar-wrapper">
+        <div class="progress-label">
+          <span>15 of 35 fields captured</span>
+          <span>43%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill progress-fill-green" style="width: 43%"></div>
+        </div>
+      </div>
+      <div class="pillar-header">FOUNDATION</div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Brand Foundation</span>
+          <span class="chapter-badge complete">3/3</span>
+        </div>
+        <div class="chapter-fields">
+          <div class="field-row" id="a-field-purpose">
+            <div class="field-label">
+              Brand Purpose
+              <span class="source-badge source-ai">✦ AI</span>
+            </div>
+            <div class="field-value">To make conscious consumption effortless for...</div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">
+              Brand Vision
+              <span class="source-badge source-manual">✎ edited</span>
+            </div>
+            <div class="field-value">A world where every purchase aligns with values</div>
+          </div>
+          <div class="field-row">
+            <div class="field-label">
+              Brand Mission
+              <span class="source-badge source-ai">✦ AI</span>
+            </div>
+            <div class="field-value">Empowering women to shop with heart and mind</div>
+          </div>
+        </div>
+      </div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Brand Values</span>
+          <span class="chapter-badge complete">2/3</span>
+        </div>
+        <div class="chapter-fields">
+          <div class="field-row" id="a-field-values">
+            <div class="field-label">Core Values <span class="source-badge source-ai">✦ AI</span></div>
+            <div class="field-value">Sustainability, Transparency, Empowerment</div>
+          </div>
+          <div class="field-row" id="a-field-story">
+            <div class="field-label">Brand Story</div>
+            <div class="field-value field-ghost-wrapper">
+              <span class="field-ghost" id="a-ghost-story" style="display:none">Founded in 2023 after seeing the impact of fast fashion on communities...</span>
+              <span id="a-empty-story" class="field-value empty">Not yet captured</span>
+              <span class="field-ghost-hint" id="a-ghost-hint" style="display:none">Tab ↹ to accept</span>
+            </div>
+          </div>
+          <div class="field-row" id="a-field-promise">
+            <div class="field-label">Brand Promise</div>
+            <div class="field-value empty">Not yet captured</div>
+          </div>
+        </div>
+      </div>
+      <div class="pillar-header">INSIGHT</div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Customer Avatar</span>
+          <span class="chapter-badge">1/4</span>
+        </div>
+      </div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Market Insight</span>
+          <span class="chapter-badge">0/2</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="chat-header">
+        <div class="avatar">T</div>
+        <span class="name">TrevBot</span>
+        <span class="ch-badge">Ch. 2</span>
+      </div>
+      <div class="chat-messages">
+        <div class="msg msg-ai">
+          <div class="msg-bubble">Welcome! I'm TrevBot, your AI brand coach. Tell me about your brand — what drives it, who it's for, and what makes it special. I'll help you build a complete brand strategy through our conversation.</div>
+        </div>
+        <div class="msg msg-user">
+          <div class="msg-bubble">We're a sustainable clothing brand for millennial women who care about ethical fashion. Our purpose is making conscious consumption effortless. We started after seeing the impact of fast fashion.</div>
+        </div>
+        <div class="msg msg-ai">
+          <div class="msg-bubble">That's a powerful foundation! I can feel the passion behind the mission. Let me capture what I'm hearing — your brand exists to bridge the gap between wanting to shop ethically and actually doing it effortlessly.<br><br>I captured that as your <strong>Brand Purpose</strong>. I also noticed some details about your <strong>Brand Story</strong> and <strong>Core Values</strong> — check the fields on the left to review.</div>
+          <div class="extraction-badges" id="a-badges">
+            <span class="ext-badge ext-badge-count">✦ 3 fields extracted</span>
+            <span class="ext-badge ext-badge-field badge-pop" style="animation-delay: 0.05s">Brand Purpose</span>
+            <span class="ext-badge ext-badge-field badge-pop" style="animation-delay: 0.1s">Core Values</span>
+            <span class="ext-badge ext-badge-field badge-pop" style="animation-delay: 0.15s">Brand Story</span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div class="chat-input-wrapper">
+          <span class="ghost-text-overlay">Tell me about your ideal customer...</span>
+          <textarea class="chat-input" rows="1" placeholder=""></textarea>
+          <button class="send-btn">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DIRECTION B: Active & Guided -->
+<!-- ============================================================ -->
+<div id="dir-b" class="direction">
+  <div class="dir-header">
+    <h2>Direction B: Active & Guided</h2>
+    <div class="subtitle">Visible, engaging, trust-building. Like Grammarly meets ChatGPT.</div>
+    <div>
+      <span class="tag tag-green">Auto Review Modal</span>
+      <span class="tag tag-green">Prominent Flash (1.5s)</span>
+      <span class="tag tag-red">Rejection → Chat Response</span>
+      <span class="tag tag-gold">Two-Tier Accept</span>
+    </div>
+    <p class="desc">The scroll-open-flash is prominent. The batched review modal appears automatically after extraction. Ghost text in both fields and chat input. Two-button accept (batch + always). Rejection triggers TrevBot chat response. The recommended direction — matches all emotional design principles.</p>
+  </div>
+
+  <div class="demo-controls">
+    <button class="demo-btn" onclick="demoFlashB()">▶ Demo: Scroll-Open-Flash</button>
+    <button class="demo-btn" onclick="demoRejectB()">▶ Demo: Rejection → Chat</button>
+    <button class="demo-btn" onclick="demoBatchB()">▶ Demo: Batch Accept All</button>
+  </div>
+
+  <div class="two-panel">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="progress-bar-wrapper">
+        <div class="progress-label">
+          <span>15 of 35 fields captured</span>
+          <span>43%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill progress-fill-green" style="width: 43%"></div>
+        </div>
+      </div>
+      <div class="pillar-header">FOUNDATION</div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Brand Foundation</span>
+          <span class="chapter-badge complete">3/3</span>
+        </div>
+        <div class="chapter-fields">
+          <div class="field-row" id="b-field-purpose">
+            <div class="field-label">Brand Purpose <span class="source-badge source-ai">✦ AI</span></div>
+            <div class="field-value">To make conscious consumption effortless for...</div>
+          </div>
+          <div class="field-row" id="b-field-vision">
+            <div class="field-label">Brand Vision <span class="source-badge source-locked">🔒 locked</span></div>
+            <div class="field-value">A world where every purchase aligns with values</div>
+          </div>
+          <div class="field-row" id="b-field-mission">
+            <div class="field-label">Brand Mission <span class="source-badge source-ai">✦ AI</span></div>
+            <div class="field-value">Empowering women to shop with heart and mind</div>
+          </div>
+        </div>
+      </div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Brand Values</span>
+          <span class="chapter-badge">1/3</span>
+        </div>
+        <div class="chapter-fields">
+          <div class="field-row" id="b-field-values">
+            <div class="field-label">Core Values <span class="source-badge source-ai">✦ AI</span></div>
+            <div class="field-value">Sustainability, Transparency, Empowerment</div>
+          </div>
+          <div class="field-row" id="b-field-story">
+            <div class="field-label">Brand Story</div>
+            <div class="field-value empty">Not yet captured</div>
+          </div>
+          <div class="field-row" id="b-field-promise">
+            <div class="field-label">Brand Promise</div>
+            <div class="field-value empty">Not yet captured</div>
+          </div>
+        </div>
+      </div>
+      <div class="pillar-header">INSIGHT</div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Customer Avatar</span>
+          <span class="chapter-badge">1/4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel with Review Sidebar -->
+    <div class="right-panel panel-with-review">
+      <div class="chat-header">
+        <div class="avatar">T</div>
+        <span class="name">TrevBot</span>
+        <span class="ch-badge">Ch. 2</span>
+      </div>
+      <div class="chat-messages" id="b-messages">
+        <div class="msg msg-user">
+          <div class="msg-bubble">Our brand story started when my co-founder and I saw garment workers in Bangladesh. We promised to build a brand that proves fashion can be both beautiful and ethical.</div>
+        </div>
+        <div class="msg msg-ai">
+          <div class="msg-bubble">What a powerful origin story — that firsthand experience gives your brand authenticity that competitors can't replicate. I'm capturing this as your <strong>Brand Story</strong> and I'm also hearing a strong <strong>Brand Promise</strong> in there.</div>
+          <div class="extraction-badges">
+            <span class="ext-badge ext-badge-count">✦ 2 fields extracted</span>
+            <span class="ext-badge ext-badge-field">Brand Story</span>
+            <span class="ext-badge ext-badge-field">Brand Promise</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review Sidebar -->
+      <div class="review-sidebar" id="b-review">
+        <div class="review-header">
+          <h3>Field Review</h3>
+          <span class="review-progress">1 of 2</span>
+        </div>
+        <div class="review-toggle">
+          <div class="toggle-switch" id="b-toggle" onclick="toggleAlwaysAccept(this)">
+            <div class="toggle-dot"></div>
+          </div>
+          <span>Auto-accept future extractions</span>
+        </div>
+        <div class="review-content">
+          <div class="review-field-card">
+            <div class="review-field-chapter">BRAND VALUES</div>
+            <div class="review-field-name">Brand Story</div>
+            <div class="review-field-value">Founded after witnessing garment workers in Bangladesh firsthand. Co-founders promised to build a brand proving fashion can be both beautiful and ethical — that style and conscience aren't mutually exclusive.</div>
+            <div class="review-field-meta">
+              <span>Confidence:</span>
+              <div class="confidence-bar"><div class="confidence-fill" style="width: 92%"></div></div>
+              <span>92%</span>
+              <span style="margin-left: auto">Source: user_stated</span>
+            </div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+            <strong>Next:</strong> Brand Promise — "Fashion can be both beautiful and ethical..."
+          </div>
+        </div>
+        <div class="review-actions">
+          <div class="review-btn-row">
+            <button class="btn btn-accept" onclick="demoAcceptB()">✓ Accept</button>
+            <button class="btn btn-reject" onclick="demoRejectB()">✕ Reject</button>
+          </div>
+          <button class="btn btn-accept-all" onclick="demoBatchB()">Accept All 2</button>
+          <div class="keyboard-hint">
+            <span class="keyboard-key">A</span> accept &nbsp;
+            <span class="keyboard-key">R</span> reject &nbsp;
+            <span class="keyboard-key">←</span> <span class="keyboard-key">→</span> navigate
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-area" style="padding-right: 396px;">
+        <div class="chat-input-wrapper">
+          <span class="ghost-text-overlay">What promise does your brand make to customers?</span>
+          <textarea class="chat-input" rows="1"></textarea>
+          <button class="send-btn">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DIRECTION C: Celebratory & Bold -->
+<!-- ============================================================ -->
+<div id="dir-c" class="direction">
+  <div class="dir-header">
+    <h2>Direction C: Celebratory & Bold</h2>
+    <div class="subtitle">Gamified, high-energy. Like Duolingo meets brand building.</div>
+    <div>
+      <span class="tag tag-red">Heart Red Badges</span>
+      <span class="tag tag-gold">Milestone Celebrations</span>
+      <span class="tag tag-green">Full Cascade Animation</span>
+      <span class="tag tag-red">Bold Flash + Scale</span>
+    </div>
+    <p class="desc">Full cascade animation with stagger — all extracted fields flash in sequence with scale effect. Confetti-style pulse on milestones. Heart Red accent on extraction badges. Bolder review modal with large accept/reject buttons. For users who need motivation and visual energy.</p>
+  </div>
+
+  <div class="demo-controls">
+    <button class="demo-btn" onclick="demoCascadeC()">▶ Demo: Cascade Flash</button>
+    <button class="demo-btn" onclick="demoMilestoneC()">▶ Demo: Milestone Celebration</button>
+    <button class="demo-btn" onclick="demoBoldFlashC()">▶ Demo: Bold Field Flash</button>
+  </div>
+
+  <div class="two-panel">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="progress-bar-wrapper">
+        <div class="progress-label">
+          <span style="font-weight: 600; color: var(--gold);">🏆 20 of 35 fields captured!</span>
+          <span style="color: var(--gold)">57%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill progress-fill-gradient" style="width: 57%"></div>
+        </div>
+      </div>
+      <div id="c-milestone" style="display:none; padding: 8px 16px;">
+        <div class="milestone-badge" style="text-align: center; border-radius: var(--radius-sm);">
+          🎉 Milestone! 20 fields captured — you're past the halfway mark!
+        </div>
+      </div>
+      <div class="pillar-header">FOUNDATION</div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Brand Foundation</span>
+          <span class="chapter-badge complete">3/3 ✓</span>
+        </div>
+        <div class="chapter-fields">
+          <div class="field-row" id="c-field-1">
+            <div class="field-label">Brand Purpose <span class="source-badge source-ai">✦ AI</span></div>
+            <div class="field-value">To make conscious consumption effortless</div>
+          </div>
+          <div class="field-row" id="c-field-2">
+            <div class="field-label">Brand Vision <span class="source-badge source-ai">✦ AI</span></div>
+            <div class="field-value">A world where every purchase aligns with values</div>
+          </div>
+          <div class="field-row" id="c-field-3">
+            <div class="field-label">Brand Mission <span class="source-badge source-ai">✦ AI</span></div>
+            <div class="field-value">Empowering women to shop with heart and mind</div>
+          </div>
+        </div>
+      </div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Brand Values</span>
+          <span class="chapter-badge complete">3/3 ✓</span>
+        </div>
+        <div class="chapter-fields">
+          <div class="field-row" id="c-field-4">
+            <div class="field-label">Core Values <span class="source-badge source-ai">✦ AI</span></div>
+            <div class="field-value">Sustainability, Transparency, Empowerment</div>
+          </div>
+          <div class="field-row" id="c-field-5">
+            <div class="field-label">Brand Story <span class="source-badge source-manual">✎ edited</span></div>
+            <div class="field-value">Founded after witnessing garment workers in Bangladesh</div>
+          </div>
+          <div class="field-row" id="c-field-6">
+            <div class="field-label">Brand Promise <span class="source-badge source-ai">✦ AI</span></div>
+            <div class="field-value">Fashion that's beautiful, ethical, and effortless</div>
+          </div>
+        </div>
+      </div>
+      <div class="pillar-header">INSIGHT</div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Customer Avatar</span>
+          <span class="chapter-badge complete">4/4 ✓</span>
+        </div>
+      </div>
+      <div class="chapter-section">
+        <div class="chapter-header">
+          <span class="chapter-title">Market Insight</span>
+          <span class="chapter-badge">1/2</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="chat-header">
+        <div class="avatar">T</div>
+        <span class="name">TrevBot</span>
+        <span class="ch-badge">Ch. 4</span>
+        <span style="margin-left: auto; font-size: 11px; color: var(--gold); font-weight: 500;">🔥 57% complete</span>
+      </div>
+      <div class="chat-messages">
+        <div class="msg msg-user">
+          <div class="msg-bubble">Our customers are 25-35 year old women, mostly urban, $60-90K income. They follow sustainable living influencers and feel guilty about impulse fashion purchases.</div>
+        </div>
+        <div class="msg msg-ai">
+          <div class="msg-bubble">Incredible detail! I can see your avatar taking shape — a young professional woman who <em>wants</em> to live her values but feels the tension between convenience and conscience. That guilt is a powerful insight we can address directly in your messaging.<br><br>I captured <strong>Demographics</strong>, <strong>Psychographics</strong>, and <strong>Pain Points</strong> from that single message! 🎯</div>
+          <div class="extraction-badges" id="c-badges">
+            <span class="ext-badge ext-badge-red" style="font-weight: 600;">❤ 3 fields captured!</span>
+            <span class="ext-badge ext-badge-red badge-pop" style="animation-delay: 0.05s">Demographics</span>
+            <span class="ext-badge ext-badge-red badge-pop" style="animation-delay: 0.1s">Psychographics</span>
+            <span class="ext-badge ext-badge-red badge-pop" style="animation-delay: 0.15s">Pain Points</span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div class="chat-input-wrapper">
+          <span class="ghost-text-overlay">What are your customers' biggest goals and aspirations?</span>
+          <textarea class="chat-input" rows="1"></textarea>
+          <button class="send-btn">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- COMPARISON VIEW -->
+<!-- ============================================================ -->
+<div id="dir-compare" class="direction">
+  <div class="dir-header">
+    <h2>Compare All Directions</h2>
+    <div class="subtitle">Side-by-side comparison of key design decisions</div>
+  </div>
+  <div class="comparison">
+    <div class="comparison-card">
+      <h3 style="color: var(--green-text)">A — Subtle & Ambient</h3>
+      <div class="comparison-item">
+        <div class="comparison-label">Review Modal</div>
+        <div class="comparison-value">On badge click only — never auto-appears</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Field Flash</div>
+        <div class="comparison-value">Gentle, 2s fade, low opacity</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Primary Feedback</div>
+        <div class="comparison-value">Ghost text in fields (Tab to accept)</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Badge Style</div>
+        <div class="comparison-value">Green, understated</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Rejection Handling</div>
+        <div class="comparison-value">Ghost text disappears, field stays empty</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Milestones</div>
+        <div class="comparison-value">Progress bar updates, no celebration</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Trust Model</div>
+        <div class="comparison-value">Trust-forward — AI suggestions are ambient</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Best For</div>
+        <div class="comparison-value">Power users, minimal interruption seekers</div>
+      </div>
+      <div class="comparison-item" style="border: 1px solid var(--border); border-radius: var(--radius-sm); margin: 8px 0; padding: 12px;">
+        <div class="field-row flash-subtle" style="margin: 0">
+          <div class="field-label">Brand Story <span class="source-badge source-ai">✦ AI</span></div>
+          <div class="field-value field-ghost" style="display:block">Founded after witnessing...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-card" style="border-color: var(--green);">
+      <h3 style="color: var(--green-text)">B — Active & Guided ★ Recommended</h3>
+      <div class="comparison-item">
+        <div class="comparison-label">Review Modal</div>
+        <div class="comparison-value" style="font-weight: 500; color: var(--text-primary)">Auto-appears with batched review (1 of N)</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Field Flash</div>
+        <div class="comparison-value">Prominent, 1.5s, with subtle glow</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Primary Feedback</div>
+        <div class="comparison-value">Scroll-open-flash + review modal + ghost text</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Badge Style</div>
+        <div class="comparison-value">Green gradient, animated stagger</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Rejection Handling</div>
+        <div class="comparison-value" style="font-weight: 500; color: var(--heart-red)">TrevBot responds in chat acknowledging rejection</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Milestones</div>
+        <div class="comparison-value">Progress bar + subtle indicator</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Trust Model</div>
+        <div class="comparison-value">Trust-building — review first, then offer auto-accept</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Best For</div>
+        <div class="comparison-value" style="font-weight: 500; color: var(--text-primary)">All users — careful reviewers AND power users</div>
+      </div>
+      <div class="comparison-item" style="border: 1px solid var(--green); border-radius: var(--radius-sm); margin: 8px 0; padding: 12px; box-shadow: 0 0 12px hsla(142,71%,45%,0.1);">
+        <div class="field-row flash-active" style="margin: 0">
+          <div class="field-label">Brand Story <span class="source-badge source-ai">✦ AI</span></div>
+          <div class="field-value">Founded after witnessing garment workers...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-card">
+      <h3 style="color: var(--heart-red)">C — Celebratory & Bold</h3>
+      <div class="comparison-item">
+        <div class="comparison-label">Review Modal</div>
+        <div class="comparison-value">Auto-appears with large buttons and energy</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Field Flash</div>
+        <div class="comparison-value">Bold, 1.8s, with scale effect + glow</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Primary Feedback</div>
+        <div class="comparison-value">Full cascade — all fields flash in sequence</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Badge Style</div>
+        <div class="comparison-value" style="color: var(--heart-red)">Heart Red gradient, ❤ icon</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Rejection Handling</div>
+        <div class="comparison-value">TrevBot responds + field shows red flash</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Milestones</div>
+        <div class="comparison-value" style="color: var(--gold)">🎉 Animated celebration banner + glow</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Trust Model</div>
+        <div class="comparison-value">Motivation-forward — celebrate every extraction</div>
+      </div>
+      <div class="comparison-item">
+        <div class="comparison-label">Best For</div>
+        <div class="comparison-value">New users, motivation-driven, gamification fans</div>
+      </div>
+      <div class="comparison-item" style="border: 1px solid var(--heart-red); border-radius: var(--radius-sm); margin: 8px 0; padding: 12px;">
+        <div class="field-row flash-bold" style="margin: 0">
+          <div class="field-label">Brand Story <span class="source-badge source-ai" style="background: var(--heart-red-dim); color: var(--heart-red)">❤ AI</span></div>
+          <div class="field-value">Founded after witnessing garment workers...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Navigation
+  function showDirection(id) {
+    document.querySelectorAll('.direction').forEach(d => d.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('dir-' + id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // Direction A demos
+  function demoFlashA() {
+    const field = document.getElementById('a-field-values');
+    field.classList.remove('flash-subtle');
+    void field.offsetWidth;
+    field.classList.add('flash-subtle');
+  }
+
+  function demoGhostA() {
+    const ghost = document.getElementById('a-ghost-story');
+    const empty = document.getElementById('a-empty-story');
+    const hint = document.getElementById('a-ghost-hint');
+    if (ghost.style.display === 'none') {
+      ghost.style.display = 'inline';
+      empty.style.display = 'none';
+      hint.style.display = 'inline';
+      const field = document.getElementById('a-field-story');
+      field.classList.remove('flash-subtle');
+      void field.offsetWidth;
+      field.classList.add('flash-subtle');
+    } else {
+      ghost.style.display = 'none';
+      empty.style.display = 'inline';
+      hint.style.display = 'none';
+    }
+  }
+
+  function demoBadgesA() {
+    const badges = document.getElementById('a-badges');
+    badges.querySelectorAll('.ext-badge-field').forEach((b, i) => {
+      b.style.opacity = '0';
+      b.style.transform = 'translateY(8px)';
+      setTimeout(() => {
+        b.style.transition = 'all 0.3s ease-out';
+        b.style.opacity = '1';
+        b.style.transform = 'translateY(0)';
+      }, 50 + i * 80);
+    });
+  }
+
+  // Direction B demos
+  function demoFlashB() {
+    const field = document.getElementById('b-field-story');
+    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      field.classList.remove('flash-active');
+      void field.offsetWidth;
+      field.classList.add('flash-active');
+    }, 300);
+  }
+
+  function demoAcceptB() {
+    const field = document.getElementById('b-field-story');
+    field.classList.remove('flash-active');
+    void field.offsetWidth;
+    field.classList.add('flash-active');
+    field.querySelector('.field-value').textContent = 'Founded after witnessing garment workers in Bangladesh...';
+    field.querySelector('.field-value').classList.remove('empty');
+    const label = field.querySelector('.field-label');
+    if (!label.querySelector('.source-badge')) {
+      label.innerHTML += ' <span class="source-badge source-ai">✦ AI</span>';
+    }
+    const progress = document.getElementById('b-review').querySelector('.review-progress');
+    progress.textContent = '2 of 2';
+  }
+
+  function demoRejectB() {
+    const msgs = document.getElementById('b-messages');
+    const existing = msgs.querySelector('.msg-system');
+    if (existing) existing.remove();
+
+    const field = document.getElementById('b-field-story');
+    field.classList.remove('flash-active');
+    void field.offsetWidth;
+    field.style.animation = 'fieldFlashActive 1s ease-out';
+    field.style.borderColor = 'hsla(0, 85%, 50%, 0.3)';
+    field.style.backgroundColor = 'hsla(0, 85%, 50%, 0.1)';
+    setTimeout(() => {
+      field.style.borderColor = '';
+      field.style.backgroundColor = '';
+      field.style.animation = '';
+    }, 1000);
+
+    const rejMsg = document.createElement('div');
+    rejMsg.className = 'msg msg-system msg-ai';
+    rejMsg.innerHTML = '<div class="msg-bubble">Got it, I won\'t use that for <strong>Brand Story</strong>. What would you like your brand story to say instead? Tell me in your own words.</div>';
+    msgs.appendChild(rejMsg);
+    rejMsg.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function demoBatchB() {
+    ['b-field-story', 'b-field-promise'].forEach((id, i) => {
+      const field = document.getElementById(id);
+      setTimeout(() => {
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        field.classList.remove('flash-active');
+        void field.offsetWidth;
+        field.classList.add('flash-active');
+        if (field.querySelector('.field-value.empty')) {
+          field.querySelector('.field-value').textContent = i === 0
+            ? 'Founded after witnessing garment workers in Bangladesh...'
+            : 'Fashion that is both beautiful and ethical';
+          field.querySelector('.field-value').classList.remove('empty');
+          const label = field.querySelector('.field-label');
+          if (!label.querySelector('.source-badge')) {
+            label.innerHTML += ' <span class="source-badge source-ai">✦ AI</span>';
+          }
+        }
+      }, i * 600);
+    });
+  }
+
+  function toggleAlwaysAccept(el) {
+    el.classList.toggle('on');
+  }
+
+  // Direction C demos
+  function demoCascadeC() {
+    ['c-field-1', 'c-field-2', 'c-field-3', 'c-field-4', 'c-field-5', 'c-field-6'].forEach((id, i) => {
+      const field = document.getElementById(id);
+      setTimeout(() => {
+        field.classList.remove('flash-bold');
+        void field.offsetWidth;
+        field.classList.add('flash-bold');
+        field.classList.add('confetti-pulse');
+        setTimeout(() => field.classList.remove('confetti-pulse'), 1000);
+      }, i * 200);
+    });
+  }
+
+  function demoMilestoneC() {
+    const milestone = document.getElementById('c-milestone');
+    milestone.style.display = milestone.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function demoBoldFlashC() {
+    const field = document.getElementById('c-field-4');
+    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      field.classList.remove('flash-bold');
+      void field.offsetWidth;
+      field.classList.add('flash-bold');
+    }, 300);
+  }
+</script>
+
+</body>
+</html>
