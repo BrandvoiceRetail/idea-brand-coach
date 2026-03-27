@@ -1485,6 +1485,7 @@ serve(async (req) => {
           }
 
           // Stream SSE events from OpenAI → client
+          console.log(`[Streaming] OpenAI response OK. Status: ${openAIResponse.status}, Content-Type: ${openAIResponse.headers.get('content-type')}, hasBody: ${!!openAIResponse.body}`);
           const encoder = new TextEncoder();
           const decoder = new TextDecoder();
           let functionCallArgs = '';
@@ -1502,6 +1503,8 @@ serve(async (req) => {
               let buffer = '';
               let receivedCompletedEvent = false;
 
+              let openAIStreamError: string | null = null;
+
               /** Process a single SSE line from OpenAI and forward relevant events to the client. */
               const processLine = async (line: string): Promise<void> => {
                 if (!line.startsWith('data: ')) return;
@@ -1515,6 +1518,26 @@ serve(async (req) => {
                   // Capture response ID
                   if (event.type === 'response.created' && event.response?.id) {
                     streamedResponseId = event.response.id;
+                  }
+
+                  // Handle OpenAI stream errors (e.g. insufficient_quota, rate_limit)
+                  // These arrive as SSE events inside a 200 response
+                  if (event.type === 'error') {
+                    const errMsg = event.error?.message || 'Unknown OpenAI error';
+                    const errCode = event.error?.code || event.error?.type || 'unknown';
+                    console.error(`[SSE Error] OpenAI stream error: ${errCode} — ${errMsg}`);
+                    openAIStreamError = errCode === 'insufficient_quota'
+                      ? 'The AI service is temporarily unavailable due to usage limits. Please try again later.'
+                      : `AI service error: ${errMsg}`;
+                  }
+
+                  // Handle response.failed — model could not produce output
+                  if (event.type === 'response.failed') {
+                    const errMsg = event.response?.error?.message || 'Response generation failed';
+                    console.error(`[SSE Error] Response failed: ${errMsg}`);
+                    if (!openAIStreamError) {
+                      openAIStreamError = 'The AI service encountered an error. Please try again.';
+                    }
                   }
 
                   // Text delta → forward to client
@@ -1657,13 +1680,16 @@ serve(async (req) => {
                       }
                     }
 
-                    console.log(`[Streaming Summary] textDeltas: ${textDeltaCount}, textLength: ${totalTextLength}, toolCalls: ${streamedToolCalls.length}, hasTextOutput: ${hasTextOutput}`);
+                    console.log(`[Streaming Summary] textDeltas: ${textDeltaCount}, textLength: ${totalTextLength}, toolCalls: ${streamedToolCalls.length}, hasTextOutput: ${hasTextOutput}, openAIError: ${openAIStreamError || 'none'}`);
 
                     // Fallback: if model produced only tool calls with no text AND
-                    // the follow-up also failed to produce text, inject a static summary
+                    // the follow-up also failed to produce text, inject a message
                     if (!hasTextOutput) {
                       let fallback: string;
-                      if (streamedToolCalls.length > 0) {
+                      if (openAIStreamError) {
+                        // Surface the actual error to the user instead of a vague message
+                        fallback = openAIStreamError;
+                      } else if (streamedToolCalls.length > 0) {
                         const totalFields = streamedToolCalls.reduce((sum, tc) => sum + tc.fields_count, 0);
                         fallback = totalFields > 0
                           ? `I found ${totalFields} field${totalFields !== 1 ? 's' : ''} from your input and added them to your brand profile. Let me know if you'd like to review or refine any of them!`
