@@ -9,6 +9,7 @@ import { ChapterSectionAccordion } from '@/components/v2/ChapterSectionAccordion
 import { BrandCoachHeader } from '@/components/v2/BrandCoachHeader';
 import { ChatMessageList } from '@/components/v2/ChatMessageList';
 import { ChatInputBar } from '@/components/v2/ChatInputBar';
+import { MilestoneCelebration } from '@/components/v2/MilestoneCelebration';
 import { useBrandCoachV2State } from '@/hooks/v2/useBrandCoachV2State';
 
 /**
@@ -61,6 +62,8 @@ const BrandCoachV2 = (): JSX.Element => {
     reviewEnrichmentStatus,
     reviewCount,
     isFieldLocked,
+    milestone,
+    dismissMilestone,
 
     // Actions
     handleSessionSelect,
@@ -226,6 +229,13 @@ const BrandCoachV2 = (): JSX.Element => {
           </div>
         }
         rightPanelTitle="Brand Coach — Trevor"
+      />
+
+      {/* Milestone celebration overlay */}
+      <MilestoneCelebration
+        milestone={milestone}
+        onDismiss={dismissMilestone}
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-md"
       />
     </div>
   );

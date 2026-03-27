@@ -8,7 +8,7 @@
  * This is a pure structural refactor — no behavior changes.
  */
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,6 +32,8 @@ import { useChatExportActions } from '@/hooks/useChatExportActions';
 import { useDocumentUploadFlow } from '@/hooks/useDocumentUploadFlow';
 import { useFieldExtractionOrchestrator } from '@/hooks/useFieldExtractionOrchestrator';
 import { useChapterProceeding } from '@/hooks/useChapterProceeding';
+import { useMilestoneCelebration } from '@/components/v2/MilestoneCelebration';
+import type { MilestoneEvent } from '@/components/v2/MilestoneCelebration';
 import { CHAPTER_FIELDS_MAP, BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY } from '@/config/chapterFields';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
 import type { ChapterAccordionHandle } from '@/components/v2/ChapterSectionAccordion';
@@ -137,6 +139,10 @@ export interface BrandCoachV2State {
 
   /** Field locked check */
   isFieldLocked: (fieldId: string) => boolean;
+
+  /** Milestone celebration */
+  milestone: MilestoneEvent | null;
+  dismissMilestone: () => void;
 }
 
 export interface BrandCoachV2Actions {
@@ -315,12 +321,36 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     enqueueFields,
   });
 
-  const { handleProceed } = useChapterProceeding({
+  const { handleProceed: rawHandleProceed } = useChapterProceeding({
     allChapters,
     fieldValues,
     completeCurrentChapter,
     sendMessage,
   });
+
+  // ── Milestone celebration ────────────────────────────────────────────
+  const { milestone, dismissMilestone, checkFieldMilestone, checkChapterComplete } = useMilestoneCelebration();
+
+  // Trigger field milestones when savedFieldCount changes
+  useEffect(() => {
+    if (savedFieldCount > 0) {
+      checkFieldMilestone(savedFieldCount);
+    }
+  }, [savedFieldCount, checkFieldMilestone]);
+
+  // Wrap handleProceed to trigger chapter celebration on success
+  const handleProceed = useCallback(async (chapterId: ChapterId): Promise<void> => {
+    const beforeStatuses = progress?.chapter_statuses ?? {};
+    await rawHandleProceed(chapterId);
+    // If the chapter wasn't completed before, trigger celebration
+    if (beforeStatuses[chapterId] !== 'completed') {
+      const bookChapter = allChapters.find(ch => ch.id === chapterId);
+      const chapterName = bookChapter?.title ?? chapterId;
+      const isLastChapter = allChapters.length > 0 &&
+        chapterId === allChapters[allChapters.length - 1].id;
+      checkChapterComplete(chapterName, isLastChapter);
+    }
+  }, [rawHandleProceed, progress, allChapters, checkChapterComplete]);
 
   // ── Side effects ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -452,6 +482,8 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     reviewEnrichmentStatus,
     reviewCount,
     isFieldLocked,
+    milestone,
+    dismissMilestone,
 
     // Actions
     handleSessionSelect,
