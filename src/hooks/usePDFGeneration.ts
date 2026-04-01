@@ -35,8 +35,12 @@ async function invokePDFGeneration(
   pdfType: PDFType,
   brandId: string
 ): Promise<string> {
-  const { data, error } = await supabase.functions.invoke('generate-pdf', {
-    body: { type: pdfType, brandId },
+  const functionName = pdfType === 'brand-strategy'
+    ? 'generate-brand-strategy-pdf'
+    : 'generate-competitor-analysis-pdf';
+
+  const { data, error } = await supabase.functions.invoke(functionName, {
+    body: { brandId },
   });
 
   if (error) {

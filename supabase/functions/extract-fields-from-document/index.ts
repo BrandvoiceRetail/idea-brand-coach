@@ -182,14 +182,16 @@ async function searchVectorStoreForField(
       return null;
     }
 
-    const data = await response.json();
+    const data = await response.json() as {
+      output?: Array<{ type: string; content?: Array<{ type: string; text?: string }> }>;
+    };
 
     // Extract text from output items
     const textContent = data.output
-      ?.filter((item: any) => item.type === "message")
-      ?.flatMap((item: any) => item.content || [])
-      ?.filter((c: any) => c.type === "output_text")
-      ?.map((c: any) => c.text || "")
+      ?.filter((item) => item.type === "message")
+      ?.flatMap((item) => item.content || [])
+      ?.filter((c) => c.type === "output_text")
+      ?.map((c) => c.text || "")
       ?.join(" ")
       ?.trim();
 

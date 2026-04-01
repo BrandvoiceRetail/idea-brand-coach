@@ -1136,10 +1136,10 @@ serve(async (req) => {
     // Retrieve user's knowledge base context (structured data)
     let userKnowledgeContext = '';
     // Retrieve semantic context (embedding-based similarity search)
-    let semanticContext = '';
+    const semanticContext = '';
     // Retrieve uploaded documents from OpenAI vector store
     let vectorStoreContext = '';
-    let sources: string[] = [];
+    const sources: string[] = [];
 
     if (userId && supabaseClient) {
       if (needsFullContext) {

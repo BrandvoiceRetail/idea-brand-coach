@@ -454,7 +454,7 @@ describe('ChapterFieldSet', () => {
     it('should default to text input for unknown field type', () => {
       const unknownTypeField = {
         ...textField,
-        type: 'unknown' as any
+        type: 'unknown' as unknown as typeof textField.type
       };
 
       render(

@@ -64,6 +64,7 @@ const BrandCoachV2 = (): JSX.Element => {
     isFieldLocked,
     milestone,
     dismissMilestone,
+    ghostSuggestion,
 
     // Actions
     handleSessionSelect,
@@ -216,6 +217,7 @@ const BrandCoachV2 = (): JSX.Element => {
               onSendMessage={handleSendMessage}
               isStreaming={isStreaming}
               isSending={isSending}
+              ghostSuggestion={ghostSuggestion}
               showUploadPanel={showDocumentUpload}
               onToggleUpload={() => setShowDocumentUpload(!showDocumentUpload)}
               userDocumentCount={userDocuments.length}

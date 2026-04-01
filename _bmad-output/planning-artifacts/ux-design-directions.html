@@ -6,27 +6,39 @@
 <title>IDEA Brand Coach — Field Extraction Feedback Design Directions</title>
 <style>
   :root {
-    --bg-primary: hsl(220 13% 9%);
-    --bg-secondary: hsl(220 13% 13%);
-    --bg-tertiary: hsl(220 13% 17%);
-    --bg-card: hsl(220 13% 15%);
-    --text-primary: hsl(0 0% 100%);
-    --text-secondary: hsl(220 10% 70%);
-    --text-muted: hsl(220 10% 50%);
-    --border: hsl(220 13% 22%);
+    /* App light-mode palette (from index.css) */
+    --bg-primary: hsl(0 0% 98%);
+    --bg-secondary: hsl(0 0% 100%);
+    --bg-tertiary: hsl(210 40% 96%);
+    --bg-card: hsl(0 0% 100%);
+    --text-primary: hsl(220 13% 9%);
+    --text-secondary: hsl(215 13% 40%);
+    --text-muted: hsl(215 13% 55%);
+    --border: hsl(220 13% 91%);
     --heart-red: hsl(0 85% 50%);
-    --heart-red-dim: hsla(0, 85%, 50%, 0.15);
-    --gold: hsl(40 90% 55%);
-    --gold-dim: hsla(40, 90%, 55%, 0.15);
+    --heart-red-dim: hsla(0, 85%, 50%, 0.1);
+    --gold: hsl(47 96% 53%);
+    --gold-warm: hsl(40 90% 55%);
+    --gold-dim: hsla(47, 96%, 53%, 0.12);
     --green: hsl(142 71% 45%);
-    --green-dim: hsla(142, 71%, 45%, 0.1);
-    --green-flash: hsla(142, 71%, 45%, 0.2);
-    --green-text: hsl(142 60% 55%);
-    --blue-dim: hsla(217, 91%, 60%, 0.1);
-    --blue-text: hsl(217, 91%, 70%);
-    --ghost-opacity: 0.4;
+    --green-dim: hsla(142, 71%, 45%, 0.08);
+    --green-flash: hsla(142, 71%, 45%, 0.15);
+    --green-text: hsl(142 60% 35%);
+    --blue-dim: hsla(217, 91%, 60%, 0.08);
+    --blue-text: hsl(217, 91%, 50%);
+    --ghost-opacity: 0.45;
     --radius: 8px;
     --radius-sm: 6px;
+
+    /* Brand gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 13% 9%) 0%, hsl(220 15% 15%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(47 96% 53%) 0%, hsl(45 93% 47%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(220 13% 9%) 0%, hsl(220 15% 15%) 50%, hsl(47 96% 53%) 100%);
+
+    /* Brand shadows */
+    --shadow-brand: 0 15px 50px -15px hsl(47 96% 53% / 0.4);
+    --shadow-card: 0 4px 20px -4px hsl(220 13% 9% / 0.08);
+    --shadow-glow: 0 0 30px hsl(47 96% 53% / 0.3);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -40,26 +52,27 @@
   /* Navigation */
   .nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: var(--bg-secondary);
+    background: var(--text-primary);
     border-bottom: 1px solid var(--border);
     display: flex; align-items: center; gap: 8px;
     padding: 12px 24px;
+    color: hsl(0 0% 98%);
   }
-  .nav h1 { font-size: 14px; font-weight: 600; margin-right: 16px; }
+  .nav h1 { font-size: 14px; font-weight: 600; margin-right: 16px; color: var(--gold); }
   .nav-btn {
     padding: 8px 16px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border); background: transparent;
-    color: var(--text-secondary); cursor: pointer; font-size: 13px;
+    border: 1px solid hsl(220 13% 25%); background: transparent;
+    color: hsl(0 0% 75%); cursor: pointer; font-size: 13px;
     transition: all 0.2s;
   }
-  .nav-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .nav-btn:hover { background: hsl(220 13% 15%); color: hsl(0 0% 95%); }
   .nav-btn.active {
-    background: var(--heart-red); border-color: var(--heart-red);
-    color: white; font-weight: 500;
+    background: var(--gold); border-color: var(--gold);
+    color: var(--text-primary); font-weight: 500;
   }
   .nav-label {
     font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-    color: var(--text-muted); margin-left: 12px;
+    color: hsl(0 0% 60%); margin-left: 12px;
   }
 
   /* Direction containers */
@@ -70,6 +83,7 @@
   .dir-header {
     padding: 32px 24px 24px;
     border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
   }
   .dir-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
   .dir-header .subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; }
@@ -80,7 +94,7 @@
   }
   .tag-green { background: var(--green-dim); color: var(--green-text); }
   .tag-red { background: var(--heart-red-dim); color: var(--heart-red); }
-  .tag-gold { background: var(--gold-dim); color: var(--gold); }
+  .tag-gold { background: var(--gold-dim); color: hsl(40 90% 38%); }
   .tag-blue { background: var(--blue-dim); color: var(--blue-text); }
 
   /* Two-panel layout */
@@ -89,6 +103,7 @@
     height: calc(100vh - 170px); margin: 0 24px;
     border: 1px solid var(--border); border-radius: var(--radius);
     overflow: hidden;
+    box-shadow: var(--shadow-card);
   }
 
   /* Left panel - chapters */
@@ -142,7 +157,7 @@
   }
   .source-ai { background: var(--green-dim); color: var(--green-text); }
   .source-manual { background: var(--blue-dim); color: var(--blue-text); }
-  .source-locked { background: var(--gold-dim); color: var(--gold); }
+  .source-locked { background: var(--gold-dim); color: hsl(40 90% 38%); }
 
   /* Right panel - chat */
   .right-panel {
@@ -157,8 +172,9 @@
   }
   .chat-header .avatar {
     width: 32px; height: 32px; border-radius: 50%;
-    background: var(--heart-red); display: flex; align-items: center;
+    background: var(--gradient-primary); display: flex; align-items: center;
     justify-content: center; font-size: 14px; font-weight: 700;
+    color: var(--gold);
   }
   .chat-header .name { font-size: 14px; font-weight: 600; }
   .chat-header .ch-badge {
@@ -177,13 +193,14 @@
     line-height: 1.5;
   }
   .msg-user .msg-bubble {
-    background: var(--heart-red); color: white;
+    background: var(--text-primary); color: hsl(0 0% 98%);
     border-bottom-right-radius: 4px;
   }
   .msg-ai .msg-bubble {
-    background: var(--bg-card); color: var(--text-primary);
+    background: var(--bg-secondary); color: var(--text-primary);
     border-bottom-left-radius: 4px;
     border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
   }
 
   /* Extraction badges */
@@ -198,12 +215,12 @@
   .ext-badge:hover { transform: scale(1.05); }
   .ext-badge-count {
     background: var(--green-dim); color: var(--green-text);
-    border: 1px solid hsla(142, 71%, 45%, 0.3);
+    border: 1px solid hsla(142, 71%, 45%, 0.2);
   }
   .ext-badge-field {
-    background: linear-gradient(135deg, var(--green-dim), hsla(160, 71%, 45%, 0.1));
+    background: linear-gradient(135deg, var(--green-dim), hsla(160, 71%, 45%, 0.06));
     color: var(--green-text);
-    border: 1px solid hsla(142, 71%, 45%, 0.3);
+    border: 1px solid hsla(142, 71%, 45%, 0.2);
   }
 
   /* Chat input */
@@ -231,11 +248,12 @@
   }
   .send-btn {
     width: 36px; height: 36px; border-radius: 50%;
-    background: var(--heart-red); border: none; cursor: pointer;
-    color: white; display: flex; align-items: center; justify-content: center;
+    background: var(--text-primary); border: none; cursor: pointer;
+    color: var(--gold); display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; transition: transform 0.15s;
+    font-size: 16px; font-weight: 700;
   }
-  .send-btn:hover { transform: scale(1.1); }
+  .send-btn:hover { transform: scale(1.1); box-shadow: var(--shadow-brand); }
 
   /* Review modal - sidebar */
   .review-sidebar {
@@ -243,7 +261,7 @@
     width: 380px; background: var(--bg-secondary);
     border-left: 1px solid var(--border);
     display: flex; flex-direction: column;
-    box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.08);
     z-index: 10;
   }
   .review-header {
@@ -285,7 +303,7 @@
   }
   .review-field-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
   .review-field-value {
-    background: var(--bg-secondary); border-radius: var(--radius-sm);
+    background: var(--bg-tertiary); border-radius: var(--radius-sm);
     padding: 10px 12px; font-size: 13px; color: var(--text-secondary);
     border: 1px solid var(--border); line-height: 1.5;
     min-height: 60px;
@@ -332,21 +350,21 @@
 
   /* Field flash animations */
   @keyframes fieldFlashSubtle {
-    0% { background-color: var(--green-flash); border-color: hsla(142, 71%, 45%, 0.3); }
+    0% { background-color: var(--green-flash); border-color: hsla(142, 71%, 45%, 0.2); }
     100% { background-color: var(--bg-primary); border-color: var(--border); }
   }
   @keyframes fieldFlashActive {
-    0% { background-color: hsla(142, 71%, 45%, 0.25); border-color: hsla(142, 71%, 45%, 0.5); box-shadow: 0 0 12px hsla(142, 71%, 45%, 0.15); }
-    50% { background-color: hsla(142, 71%, 45%, 0.15); }
+    0% { background-color: hsla(142, 71%, 45%, 0.2); border-color: hsla(142, 71%, 45%, 0.4); box-shadow: 0 0 12px hsla(142, 71%, 45%, 0.1); }
+    50% { background-color: hsla(142, 71%, 45%, 0.1); }
     100% { background-color: var(--bg-primary); border-color: var(--border); box-shadow: none; }
   }
   @keyframes fieldFlashBold {
-    0% { background-color: hsla(142, 71%, 45%, 0.35); border-color: var(--green); box-shadow: 0 0 20px hsla(142, 71%, 45%, 0.25); transform: scale(1.02); }
+    0% { background-color: hsla(47, 96%, 53%, 0.25); border-color: var(--gold); box-shadow: 0 0 20px hsla(47, 96%, 53%, 0.2); transform: scale(1.02); }
     30% { transform: scale(1); }
     100% { background-color: var(--bg-primary); border-color: var(--border); box-shadow: none; }
   }
   @keyframes fieldFlashRed {
-    0% { background-color: hsla(0, 85%, 50%, 0.25); border-color: var(--heart-red); box-shadow: 0 0 20px hsla(0, 85%, 50%, 0.2); transform: scale(1.02); }
+    0% { background-color: hsla(0, 85%, 50%, 0.15); border-color: var(--heart-red); box-shadow: 0 0 20px hsla(0, 85%, 50%, 0.12); transform: scale(1.02); }
     30% { transform: scale(1); }
     100% { background-color: var(--bg-primary); border-color: var(--border); box-shadow: none; }
   }
@@ -355,14 +373,14 @@
     100% { opacity: 1; transform: translateY(0); }
   }
   @keyframes confettiPulse {
-    0% { box-shadow: 0 0 0 0 hsla(142, 71%, 45%, 0.4); }
-    70% { box-shadow: 0 0 0 10px hsla(142, 71%, 45%, 0); }
-    100% { box-shadow: 0 0 0 0 hsla(142, 71%, 45%, 0); }
+    0% { box-shadow: 0 0 0 0 hsla(47, 96%, 53%, 0.4); }
+    70% { box-shadow: 0 0 0 10px hsla(47, 96%, 53%, 0); }
+    100% { box-shadow: 0 0 0 0 hsla(47, 96%, 53%, 0); }
   }
   @keyframes milestoneGlow {
-    0% { background: linear-gradient(135deg, var(--gold-dim), var(--heart-red-dim)); }
-    50% { background: linear-gradient(135deg, var(--heart-red-dim), var(--gold-dim)); }
-    100% { background: linear-gradient(135deg, var(--gold-dim), var(--heart-red-dim)); }
+    0% { background: linear-gradient(135deg, var(--gold-dim), hsla(47, 96%, 53%, 0.2)); }
+    50% { background: linear-gradient(135deg, hsla(47, 96%, 53%, 0.2), var(--gold-dim)); }
+    100% { background: linear-gradient(135deg, var(--gold-dim), hsla(47, 96%, 53%, 0.2)); }
   }
 
   .flash-subtle { animation: fieldFlashSubtle 2s ease-out; }
@@ -385,13 +403,13 @@
 
   /* Direction-specific: Celebratory badges */
   .ext-badge-red {
-    background: linear-gradient(135deg, var(--heart-red-dim), hsla(0, 85%, 50%, 0.2));
-    color: var(--heart-red);
-    border: 1px solid hsla(0, 85%, 50%, 0.3);
+    background: linear-gradient(135deg, var(--gold-dim), hsla(47, 96%, 53%, 0.15));
+    color: hsl(40 90% 38%);
+    border: 1px solid hsla(47, 96%, 53%, 0.3);
   }
   .milestone-badge {
-    background: linear-gradient(135deg, var(--gold-dim), var(--heart-red-dim));
-    color: var(--gold); border: 1px solid hsla(40, 90%, 55%, 0.3);
+    background: linear-gradient(135deg, var(--gold-dim), hsla(47, 96%, 53%, 0.2));
+    color: hsl(40 90% 38%); border: 1px solid hsla(47, 96%, 53%, 0.3);
     padding: 6px 14px; font-size: 12px; font-weight: 600;
     animation: milestoneGlow 3s ease-in-out infinite;
   }
@@ -417,6 +435,7 @@
   .comparison-card {
     background: var(--bg-secondary); border-radius: var(--radius);
     border: 1px solid var(--border); overflow: hidden;
+    box-shadow: var(--shadow-card);
   }
   .comparison-card h3 {
     padding: 14px 16px; font-size: 14px; font-weight: 600;
@@ -435,7 +454,7 @@
   /* Rejection chat message */
   .msg-system .msg-bubble {
     background: var(--heart-red-dim); color: var(--text-primary);
-    border: 1px solid hsla(0, 85%, 50%, 0.2);
+    border: 1px solid hsla(0, 85%, 50%, 0.15);
     border-bottom-left-radius: 4px; font-style: italic;
   }
 
@@ -774,12 +793,12 @@
     <h2>Direction C: Celebratory & Bold</h2>
     <div class="subtitle">Gamified, high-energy. Like Duolingo meets brand building.</div>
     <div>
-      <span class="tag tag-red">Heart Red Badges</span>
+      <span class="tag tag-gold">Gold Badges</span>
       <span class="tag tag-gold">Milestone Celebrations</span>
       <span class="tag tag-green">Full Cascade Animation</span>
-      <span class="tag tag-red">Bold Flash + Scale</span>
+      <span class="tag tag-gold">Bold Flash + Scale</span>
     </div>
-    <p class="desc">Full cascade animation with stagger — all extracted fields flash in sequence with scale effect. Confetti-style pulse on milestones. Heart Red accent on extraction badges. Bolder review modal with large accept/reject buttons. For users who need motivation and visual energy.</p>
+    <p class="desc">Full cascade animation with stagger — all extracted fields flash in sequence with scale effect. Confetti-style pulse on milestones. Gold accent on extraction badges. Bolder review modal with large accept/reject buttons. For users who need motivation and visual energy.</p>
   </div>
 
   <div class="demo-controls">
@@ -793,8 +812,8 @@
     <div class="left-panel">
       <div class="progress-bar-wrapper">
         <div class="progress-label">
-          <span style="font-weight: 600; color: var(--gold);">🏆 20 of 35 fields captured!</span>
-          <span style="color: var(--gold)">57%</span>
+          <span style="font-weight: 600; color: hsl(40 90% 38%);">🏆 20 of 35 fields captured!</span>
+          <span style="color: hsl(40 90% 38%)">57%</span>
         </div>
         <div class="progress-bar">
           <div class="progress-fill progress-fill-gradient" style="width: 57%"></div>
@@ -867,7 +886,7 @@
         <div class="avatar">T</div>
         <span class="name">TrevBot</span>
         <span class="ch-badge">Ch. 4</span>
-        <span style="margin-left: auto; font-size: 11px; color: var(--gold); font-weight: 500;">🔥 57% complete</span>
+        <span style="margin-left: auto; font-size: 11px; color: hsl(40 90% 38%); font-weight: 500;">🔥 57% complete</span>
       </div>
       <div class="chat-messages">
         <div class="msg msg-user">
@@ -876,7 +895,7 @@
         <div class="msg msg-ai">
           <div class="msg-bubble">Incredible detail! I can see your avatar taking shape — a young professional woman who <em>wants</em> to live her values but feels the tension between convenience and conscience. That guilt is a powerful insight we can address directly in your messaging.<br><br>I captured <strong>Demographics</strong>, <strong>Psychographics</strong>, and <strong>Pain Points</strong> from that single message! 🎯</div>
           <div class="extraction-badges" id="c-badges">
-            <span class="ext-badge ext-badge-red" style="font-weight: 600;">❤ 3 fields captured!</span>
+            <span class="ext-badge ext-badge-red" style="font-weight: 600;">✦ 3 fields captured!</span>
             <span class="ext-badge ext-badge-red badge-pop" style="animation-delay: 0.05s">Demographics</span>
             <span class="ext-badge ext-badge-red badge-pop" style="animation-delay: 0.1s">Psychographics</span>
             <span class="ext-badge ext-badge-red badge-pop" style="animation-delay: 0.15s">Pain Points</span>
@@ -945,8 +964,8 @@
       </div>
     </div>
 
-    <div class="comparison-card" style="border-color: var(--green);">
-      <h3 style="color: var(--green-text)">B — Active & Guided ★ Recommended</h3>
+    <div class="comparison-card" style="border-color: var(--gold);">
+      <h3 style="color: hsl(40 90% 38%)">B — Active & Guided ★ Recommended</h3>
       <div class="comparison-item">
         <div class="comparison-label">Review Modal</div>
         <div class="comparison-value" style="font-weight: 500; color: var(--text-primary)">Auto-appears with batched review (1 of N)</div>
@@ -979,7 +998,7 @@
         <div class="comparison-label">Best For</div>
         <div class="comparison-value" style="font-weight: 500; color: var(--text-primary)">All users — careful reviewers AND power users</div>
       </div>
-      <div class="comparison-item" style="border: 1px solid var(--green); border-radius: var(--radius-sm); margin: 8px 0; padding: 12px; box-shadow: 0 0 12px hsla(142,71%,45%,0.1);">
+      <div class="comparison-item" style="border: 1px solid var(--green); border-radius: var(--radius-sm); margin: 8px 0; padding: 12px; box-shadow: 0 0 12px hsla(142,71%,45%,0.08);">
         <div class="field-row flash-active" style="margin: 0">
           <div class="field-label">Brand Story <span class="source-badge source-ai">✦ AI</span></div>
           <div class="field-value">Founded after witnessing garment workers...</div>
@@ -988,7 +1007,7 @@
     </div>
 
     <div class="comparison-card">
-      <h3 style="color: var(--heart-red)">C — Celebratory & Bold</h3>
+      <h3 style="color: hsl(40 90% 38%)">C — Celebratory & Bold</h3>
       <div class="comparison-item">
         <div class="comparison-label">Review Modal</div>
         <div class="comparison-value">Auto-appears with large buttons and energy</div>
@@ -1003,7 +1022,7 @@
       </div>
       <div class="comparison-item">
         <div class="comparison-label">Badge Style</div>
-        <div class="comparison-value" style="color: var(--heart-red)">Heart Red gradient, ❤ icon</div>
+        <div class="comparison-value" style="color: hsl(40 90% 38%)">Gold gradient, ✦ icon</div>
       </div>
       <div class="comparison-item">
         <div class="comparison-label">Rejection Handling</div>
@@ -1011,7 +1030,7 @@
       </div>
       <div class="comparison-item">
         <div class="comparison-label">Milestones</div>
-        <div class="comparison-value" style="color: var(--gold)">🎉 Animated celebration banner + glow</div>
+        <div class="comparison-value" style="color: hsl(40 90% 38%)">🎉 Animated celebration banner + glow</div>
       </div>
       <div class="comparison-item">
         <div class="comparison-label">Trust Model</div>
@@ -1021,9 +1040,9 @@
         <div class="comparison-label">Best For</div>
         <div class="comparison-value">New users, motivation-driven, gamification fans</div>
       </div>
-      <div class="comparison-item" style="border: 1px solid var(--heart-red); border-radius: var(--radius-sm); margin: 8px 0; padding: 12px;">
+      <div class="comparison-item" style="border: 1px solid var(--gold); border-radius: var(--radius-sm); margin: 8px 0; padding: 12px;">
         <div class="field-row flash-bold" style="margin: 0">
-          <div class="field-label">Brand Story <span class="source-badge source-ai" style="background: var(--heart-red-dim); color: var(--heart-red)">❤ AI</span></div>
+          <div class="field-label">Brand Story <span class="source-badge source-ai" style="background: var(--gold-dim); color: hsl(40 90% 38%)">✦ AI</span></div>
           <div class="field-value">Founded after witnessing garment workers...</div>
         </div>
       </div>
@@ -1116,7 +1135,7 @@
     void field.offsetWidth;
     field.style.animation = 'fieldFlashActive 1s ease-out';
     field.style.borderColor = 'hsla(0, 85%, 50%, 0.3)';
-    field.style.backgroundColor = 'hsla(0, 85%, 50%, 0.1)';
+    field.style.backgroundColor = 'hsla(0, 85%, 50%, 0.06)';
     setTimeout(() => {
       field.style.borderColor = '';
       field.style.backgroundColor = '';

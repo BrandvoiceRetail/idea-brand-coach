@@ -6,7 +6,7 @@ import type { Chapter, ChapterStatus } from '@/config/chapterFields';
 
 // Mock ChapterFieldSet component to simplify testing
 vi.mock('../ChapterFieldSet', () => ({
-  ChapterFieldSet: ({ field, onChange, disabled }: any) => (
+  ChapterFieldSet: ({ field, onChange, disabled }: { field: { id: string; label: string }; onChange: (id: string, value: string) => void; disabled: boolean }) => (
     <div data-testid={`field-${field.id}`}>
       <input
         aria-label={field.label}

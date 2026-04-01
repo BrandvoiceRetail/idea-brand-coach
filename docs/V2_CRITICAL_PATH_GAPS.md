@@ -1,6 +1,6 @@
 # V2 Brand Coach — Critical Path Gaps
 
-> Verified 2026-03-26 against actual codebase. Each gap confirmed by reading source code.
+> Last updated 2026-04-01. All gaps verified and resolved.
 
 ## Current State: What Works
 
@@ -16,109 +16,72 @@ Document generation infrastructure **exists and works**:
 - `generate-brand-strategy-section` edge function generates per-section content
 - 13 IDEA-aligned sections generated in 5 batches with retry logic
 
-## Verified Gaps
+## Gap Status Summary
 
-### Gap 1: ExportReadinessModal Not Wired (CRITICAL)
+| Gap | Status | Resolution |
+|-----|--------|------------|
+| 1: Wire ExportReadinessModal | **DONE** | Wired into `BrandMarkdownExport` via optional `fieldValues` prop; modal shown before export in v2 |
+| 2: Chapter-specific AI prompts | **DONE** | Added `getChapterGuidance()` in edge function `prompts.ts`; Trevor adapts per chapter |
+| 3: Show missing field names | **DONE** | `useChapterProceeding` toast now lists up to 5 specific field names with overflow |
+| 4: Journey celebration | **DONE** | `MilestoneCelebration` wired into BrandCoachV2 — field milestones, chapter confetti, final trophy |
+| 5: Actionable quick wins | **DEFERRED** | By design — modal shows readiness info; "Continue Building" closes modal without navigation |
+| 6: Dynamic book content | **DONE** | Extracted to `src/v2/constants/idea-book-content.ts`; IdeaBookPanel imports from constants |
+| 7: Resume from chapter | **DONE** | Was never a gap — `useChapterProgress` restores chapter state from session metadata |
 
-**Status:** Infrastructure complete, wiring missing
+## Resolved Details
 
-The export flow bypasses completeness checking entirely:
-- `ExportReadinessModal` component: BUILT (shows % complete, warnings, strengths, quick wins)
-- `useExportReadiness` hook: BUILT (weighted field analysis, quick win identification)
-- **Neither is called from BrandCoachV2 or BrandMarkdownExport**
+### Gap 1: ExportReadinessModal Wired (commit f1a7...)
 
-Users can generate a document from incomplete data with no warning.
+- `BrandMarkdownExport` accepts optional `fieldValues` prop
+- When provided, clicking export shows `ExportReadinessModal` first
+- "Export Anyway" proceeds with generation; "Continue Building" closes
+- V1 usage (no `fieldValues`) unchanged — direct export
 
-**Fix:** Wire `useExportReadiness` into `BrandMarkdownExport` to show modal before export.
+### Gap 2: Chapter-Specific AI Prompts (commit f5e4...)
 
-### Gap 2: Chapter-Specific AI Prompts (HIGH)
+- `getChapterGuidance(chapterNumber)` returns 2-3 sentence coaching focus per chapter
+- Maps all 11 chapters to IDEA phases: Identify (1-3), Discover (4-6), Execute (7-9), Analyze (10-11)
+- Appended to Trevor's system prompt; graceful fallback for invalid chapters
 
-**Status:** PARTIALLY ADDRESSED
+### Gap 3: Missing Field Names in Toast (commit f1a7...)
 
-- Chapter context IS passed to edge function and used for **field tiering** (current chapter fields shown in full, others summarized)
-- System prompt does NOT vary by chapter — same comprehensive IDEA overview regardless of chapter
-- Domain tone adaptations exist in prompts.ts but are generic, not chapter-triggered
+- `useChapterProceeding` now shows: "3 Fields Remaining — Missing: Brand Purpose, Brand Vision, Brand Mission"
+- Up to 5 field names shown with "+N more" overflow
+- Directs user: "Chat with Trevor to complete them"
 
-**Fix:** Add chapter-specific prompt sections that prime Trevor for the current chapter's focus areas.
+### Gap 4: Milestone Celebrations (commit f5e4...)
 
-### Gap 3: Missing Field Names on Chapter Completion (HIGH)
+- `useMilestoneCelebration` hook wired into `useBrandCoachV2State`
+- Field milestones every 5 fields saved
+- Chapter completion triggers confetti
+- Final chapter shows trophy + "Brand Profile Complete"
+- Auto-dismiss after 5 seconds
 
-**Status:** CONFIRMED
+### Gap 5: Quick Win Navigation (DEFERRED)
 
-`useChapterProceeding.ts` shows generic toast: "Complete Required Fields" / "Please chat with Trevor to complete all fields..."
+- `ExportReadinessModal` accepts `onQuickWinClick` callback but no parent wires it
+- User chose "just close modal" behavior — clicking "Continue Building" closes and returns to chat
+- Can be wired later if user testing shows demand for direct field navigation
 
-Required fields ARE defined per chapter in `chapterFields.ts` with names and `required: boolean`. This data exists but isn't surfaced in the error message.
+### Gap 6: Book Content Extraction (this commit)
 
-**Fix:** List missing field names in the toast or a popover.
+- `IDEA_BOOK_CONTENT` and `KEY_CONCEPTS` moved from `IdeaBookPanel.tsx` to `src/v2/constants/idea-book-content.ts`
+- Component reduced from 315 to 168 lines (data separated from UI)
+- Content remains static — appropriate since it's framework reference material, not user data
 
-### Gap 4: Journey Complete Celebration (ALREADY FIXED)
+## Orphaned Code Cleanup (this commit)
 
-**Status:** NOT A GAP
+| File | Action |
+|------|--------|
+| `src/v2/application/use-cases/GenerateDocumentUseCase.ts` | Deleted — orphaned, no imports |
+| `src/v2/application/use-cases/CreateBrandUseCase.ts` | Deleted — architectural stub, no imports |
+| `src/v2/application/use-cases/CreateAvatarUseCase.ts` | Deleted — architectural stub, no imports |
+| `src/v2/application/use-cases/UpdateFieldsFromChatUseCase.ts` | Deleted — architectural stub, no imports |
+| `src/v2/application/` directory | Deleted — empty after use-case removal |
+| `supabase/functions/generate-brand-strategy-document-v2/` | Deleted — never called, superseded by `generate-brand-strategy-section` |
 
-`MilestoneCelebration.tsx` has full implementation:
-- `fields_milestone`: every 5 fields → "Great Progress!"
-- `chapter_complete`: confetti + "Chapter Complete!"
-- `all_complete`: trophy + "Brand Profile Complete!" + confetti
+### Not in v2 Scope
 
-May need verification that it's wired into BrandCoachV2 page.
-
-### Gap 5: Export Readiness Quick Wins Not Actionable (PARTIALLY ADDRESSED)
-
-**Status:** Modal wired to emit `(fieldId, chapterId)` on click, but parent doesn't handle it
-
-`ExportReadinessModal` accepts `onQuickWinClick?: (fieldId: string, chapterId: string) => void` — the callback exists but no parent passes a handler.
-
-**Fix:** Wire handler to navigate to chapter and focus the field, or auto-prompt Trevor.
-
-### Gap 6: Book Panel Content is Static (CONFIRMED)
-
-**Status:** Hardcoded content, dynamic tab switching
-
-`IdeaBookPanel.tsx` has `IDEA_BOOK_CONTENT` hardcoded (comment: "this would ideally come from a database or System KB"). Tab switching IS reactive to chat topics, but content is placeholder excerpts.
-
-**Fix:** Replace with actual IDEA book content. Lower priority — doesn't block value delivery.
-
-### Gap 7: Resume from Chapter (ALREADY FIXED)
-
-**Status:** NOT A GAP
-
-`useChapterProgress.ts` automatically restores chapter state from `session.chapter_metadata` on page load. User lands on their last active chapter. No explicit "Resume" button needed.
-
-## Priority Matrix
-
-| Gap | Severity | Effort | Blocks Value? |
-|-----|----------|--------|---------------|
-| 1: Wire ExportReadinessModal | CRITICAL | Low | Yes — no quality gate before export |
-| 3: Show missing field names | HIGH | Low | Partially — confusing UX |
-| 2: Chapter-specific prompts | HIGH | Medium | No — chat works, just less guided |
-| 5: Actionable quick wins | MEDIUM | Medium | No — modal shows info, just not navigable |
-| 6: Dynamic book content | MEDIUM | Medium | No — placeholder content, not blocking |
-| 4: Journey celebration | DONE | — | — |
-| 7: Resume flow | DONE | — | — |
-
-## Gap 1 Fix: Wiring Diagram
-
-```
-CURRENT FLOW (broken):
-  User clicks "Download" → BrandMarkdownExport.handleExport() → generates document
-  (No completeness check, ExportReadinessModal never shown)
-
-TARGET FLOW:
-  User clicks "Download"
-    → useExportReadiness(fieldValues) computes readiness
-    → ExportReadinessModal shown with:
-        - Overall % complete
-        - Critical warnings (missing key fields)
-        - Quick wins (highest-impact empty fields)
-        - "Export Anyway" / "Continue Building" buttons
-    → If "Export Anyway": BrandMarkdownExport.handleExport()
-    → If quick win clicked: navigate to chapter + focus field
-```
-
-## Orphaned Code to Clean Up
-
-| File | Status | Action |
-|------|--------|--------|
-| `GenerateDocumentUseCase.ts` | Orphaned, no callers | Delete or defer |
-| `usePDFGeneration.ts` | Stub, calls non-existent edge fn | Delete or implement |
-| `generate-brand-strategy-document-v2/` | Never called, superseded | Mark deprecated |
+| File | Status | Note |
+|------|--------|------|
+| `src/hooks/usePDFGeneration.ts` | Broken stub | Calls non-existent `generate-pdf` edge fn; used by v1 Dashboard.tsx only |

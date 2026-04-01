@@ -132,6 +132,7 @@ export function GhostTextChatInput({
       ref={autocompleteRef}
       asChild
       autocompleteEnabled={!disabled}
+      onChange={handleChange}
       handleCompletion={handleCompletion}
       completionShortcut={new Set(['Tab'])}
       styles={{
@@ -142,7 +143,6 @@ export function GhostTextChatInput({
     >
       <AutocompleteTextarea
         value={value}
-        onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={className}

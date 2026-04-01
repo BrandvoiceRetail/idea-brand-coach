@@ -143,7 +143,7 @@ export function ReviewAnalyzerModal({
         return;
       }
 
-      const enrichedResults: ProductResult[] = (data?.results ?? []).map((r: any) => ({
+      const enrichedResults: ProductResult[] = (data?.results ?? []).map((r: ProductResult) => ({
         asin: r.asin,
         reviews: r.reviews ?? [],
         error: r.error,

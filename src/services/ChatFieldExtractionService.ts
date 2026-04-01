@@ -48,7 +48,7 @@ export class ChatFieldExtractionService {
         // Handle both single and array of extractions
         const fields = Array.isArray(extraction) ? extraction : [extraction];
 
-        fields.forEach((field: any) => {
+        fields.forEach((field: { fieldId?: string; value?: string; confidence?: number; context?: string }) => {
           if (field.fieldId && field.value !== undefined) {
             extractedFields.push({
               fieldId: field.fieldId,
@@ -107,9 +107,9 @@ export class ChatFieldExtractionService {
    * @returns Merged fields, only updating AI-sourced or empty fields
    */
   mergeFields(
-    existingFields: Record<string, { value: any; source: 'ai' | 'manual' }>,
+    existingFields: Record<string, { value: string | string[]; source: 'ai' | 'manual' }>,
     newFields: ExtractedField[]
-  ): Record<string, { value: any; source: 'ai' | 'manual' }> {
+  ): Record<string, { value: string | string[]; source: 'ai' | 'manual' }> {
     const merged = { ...existingFields };
 
     newFields.forEach((field) => {

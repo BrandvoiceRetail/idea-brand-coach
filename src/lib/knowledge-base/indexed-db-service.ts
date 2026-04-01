@@ -34,6 +34,7 @@ export class IndexedDBService {
    * Initialize the database connection
    */
   async initialize(): Promise<void> {
+    if (this.db) return; // Already connected — skip re-initialization
     try {
       this.db = await this.openDatabase();
     } catch (error) {

@@ -33,6 +33,7 @@ import { useDocumentUploadFlow } from '@/hooks/useDocumentUploadFlow';
 import { useFieldExtractionOrchestrator } from '@/hooks/useFieldExtractionOrchestrator';
 import { useChapterProceeding } from '@/hooks/useChapterProceeding';
 import { useMilestoneCelebration } from '@/components/v2/MilestoneCelebration';
+import { useGhostSuggestion } from '@/hooks/v2/useGhostSuggestion';
 import type { MilestoneEvent } from '@/components/v2/MilestoneCelebration';
 import { CHAPTER_FIELDS_MAP, BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY } from '@/config/chapterFields';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
@@ -143,6 +144,9 @@ export interface BrandCoachV2State {
   /** Milestone celebration */
   milestone: MilestoneEvent | null;
   dismissMilestone: () => void;
+
+  /** Ghost text suggestion for chat input */
+  ghostSuggestion: string | null;
 }
 
 export interface BrandCoachV2Actions {
@@ -432,6 +436,9 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     }) ?? [],
   [allChapters, progress, fieldValues, fieldSources]);
 
+  // ── Ghost text suggestion ─────────────────────────────────────────────
+  const ghostSuggestion = useGhostSuggestion(currentChapter?.id ?? null, fieldValues);
+
   // ── Loading gate ──────────────────────────────────────────────────────
   const isLoading = isLoadingAuth || isLoadingChapter || isLoadingSessions || isLoadingAvatars;
 
@@ -484,6 +491,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     isFieldLocked,
     milestone,
     dismissMilestone,
+    ghostSuggestion,
 
     // Actions
     handleSessionSelect,
