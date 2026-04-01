@@ -230,7 +230,6 @@ const BrandCoachV2 = (): JSX.Element => {
             />
           </div>
         }
-        rightPanelTitle="Brand Coach — Trevor"
       />
 
       {/* Milestone celebration overlay */}

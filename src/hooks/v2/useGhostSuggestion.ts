@@ -99,7 +99,7 @@ export function useGhostSuggestion(
 
       for (const field of chapter.fields) {
         if (!fieldIsFilled(field.id, fieldValues)) {
-          return `Let's move on to ${chapter.title} — ${FIELD_SUGGESTION_PROMPTS[field.id] ?? ''}`.trim();
+          return FIELD_SUGGESTION_PROMPTS[field.id] ?? null;
         }
       }
     }

@@ -1,9 +1,12 @@
 /**
  * Field Suggestion Prompts
  *
- * Static map of fieldId -> natural conversational question prompt.
- * Used by useGhostSuggestion to suggest the next question based on
+ * Static map of fieldId -> conversational prompt the USER would type to Trevor.
+ * Used by useGhostSuggestion to suggest the next message based on
  * which fields are empty in the current chapter.
+ *
+ * These must read naturally as things the user says TO Trevor — sharing
+ * their brand info, asking for help, or starting a conversation topic.
  *
  * Covers all 35 fields from ALL_FIELDS_MAP in
  * supabase/functions/idea-framework-consultant/fields.ts.
@@ -12,93 +15,93 @@
 export const FIELD_SUGGESTION_PROMPTS: Record<string, string> = {
   // ── Brand Foundation ───────────────────────────────────────────────────────
   brandPurpose:
-    "What's the deeper reason your brand exists beyond making money?",
+    "Help me define my brand's purpose — the deeper reason it exists.",
   brandVision:
-    'What future do you want your brand to help create?',
+    'I want to work on my brand vision — the future I want to create.',
   brandMission:
-    'How does your brand plan to achieve that vision day-to-day?',
+    "Let's define my brand's mission — how we achieve the vision day-to-day.",
 
   // ── Brand Values ───────────────────────────────────────────────────────────
   brandValues:
-    'What core values guide every decision your brand makes?',
+    "I'd like to nail down the core values that guide my brand.",
   brandStory:
-    'What is the origin story behind your brand?',
+    'Let me tell you the origin story behind my brand.',
   brandPromise:
-    'What commitment do you make to your customers every single time?',
+    "Help me articulate my brand's promise to customers.",
 
   // ── Customer Avatar ────────────────────────────────────────────────────────
   demographics:
-    'Tell me about your ideal customer — age, location, income, occupation...',
+    "Let me describe my ideal customer — who they are and where they live.",
   psychographics:
-    "What are your customers' interests, values, and lifestyle?",
+    "I want to map out my customers' interests, values, and lifestyle.",
   painPoints:
-    'What frustrations or challenges do your customers face regularly?',
+    "Let's talk about the frustrations my customers deal with.",
   goals:
-    'What goals and aspirations motivate your ideal customer?',
+    "Help me define what goals and aspirations motivate my customers.",
 
   // ── Market Insight ─────────────────────────────────────────────────────────
   marketInsight:
-    'What trends, gaps, or opportunities do you see in your market right now?',
+    "I want to talk about trends and opportunities I see in my market.",
   consumerInsight:
-    'What drives your customers to make purchasing decisions?',
+    "Let's dig into what drives my customers' purchasing decisions.",
 
   // ── Buyer Intent ───────────────────────────────────────────────────────────
   functionalIntent:
-    'What practical problem are your customers trying to solve?',
+    "Help me define the practical problem my customers are trying to solve.",
   emotionalIntent:
-    'How do your customers want to feel when using your product or service?',
+    "Let's explore how my customers want to feel when using my product.",
   identityIntent:
-    'Who do your customers want to become through your brand?',
+    "I want to define who my customers want to become through my brand.",
   socialIntent:
-    'How do your customers want to be perceived by others?',
+    "Help me understand how my customers want to be perceived by others.",
 
   // ── Brand Positioning ──────────────────────────────────────────────────────
   positioningStatement:
-    'How do you want your brand to be perceived compared to competitors?',
+    "I need help crafting my brand's positioning statement.",
   uniqueValue:
-    'What specific value can only your brand deliver?',
+    "Let's define the unique value only my brand can deliver.",
   differentiators:
-    'What key advantages distinguish you from every competitor?',
+    "Help me articulate what sets my brand apart from competitors.",
 
   // ── Brand Personality & Voice ──────────────────────────────────────────────
   brandPersonality:
-    'If your brand were a person, what personality traits would they have?',
+    "I want to define my brand's personality traits.",
   brandVoice:
-    'How does your brand communicate — what tone, style, and language?',
+    "Help me nail down my brand's tone and communication style.",
   brandArchetype:
-    'Which universal character archetype does your brand embody?',
+    "Let's figure out which archetype best fits my brand.",
 
   // ── Emotional Connection ───────────────────────────────────────────────────
   emotionalConnection:
-    'What primary emotion do you want your brand to evoke in people?',
+    "I want to define the primary emotion my brand should evoke.",
   emotionalTriggers:
-    'What specific moments or situations trigger an emotional response toward your brand?',
+    "Let's identify the moments that trigger an emotional response to my brand.",
   customerNeeds:
-    'What fundamental human needs does your brand address?',
+    "Help me define the fundamental human needs my brand addresses.",
 
   // ── Customer Experience ────────────────────────────────────────────────────
   customerJourney:
-    'Walk me through the key touchpoints from when a customer first discovers you to when they become an advocate.',
+    "I want to map out my customer journey from discovery to advocacy.",
   experiencePillars:
-    'What are the core elements that shape every customer interaction with your brand?',
+    "Help me define the core pillars of my customer experience.",
   preferredChannels:
-    'Which platforms and channels does your audience prefer to engage on?',
+    "Let's identify which channels my audience prefers to engage on.",
 
   // ── Brand Authority ────────────────────────────────────────────────────────
   expertise:
-    'What domains does your brand have deep knowledge and credibility in?',
+    "I want to define the domains where my brand has deep credibility.",
   credibilityMarkers:
-    'What evidence validates your brand\'s expertise — certifications, awards, partnerships?',
+    "Let me share the evidence that validates my brand's expertise.",
   thoughtLeadership:
-    'What unique perspectives does your brand bring to the industry?',
+    "Help me articulate the unique perspectives my brand brings to the industry.",
 
   // ── Brand Authenticity ─────────────────────────────────────────────────────
   authenticityPrinciples:
-    'What core truths make your brand real and believable?',
+    "Let's define the core truths that make my brand authentic.",
   transparency:
-    'How does your brand approach open, honest communication with customers?',
+    "I want to talk about how my brand approaches honest communication.",
   socialProof:
-    'What evidence shows you consistently deliver on your promises?',
+    "Help me gather the proof that I consistently deliver on my promises.",
   brandConsistency:
-    'How do you maintain a coherent brand experience across all touchpoints?',
+    "Let's work on how to maintain a coherent brand across all touchpoints.",
 };
