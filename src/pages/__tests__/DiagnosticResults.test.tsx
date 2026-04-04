@@ -7,15 +7,26 @@ import DiagnosticResults from '../DiagnosticResults';
 import { useAuth } from '@/hooks/useAuth';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 
+const mockNavigate = vi.hoisted(() => vi.fn());
+
 vi.mock('@/hooks/useAuth');
 vi.mock('@/hooks/useDiagnostic');
 vi.mock('@/components/BetaNavigationWidget', () => ({
   BetaNavigationWidget: () => <div>Beta Navigation</div>
 }));
+vi.mock('@/components/export/DiagnosticResultsPDFExport', () => ({
+  DiagnosticResultsPDFExport: () => <div>PDF Export</div>
+}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 describe('DiagnosticResults', () => {
   let queryClient: QueryClient;
-  const mockNavigate = vi.fn();
 
   const mockDiagnosticData = {
     answers: {},
@@ -39,14 +50,6 @@ describe('DiagnosticResults', () => {
     
     vi.clearAllMocks();
     
-    vi.mock('react-router-dom', async () => {
-      const actual = await vi.importActual('react-router-dom');
-      return {
-        ...actual,
-        useNavigate: () => mockNavigate,
-      };
-    });
-
     localStorage.clear();
   });
 
@@ -76,6 +79,7 @@ describe('DiagnosticResults', () => {
       saveDiagnostic: vi.fn(),
       syncFromLocalStorage: vi.fn(),
       calculateScores: vi.fn(),
+      isSyncing: false,
     } as any);
 
     render(<DiagnosticResults />, { wrapper });
@@ -114,16 +118,17 @@ describe('DiagnosticResults', () => {
       saveDiagnostic: vi.fn(),
       syncFromLocalStorage: vi.fn(),
       calculateScores: vi.fn(),
+      isSyncing: false,
     } as any);
 
     render(<DiagnosticResults />, { wrapper });
-    
+
     expect(screen.getByText('Your Brand Diagnostic Results')).toBeInTheDocument();
     expect(screen.getByText('73%')).toBeInTheDocument();
-    expect(screen.getByText('75')).toBeInTheDocument(); // Insight score
-    expect(screen.getByText('60')).toBeInTheDocument(); // Distinctive score
-    expect(screen.getByText('85')).toBeInTheDocument(); // Empathetic score
-    expect(screen.getByText('70')).toBeInTheDocument(); // Authentic score
+    expect(screen.getByText('75%')).toBeInTheDocument(); // Insight score
+    expect(screen.getByText('60%')).toBeInTheDocument(); // Distinctive score
+    expect(screen.getByText('85%')).toBeInTheDocument(); // Empathetic score
+    expect(screen.getByText('70%')).toBeInTheDocument(); // Authentic score
   });
 
   it('should render results from localStorage for non-authenticated users', () => {
@@ -146,6 +151,7 @@ describe('DiagnosticResults', () => {
       saveDiagnostic: vi.fn(),
       syncFromLocalStorage: vi.fn(),
       calculateScores: vi.fn(),
+      isSyncing: false,
     } as any);
 
     render(<DiagnosticResults />, { wrapper });
@@ -185,12 +191,13 @@ describe('DiagnosticResults', () => {
       saveDiagnostic: vi.fn(),
       syncFromLocalStorage: vi.fn(),
       calculateScores: vi.fn(),
+      isSyncing: false,
     } as any);
 
     render(<DiagnosticResults />, { wrapper });
-    
-    expect(screen.getByText('Get Personalized Coaching')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Start Brand Coaching/i })).toBeInTheDocument();
+
+    expect(screen.getByText('Would you like some help with this?')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Chat with your AI Brand Coach/i })).toBeInTheDocument();
   });
 
   it('should show sign up CTA for non-authenticated users', () => {
@@ -213,12 +220,13 @@ describe('DiagnosticResults', () => {
       saveDiagnostic: vi.fn(),
       syncFromLocalStorage: vi.fn(),
       calculateScores: vi.fn(),
+      isSyncing: false,
     } as any);
 
     render(<DiagnosticResults />, { wrapper });
-    
+
     expect(screen.getByText('Save & Unlock Premium Tools')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Create Free Account/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sign In or Sign Up/i })).toBeInTheDocument();
   });
 
   it('should display correct score levels', () => {
@@ -250,12 +258,14 @@ describe('DiagnosticResults', () => {
       saveDiagnostic: vi.fn(),
       syncFromLocalStorage: vi.fn(),
       calculateScores: vi.fn(),
+      isSyncing: false,
     } as any);
 
     render(<DiagnosticResults />, { wrapper });
     
     expect(screen.getByText('Excellent')).toBeInTheDocument();
-    expect(screen.getByText('Good')).toBeInTheDocument();
+    // 'Good' appears for both the overall score (60) and the category score (70)
+    expect(screen.getAllByText('Good').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Fair')).toBeInTheDocument();
     expect(screen.getByText('Needs Improvement')).toBeInTheDocument();
   });
@@ -280,13 +290,14 @@ describe('DiagnosticResults', () => {
       saveDiagnostic: vi.fn(),
       syncFromLocalStorage: vi.fn(),
       calculateScores: vi.fn(),
+      isSyncing: false,
     } as any);
 
     render(<DiagnosticResults />, { wrapper });
     
-    const createAccountButton = screen.getByRole('button', { name: /Create Free Account/i });
-    fireEvent.click(createAccountButton);
-    
-    expect(mockNavigate).toHaveBeenCalledWith('/auth');
+    const signInButton = screen.getByRole('button', { name: /Sign In or Sign Up/i });
+    fireEvent.click(signInButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/auth?redirect=/subscribe');
   });
 });

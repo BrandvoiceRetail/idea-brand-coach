@@ -1,11 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen, fireEvent, waitFor } from '@testing-library/dom';
+import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Auth from '../Auth';
 import { useAuth } from '@/hooks/useAuth';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
+
+const mockNavigate = vi.hoisted(() => vi.fn());
 
 vi.mock('@/hooks/useAuth');
 vi.mock('@/hooks/useDiagnostic');
@@ -13,14 +16,21 @@ vi.mock('@/services/ServiceProvider');
 vi.mock('@/components/BetaNavigationWidget', () => ({
   BetaNavigationWidget: () => <div>Beta Navigation</div>
 }));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 describe('Auth', () => {
   let queryClient: QueryClient;
-  const mockNavigate = vi.fn();
   const mockSignIn = vi.fn();
   const mockSignUp = vi.fn();
   const mockSignOut = vi.fn();
   const mockResetPassword = vi.fn();
+  const mockSignInWithGoogle = vi.fn();
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -43,13 +53,6 @@ describe('Auth', () => {
       calculateScores: vi.fn(),
     } as any);
 
-    vi.mock('react-router-dom', async () => {
-      const actual = await vi.importActual('react-router-dom');
-      return {
-        ...actual,
-        useNavigate: () => mockNavigate,
-      };
-    });
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -68,6 +71,7 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });
@@ -78,7 +82,7 @@ describe('Auth', () => {
     expect(screen.getByRole('button', { name: /Let's go!/i })).toBeInTheDocument();
   });
 
-  it('should switch to sign up form', () => {
+  it('should switch to sign up form', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
       loading: false,
@@ -86,12 +90,13 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });
-    
+
     const signUpTab = screen.getByRole('tab', { name: /Sign Up/i });
-    fireEvent.click(signUpTab);
+    await userEvent.click(signUpTab);
 
     expect(screen.getByLabelText(/Full Name/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Let's get started!/i })).toBeInTheDocument();
@@ -105,6 +110,7 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });
@@ -126,6 +132,7 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });
@@ -149,6 +156,7 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });
@@ -178,13 +186,14 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });
-    
+
     // Switch to sign up tab
     const signUpTab = screen.getByRole('tab', { name: /Sign Up/i });
-    fireEvent.click(signUpTab);
+    await userEvent.click(signUpTab);
 
     // Fill out form
     fireEvent.change(screen.getByLabelText(/Full Name/i), {
@@ -213,6 +222,7 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });
@@ -234,6 +244,7 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });
@@ -262,6 +273,7 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });
@@ -280,11 +292,16 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
-    render(<Auth />, { wrapper });
-    
-    expect(screen.getByRole('status')).toBeInTheDocument(); // Loader2 has role="status"
+    const { container } = render(<Auth />, { wrapper });
+
+    // Loader2 renders as an SVG with aria-hidden and animate-spin class
+    const spinner = container.querySelector('.animate-spin');
+    expect(spinner).toBeInTheDocument();
+    // Ensure the auth form is NOT rendered during loading
+    expect(screen.queryByText('Welcome to IDEA Brand Coach')).not.toBeInTheDocument();
   });
 
   it('should navigate to dashboard after successful sign in', async () => {
@@ -297,6 +314,7 @@ describe('Auth', () => {
       signUp: mockSignUp,
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
     } as any);
 
     render(<Auth />, { wrapper });

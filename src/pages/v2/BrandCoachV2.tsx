@@ -10,6 +10,7 @@ import { BrandCoachHeader } from '@/components/v2/BrandCoachHeader';
 import { ChatMessageList } from '@/components/v2/ChatMessageList';
 import { ChatInputBar } from '@/components/v2/ChatInputBar';
 import { MilestoneCelebration } from '@/components/v2/MilestoneCelebration';
+import { BatchReviewOrchestrator } from '@/components/v2/BatchReviewOrchestrator';
 import { useBrandCoachV2State } from '@/hooks/v2/useBrandCoachV2State';
 
 /**
@@ -65,6 +66,10 @@ const BrandCoachV2 = (): JSX.Element => {
     milestone,
     dismissMilestone,
     ghostSuggestion,
+    extractionQueue,
+    extractionQueueIndex,
+    isReviewOpen,
+    alwaysAccept,
 
     // Actions
     handleSessionSelect,
@@ -80,6 +85,13 @@ const BrandCoachV2 = (): JSX.Element => {
     downloadResponse,
     setFieldManual,
     acceptAllFields,
+    handleReviewAccept,
+    handleReviewReject,
+    handleReviewAcceptAll,
+    handleReviewClose,
+    toggleAlwaysAccept,
+    handleFieldAcceptFromBadge,
+    handleAcceptAllFromBadge,
     handleProceed,
     handleDocumentUploadComplete,
     handleSendReviewContext,
@@ -182,6 +194,19 @@ const BrandCoachV2 = (): JSX.Element => {
               </div>
             </div>
 
+            {/* Batch review controls (visible when extraction queue has items) */}
+            <BatchReviewOrchestrator
+              queue={extractionQueue}
+              currentIndex={extractionQueueIndex}
+              isOpen={isReviewOpen}
+              onAccept={handleReviewAccept}
+              onReject={handleReviewReject}
+              onAcceptAll={handleReviewAcceptAll}
+              onClose={handleReviewClose}
+              alwaysAccept={alwaysAccept}
+              onToggleAlwaysAccept={toggleAlwaysAccept}
+            />
+
             <ChatMessageList
               messages={messagesWithPending}
               isStreaming={isStreaming}
@@ -192,10 +217,8 @@ const BrandCoachV2 = (): JSX.Element => {
               fieldValues={fieldValues}
               isFieldLocked={isFieldLocked}
               onFieldClick={handleFieldClick}
-              onAcceptAllFromMessage={(fields) => {
-                Object.entries(fields).forEach(([fieldId, value]) => setFieldManual(fieldId, value));
-              }}
-              onFieldAccept={(fieldId, value) => setFieldManual(fieldId, value)}
+              onAcceptAllFromMessage={handleAcceptAllFromBadge}
+              onFieldAccept={handleFieldAcceptFromBadge}
               messagesEndRef={chatContainerRef}
             />
 

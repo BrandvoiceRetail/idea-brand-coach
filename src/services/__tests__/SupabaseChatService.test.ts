@@ -85,55 +85,73 @@ describe('SupabaseChatService', () => {
             }),
           } as any;
         }
-        return {} as any;
+        // Fallback for other tables (uploaded_documents, chat_sessions, etc.)
+        const chainableMock = {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+        return chainableMock as any;
       });
 
-      // First call: save user message (insert)
-      // Second call: get recent messages (select) - return empty
-      // Third call: save assistant message (insert)
-      let callCount = 0;
+      // Mock supabase.from for all tables
+      let insertCallCount = 0;
       vi.mocked(supabase.from).mockImplementation((table: string) => {
-        callCount++;
         if (table === 'chat_messages') {
-          if (callCount === 1 || callCount === 3) {
-            // Insert calls (user message and assistant message)
-            const messageData = callCount === 1 ? mockUserMessage : mockAssistantMessage;
-            return {
-              insert: vi.fn().mockReturnValue({
+          return {
+            insert: vi.fn().mockImplementation(() => {
+              insertCallCount++;
+              const messageData = insertCallCount === 1 ? mockUserMessage : mockAssistantMessage;
+              return {
                 select: vi.fn().mockReturnValue({
                   single: vi.fn().mockResolvedValue({
                     data: messageData,
                     error: null,
                   }),
                 }),
-              }),
-            } as any;
-          } else {
-            // Select call (get recent messages)
-            return {
-              select: vi.fn().mockReturnValue({
+              };
+            }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockReturnValue({
-                  eq: vi.fn().mockReturnValue({
-                    order: vi.fn().mockReturnValue({
-                      limit: vi.fn().mockResolvedValue({
-                        data: [],
-                        error: null,
-                      }),
+                  order: vi.fn().mockReturnValue({
+                    limit: vi.fn().mockResolvedValue({
+                      data: [],
+                      error: null,
                     }),
                   }),
                 }),
               }),
-            } as any;
-          }
+            }),
+          } as any;
         }
-        return {} as any;
+        // Fallback for other tables (uploaded_documents, chat_sessions, etc.)
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        } as any;
       });
 
       const result = await service.sendMessage(mockMessage);
 
       expect(result.message.role).toBe('assistant');
       expect(result.message.content).toBe(mockResponse);
-      expect(supabase.functions.invoke).toHaveBeenCalledWith('idea-framework-consultant-test',
+      expect(supabase.functions.invoke).toHaveBeenCalledWith('idea-framework-consultant',
         expect.objectContaining({
           body: expect.objectContaining({
             message: mockMessage.content,
@@ -211,7 +229,20 @@ describe('SupabaseChatService', () => {
             } as any;
           }
         }
-        return {} as any;
+        // Fallback for other tables (uploaded_documents, chat_sessions, etc.)
+        const chainableMock = {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+        return chainableMock as any;
       });
 
       const mockError = new Error('AI service unavailable');
@@ -338,7 +369,20 @@ describe('SupabaseChatService', () => {
             } as any;
           }
         }
-        return {} as any;
+        // Fallback for other tables (uploaded_documents, chat_sessions, etc.)
+        const chainableMock = {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+        return chainableMock as any;
       });
 
       await service.clearChatHistory();

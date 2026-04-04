@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { AdaptiveFieldReview, ReviewField } from '../AdaptiveFieldReview';
 import * as useDeviceTypeModule from '@/hooks/useDeviceType';
 
@@ -208,9 +208,13 @@ describe('AdaptiveFieldReview', () => {
         />
       );
 
-      expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
-      expect(screen.getByText('Accept')).toBeInTheDocument();
-      expect(screen.getByText('Reject')).toBeInTheDocument();
+      const shortcutsHeading = screen.getByText('Keyboard Shortcuts');
+      expect(shortcutsHeading).toBeInTheDocument();
+      // "Accept" and "Reject" appear in both action buttons and shortcuts help;
+      // scope to the shortcuts section to avoid ambiguity.
+      const shortcutsSection = shortcutsHeading.closest('div.space-y-2')!;
+      expect(within(shortcutsSection as HTMLElement).getByText('Accept')).toBeInTheDocument();
+      expect(within(shortcutsSection as HTMLElement).getByText('Reject')).toBeInTheDocument();
     });
 
     it('should handle field editing', async () => {
@@ -301,8 +305,10 @@ describe('AdaptiveFieldReview', () => {
       );
 
       expect(screen.getByText('Swipe to review')).toBeInTheDocument();
-      expect(screen.getByText('Reject')).toBeInTheDocument();
-      expect(screen.getByText('Accept')).toBeInTheDocument();
+      // "Accept" and "Reject" appear in both swipe hints and action buttons;
+      // verify at least two instances exist (hint text + button label).
+      expect(screen.getAllByText('Accept').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByText('Reject').length).toBeGreaterThanOrEqual(2);
     });
 
     it('should show progress dots', () => {
@@ -352,6 +358,18 @@ describe('AdaptiveFieldReview', () => {
   });
 
   describe('Edge cases', () => {
+    beforeEach(() => {
+      vi.mocked(useDeviceTypeModule.useDeviceType).mockReturnValue({
+        deviceType: 'desktop',
+        isMobile: false,
+        isTablet: false,
+        isDesktop: true,
+        isTouchDevice: false,
+        width: 1920,
+        height: 1080,
+      });
+    });
+
     it('should handle empty fields array', () => {
       render(
         <AdaptiveFieldReview

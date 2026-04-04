@@ -23,7 +23,11 @@ import { useSimpleFieldSync } from '@/hooks/useSimpleFieldSync';
 import { useSystemKB } from '@/contexts/SystemKBContext';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useDeviceType } from '@/hooks/useDeviceType';
-import { useFieldReview } from '@/contexts/FieldReviewContext';
+import { useExtractionMeta } from '@/contexts/ExtractionMetaContext';
+import { useExtractionQueue } from '@/hooks/v2/useExtractionQueue';
+import type { PendingField as QueuePendingField } from '@/hooks/v2/useExtractionQueue';
+import { useAlwaysAccept } from '@/hooks/v2/useAlwaysAccept';
+import { useScrollOpenFlash } from '@/hooks/v2/useScrollOpenFlash';
 import { supabase } from '@/integrations/supabase/client';
 import { SupabaseBrandService } from '@/services/SupabaseBrandService';
 import { useServices } from '@/services/ServiceProvider';
@@ -147,6 +151,12 @@ export interface BrandCoachV2State {
 
   /** Ghost text suggestion for chat input */
   ghostSuggestion: string | null;
+
+  /** Extraction review queue */
+  extractionQueue: QueuePendingField[];
+  extractionQueueIndex: number;
+  isReviewOpen: boolean;
+  alwaysAccept: boolean;
 }
 
 export interface BrandCoachV2Actions {
@@ -170,7 +180,17 @@ export interface BrandCoachV2Actions {
   /** Field actions */
   setFieldManual: (fieldId: string, value: string | string[]) => void;
   acceptAllFields: () => void;
-  setActiveReviewFieldId: (fieldId: string | null) => void;
+
+  /** Review modal actions */
+  handleReviewAccept: (fieldId: string, value?: string | string[]) => void;
+  handleReviewReject: (fieldId: string) => void;
+  handleReviewAcceptAll: () => void;
+  handleReviewClose: () => void;
+  toggleAlwaysAccept: () => void;
+
+  /** Badge accept actions (with scroll-open-flash) */
+  handleFieldAcceptFromBadge: (fieldId: string, value: string | string[]) => void;
+  handleAcceptAllFromBadge: (fields: Record<string, string | string[]>) => void;
 
   /** Chapter actions */
   handleProceed: (chapterId: ChapterId) => Promise<void>;
@@ -248,20 +268,24 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     clearFields, isFieldLocked,
   } = useFieldExtraction(currentAvatar?.id || null);
 
-  // ── Field review context ──────────────────────────────────────────────
+  // ── Field review — queue-based system ──────────────────────────────────
+  const { messageExtractions, setMessageExtraction } = useExtractionMeta();
   const {
-    enqueueFields, setMessageExtraction, registerFieldAcceptHandler,
-    pendingCount, acceptAllFields, messageExtractions, setActiveReviewFieldId,
-  } = useFieldReview();
+    queue: reviewQueue,
+    currentIndex: reviewQueueIndex,
+    enqueue: enqueueToQueue,
+    accept: acceptFromQueue,
+    reject: rejectFromQueue,
+    acceptAll: acceptAllFromQueue,
+    clear: clearReviewQueue,
+    isOpen: isReviewOpen,
+  } = useExtractionQueue();
+  const { isOn: alwaysAccept, toggle: toggleAlwaysAccept } = useAlwaysAccept();
 
   const setFieldManualRef = useRef(setFieldManual);
   setFieldManualRef.current = setFieldManual;
 
-  useEffect(() => {
-    registerFieldAcceptHandler((fieldId: string, value: string | string[]) => {
-      setFieldManualRef.current(fieldId, value);
-    });
-  }, [registerFieldAcceptHandler]);
+  const pendingCount = reviewQueue.length;
 
   // ── Field sync ────────────────────────────────────────────────────────
   const { savedFieldCount } = useSimpleFieldSync({
@@ -290,6 +314,66 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   const [focusedFieldId, setFocusedFieldId] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const accordionRef = useRef<ChapterAccordionHandle>(null);
+
+  // ── Scroll-open-flash + review handlers ──────────────────────────────
+  const { triggerFlash, triggerBatchFlash } = useScrollOpenFlash({ accordionRef });
+
+  // Wrapper passed to the orchestrator: routes to queue or auto-accepts
+  const enqueueFieldsForReview = useCallback((fields: QueuePendingField[]): void => {
+    if (alwaysAccept) {
+      fields.forEach(f => setFieldManualRef.current(f.fieldId, f.value));
+      if (fields.length > 0) {
+        triggerBatchFlash(fields.map(f => f.fieldId));
+      }
+    } else {
+      enqueueToQueue(fields);
+    }
+  }, [alwaysAccept, triggerBatchFlash, enqueueToQueue]);
+
+  // Review modal: accept a single field
+  const handleReviewAccept = useCallback((fieldId: string, value?: string | string[]): void => {
+    const field = reviewQueue.find(f => f.fieldId === fieldId);
+    const finalValue = value ?? field?.value;
+    if (finalValue !== undefined) {
+      setFieldManualRef.current(fieldId, finalValue);
+    }
+    acceptFromQueue(fieldId);
+    triggerFlash(fieldId);
+  }, [reviewQueue, acceptFromQueue, triggerFlash]);
+
+  // Review modal: reject a single field
+  const handleReviewReject = useCallback((fieldId: string): void => {
+    rejectFromQueue(fieldId);
+  }, [rejectFromQueue]);
+
+  // Review modal: accept all remaining fields
+  const handleReviewAcceptAll = useCallback((): void => {
+    const accepted = acceptAllFromQueue();
+    accepted.forEach(f => setFieldManualRef.current(f.fieldId, f.value));
+    if (accepted.length > 0) {
+      triggerBatchFlash(accepted.map(f => f.fieldId));
+    }
+  }, [acceptAllFromQueue, triggerBatchFlash]);
+
+  // Review modal: close/dismiss
+  const handleReviewClose = useCallback((): void => {
+    clearReviewQueue();
+  }, [clearReviewQueue]);
+
+  // Alias for header "pending" button
+  const acceptAllFields = handleReviewAcceptAll;
+
+  // Badge accept handlers (with scroll-open-flash)
+  const handleFieldAcceptFromBadge = useCallback((fieldId: string, value: string | string[]): void => {
+    setFieldManualRef.current(fieldId, value);
+    triggerFlash(fieldId);
+  }, [triggerFlash]);
+
+  const handleAcceptAllFromBadge = useCallback((fields: Record<string, string | string[]>): void => {
+    const entries = Object.entries(fields);
+    entries.forEach(([fieldId, value]) => setFieldManualRef.current(fieldId, value));
+    triggerBatchFlash(entries.map(([fieldId]) => fieldId));
+  }, [triggerBatchFlash]);
 
   // ── Extracted hooks ───────────────────────────────────────────────────
   const { messagesWithPending, displayMessages, handleSendMessage } = useBrandCoachChat({
@@ -320,9 +404,8 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     allChapters,
     fieldValues,
     fieldSources,
-    setFieldManual,
     setMessageExtraction,
-    enqueueFields,
+    enqueueFields: enqueueFieldsForReview,
   });
 
   const { handleProceed: rawHandleProceed } = useChapterProceeding({
@@ -407,18 +490,14 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     }
   };
 
-  const handleFieldClick = (field: { fieldId: string }): void => {
-    setActiveReviewFieldId(field.fieldId);
-    const bookChapterId = fieldToBookChapterId[field.fieldId];
-    if (bookChapterId) {
-      if (isMobile) {
-        setMobileAccordionOpen(true);
-        setTimeout(() => accordionRef.current?.focusChapter(bookChapterId), 300);
-      } else {
-        accordionRef.current?.focusChapter(bookChapterId);
-      }
+  const handleFieldClick = useCallback((field: { fieldId: string }): void => {
+    if (isMobile) {
+      setMobileAccordionOpen(true);
+      setTimeout(() => triggerFlash(field.fieldId), 400);
+    } else {
+      triggerFlash(field.fieldId);
     }
-  };
+  }, [isMobile, triggerFlash, setMobileAccordionOpen]);
 
   // ── Precomputed data ──────────────────────────────────────────────────
   const chapterAccordionData = useMemo(() =>
@@ -492,6 +571,10 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     milestone,
     dismissMilestone,
     ghostSuggestion,
+    extractionQueue: reviewQueue,
+    extractionQueueIndex: reviewQueueIndex,
+    isReviewOpen,
+    alwaysAccept,
 
     // Actions
     handleSessionSelect,
@@ -507,7 +590,13 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     downloadResponse,
     setFieldManual,
     acceptAllFields,
-    setActiveReviewFieldId,
+    handleReviewAccept,
+    handleReviewReject,
+    handleReviewAcceptAll,
+    handleReviewClose,
+    toggleAlwaysAccept,
+    handleFieldAcceptFromBadge,
+    handleAcceptAllFromBadge,
     handleProceed,
     handleDocumentUploadComplete,
     handleSendReviewContext,

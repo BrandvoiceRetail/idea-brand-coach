@@ -21,7 +21,7 @@ describe('IDEA Framework Consultant - Image Processing', () => {
     global.fetch = vi.fn();
   });
 
-  it('should build multimodal message for GPT-4 Vision with images', async () => {
+  it('should build multimodal message for GPT-4 Vision with images', () => {
     const mockImages: ChatImageAttachment[] = [
       {
         id: 'img-1',
@@ -37,54 +37,28 @@ describe('IDEA Framework Consultant - Image Processing', () => {
       },
     ];
 
-    const mockRequest = {
-      message: 'Analyze these brand images for consistency',
-      metadata: { images: mockImages },
-      chat_history: [],
-    };
-
-    // Expected multimodal content structure for GPT-4 Vision
-    const expectedContent = [
-      { type: 'text', text: expect.stringContaining('Analyze these brand images') },
-      {
-        type: 'image_url',
-        image_url: {
-          url: 'https://example.com/product.jpg',
-          detail: 'high',
-        },
-      },
-      {
-        type: 'image_url',
-        image_url: {
-          url: 'https://example.com/logo.png',
-          detail: 'high',
-        },
-      },
+    // Build multimodal content structure for GPT-4 Vision
+    const userContent = [
+      { type: 'text' as const, text: 'Analyze these brand images for consistency' },
+      ...mockImages.map(img => ({
+        type: 'image_url' as const,
+        image_url: { url: img.url, detail: 'high' as const },
+      })),
     ];
 
-    // Mock OpenAI API response
-    vi.mocked(global.fetch).mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        choices: [
-          {
-            message: {
-              content: 'Based on my analysis of the brand images, I can see strong visual consistency...',
-            },
-          },
-        ],
-      }),
-    } as any);
+    const systemContent = `IMAGE ANALYSIS CAPABILITIES:
+When images are provided by the user, analyze visual branding elements.`;
 
-    // Simulate edge function processing
     const messages = [
-      { role: 'system', content: expect.stringContaining('IMAGE ANALYSIS CAPABILITIES') },
-      { role: 'user', content: expectedContent },
+      { role: 'system', content: systemContent },
+      { role: 'user', content: userContent },
     ];
 
-    // Verify the request would be structured correctly
-    expect(messages[1].content).toEqual(expectedContent);
+    // Verify multimodal structure
+    expect(messages[1].content).toHaveLength(3); // 1 text + 2 images
+    expect(messages[1].content[0]).toEqual({ type: 'text', text: expect.stringContaining('Analyze these brand images') });
+    expect(messages[1].content[1]).toEqual({ type: 'image_url', image_url: { url: 'https://example.com/product.jpg', detail: 'high' } });
+    expect(messages[1].content[2]).toEqual({ type: 'image_url', image_url: { url: 'https://example.com/logo.png', detail: 'high' } });
     expect(messages[0].content).toContain('IMAGE ANALYSIS CAPABILITIES');
   });
 
@@ -102,39 +76,18 @@ When images are provided by the user, YOU MUST:
     expect(systemPrompt).toContain('IDEA Framework principles');
   });
 
-  it('should handle messages without images as regular text', async () => {
-    const mockRequest = {
-      message: 'What is the IDEA Framework?',
-      metadata: {},
-      chat_history: [],
-    };
-
-    // Mock OpenAI API response
-    vi.mocked(global.fetch).mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        choices: [
-          {
-            message: {
-              content: 'The IDEA Framework stands for Insight-Driven, Distinctive, Empathetic, and Authentic...',
-            },
-          },
-        ],
-      }),
-    } as any);
-
+  it('should handle messages without images as regular text', () => {
     // For non-image messages, content should be a simple string
-    const expectedContent = expect.stringContaining('What is the IDEA Framework?');
+    const userMessage = 'What is the IDEA Framework?';
 
-    // Simulate message structure
     const messages = [
-      { role: 'system', content: expect.any(String) },
-      { role: 'user', content: expectedContent },
+      { role: 'system', content: 'You are a brand consultant.' },
+      { role: 'user', content: userMessage },
     ];
 
     // Verify content is a string, not an array
     expect(typeof messages[1].content).toBe('string');
+    expect(messages[1].content).toContain('What is the IDEA Framework?');
   });
 
   it('should add visual analysis instructions for image messages', () => {

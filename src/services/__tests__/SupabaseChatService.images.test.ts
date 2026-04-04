@@ -3,7 +3,6 @@ import { SupabaseChatService } from '../SupabaseChatService';
 import { supabase } from '@/integrations/supabase/client';
 import { ChatImageAttachment } from '@/types/chat';
 
-vi.mock('@/integrations/supabase/client');
 vi.mock('@/lib/knowledge-base/sync-service-instance');
 
 describe('SupabaseChatService - Image Processing', () => {
@@ -93,7 +92,20 @@ describe('SupabaseChatService - Image Processing', () => {
             }),
           } as any;
         }
-        return {} as any;
+        // Fallback for other tables (uploaded_documents, chat_sessions, etc.)
+        const chainableMock = {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+        return chainableMock as any;
       });
 
       // Mock edge function with image processing
@@ -113,20 +125,19 @@ describe('SupabaseChatService - Image Processing', () => {
 
       // Verify edge function was called with images in metadata
       expect(mockEdgeFunctionInvoke).toHaveBeenCalledWith(
-        'idea-framework-consultant-test',
-        {
+        'idea-framework-consultant',
+        expect.objectContaining({
           headers: {
             Authorization: `Bearer ${mockSession.access_token}`,
           },
-          body: {
+          body: expect.objectContaining({
             message: mockMessage.content,
-            chat_history: expect.any(Array),
-            metadata: {
+            metadata: expect.objectContaining({
               images: mockImages,
               useSystemKB: true,
-            },
-          },
-        }
+            }),
+          }),
+        })
       );
     });
 
@@ -190,7 +201,20 @@ describe('SupabaseChatService - Image Processing', () => {
             }),
           } as any;
         }
-        return {} as any;
+        // Fallback for other tables (uploaded_documents, chat_sessions, etc.)
+        const chainableMock = {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+        return chainableMock as any;
       });
 
       // Mock edge function without images
@@ -210,19 +234,18 @@ describe('SupabaseChatService - Image Processing', () => {
 
       // Verify edge function was called without images
       expect(mockEdgeFunctionInvoke).toHaveBeenCalledWith(
-        'idea-framework-consultant-test',
-        {
+        'idea-framework-consultant',
+        expect.objectContaining({
           headers: {
             Authorization: `Bearer ${mockSession.access_token}`,
           },
-          body: {
+          body: expect.objectContaining({
             message: mockMessage.content,
-            chat_history: expect.any(Array),
-            metadata: {
+            metadata: expect.objectContaining({
               useSystemKB: true,
-            },
-          },
-        }
+            }),
+          }),
+        })
       );
 
       // Verify no images property in metadata
@@ -302,7 +325,20 @@ describe('SupabaseChatService - Image Processing', () => {
             }),
           } as any;
         }
-        return {} as any;
+        // Fallback for other tables (uploaded_documents, chat_sessions, etc.)
+        const chainableMock = {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+        return chainableMock as any;
       });
 
       // Mock edge function

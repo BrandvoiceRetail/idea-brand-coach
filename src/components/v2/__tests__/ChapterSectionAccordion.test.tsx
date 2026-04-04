@@ -616,7 +616,7 @@ describe('ChapterSectionAccordion', () => {
   });
 
   describe('ref forwarding', () => {
-    it('should forward ref to container div', () => {
+    it('should expose imperative handle with focusChapter, focusField, flashField', () => {
       const ref = vi.fn();
       const chapters: ChapterData[] = [
         createChapterData(mockChapter1, 'active'),
@@ -633,7 +633,10 @@ describe('ChapterSectionAccordion', () => {
       );
 
       expect(ref).toHaveBeenCalled();
-      expect(ref.mock.calls[0][0]).toBeInstanceOf(HTMLDivElement);
+      const handle = ref.mock.calls[0][0];
+      expect(handle).toHaveProperty('focusChapter');
+      expect(handle).toHaveProperty('focusField');
+      expect(handle).toHaveProperty('flashField');
     });
   });
 
