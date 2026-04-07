@@ -7,6 +7,7 @@
 export const ALLOWED_MIME_TYPES = [
   'application/pdf',
   'text/plain',
+  'text/markdown',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'image/jpeg',
@@ -20,11 +21,11 @@ export const ALLOWED_MIME_TYPES = [
 export const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 
 /** Accept string for file input elements */
-export const ACCEPT_STRING = '.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp';
+export const ACCEPT_STRING = '.pdf,.doc,.docx,.txt,.md,.markdown,.jpg,.jpeg,.png,.gif,.webp';
 
 /** Human-readable description of allowed file types */
 export const ALLOWED_TYPES_DESCRIPTION =
-  'PDF, DOC, DOCX, TXT, or image files (JPG, PNG, GIF, WEBP)';
+  'PDF, DOC, DOCX, TXT, MD, or image files (JPG, PNG, GIF, WEBP)';
 
 interface FileValidationResult {
   valid: boolean;
@@ -37,8 +38,18 @@ interface FileValidationResult {
  * @param file - The File object to validate
  * @returns Validation result with optional error message
  */
+/** File extensions accepted when MIME type is empty or unrecognized */
+const ALLOWED_EXTENSIONS = [
+  '.pdf', '.doc', '.docx', '.txt', '.md', '.markdown',
+  '.jpg', '.jpeg', '.png', '.gif', '.webp',
+];
+
 export function validateFile(file: File): FileValidationResult {
-  if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
+  const mimeAllowed = (ALLOWED_MIME_TYPES as readonly string[]).includes(file.type);
+  const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+  const extAllowed = ALLOWED_EXTENSIONS.includes(ext);
+
+  if (!mimeAllowed && !extAllowed) {
     return {
       valid: false,
       error: `Please upload ${ALLOWED_TYPES_DESCRIPTION} only`,

@@ -77,6 +77,11 @@ export const DesktopFieldReview: React.FC<DesktopFieldReviewProps> = ({
 }) => {
   const [editedValue, setEditedValue] = useState(field.value);
 
+  // Reset edited value when the active field changes
+  useEffect(() => {
+    setEditedValue(field.value);
+  }, [field.id]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent): void => {

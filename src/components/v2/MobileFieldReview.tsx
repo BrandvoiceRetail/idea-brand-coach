@@ -10,7 +10,7 @@
  */
 
 import * as React from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -70,6 +70,11 @@ export const MobileFieldReview: React.FC<MobileFieldReviewProps> = ({
 }) => {
   const [editedValue, setEditedValue] = useState(field.value);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+
+  // Reset edited value when the active field changes
+  useEffect(() => {
+    setEditedValue(field.value);
+  }, [field.id]);
 
   const handleSwipe = useCallback((event: SwipeEvent) => {
     switch (event.direction) {

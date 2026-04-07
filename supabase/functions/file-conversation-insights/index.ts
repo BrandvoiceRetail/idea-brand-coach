@@ -50,15 +50,15 @@ Assistant: ${assistantResponse}
     {
       "category": "avatar",
       "insights": [
-        "Target audience: 25-35 year old TCG enthusiasts",
-        "Collectors value protection for prized cards - part investment, part identity"
+        "Target audience: health-conscious millennials aged 28-40",
+        "Customers prioritize convenience and transparency in ingredient sourcing"
       ],
       "reasoning": "User stated audience and assistant explained their psychographics"
     },
     {
       "category": "core",
       "insights": [
-        "Core values: trustworthy, exclusive, emotionally connected"
+        "Core values: sustainability, transparency, community wellness"
       ],
       "reasoning": "Assistant recommended these as brand values"
     }
@@ -66,8 +66,8 @@ Assistant: ${assistantResponse}
 }
 
 **Example - Good extraction:**
-User: "our target audience is 25-35 TCG enthusiasts"
-Assistant: "TCG collectors value protection... This age group values authenticity..."
+User: "we're targeting health-conscious millennials who care about where their food comes from"
+Assistant: "That audience values transparency and convenience... They tend to research brands thoroughly..."
 => Extract multiple categories: avatar (demographics), canvas (positioning), core (values)
 
 **Example - Skip:**

@@ -399,6 +399,42 @@ describe('AdaptiveFieldReview', () => {
       expect(screen.queryByText('Next Field')).not.toBeInTheDocument();
     });
 
+    it('should reset textarea value when navigating between fields', async () => {
+      // Use only text/textarea fields to avoid array rendering complexity
+      const textFields: ReviewField[] = [
+        { ...mockFields[0] },  // "Test Brand"
+        { ...mockFields[1] },  // "Our mission is to test"
+      ];
+
+      const { rerender } = render(
+        <AdaptiveFieldReview
+          fields={textFields}
+          isOpen={true}
+          currentIndex={0}
+          {...mockHandlers}
+        />
+      );
+
+      // Card 1: should show "Test Brand"
+      expect(screen.getByDisplayValue('Test Brand')).toBeInTheDocument();
+
+      // Navigate to card 2 by re-rendering with new index
+      rerender(
+        <AdaptiveFieldReview
+          fields={textFields}
+          isOpen={true}
+          currentIndex={1}
+          {...mockHandlers}
+        />
+      );
+
+      // Card 2: should show mission value, NOT "Test Brand"
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('Our mission is to test')).toBeInTheDocument();
+      });
+      expect(screen.queryByDisplayValue('Test Brand')).not.toBeInTheDocument();
+    });
+
     it('should close after reviewing all fields', async () => {
       render(
         <AdaptiveFieldReview

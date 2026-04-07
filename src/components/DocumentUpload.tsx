@@ -88,7 +88,7 @@ export const DocumentUpload = ({ onDocumentsChange, onUploadComplete }: Document
                     <span className="text-primary underline">browse files</span>
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    I can work with PDF, DOC, DOCX, TXT, and image files (JPG, PNG, GIF, WEBP) up to 20MB - whatever works best for you!
+                    I can work with PDF, DOC, DOCX, TXT, Markdown, and image files (JPG, PNG, GIF, WEBP) up to 20MB - whatever works best for you!
                   </p>
                 </div>
               </div>
