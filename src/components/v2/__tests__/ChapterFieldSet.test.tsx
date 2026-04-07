@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ChapterFieldSet } from '../ChapterFieldSet';
 import type { ChapterField } from '@/config/chapterFields';
@@ -454,7 +454,7 @@ describe('ChapterFieldSet', () => {
     it('should default to text input for unknown field type', () => {
       const unknownTypeField = {
         ...textField,
-        type: 'unknown' as unknown as typeof textField.type
+        type: 'unknown' as any
       };
 
       render(
@@ -541,6 +541,180 @@ describe('ChapterFieldSet', () => {
 
       const textarea = screen.getByLabelText(/Brand Vision/);
       expect(textarea).not.toBeRequired();
+    });
+  });
+
+  describe('ghost text (pending values)', () => {
+    // Set viewport to desktop width so ghost text is visible (hidden on mobile via CSS)
+    beforeEach(() => {
+      // Note: Tailwind responsive classes (hidden md:block) are CSS-based,
+      // so in JSDOM they render in DOM but aren't visually hidden.
+      // We test DOM presence here; responsive hiding is a CSS concern.
+    });
+
+    it('should render ghost text overlay when pendingValue is provided and field is empty', () => {
+      render(
+        <ChapterFieldSet
+          field={textField}
+          value=""
+          pendingValue="To inspire innovation"
+          onChange={mockOnChange}
+        />
+      );
+
+      const ghostOverlay = screen.getByTestId('ghost-text-overlay');
+      expect(ghostOverlay).toBeInTheDocument();
+      expect(ghostOverlay).toHaveTextContent('To inspire innovation');
+    });
+
+    it('should render Tab-to-accept hint when ghost text is shown', () => {
+      render(
+        <ChapterFieldSet
+          field={textField}
+          value=""
+          pendingValue="To inspire innovation"
+          onChange={mockOnChange}
+        />
+      );
+
+      const hint = screen.getByTestId('ghost-text-hint');
+      expect(hint).toBeInTheDocument();
+      expect(hint).toHaveTextContent('Tab');
+    });
+
+    it('should NOT render ghost text when field already has a value', () => {
+      render(
+        <ChapterFieldSet
+          field={textField}
+          value="Existing value"
+          pendingValue="To inspire innovation"
+          onChange={mockOnChange}
+        />
+      );
+
+      expect(screen.queryByTestId('ghost-text-overlay')).not.toBeInTheDocument();
+    });
+
+    it('should NOT render ghost text when pendingValue is undefined', () => {
+      render(
+        <ChapterFieldSet
+          field={textField}
+          value=""
+          onChange={mockOnChange}
+        />
+      );
+
+      expect(screen.queryByTestId('ghost-text-overlay')).not.toBeInTheDocument();
+    });
+
+    it('should NOT render ghost text for array fields that have items', () => {
+      render(
+        <ChapterFieldSet
+          field={arrayField}
+          value={['Innovation', 'Integrity']}
+          pendingValue={['New Value 1', 'New Value 2']}
+          onChange={mockOnChange}
+        />
+      );
+
+      expect(screen.queryByTestId('ghost-text-overlay')).not.toBeInTheDocument();
+    });
+
+    it('should render ghost text for empty array fields with pending values', () => {
+      render(
+        <ChapterFieldSet
+          field={arrayField}
+          value={[]}
+          pendingValue={['Innovation', 'Integrity', 'Excellence']}
+          onChange={mockOnChange}
+        />
+      );
+
+      const ghostOverlay = screen.getByTestId('ghost-text-overlay');
+      expect(ghostOverlay).toBeInTheDocument();
+      // toHaveTextContent normalizes whitespace; newlines become spaces
+      expect(ghostOverlay).toHaveTextContent('Innovation Integrity Excellence');
+    });
+
+    it('should render ghost text for textarea fields', () => {
+      render(
+        <ChapterFieldSet
+          field={textareaField}
+          value=""
+          pendingValue="A world where everyone thrives"
+          onChange={mockOnChange}
+        />
+      );
+
+      const ghostOverlay = screen.getByTestId('ghost-text-overlay');
+      expect(ghostOverlay).toBeInTheDocument();
+      expect(ghostOverlay).toHaveTextContent('A world where everyone thrives');
+    });
+
+    it('should call onChange when Tab key accepts ghost value for text field', () => {
+      render(
+        <ChapterFieldSet
+          field={textField}
+          value=""
+          pendingValue="To inspire innovation"
+          onChange={mockOnChange}
+        />
+      );
+
+      const input = screen.getByLabelText(/Brand Purpose/);
+      fireEvent.keyDown(input, { key: 'Tab' });
+
+      expect(mockOnChange).toHaveBeenCalledWith('brandPurpose', 'To inspire innovation');
+    });
+
+    it('should call onChange with array when Tab key accepts ghost value for array field', () => {
+      render(
+        <ChapterFieldSet
+          field={arrayField}
+          value={[]}
+          pendingValue={['Innovation', 'Integrity']}
+          onChange={mockOnChange}
+        />
+      );
+
+      const textarea = screen.getByLabelText(/Core Values/);
+      fireEvent.keyDown(textarea, { key: 'Tab' });
+
+      expect(mockOnChange).toHaveBeenCalledWith('brandValues', ['Innovation', 'Integrity']);
+    });
+
+    it('should dismiss ghost text when Escape key is pressed', () => {
+      render(
+        <ChapterFieldSet
+          field={textField}
+          value=""
+          pendingValue="To inspire innovation"
+          onChange={mockOnChange}
+        />
+      );
+
+      // Ghost text should be visible initially
+      expect(screen.getByTestId('ghost-text-overlay')).toBeInTheDocument();
+
+      const input = screen.getByLabelText(/Brand Purpose/);
+      fireEvent.keyDown(input, { key: 'Escape' });
+
+      // Ghost text should be dismissed
+      expect(screen.queryByTestId('ghost-text-overlay')).not.toBeInTheDocument();
+    });
+
+    it('should have aria-hidden on ghost text overlay for accessibility', () => {
+      render(
+        <ChapterFieldSet
+          field={textField}
+          value=""
+          pendingValue="To inspire innovation"
+          onChange={mockOnChange}
+        />
+      );
+
+      const ghostOverlay = screen.getByTestId('ghost-text-overlay');
+      expect(ghostOverlay.parentElement).toHaveAttribute('aria-hidden', 'true');
     });
   });
 });

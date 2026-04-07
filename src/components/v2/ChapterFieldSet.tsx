@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { GhostTextFieldWrapper } from "@/components/v2/GhostTextFieldWrapper";
 import type { ChapterField, FieldSource } from "@/config/chapterFields";
 
 /**
@@ -19,6 +20,9 @@ export interface ChapterFieldSetProps {
 
   /** Field source indicator (AI-generated or manually entered) */
   source?: FieldSource;
+
+  /** Pending AI-extracted value to show as ghost text (Tab-to-accept) */
+  pendingValue?: string | string[];
 
   /** Change handler for field updates */
   onChange: (fieldId: string, value: string | string[]) => void;
@@ -50,7 +54,7 @@ export interface ChapterFieldSetProps {
  * ```
  */
 export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetProps>(
-  ({ field, value, source, onChange, onFocus, disabled = false, className }, ref) => {
+  ({ field, value, pendingValue, source, onChange, onFocus, disabled = false, className }, ref) => {
     /**
      * Handle input change for text and textarea fields
      */
@@ -104,6 +108,55 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
     };
 
     /**
+     * Normalize pending value to a display string for ghost text.
+     * Returns empty string if the field already has a value (ghost text
+     * should only appear on empty fields).
+     */
+    const getGhostText = (): string => {
+      // Don't show ghost text if field already has content
+      const hasValue = Array.isArray(value)
+        ? value.length > 0
+        : Boolean(value);
+      if (hasValue || !pendingValue) return '';
+
+      if (Array.isArray(pendingValue)) {
+        return pendingValue.join('\n');
+      }
+      return pendingValue;
+    };
+
+    /**
+     * Handle accepting ghost text — route through the standard onChange handler.
+     * For array fields, split the accepted string into lines.
+     */
+    const handleGhostAccept = (ghostValue: string): void => {
+      if (field.type === 'array') {
+        const lines = ghostValue.split('\n').filter(line => line.trim());
+        onChange(field.id, lines);
+      } else {
+        onChange(field.id, ghostValue);
+      }
+    };
+
+    /**
+     * Optionally wrap an input element in GhostTextFieldWrapper
+     * when there is a pending ghost value to display.
+     */
+    const wrapWithGhost = (inputElement: JSX.Element): JSX.Element => {
+      const ghostText = getGhostText();
+      if (!ghostText) return inputElement;
+
+      return (
+        <GhostTextFieldWrapper
+          pendingValue={ghostText}
+          onAccept={handleGhostAccept}
+        >
+          {inputElement}
+        </GhostTextFieldWrapper>
+      );
+    };
+
+    /**
      * Render the appropriate input component based on field type
      */
     const renderFieldInput = (): JSX.Element => {
@@ -111,7 +164,7 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
 
       switch (field.type) {
         case 'text':
-          return (
+          return wrapWithGhost(
             <Input
               id={field.id}
               value={stringValue || ''}
@@ -124,7 +177,7 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
           );
 
         case 'textarea':
-          return (
+          return wrapWithGhost(
             <Textarea
               id={field.id}
               value={stringValue || ''}
@@ -138,7 +191,7 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
           );
 
         case 'array':
-          return (
+          return wrapWithGhost(
             <Textarea
               id={field.id}
               value={arrayValueToString(value)}
@@ -152,7 +205,7 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
           );
 
         default:
-          return (
+          return wrapWithGhost(
             <Input
               id={field.id}
               value={stringValue || ''}

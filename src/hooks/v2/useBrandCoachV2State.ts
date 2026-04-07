@@ -23,11 +23,11 @@ import { useSimpleFieldSync } from '@/hooks/useSimpleFieldSync';
 import { useSystemKB } from '@/contexts/SystemKBContext';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useDeviceType } from '@/hooks/useDeviceType';
-import { useExtractionMeta } from '@/contexts/ExtractionMetaContext';
-import { useExtractionQueue } from '@/hooks/v2/useExtractionQueue';
+import { useFieldReviewPipeline } from '@/hooks/v2/useFieldReviewPipeline';
 import type { PendingField as QueuePendingField } from '@/hooks/v2/useExtractionQueue';
-import { useAlwaysAccept } from '@/hooks/v2/useAlwaysAccept';
-import { useScrollOpenFlash } from '@/hooks/v2/useScrollOpenFlash';
+import { useRejectionMessages } from '@/hooks/v2/useRejectionMessages';
+import { useMilestone } from '@/hooks/v2/useMilestone';
+import { useExportReadiness } from '@/hooks/v2/useExportReadiness';
 import { supabase } from '@/integrations/supabase/client';
 import { SupabaseBrandService } from '@/services/SupabaseBrandService';
 import { useServices } from '@/services/ServiceProvider';
@@ -36,9 +36,7 @@ import { useChatExportActions } from '@/hooks/useChatExportActions';
 import { useDocumentUploadFlow } from '@/hooks/useDocumentUploadFlow';
 import { useFieldExtractionOrchestrator } from '@/hooks/useFieldExtractionOrchestrator';
 import { useChapterProceeding } from '@/hooks/useChapterProceeding';
-import { useMilestoneCelebration } from '@/components/v2/MilestoneCelebration';
 import { useGhostSuggestion } from '@/hooks/v2/useGhostSuggestion';
-import type { MilestoneEvent } from '@/components/v2/MilestoneCelebration';
 import { CHAPTER_FIELDS_MAP, BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY } from '@/config/chapterFields';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
 import type { ChapterAccordionHandle } from '@/components/v2/ChapterSectionAccordion';
@@ -49,6 +47,9 @@ import type { MessageExtractionMeta } from '@/contexts/FieldReviewContext';
 import type { ChatSession } from '@/types/chat';
 import type { ChapterProgress, Chapter, ChapterId } from '@/types/chapter';
 import type { Avatar } from '@/hooks/useAvatarService';
+import type { MilestoneData } from '@/hooks/v2/useMilestone';
+import type { ExportReadiness } from '@/hooks/v2/useExportReadiness';
+import type { BrandMarkdownExportRef } from '@/components/export/BrandMarkdownExport';
 
 // ============================================================================
 // Types
@@ -67,6 +68,7 @@ interface ChapterAccordionItem {
   status: 'completed' | 'active' | 'future';
   fieldValues: Record<string, string | string[]>;
   fieldSources: Record<string, FieldSource>;
+  pendingValues?: Record<string, string | string[]>;
 }
 
 export interface BrandCoachV2State {
@@ -145,9 +147,16 @@ export interface BrandCoachV2State {
   /** Field locked check */
   isFieldLocked: (fieldId: string) => boolean;
 
-  /** Milestone celebration */
-  milestone: MilestoneEvent | null;
-  dismissMilestone: () => void;
+  /** Milestone celebrations */
+  activeMilestone: MilestoneData | null;
+  prefersReducedMotion: boolean;
+  isMilestoneComplete: boolean;
+
+  /** Export readiness */
+  exportReadiness: ExportReadiness;
+  isExportReadinessOpen: boolean;
+  setIsExportReadinessOpen: (open: boolean) => void;
+  exportRef: React.RefObject<BrandMarkdownExportRef | null>;
 
   /** Ghost text suggestion for chat input */
   ghostSuggestion: string | null;
@@ -179,10 +188,9 @@ export interface BrandCoachV2Actions {
 
   /** Field actions */
   setFieldManual: (fieldId: string, value: string | string[]) => void;
-  acceptAllFields: () => void;
 
   /** Review modal actions */
-  handleReviewAccept: (fieldId: string, value?: string | string[]) => void;
+  handleReviewAccept: (fieldId: string, value: string | string[]) => void;
   handleReviewReject: (fieldId: string) => void;
   handleReviewAcceptAll: () => void;
   handleReviewClose: () => void;
@@ -191,6 +199,13 @@ export interface BrandCoachV2Actions {
   /** Badge accept actions (with scroll-open-flash) */
   handleFieldAcceptFromBadge: (fieldId: string, value: string | string[]) => void;
   handleAcceptAllFromBadge: (fields: Record<string, string | string[]>) => void;
+
+  /** Rejection-to-chat actions */
+  handleRejectField: (fieldId: string) => void;
+  flushRejections: () => void;
+
+  /** Milestone dismiss */
+  dismissMilestone: () => void;
 
   /** Chapter actions */
   handleProceed: (chapterId: ChapterId) => Promise<void>;
@@ -268,24 +283,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     clearFields, isFieldLocked,
   } = useFieldExtraction(currentAvatar?.id || null);
 
-  // ── Field review — queue-based system ──────────────────────────────────
-  const { messageExtractions, setMessageExtraction } = useExtractionMeta();
-  const {
-    queue: reviewQueue,
-    currentIndex: reviewQueueIndex,
-    enqueue: enqueueToQueue,
-    accept: acceptFromQueue,
-    reject: rejectFromQueue,
-    acceptAll: acceptAllFromQueue,
-    clear: clearReviewQueue,
-    isOpen: isReviewOpen,
-  } = useExtractionQueue();
-  const { isOn: alwaysAccept, toggle: toggleAlwaysAccept } = useAlwaysAccept();
-
-  const setFieldManualRef = useRef(setFieldManual);
-  setFieldManualRef.current = setFieldManual;
-
-  const pendingCount = reviewQueue.length;
+  // ── Field review pipeline (queue + flash + handlers) ───────────────────
 
   // ── Field sync ────────────────────────────────────────────────────────
   const { savedFieldCount } = useSimpleFieldSync({
@@ -315,65 +313,19 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const accordionRef = useRef<ChapterAccordionHandle>(null);
 
-  // ── Scroll-open-flash + review handlers ──────────────────────────────
-  const { triggerFlash, triggerBatchFlash } = useScrollOpenFlash({ accordionRef });
+  const {
+    reviewQueue, reviewQueueIndex, isReviewOpen, pendingCount,
+    alwaysAccept, toggleAlwaysAccept,
+    messageExtractions, setMessageExtraction,
+    enqueueFieldsForReview,
+    handleReviewAccept, handleReviewReject, handleReviewAcceptAll, handleReviewClose,
+    handleFieldAcceptFromBadge, handleAcceptAllFromBadge, handleFieldClick,
+  } = useFieldReviewPipeline({ accordionRef, setFieldManual, isMobile, setMobileAccordionOpen });
 
-  // Wrapper passed to the orchestrator: routes to queue or auto-accepts
-  const enqueueFieldsForReview = useCallback((fields: QueuePendingField[]): void => {
-    if (alwaysAccept) {
-      fields.forEach(f => setFieldManualRef.current(f.fieldId, f.value));
-      if (fields.length > 0) {
-        triggerBatchFlash(fields.map(f => f.fieldId));
-      }
-    } else {
-      enqueueToQueue(fields);
-    }
-  }, [alwaysAccept, triggerBatchFlash, enqueueToQueue]);
-
-  // Review modal: accept a single field
-  const handleReviewAccept = useCallback((fieldId: string, value?: string | string[]): void => {
-    const field = reviewQueue.find(f => f.fieldId === fieldId);
-    const finalValue = value ?? field?.value;
-    if (finalValue !== undefined) {
-      setFieldManualRef.current(fieldId, finalValue);
-    }
-    acceptFromQueue(fieldId);
-    triggerFlash(fieldId);
-  }, [reviewQueue, acceptFromQueue, triggerFlash]);
-
-  // Review modal: reject a single field
-  const handleReviewReject = useCallback((fieldId: string): void => {
-    rejectFromQueue(fieldId);
-  }, [rejectFromQueue]);
-
-  // Review modal: accept all remaining fields
-  const handleReviewAcceptAll = useCallback((): void => {
-    const accepted = acceptAllFromQueue();
-    accepted.forEach(f => setFieldManualRef.current(f.fieldId, f.value));
-    if (accepted.length > 0) {
-      triggerBatchFlash(accepted.map(f => f.fieldId));
-    }
-  }, [acceptAllFromQueue, triggerBatchFlash]);
-
-  // Review modal: close/dismiss
-  const handleReviewClose = useCallback((): void => {
-    clearReviewQueue();
-  }, [clearReviewQueue]);
-
-  // Alias for header "pending" button
-  const acceptAllFields = handleReviewAcceptAll;
-
-  // Badge accept handlers (with scroll-open-flash)
-  const handleFieldAcceptFromBadge = useCallback((fieldId: string, value: string | string[]): void => {
-    setFieldManualRef.current(fieldId, value);
-    triggerFlash(fieldId);
-  }, [triggerFlash]);
-
-  const handleAcceptAllFromBadge = useCallback((fields: Record<string, string | string[]>): void => {
-    const entries = Object.entries(fields);
-    entries.forEach(([fieldId, value]) => setFieldManualRef.current(fieldId, value));
-    triggerBatchFlash(entries.map(([fieldId]) => fieldId));
-  }, [triggerBatchFlash]);
+  // ── Rejection-to-chat messages ───────────────────────────────────────
+  const {
+    rejectionMessages, trackRejection, flushRejections, clearRejectionMessages,
+  } = useRejectionMessages();
 
   // ── Extracted hooks ───────────────────────────────────────────────────
   const { messagesWithPending, displayMessages, handleSendMessage } = useBrandCoachChat({
@@ -385,6 +337,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     isSystemKBEnabled,
     latestDiagnostic,
     sendMessageStreaming,
+    injectedMessages: rejectionMessages,
   });
 
   const { isCopied, downloadResponse, handleCopyChat, handleClearChat } = useChatExportActions({
@@ -408,36 +361,23 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     enqueueFields: enqueueFieldsForReview,
   });
 
-  const { handleProceed: rawHandleProceed } = useChapterProceeding({
+  const { handleProceed } = useChapterProceeding({
     allChapters,
     fieldValues,
     completeCurrentChapter,
     sendMessage,
   });
 
-  // ── Milestone celebration ────────────────────────────────────────────
-  const { milestone, dismissMilestone, checkFieldMilestone, checkChapterComplete } = useMilestoneCelebration();
+  // ── Milestone celebrations ────────────────────────────────────────────
+  const {
+    activeMilestone, dismissMilestone, prefersReducedMotion,
+    isComplete: isMilestoneComplete,
+  } = useMilestone(savedFieldCount, currentAvatar?.id ?? null);
 
-  // Trigger field milestones when savedFieldCount changes
-  useEffect(() => {
-    if (savedFieldCount > 0) {
-      checkFieldMilestone(savedFieldCount);
-    }
-  }, [savedFieldCount, checkFieldMilestone]);
-
-  // Wrap handleProceed to trigger chapter celebration on success
-  const handleProceed = useCallback(async (chapterId: ChapterId): Promise<void> => {
-    const beforeStatuses = progress?.chapter_statuses ?? {};
-    await rawHandleProceed(chapterId);
-    // If the chapter wasn't completed before, trigger celebration
-    if (beforeStatuses[chapterId] !== 'completed') {
-      const bookChapter = allChapters.find(ch => ch.id === chapterId);
-      const chapterName = bookChapter?.title ?? chapterId;
-      const isLastChapter = allChapters.length > 0 &&
-        chapterId === allChapters[allChapters.length - 1].id;
-      checkChapterComplete(chapterName, isLastChapter);
-    }
-  }, [rawHandleProceed, progress, allChapters, checkChapterComplete]);
+  // ── Export readiness ──────────────────────────────────────────────────
+  const exportReadiness = useExportReadiness({ fieldValues });
+  const [isExportReadinessOpen, setIsExportReadinessOpen] = useState(false);
+  const exportRef = useRef<BrandMarkdownExportRef | null>(null);
 
   // ── Side effects ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -455,6 +395,25 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   }, [messagesWithPending, streamingContent]);
 
   useAvatarFieldSync({ currentAvatarId: currentAvatar?.id, clearFields });
+
+  // Clear rejection messages when session changes
+  useEffect(() => {
+    clearRejectionMessages();
+  }, [currentSessionId, clearRejectionMessages]);
+
+  // ── Rejection-to-chat handler ──────────────────────────────────────────
+  const handleRejectField = useCallback((fieldId: string): void => {
+    const pending = reviewQueue.find((f) => f.fieldId === fieldId);
+    const fieldLabel = pending?.label ?? fieldId;
+    trackRejection(fieldId, fieldLabel);
+    handleReviewReject(fieldId);
+  }, [reviewQueue, trackRejection, handleReviewReject]);
+
+  // ── Pending values map (fieldId -> pending extracted value) ───────────
+  const pendingValuesMap = useMemo<Record<string, string | string[]>>(
+    () => Object.fromEntries(reviewQueue.map(f => [f.fieldId, f.value])),
+    [reviewQueue]
+  );
 
   // ── Handlers ──────────────────────────────────────────────────────────
   const handleSessionSelect = (sessionId: string): void => {
@@ -490,15 +449,6 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     }
   };
 
-  const handleFieldClick = useCallback((field: { fieldId: string }): void => {
-    if (isMobile) {
-      setMobileAccordionOpen(true);
-      setTimeout(() => triggerFlash(field.fieldId), 400);
-    } else {
-      triggerFlash(field.fieldId);
-    }
-  }, [isMobile, triggerFlash, setMobileAccordionOpen]);
-
   // ── Precomputed data ──────────────────────────────────────────────────
   const chapterAccordionData = useMemo(() =>
     allChapters?.map(bookChapter => {
@@ -511,9 +461,9 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
       const chapterStatus: 'completed' | 'active' | 'future' =
         progress?.chapter_statuses?.[bookChapter.id] === 'completed' ? 'completed' : 'active';
 
-      return { chapter: mergedChapter, status: chapterStatus, fieldValues, fieldSources };
+      return { chapter: mergedChapter, status: chapterStatus, fieldValues, fieldSources, pendingValues: pendingValuesMap };
     }) ?? [],
-  [allChapters, progress, fieldValues, fieldSources]);
+  [allChapters, progress, fieldValues, fieldSources, pendingValuesMap]);
 
   // ── Ghost text suggestion ─────────────────────────────────────────────
   const ghostSuggestion = useGhostSuggestion(currentChapter?.id ?? null, fieldValues);
@@ -568,8 +518,13 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     reviewEnrichmentStatus,
     reviewCount,
     isFieldLocked,
-    milestone,
-    dismissMilestone,
+    activeMilestone,
+    prefersReducedMotion,
+    isMilestoneComplete,
+    exportReadiness,
+    isExportReadinessOpen,
+    setIsExportReadinessOpen,
+    exportRef,
     ghostSuggestion,
     extractionQueue: reviewQueue,
     extractionQueueIndex: reviewQueueIndex,
@@ -589,7 +544,6 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     handleClearChat,
     downloadResponse,
     setFieldManual,
-    acceptAllFields,
     handleReviewAccept,
     handleReviewReject,
     handleReviewAcceptAll,
@@ -603,5 +557,8 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     handleEnrichmentComplete,
     handleClearReviewContext,
     handleFieldClick,
+    handleRejectField,
+    flushRejections,
+    dismissMilestone,
   };
 }

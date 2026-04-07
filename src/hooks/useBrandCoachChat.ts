@@ -41,6 +41,19 @@ interface ChapterInfo {
   title: string;
 }
 
+/**
+ * A local-only assistant message injected into the display list
+ * (e.g., rejection follow-ups). Not persisted to Supabase.
+ */
+export interface InjectedAssistantMessage {
+  /** Unique identifier for deduplication */
+  id: string;
+  /** Markdown content to display */
+  content: string;
+  /** ISO 8601 timestamp for ordering */
+  created_at: string;
+}
+
 interface UseBrandCoachChatConfig {
   /** Messages from the useChat hook */
   messages: ChatMessage[];
@@ -58,6 +71,8 @@ interface UseBrandCoachChatConfig {
   latestDiagnostic: unknown | null;
   /** Streaming send function from useChat */
   sendMessageStreaming: (message: ChatMessageCreate) => Promise<void>;
+  /** Local-only assistant messages to merge into the display list */
+  injectedMessages?: InjectedAssistantMessage[];
 }
 
 interface PendingUserMessage {
@@ -97,6 +112,7 @@ export function useBrandCoachChat(config: UseBrandCoachChatConfig): UseBrandCoac
     isSystemKBEnabled,
     latestDiagnostic,
     sendMessageStreaming,
+    injectedMessages = [],
   } = config;
 
   const [pendingUserMessage, setPendingUserMessage] = useState<PendingUserMessage | null>(null);
@@ -132,10 +148,29 @@ export function useBrandCoachChat(config: UseBrandCoachChatConfig): UseBrandCoac
     });
   }, [messages]);
 
-  // Filter system messages from display
+  // Convert injected local-only messages to ProcessedMessage shape
+  const injectedAsProcessed = useMemo<ProcessedMessage[]>(() => {
+    return injectedMessages.map((msg) => ({
+      id: msg.id,
+      user_id: 'system',
+      role: 'assistant' as const,
+      content: msg.content,
+      created_at: msg.created_at,
+      updated_at: msg.created_at,
+      metadata: { isInjected: true },
+    }));
+  }, [injectedMessages]);
+
+  // Filter system messages from display and merge injected messages
   const displayMessages = useMemo<ProcessedMessage[]>(() => {
-    return processedMessages.filter((msg) => !msg.metadata?.isSystemMessage);
-  }, [processedMessages]);
+    const persisted = processedMessages.filter((msg) => !msg.metadata?.isSystemMessage);
+    if (injectedAsProcessed.length === 0) return persisted;
+
+    // Merge and sort by created_at to maintain chronological order
+    const merged = [...persisted, ...injectedAsProcessed];
+    merged.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    return merged;
+  }, [processedMessages, injectedAsProcessed]);
 
   // Merge pending optimistic message with display messages
   const messagesWithPending = useMemo<ProcessedMessage[]>(() => {

@@ -42,14 +42,14 @@ All colors MUST be HSL.
     --gradient-hero: linear-gradient(135deg, hsl(220 13% 9%) 0%, hsl(220 15% 15%) 50%, hsl(47 96% 53%) 100%);
     --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(210 40% 85%) 100%);
     
+    /* Milestone palette */
+    --heart-red: 0 84% 50%;
+    --gold-warm: 43 96% 56%;
+
     /* Brand shadows */
     --shadow-brand: 0 15px 50px -15px hsl(47 96% 53% / 0.4);
     --shadow-card: 0 4px 20px -4px hsl(220 13% 9% / 0.15);
     --shadow-glow: 0 0 30px hsl(47 96% 53% / 0.4);
-
-    /* Progress bar colors */
-    --heart-red: 0 85% 50%;
-    --gold-warm: 40 90% 55%;
 
     --radius: 0.5rem;
 
@@ -98,11 +98,6 @@ All colors MUST be HSL.
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-
-    /* Progress bar colors */
-    --heart-red: 0 85% 50%;
-    --gold-warm: 40 90% 55%;
-
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -111,6 +106,10 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Milestone palette (dark) */
+    --heart-red: 0 84% 50%;
+    --gold-warm: 43 96% 56%;
   }
 }
 
@@ -138,4 +137,19 @@ All colors MUST be HSL.
 
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
+}
+
+/* Milestone progress-bar pulse (10-field tier) */
+@keyframes milestone-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--heart-red) / 0.5); }
+  50% { box-shadow: 0 0 12px 4px hsl(var(--heart-red) / 0.35); }
+}
+
+.milestone-pulse {
+  animation: milestone-pulse 0.8s ease-in-out 3;
+}
+
+/* Gold progress bar for 35-field completion */
+.progress-gold [data-progress-indicator] {
+  background: linear-gradient(90deg, hsl(var(--heart-red)), hsl(var(--gold-warm)));
 }

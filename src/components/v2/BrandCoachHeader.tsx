@@ -10,13 +10,16 @@
  */
 
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { BrandMarkdownExport } from '@/components/export/BrandMarkdownExport';
+import type { BrandMarkdownExportRef } from '@/components/export/BrandMarkdownExport';
 import { VersionSwitcher } from '@/components/VersionSwitcher';
 import { AvatarHeaderDropdown } from '@/components/v2/AvatarHeaderDropdown';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
 import { CHAPTER_FIELDS_MAP } from '@/config/chapterFields';
 import type { ChapterProgress } from '@/types/chapter';
+import type { MilestoneData } from '@/hooks/v2/useMilestone';
 
 /**
  * Avatar context for the header dropdown
@@ -43,15 +46,23 @@ interface BrandCoachHeaderProps {
   savedFieldCount: number;
   fieldValues: Record<string, string | string[]>;
   onCreateAvatar: () => void;
+  /** Currently active milestone for visual effects (pulse/gold) */
+  activeMilestone?: MilestoneData | null;
+  /** Whether all 35 fields have been captured (persistent gold badge) */
+  isMilestoneComplete?: boolean;
+  /** Callback to open export readiness modal before exporting */
+  onBeforeExport?: () => void;
+  /** Ref forwarded to BrandMarkdownExport for programmatic export triggering */
+  exportRef?: React.RefObject<BrandMarkdownExportRef | null>;
 }
 
 /**
- * ChapterProgressBadge - Inline component showing "Chapter X of 11"
+ * ChapterProgressBadge - Inline badge showing the current chapter title
  */
-function ChapterProgressBadge({ current, total }: { current: number; total: number }): JSX.Element {
+function ChapterProgressBadge({ title }: { title: string }): JSX.Element {
   return (
     <Badge variant="outline" className="text-xs">
-      Chapter {current} of {total}
+      {title}
     </Badge>
   );
 }
@@ -64,6 +75,10 @@ export function BrandCoachHeader({
   savedFieldCount,
   fieldValues,
   onCreateAvatar,
+  activeMilestone,
+  isMilestoneComplete,
+  onBeforeExport,
+  exportRef,
 }: BrandCoachHeaderProps): JSX.Element {
   const { isMobile } = useDeviceType();
 
@@ -85,8 +100,7 @@ export function BrandCoachHeader({
         <h1 className="font-semibold text-sm lg:text-base">IDEA Brand Coach</h1>
         <div className="flex items-center gap-2">
           <ChapterProgressBadge
-            current={chapterProgress?.current_chapter_number ?? 1}
-            total={11}
+            title={currentChapter?.title ?? 'Brand Purpose'}
           />
           <div className="flex items-center gap-2">
             <div className="relative h-2 w-24 lg:w-32 rounded-full bg-muted overflow-hidden">
@@ -97,7 +111,11 @@ export function BrandCoachHeader({
                 />
               )}
             </div>
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
+            <span className={cn(
+              'text-xs text-muted-foreground whitespace-nowrap transition-colors',
+              activeMilestone?.showPulse && 'milestone-pulse text-[hsl(var(--heart-red))]',
+              (activeMilestone?.showGold || isMilestoneComplete) && 'text-[hsl(var(--gold-warm))]',
+            )}>
               {isMobile
                 ? `${filledFields}/35`
                 : `${filledFields} of 35 fields captured`}
@@ -108,7 +126,13 @@ export function BrandCoachHeader({
 
       <div className={isMobile ? 'flex flex-col items-end gap-1' : 'flex items-center gap-2'}>
         <div className="flex items-center gap-2">
-          <BrandMarkdownExport variant="outline" size="sm" fieldValues={fieldValues} />
+          <BrandMarkdownExport
+            ref={exportRef}
+            variant="outline"
+            size="sm"
+            fieldValues={fieldValues}
+            onBeforeExport={onBeforeExport}
+          />
           <VersionSwitcher />
         </div>
         <AvatarHeaderDropdown

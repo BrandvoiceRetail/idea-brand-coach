@@ -1,333 +1,310 @@
 /**
- * useExportReadiness - Computes export readiness assessment
+ * useExportReadiness Hook
  *
- * Integration: Call this hook with fieldValues from useFieldExtraction.
- * Show ExportReadinessModal before calling downloadResponse.
- * Wire onExportAnyway to the existing downloadResponse action.
+ * Computes brand export readiness data by analyzing field completion
+ * across all 11 IDEA framework chapters. Returns:
+ * - Weighted completion percentage
+ * - Section-level warnings with severity
+ * - Strengths (sections >= 75% complete)
+ * - Quick wins (top 3 highest-weight empty fields)
+ *
+ * Used by ExportReadinessModal to show a pre-export readiness report.
  */
 
 import { useMemo } from 'react';
-import {
-  CHAPTER_FIELDS_MAP,
-  type Chapter,
-  type ChapterField,
-} from '@/config/chapterFields';
+import { CHAPTER_FIELDS_MAP, getChaptersInOrder } from '@/config/chapterFields';
+import type { Chapter, ChapterField } from '@/config/chapterFields';
 
-// ---------------------------------------------------------------------------
-// Section batch config (mirrors MarkdownExportService.SECTION_BATCHES)
-// ---------------------------------------------------------------------------
+// ============================================================================
+// Types
+// ============================================================================
 
-interface SectionFieldMapping {
-  id: string;
-  label: string;
-  /** Field IDs that feed this document section */
-  fieldIds: string[];
-  dependsOn?: string[];
+/** Severity level for section warnings */
+export type WarningSeverity = 'critical' | 'warning' | 'info';
+
+/** A warning about incomplete section content */
+export interface SectionWarning {
+  /** Chapter that has the gap */
+  chapterId: string;
+  /** Chapter title for display */
+  chapterTitle: string;
+  /** IDEA pillar this chapter belongs to */
+  pillar: string;
+  /** How severe the gap is */
+  severity: WarningSeverity;
+  /** Human-readable description of what's missing */
+  message: string;
+  /** Completion percentage for this section (0-100) */
+  completionPercent: number;
+  /** Count of missing required fields */
+  missingRequiredCount: number;
+  /** Count of missing optional fields */
+  missingOptionalCount: number;
 }
+
+/** A section that is at least 75% complete */
+export interface SectionStrength {
+  /** Chapter ID */
+  chapterId: string;
+  /** Chapter title */
+  chapterTitle: string;
+  /** IDEA pillar */
+  pillar: string;
+  /** Completion percentage */
+  completionPercent: number;
+}
+
+/** A high-impact empty field the user can quickly fill */
+export interface QuickWin {
+  /** Field ID for navigation */
+  fieldId: string;
+  /** Field label for display */
+  fieldLabel: string;
+  /** Chapter this field belongs to */
+  chapterId: string;
+  /** Chapter title */
+  chapterTitle: string;
+  /** Why filling this field matters */
+  impactDescription: string;
+  /** Weight/importance of this field (higher = more impactful) */
+  weight: number;
+}
+
+/** Complete readiness assessment returned by the hook */
+export interface ExportReadiness {
+  /** Weighted overall completion percentage (0-100) */
+  completionPercent: number;
+  /** Total fields across all chapters */
+  totalFields: number;
+  /** Number of filled fields */
+  filledFields: number;
+  /** Sections with gaps, sorted by severity */
+  warnings: SectionWarning[];
+  /** Sections >= 75% complete */
+  strengths: SectionStrength[];
+  /** Top 3 highest-weight empty fields */
+  quickWins: QuickWin[];
+  /** Whether brand is considered "ready" (>= 60% complete, no critical warnings) */
+  isReady: boolean;
+}
+
+// ============================================================================
+// Weight Configuration
+// ============================================================================
 
 /**
- * Maps each export document section to the brand-data fields it relies on.
- * Derived from SECTION_BATCHES in MarkdownExportService and the edge
- * function prompts that consume each field.
+ * Pillar weights reflect strategic importance in the IDEA framework.
+ * Foundation chapters are weighted highest because everything builds on them.
  */
-const SECTION_FIELD_MAP: SectionFieldMapping[] = [
-  {
-    id: 'idea_overview',
-    label: 'IDEA Framework Overview',
-    fieldIds: [
-      'brandPurpose', 'brandVision', 'brandMission', 'brandValues',
-      'positioningStatement', 'demographics', 'psychographics',
-    ],
-    dependsOn: ['customer_avatar', 'brand_purpose', 'brand_positioning', 'brand_essence'],
-  },
-  {
-    id: 'customer_avatar',
-    label: 'Customer Understanding',
-    fieldIds: ['demographics', 'psychographics', 'painPoints', 'goals'],
-  },
-  {
-    id: 'emotional_triggers',
-    label: 'Emotional Triggers',
-    fieldIds: ['emotionalConnection', 'emotionalTriggers', 'customerNeeds'],
-  },
-  {
-    id: 'customer_journey',
-    label: 'Customer Journey',
-    fieldIds: ['customerJourney', 'experiencePillars', 'preferredChannels'],
-  },
-  {
-    id: 'brand_purpose',
-    label: 'Brand Purpose & Vision',
-    fieldIds: ['brandPurpose', 'brandVision', 'brandMission'],
-  },
-  {
-    id: 'brand_mission',
-    label: 'Brand Mission & Values',
-    fieldIds: ['brandMission', 'brandValues', 'brandPromise'],
-  },
-  {
-    id: 'brand_positioning',
-    label: 'Brand Positioning',
-    fieldIds: ['positioningStatement', 'uniqueValue', 'differentiators'],
-  },
-  {
-    id: 'brand_personality',
-    label: 'Brand Personality & Voice',
-    fieldIds: ['brandPersonality', 'brandVoice', 'brandArchetype'],
-  },
-  {
-    id: 'brand_essence',
-    label: 'Brand Essence & DNA',
-    fieldIds: [
-      'brandPurpose', 'brandMission', 'positioningStatement',
-      'brandPersonality', 'brandVoice',
-    ],
-    dependsOn: ['brand_purpose', 'brand_mission', 'brand_positioning', 'brand_personality'],
-  },
-  {
-    id: 'brand_story',
-    label: 'Brand Story',
-    fieldIds: ['brandStory', 'brandValues', 'brandPromise', 'brandPurpose'],
-  },
-  {
-    id: 'messaging_framework',
-    label: 'Messaging Framework',
-    fieldIds: [
-      'positioningStatement', 'uniqueValue', 'brandVoice',
-      'emotionalConnection', 'demographics',
-    ],
-  },
-  {
-    id: 'agentic_commerce',
-    label: 'Agentic Commerce',
-    fieldIds: [
-      'functionalIntent', 'emotionalIntent', 'identityIntent', 'socialIntent',
-      'marketInsight', 'consumerInsight',
-    ],
-  },
-  {
-    id: 'implementation',
-    label: 'Implementation Roadmap',
-    fieldIds: [
-      'expertise', 'credibilityMarkers', 'authenticityPrinciples',
-      'transparency', 'socialProof', 'brandConsistency',
-    ],
-    dependsOn: ['brand_essence'],
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Weight configuration
-// ---------------------------------------------------------------------------
-
-/** Fields that get elevated weight in the overall score. */
-const FIELD_WEIGHTS: Record<string, number> = {
-  // 3x — foundation for synthesis
-  brandPurpose: 3,
-  brandVision: 3,
-  brandMission: 3,
-  // 2x — positioning & avatar demographics
-  positioningStatement: 2,
-  demographics: 2,
-  psychographics: 2,
+const PILLAR_WEIGHTS: Record<string, number> = {
+  foundation: 1.5,
+  insight: 1.3,
+  distinctive: 1.2,
+  empathy: 1.0,
+  authentic: 1.0,
 };
 
-const DEFAULT_WEIGHT = 1;
+/** Required fields count 2x toward weight */
+const REQUIRED_FIELD_MULTIPLIER = 2;
 
-// ---------------------------------------------------------------------------
-// Public types
-// ---------------------------------------------------------------------------
+/** Optional fields count 1x toward weight */
+const OPTIONAL_FIELD_MULTIPLIER = 1;
 
-export interface ExportReadiness {
-  overallPercent: number;
-  sectionReadiness: SectionScore[];
-  warnings: ReadinessWarning[];
-  strengths: string[];
-  quickWins: QuickWin[];
-}
+/**
+ * Impact descriptions for quick wins, keyed by field ID.
+ * Falls back to generic description using the chapter context.
+ */
+const FIELD_IMPACT_DESCRIPTIONS: Record<string, string> = {
+  brandPurpose: 'Your brand purpose anchors every strategic decision in the export',
+  brandVision: 'A clear vision statement gives your brand document directional clarity',
+  brandMission: 'The mission statement translates your purpose into actionable strategy',
+  brandValues: 'Core values create consistency across all brand touchpoints',
+  brandStory: 'Your brand story makes the export compelling and memorable',
+  brandPromise: 'A strong brand promise sets clear customer expectations',
+  demographics: 'Customer demographics ensure your strategy targets the right audience',
+  psychographics: 'Psychographic data reveals the deeper motivations behind customer behavior',
+  painPoints: 'Defined pain points focus your value proposition on real problems',
+  goals: 'Customer goals align your brand with what matters most to your audience',
+  marketInsight: 'Market analysis validates your positioning against the competitive landscape',
+  consumerInsight: 'Consumer behavior insights sharpen your messaging strategy',
+  positioningStatement: 'Your positioning statement is the strategic heart of the brand export',
+  uniqueValue: 'A clear UVP differentiates your brand document from generic strategies',
+  differentiators: 'Key differentiators prove why your brand stands apart',
+  brandPersonality: 'Personality traits make your brand voice consistent and recognizable',
+  brandVoice: 'A defined brand voice ensures coherent communication across channels',
+  emotionalConnection: 'The emotional hook creates memorable brand experiences in the export',
+};
 
-export interface SectionScore {
-  sectionId: string;
-  sectionLabel: string;
-  percent: number;
-  fieldsFilled: number;
-  fieldsTotal: number;
-}
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
-export interface ReadinessWarning {
-  severity: 'info' | 'warning' | 'critical';
-  section: string;
-  missingFields: string[];
-  impact: string;
-}
-
-export interface QuickWin {
-  fieldId: string;
-  fieldLabel: string;
-  chapterId: string;
-  impact: string;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Build a flat lookup: fieldId -> { field, chapter } */
-function buildFieldLookup(): Map<string, { field: ChapterField; chapter: Chapter }> {
-  const lookup = new Map<string, { field: ChapterField; chapter: Chapter }>();
-  for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
-    for (const field of chapter.fields) {
-      lookup.set(field.id, { field, chapter });
-    }
-  }
-  return lookup;
-}
-
+/** Check whether a field value is considered "filled" */
 function isFieldFilled(value: string | string[] | undefined): boolean {
   if (value === undefined || value === null) return false;
   if (Array.isArray(value)) return value.length > 0 && value.some(v => v.trim().length > 0);
-  return typeof value === 'string' && value.trim().length > 0;
+  return String(value).trim().length > 0;
 }
 
-function severityForField(fieldId: string): 'critical' | 'warning' | 'info' {
-  const weight = FIELD_WEIGHTS[fieldId] ?? DEFAULT_WEIGHT;
-  if (weight >= 3) return 'critical';
-  if (weight >= 2) return 'warning';
+/** Calculate completion percentage for a single chapter */
+function computeChapterCompletion(
+  chapter: Chapter,
+  fieldValues: Record<string, string | string[]>
+): { completionPercent: number; filledCount: number; totalCount: number; missingRequired: ChapterField[]; missingOptional: ChapterField[] } {
+  const totalCount = chapter.fields.length;
+  if (totalCount === 0) return { completionPercent: 100, filledCount: 0, totalCount: 0, missingRequired: [], missingOptional: [] };
+
+  let filledCount = 0;
+  const missingRequired: ChapterField[] = [];
+  const missingOptional: ChapterField[] = [];
+
+  for (const field of chapter.fields) {
+    if (isFieldFilled(fieldValues[field.id])) {
+      filledCount++;
+    } else if (field.required) {
+      missingRequired.push(field);
+    } else {
+      missingOptional.push(field);
+    }
+  }
+
+  const completionPercent = Math.round((filledCount / totalCount) * 100);
+  return { completionPercent, filledCount, totalCount, missingRequired, missingOptional };
+}
+
+/** Determine warning severity based on completion and required field gaps */
+function determineSeverity(completionPercent: number, missingRequiredCount: number): WarningSeverity {
+  if (completionPercent === 0) return 'critical';
+  if (missingRequiredCount > 0 && completionPercent < 50) return 'critical';
+  if (missingRequiredCount > 0) return 'warning';
   return 'info';
 }
 
-function impactTextForSection(sectionLabel: string, missingCount: number, totalCount: number): string {
-  if (missingCount === totalCount) {
-    return `${sectionLabel} section will contain placeholder guidance instead of your specific brand direction`;
+/** Build a human-readable warning message */
+function buildWarningMessage(missingRequiredCount: number, missingOptionalCount: number, chapterTitle: string): string {
+  const parts: string[] = [];
+  if (missingRequiredCount > 0) {
+    parts.push(`${missingRequiredCount} required field${missingRequiredCount > 1 ? 's' : ''} missing`);
   }
-  return `${sectionLabel} section will be partially generated — some content will use generic guidance`;
+  if (missingOptionalCount > 0) {
+    parts.push(`${missingOptionalCount} optional field${missingOptionalCount > 1 ? 's' : ''} empty`);
+  }
+  return `${chapterTitle}: ${parts.join(', ')}`;
 }
 
-function impactTextForQuickWin(fieldLabel: string, sectionLabels: string[]): string {
-  if (sectionLabels.length === 0) return `Completing ${fieldLabel} improves your overall brand strategy`;
-  if (sectionLabels.length === 1) return `Feeds into ${sectionLabels[0]}`;
-  return `Feeds into ${sectionLabels.slice(0, 2).join(' and ')}${sectionLabels.length > 2 ? ` (+${sectionLabels.length - 2} more)` : ''}`;
+/** Get impact description for a field, with fallback */
+function getImpactDescription(fieldId: string, chapterTitle: string): string {
+  return FIELD_IMPACT_DESCRIPTIONS[fieldId]
+    ?? `Completing this field strengthens your ${chapterTitle} section`;
 }
 
-// ---------------------------------------------------------------------------
+/** Calculate weighted field importance */
+function calculateFieldWeight(field: ChapterField, pillarWeight: number): number {
+  const requiredMultiplier = field.required ? REQUIRED_FIELD_MULTIPLIER : OPTIONAL_FIELD_MULTIPLIER;
+  return pillarWeight * requiredMultiplier;
+}
+
+// ============================================================================
 // Hook
-// ---------------------------------------------------------------------------
+// ============================================================================
 
-export function useExportReadiness(
-  fieldValues: Record<string, string | string[]>
-): ExportReadiness {
-  return useMemo(() => computeReadiness(fieldValues), [fieldValues]);
+interface UseExportReadinessParams {
+  /** Current field values keyed by field ID */
+  fieldValues: Record<string, string | string[]>;
 }
 
-/**
- * Pure computation — separated for testability.
- */
-export function computeReadiness(
-  fieldValues: Record<string, string | string[]>
-): ExportReadiness {
-  const fieldLookup = buildFieldLookup();
+export function useExportReadiness({ fieldValues }: UseExportReadinessParams): ExportReadiness {
+  return useMemo(() => {
+    const chapters = getChaptersInOrder();
+    const warnings: SectionWarning[] = [];
+    const strengths: SectionStrength[] = [];
+    const candidateQuickWins: QuickWin[] = [];
 
-  // -- Overall percent (weighted) --
-  let weightedFilled = 0;
-  let weightedTotal = 0;
+    let totalWeightedScore = 0;
+    let totalWeightedMax = 0;
+    let totalFields = 0;
+    let filledFields = 0;
 
-  for (const [fieldId] of fieldLookup) {
-    const weight = FIELD_WEIGHTS[fieldId] ?? DEFAULT_WEIGHT;
-    weightedTotal += weight;
-    if (isFieldFilled(fieldValues[fieldId])) {
-      weightedFilled += weight;
+    for (const chapter of chapters) {
+      const pillarWeight = PILLAR_WEIGHTS[chapter.pillar] ?? 1.0;
+      const result = computeChapterCompletion(chapter, fieldValues);
+
+      totalFields += result.totalCount;
+      filledFields += result.filledCount;
+
+      // Weighted score: each field contributes its weight when filled
+      for (const field of chapter.fields) {
+        const weight = calculateFieldWeight(field, pillarWeight);
+        totalWeightedMax += weight;
+        if (isFieldFilled(fieldValues[field.id])) {
+          totalWeightedScore += weight;
+        }
+      }
+
+      // Strengths: sections >= 75% complete
+      if (result.completionPercent >= 75) {
+        strengths.push({
+          chapterId: chapter.id,
+          chapterTitle: chapter.title,
+          pillar: chapter.pillar,
+          completionPercent: result.completionPercent,
+        });
+      }
+
+      // Warnings: sections with any gaps
+      if (result.completionPercent < 100) {
+        const severity = determineSeverity(result.completionPercent, result.missingRequired.length);
+        warnings.push({
+          chapterId: chapter.id,
+          chapterTitle: chapter.title,
+          pillar: chapter.pillar,
+          severity,
+          message: buildWarningMessage(result.missingRequired.length, result.missingOptional.length, chapter.title),
+          completionPercent: result.completionPercent,
+          missingRequiredCount: result.missingRequired.length,
+          missingOptionalCount: result.missingOptional.length,
+        });
+      }
+
+      // Quick win candidates: empty fields with their weights
+      for (const field of [...result.missingRequired, ...result.missingOptional]) {
+        const weight = calculateFieldWeight(field, pillarWeight);
+        candidateQuickWins.push({
+          fieldId: field.id,
+          fieldLabel: field.label,
+          chapterId: chapter.id,
+          chapterTitle: chapter.title,
+          impactDescription: getImpactDescription(field.id, chapter.title),
+          weight,
+        });
+      }
     }
-  }
 
-  const overallPercent = weightedTotal > 0
-    ? Math.round((weightedFilled / weightedTotal) * 100)
-    : 0;
+    // Sort warnings: critical first, then warning, then info
+    const severityOrder: Record<WarningSeverity, number> = { critical: 0, warning: 1, info: 2 };
+    warnings.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 
-  // -- Section readiness --
-  const sectionReadiness: SectionScore[] = SECTION_FIELD_MAP.map(section => {
-    const uniqueFields = [...new Set(section.fieldIds)];
-    const filled = uniqueFields.filter(fId => isFieldFilled(fieldValues[fId])).length;
+    // Sort quick wins by weight descending, take top 3
+    candidateQuickWins.sort((a, b) => b.weight - a.weight);
+    const quickWins = candidateQuickWins.slice(0, 3);
+
+    // Weighted completion percentage
+    const completionPercent = totalWeightedMax > 0
+      ? Math.round((totalWeightedScore / totalWeightedMax) * 100)
+      : 0;
+
+    // Ready = >= 60% complete and no critical warnings
+    const hasCritical = warnings.some(w => w.severity === 'critical');
+    const isReady = completionPercent >= 60 && !hasCritical;
+
     return {
-      sectionId: section.id,
-      sectionLabel: section.label,
-      percent: uniqueFields.length > 0 ? Math.round((filled / uniqueFields.length) * 100) : 100,
-      fieldsFilled: filled,
-      fieldsTotal: uniqueFields.length,
+      completionPercent,
+      totalFields,
+      filledFields,
+      warnings,
+      strengths,
+      quickWins,
+      isReady,
     };
-  });
-
-  // -- Warnings --
-  const warnings: ReadinessWarning[] = [];
-
-  for (const section of SECTION_FIELD_MAP) {
-    const uniqueFields = [...new Set(section.fieldIds)];
-    const missing = uniqueFields.filter(fId => !isFieldFilled(fieldValues[fId]));
-    if (missing.length === 0) continue;
-
-    // Use highest severity among missing fields
-    let maxSeverity: 'info' | 'warning' | 'critical' = 'info';
-    for (const fId of missing) {
-      const s = severityForField(fId);
-      if (s === 'critical') { maxSeverity = 'critical'; break; }
-      if (s === 'warning' && maxSeverity !== 'critical') maxSeverity = 'warning';
-    }
-
-    warnings.push({
-      severity: maxSeverity,
-      section: section.label,
-      missingFields: missing,
-      impact: impactTextForSection(section.label, missing.length, uniqueFields.length),
-    });
-  }
-
-  // Sort: critical first, then warning, then info
-  const severityOrder: Record<string, number> = { critical: 0, warning: 1, info: 2 };
-  warnings.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
-
-  // -- Strengths --
-  const strengths: string[] = sectionReadiness
-    .filter(s => s.percent >= 75)
-    .map(s => `${s.sectionLabel} is well-developed (${s.percent}% complete)`);
-
-  // -- Quick wins: highest-weight empty fields, top 3 --
-  const emptyFields: Array<{
-    fieldId: string;
-    weight: number;
-    field: ChapterField;
-    chapter: Chapter;
-    sections: string[];
-  }> = [];
-
-  for (const [fieldId, meta] of fieldLookup) {
-    if (isFieldFilled(fieldValues[fieldId])) continue;
-
-    const sections = SECTION_FIELD_MAP
-      .filter(s => s.fieldIds.includes(fieldId))
-      .map(s => s.label);
-
-    emptyFields.push({
-      fieldId,
-      weight: FIELD_WEIGHTS[fieldId] ?? DEFAULT_WEIGHT,
-      field: meta.field,
-      chapter: meta.chapter,
-      sections,
-    });
-  }
-
-  emptyFields.sort((a, b) => b.weight - a.weight);
-
-  const quickWins: QuickWin[] = emptyFields.slice(0, 3).map(entry => ({
-    fieldId: entry.fieldId,
-    fieldLabel: entry.field.label,
-    chapterId: entry.chapter.id,
-    impact: impactTextForQuickWin(entry.field.label, entry.sections),
-  }));
-
-  return {
-    overallPercent,
-    sectionReadiness,
-    warnings,
-    strengths,
-    quickWins,
-  };
+  }, [fieldValues]);
 }

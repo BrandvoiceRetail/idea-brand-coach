@@ -1,161 +1,124 @@
 /**
  * GhostTextFieldWrapper Component
  *
- * Wraps chapter panel Input/Textarea fields with ghost-text autocomplete
- * showing pending extracted values from AI. Uses react-copilot-autocomplete's
- * asChild pattern to overlay suggestion text on existing form controls.
+ * Wraps an Input or Textarea field to overlay ghost (autocomplete) text
+ * for pending AI-extracted values. The ghost text appears at 40% opacity
+ * in the field when:
+ *   - A pending extracted value exists for this field
+ *   - The field is currently empty (no user-entered value)
  *
- * - Tab: accept the pending value into the field (calls onChange)
- * - Any typing: dismisses the ghost text
- * - Array values: displayed joined with ", " for preview
+ * Keyboard interactions:
+ *   - Tab: accepts the ghost value (calls onAccept)
+ *   - Escape: dismisses the ghost text (calls onDismiss if provided)
+ *   - Any typing: the ghost text is ignored; user input takes precedence
+ *
+ * Mobile behavior:
+ *   - Ghost text is hidden on mobile (viewport < 768px) since narrow
+ *     screens make the overlay confusing. The `hidden md:block` class
+ *     on the overlay handles this via Tailwind responsive utilities.
  */
 
-import React, { useEffect, useRef, useCallback } from 'react';
-import Autocomplete, {
-  type AutocompleteInputRef,
-  type AutocompleteTextareaRef,
-} from 'react-copilot-autocomplete';
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
-// ============================================================================
-// Types
-// ============================================================================
+/**
+ * Props for GhostTextFieldWrapper
+ */
+export interface GhostTextFieldWrapperProps {
+  /** The pending AI-extracted value to show as ghost text */
+  pendingValue: string;
 
-interface GhostTextFieldWrapperProps {
-  /** The field identifier (used for keying) */
-  fieldId: string;
-  /** Pending AI-extracted value to show as ghost text */
-  pendingValue?: string | string[];
-  /** Called when the user accepts the ghost suggestion via Tab */
-  onAccept?: (fieldId: string, value: string | string[]) => void;
-  /** The existing Input or Textarea element to wrap */
+  /** Called when the user accepts the ghost value (Tab key) */
+  onAccept: (value: string) => void;
+
+  /** Called when the user dismisses the ghost text (Escape key) */
+  onDismiss?: () => void;
+
+  /** The wrapped input/textarea element */
   children: React.ReactElement;
-}
 
-type AutocompleteRef = AutocompleteInputRef | AutocompleteTextareaRef;
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-/**
- * Format a pending value for display as ghost text.
- * Arrays are joined with ", " for a readable preview.
- */
-function formatPendingValue(value: string | string[]): string {
-  if (Array.isArray(value)) {
-    return value.join(', ');
-  }
-  return value;
+  /** Additional class names for the wrapper container */
+  className?: string;
 }
 
 /**
- * Detect whether the child element is a textarea (vs input).
+ * GhostTextFieldWrapper
+ *
+ * Renders ghost (autocomplete) text over an empty input field.
+ * The ghost text is positioned absolutely to overlay the input,
+ * matching its padding and font so text aligns perfectly.
+ *
+ * @example
+ * ```tsx
+ * <GhostTextFieldWrapper
+ *   pendingValue="To inspire innovation"
+ *   onAccept={(val) => onChange(fieldId, val)}
+ * >
+ *   <Input value="" onChange={handleChange} placeholder="Enter brand purpose" />
+ * </GhostTextFieldWrapper>
+ * ```
  */
-function isTextareaChild(child: React.ReactElement): boolean {
-  const type = child.type;
-  if (typeof type === 'string') {
-    return type === 'textarea';
-  }
-  // Check displayName for wrapped components like shadcn Textarea
-  if (typeof type === 'object' && type !== null && 'displayName' in type) {
-    return (type as { displayName?: string }).displayName === 'Textarea';
-  }
-  return false;
-}
-
-// ============================================================================
-// Component
-// ============================================================================
-
 export function GhostTextFieldWrapper({
-  fieldId,
   pendingValue,
   onAccept,
+  onDismiss,
   children,
+  className,
 }: GhostTextFieldWrapperProps): JSX.Element {
-  const autocompleteRef = useRef<AutocompleteRef>(null);
-  const formattedValue = pendingValue ? formatPendingValue(pendingValue) : '';
-  const hasPending = formattedValue.trim() !== '';
-  const isTextarea = isTextareaChild(children);
+  const [isDismissed, setIsDismissed] = React.useState(false);
 
-  // Push the pending value into the autocomplete overlay
-  useEffect(() => {
-    if (!autocompleteRef.current) return;
+  // Reset dismissed state when pendingValue changes
+  React.useEffect(() => {
+    setIsDismissed(false);
+  }, [pendingValue]);
 
-    if (hasPending) {
-      autocompleteRef.current.setSuggestion(formattedValue);
-    } else {
-      autocompleteRef.current.clearSuggestion();
+  /**
+   * Handle keyboard events on the wrapper to intercept Tab and Escape
+   * before they reach the child input.
+   */
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
+    if (isDismissed) return;
+
+    if (e.key === 'Tab' && pendingValue) {
+      e.preventDefault();
+      onAccept(pendingValue);
+    } else if (e.key === 'Escape' && pendingValue) {
+      e.preventDefault();
+      setIsDismissed(true);
+      onDismiss?.();
     }
-  }, [formattedValue, hasPending]);
+  };
 
-  // When Tab completes the suggestion, notify the parent with the original value
-  const handleCompletion = useCallback(
-    ({
-      setSuggestion,
-      value: currentValue,
-    }: {
-      value: string;
-      currentSuggestion: string;
-      setSuggestion: (s: string) => void;
-      onChangeEvent: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>;
-    }): void => {
-      // If user types, dismiss the ghost text
-      if (currentValue.trim() !== '') {
-        setSuggestion('');
-      } else if (hasPending) {
-        setSuggestion(formattedValue);
-      }
-    },
-    [hasPending, formattedValue],
-  );
-
-  // Intercept Tab to fire onAccept with the original (non-formatted) value
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLElement>): void => {
-      if (e.key === 'Tab' && hasPending) {
-        onAccept?.(fieldId, pendingValue!);
-      }
-
-      // Escape dismisses ghost text
-      if (e.key === 'Escape' && autocompleteRef.current) {
-        autocompleteRef.current.clearSuggestion();
-      }
-
-      // Forward the original child's onKeyDown if present
-      const childProps = children.props as Record<string, unknown>;
-      if (typeof childProps.onKeyDown === 'function') {
-        (childProps.onKeyDown as (e: React.KeyboardEvent<HTMLElement>) => void)(e);
-      }
-    },
-    [hasPending, pendingValue, fieldId, onAccept, children.props],
-  );
-
-  // If there's no pending value, render the child as-is (no wrapper overhead)
-  if (!hasPending) {
-    return children;
-  }
-
-  // Clone child to inject the onKeyDown interceptor
-  const enhancedChild = React.cloneElement(children, {
-    onKeyDown: handleKeyDown,
-  } as Partial<React.HTMLAttributes<HTMLElement>>);
+  const shouldShowGhost = Boolean(pendingValue) && !isDismissed;
 
   return (
-    <Autocomplete
-      ref={autocompleteRef}
-      asChild
-      as={isTextarea ? 'textarea' : 'input'}
-      autocompleteEnabled={hasPending}
-      handleCompletion={handleCompletion}
-      completionShortcut={new Set(['Tab'])}
-      styles={{
-        suggestion: {
-          opacity: 0.4,
-        },
-      }}
+    <div
+      className={cn('relative', className)}
+      onKeyDown={handleKeyDown}
     >
-      {enhancedChild}
-    </Autocomplete>
+      {children}
+
+      {shouldShowGhost && (
+        <div
+          className="hidden md:block absolute inset-0 pointer-events-none select-none"
+          aria-hidden="true"
+        >
+          <div
+            className="px-3 py-2 text-sm text-muted-foreground/40 truncate"
+            data-testid="ghost-text-overlay"
+          >
+            {pendingValue}
+          </div>
+        </div>
+      )}
+
+      {shouldShowGhost && (
+        <div className="hidden md:block text-xs text-muted-foreground/60 mt-1" data-testid="ghost-text-hint">
+          Press <kbd className="px-1 py-0.5 rounded border bg-muted text-xs">Tab</kbd> to accept
+        </div>
+      )}
+    </div>
   );
 }
+
+GhostTextFieldWrapper.displayName = 'GhostTextFieldWrapper';

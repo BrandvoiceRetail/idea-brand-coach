@@ -5,7 +5,7 @@
  * Integrates with MarkdownExportService and handles user interactions.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -14,8 +14,6 @@ import { useBrand } from '@/contexts/BrandContext';
 import { MarkdownExportService } from './MarkdownExportService';
 import { KnowledgeBaseFactory } from '@/lib/knowledge-base';
 import { SupabaseChatService } from '@/services/SupabaseChatService';
-import { useExportReadiness } from '@/hooks/v2/useExportReadiness';
-import { ExportReadinessModal } from '@/components/v2/ExportReadinessModal';
 
 /** Progress stages shown during V2 document generation */
 const PROGRESS_STAGES = [
@@ -28,6 +26,12 @@ const PROGRESS_STAGES = [
   'Running coherence pass...',
   'Finalising your document...',
 ] as const;
+
+/** Imperative handle for triggering export programmatically */
+export interface BrandMarkdownExportRef {
+  /** Start the export process programmatically */
+  startExport: () => Promise<void>;
+}
 
 interface BrandMarkdownExportProps {
   /** Company name for filename */
@@ -45,28 +49,29 @@ interface BrandMarkdownExportProps {
   /** Include chat conversation insights */
   includeChats?: boolean;
 
-  /** Field values for export readiness check. When provided, shows readiness modal before export. */
-  fieldValues?: Record<string, string | string[]>;
+  /**
+   * If provided, this callback is invoked when the user clicks the export button
+   * INSTEAD of starting the export directly. Use this to gate export behind a
+   * readiness check (e.g., opening ExportReadinessModal).
+   */
+  onBeforeExport?: () => void;
 }
 
-export function BrandMarkdownExport({
-  companyName,
-  variant = 'outline',
-  size = 'default',
-  fullWidth = false,
-  includeChats = true,
-  fieldValues,
-}: BrandMarkdownExportProps): JSX.Element {
+export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkdownExportProps>(
+  function BrandMarkdownExport({
+    companyName,
+    variant = 'outline',
+    size = 'default',
+    fullWidth = false,
+    includeChats = true,
+    onBeforeExport,
+  }: BrandMarkdownExportProps, ref): JSX.Element {
   const { toast } = useToast();
   const { user } = useAuth();
   const { brandData } = useBrand();
   const [isExporting, setIsExporting] = useState(false);
   const [progressStage, setProgressStage] = useState(0);
-  const [showReadinessModal, setShowReadinessModal] = useState(false);
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Readiness assessment — only computed when fieldValues provided
-  const readiness = useExportReadiness(fieldValues ?? {});
 
   // Cycle through progress stages while exporting
   useEffect(() => {
@@ -90,6 +95,19 @@ export function BrandMarkdownExport({
       }
     };
   }, [isExporting]);
+
+  // Expose startExport for programmatic triggering (e.g., from ExportReadinessModal)
+  useImperativeHandle(ref, () => ({
+    startExport: handleExport,
+  }));
+
+  const handleButtonClick = (): void => {
+    if (onBeforeExport) {
+      onBeforeExport();
+    } else {
+      handleExport();
+    }
+  };
 
   const handleExport = async (): Promise<void> => {
     if (!user) {
@@ -161,18 +179,10 @@ export function BrandMarkdownExport({
     }
   };
 
-  const handleClick = (): void => {
-    if (fieldValues) {
-      setShowReadinessModal(true);
-    } else {
-      handleExport();
-    }
-  };
-
   return (
     <div className={fullWidth ? 'w-full' : ''}>
       <Button
-        onClick={handleClick}
+        onClick={handleButtonClick}
         variant={variant}
         size={size}
         className={fullWidth ? 'w-full' : ''}
@@ -195,18 +205,6 @@ export function BrandMarkdownExport({
           {PROGRESS_STAGES[progressStage]}
         </p>
       )}
-      {fieldValues && (
-        <ExportReadinessModal
-          open={showReadinessModal}
-          onOpenChange={setShowReadinessModal}
-          readiness={readiness}
-          onExportAnyway={() => {
-            setShowReadinessModal(false);
-            handleExport();
-          }}
-          onContinueBuilding={() => setShowReadinessModal(false)}
-        />
-      )}
     </div>
   );
-}
+});

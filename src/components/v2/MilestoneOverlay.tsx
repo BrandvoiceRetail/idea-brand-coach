@@ -1,135 +1,183 @@
 /**
  * MilestoneOverlay Component
  *
- * Displays celebration effects when field count milestones are reached.
- * - 10 fields: subtle pulse badge + toast
- * - 20 fields: confetti burst + toast
- * - 35 fields: full confetti + prominent toast
+ * Renders milestone celebrations using canvas-confetti.
+ * Respects prefers-reduced-motion: when active, shows toast only (no animation).
  *
- * Respects prefers-reduced-motion by showing toast only.
- * Auto-dismisses after 4 seconds or on click.
+ * Milestone tiers:
+ * - 10 fields: Triggers pulse CSS class on progress bar + toast
+ * - 20 fields: Confetti burst + toast
+ * - 35 fields: Full confetti celebration + toast (gold progress handled via CSS class)
+ *
+ * Uses Heart Red + Gold palette from design tokens (--heart-red, --gold-warm).
  */
 
 import { useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
+import type { MilestoneData } from '@/hooks/v2/useMilestone';
 
-interface MilestoneOverlayProps {
-  milestone: 10 | 20 | 35 | null;
-  onDismiss: () => void;
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface MilestoneOverlayProps {
+  /** Currently active milestone (null = hidden) */
+  activeMilestone: MilestoneData | null;
+
+  /** Whether the user prefers reduced motion */
+  prefersReducedMotion: boolean;
+
+  /** Called when the celebration finishes or the toast appears */
+  onComplete: () => void;
 }
 
-const MESSAGES: Record<10 | 20 | 35, string> = {
-  10: '10 fields captured \u2014 your brand foundation is taking shape!',
-  20: '20 fields \u2014 over halfway! Your brand strategy is really coming together.',
-  35: 'All 35 fields captured! Your complete brand strategy is ready to export.',
-};
+// ============================================================================
+// Confetti palettes using Heart Red + Gold Warm tokens
+// ============================================================================
 
-const AUTO_DISMISS_MS = 4000;
+/** HSL(0 84% 50%) -> #E01414 and HSL(43 96% 56%) -> #F5B91E approximately */
+const HEART_RED = '#E01414';
+const GOLD_WARM = '#F5B91E';
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CONFETTI_COLORS_20 = [HEART_RED, GOLD_WARM, '#FF6B6B', '#FFD700'];
+const CONFETTI_COLORS_35 = [HEART_RED, GOLD_WARM, '#FF6B6B', '#FFD700', '#FFA500', '#FF4500'];
+
+// ============================================================================
+// Confetti helpers
+// ============================================================================
+
+function fireBurst20(): void {
+  confetti({
+    particleCount: 80,
+    spread: 70,
+    origin: { y: 0.6 },
+    colors: CONFETTI_COLORS_20,
+    disableForReducedMotion: true,
+  });
 }
 
-function fireConfetti(milestone: 20 | 35): void {
-  const colors = ['#E02020', '#E8A817', '#22c55e'];
+function fireCelebration35(): void {
+  // First burst
+  confetti({
+    particleCount: 100,
+    spread: 100,
+    origin: { y: 0.5 },
+    colors: CONFETTI_COLORS_35,
+    disableForReducedMotion: true,
+  });
 
-  if (milestone === 20) {
+  // Delayed second burst from left
+  setTimeout(() => {
     confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.3 },
-      colors,
+      particleCount: 60,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.6 },
+      colors: CONFETTI_COLORS_35,
+      disableForReducedMotion: true,
     });
-  } else {
-    // 35 fields: longer, more particles
+  }, 250);
+
+  // Delayed third burst from right
+  setTimeout(() => {
     confetti({
-      particleCount: 200,
-      spread: 100,
-      origin: { y: 0.3 },
-      colors,
-      ticks: 300,
+      particleCount: 60,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.6 },
+      colors: CONFETTI_COLORS_35,
+      disableForReducedMotion: true,
     });
-    // Second burst for extra celebration
-    setTimeout(() => {
-      confetti({
-        particleCount: 100,
-        spread: 120,
-        origin: { y: 0.4 },
-        colors,
-        ticks: 200,
-      });
-    }, 300);
-  }
+  }, 400);
 }
 
-export function MilestoneOverlay({ milestone, onDismiss }: MilestoneOverlayProps): JSX.Element | null {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+// ============================================================================
+// Component
+// ============================================================================
+
+/**
+ * MilestoneOverlay handles visual celebration effects.
+ *
+ * It is invisible in the DOM (no rendered elements) — it uses canvas-confetti
+ * which draws on an auto-created canvas, and toasts via the toast system.
+ *
+ * @example
+ * ```tsx
+ * <MilestoneOverlay
+ *   activeMilestone={activeMilestone}
+ *   prefersReducedMotion={prefersReducedMotion}
+ *   onComplete={dismissMilestone}
+ * />
+ * ```
+ */
+export function MilestoneOverlay({
+  activeMilestone,
+  prefersReducedMotion,
+  onComplete,
+}: MilestoneOverlayProps): null {
+  const { toast } = useToast();
+  const lastFiredTier = useRef<number | null>(null);
 
   useEffect(() => {
-    if (milestone === null) return;
+    if (!activeMilestone) return;
+    if (lastFiredTier.current === activeMilestone.tier) return;
 
-    const reduced = prefersReducedMotion();
-    const message = MESSAGES[milestone];
+    lastFiredTier.current = activeMilestone.tier;
 
-    // Always show toast
-    if (milestone === 35) {
-      toast.success(message, { duration: AUTO_DISMISS_MS });
-    } else {
-      toast(message, { duration: AUTO_DISMISS_MS });
+    // Always show the toast (even with reduced motion)
+    toast({
+      title: getMilestoneTitle(activeMilestone.tier),
+      description: activeMilestone.message,
+    });
+
+    // Skip animations if the user prefers reduced motion
+    if (prefersReducedMotion) {
+      onComplete();
+      return;
     }
 
-    // Fire confetti for 20+ milestones (skip if reduced motion)
-    if (!reduced && (milestone === 20 || milestone === 35)) {
-      fireConfetti(milestone);
+    // Fire confetti based on tier
+    if (activeMilestone.tier === 20 && activeMilestone.showConfetti) {
+      fireBurst20();
+    } else if (activeMilestone.tier === 35 && activeMilestone.showConfetti) {
+      fireCelebration35();
     }
 
-    // Auto-dismiss
-    timerRef.current = setTimeout(onDismiss, AUTO_DISMISS_MS);
+    // Auto-dismiss after a delay so the pulse / gold has time to show
+    const dismissDelay = activeMilestone.tier === 35 ? 4000 : 3000;
+    const timer = setTimeout(() => {
+      onComplete();
+    }, dismissDelay);
 
-    return (): void => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, [milestone, onDismiss]);
+    return () => clearTimeout(timer);
+  }, [activeMilestone, prefersReducedMotion, onComplete, toast]);
 
-  if (milestone === null) return null;
+  // Reset lastFiredTier when milestone is cleared so it can fire again for
+  // a different avatar
+  useEffect(() => {
+    if (!activeMilestone) {
+      lastFiredTier.current = null;
+    }
+  }, [activeMilestone]);
 
-  // For milestone 10, render a subtle pulse badge overlay (click to dismiss)
-  // For 20+, confetti handles the visual; this is just a click target
-  if (milestone === 10) {
-    return (
-      <div
-        className="fixed inset-0 z-50 pointer-events-auto"
-        onClick={onDismiss}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e): void => {
-          if (e.key === 'Enter' || e.key === ' ') onDismiss();
-        }}
-        aria-label="Dismiss milestone celebration"
-      >
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 animate-pulse">
-          <div className="rounded-full bg-progress-gradient px-4 py-2 text-white text-sm font-medium shadow-lg">
-            10 fields captured!
-          </div>
-        </div>
-      </div>
-    );
+  // This component renders nothing — all effects are side-effects
+  return null;
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+function getMilestoneTitle(tier: number): string {
+  switch (tier) {
+    case 10:
+      return 'Milestone Reached!';
+    case 20:
+      return 'Great Progress!';
+    case 35:
+      return 'Brand Strategy Complete!';
+    default:
+      return 'Milestone!';
   }
-
-  // For 20 and 35, just provide a click-to-dismiss overlay (confetti handles visuals)
-  return (
-    <div
-      className="fixed inset-0 z-50 pointer-events-auto"
-      onClick={onDismiss}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e): void => {
-        if (e.key === 'Enter' || e.key === ' ') onDismiss();
-      }}
-      aria-label="Dismiss milestone celebration"
-    />
-  );
 }

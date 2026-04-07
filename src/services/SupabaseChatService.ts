@@ -88,11 +88,6 @@ export class SupabaseChatService implements IChatService {
     // Call edge function
     const responseData = await this.edgeFunctionService.callConsultant(ctx.body, ctx.authToken);
 
-    // Save response ID for chaining
-    if (ctx.sessionId && responseData.responseId) {
-      await this.edgeFunctionService.saveResponseId(ctx.sessionId, responseData.responseId);
-    }
-
     // Handle extracted fields
     const extractedFields = responseData.extractedFields || [];
     if (extractedFields.length > 0) {
@@ -185,7 +180,7 @@ export class SupabaseChatService implements IChatService {
     }
 
     // Save assistant response
-    await this.messageService.saveMessage({
+    const { error: assistantSaveError } = await this.messageService.saveMessage({
       user_id: ctx.userId,
       role: 'assistant',
       content: assistantContent,
@@ -195,10 +190,10 @@ export class SupabaseChatService implements IChatService {
       chapter_metadata: message.chapter_metadata,
       metadata: { extractedFields: result.extractedFields },
     });
-
-    // Save response ID for chaining
-    if (ctx.sessionId && result.responseId) {
-      await this.edgeFunctionService.saveResponseId(ctx.sessionId, result.responseId);
+    if (assistantSaveError) {
+      console.error('[sendMessageStreaming] Failed to save assistant message:', assistantSaveError);
+      callbacks.onError(assistantSaveError);
+      return;
     }
 
     // Generate title for new sessions
@@ -356,20 +351,16 @@ export class SupabaseChatService implements IChatService {
     }
 
     // Gather edge function prerequisites in parallel
-    const [previousResponseId, authSession, hasUploadedDocuments] = await Promise.all([
-      sessionId
-        ? this.edgeFunctionService.lookupPreviousResponseId(sessionId)
-        : Promise.resolve(undefined),
+    const [authSession, hasUploadedDocuments] = await Promise.all([
       this.edgeFunctionService.getAuthSession(),
       this.edgeFunctionService.checkUploadedDocuments(userId),
     ]);
 
-    const chatHistory = !previousResponseId
-      ? (await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT)).map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        }))
-      : undefined;
+    // Always send chat history — Claude has no server-side conversation state
+    const chatHistory = (await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT)).map(msg => ({
+      role: msg.role,
+      content: msg.content,
+    }));
 
     const body = this.edgeFunctionService.buildRequestBody({
       message: message.content,
@@ -377,7 +368,6 @@ export class SupabaseChatService implements IChatService {
       competitiveInsights: this.competitiveInsightsContext,
       metadata: message.metadata,
       hasUploadedDocuments,
-      previousResponseId,
       chatHistory,
       stream,
     });

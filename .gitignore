@@ -37,6 +37,7 @@ dist-ssr
 
 # Git worktrees
 .worktrees/
+.claude/worktrees/
 
 # Supabase CLI temp files
 supabase/.temp/

@@ -7,9 +7,10 @@ import { DocumentUpload } from '@/components/DocumentUpload';
 import { TwoPanelTemplate } from '@/components/templates/TwoPanelTemplate';
 import { ChapterSectionAccordion } from '@/components/v2/ChapterSectionAccordion';
 import { BrandCoachHeader } from '@/components/v2/BrandCoachHeader';
+import { ExportReadinessModal } from '@/components/v2/ExportReadinessModal';
 import { ChatMessageList } from '@/components/v2/ChatMessageList';
 import { ChatInputBar } from '@/components/v2/ChatInputBar';
-import { MilestoneCelebration } from '@/components/v2/MilestoneCelebration';
+import { MilestoneOverlay } from '@/components/v2/MilestoneOverlay';
 import { BatchReviewOrchestrator } from '@/components/v2/BatchReviewOrchestrator';
 import { useBrandCoachV2State } from '@/hooks/v2/useBrandCoachV2State';
 
@@ -63,8 +64,13 @@ const BrandCoachV2 = (): JSX.Element => {
     reviewEnrichmentStatus,
     reviewCount,
     isFieldLocked,
-    milestone,
-    dismissMilestone,
+    activeMilestone,
+    prefersReducedMotion,
+    isMilestoneComplete,
+    exportReadiness,
+    isExportReadinessOpen,
+    setIsExportReadinessOpen,
+    exportRef,
     ghostSuggestion,
     extractionQueue,
     extractionQueueIndex,
@@ -84,7 +90,6 @@ const BrandCoachV2 = (): JSX.Element => {
     handleClearChat,
     downloadResponse,
     setFieldManual,
-    acceptAllFields,
     handleReviewAccept,
     handleReviewReject,
     handleReviewAcceptAll,
@@ -98,6 +103,7 @@ const BrandCoachV2 = (): JSX.Element => {
     handleEnrichmentComplete,
     handleClearReviewContext,
     handleFieldClick,
+    dismissMilestone,
   } = useBrandCoachV2State();
 
   // ── Loading gate ──────────────────────────────────────────────────────
@@ -112,6 +118,11 @@ const BrandCoachV2 = (): JSX.Element => {
   // ── Render ────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-screen">
+      <MilestoneOverlay
+        activeMilestone={activeMilestone}
+        prefersReducedMotion={prefersReducedMotion}
+        onComplete={dismissMilestone}
+      />
       <BrandCoachHeader
         currentChapter={currentChapter}
         chapterProgress={progress}
@@ -125,6 +136,18 @@ const BrandCoachV2 = (): JSX.Element => {
         savedFieldCount={savedFieldCount}
         fieldValues={fieldValues}
         onCreateAvatar={handleCreateAvatar}
+        activeMilestone={activeMilestone}
+        isMilestoneComplete={isMilestoneComplete}
+        onBeforeExport={() => setIsExportReadinessOpen(true)}
+        exportRef={exportRef}
+      />
+
+      <ExportReadinessModal
+        isOpen={isExportReadinessOpen}
+        onClose={() => setIsExportReadinessOpen(false)}
+        onExportAnyway={() => exportRef.current?.startExport()}
+        onQuickWinClick={(fieldId) => handleFieldClick({ fieldId })}
+        readiness={exportReadiness}
       />
 
       <TwoPanelTemplate
@@ -178,7 +201,7 @@ const BrandCoachV2 = (): JSX.Element => {
               </div>
               <div className="flex items-center gap-2">
                 {pendingCount > 0 && (
-                  <Button variant="outline" size="sm" className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={acceptAllFields} title={`Accept all ${pendingCount} pending field(s)`}>
+                  <Button variant="outline" size="sm" className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={handleReviewAcceptAll} title={`Accept all ${pendingCount} pending field(s)`}>
                     <CheckCircle className="h-3 w-3 mr-1" />{pendingCount} pending
                   </Button>
                 )}
@@ -255,12 +278,6 @@ const BrandCoachV2 = (): JSX.Element => {
         }
       />
 
-      {/* Milestone celebration overlay */}
-      <MilestoneCelebration
-        milestone={milestone}
-        onDismiss={dismissMilestone}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-md"
-      />
     </div>
   );
 };

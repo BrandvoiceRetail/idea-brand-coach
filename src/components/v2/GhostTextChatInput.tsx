@@ -128,26 +128,28 @@ export function GhostTextChatInput({
   };
 
   return (
-    <Autocomplete
-      ref={autocompleteRef}
-      asChild
-      autocompleteEnabled={!disabled}
-      onChange={handleChange}
-      handleCompletion={handleCompletion}
-      completionShortcut={new Set(['Tab'])}
-      styles={{
-        suggestion: {
-          opacity: 0.4,
-        },
-      }}
-    >
-      <AutocompleteTextarea
-        value={value}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        className={className}
-        disabled={disabled}
-      />
-    </Autocomplete>
+    <div className="flex-1 min-w-0">
+      <Autocomplete
+        ref={autocompleteRef}
+        asChild
+        autocompleteEnabled={!disabled}
+        onChange={handleChange}
+        handleCompletion={handleCompletion}
+        completionShortcut={new Set(['Tab'])}
+        styles={{
+          suggestion: {
+            opacity: 0.4,
+          },
+        }}
+      >
+        <AutocompleteTextarea
+          value={value}
+          onKeyDown={handleKeyDown}
+          placeholder={suggestion && value.trim() === '' ? '' : placeholder}
+          className={cn('w-full', className)}
+          disabled={disabled}
+        />
+      </Autocomplete>
+    </div>
   );
 }

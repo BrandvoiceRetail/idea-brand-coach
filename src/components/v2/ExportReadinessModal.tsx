@@ -1,210 +1,262 @@
+/**
+ * ExportReadinessModal Component
+ *
+ * Pre-export gate that shows brand readiness assessment before generating
+ * the markdown export. Displays:
+ * - Weighted completion progress bar
+ * - Section warnings by severity (critical/warning/info)
+ * - Strengths list (sections >= 75% complete)
+ * - Quick wins (top 3 highest-weight empty fields)
+ * - "Export Anyway" and "Continue Building" action buttons
+ */
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle2, Lightbulb, FileText } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type {
-  ExportReadiness,
-  ReadinessWarning,
-  QuickWin,
-} from '@/hooks/v2/useExportReadiness';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  Info,
+  Lightbulb,
+  ShieldAlert,
+  Trophy,
+  XCircle,
+} from 'lucide-react';
+import type { ExportReadiness, QuickWin, SectionStrength, SectionWarning, WarningSeverity } from '@/hooks/v2/useExportReadiness';
 
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
+// ============================================================================
+// Types
+// ============================================================================
 
 interface ExportReadinessModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  readiness: ExportReadiness;
+  /** Whether the modal is open */
+  isOpen: boolean;
+  /** Callback to close the modal */
+  onClose: () => void;
+  /** Callback when user clicks "Export Anyway" */
   onExportAnyway: () => void;
-  onContinueBuilding: () => void;
-  onQuickWinClick?: (fieldId: string, chapterId: string) => void;
+  /** Callback when user clicks a quick win field to navigate to it */
+  onQuickWinClick?: (fieldId: string) => void;
+  /** Readiness data from useExportReadiness hook */
+  readiness: ExportReadiness;
 }
 
-// ---------------------------------------------------------------------------
-// Severity helpers
-// ---------------------------------------------------------------------------
-
-const SEVERITY_STYLES: Record<ReadinessWarning['severity'], {
-  badge: 'destructive' | 'default' | 'secondary';
-  text: string;
-  bg: string;
-}> = {
-  critical: { badge: 'destructive', text: 'text-red-700 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-950/30' },
-  warning: { badge: 'default', text: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30' },
-  info: { badge: 'secondary', text: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/30' },
-};
-
-function progressIndicatorClass(percent: number): string {
-  if (percent >= 75) return '[&>div]:bg-green-500';
-  if (percent >= 40) return '[&>div]:bg-amber-500';
-  return '[&>div]:bg-red-500';
-}
-
-// ---------------------------------------------------------------------------
+// ============================================================================
 // Sub-components
-// ---------------------------------------------------------------------------
+// ============================================================================
 
-function WarningItem({ warning }: { warning: ReadinessWarning }): JSX.Element {
-  const style = SEVERITY_STYLES[warning.severity];
+/** Severity icon mapping */
+function SeverityIcon({ severity }: { severity: WarningSeverity }): JSX.Element {
+  switch (severity) {
+    case 'critical':
+      return <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />;
+    case 'warning':
+      return <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />;
+    case 'info':
+      return <Info className="h-4 w-4 text-blue-500 flex-shrink-0" />;
+  }
+}
+
+/** Severity badge variant mapping */
+function severityBadgeVariant(severity: WarningSeverity): 'destructive' | 'secondary' | 'outline' {
+  switch (severity) {
+    case 'critical': return 'destructive';
+    case 'warning': return 'secondary';
+    case 'info': return 'outline';
+  }
+}
+
+/** Progress bar color based on completion */
+function progressColor(percent: number): string {
+  if (percent >= 75) return '[&>div]:bg-green-500';
+  if (percent >= 50) return '[&>div]:bg-amber-500';
+  return '[&>div]:bg-destructive';
+}
+
+/** Warning list item */
+function WarningItem({ warning }: { warning: SectionWarning }): JSX.Element {
   return (
-    <div className={cn('flex items-start gap-3 rounded-md border px-3 py-2.5', style.bg)}>
-      <AlertTriangle className={cn('mt-0.5 h-4 w-4 shrink-0', style.text)} />
-      <div className="min-w-0 flex-1 space-y-1">
-        <div className="flex items-center gap-2">
-          <span className={cn('text-sm font-medium', style.text)}>{warning.section}</span>
-          <Badge variant={style.badge} className="text-[10px] leading-tight">
+    <li className="flex items-start gap-2 py-1.5">
+      <SeverityIcon severity={warning.severity} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium">{warning.chapterTitle}</span>
+          <Badge variant={severityBadgeVariant(warning.severity)} className="text-[10px] px-1.5 py-0">
             {warning.severity}
           </Badge>
+          <span className="text-xs text-muted-foreground">{warning.completionPercent}%</span>
         </div>
-        <p className="text-xs text-muted-foreground">{warning.impact}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{warning.message}</p>
       </div>
-    </div>
+    </li>
   );
 }
 
-function StrengthItem({ text }: { text: string }): JSX.Element {
+/** Strength list item */
+function StrengthItem({ strength }: { strength: SectionStrength }): JSX.Element {
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-      <span>{text}</span>
-    </div>
+    <li className="flex items-center gap-2 py-1">
+      <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+      <span className="text-sm">{strength.chapterTitle}</span>
+      <span className="text-xs text-muted-foreground ml-auto">{strength.completionPercent}%</span>
+    </li>
   );
 }
 
+/** Quick win list item */
 function QuickWinItem({
   quickWin,
   onClick,
 }: {
   quickWin: QuickWin;
-  onClick?: () => void;
+  onClick?: (fieldId: string) => void;
 }): JSX.Element {
-  const Wrapper = onClick ? 'button' : 'div';
   return (
-    <Wrapper
-      className={cn(
-        'flex items-start gap-3 rounded-md border px-3 py-2.5 text-left',
-        onClick && 'cursor-pointer transition-colors hover:bg-accent'
-      )}
-      onClick={onClick}
-      type={onClick ? 'button' : undefined}
+    <li
+      className={`flex items-start gap-2 py-1.5 rounded-md px-2 -mx-2 ${
+        onClick ? 'hover:bg-muted/50 cursor-pointer transition-colors' : ''
+      }`}
+      onClick={() => onClick?.(quickWin.fieldId)}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick(quickWin.fieldId);
+        }
+      }}
     >
-      <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">{quickWin.fieldLabel}</p>
-        <p className="text-xs text-muted-foreground">{quickWin.impact}</p>
+      <Lightbulb className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">{quickWin.fieldLabel}</span>
+          <span className="text-xs text-muted-foreground">({quickWin.chapterTitle})</span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">{quickWin.impactDescription}</p>
       </div>
-    </Wrapper>
+    </li>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
+// ============================================================================
+// Main Component
+// ============================================================================
 
 export function ExportReadinessModal({
-  open,
-  onOpenChange,
-  readiness,
+  isOpen,
+  onClose,
   onExportAnyway,
-  onContinueBuilding,
   onQuickWinClick,
+  readiness,
 }: ExportReadinessModalProps): JSX.Element {
-  const { overallPercent, warnings, strengths, quickWins } = readiness;
+  const { completionPercent, filledFields, totalFields, warnings, strengths, quickWins, isReady } = readiness;
 
-  const hasWarnings = warnings.length > 0;
-  const hasStrengths = strengths.length > 0;
-  const hasQuickWins = quickWins.length > 0;
+  const handleExportAnyway = (): void => {
+    onClose();
+    onExportAnyway();
+  };
+
+  const handleQuickWinClick = (fieldId: string): void => {
+    onClose();
+    onQuickWinClick?.(fieldId);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Export Brand Strategy
+            {isReady ? (
+              <Trophy className="h-5 w-5 text-green-500" />
+            ) : (
+              <ShieldAlert className="h-5 w-5 text-amber-500" />
+            )}
+            Export Readiness
           </DialogTitle>
           <DialogDescription>
-            Review your brand profile completeness before generating the strategy document.
+            {isReady
+              ? 'Your brand strategy is looking strong. Review the details below before exporting.'
+              : 'Your brand strategy has some gaps. Review below and decide whether to export now or keep building.'}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Overall progress */}
+        {/* Progress bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Overall Completion</span>
-            <span className="tabular-nums">{overallPercent}%</span>
+            <span className="text-muted-foreground">{filledFields} / {totalFields} fields ({completionPercent}%)</span>
           </div>
-          <Progress
-            value={overallPercent}
-            className={cn('h-2.5', progressIndicatorClass(overallPercent))}
-          />
+          <Progress value={completionPercent} className={`h-3 ${progressColor(completionPercent)}`} />
         </div>
 
         {/* Warnings */}
-        {hasWarnings && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Potential Gaps</h4>
-            <div className="space-y-2">
-              {warnings.slice(0, 5).map(warning => (
-                <WarningItem key={warning.section} warning={warning} />
+        {warnings.length > 0 && (
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold flex items-center gap-1.5">
+              <AlertTriangle className="h-4 w-4" />
+              Sections with Gaps ({warnings.length})
+            </h4>
+            <ul className="space-y-0.5 max-h-40 overflow-y-auto">
+              {warnings.map((warning) => (
+                <WarningItem key={warning.chapterId} warning={warning} />
               ))}
-              {warnings.length > 5 && (
-                <p className="text-xs text-muted-foreground">
-                  +{warnings.length - 5} more sections with gaps
-                </p>
-              )}
-            </div>
+            </ul>
           </div>
         )}
 
         {/* Strengths */}
-        {hasStrengths && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Strengths</h4>
-            <div className="space-y-1.5">
-              {strengths.map(text => (
-                <StrengthItem key={text} text={text} />
+        {strengths.length > 0 && (
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              Strengths ({strengths.length})
+            </h4>
+            <ul className="space-y-0.5">
+              {strengths.map((strength) => (
+                <StrengthItem key={strength.chapterId} strength={strength} />
               ))}
-            </div>
+            </ul>
           </div>
         )}
 
         {/* Quick wins */}
-        {hasQuickWins && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Quick Wins</h4>
-            <div className="space-y-2">
-              {quickWins.map(qw => (
+        {quickWins.length > 0 && (
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold flex items-center gap-1.5">
+              <Lightbulb className="h-4 w-4 text-amber-500" />
+              Quick Wins
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              Fill these high-impact fields to strengthen your export the most.
+            </p>
+            <ul className="space-y-0.5">
+              {quickWins.map((quickWin) => (
                 <QuickWinItem
-                  key={qw.fieldId}
-                  quickWin={qw}
-                  onClick={
-                    onQuickWinClick
-                      ? () => onQuickWinClick(qw.fieldId, qw.chapterId)
-                      : undefined
-                  }
+                  key={quickWin.fieldId}
+                  quickWin={quickWin}
+                  onClick={onQuickWinClick ? handleQuickWinClick : undefined}
                 />
               ))}
-            </div>
+            </ul>
           </div>
         )}
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={onExportAnyway}>
-            Export Anyway
-          </Button>
-          <Button onClick={onContinueBuilding}>
+          <Button variant="outline" onClick={onClose}>
             Continue Building
+          </Button>
+          <Button onClick={handleExportAnyway}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Anyway
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -230,6 +230,7 @@ services:
       SUPABASE_DB_URL: postgres://postgres:postgres@supabase-db:5432/postgres
       VERIFY_JWT: "false"
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - ./supabase/functions:/home/deno/functions:ro
     depends_on:
