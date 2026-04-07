@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { GhostTextFieldWrapper } from "@/components/v2/GhostTextFieldWrapper";
+import { scoreFieldQuality } from "@/utils/fieldQualityScore";
+import type { QualityTier } from "@/utils/fieldQualityScore";
 import type { ChapterField, FieldSource } from "@/config/chapterFields";
 
 /**
@@ -103,6 +105,31 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
               <span>Manual</span>
             </>
           )}
+        </Badge>
+      );
+    };
+
+    const TIER_STYLES: Record<QualityTier, string> = {
+      empty: '',
+      weak: 'border-red-400/60 text-red-600',
+      fair: 'border-amber-400/60 text-amber-600',
+      good: 'border-emerald-400/60 text-emerald-600',
+      strong: 'border-emerald-500 text-emerald-700 bg-emerald-50',
+    };
+
+    /**
+     * Render IDEA Brand Coach quality score badge
+     */
+    const renderQualityBadge = (): JSX.Element | null => {
+      const quality = scoreFieldQuality(value);
+      if (quality.tier === 'empty') return null;
+
+      return (
+        <Badge
+          variant="outline"
+          className={cn('ml-auto gap-1 text-xs', TIER_STYLES[quality.tier])}
+        >
+          {quality.label}
         </Badge>
       );
     };
@@ -231,6 +258,7 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
             )}
           </Label>
           {renderSourceBadge()}
+          {renderQualityBadge()}
         </div>
 
         {renderFieldInput()}
