@@ -15,7 +15,7 @@ export const CHAT_CONSTANTS = {
   TITLE_MESSAGE_THRESHOLD: 2,
   TITLE_CONTEXT_LIMIT: 500,
   CONVERSATION_SUMMARY_MESSAGES: 6,
-  EDGE_FUNCTION_CONSULTANT: 'idea-framework-consultant',
+  EDGE_FUNCTION_CONSULTANT: 'idea-framework-consultant-claude',
   EDGE_FUNCTION_TITLE: 'generate-session-title',
 } as const;
 
@@ -41,7 +41,6 @@ export interface ConsultantRequestParams {
   competitiveInsights: string | null;
   metadata?: Record<string, unknown>;
   hasUploadedDocuments: boolean;
-  previousResponseId?: string;
   chatHistory?: Array<{ role: string; content: string }>;
   stream?: boolean;
 }
@@ -84,29 +83,9 @@ export class ChatEdgeFunctionService {
   }
 
   /**
-   * Look up the previous OpenAI response ID for conversation chaining.
-   */
-  async lookupPreviousResponseId(sessionId: string): Promise<string | undefined> {
-    try {
-      const { data: sessionData } = await supabase
-        .from('chat_sessions')
-        .select('openai_response_id')
-        .eq('id', sessionId)
-        .single();
-
-      const responseId = sessionData?.openai_response_id || undefined;
-      if (responseId) {
-        console.log('🔗 Chaining conversation via previous_response_id:', responseId);
-      }
-      return responseId;
-    } catch (error) {
-      console.warn('Failed to look up previous response ID:', error);
-      return undefined;
-    }
-  }
-
-  /**
    * Build the request body for the consultant edge function.
+   * Claude version: no previousResponseId or useResponsesApi — conversation
+   * history is always sent explicitly via chat_history.
    */
   buildRequestBody(params: ConsultantRequestParams): Record<string, unknown> {
     const body: Record<string, unknown> = {
@@ -117,35 +96,17 @@ export class ChatEdgeFunctionService {
         ...params.metadata,
         hasUploadedDocuments: params.hasUploadedDocuments,
       },
-      useResponsesApi: true,
-      previousResponseId: params.previousResponseId,
     };
 
     if (params.stream) {
       body.stream = true;
     }
 
-    // Only send chat_history when not chaining (first message or no previous response)
-    if (!params.previousResponseId && params.chatHistory) {
+    if (params.chatHistory) {
       body.chat_history = params.chatHistory;
     }
 
     return body;
-  }
-
-  /**
-   * Save the response ID on the session for conversation chaining.
-   */
-  async saveResponseId(sessionId: string, responseId: string): Promise<void> {
-    console.log('💾 Saving response ID for conversation chaining:', responseId);
-    const { error } = await supabase
-      .from('chat_sessions')
-      .update({ openai_response_id: responseId })
-      .eq('id', sessionId);
-
-    if (error) {
-      console.warn('Failed to save response ID:', error);
-    }
   }
 
   /**

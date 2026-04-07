@@ -92,9 +92,6 @@ export class SupabaseChatService implements IChatService {
     const recentMessages = await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT);
     const authSession = await this.edgeFunctionService.getAuthSession();
     const hasUploadedDocuments = await this.edgeFunctionService.checkUploadedDocuments(userId);
-    const previousResponseId = sessionId
-      ? await this.edgeFunctionService.lookupPreviousResponseId(sessionId)
-      : undefined;
 
     const body = this.edgeFunctionService.buildRequestBody({
       message: message.content,
@@ -102,10 +99,7 @@ export class SupabaseChatService implements IChatService {
       competitiveInsights: this.competitiveInsightsContext,
       metadata: message.metadata,
       hasUploadedDocuments,
-      previousResponseId,
-      chatHistory: !previousResponseId
-        ? recentMessages.map(msg => ({ role: msg.role, content: msg.content }))
-        : undefined,
+      chatHistory: recentMessages.map(msg => ({ role: msg.role, content: msg.content })),
     });
 
     console.log('📨 Edge function request:', {
@@ -116,18 +110,13 @@ export class SupabaseChatService implements IChatService {
     // 4. Call edge function
     const responseData = await this.edgeFunctionService.callConsultant(body, authSession.access_token);
 
-    // 5. Save response ID for chaining
-    if (sessionId && responseData.responseId) {
-      await this.edgeFunctionService.saveResponseId(sessionId, responseData.responseId);
-    }
-
-    // 6. Handle extracted fields
+    // 5. Handle extracted fields
     const extractedFields = responseData.extractedFields || [];
     if (extractedFields.length > 0) {
       console.log('📝 Extracted fields (tool call):', extractedFields.map(f => f.identifier));
     }
 
-    // 7. Save assistant response
+    // 6. Save assistant response
     const { data: assistantMessage, error: assistantError } = await this.messageService.saveMessage({
       user_id: userId,
       role: 'assistant',
@@ -144,7 +133,7 @@ export class SupabaseChatService implements IChatService {
     });
     if (assistantError) throw assistantError;
 
-    // 8. Generate AI title (non-blocking)
+    // 7. Generate AI title (non-blocking)
     const titlePromise = sessionId
       ? this.titleService
           .generateSessionTitle(sessionId, message.content, responseData.response)
@@ -193,18 +182,13 @@ export class SupabaseChatService implements IChatService {
     }
 
     // Prepare edge function call
-    const previousResponseId = sessionId
-      ? await this.edgeFunctionService.lookupPreviousResponseId(sessionId)
-      : undefined;
     const authSession = await this.edgeFunctionService.getAuthSession();
     const hasUploadedDocuments = await this.edgeFunctionService.checkUploadedDocuments(userId);
 
-    const chatHistory = !previousResponseId
-      ? (await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT)).map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        }))
-      : undefined;
+    const chatHistory = (await this.getRecentMessages(CHAT_CONSTANTS.RECENT_MESSAGES_COUNT)).map(msg => ({
+      role: msg.role,
+      content: msg.content,
+    }));
 
     const body = this.edgeFunctionService.buildRequestBody({
       message: message.content,
@@ -212,7 +196,6 @@ export class SupabaseChatService implements IChatService {
       competitiveInsights: this.competitiveInsightsContext,
       metadata: message.metadata,
       hasUploadedDocuments,
-      previousResponseId,
       chatHistory,
       stream: true,
     });
@@ -268,11 +251,6 @@ export class SupabaseChatService implements IChatService {
       chapter_metadata: message.chapter_metadata,
       metadata: { extractedFields: result.extractedFields },
     });
-
-    // Save response ID for chaining
-    if (sessionId && result.responseId) {
-      await this.edgeFunctionService.saveResponseId(sessionId, result.responseId);
-    }
 
     // Generate title for new sessions
     if (sessionId) {
