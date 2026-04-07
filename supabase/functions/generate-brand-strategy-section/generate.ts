@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { openAIApiKey, SECTION_MAX_TOKENS, ASSISTANT_RESPONSE_TRUNCATE, CHAT_EXCERPT_MAX_LENGTH } from './config.ts';
+import { anthropicApiKey, CLAUDE_API_URL, HAIKU_MODEL, SECTION_MAX_TOKENS, ASSISTANT_RESPONSE_TRUNCATE, CHAT_EXCERPT_MAX_LENGTH } from './config.ts';
 import { TREVOR_VOICE_DIRECTIVE } from './voice.ts';
 import { DocumentSection } from './sections.ts';
 import { fetchWithRetry } from './utils.ts';
@@ -109,17 +109,18 @@ ${previousContext ? `## Context from Previous Sections\n${previousContext}` : ''
 Generate the complete section now.`;
 
   const response = await fetchWithRetry(
-    'https://api.openai.com/v1/chat/completions',
+    CLAUDE_API_URL,
     {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'x-api-key': anthropicApiKey!,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: HAIKU_MODEL,
+        system: systemPrompt,
         messages: [
-          { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.7,
@@ -132,29 +133,29 @@ Generate the complete section now.`;
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`[generateSection] GPT-4o error for ${section.title}:`, response.status, errorText);
+    console.error(`[generateSection] Claude Haiku error for ${section.title}:`, response.status, errorText);
     let parsedError = errorText;
     try {
       const errorJson = JSON.parse(errorText);
       parsedError = errorJson?.error?.message || errorText;
     } catch { /* use raw text */ }
-    throw new Error(`OpenAI API error (${response.status}): ${parsedError}`);
+    throw new Error(`Anthropic API error (${response.status}): ${parsedError}`);
   }
 
   const data = await response.json();
 
-  if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+  if (!data.content || !Array.isArray(data.content) || data.content.length === 0) {
     console.error(`[generateSection] Invalid response structure for ${section.title}`);
-    throw new Error(`OpenAI returned invalid response structure for section "${section.title}"`);
+    throw new Error(`Claude returned invalid response structure for section "${section.title}"`);
   }
 
-  const choice = data.choices[0];
-  if (!choice?.message?.content || typeof choice.message.content !== 'string') {
-    console.error(`[generateSection] Missing content in API response for ${section.title}`);
-    throw new Error(`OpenAI returned empty content for section "${section.title}"`);
+  const textBlock = data.content.find((block: { type: string }) => block.type === 'text');
+  if (!textBlock?.text || typeof textBlock.text !== 'string') {
+    console.error(`[generateSection] Missing text content in API response for ${section.title}`);
+    throw new Error(`Claude returned empty content for section "${section.title}"`);
   }
 
-  const content = choice.message.content.trim();
+  const content = textBlock.text.trim();
   console.log(`[generateSection] ${section.title} generated: ${content.length} chars`);
   return content;
 }

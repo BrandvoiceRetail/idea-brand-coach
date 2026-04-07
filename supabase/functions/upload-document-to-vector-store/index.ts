@@ -1,28 +1,29 @@
 /**
- * upload-document-to-vector-store
+ * upload-document-to-vector-store (pgvector edition)
  *
- * Uploads a document directly to OpenAI's vector store, bypassing local text extraction.
- * OpenAI handles PDF parsing, chunking, and embedding automatically.
+ * Replaces the OpenAI vector store upload pipeline with local chunking + pgvector.
+ * Documents are downloaded from Supabase storage, chunked, embedded via ada-002,
+ * and stored in user_knowledge_chunks for semantic search.
  *
  * Usage:
- * - { documentId: "uuid" } - Upload a document from uploaded_documents table
+ * - { documentId: "uuid" } - Process a document from uploaded_documents table
  *
  * Flow:
  * 1. Get document metadata from uploaded_documents
  * 2. Download file from Supabase storage
- * 3. Ensure user has vector stores (creates if needed)
- * 4. Upload file to OpenAI Files API
- * 5. Add file to user's core_store vector store
- * 6. Update uploaded_documents with openai_file_id and status
+ * 3. Extract text content (plain text / markdown)
+ * 4. Chunk text into overlapping segments
+ * 5. Generate embeddings via OpenAI ada-002 (Phase 4: Voyage AI)
+ * 6. Store chunks + embeddings in user_knowledge_chunks (pgvector)
+ * 7. Update uploaded_documents status
+ * 8. Trigger field extraction (unchanged)
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { generateEmbeddingsBatch } from "../_shared/embeddings.ts";
+import { chunkText } from "../_shared/chunking.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 interface UploadRequest {
   documentId: string;
@@ -36,190 +37,49 @@ interface UploadedDocument {
   file_size: number;
   mime_type: string;
   status: string;
-}
-
-interface UserVectorStores {
-  user_id: string;
-  core_store_id: string;
+  extracted_content: string | null;
 }
 
 /**
- * Create vector stores for user if they don't exist
+ * Extract readable text from a file blob based on mime type.
+ * For PDFs and binary formats, falls back to extracted_content from the DB.
  */
-async function ensureUserVectorStores(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  userEmail: string,
-  openaiKey: string
-): Promise<UserVectorStores> {
-  // Check if user already has vector stores
-  const { data: existing } = await supabase
-    .from("user_vector_stores")
-    .select("user_id, core_store_id")
-    .eq("user_id", userId)
-    .single();
-
-  if (existing) {
-    return existing as UserVectorStores;
-  }
-
-  // Create vector stores
-  console.log(`Creating vector stores for user ${userEmail}`);
-
-  const storeConfigs = [
-    { name: `User ${userEmail} - Diagnostic`, domain: "diagnostic", field: "diagnostic_store_id" },
-    { name: `User ${userEmail} - Avatar`, domain: "avatar", field: "avatar_store_id" },
-    { name: `User ${userEmail} - Canvas`, domain: "canvas", field: "canvas_store_id" },
-    { name: `User ${userEmail} - CAPTURE`, domain: "capture", field: "capture_store_id" },
-    { name: `User ${userEmail} - Core`, domain: "core", field: "core_store_id" },
-  ];
-
-  const storeIds: Record<string, string> = { user_id: userId };
-
-  for (const config of storeConfigs) {
-    const response = await fetch("https://api.openai.com/v1/vector_stores", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openaiKey}`,
-        "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
-      },
-      body: JSON.stringify({
-        name: config.name,
-        metadata: {
-          user_id: userId,
-          domain: config.domain,
-          scope: "user",
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to create ${config.domain} vector store: ${error}`);
-    }
-
-    const data = await response.json();
-    storeIds[config.field] = data.id;
-    console.log(`  ✅ Created ${config.domain} store: ${data.id}`);
-  }
-
-  // Save to database
-  const { error: insertError } = await supabase
-    .from("user_vector_stores")
-    .insert(storeIds);
-
-  if (insertError) {
-    throw new Error(`Failed to save vector stores: ${insertError.message}`);
-  }
-
-  return { user_id: userId, core_store_id: storeIds.core_store_id };
-}
-
-/**
- * Upload file to OpenAI Files API
- */
-async function uploadFileToOpenAI(
-  apiKey: string,
-  fileBlob: Blob,
-  filename: string
+async function extractText(
+  blob: Blob,
+  mimeType: string,
+  extractedContent: string | null
 ): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", fileBlob, filename);
-  formData.append("purpose", "assistants");
-
-  console.log(`Uploading ${filename} to OpenAI Files API...`);
-
-  const response = await fetch("https://api.openai.com/v1/files", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to upload file to OpenAI: ${response.status} - ${error}`);
+  // If we already have extracted content (from a prior extraction step), use it
+  if (extractedContent && extractedContent.trim().length > 0) {
+    return extractedContent;
   }
 
-  const data = await response.json();
-  console.log(`✅ File uploaded to OpenAI: ${data.id}`);
-  return data.id;
+  // Plain text, markdown, CSV — read directly
+  if (
+    mimeType.startsWith('text/') ||
+    mimeType === 'application/json' ||
+    mimeType === 'application/csv'
+  ) {
+    return await blob.text();
+  }
+
+  // For PDFs and other binary formats, we rely on extracted_content
+  // being populated by a prior processing step (document-processor function).
+  // If it's not available, log a warning and return empty.
+  console.warn(
+    `[Extract] No extracted_content for binary mime type: ${mimeType}. ` +
+    `Ensure document-processor has run first.`
+  );
+  return '';
 }
 
 /**
- * Add file to OpenAI vector store and wait for it to be fully processed
+ * Map mime type / filename to a category for the knowledge chunk.
  */
-async function addFileToVectorStore(
-  apiKey: string,
-  vectorStoreId: string,
-  fileId: string,
-  updateStatus?: (status: string) => Promise<void>
-): Promise<void> {
-  console.log(`Adding file ${fileId} to vector store ${vectorStoreId}...`);
-
-  const response = await fetch(
-    `https://api.openai.com/v1/vector_stores/${vectorStoreId}/files`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
-      },
-      body: JSON.stringify({ file_id: fileId }),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to add file to vector store: ${response.status} - ${error}`);
-  }
-
-  const data = await response.json();
-  const vectorStoreFileId = data.id;
-  console.log(`✅ File added to vector store with ID: ${vectorStoreFileId}, initial status: ${data.status}`);
-
-  // Update status to "indexing"
-  if (updateStatus) {
-    await updateStatus("indexing");
-  }
-
-  // Poll for file processing completion (max 60 seconds)
-  let attempts = 0;
-  let fileStatus = data.status;
-
-  while ((fileStatus === "in_progress" || fileStatus === "pending") && attempts < 60) {
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-
-    const statusResponse = await fetch(
-      `https://api.openai.com/v1/vector_stores/${vectorStoreId}/files/${vectorStoreFileId}`,
-      {
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "OpenAI-Beta": "assistants=v2",
-        },
-      }
-    );
-
-    if (statusResponse.ok) {
-      const statusData = await statusResponse.json();
-      fileStatus = statusData.status;
-      console.log(`Polling attempt ${attempts + 1}: File status is ${fileStatus}`);
-    }
-
-    attempts++;
-  }
-
-  if (fileStatus === "completed") {
-    console.log(`✅ File fully processed and indexed in vector store`);
-  } else if (fileStatus === "failed") {
-    throw new Error(`File processing failed in vector store`);
-  } else {
-    console.warn(`⚠️ File processing timed out after 60 seconds, status: ${fileStatus}`);
-    // Don't throw error - file might still process successfully
-  }
+function inferCategory(_filename: string, _mimeType: string): string {
+  // Uploaded user documents go to "core" by default.
+  // The category can be refined later based on content analysis.
+  return 'core';
 }
 
 serve(async (req) => {
@@ -233,23 +93,16 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY not configured");
     }
 
-    // Get authenticated user
+    // ── Auth ──────────────────────────────────────────────────────────────
     const authHeader = req.headers.get('authorization');
-
     let user: any = null;
 
-    // Try to authenticate the user
     if (authHeader) {
-      // Extract the JWT token from the Authorization header
       const token = authHeader.replace('Bearer ', '');
-
-      // Create Supabase client for auth verification
       const supabaseClient = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_ANON_KEY")!
       );
-
-      // Verify the user by passing the JWT token directly to getUser
       const { data: authData, error: authError } = await supabaseClient.auth.getUser(token);
       if (!authError && authData?.user) {
         user = authData.user;
@@ -259,71 +112,56 @@ serve(async (req) => {
       }
     }
 
-    // For local development, if auth fails, try to extract user ID from the request
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const isLocalDev = supabaseUrl?.includes("kong:8000") ||
                        supabaseUrl?.includes("127.0.0.1") ||
                        supabaseUrl?.includes("localhost");
 
-    console.log(`SUPABASE_URL: ${supabaseUrl}, User authenticated: ${!!user}, Local dev: ${isLocalDev}`);
-
-    if (!user && isLocalDev) {
-      console.log("Local development mode - attempting to proceed without strict auth");
-      // In local dev, we'll verify document ownership below
-    } else if (!user) {
+    if (!user && !isLocalDev) {
       return new Response(
         JSON.stringify({ error: "Authentication required" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Create service role client for administrative operations
+    // ── Service role client ──────────────────────────────────────────────
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     const { documentId }: UploadRequest = await req.json();
-
     if (!documentId) {
       throw new Error("documentId is required");
     }
 
-    console.log(`Processing document: ${documentId}${user ? ` for user: ${user.id}` : ' (local dev mode)'}`);
+    console.log(`Processing document: ${documentId}${user ? ` for user: ${user.id}` : ' (local dev)'}`);
 
-    // Get document metadata
+    // ── Get document metadata ────────────────────────────────────────────
     let query = supabase
       .from("uploaded_documents")
       .select("*")
       .eq("id", documentId);
 
-    // Verify ownership if we have authenticated user
     if (user) {
       query = query.eq("user_id", user.id);
     }
 
     const { data: document, error: docError } = await query.single();
-
     if (docError || !document) {
       throw new Error(`Document not found or access denied: ${docError?.message || "Unknown error"}`);
     }
 
     const doc = document as UploadedDocument;
-    console.log(`Found document: ${doc.filename} (${doc.mime_type})`);
+    console.log(`Found document: ${doc.filename} (${doc.mime_type}, ${doc.file_size} bytes)`);
 
-    // Get user email for vector store naming
-    const { data: userData } = await supabase.auth.admin.getUserById(doc.user_id);
-    const userEmail = userData?.user?.email || doc.user_id;
+    // ── Update status: uploading → processing ────────────────────────────
+    await supabase
+      .from("uploaded_documents")
+      .update({ status: "processing", updated_at: new Date().toISOString() })
+      .eq("id", documentId);
 
-    // Ensure user has vector stores
-    const userStores = await ensureUserVectorStores(
-      supabase,
-      doc.user_id,
-      userEmail,
-      OPENAI_API_KEY
-    );
-
-    // Download file from Supabase storage
+    // ── Download file from storage ───────────────────────────────────────
     console.log(`Downloading file from storage: ${doc.file_path}`);
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("documents")
@@ -333,99 +171,146 @@ serve(async (req) => {
       throw new Error(`Failed to download file: ${downloadError?.message || "Unknown error"}`);
     }
 
-    // Update status to "uploading"
-    await supabase
-      .from("uploaded_documents")
-      .update({
-        status: "uploading",
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", documentId);
-
-    // Upload to OpenAI
-    const openaiFileId = await uploadFileToOpenAI(
-      OPENAI_API_KEY,
-      fileData,
-      doc.filename
-    );
-
-    // Update status to "processing"
-    await supabase
-      .from("uploaded_documents")
-      .update({
-        status: "processing",
-        openai_file_id: openaiFileId,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", documentId);
-
-    // Create status update callback
-    const updateStatus = async (status: string) => {
+    // ── Extract text ─────────────────────────────────────────────────────
+    const text = await extractText(fileData, doc.mime_type, doc.extracted_content);
+    if (!text || text.trim().length < 10) {
+      // Mark as ready but with no chunks — the file exists but has no indexable content
       await supabase
         .from("uploaded_documents")
         .update({
-          status,
-          updated_at: new Date().toISOString()
+          status: "ready",
+          pgvector_indexed: false,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", documentId);
-    };
 
-    // Add to vector store with status updates
-    await addFileToVectorStore(
-      OPENAI_API_KEY,
-      userStores.core_store_id,
-      openaiFileId,
-      updateStatus
-    );
+      console.warn(`Document ${doc.filename} has insufficient text content for indexing`);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          documentId,
+          filename: doc.filename,
+          chunksCreated: 0,
+          message: "Document saved but insufficient text for vector indexing",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Final status update to "ready"
+    console.log(`Extracted ${text.length} chars of text from ${doc.filename}`);
+
+    // ── Chunk text ───────────────────────────────────────────────────────
+    await supabase
+      .from("uploaded_documents")
+      .update({ status: "indexing", updated_at: new Date().toISOString() })
+      .eq("id", documentId);
+
+    const chunks = chunkText(text, { chunkSize: 1000, overlap: 200 });
+    console.log(`Split into ${chunks.length} chunks`);
+
+    if (chunks.length === 0) {
+      await supabase
+        .from("uploaded_documents")
+        .update({ status: "ready", pgvector_indexed: false, updated_at: new Date().toISOString() })
+        .eq("id", documentId);
+
+      return new Response(
+        JSON.stringify({ success: true, documentId, filename: doc.filename, chunksCreated: 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── Delete any previous chunks for this document (re-indexing) ───────
+    const { error: deleteError } = await supabase
+      .from("user_knowledge_chunks")
+      .delete()
+      .eq("source_document_id", documentId);
+
+    if (deleteError) {
+      console.warn(`Failed to delete old chunks for document ${documentId}:`, deleteError);
+    }
+
+    // ── Generate embeddings in batch ─────────────────────────────────────
+    console.log(`Generating embeddings for ${chunks.length} chunks...`);
+    const chunkTexts = chunks.map(c => c.content);
+    const embeddings = await generateEmbeddingsBatch(chunkTexts, OPENAI_API_KEY);
+    console.log(`Generated ${embeddings.length} embeddings`);
+
+    // ── Insert chunks into pgvector ──────────────────────────────────────
+    const category = inferCategory(doc.filename, doc.mime_type);
+    const chunkRows = chunks.map((chunk, i) => ({
+      user_id: doc.user_id,
+      content: chunk.content,
+      embedding: JSON.stringify(embeddings[i]),
+      source_type: 'document',
+      source_id: documentId,
+      source_document_id: documentId,
+      category,
+      chunk_index: chunk.index,
+      metadata: {
+        filename: doc.filename,
+        mime_type: doc.mime_type,
+        chunk_index: chunk.index,
+        total_chunks: chunks.length,
+      },
+    }));
+
+    // Insert in batches of 50 to avoid payload size limits
+    const BATCH_SIZE = 50;
+    let insertedCount = 0;
+    for (let i = 0; i < chunkRows.length; i += BATCH_SIZE) {
+      const batch = chunkRows.slice(i, i + BATCH_SIZE);
+      const { error: insertError } = await supabase
+        .from("user_knowledge_chunks")
+        .insert(batch);
+
+      if (insertError) {
+        console.error(`Failed to insert chunk batch ${i / BATCH_SIZE}:`, insertError);
+        throw new Error(`Failed to insert chunks: ${insertError.message}`);
+      }
+      insertedCount += batch.length;
+    }
+
+    console.log(`Inserted ${insertedCount} chunks into pgvector`);
+
+    // ── Final status update ──────────────────────────────────────────────
     const { error: updateError } = await supabase
       .from("uploaded_documents")
       .update({
         status: "ready",
-        openai_file_id: openaiFileId,
+        pgvector_indexed: true,
         updated_at: new Date().toISOString(),
       })
       .eq("id", documentId);
 
     if (updateError) {
       console.error(`Failed to update final document status: ${updateError.message}`);
-      // Don't throw - the file is already processed, we just failed to record it
     }
 
-    console.log(`✅ Document ${doc.filename} successfully uploaded to vector store`);
+    console.log(`Document ${doc.filename} successfully indexed: ${insertedCount} chunks`);
 
-    // Trigger automatic field extraction
-    // This runs asynchronously - we don't wait for it to complete
+    // ── Trigger field extraction (unchanged from original) ───────────────
     try {
       const extractionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/extract-fields-from-document`;
-      console.log(`🔄 Triggering automatic field extraction for document ${documentId}`);
-      console.log(`🔗 Extraction URL: ${extractionUrl}`);
-      const extractionResponse = await fetch(
-        extractionUrl,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            documentId,
-            // avatarId will be read from the document record if available
-          }),
-        }
-      );
+      console.log(`Triggering automatic field extraction for document ${documentId}`);
+      const extractionResponse = await fetch(extractionUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documentId }),
+      });
 
       if (!extractionResponse.ok) {
         const errorText = await extractionResponse.text();
         console.warn('Field extraction trigger failed:', errorText);
       } else {
         const extractionResult = await extractionResponse.json();
-        console.log('✅ Field extraction completed:', extractionResult);
+        console.log('Field extraction completed:', extractionResult);
       }
     } catch (err) {
       console.warn('Failed to trigger field extraction:', err);
-      // Don't throw - document upload was successful, extraction is optional
     }
 
     return new Response(
@@ -433,8 +318,7 @@ serve(async (req) => {
         success: true,
         documentId,
         filename: doc.filename,
-        openaiFileId,
-        vectorStoreId: userStores.core_store_id,
+        chunksCreated: insertedCount,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -443,10 +327,7 @@ serve(async (req) => {
     console.error("Error in upload-document-to-vector-store:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

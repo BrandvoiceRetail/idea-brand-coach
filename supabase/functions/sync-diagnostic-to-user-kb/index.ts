@@ -1,10 +1,19 @@
+/**
+ * sync-diagnostic-to-user-kb (pgvector edition)
+ *
+ * Syncs diagnostic data to pgvector embeddings in user_knowledge_chunks.
+ * Replaces the OpenAI vector store pipeline — the diagnostic document
+ * is embedded via ada-002 and stored directly in pgvector.
+ *
+ * Usage: { diagnosticData: {...}, scores: {...} }
+ * Called from the frontend after diagnostic completion.
+ */
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { generateEmbedding } from "../_shared/embeddings.ts";
+import { chunkText } from "../_shared/chunking.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 function getScoreInterpretation(score: number): string {
   if (score >= 80) return "Excellent - strong performance";
@@ -76,55 +85,6 @@ ${scores.insight < 60 ? "- Developing deeper customer insights and understanding
 `.trim();
 }
 
-async function uploadFileToOpenAI(content: string, openaiKey: string): Promise<string> {
-  const blob = new Blob([content], { type: "text/plain" });
-  const formData = new FormData();
-  formData.append("file", blob, "diagnostic-results.txt");
-  formData.append("purpose", "assistants");
-
-  const response = await fetch("https://api.openai.com/v1/files", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${openaiKey}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to upload file: ${response.status} - ${error}`);
-  }
-
-  const data = await response.json();
-  return data.id;
-}
-
-async function addFileToVectorStore(
-  vectorStoreId: string,
-  fileId: string,
-  openaiKey: string
-): Promise<void> {
-  const response = await fetch(
-    `https://api.openai.com/v1/vector_stores/${vectorStoreId}/files`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openaiKey}`,
-        "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
-      },
-      body: JSON.stringify({
-        file_id: fileId,
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to add file to vector store: ${response.status} - ${error}`);
-  }
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -137,7 +97,7 @@ serve(async (req) => {
       throw new Error("No authorization header");
     }
 
-    const supabase = createClient(
+    const supabaseAuth = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       {
@@ -150,7 +110,7 @@ serve(async (req) => {
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await supabaseAuth.auth.getUser();
 
     if (userError || !user) {
       throw new Error("User not authenticated");
@@ -169,51 +129,70 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY not configured");
     }
 
-    // Ensure user has vector stores (create if not)
-    const ensureResponse = await fetch(
-      `${Deno.env.get("SUPABASE_URL")}/functions/v1/ensure-user-kb`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": authHeader,
-          "Content-Type": "application/json",
-        },
-      }
+    // Service role client for database operations
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    if (!ensureResponse.ok) {
-      throw new Error("Failed to ensure user KB");
-    }
-
-    const { stores } = await ensureResponse.json();
-    const userStores = { data: stores };
-
-    // Format diagnostic as text document
+    // Format diagnostic as document
     const diagnosticDocument = formatDiagnosticAsDocument(
       user.email!,
       diagnosticData,
       scores
     );
 
-    // Upload to OpenAI
-    console.log("Uploading diagnostic document to OpenAI...");
-    const fileId = await uploadFileToOpenAI(diagnosticDocument, OPENAI_API_KEY);
-    console.log(`✅ File uploaded: ${fileId}`);
+    // Chunk the diagnostic document
+    const chunks = chunkText(diagnosticDocument, { chunkSize: 1000, overlap: 200 });
+    console.log(`Diagnostic formatted into ${chunks.length} chunks`);
 
-    // Add to user's diagnostic vector store
-    console.log("Adding file to diagnostic vector store...");
-    await addFileToVectorStore(
-      userStores.data.diagnostic_store_id,
-      fileId,
-      OPENAI_API_KEY
-    );
-    console.log(`✅ File added to vector store: ${userStores.data.diagnostic_store_id}`);
+    // Delete existing diagnostic KB chunks for this user
+    const { error: deleteError } = await supabase
+      .from("user_knowledge_chunks")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("source_type", "diagnostic_kb")
+      .eq("category", "diagnostic");
+
+    if (deleteError) {
+      console.warn("Failed to delete old diagnostic KB chunks:", deleteError);
+    }
+
+    // Generate embeddings and store chunks
+    let successCount = 0;
+    for (const chunk of chunks) {
+      const embedding = await generateEmbedding(chunk.content, OPENAI_API_KEY);
+
+      const { error: insertError } = await supabase
+        .from("user_knowledge_chunks")
+        .insert({
+          user_id: user.id,
+          content: chunk.content,
+          embedding: JSON.stringify(embedding),
+          source_type: "diagnostic_kb",
+          category: "diagnostic",
+          chunk_index: chunk.index,
+          metadata: {
+            chunk_index: chunk.index,
+            total_chunks: chunks.length,
+            scores,
+          },
+        });
+
+      if (insertError) {
+        console.error(`Failed to insert diagnostic KB chunk ${chunk.index}:`, insertError);
+        throw insertError;
+      }
+      successCount++;
+    }
+
+    console.log(`Synced ${successCount} diagnostic KB chunks to pgvector`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        fileId: fileId,
-        vectorStoreId: userStores.data.diagnostic_store_id,
+        chunksCreated: successCount,
+        backend: 'pgvector',
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

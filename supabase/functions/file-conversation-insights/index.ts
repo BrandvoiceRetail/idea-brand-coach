@@ -15,8 +15,12 @@ interface InsightCategory {
 async function analyzeConversationForInsights(
   userMessage: string,
   assistantResponse: string,
-  openaiKey: string
+  _openaiKey: string
 ): Promise<InsightCategory[]> {
+  const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+  const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
+
   const analysisPrompt = `Analyze this brand consulting conversation and extract actionable brand insights. Categorize each insight into ONE of these categories:
 
 **Categories:**
@@ -71,34 +75,30 @@ User: "hello"
 Assistant: "Hi there! How can I help?"
 => Return: {"categories": []}`;
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch(CLAUDE_API_URL, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${openaiKey}`,
+      "x-api-key": anthropicApiKey!,
+      "anthropic-version": "2023-06-01",
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert at extracting actionable brand insights from conversations. You MUST return a valid JSON object with a 'categories' array containing insight objects. Be generous in extraction - if there is ANY brand information, extract it.",
-        },
-        { role: "user", content: analysisPrompt },
-      ],
+      model: HAIKU_MODEL,
+      max_tokens: 1024,
+      system: "You are an expert at extracting actionable brand insights from conversations. You MUST return a valid JSON object with a 'categories' array containing insight objects. Be generous in extraction - if there is ANY brand information, extract it. Return your response as valid JSON only, with no other text.",
+      messages: [{ role: "user", content: analysisPrompt }],
       temperature: 0.3,
-      response_format: { type: "json_object" },
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`GPT analysis failed: ${response.status} - ${error}`);
+    throw new Error(`Claude analysis failed: ${response.status} - ${error}`);
   }
 
   const data = await response.json();
-  const rawContent = data.choices[0].message.content;
-  console.log("GPT analysis raw response:", rawContent);
+  const rawContent = data.content[0].text;
+  console.log("Claude analysis raw response:", rawContent);
 
   let result;
   try {

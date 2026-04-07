@@ -1,8 +1,12 @@
 /**
- * sync-to-openai-vector-store
+ * sync-to-openai-vector-store (pgvector edition)
  *
- * Syncs user_knowledge_base entries to OpenAI Vector Stores.
- * Routes entries to the correct vector store based on category.
+ * Syncs user_knowledge_base entries to pgvector embeddings.
+ * Replaces the OpenAI vector store pipeline — entries are embedded
+ * via ada-002 and stored directly in user_knowledge_chunks.
+ *
+ * The function name is preserved for backward compatibility with
+ * frontend callers; the underlying implementation now uses pgvector.
  *
  * Usage:
  * - Single entry: { entry_id: "uuid" }
@@ -12,11 +16,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { generateEmbedding } from "../_shared/embeddings.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 interface SyncRequest {
   entry_id?: string;
@@ -34,36 +35,11 @@ interface KnowledgeEntry {
   structured_data: Record<string, unknown> | null;
   metadata: Record<string, unknown> | null;
   updated_at: string;
-  openai_file_id: string | null;
-}
-
-interface UserVectorStores {
-  user_id: string;
-  diagnostic_store_id: string;
-  avatar_store_id: string;
-  canvas_store_id: string;
-  capture_store_id: string;
-  core_store_id: string;
 }
 
 /**
- * Maps DB category to OpenAI vector store field
- */
-function getVectorStoreField(category: string): keyof Omit<UserVectorStores, 'user_id'> {
-  const mapping: Record<string, keyof Omit<UserVectorStores, 'user_id'>> = {
-    'diagnostic': 'diagnostic_store_id',
-    'avatar': 'avatar_store_id',
-    'canvas': 'canvas_store_id',
-    'insights': 'capture_store_id',  // Buyer intent research → capture
-    'copy': 'capture_store_id',       // Copy generation → capture
-    'capture': 'capture_store_id',    // Direct mapping
-    'core': 'core_store_id',          // Uploaded docs, insights
-  };
-  return mapping[category] || 'core_store_id';
-}
-
-/**
- * Format entry as a markdown document for OpenAI
+ * Format entry as a markdown document for embedding.
+ * Same format as the old OpenAI version for consistency.
  */
 function formatEntryAsDocument(entry: KnowledgeEntry): string {
   const lines = [
@@ -85,80 +61,6 @@ function formatEntryAsDocument(entry: KnowledgeEntry): string {
   }
 
   return lines.join('\n');
-}
-
-/**
- * Upload content as file to OpenAI
- */
-async function uploadFileToOpenAI(
-  apiKey: string,
-  content: string,
-  filename: string
-): Promise<string> {
-  const blob = new Blob([content], { type: 'text/markdown' });
-  const formData = new FormData();
-  formData.append('file', blob, `${filename}.md`);
-  formData.append('purpose', 'assistants');
-
-  const response = await fetch('https://api.openai.com/v1/files', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to upload file: ${response.status} - ${error}`);
-  }
-
-  const data = await response.json();
-  return data.id;
-}
-
-/**
- * Add file to OpenAI vector store
- */
-async function addFileToVectorStore(
-  apiKey: string,
-  vectorStoreId: string,
-  fileId: string
-): Promise<void> {
-  const response = await fetch(
-    `https://api.openai.com/v1/vector_stores/${vectorStoreId}/files`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2',
-      },
-      body: JSON.stringify({ file_id: fileId }),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to add file to vector store: ${response.status} - ${error}`);
-  }
-}
-
-/**
- * Delete old file from OpenAI (for updates)
- */
-async function deleteFileFromOpenAI(apiKey: string, fileId: string): Promise<void> {
-  try {
-    await fetch(`https://api.openai.com/v1/files/${fileId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    });
-  } catch (error) {
-    console.warn(`Failed to delete old file ${fileId}:`, error);
-    // Non-fatal - old file will be orphaned but won't affect functionality
-  }
 }
 
 serve(async (req) => {
@@ -213,85 +115,78 @@ serve(async (req) => {
       );
     }
 
-    // Get unique user IDs from entries
-    const userIds = [...new Set(entries.map(e => e.user_id))];
-
-    // Fetch vector stores for all users
-    const { data: allUserStores, error: storesError } = await supabase
-      .from('user_vector_stores')
-      .select('*')
-      .in('user_id', userIds);
-
-    if (storesError) {
-      throw new Error(`Failed to fetch vector stores: ${storesError.message}`);
-    }
-
-    // Create lookup map
-    const userStoresMap = new Map<string, UserVectorStores>();
-    for (const stores of allUserStores || []) {
-      userStoresMap.set(stores.user_id, stores);
-    }
-
     // Process each entry
-    const results: Array<{ id: string; status: string; fileId?: string; error?: string }> = [];
+    const results: Array<{ id: string; status: string; error?: string }> = [];
 
     for (const entry of entries as KnowledgeEntry[]) {
       try {
-        // Skip if content is too short
+        // Skip entries with content too short
         if (entry.content.length < 10) {
           results.push({ id: entry.id, status: 'skipped', error: 'Content too short' });
           continue;
         }
 
-        // Get user's vector stores
-        const userStores = userStoresMap.get(entry.user_id);
-        if (!userStores) {
-          results.push({ id: entry.id, status: 'skipped', error: 'User has no vector stores' });
-          continue;
-        }
-
-        // Get target vector store based on category
-        const storeField = getVectorStoreField(entry.category);
-        const vectorStoreId = userStores[storeField];
-
-        if (!vectorStoreId) {
-          results.push({ id: entry.id, status: 'skipped', error: `No vector store for category: ${entry.category}` });
-          continue;
-        }
-
-        // Delete old file if updating
-        if (entry.openai_file_id) {
-          await deleteFileFromOpenAI(OPENAI_API_KEY, entry.openai_file_id);
-        }
-
-        // Format and upload document
+        // Format the entry as a document for embedding
         const document = formatEntryAsDocument(entry);
-        const fileId = await uploadFileToOpenAI(
-          OPENAI_API_KEY,
-          document,
-          `${entry.user_id}_${entry.field_identifier}`
-        );
 
-        // Add to vector store
-        await addFileToVectorStore(OPENAI_API_KEY, vectorStoreId, fileId);
+        // Generate embedding
+        const embedding = await generateEmbedding(document, OPENAI_API_KEY);
 
-        // Update entry with file ID
+        // Delete any existing chunks for this field_identifier + user
+        // (this handles re-syncs / updates)
+        const { error: deleteError } = await supabase
+          .from('user_knowledge_chunks')
+          .delete()
+          .eq('user_id', entry.user_id)
+          .eq('field_identifier', entry.field_identifier)
+          .eq('source_type', 'kb_entry');
+
+        if (deleteError) {
+          console.warn(`Failed to delete old chunks for ${entry.field_identifier}:`, deleteError);
+        }
+
+        // Insert new chunk
+        const { error: insertError } = await supabase
+          .from('user_knowledge_chunks')
+          .insert({
+            user_id: entry.user_id,
+            content: document,
+            embedding: JSON.stringify(embedding),
+            source_type: 'kb_entry',
+            source_id: entry.id,
+            category: entry.category,
+            field_identifier: entry.field_identifier,
+            chunk_index: 0,
+            metadata: {
+              field_identifier: entry.field_identifier,
+              category: entry.category,
+              subcategory: entry.subcategory,
+              kb_entry_id: entry.id,
+            },
+          });
+
+        if (insertError) {
+          console.error(`Failed to insert chunk for ${entry.field_identifier}:`, insertError);
+          results.push({ id: entry.id, status: 'error', error: insertError.message });
+          continue;
+        }
+
+        // Mark entry as synced to pgvector
         const { error: updateError } = await supabase
           .from('user_knowledge_base')
           .update({
-            openai_file_id: fileId,
-            openai_synced_at: new Date().toISOString(),
+            pgvector_synced_at: new Date().toISOString(),
           })
           .eq('id', entry.id);
 
         if (updateError) {
-          console.error(`Failed to update entry ${entry.id}:`, updateError);
-          results.push({ id: entry.id, status: 'partial', fileId, error: 'File uploaded but DB update failed' });
+          console.error(`Failed to update pgvector_synced_at for ${entry.id}:`, updateError);
+          results.push({ id: entry.id, status: 'partial', error: 'Chunk created but sync timestamp not updated' });
         } else {
-          results.push({ id: entry.id, status: 'synced', fileId });
+          results.push({ id: entry.id, status: 'synced' });
         }
 
-        console.log(`✅ Synced ${entry.field_identifier} to ${entry.category} store`);
+        console.log(`Synced ${entry.field_identifier} (${entry.category}) to pgvector`);
 
       } catch (error) {
         console.error(`Failed to sync entry ${entry.id}:`, error);

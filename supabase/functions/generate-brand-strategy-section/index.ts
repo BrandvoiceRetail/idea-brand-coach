@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { openAIApiKey, corsHeaders } from './config.ts';
+import { anthropicApiKey, corsHeaders } from './config.ts';
 import { DOCUMENT_SECTIONS } from './sections.ts';
 import { generateSection } from './generate.ts';
 
@@ -14,9 +14,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (!openAIApiKey) {
+  if (!anthropicApiKey) {
     return new Response(
-      JSON.stringify({ success: false, error: 'OpenAI API key not configured' }),
+      JSON.stringify({ success: false, error: 'Anthropic API key not configured' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -2,8 +2,12 @@
 // CONFIGURATION
 // ============================================================================
 
-export const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+export const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+export const openAIApiKey = Deno.env.get('OPENAI_API_KEY'); // Still needed for embeddings + vector store search
 export const skillsVectorStoreId = Deno.env.get('SKILLS_VECTOR_STORE_ID');
+
+export const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+export const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
 export const SKILL_SEARCH_MAX_RESULTS = 5;
 export const SKILL_SEARCH_MAX_RETRIES = 2;

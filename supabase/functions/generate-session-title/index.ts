@@ -1,7 +1,8 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,19 +25,8 @@ serve(async (req) => {
       );
     }
 
-    // Use GPT-4o-mini for fast, cheap title generation
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a title generator. Generate a concise, descriptive title (3-6 words) that summarizes the main topic or intent of a conversation.
+    // Use Claude Haiku for fast, cheap title generation
+    const systemPrompt = `You are a title generator. Generate a concise, descriptive title (3-6 words) that summarizes the main topic or intent of a conversation.
 
 Rules:
 - Be specific to the topic discussed
@@ -45,24 +35,32 @@ Rules:
 - Focus on the user's intent/question, not the response
 - Examples of good titles: "Brand Positioning Strategy", "Customer Psychology Insights", "E-commerce Trust Building", "Emotional Marketing Tactics"
 
-Respond with ONLY the title, nothing else.`
-          },
-          {
-            role: 'user',
-            content: `User's question: "${user_message}"
+Respond with ONLY the title, nothing else.`;
+
+    const userMessage = `User's question: "${user_message}"
 
 ${assistant_response ? `Assistant's response summary: "${assistant_response.substring(0, 300)}..."` : ''}
 
-Generate a concise title:`
-          }
-        ],
-        max_tokens: 20,
+Generate a concise title:`;
+
+    const response = await fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': anthropicApiKey!,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: HAIKU_MODEL,
+        max_tokens: 30,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
         temperature: 0.3,
       }),
     });
 
     const data = await response.json();
-    const title = data.choices?.[0]?.message?.content?.trim() || null;
+    const title = data.content?.[0]?.text?.trim() || null;
 
     console.log('[generate-session-title] Generated title:', title);
 
