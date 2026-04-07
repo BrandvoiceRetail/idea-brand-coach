@@ -14,6 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
+      avatar_field_values: {
+        Row: {
+          avatar_id: string | null
+          chapter_id: string | null
+          confidence_score: number | null
+          created_at: string | null
+          extracted_at: string | null
+          field_id: string
+          field_source: string | null
+          field_value: string | null
+          id: string
+          is_locked: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_id?: string | null
+          chapter_id?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          extracted_at?: string | null
+          field_id: string
+          field_source?: string | null
+          field_value?: string | null
+          id?: string
+          is_locked?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_id?: string | null
+          chapter_id?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          extracted_at?: string | null
+          field_id?: string
+          field_source?: string | null
+          field_value?: string | null
+          id?: string
+          is_locked?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avatar_field_values_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      avatars: {
+        Row: {
+          buying_behavior: Json | null
+          created_at: string
+          demographics: Json | null
+          description: string | null
+          id: string
+          is_template: boolean
+          name: string
+          psychographics: Json | null
+          updated_at: string
+          user_id: string
+          voice_of_customer: string | null
+        }
+        Insert: {
+          buying_behavior?: Json | null
+          created_at?: string
+          demographics?: Json | null
+          description?: string | null
+          id?: string
+          is_template?: boolean
+          name: string
+          psychographics?: Json | null
+          updated_at?: string
+          user_id: string
+          voice_of_customer?: string | null
+        }
+        Update: {
+          buying_behavior?: Json | null
+          created_at?: string
+          demographics?: Json | null
+          description?: string | null
+          id?: string
+          is_template?: boolean
+          name?: string
+          psychographics?: Json | null
+          updated_at?: string
+          user_id?: string
+          voice_of_customer?: string | null
+        }
+        Relationships: []
+      }
       beta_comments: {
         Row: {
           beta_tester_id: string | null
@@ -158,6 +250,8 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          industry: string | null
+          metadata: Json | null
           name: string
           updated_at: string
           user_id: string
@@ -166,6 +260,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          industry?: string | null
+          metadata?: Json | null
           name: string
           updated_at?: string
           user_id: string
@@ -174,46 +270,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          industry?: string | null
+          metadata?: Json | null
           name?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: []
-      }
-      avatars: {
-        Row: {
-          brand_id: string
-          created_at: string
-          id: string
-          name: string
-          persona_data: Json | null
-          updated_at: string
-        }
-        Insert: {
-          brand_id: string
-          created_at?: string
-          id?: string
-          name: string
-          persona_data?: Json | null
-          updated_at?: string
-        }
-        Update: {
-          brand_id?: string
-          created_at?: string
-          id?: string
-          name?: string
-          persona_data?: Json | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "avatars_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       chat_messages: {
         Row: {
@@ -261,56 +324,48 @@ export type Database = {
       }
       chat_sessions: {
         Row: {
-          avatar_id: string | null
+          chapter_id: string | null
+          chapter_metadata: Json | null
           chatbot_type: string
           conversation_type: string
           created_at: string
           field_id: string | null
           field_label: string | null
           id: string
-          openai_response_id: string | null
           page_context: string | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          avatar_id?: string | null
+          chapter_id?: string | null
+          chapter_metadata?: Json | null
           chatbot_type?: string
           conversation_type?: string
           created_at?: string
           field_id?: string | null
           field_label?: string | null
           id?: string
-          openai_response_id?: string | null
           page_context?: string | null
           title?: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          avatar_id?: string | null
+          chapter_id?: string | null
+          chapter_metadata?: Json | null
           chatbot_type?: string
           conversation_type?: string
           created_at?: string
           field_id?: string | null
           field_label?: string | null
           id?: string
-          openai_response_id?: string | null
           page_context?: string | null
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "chat_sessions_avatar_id_fkey"
-            columns: ["avatar_id"]
-            isOneToOne: false
-            referencedRelation: "avatars"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       diagnostic_submissions: {
         Row: {
@@ -378,44 +433,6 @@ export type Database = {
         }
         Relationships: []
       }
-      performance_metrics: {
-        Row: {
-          avatar_id: string
-          created_at: string
-          id: string
-          metadata: Json | null
-          metric_type: string
-          metric_value: number
-          recorded_at: string
-        }
-        Insert: {
-          avatar_id: string
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          metric_type: string
-          metric_value: number
-          recorded_at?: string
-        }
-        Update: {
-          avatar_id?: string
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          metric_type?: string
-          metric_value?: number
-          recorded_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "performance_metrics_avatar_id_fkey"
-            columns: ["avatar_id"]
-            isOneToOne: false
-            referencedRelation: "avatars"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string
@@ -426,6 +443,7 @@ export type Database = {
           latest_diagnostic_data: Json | null
           latest_diagnostic_score: number | null
           updated_at: string
+          version_preference: string | null
         }
         Insert: {
           created_at?: string
@@ -436,6 +454,7 @@ export type Database = {
           latest_diagnostic_data?: Json | null
           latest_diagnostic_score?: number | null
           updated_at?: string
+          version_preference?: string | null
         }
         Update: {
           created_at?: string
@@ -446,6 +465,7 @@ export type Database = {
           latest_diagnostic_data?: Json | null
           latest_diagnostic_score?: number | null
           updated_at?: string
+          version_preference?: string | null
         }
         Relationships: []
       }
@@ -464,7 +484,7 @@ export type Database = {
           filename: string
           id: string
           mime_type: string
-          openai_file_id: string | null
+          pgvector_indexed: boolean | null
           status: string
           updated_at: string
           user_id: string | null
@@ -483,7 +503,7 @@ export type Database = {
           filename: string
           id?: string
           mime_type: string
-          openai_file_id?: string | null
+          pgvector_indexed?: boolean | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -502,12 +522,20 @@ export type Database = {
           filename?: string
           id?: string
           mime_type?: string
-          openai_file_id?: string | null
+          pgvector_indexed?: boolean | null
           status?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "uploaded_documents_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_diagnostic_results: {
         Row: {
@@ -562,8 +590,7 @@ export type Database = {
           last_synced_at: string | null
           local_changes: boolean | null
           metadata: Json | null
-          openai_file_id: string | null
-          openai_synced_at: string | null
+          pgvector_synced_at: string | null
           source_page: string | null
           structured_data: Json | null
           subcategory: string | null
@@ -582,8 +609,7 @@ export type Database = {
           last_synced_at?: string | null
           local_changes?: boolean | null
           metadata?: Json | null
-          openai_file_id?: string | null
-          openai_synced_at?: string | null
+          pgvector_synced_at?: string | null
           source_page?: string | null
           structured_data?: Json | null
           subcategory?: string | null
@@ -602,8 +628,7 @@ export type Database = {
           last_synced_at?: string | null
           local_changes?: boolean | null
           metadata?: Json | null
-          openai_file_id?: string | null
-          openai_synced_at?: string | null
+          pgvector_synced_at?: string | null
           source_page?: string | null
           structured_data?: Json | null
           subcategory?: string | null
@@ -615,72 +640,59 @@ export type Database = {
       }
       user_knowledge_chunks: {
         Row: {
+          category: string | null
+          chunk_index: number | null
           content: string
           created_at: string
           embedding: string | null
+          field_identifier: string | null
           id: string
           metadata: Json | null
+          source_document_id: string | null
           source_id: string | null
           source_type: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          category?: string | null
+          chunk_index?: number | null
           content: string
           created_at?: string
           embedding?: string | null
+          field_identifier?: string | null
           id?: string
           metadata?: Json | null
+          source_document_id?: string | null
           source_id?: string | null
           source_type: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          category?: string | null
+          chunk_index?: number | null
           content?: string
           created_at?: string
           embedding?: string | null
+          field_identifier?: string | null
           id?: string
           metadata?: Json | null
+          source_document_id?: string | null
           source_id?: string | null
           source_type?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
-      }
-      user_vector_stores: {
-        Row: {
-          avatar_store_id: string
-          canvas_store_id: string
-          capture_store_id: string
-          core_store_id: string
-          created_at: string
-          diagnostic_store_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          avatar_store_id: string
-          canvas_store_id: string
-          capture_store_id: string
-          core_store_id: string
-          created_at?: string
-          diagnostic_store_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          avatar_store_id?: string
-          canvas_store_id?: string
-          capture_store_id?: string
-          core_store_id?: string
-          created_at?: string
-          diagnostic_store_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_knowledge_chunks_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -745,6 +757,25 @@ export type Database = {
     Functions: {
       handle_ai_insight_guidance: { Args: never; Returns: undefined }
       handle_buyer_intent_analysis: { Args: never; Returns: undefined }
+      match_document_chunks: {
+        Args: {
+          filter_categories?: string[]
+          match_count?: number
+          match_threshold?: number
+          match_user_id: string
+          query_embedding: string
+        }
+        Returns: {
+          category: string
+          chunk_index: number
+          content: string
+          field_identifier: string
+          id: string
+          metadata: Json
+          similarity: number
+          source_type: string
+        }[]
+      }
       match_user_documents: {
         Args: {
           filter?: Json

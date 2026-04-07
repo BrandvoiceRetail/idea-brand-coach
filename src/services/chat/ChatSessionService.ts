@@ -146,7 +146,6 @@ export class ChatSessionService {
     if (update.title !== undefined) updateData.title = update.title;
     if (update.chapter_id !== undefined) updateData.chapter_id = update.chapter_id;
     if (update.chapter_metadata !== undefined) updateData.chapter_metadata = update.chapter_metadata;
-    if (update.openai_response_id !== undefined) updateData.openai_response_id = update.openai_response_id;
 
     const { data, error } = await supabase
       .from('chat_sessions')
@@ -210,7 +209,6 @@ export class ChatSessionService {
       page_context: item.page_context as string | undefined,
       chapter_id: item.chapter_id as ChapterId | undefined,
       chapter_metadata: item.chapter_metadata as ChapterMetadata | undefined,
-      openai_response_id: item.openai_response_id as string | undefined,
       created_at: item.created_at as string,
       updated_at: item.updated_at as string,
     };

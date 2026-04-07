@@ -9,40 +9,17 @@
  */
 
 import { getFieldLabel } from './fields.ts';
+import { generateEmbedding as _generateEmbedding } from '../_shared/embeddings.ts';
 
-// Temporarily keep OpenAI embeddings for semantic search compatibility.
-// Phase 4 will replace this with Voyage AI.
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
-/**
- * Generate embedding using OpenAI ada-002 (temporary -- Phase 4 migrates to Voyage AI).
- */
+/** Wrapper that returns [] instead of throwing when API key is missing. */
 async function generateEmbedding(text: string): Promise<number[]> {
   if (!openAIApiKey) {
     console.warn('[Embeddings] No OPENAI_API_KEY -- skipping semantic search');
     return [];
   }
-
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'text-embedding-ada-002',
-      input: text,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[Embeddings] Error:', response.status, errorText);
-    throw new Error(`Embedding generation failed: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.data[0].embedding;
+  return _generateEmbedding(text, openAIApiKey);
 }
 
 /**

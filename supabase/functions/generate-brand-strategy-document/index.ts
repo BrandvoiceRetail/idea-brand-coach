@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { generateEmbedding as _generateEmbedding } from '../_shared/embeddings.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -133,40 +134,9 @@ const SECTION_QUERIES: SectionQueryConfig[] = [
   }
 ];
 
-/**
- * Generate embedding for semantic search using OpenAI
- */
+/** Generate embedding via the shared utility. */
 async function generateEmbedding(text: string): Promise<number[]> {
-  const response = await fetch("https://api.openai.com/v1/embeddings", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${openAIApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "text-embedding-ada-002",
-      input: text,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[generateEmbedding] Error:', response.status, errorText);
-    throw new Error(`Embedding generation failed: ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
-    throw new Error('Invalid embedding response: no embeddings returned');
-  }
-
-  const embedding = data.data[0].embedding;
-  if (!Array.isArray(embedding) || embedding.length === 0) {
-    throw new Error('Invalid embedding response: embedding is not a valid array');
-  }
-
-  return embedding;
+  return _generateEmbedding(text, openAIApiKey!);
 }
 
 /**

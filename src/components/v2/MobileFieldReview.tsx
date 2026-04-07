@@ -154,7 +154,7 @@ export const MobileFieldReview: React.FC<MobileFieldReviewProps> = ({
         className="flex-1 space-y-4"
       >
         <ChapterFieldSet
-          field={field}
+          field={{ ...field, type: field.type === 'text' ? 'textarea' : field.type }}
           value={editedValue}
           source={field.source}
           onChange={(_, value) => {

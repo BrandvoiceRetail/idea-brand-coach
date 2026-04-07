@@ -11,7 +11,6 @@ export interface UploadedDocument {
   status: string;
   created_at: string;
   extracted_content?: string;
-  openai_file_id?: string;
   avatar_id?: string;
   extraction_status?: 'pending' | 'extracting' | 'completed' | 'failed' | 'skipped';
   fields_extracted?: number;

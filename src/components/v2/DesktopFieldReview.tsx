@@ -155,7 +155,7 @@ export const DesktopFieldReview: React.FC<DesktopFieldReviewProps> = ({
           </div>
 
           <ChapterFieldSet
-            field={field}
+            field={{ ...field, type: field.type === 'text' ? 'textarea' : field.type }}
             value={editedValue}
             source={field.source}
             onChange={(_, value) => {

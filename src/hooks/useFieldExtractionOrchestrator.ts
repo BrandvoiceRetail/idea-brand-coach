@@ -130,7 +130,7 @@ export function useFieldExtractionOrchestrator({
   }, []);
 
   // Side-effect: extract fields from NEW assistant messages and enqueue for review.
-  // Fields arrive via msg.metadata.extractedFields (from OpenAI tool calls).
+  // Fields arrive via msg.metadata.extractedFields (from Claude tool calls).
   // AI-extracted fields are NOT auto-saved — they enter the review queue instead.
   useEffect(() => {
     messages.forEach((msg) => {

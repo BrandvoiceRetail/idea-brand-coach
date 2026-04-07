@@ -1,26 +1,18 @@
 /**
  * Chapter Content RAG Helper
  *
- * Queries the IDEA Framework book content from RAG vector store
+ * Queries the IDEA Framework book content from pgvector
  * to retrieve chapter summaries, excerpts, and key concepts.
- *
- * Vector Store: vs_6948707b318c81918a90e9b44970a99e (Trevor's IDEA Framework book)
  */
 
 import { supabase } from '@/integrations/supabase/client';
 import { ChapterId, ChapterSummary, DEFAULT_BOOK_STRUCTURE } from '@/types/chapter';
 
 /**
- * System knowledge base vector store ID
- * Contains Trevor's IDEA Framework book content
- */
-const SYSTEM_VECTOR_STORE_ID = 'vs_6948707b318c81918a90e9b44970a99e';
-
-/**
  * Query chapter content from RAG vector store
  *
  * Retrieves chapter summaries, key concepts, and relevant excerpts
- * from the IDEA Framework book stored in the OpenAI vector store.
+ * from the IDEA Framework book stored in pgvector.
  *
  * @param chapterId - Chapter identifier to query
  * @returns Promise resolving to chapter summary with excerpts
@@ -54,9 +46,8 @@ Chapter context:
   `.trim();
 
   try {
-    // Call edge function to query vector store
-    // The edge function will use OpenAI's file_search to retrieve relevant content
-    const { data, error } = await supabase.functions.invoke('idea-framework-consultant', {
+    // Call edge function to query pgvector for chapter content
+    const { data, error } = await supabase.functions.invoke('idea-framework-consultant-claude', {
       body: {
         message: query,
         context: `Searching for Chapter ${chapter.number}: ${chapter.title}`,

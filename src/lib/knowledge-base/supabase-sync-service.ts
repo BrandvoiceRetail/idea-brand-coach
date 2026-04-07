@@ -168,46 +168,6 @@ export class SupabaseSyncService implements ISyncService {
     // Mark local entry as synced
     await this.repository.markAsSynced(localEntry.id, new Date());
 
-    // Trigger OpenAI vector store sync (non-blocking)
-    this.triggerOpenAISync(userId, fieldIdentifier).catch(err => {
-      console.warn('OpenAI sync queued for retry:', err);
-    });
-  }
-
-  /**
-   * Trigger sync to OpenAI vector store
-   * Non-blocking - failures will be caught by periodic backfill
-   */
-  private async triggerOpenAISync(userId: string, fieldIdentifier: string): Promise<void> {
-    try {
-      // Get the entry ID for syncing
-      const { data: entry, error: fetchError } = await supabase
-        .from('user_knowledge_base')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('field_identifier', fieldIdentifier)
-        .eq('is_current', true)
-        .single();
-
-      if (fetchError || !entry) {
-        console.warn('Could not find entry for OpenAI sync:', fieldIdentifier);
-        return;
-      }
-
-      // Call the sync edge function
-      const { error } = await supabase.functions.invoke('sync-to-openai-vector-store', {
-        body: { entry_id: entry.id }
-      });
-
-      if (error) {
-        console.warn('OpenAI sync failed, will retry:', error);
-      } else {
-        console.log('OpenAI sync triggered for:', fieldIdentifier);
-      }
-    } catch (error) {
-      // Non-fatal - backfill will catch unsynced entries
-      console.warn('OpenAI sync error (will retry):', error);
-    }
   }
 
   /**

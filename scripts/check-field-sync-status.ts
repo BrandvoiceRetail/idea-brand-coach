@@ -19,9 +19,8 @@ interface FieldStatus {
   contentPreview: string;
   isCurrent: boolean;
   lastUpdated: string;
-  hasSyncedToOpenAI: boolean;
-  openaiSyncedAt: string | null;
-  openaiFileId: string | null;
+  hasSyncedToPgvector: boolean;
+  pgvectorSyncedAt: string | null;
 }
 
 const ALL_EXPECTED_FIELDS = [
@@ -93,9 +92,8 @@ async function checkFieldStatus(userId: string): Promise<void> {
         contentPreview: entry.content?.substring(0, 50) || '',
         isCurrent: entry.is_current,
         lastUpdated: entry.updated_at,
-        hasSyncedToOpenAI: !!entry.openai_file_id,
-        openaiSyncedAt: entry.openai_synced_at,
-        openaiFileId: entry.openai_file_id,
+        hasSyncedToPgvector: !!entry.pgvector_synced_at,
+        pgvectorSyncedAt: entry.pgvector_synced_at,
       };
 
       results.push(status);
@@ -103,7 +101,7 @@ async function checkFieldStatus(userId: string): Promise<void> {
       if (status.hasContent) {
         withContent++;
         syncedToSupabase++;
-        if (status.hasSyncedToOpenAI) {
+        if (status.hasSyncedToPgvector) {
           syncedToOpenAI++;
         }
       }
@@ -117,9 +115,8 @@ async function checkFieldStatus(userId: string): Promise<void> {
         contentPreview: '(not in database)',
         isCurrent: false,
         lastUpdated: '',
-        hasSyncedToOpenAI: false,
-        openaiSyncedAt: null,
-        openaiFileId: null,
+        hasSyncedToPgvector: false,
+        pgvectorSyncedAt: null,
       });
     }
   }
@@ -130,7 +127,7 @@ async function checkFieldStatus(userId: string): Promise<void> {
   console.log(`Total Fields:             ${ALL_EXPECTED_FIELDS.length}`);
   console.log(`With Content:             ${withContent} (${Math.round(withContent/ALL_EXPECTED_FIELDS.length * 100)}%)`);
   console.log(`Synced to Supabase:       ${syncedToSupabase} (${Math.round(syncedToSupabase/ALL_EXPECTED_FIELDS.length * 100)}%)`);
-  console.log(`Synced to OpenAI:         ${syncedToOpenAI} (${Math.round(syncedToOpenAI/ALL_EXPECTED_FIELDS.length * 100)}%)`);
+  console.log(`Synced to pgvector:       ${syncedToOpenAI} (${Math.round(syncedToOpenAI/ALL_EXPECTED_FIELDS.length * 100)}%)`);
   console.log('');
 
   // Print by category

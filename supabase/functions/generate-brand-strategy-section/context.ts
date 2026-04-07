@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { generateEmbedding as _generateEmbedding } from '../_shared/embeddings.ts';
 import { openAIApiKey, USER_CONTEXT_MATCH_COUNT } from './config.ts';
 
 // ============================================================================
@@ -7,6 +8,7 @@ import { openAIApiKey, USER_CONTEXT_MATCH_COUNT } from './config.ts';
 
 const embeddingCache = new Map<string, number[]>();
 
+/** Cached wrapper around the shared embedding utility. */
 export async function generateEmbedding(text: string): Promise<number[]> {
   const cacheKey = text.substring(0, 200).toLowerCase().trim();
   if (embeddingCache.has(cacheKey)) {
@@ -14,33 +16,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     return embeddingCache.get(cacheKey)!;
   }
 
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'text-embedding-ada-002',
-      input: text,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Embedding generation failed: ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
-    throw new Error('Invalid embedding response: no embeddings returned');
-  }
-
-  const embedding = data.data[0].embedding;
-  if (!Array.isArray(embedding) || embedding.length === 0) {
-    throw new Error('Invalid embedding response: embedding is not a valid array');
-  }
-
+  const embedding = await _generateEmbedding(text, openAIApiKey!);
   embeddingCache.set(cacheKey, embedding);
   return embedding;
 }

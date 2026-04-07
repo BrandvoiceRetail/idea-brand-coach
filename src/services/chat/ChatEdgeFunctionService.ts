@@ -65,7 +65,7 @@ export class ChatEdgeFunctionService {
     try {
       const { data: uploadedDocs } = await supabase
         .from('uploaded_documents')
-        .select('id, openai_file_id')
+        .select('id, pgvector_indexed')
         .eq('user_id', userId)
         .limit(1);
 
@@ -73,7 +73,7 @@ export class ChatEdgeFunctionService {
       console.log('📄 Document check:', {
         hasDocuments,
         documentCount: uploadedDocs?.length || 0,
-        hasOpenAIFileId: uploadedDocs?.[0]?.openai_file_id ? true : false,
+        pgvectorIndexed: uploadedDocs?.[0]?.pgvector_indexed ?? false,
       });
       return hasDocuments;
     } catch (error) {
