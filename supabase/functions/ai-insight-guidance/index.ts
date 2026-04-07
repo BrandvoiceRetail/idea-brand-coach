@@ -1,8 +1,9 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -238,9 +239,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (!openAIApiKey) {
+  if (!anthropicApiKey) {
     return new Response(
-      JSON.stringify({ error: 'OpenAI API key not configured' }),
+      JSON.stringify({ error: 'Anthropic API key not configured' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -320,31 +321,32 @@ ${userInput}
 # Focus Areas for ${stepTitle}
 ${stepFocusPoints}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // System prompt is >1000 chars, use prompt caching
+    const response = await fetch(CLAUDE_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'x-api-key': anthropicApiKey!,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage }
-        ],
-        temperature: 0.7,
+        model: HAIKU_MODEL,
         max_tokens: 800,
+        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: userMessage }],
+        temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('[ai-insight-guidance] OpenAI API error:', response.status, errorBody);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('[ai-insight-guidance] Anthropic API error:', response.status, errorBody);
+      throw new Error(`Anthropic API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const guidance = data.choices[0].message.content.trim();
+    const guidance = data.content[0].text.trim();
 
     console.log('[ai-insight-guidance] Content generated successfully');
 

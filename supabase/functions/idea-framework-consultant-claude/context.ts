@@ -1,10 +1,11 @@
 /**
  * Context retrieval for the Claude edge function.
- * Retrieves user knowledge base and semantic context from Supabase.
+ * Retrieves user knowledge base and semantic context from Supabase pgvector.
  *
- * Phase 1: Uses existing pgvector + ada-002 embeddings for semantic search.
- *          OpenAI vector store search is omitted (Phase 2 will migrate to pgvector).
- * Phase 4: Will switch embeddings to Voyage AI.
+ * Phase 2: Uses pgvector match_document_chunks RPC for semantic search.
+ *          All data (documents, KB entries, diagnostics) lives in
+ *          user_knowledge_chunks with category-scoped filtering.
+ * Phase 4: Will switch embedding model from ada-002 to Voyage AI.
  */
 
 import { getFieldLabel } from './fields.ts';
@@ -14,11 +15,11 @@ import { getFieldLabel } from './fields.ts';
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 /**
- * Generate embedding using OpenAI ada-002 (temporary — Phase 4 migrates to Voyage AI).
+ * Generate embedding using OpenAI ada-002 (temporary -- Phase 4 migrates to Voyage AI).
  */
 async function generateEmbedding(text: string): Promise<number[]> {
   if (!openAIApiKey) {
-    console.warn('[Embeddings] No OPENAI_API_KEY — skipping semantic search');
+    console.warn('[Embeddings] No OPENAI_API_KEY -- skipping semantic search');
     return [];
   }
 
@@ -121,7 +122,11 @@ export async function retrieveUserContext(
 }
 
 /**
- * Retrieve relevant context using semantic search (pgvector + ada-002 embeddings).
+ * Retrieve relevant context using semantic search via pgvector.
+ *
+ * Uses match_document_chunks RPC which searches across all
+ * user_knowledge_chunks (documents, KB entries, diagnostics)
+ * with optional category filtering.
  */
 export async function retrieveSemanticContext(
   supabaseClient: any,
@@ -139,18 +144,52 @@ export async function retrieveSemanticContext(
       return { content: '', sources: [] };
     }
 
+    // Use the new match_document_chunks RPC which supports category filtering
+    // and returns richer metadata than the old match_user_documents
     const { data: matches, error } = await supabaseClient.rpc(
-      'match_user_documents',
+      'match_document_chunks',
       {
         query_embedding: queryEmbedding,
         match_user_id: userId,
         match_count: 5,
+        match_threshold: 0.5,
+        filter_categories: null, // Search all categories
       }
     );
 
     if (error) {
       console.error('[Context] Semantic search error:', error);
-      return { content: '', sources: [] };
+
+      // Fallback: try the legacy match_user_documents RPC
+      // (in case the migration hasn't been applied yet)
+      console.log('[Context] Falling back to match_user_documents...');
+      const { data: fallbackMatches, error: fallbackError } = await supabaseClient.rpc(
+        'match_user_documents',
+        {
+          query_embedding: queryEmbedding,
+          match_user_id: userId,
+          match_count: 5,
+        }
+      );
+
+      if (fallbackError || !fallbackMatches || fallbackMatches.length === 0) {
+        console.log('[Context] Fallback also returned no results');
+        return { content: '', sources: [] };
+      }
+
+      const contextParts = fallbackMatches.map((m: any) => m.content);
+      const sources = fallbackMatches.map((m: any, i: number) =>
+        `Source ${i + 1} (relevance: ${(m.similarity * 100).toFixed(1)}%)`
+      );
+      return {
+        content: `
+<semantic-context>
+The following information was retrieved based on relevance to the user's question:
+
+${contextParts.join('\n\n---\n\n')}
+</semantic-context>`,
+        sources,
+      };
     }
 
     if (!matches || matches.length === 0) {
@@ -161,9 +200,11 @@ export async function retrieveSemanticContext(
     console.log(`[Context] Found ${matches.length} semantic matches`);
 
     const contextParts = matches.map((m: any) => m.content);
-    const sources = matches.map((m: any, i: number) =>
-      `Source ${i + 1} (relevance: ${(m.similarity * 100).toFixed(1)}%)`
-    );
+    const sources = matches.map((m: any, i: number) => {
+      const catLabel = m.category ? ` [${m.category}]` : '';
+      const srcLabel = m.source_type ? ` (${m.source_type})` : '';
+      return `Source ${i + 1}${catLabel}${srcLabel} (relevance: ${(m.similarity * 100).toFixed(1)}%)`;
+    });
 
     return {
       content: `

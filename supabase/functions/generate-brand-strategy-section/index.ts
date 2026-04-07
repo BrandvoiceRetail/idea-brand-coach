@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -6,8 +5,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 // CONFIGURATION
 // ============================================================================
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY'); // Kept for embeddings and vector store search
+const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const skillsVectorStoreId = Deno.env.get('SKILLS_VECTOR_STORE_ID');
+const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
 const SKILL_SEARCH_MAX_RESULTS = 5;
 const SKILL_SEARCH_MAX_RETRIES = 2;
@@ -901,22 +903,23 @@ ${previousContext ? `## Context from Previous Sections\n${previousContext}` : ''
 
 Generate the complete section now.`;
 
+  // System prompt is always large (TREVOR_VOICE_DIRECTIVE + skill context + instructions), use prompt caching
   const response = await fetchWithRetry(
-    'https://api.openai.com/v1/chat/completions',
+    CLAUDE_API_URL,
     {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'x-api-key': anthropicApiKey!,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.7,
+        model: HAIKU_MODEL,
         max_tokens: SECTION_MAX_TOKENS,
+        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: userPrompt }],
+        temperature: 0.7,
       }),
     },
     1,
@@ -925,24 +928,24 @@ Generate the complete section now.`;
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`[generateSection] GPT-4o error for ${section.title}:`, response.status, errorText);
+    console.error(`[generateSection] Claude Haiku error for ${section.title}:`, response.status, errorText);
     return `## ${section.order}. ${section.title}\n\nThis section could not be generated. Please try again.\n`;
   }
 
   const data = await response.json();
 
-  if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+  if (!data.content || !Array.isArray(data.content) || data.content.length === 0) {
     console.error(`[generateSection] Invalid response structure for ${section.title}`);
     return `## ${section.order}. ${section.title}\n\nGeneration error: invalid API response. Please try again.\n`;
   }
 
-  const choice = data.choices[0];
-  if (!choice?.message?.content || typeof choice.message.content !== 'string') {
+  const firstBlock = data.content[0];
+  if (!firstBlock?.text || typeof firstBlock.text !== 'string') {
     console.error(`[generateSection] Missing content in API response for ${section.title}`);
     return `## ${section.order}. ${section.title}\n\nGeneration error: no content returned. Please try again.\n`;
   }
 
-  const content = choice.message.content.trim();
+  const content = firstBlock.text.trim();
   console.log(`[generateSection] ${section.title} generated: ${content.length} chars`);
   return content;
 }
@@ -956,9 +959,16 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (!anthropicApiKey) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Anthropic API key not configured' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
   if (!openAIApiKey) {
     return new Response(
-      JSON.stringify({ success: false, error: 'OpenAI API key not configured' }),
+      JSON.stringify({ success: false, error: 'OpenAI API key not configured (needed for embeddings and vector store search)' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

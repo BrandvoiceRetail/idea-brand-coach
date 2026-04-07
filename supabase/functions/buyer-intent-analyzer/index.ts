@@ -1,7 +1,8 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,7 +28,9 @@ CRITICAL RESPONSE FORMATTING REQUIREMENTS:
 - Highly actionable outputs with specific steps
 - Focus on conversion and emotional connection
 
-Your analysis should help brands improve sales conversion and emotional connection with customers.`;
+Your analysis should help brands improve sales conversion and emotional connection with customers.
+
+Return your response as valid JSON.`;
 
     const prompt = `What is the Buyer intent for the keyword search: ${searchTerms.join(', ')} in the ${industry} industry?
 
@@ -60,34 +63,33 @@ Return ONLY valid JSON in this exact format:
   "analysis": "Your complete detailed analysis here. Start each section with a plain text heading on its own line, followed by paragraph text. No bold, no bullets, no asterisks, no ## symbols."
 }`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(CLAUDE_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'x-api-key': anthropicApiKey!,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
+        model: HAIKU_MODEL,
         max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`Anthropic API error: ${response.status}`);
     }
 
     const data = await response.json();
     let analysisResult;
-    
+
     try {
-      let content = data.choices[0].message.content;
+      let content = data.content[0].text;
       console.log('AI Response (raw):', content);
-      
+
       // Clean up the content - remove trailing newlines and quotes
       content = content.trim();
       if (content.endsWith('\\n"')) {
@@ -96,7 +98,7 @@ Return ONLY valid JSON in this exact format:
       if (content.endsWith('\\n')) {
         content = content.slice(0, -2);
       }
-      
+
       console.log('AI Response (cleaned):', content);
       analysisResult = JSON.parse(content);
     } catch (parseError) {

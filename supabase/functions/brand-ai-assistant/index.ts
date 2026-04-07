@@ -1,8 +1,9 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -122,9 +123,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (!openAIApiKey) {
+  if (!anthropicApiKey) {
     return new Response(
-      JSON.stringify({ error: 'OpenAI API key not configured' }),
+      JSON.stringify({ error: 'Anthropic API key not configured' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -282,31 +283,41 @@ ${userGuidance}
 
 Remember: Output ONLY the final content that should appear in the field. No explanations or meta-commentary. Make it specific to THIS brand based on all the context provided.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Use prompt caching for large system prompts (brand context can be substantial)
+    const usePromptCaching = systemPrompt.length > 1000;
+    const headers: Record<string, string> = {
+      'x-api-key': anthropicApiKey!,
+      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/json',
+    };
+    if (usePromptCaching) {
+      headers['anthropic-beta'] = 'prompt-caching-2024-07-31';
+    }
+
+    const systemContent = usePromptCaching
+      ? [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }]
+      : systemPrompt;
+
+    const response = await fetch(CLAUDE_API_URL, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate the ${fieldType} content now.` }
-        ],
-        temperature: 0.7,
+        model: HAIKU_MODEL,
         max_tokens: 500,
+        system: systemContent,
+        messages: [{ role: 'user', content: `Generate the ${fieldType} content now.` }],
+        temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('[brand-ai-assistant] OpenAI API error:', response.status, errorBody);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('[brand-ai-assistant] Anthropic API error:', response.status, errorBody);
+      throw new Error(`Anthropic API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const suggestion = data.choices[0].message.content.trim();
+    const suggestion = data.content[0].text.trim();
 
     console.log('[brand-ai-assistant] Successfully generated suggestion');
 

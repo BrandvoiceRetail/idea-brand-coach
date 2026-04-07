@@ -384,46 +384,58 @@ serve(async (req) => {
     // Build the copy generation prompt
     const copyPrompt = buildCopyPrompt(copyRequest);
 
-    // Build messages array
-    const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
-    ];
-
-    // Add user context if available
-    if (userContext) {
-      messages.push({
-        role: "system",
-        content: userContext,
-      });
+    // Build system prompt - combine SYSTEM_PROMPT and user context into a single system string
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error("ANTHROPIC_API_KEY not configured");
     }
 
-    messages.push({ role: "user", content: copyPrompt });
+    const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+    const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
-    console.log("Calling OpenAI with", messages.length, "messages, context:", userContext ? "yes" : "no");
+    let fullSystemPrompt = SYSTEM_PROMPT;
+    if (userContext) {
+      fullSystemPrompt += `\n\n${userContext}`;
+    }
 
-    // Call OpenAI Chat API
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+    console.log("Calling Claude Haiku with context:", userContext ? "yes" : "no");
+
+    // Use prompt caching for large system prompts (brand context can be substantial)
+    const usePromptCaching = fullSystemPrompt.length > 1000;
+    const requestHeaders: Record<string, string> = {
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    };
+    if (usePromptCaching) {
+      requestHeaders["anthropic-beta"] = "prompt-caching-2024-07-31";
+    }
+
+    const systemContent = usePromptCaching
+      ? [{ type: "text", text: fullSystemPrompt, cache_control: { type: "ephemeral" } }]
+      : fullSystemPrompt;
+
+    // Call Claude API
+    const claudeResponse = await fetch(CLAUDE_API_URL, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: requestHeaders,
       body: JSON.stringify({
-        model: "gpt-4-turbo-preview",
-        messages,
-        temperature: 0.8, // Slightly higher for creative copy
+        model: HAIKU_MODEL,
         max_tokens: 1500,
+        system: systemContent,
+        messages: [{ role: "user", content: copyPrompt }],
+        temperature: 0.8, // Slightly higher for creative copy
       }),
     });
 
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error("OpenAI API error:", errorText);
-      throw new Error(`OpenAI API failed: ${openaiResponse.status}`);
+    if (!claudeResponse.ok) {
+      const errorText = await claudeResponse.text();
+      console.error("Anthropic API error:", errorText);
+      throw new Error(`Anthropic API failed: ${claudeResponse.status}`);
     }
 
-    const openaiData = await openaiResponse.json();
-    const generatedCopy = openaiData.choices[0].message.content;
+    const claudeData = await claudeResponse.json();
+    const generatedCopy = claudeData.content[0].text;
 
     console.log("Successfully generated copy");
 

@@ -139,9 +139,9 @@ interface ExtractedField {
 }
 
 /**
- * Search vector store for field-specific content using the Responses API file_search tool.
- * Replaces the deprecated Assistants API approach (thread → message → assistant → run → poll → read → cleanup)
- * with a single API call.
+ * Search vector store for field-specific content.
+ * Step 1: Use OpenAI vector store search API to retrieve relevant chunks.
+ * Step 2: Use Claude Haiku to extract the specific field value from the chunks.
  */
 async function searchVectorStoreForField(
   vectorStoreId: string,
@@ -149,49 +149,90 @@ async function searchVectorStoreForField(
   fieldHelpText: string,
   openaiKey: string
 ): Promise<string | null> {
+  const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+  const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
+
   try {
-    const query = `Find and extract the ${fieldLabel}: ${fieldHelpText}.
-                   Look for any relevant information in the uploaded document.
-                   If found, return ONLY the extracted value without commentary.
-                   If not found or unclear, respond with exactly: NOT_FOUND`;
-
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openaiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        instructions: `You are a precise extraction assistant. Extract only the requested brand field value from the document.
-                       Be concise and specific. Return ONLY the extracted value, not a full sentence.
-                       If the information is not found, respond with exactly: NOT_FOUND`,
-        input: query,
-        tools: [{
-          type: "file_search",
-          vector_store_ids: [vectorStoreId],
+    // Step 1: Search vector store using OpenAI's vector store search endpoint
+    const searchQuery = `${fieldLabel}: ${fieldHelpText}`;
+    const searchResponse = await fetch(
+      `https://api.openai.com/v1/vector_stores/${vectorStoreId}/search`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openaiKey}`,
+          "Content-Type": "application/json",
+          "OpenAI-Beta": "assistants=v2",
+        },
+        body: JSON.stringify({
+          query: searchQuery,
           max_num_results: 5,
-        }],
-        store: false,
-      }),
-    });
+        }),
+      }
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[searchVectorStoreForField] Responses API error for ${fieldLabel}:`, response.status, errorText);
+    if (!searchResponse.ok) {
+      const errorText = await searchResponse.text();
+      console.error(`[searchVectorStoreForField] Vector store search error for ${fieldLabel}:`, searchResponse.status, errorText);
       return null;
     }
 
-    const data = await response.json();
+    const searchData = await searchResponse.json();
 
-    // Extract text from output items
-    const textContent = data.output
-      ?.filter((item: any) => item.type === "message")
-      ?.flatMap((item: any) => item.content || [])
-      ?.filter((c: any) => c.type === "output_text")
-      ?.map((c: any) => c.text || "")
-      ?.join(" ")
-      ?.trim();
+    // Extract text content from search results
+    const chunks: string[] = [];
+    if (searchData.data) {
+      for (const result of searchData.data) {
+        for (const contentItem of result.content || []) {
+          if (contentItem.type === 'text' && contentItem.text) {
+            chunks.push(contentItem.text);
+          }
+        }
+      }
+    }
+
+    if (chunks.length === 0) {
+      console.log(`[searchVectorStoreForField] No search results for ${fieldLabel}`);
+      return null;
+    }
+
+    // Step 2: Use Claude Haiku to extract the specific field value
+    const extractionPrompt = `Here are relevant excerpts from an uploaded document:
+
+${chunks.join('\n\n---\n\n')}
+
+Extract the ${fieldLabel}: ${fieldHelpText}.
+Look for any relevant information in the document excerpts above.
+If found, return ONLY the extracted value without commentary.
+If not found or unclear, respond with exactly: NOT_FOUND`;
+
+    const claudeResponse = await fetch(CLAUDE_API_URL, {
+      method: "POST",
+      headers: {
+        "x-api-key": anthropicApiKey!,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: HAIKU_MODEL,
+        max_tokens: 300,
+        system: `You are a precise extraction assistant. Extract only the requested brand field value from the document excerpts provided.
+Be concise and specific. Return ONLY the extracted value, not a full sentence.
+If the information is not found, respond with exactly: NOT_FOUND`,
+        messages: [{ role: "user", content: extractionPrompt }],
+        temperature: 0.1,
+      }),
+    });
+
+    if (!claudeResponse.ok) {
+      const errorText = await claudeResponse.text();
+      console.error(`[searchVectorStoreForField] Claude extraction error for ${fieldLabel}:`, claudeResponse.status, errorText);
+      return null;
+    }
+
+    const claudeData = await claudeResponse.json();
+    const textContent = claudeData.content?.[0]?.text?.trim();
 
     if (!textContent || textContent === "NOT_FOUND" || textContent.includes("NOT_FOUND")) {
       return null;
