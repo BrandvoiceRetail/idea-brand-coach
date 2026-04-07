@@ -364,11 +364,20 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     enqueueFields: enqueueFieldsForReview,
   });
 
+  // ── Pending values map (fieldId -> pending extracted value) ───────────
+  const pendingValuesMap = useMemo<Record<string, string | string[]>>(
+    () => Object.fromEntries(reviewQueue.map(f => [f.fieldId, f.value])),
+    [reviewQueue]
+  );
+
   const { handleProceed } = useChapterProceeding({
     allChapters,
     fieldValues,
+    pendingValues: pendingValuesMap,
+    setFieldManual,
     completeCurrentChapter,
     sendMessage,
+    flashField: (fieldId: string) => handleFieldClick({ fieldId }),
   });
 
   // ── Milestone celebrations ────────────────────────────────────────────
@@ -411,12 +420,6 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     trackRejection(fieldId, fieldLabel);
     handleReviewReject(fieldId);
   }, [reviewQueue, trackRejection, handleReviewReject]);
-
-  // ── Pending values map (fieldId -> pending extracted value) ───────────
-  const pendingValuesMap = useMemo<Record<string, string | string[]>>(
-    () => Object.fromEntries(reviewQueue.map(f => [f.fieldId, f.value])),
-    [reviewQueue]
-  );
 
   // ── Handlers ──────────────────────────────────────────────────────────
   const handleSessionSelect = (sessionId: string): void => {

@@ -23,10 +23,16 @@ interface UseChapterProceedingConfig {
   allChapters: BookChapter[];
   /** Current field values keyed by field ID */
   fieldValues: Record<string, string | string[]>;
+  /** Pending AI-extracted values (ghost text) keyed by field ID */
+  pendingValues: Record<string, string | string[]>;
+  /** Persist a field value */
+  setFieldManual: (fieldId: string, value: string | string[]) => void;
   /** Marks the current chapter complete and advances progress */
   completeCurrentChapter: () => Promise<void>;
   /** Sends a chat message (used for system messages to the AI coach) */
   sendMessage: (message: ChatMessageCreate) => Promise<void>;
+  /** Flash a field in the accordion to draw attention */
+  flashField?: (fieldId: string) => void;
 }
 
 interface UseChapterProceedingReturn {
@@ -41,19 +47,35 @@ interface UseChapterProceedingReturn {
 export function useChapterProceeding({
   allChapters,
   fieldValues,
+  pendingValues,
+  setFieldManual,
   completeCurrentChapter,
   sendMessage,
+  flashField,
 }: UseChapterProceedingConfig): UseChapterProceedingReturn {
   const { toast } = useToast();
 
   const handleProceed = useCallback(async (chapterId: ChapterId): Promise<void> => {
     try {
-      // 1. Validate that all required fields are filled
+      // 1. Resolve chapter fields
       const bookChapter = allChapters.find(ch => ch.id === chapterId);
       const fieldsKey = bookChapter ? BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY[bookChapter.number] : undefined;
       const currentChapterFields = fieldsKey ? (CHAPTER_FIELDS_MAP[fieldsKey]?.fields ?? []) : [];
-      const emptyFields = currentChapterFields.filter(field => {
+
+      // 2. Auto-accept pending ghost text for any empty fields in this chapter
+      let autoAccepted = 0;
+      for (const field of currentChapterFields) {
         const value = fieldValues[field.id];
+        const isEmpty = !value || String(value).trim() === '';
+        if (isEmpty && pendingValues[field.id]) {
+          setFieldManual(field.id, pendingValues[field.id]);
+          autoAccepted++;
+        }
+      }
+
+      // 3. Re-check for empty fields after auto-accept
+      const emptyFields = currentChapterFields.filter(field => {
+        const value = fieldValues[field.id] ?? (pendingValues[field.id] || undefined);
         return !value || String(value).trim() === '';
       });
 
@@ -61,10 +83,15 @@ export function useChapterProceeding({
         const fieldNames = emptyFields.slice(0, 5).map(f => f.label).join(', ');
         const extra = emptyFields.length > 5 ? ` and ${emptyFields.length - 5} more` : '';
         toast({
-          title: `${emptyFields.length} Field${emptyFields.length > 1 ? 's' : ''} Remaining`,
-          description: `Missing: ${fieldNames}${extra}. Chat with Trevor to complete them.`,
-          variant: 'default',
+          title: `Cannot complete — ${emptyFields.length} field${emptyFields.length > 1 ? 's' : ''} still empty`,
+          description: `Missing: ${fieldNames}${extra}. Chat with Trevor to fill them in.`,
+          variant: 'destructive',
         });
+
+        // Flash the first empty field to draw attention
+        if (flashField) {
+          flashField(emptyFields[0].id);
+        }
         return;
       }
 
@@ -101,7 +128,7 @@ export function useChapterProceeding({
         variant: 'destructive',
       });
     }
-  }, [allChapters, fieldValues, completeCurrentChapter, sendMessage, toast]);
+  }, [allChapters, fieldValues, pendingValues, setFieldManual, completeCurrentChapter, sendMessage, flashField, toast]);
 
   return { handleProceed };
 }
