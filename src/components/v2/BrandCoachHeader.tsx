@@ -39,8 +39,6 @@ interface Avatar {
 interface BrandCoachHeaderProps {
   currentChapter: { number: number; title: string } | null;
   chapterProgress: ChapterProgress | null;
-  onProceed: () => void;
-  canProceed: boolean;
   avatarContext: AvatarContext;
   onAvatarChange: (avatar: Avatar) => void;
   savedFieldCount: number;

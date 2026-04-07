@@ -5,7 +5,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -60,9 +59,6 @@ export interface ChapterSectionAccordionProps {
   /** Callback when a field value changes */
   onFieldChange: (chapterId: string, fieldId: string, value: string | string[]) => void;
 
-  /** Callback when "Proceed to Next Section" is clicked */
-  onProceed: (chapterId: string) => void;
-
   /** Callback when a field receives focus (for conversational guidance) */
   onFieldFocus?: (fieldId: string) => void;
 
@@ -74,10 +70,9 @@ export interface ChapterSectionAccordionProps {
  * ChapterSectionAccordion Component
  *
  * Renders all 11 IDEA framework chapters in an accordion format with:
- * - Active chapter auto-expanded showing editable fields
- * - Completed chapters collapsed with summary (first captured value)
- * - Future chapters disabled/locked
- * - "Proceed to Next Section" button for active chapter
+ * - All chapters always editable (no locked/completed state)
+ * - Green checkmark icon when a chapter has content (5+ words)
+ * - Active chapter auto-expanded
  *
  * @example
  * ```tsx
@@ -85,12 +80,11 @@ export interface ChapterSectionAccordionProps {
  *   chapters={chaptersWithData}
  *   activeChapterId="brand-foundation"
  *   onFieldChange={(chapterId, fieldId, value) => updateField(chapterId, fieldId, value)}
- *   onProceed={(chapterId) => moveToNextChapter(chapterId)}
  * />
  * ```
  */
 export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, ChapterSectionAccordionProps>(
-  ({ chapters, activeChapterId, recentlyUpdatedChapterIds, onFieldChange, onProceed, onFieldFocus, className }, ref) => {
+  ({ chapters, activeChapterId, recentlyUpdatedChapterIds, onFieldChange, onFieldFocus, className }, ref) => {
     const internalRef = React.useRef<HTMLDivElement>(null);
     /**
      * A chapter is "complete" if its fields contain at least 5 words total
@@ -109,62 +103,31 @@ export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, 
       return false;
     };
 
+
     /**
-     * Get the first captured value from a chapter for summary display
+     * Render chapter content indicator based on field fill state
      */
-    const getChapterSummary = (chapterData: ChapterData): string => {
-      const { chapter, fieldValues } = chapterData;
-
-      // Safety check: ensure fields exist
-      if (!chapter.fields || !Array.isArray(chapter.fields)) {
-        return 'No data captured';
-      }
-
-      // Find the first field with a value
-      for (const field of chapter.fields) {
-        const value = fieldValues[field.id];
-        if (value) {
-          if (Array.isArray(value)) {
-            return value[0] || 'No data captured';
-          }
-          // Truncate long text values
-          const stringValue = String(value);
-          return stringValue.length > 100
-            ? `${stringValue.substring(0, 100)}...`
-            : stringValue;
-        }
-      }
-
-      return 'No data captured';
+    const renderContentBadge = (chapterData: ChapterData): JSX.Element | null => {
+      const { chapter, fieldValues: vals } = chapterData;
+      if (!chapter.fields || !Array.isArray(chapter.fields)) return null;
+      const filled = chapter.fields.filter(f => {
+        const v = vals[f.id];
+        return v && String(v).trim() !== '';
+      }).length;
+      const total = chapter.fields.length;
+      if (filled === 0) return null;
+      return (
+        <Badge
+          variant={filled === total ? 'secondary' : 'outline'}
+          className="ml-2 text-xs"
+        >
+          {filled}/{total}
+        </Badge>
+      );
     };
 
     /**
-     * Render chapter status badge
-     */
-    const renderStatusBadge = (status: ChapterStatus): JSX.Element | null => {
-      switch (status) {
-        case 'completed':
-          return (
-            <Badge variant="secondary" className="ml-2">
-              Completed
-            </Badge>
-          );
-        case 'active':
-          return (
-            <Badge variant="default" className="ml-2 bg-gradient-primary">
-              Active
-            </Badge>
-          );
-        case 'future':
-          // This case shouldn't happen anymore, but keeping for safety
-          return null;
-        default:
-          return null;
-      }
-    };
-
-    /**
-     * Render chapter fields for active chapter
+     * Render chapter fields — always editable
      */
     const renderChapterFields = (chapterData: ChapterData): JSX.Element => {
       const { chapter, fieldValues, fieldSources, pendingValues } = chapterData;
@@ -183,39 +146,13 @@ export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, 
                 source={fieldSources?.[field.id]}
                 onChange={(fieldId, value) => onFieldChange(chapter.id, fieldId, value)}
                 onFocus={() => onFieldFocus?.(field.id)}
-                disabled={chapterData.status !== 'active'}
               />
             </div>
           ))}
-
-          {chapterData.status === 'active' && (
-            <div className="pt-4 border-t">
-              <Button
-                onClick={() => onProceed(chapter.id)}
-                variant="outline"
-                size="lg"
-                className="w-full"
-              >
-                Complete & Continue
-              </Button>
-            </div>
-          )}
         </div>
       );
     };
 
-    /**
-     * Render completed chapter summary
-     */
-    const renderCompletedSummary = (chapterData: ChapterData): JSX.Element => {
-      const summary = getChapterSummary(chapterData);
-
-      return (
-        <div className="text-sm text-muted-foreground italic">
-          {summary}
-        </div>
-      );
-    };
 
     /**
      * Accordion open state — only the active chapter is open by default.
@@ -309,8 +246,7 @@ export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, 
           onValueChange={setAccordionValue}
         >
           {chapters.map((chapterData) => {
-            const { chapter, status } = chapterData;
-            const isDisabled = false; // All chapters are now accessible
+            const { chapter } = chapterData;
             const isOpen = accordionValue.includes(chapter.id);
             const complete = isChapterComplete(chapterData);
 
@@ -319,18 +255,9 @@ export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, 
                 key={chapter.id}
                 value={chapter.id}
                 data-chapter-id={chapter.id}
-                className={cn(
-                  "border-b",
-                  isDisabled && "opacity-50"
-                )}
+                className="border-b"
               >
-                <AccordionTrigger
-                  className={cn(
-                    "hover:no-underline",
-                    isDisabled && "cursor-not-allowed"
-                  )}
-                  disabled={isDisabled}
-                >
+                <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center justify-between w-full pr-4">
                     <div className="flex items-center gap-3">
                       {!isOpen && (
@@ -341,7 +268,7 @@ export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, 
                       <div className="flex flex-col items-start">
                         <div className="flex items-center">
                           <span className="font-semibold">{chapter.title}</span>
-                          {renderStatusBadge(status)}
+                          {renderContentBadge(chapterData)}
                         </div>
                         <span className="text-sm text-muted-foreground font-normal mt-1">
                           {chapter.description}
@@ -352,7 +279,7 @@ export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, 
                 </AccordionTrigger>
 
                 <AccordionContent className="pt-4 pb-6">
-                  {status === 'completed' ? renderCompletedSummary(chapterData) : renderChapterFields(chapterData)}
+                  {renderChapterFields(chapterData)}
                 </AccordionContent>
               </AccordionItem>
             );

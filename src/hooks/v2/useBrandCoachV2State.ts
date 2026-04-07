@@ -35,7 +35,6 @@ import { useBrandCoachChat } from '@/hooks/useBrandCoachChat';
 import { useChatExportActions } from '@/hooks/useChatExportActions';
 import { useDocumentUploadFlow } from '@/hooks/useDocumentUploadFlow';
 import { useFieldExtractionOrchestrator } from '@/hooks/useFieldExtractionOrchestrator';
-import { useChapterProceeding } from '@/hooks/useChapterProceeding';
 import { useGhostSuggestion } from '@/hooks/v2/useGhostSuggestion';
 import { CHAPTER_FIELDS_MAP, BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY } from '@/config/chapterFields';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
@@ -207,9 +206,6 @@ export interface BrandCoachV2Actions {
   /** Milestone dismiss */
   dismissMilestone: () => void;
 
-  /** Chapter actions */
-  handleProceed: (chapterId: ChapterId) => Promise<void>;
-
   /** Document upload */
   handleDocumentUploadComplete: (doc: { id: string; filename: string }) => Promise<void>;
 
@@ -277,7 +273,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   // ── Chapter progress ──────────────────────────────────────────────────
   const {
     progress, currentChapter, allChapters, isLoading: isLoadingChapter,
-    completeCurrentChapter, initializeProgress, isInitializing,
+    initializeProgress, isInitializing,
   } = useChapterProgress({ sessionId: currentSessionId });
 
   // ── Field extraction ──────────────────────────────────────────────────
@@ -370,16 +366,6 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     [reviewQueue]
   );
 
-  const { handleProceed } = useChapterProceeding({
-    allChapters,
-    fieldValues,
-    pendingValues: pendingValuesMap,
-    setFieldManual,
-    completeCurrentChapter,
-    sendMessage,
-    flashField: (fieldId: string) => handleFieldClick({ fieldId }),
-  });
-
   // ── Milestone celebrations ────────────────────────────────────────────
   const {
     activeMilestone, dismissMilestone, prefersReducedMotion,
@@ -464,8 +450,8 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
         ? { ...bookChapter, ...chapterWithFields, id: bookChapter.id, fields: chapterWithFields.fields || [] }
         : { ...bookChapter, fields: [], pillar: bookChapter.category };
 
-      const chapterStatus: 'completed' | 'active' | 'future' =
-        progress?.chapter_statuses?.[bookChapter.id] === 'completed' ? 'completed' : 'active';
+      // All chapters are always active/editable — no completed state
+      const chapterStatus = 'active' as const;
 
       return { chapter: mergedChapter, status: chapterStatus, fieldValues, fieldSources, pendingValues: pendingValuesMap };
     }) ?? [],
@@ -557,7 +543,6 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     toggleAlwaysAccept,
     handleFieldAcceptFromBadge,
     handleAcceptAllFromBadge,
-    handleProceed,
     handleDocumentUploadComplete,
     handleSendReviewContext,
     handleEnrichmentComplete,

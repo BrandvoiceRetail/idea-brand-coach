@@ -6,12 +6,11 @@ import type { Chapter, ChapterStatus } from '@/config/chapterFields';
 
 // Mock ChapterFieldSet component to simplify testing
 vi.mock('../ChapterFieldSet', () => ({
-  ChapterFieldSet: ({ field, onChange, disabled }: { field: { id: string; label: string }; onChange: (id: string, value: string) => void; disabled: boolean }) => (
+  ChapterFieldSet: ({ field, onChange }: { field: { id: string; label: string }; onChange: (id: string, value: string) => void }) => (
     <div data-testid={`field-${field.id}`}>
       <input
         aria-label={field.label}
         onChange={(e) => onChange(field.id, e.target.value)}
-        disabled={disabled}
       />
     </div>
   ),
@@ -19,7 +18,6 @@ vi.mock('../ChapterFieldSet', () => ({
 
 describe('ChapterSectionAccordion', () => {
   const mockOnFieldChange = vi.fn();
-  const mockOnProceed = vi.fn();
 
   const mockChapter1: Chapter = {
     id: 'brand-foundation',
@@ -96,9 +94,9 @@ describe('ChapterSectionAccordion', () => {
   describe('rendering', () => {
     it('should render all chapters', () => {
       const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed'),
+        createChapterData(mockChapter1, 'active'),
         createChapterData(mockChapter2, 'active'),
-        createChapterData(mockChapter3, 'future'),
+        createChapterData(mockChapter3, 'active'),
       ];
 
       render(
@@ -106,7 +104,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-values"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -125,30 +123,30 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
       expect(screen.getByText('Define your core brand identity')).toBeInTheDocument();
     });
 
-    it('should render completed status badge', () => {
+    it('should render content badge showing filled field count', () => {
       const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', { brandPurpose: 'Test purpose' }),
+        createChapterData(mockChapter1, 'active', { brandPurpose: 'Test purpose' }),
       ];
 
       render(
         <ChapterSectionAccordion
           chapters={chapters}
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
         />
       );
 
-      expect(screen.getByText('Completed')).toBeInTheDocument();
+      // 1 of 2 fields filled
+      expect(screen.getByText('1/2')).toBeInTheDocument();
     });
 
-    it('should render active status badge', () => {
+    it('should not render content badge when no fields are filled', () => {
       const chapters: ChapterData[] = [
         createChapterData(mockChapter1, 'active'),
       ];
@@ -156,36 +154,18 @@ describe('ChapterSectionAccordion', () => {
       render(
         <ChapterSectionAccordion
           chapters={chapters}
-          activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
         />
       );
 
-      expect(screen.getByText('Active')).toBeInTheDocument();
-    });
-
-    it('should not render a status badge for future chapters', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'future'),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      expect(screen.queryByText('Locked')).not.toBeInTheDocument();
+      expect(screen.queryByText('0/2')).not.toBeInTheDocument();
     });
   });
 
   describe('accordion behavior', () => {
     it('should auto-expand active chapter', () => {
       const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', { brandPurpose: 'Test' }),
+        createChapterData(mockChapter1, 'active', { brandPurpose: 'Test' }),
         createChapterData(mockChapter2, 'active'),
       ];
 
@@ -194,7 +174,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-values"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -213,7 +193,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -221,7 +201,7 @@ describe('ChapterSectionAccordion', () => {
 
       // Update to make chapter 2 active
       const updatedChapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', { brandPurpose: 'Done' }),
+        createChapterData(mockChapter1, 'active', { brandPurpose: 'Done' }),
         createChapterData(mockChapter2, 'active'),
       ];
 
@@ -230,7 +210,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={updatedChapters}
           activeChapterId="brand-values"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -246,7 +226,7 @@ describe('ChapterSectionAccordion', () => {
         <ChapterSectionAccordion
           chapters={chapters}
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -264,7 +244,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -284,7 +264,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -292,9 +272,10 @@ describe('ChapterSectionAccordion', () => {
       expect(screen.getByTestId('field-brandVision')).toBeInTheDocument();
     });
 
-    it('should render "Complete & Continue" button for active chapter', () => {
+    it('should render fields as always editable (never disabled)', () => {
       const chapters: ChapterData[] = [
         createChapterData(mockChapter1, 'active'),
+        createChapterData(mockChapter2, 'active'),
       ];
 
       render(
@@ -302,167 +283,14 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
         />
       );
 
-      expect(screen.getByText('Complete & Continue')).toBeInTheDocument();
-    });
-
-    it('should not render "Complete & Continue" button for non-active chapters', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', { brandPurpose: 'Test' }),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      expect(screen.queryByText('Complete & Continue')).not.toBeInTheDocument();
-    });
-
-    it('should pass disabled prop to fields in non-active chapters', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'active'),
-        createChapterData(mockChapter2, 'completed', { brandValues: ['Test'] }),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          activeChapterId="brand-foundation"
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      // Active chapter fields should not be disabled
-      const activeInput = screen.getByLabelText('Brand Purpose');
-      expect(activeInput).not.toBeDisabled();
+      const input = screen.getByLabelText('Brand Purpose');
+      expect(input).not.toBeDisabled();
     });
   });
 
-  describe('completed chapter summary', () => {
-    it('should display first field value as summary', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', {
-          brandPurpose: 'To innovate and inspire',
-          brandVision: 'A better world',
-        }),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          activeChapterId="brand-foundation"
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      // Accordion should be open because it's the activeChapterId
-      expect(screen.getByText('To innovate and inspire')).toBeInTheDocument();
-    });
-
-    it('should truncate long text values to 100 characters', () => {
-      const longText = 'A'.repeat(150);
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', {
-          brandPurpose: longText,
-        }),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          activeChapterId="brand-foundation"
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      expect(screen.getByText(`${'A'.repeat(100)}...`)).toBeInTheDocument();
-    });
-
-    it('should handle array values by showing first item', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter2, 'completed', {
-          brandValues: ['Innovation', 'Integrity', 'Excellence'],
-        }),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          activeChapterId="brand-values"
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      expect(screen.getByText('Innovation')).toBeInTheDocument();
-    });
-
-    it('should show "No data captured" when no field values exist', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', {}),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          activeChapterId="brand-foundation"
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      expect(screen.getByText('No data captured')).toBeInTheDocument();
-    });
-
-    it('should show "No data captured" when all fields are empty', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', {
-          brandPurpose: '',
-          brandVision: '',
-        }),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          activeChapterId="brand-foundation"
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      expect(screen.getByText('No data captured')).toBeInTheDocument();
-    });
-
-    it('should show "No data captured" for empty array values', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter2, 'completed', {
-          brandValues: [],
-        }),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          activeChapterId="brand-values"
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      expect(screen.getByText('No data captured')).toBeInTheDocument();
-    });
-  });
 
   describe('future chapter behavior', () => {
     it('should render future chapters without a locked badge', () => {
@@ -474,7 +302,7 @@ describe('ChapterSectionAccordion', () => {
         <ChapterSectionAccordion
           chapters={chapters}
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -495,7 +323,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -519,7 +347,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-values"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -533,45 +361,6 @@ describe('ChapterSectionAccordion', () => {
       );
     });
 
-    it('should call onProceed when "Complete & Continue" button is clicked', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'active'),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          activeChapterId="brand-foundation"
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const button = screen.getByText('Complete & Continue');
-      fireEvent.click(button);
-
-      expect(mockOnProceed).toHaveBeenCalledWith('brand-foundation');
-    });
-
-    it('should call onProceed with correct chapter ID', () => {
-      const chapters: ChapterData[] = [
-        createChapterData(mockChapter2, 'active'),
-      ];
-
-      render(
-        <ChapterSectionAccordion
-          chapters={chapters}
-          activeChapterId="brand-values"
-          onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
-        />
-      );
-
-      const button = screen.getByText('Complete & Continue');
-      fireEvent.click(button);
-
-      expect(mockOnProceed).toHaveBeenCalledWith('brand-values');
-    });
   });
 
   describe('className prop', () => {
@@ -585,7 +374,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
           className="custom-test-class"
         />
       );
@@ -604,7 +393,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
           className="custom-test-class"
         />
       );
@@ -628,7 +417,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -641,11 +430,11 @@ describe('ChapterSectionAccordion', () => {
   });
 
   describe('multiple chapters rendering', () => {
-    it('should render multiple chapters with different statuses', () => {
+    it('should render multiple chapters with content badges', () => {
       const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', { brandPurpose: 'Purpose 1' }),
+        createChapterData(mockChapter1, 'active', { brandPurpose: 'Purpose 1' }),
         createChapterData(mockChapter2, 'active'),
-        createChapterData(mockChapter3, 'future'),
+        createChapterData(mockChapter3, 'active'),
       ];
 
       render(
@@ -653,20 +442,18 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-values"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
         />
       );
 
-      expect(screen.getByText('Completed')).toBeInTheDocument();
-      expect(screen.getByText('Active')).toBeInTheDocument();
-      expect(screen.queryByText('Locked')).not.toBeInTheDocument();
+      // Chapter 1 has 1/2 fields filled
+      expect(screen.getByText('1/2')).toBeInTheDocument();
     });
 
     it('should only show active chapter fields initially', () => {
       const chapters: ChapterData[] = [
-        createChapterData(mockChapter1, 'completed', { brandPurpose: 'Done' }),
+        createChapterData(mockChapter1, 'active', { brandPurpose: 'Done' }),
         createChapterData(mockChapter2, 'active'),
-        createChapterData(mockChapter3, 'future'),
+        createChapterData(mockChapter3, 'active'),
       ];
 
       render(
@@ -674,7 +461,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-values"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -693,7 +480,7 @@ describe('ChapterSectionAccordion', () => {
         <ChapterSectionAccordion
           chapters={[]}
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -710,7 +497,7 @@ describe('ChapterSectionAccordion', () => {
         <ChapterSectionAccordion
           chapters={chapters}
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
@@ -733,12 +520,11 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 
       expect(screen.getByText('Brand Foundation')).toBeInTheDocument();
-      expect(screen.getByText('Complete & Continue')).toBeInTheDocument();
     });
 
     it('should handle fieldSources prop', () => {
@@ -757,7 +543,7 @@ describe('ChapterSectionAccordion', () => {
           chapters={chapters}
           activeChapterId="brand-foundation"
           onFieldChange={mockOnFieldChange}
-          onProceed={mockOnProceed}
+
         />
       );
 

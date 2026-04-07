@@ -97,7 +97,6 @@ const BrandCoachV2 = (): JSX.Element => {
     toggleAlwaysAccept,
     handleFieldAcceptFromBadge,
     handleAcceptAllFromBadge,
-    handleProceed,
     handleDocumentUploadComplete,
     handleSendReviewContext,
     handleEnrichmentComplete,
@@ -127,8 +126,6 @@ const BrandCoachV2 = (): JSX.Element => {
       <BrandCoachHeader
         currentChapter={currentChapter}
         chapterProgress={progress}
-        onProceed={() => {}}
-        canProceed={false}
         avatarContext={{
           currentAvatar: currentAvatar ? { id: currentAvatar.id, name: currentAvatar.name, image_url: currentAvatar.image_url } : null,
           avatars: avatarData,
@@ -162,7 +159,6 @@ const BrandCoachV2 = (): JSX.Element => {
               chapters={chapterAccordionData}
               activeChapterId={progress?.current_chapter_id ?? 'chapter-01-introduction'}
               recentlyUpdatedChapterIds={recentlyUpdatedChapterIds}
-              onProceed={handleProceed}
               onFieldChange={(_chapterId, fieldId, value) => setFieldManual(fieldId, value)}
               onFieldFocus={setFocusedFieldId}
             />
