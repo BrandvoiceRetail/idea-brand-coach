@@ -241,7 +241,7 @@ export class SupabaseChatService implements IChatService {
     }
 
     // Save assistant response
-    await this.messageService.saveMessage({
+    const { error: assistantSaveError } = await this.messageService.saveMessage({
       user_id: userId,
       role: 'assistant',
       content: assistantContent,
@@ -251,6 +251,12 @@ export class SupabaseChatService implements IChatService {
       chapter_metadata: message.chapter_metadata,
       metadata: { extractedFields: result.extractedFields },
     });
+
+    if (assistantSaveError) {
+      console.error('[sendMessageStreaming] Failed to save assistant message:', assistantSaveError);
+      callbacks.onError(assistantSaveError);
+      return;
+    }
 
     // Generate title for new sessions
     if (sessionId) {

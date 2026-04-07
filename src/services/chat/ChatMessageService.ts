@@ -166,7 +166,8 @@ export class ChatMessageService {
 
   /**
    * Get all messages for a specific session.
-   * Returns messages in chronological order (oldest first).
+   * Fetches the NEWEST N messages in descending order, then reverses to
+   * return them in chronological order (oldest first) for display.
    *
    * @param userId - ID of the user who owns the messages
    * @param sessionId - ID of the session to retrieve messages from
@@ -183,21 +184,23 @@ export class ChatMessageService {
       .select('*')
       .eq('user_id', userId)
       .eq('session_id', sessionId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) {
       return { data: null, error: error as Error };
     }
 
-    const messages = data.map(item => this.mapMessageFromDb(item));
+    // Reverse to get chronological order (oldest first) for display
+    const messages = data.reverse().map(item => this.mapMessageFromDb(item));
 
     return { data: messages, error: null };
   }
 
   /**
    * Get all messages for a user with optional filters.
-   * Returns messages in chronological order (oldest first).
+   * Fetches the NEWEST N messages in descending order, then reverses to
+   * return them in chronological order (oldest first) for display.
    *
    * @param userId - ID of the user who owns the messages
    * @param chatbotType - Type of chatbot to filter by
@@ -223,14 +226,15 @@ export class ChatMessageService {
     }
 
     const { data, error } = await query
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) {
       return { data: null, error: error as Error };
     }
 
-    const messages = data.map(item => this.mapMessageFromDb(item));
+    // Reverse to get chronological order (oldest first) for display
+    const messages = data.reverse().map(item => this.mapMessageFromDb(item));
 
     return { data: messages, error: null };
   }
