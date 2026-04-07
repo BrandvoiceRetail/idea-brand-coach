@@ -1,19 +1,15 @@
 /**
  * GhostTextChatInput Component
  *
- * Wraps the chat textarea with inline ghost-text autocomplete powered by
- * react-copilot-autocomplete. After TrevBot responds, the next suggested
- * prompt from useGhostSuggestion appears as gray inline text at 40% opacity.
+ * Chat textarea with inline ghost-text suggestions. After TrevBot responds,
+ * the next suggested prompt appears as gray text at 40% opacity.
  *
  * - Tab: accept the suggestion into the input
  * - Escape: dismiss ghost text
  * - Any typing: ghost text disappears, replaced by user input
  */
 
-import React, { useEffect, useRef, forwardRef } from 'react';
-import Autocomplete, {
-  type AutocompleteTextareaRef,
-} from 'react-copilot-autocomplete';
+import React, { useState, useRef } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
@@ -41,25 +37,6 @@ interface GhostTextChatInputProps {
 }
 
 // ============================================================================
-// Inner textarea that forwards ref for react-copilot-autocomplete's asChild
-// ============================================================================
-
-const AutocompleteTextarea = forwardRef<
-  HTMLTextAreaElement,
-  React.TextareaHTMLAttributes<HTMLTextAreaElement>
->((props, ref) => {
-  const { className, ...rest } = props;
-  return (
-    <Textarea
-      ref={ref}
-      className={cn('resize-none flex-1', className)}
-      {...rest}
-    />
-  );
-});
-AutocompleteTextarea.displayName = 'AutocompleteTextarea';
-
-// ============================================================================
 // Component
 // ============================================================================
 
@@ -73,83 +50,58 @@ export function GhostTextChatInput({
   className,
   disabled = false,
 }: GhostTextChatInputProps): JSX.Element {
-  const autocompleteRef = useRef<AutocompleteTextareaRef>(null);
+  const [isDismissed, setIsDismissed] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Push the external suggestion into the autocomplete overlay whenever it changes
-  useEffect(() => {
-    if (!autocompleteRef.current) return;
+  // Reset dismissed state when suggestion changes
+  const prevSuggestionRef = useRef(suggestion);
+  if (suggestion !== prevSuggestionRef.current) {
+    prevSuggestionRef.current = suggestion;
+    setIsDismissed(false);
+  }
 
-    if (suggestion && value.trim() === '') {
-      autocompleteRef.current.setSuggestion(suggestion);
-    } else {
-      autocompleteRef.current.clearSuggestion();
-    }
-  }, [suggestion, value]);
+  const showGhost = Boolean(suggestion) && value.trim() === '' && !isDismissed;
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ): void => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     onChange(e.target.value);
   };
 
-  const handleCompletion = ({
-    setSuggestion: setAutocompleteSuggestion,
-    value: currentValue,
-  }: {
-    value: string;
-    currentSuggestion: string;
-    setSuggestion: (s: string) => void;
-    onChangeEvent: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>;
-  }): void => {
-    // When the user types, clear the ghost suggestion.
-    // If they clear the input back to empty and we have a suggestion, re-show it.
-    if (currentValue.trim() === '' && suggestion) {
-      setAutocompleteSuggestion(suggestion);
-    } else {
-      setAutocompleteSuggestion('');
-    }
-  };
-
-  const handleKeyDown = (
-    e: React.KeyboardEvent<HTMLTextAreaElement>,
-  ): void => {
-    // Escape dismisses ghost text
-    if (e.key === 'Escape' && autocompleteRef.current) {
-      autocompleteRef.current.clearSuggestion();
-    }
-
-    // When Tab is pressed on an empty input with a suggestion, notify parent
-    if (e.key === 'Tab' && value.trim() === '' && suggestion) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (e.key === 'Tab' && showGhost && suggestion) {
+      e.preventDefault();
       onAcceptSuggestion?.(suggestion);
     }
 
-    // Delegate to parent's keydown handler (e.g., Enter to send)
+    if (e.key === 'Escape' && showGhost) {
+      e.preventDefault();
+      setIsDismissed(true);
+    }
+
     onKeyDown?.(e);
   };
 
   return (
-    <div className="flex-1 min-w-0">
-      <Autocomplete
-        ref={autocompleteRef}
-        asChild
-        autocompleteEnabled={!disabled}
+    <div className="flex-1 min-w-0 relative">
+      <Textarea
+        ref={textareaRef}
+        value={value}
         onChange={handleChange}
-        handleCompletion={handleCompletion}
-        completionShortcut={new Set(['Tab'])}
-        styles={{
-          suggestion: {
-            opacity: 0.4,
-          },
-        }}
-      >
-        <AutocompleteTextarea
-          value={value}
-          onKeyDown={handleKeyDown}
-          placeholder={suggestion && value.trim() === '' ? '' : placeholder}
-          className={cn('w-full', className)}
-          disabled={disabled}
-        />
-      </Autocomplete>
+        onKeyDown={handleKeyDown}
+        placeholder={showGhost ? '' : placeholder}
+        className={cn('resize-none w-full', className)}
+        disabled={disabled}
+      />
+
+      {showGhost && (
+        <div
+          className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+          aria-hidden="true"
+        >
+          <div className="px-3 py-2 text-sm text-muted-foreground/40 truncate">
+            {suggestion}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
