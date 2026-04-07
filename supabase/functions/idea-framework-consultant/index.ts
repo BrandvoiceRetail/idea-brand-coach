@@ -488,15 +488,38 @@ function buildExtractionTool(extractionFields?: string[], scopeChapterKey?: stri
 function buildExtractionPrompt(extractionFields?: string[], hasDocumentContext?: boolean): string {
   let prompt = `
 FIELD EXTRACTION:
-When the user shares information that maps to a brand field, use the extract_brand_fields tool to capture it.
-- Extract from EVERY message where relevant information appears
-- For array fields, pass an array of strings as the value
+You have an extract_brand_fields tool to capture brand field values. Use it thoughtfully — NOT on every message.
+
+CONVERSATIONAL RHYTHM:
+Have a natural coaching conversation BEFORE extracting:
+1. User shares something about their brand
+2. You ask a clarifying or deepening question (do NOT extract yet)
+3. User elaborates with more detail
+4. You may ask one more follow-up if needed
+5. NOW extract — you have enough context for a quality field value
+
+WHEN TO EXTRACT:
+- After the user has elaborated through 2-3 exchanges on a topic
+- When you have enough context for a polished, complete field value
+- When transitioning between topics — capture what was just discussed
+- When the user explicitly asks to save or capture something
+
+WHEN NOT TO EXTRACT:
+- On the first mention of a topic — ask a follow-up instead
+- When the user gives a vague or incomplete answer — probe deeper
+- Right after you just extracted — let the conversation breathe
+
+QUALITY:
+- Synthesize the full conversation into a polished value, not just the last message
+- For array fields, pass an array of strings
 - Use confidence 0.90+ for direct statements, 0.70+ for strong inferences
-- Extract MULTIPLE fields per turn when multiple are discussed
-- Do not wait for perfect phrasing — if the user mentions something relevant, extract it`;
+- Batch multiple related fields into one extraction when possible
+- Briefly mention what you captured`;
 
   if (hasDocumentContext) {
     prompt += `
+
+DOCUMENT EXTRACTION:
 - Scan document context for ALL extractable field values (confidence 0.85+, source: "document")
 - Inform the user which fields were populated from their documents`;
   }
