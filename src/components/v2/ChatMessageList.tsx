@@ -12,10 +12,16 @@
  * Mobile: larger touch targets for field accept/reject (min 44px), readable font sizes.
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { MessageSquare, Loader2, ListChecks, RotateCcw, Check, X } from 'lucide-react';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { FieldExtractionBadges } from '@/components/v2/FieldExtractionBadges';
 import type { ExtractedField } from '@/components/v2/FieldExtractionBadges';
@@ -50,7 +56,138 @@ interface ChatMessageListProps {
   onFieldClick: (field: ExtractedField) => void;
   onAcceptAllFromMessage: (extractedFields: Record<string, string>) => void;
   onFieldAccept: (fieldId: string, value: string) => void;
+  onReopenReview: (extractedFields: Record<string, string>) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+}
+
+/**
+ * ExtractionSection — renders the review button + field badges for a message.
+ * Placed ABOVE the badges in the chat bubble.
+ */
+function ExtractionSection({
+  msg,
+  messageExtractions,
+  fieldValues,
+  isFieldLocked,
+  onFieldClick,
+  onAcceptAllFromMessage,
+  onReopenReview,
+  isMobile,
+}: {
+  msg: DisplayMessage;
+  messageExtractions: Record<string, MessageExtractionRecord>;
+  fieldValues: Record<string, string | string[]>;
+  isFieldLocked: (fieldId: string) => boolean;
+  onFieldClick: (field: ExtractedField) => void;
+  onAcceptAllFromMessage: (extractedFields: Record<string, string>) => void;
+  onReopenReview: (extractedFields: Record<string, string>) => void;
+  isMobile: boolean;
+}): JSX.Element {
+  const [showSummary, setShowSummary] = useState(false);
+
+  const extractedEntries = Object.entries(msg.extractedFields!);
+
+  // Build enriched field data
+  const enrichedFields = extractedEntries.map(([fieldId, value]): ExtractedField => {
+    let fieldLabel = fieldId;
+    let chapterTitle: string | undefined;
+    let ideaRelevance: string | undefined;
+    for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
+      const field = chapter.fields?.find((f: { id: string }) => f.id === fieldId);
+      if (field) {
+        fieldLabel = field.label;
+        chapterTitle = chapter.title;
+        ideaRelevance = field.ideaRelevance;
+        break;
+      }
+    }
+
+    const msgMeta = messageExtractions[msg.id];
+    const isAccepted = msgMeta?.allAccepted || fieldValues[fieldId] !== undefined;
+    const locked = isFieldLocked(fieldId);
+
+    return {
+      fieldId,
+      label: fieldLabel,
+      value: value as string,
+      chapterTitle,
+      ideaRelevance,
+      isReviewed: isAccepted,
+      isLocked: locked,
+      confidence: 0.95,
+    };
+  });
+
+  const unreviewedFields = enrichedFields.filter(f => !f.isReviewed);
+  const allReviewed = unreviewedFields.length === 0;
+
+  const handleButtonClick = useCallback((): void => {
+    if (!allReviewed) {
+      // Re-enqueue unreviewed fields for review
+      onReopenReview(msg.extractedFields!);
+    } else {
+      setShowSummary(prev => !prev);
+    }
+  }, [allReviewed, msg.extractedFields, onReopenReview]);
+
+  return (
+    <div className="mt-3 pt-2 border-t border-border/30">
+      {/* Review / Summary button — above badges */}
+      <div className="mb-2">
+        {allReviewed ? (
+          <Popover open={showSummary} onOpenChange={setShowSummary}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-green-700 hover:text-green-800 hover:bg-green-500/10"
+              >
+                <Check className="h-3 w-3 mr-1" />
+                {enrichedFields.length} field{enrichedFields.length !== 1 ? 's' : ''} updated
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="start" className="w-64 p-3">
+              <p className="text-xs font-medium mb-2">Field Updates</p>
+              <div className="space-y-1.5">
+                {enrichedFields.map(f => (
+                  <div key={f.fieldId} className="flex items-start gap-1.5 text-xs">
+                    <Check className="h-3 w-3 mt-0.5 text-green-600 shrink-0" />
+                    <div>
+                      <span className="font-medium">{f.label}</span>
+                      {f.chapterTitle && (
+                        <span className="text-muted-foreground ml-1">({f.chapterTitle})</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-amber-700 hover:text-amber-800 hover:bg-amber-500/10"
+            onClick={handleButtonClick}
+          >
+            <ListChecks className="h-3 w-3 mr-1" />
+            Review {unreviewedFields.length} field{unreviewedFields.length !== 1 ? 's' : ''}
+          </Button>
+        )}
+      </div>
+
+      <FieldExtractionBadges
+        fields={enrichedFields}
+        onFieldClick={onFieldClick}
+        onAcceptAll={() => {
+          if (msg.extractedFields) {
+            onAcceptAllFromMessage(msg.extractedFields);
+          }
+        }}
+        className={isMobile ? 'min-h-[44px]' : undefined}
+      />
+    </div>
+  );
 }
 
 export function ChatMessageList({
@@ -65,6 +202,7 @@ export function ChatMessageList({
   onFieldClick,
   onAcceptAllFromMessage,
   onFieldAccept,
+  onReopenReview,
   messagesEndRef,
 }: ChatMessageListProps): JSX.Element {
   const { isMobile } = useDeviceType();
@@ -106,46 +244,16 @@ export function ChatMessageList({
 
                 {/* Extracted field badges */}
                 {msg.extractedFields && Object.keys(msg.extractedFields).length > 0 && (
-                  <div className="mt-3 pt-2 border-t border-border/30">
-                    <FieldExtractionBadges
-                      fields={Object.entries(msg.extractedFields).map(([fieldId, value]): ExtractedField => {
-                        let fieldLabel = fieldId;
-                        let chapterTitle: string | undefined;
-                        let ideaRelevance: string | undefined;
-                        for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
-                          const field = chapter.fields?.find((f: { id: string }) => f.id === fieldId);
-                          if (field) {
-                            fieldLabel = field.label;
-                            chapterTitle = chapter.title;
-                            ideaRelevance = field.ideaRelevance;
-                            break;
-                          }
-                        }
-
-                        const msgMeta = messageExtractions[msg.id];
-                        const isAccepted = msgMeta?.allAccepted || fieldValues[fieldId] !== undefined;
-                        const locked = isFieldLocked(fieldId);
-
-                        return {
-                          fieldId,
-                          label: fieldLabel,
-                          value: value as string,
-                          chapterTitle,
-                          ideaRelevance,
-                          isReviewed: isAccepted,
-                          isLocked: locked,
-                          confidence: 0.95,
-                        };
-                      })}
-                      onFieldClick={onFieldClick}
-                      onAcceptAll={() => {
-                        if (msg.extractedFields) {
-                          onAcceptAllFromMessage(msg.extractedFields);
-                        }
-                      }}
-                      className={isMobile ? 'min-h-[44px]' : undefined}
-                    />
-                  </div>
+                  <ExtractionSection
+                    msg={msg}
+                    messageExtractions={messageExtractions}
+                    fieldValues={fieldValues}
+                    isFieldLocked={isFieldLocked}
+                    onFieldClick={onFieldClick}
+                    onAcceptAllFromMessage={onAcceptAllFromMessage}
+                    onReopenReview={onReopenReview}
+                    isMobile={isMobile}
+                  />
                 )}
 
                 <div className="text-xs opacity-70 mt-1">

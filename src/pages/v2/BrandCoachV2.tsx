@@ -103,6 +103,7 @@ const BrandCoachV2 = (): JSX.Element => {
     handleEnrichmentComplete,
     handleClearReviewContext,
     handleFieldClick,
+    handleReopenReview,
     dismissMilestone,
   } = useBrandCoachV2State();
 
@@ -242,6 +243,7 @@ const BrandCoachV2 = (): JSX.Element => {
               onFieldClick={handleFieldClick}
               onAcceptAllFromMessage={handleAcceptAllFromBadge}
               onFieldAccept={handleFieldAcceptFromBadge}
+              onReopenReview={handleReopenReview}
               messagesEndRef={chatContainerRef}
             />
 

@@ -18,6 +18,10 @@ import type { Chapter, ChapterStatus, FieldSource } from "@/config/chapterFields
 export interface ChapterAccordionHandle {
   /** Expand a specific chapter (closing others) and scroll it into view */
   focusChapter: (chapterId: string) => void;
+  /** Open the chapter containing fieldId and scroll it into view */
+  focusField: (fieldId: string) => void;
+  /** Briefly flash a field element green to draw attention */
+  flashField: (fieldId: string) => void;
 }
 
 /**
@@ -171,16 +175,17 @@ export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, 
       return (
         <div className="space-y-6">
           {fields.map((field) => (
-            <ChapterFieldSet
-              key={field.id}
-              field={field}
-              value={fieldValues[field.id]}
-              pendingValue={pendingValues?.[field.id]}
-              source={fieldSources?.[field.id]}
-              onChange={(fieldId, value) => onFieldChange(chapter.id, fieldId, value)}
-              onFocus={() => onFieldFocus?.(field.id)}
-              disabled={chapterData.status !== 'active'}
-            />
+            <div key={field.id} data-field-id={field.id}>
+              <ChapterFieldSet
+                field={field}
+                value={fieldValues[field.id]}
+                pendingValue={pendingValues?.[field.id]}
+                source={fieldSources?.[field.id]}
+                onChange={(fieldId, value) => onFieldChange(chapter.id, fieldId, value)}
+                onFocus={() => onFieldFocus?.(field.id)}
+                disabled={chapterData.status !== 'active'}
+              />
+            </div>
           ))}
 
           {chapterData.status === 'active' && (
@@ -243,6 +248,15 @@ export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, 
       }
     }, [recentlyUpdatedChapterIds]);
 
+    // Build a map from fieldId → chapterId for quick lookup
+    const fieldToChapterMap = React.useMemo(() => {
+      const map: Record<string, string> = {};
+      chapters.forEach(({ chapter }) => {
+        (chapter.fields || []).forEach((f) => { map[f.id] = chapter.id; });
+      });
+      return map;
+    }, [chapters]);
+
     // Expose imperative handle for programmatic chapter navigation
     React.useImperativeHandle(ref, () => ({
       focusChapter: (chapterId: string) => {
@@ -251,6 +265,39 @@ export const ChapterSectionAccordion = React.forwardRef<ChapterAccordionHandle, 
           const el = internalRef.current?.querySelector(`[data-chapter-id="${chapterId}"]`);
           el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 150);
+      },
+
+      focusField: (fieldId: string) => {
+        const chapterId = fieldToChapterMap[fieldId];
+        if (!chapterId) return;
+
+        // Open the chapter if not already open
+        setAccordionValue(prev =>
+          prev.includes(chapterId) ? prev : [...prev, chapterId]
+        );
+
+        // Wait for accordion to expand, then scroll to the field
+        setTimeout(() => {
+          const el = internalRef.current?.querySelector(`[data-field-id="${fieldId}"]`);
+          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 200);
+      },
+
+      flashField: (fieldId: string) => {
+        const el = internalRef.current?.querySelector(`[data-field-id="${fieldId}"]`) as HTMLElement | null;
+        if (!el) return;
+
+        el.style.transition = 'background-color 0.3s ease';
+        el.style.backgroundColor = 'rgba(34, 197, 94, 0.15)';
+        el.style.borderRadius = '8px';
+
+        setTimeout(() => {
+          el.style.backgroundColor = 'transparent';
+          setTimeout(() => {
+            el.style.transition = '';
+            el.style.borderRadius = '';
+          }, 300);
+        }, 1200);
       },
     }));
 

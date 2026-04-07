@@ -20,6 +20,7 @@ import { useExtractionQueue } from '@/hooks/v2/useExtractionQueue';
 import type { PendingField as QueuePendingField } from '@/hooks/v2/useExtractionQueue';
 import { useAlwaysAccept } from '@/hooks/v2/useAlwaysAccept';
 import { useScrollOpenFlash } from '@/hooks/v2/useScrollOpenFlash';
+import { CHAPTER_FIELDS_MAP } from '@/config/chapterFields';
 import type { ChapterAccordionHandle } from '@/components/v2/ChapterSectionAccordion';
 import type { MessageExtractionMeta } from '@/contexts/FieldReviewContext';
 
@@ -73,6 +74,9 @@ export interface UseFieldReviewPipelineReturn {
   handleFieldAcceptFromBadge: (fieldId: string, value: string | string[]) => void;
   handleAcceptAllFromBadge: (fields: Record<string, string | string[]>) => void;
   handleFieldClick: (field: { fieldId: string }) => void;
+
+  // Reopen review for a message's extracted fields
+  handleReopenReview: (extractedFields: Record<string, string | string[]>) => void;
 }
 
 // ============================================================================
@@ -154,6 +158,28 @@ export function useFieldReviewPipeline({
     triggerBatchFlash(entries.map(([fieldId]) => fieldId));
   }, [triggerBatchFlash]);
 
+  // ── Reopen review for a message's extracted fields ────────────────────
+  const handleReopenReview = useCallback((extractedFields: Record<string, string | string[]>): void => {
+    const fields: QueuePendingField[] = Object.entries(extractedFields).map(([fieldId, value]) => {
+      let label = fieldId;
+      for (const chapter of Object.values(CHAPTER_FIELDS_MAP)) {
+        const field = chapter.fields?.find((f: { id: string }) => f.id === fieldId);
+        if (field) { label = field.label; break; }
+      }
+      return {
+        fieldId,
+        label,
+        value,
+        confidence: 0.95,
+        source: 'user_stated' as const,
+      };
+    });
+
+    if (fields.length > 0) {
+      enqueueToQueue(fields);
+    }
+  }, [enqueueToQueue]);
+
   // ── Field click navigation (badge click → scroll-open-flash) ─────────
   const handleFieldClick = useCallback((field: { fieldId: string }): void => {
     if (isMobile) {
@@ -181,5 +207,6 @@ export function useFieldReviewPipeline({
     handleFieldAcceptFromBadge,
     handleAcceptAllFromBadge,
     handleFieldClick,
+    handleReopenReview,
   };
 }

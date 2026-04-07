@@ -220,6 +220,9 @@ export interface BrandCoachV2Actions {
 
   /** Field click handler */
   handleFieldClick: (field: { fieldId: string }) => void;
+
+  /** Reopen review for a message's extracted fields */
+  handleReopenReview: (extractedFields: Record<string, string | string[]>) => void;
 }
 
 // ============================================================================
@@ -319,7 +322,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     messageExtractions, setMessageExtraction,
     enqueueFieldsForReview,
     handleReviewAccept, handleReviewReject, handleReviewAcceptAll, handleReviewClose,
-    handleFieldAcceptFromBadge, handleAcceptAllFromBadge, handleFieldClick,
+    handleFieldAcceptFromBadge, handleAcceptAllFromBadge, handleFieldClick, handleReopenReview,
   } = useFieldReviewPipeline({ accordionRef, setFieldManual, isMobile, setMobileAccordionOpen });
 
   // ── Rejection-to-chat messages ───────────────────────────────────────
@@ -557,6 +560,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     handleEnrichmentComplete,
     handleClearReviewContext,
     handleFieldClick,
+    handleReopenReview,
     handleRejectField,
     flushRejections,
     dismissMilestone,
