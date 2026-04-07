@@ -186,7 +186,8 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
               placeholder={field.placeholder}
               disabled={disabled}
               required={field.required}
-              className="min-h-[120px]"
+              className="min-h-[80px] max-h-[400px] resize-y"
+              style={{ fieldSizing: 'content' } as React.CSSProperties}
             />
           );
 
@@ -200,7 +201,8 @@ export const ChapterFieldSet = React.forwardRef<HTMLDivElement, ChapterFieldSetP
               placeholder={`${field.placeholder}\n(One item per line)`}
               disabled={disabled}
               required={field.required}
-              className="min-h-[120px]"
+              className="min-h-[80px] max-h-[400px] resize-y"
+              style={{ fieldSizing: 'content' } as React.CSSProperties}
             />
           );
 
