@@ -3,9 +3,12 @@
  *
  * UI component for exporting brand strategy as comprehensive markdown document.
  * Integrates with MarkdownExportService and handles user interactions.
+ *
+ * Export state is stored at module level so it survives component remounts
+ * (e.g. when the user switches chat sessions mid-export).
  */
 
-import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef, useSyncExternalStore } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +30,54 @@ const PROGRESS_STAGES = [
   'Finalising your document...',
 ] as const;
 
+// ============================================================================
+// Module-level export state (survives component remounts)
+// ============================================================================
+
+interface ExportState {
+  isExporting: boolean;
+  progressStage: number;
+}
+
+let exportState: ExportState = { isExporting: false, progressStage: 0 };
+let progressInterval: ReturnType<typeof setInterval> | null = null;
+const listeners = new Set<() => void>();
+
+function getSnapshot(): ExportState {
+  return exportState;
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function setExportState(next: Partial<ExportState>): void {
+  exportState = { ...exportState, ...next };
+  listeners.forEach((l) => l());
+}
+
+function startProgressCycle(): void {
+  stopProgressCycle();
+  setExportState({ progressStage: 0 });
+  progressInterval = setInterval(() => {
+    if (exportState.progressStage < PROGRESS_STAGES.length - 1) {
+      setExportState({ progressStage: exportState.progressStage + 1 });
+    }
+  }, 8000);
+}
+
+function stopProgressCycle(): void {
+  if (progressInterval) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+  }
+}
+
+// ============================================================================
+// Component
+// ============================================================================
+
 /** Imperative handle for triggering export programmatically */
 export interface BrandMarkdownExportRef {
   /** Start the export process programmatically */
@@ -34,32 +85,17 @@ export interface BrandMarkdownExportRef {
 }
 
 interface BrandMarkdownExportProps {
-  /** Company name for filename */
   companyName?: string;
-
-  /** Button variant */
   variant?: 'default' | 'outline' | 'secondary' | 'ghost';
-
-  /** Button size */
   size?: 'default' | 'sm' | 'lg';
-
-  /** Full width button */
   fullWidth?: boolean;
-
-  /** Include chat conversation insights */
   includeChats?: boolean;
-
-  /**
-   * If provided, this callback is invoked when the user clicks the export button
-   * INSTEAD of starting the export directly. Use this to gate export behind a
-   * readiness check (e.g., opening ExportReadinessModal).
-   */
+  fieldValues?: Record<string, string | string[]>;
   onBeforeExport?: () => void;
 }
 
 export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkdownExportProps>(
   function BrandMarkdownExport({
-    companyName,
     variant = 'outline',
     size = 'default',
     fullWidth = false,
@@ -69,32 +105,16 @@ export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkd
   const { toast } = useToast();
   const { user } = useAuth();
   const { brandData } = useBrand();
-  const [isExporting, setIsExporting] = useState(false);
-  const [progressStage, setProgressStage] = useState(0);
-  const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { isExporting, progressStage } = useSyncExternalStore(subscribe, getSnapshot);
 
-  // Cycle through progress stages while exporting
+  // Clean up interval on unmount only if no export is running
   useEffect(() => {
-    if (isExporting) {
-      setProgressStage(0);
-      progressInterval.current = setInterval(() => {
-        setProgressStage((prev) =>
-          prev < PROGRESS_STAGES.length - 1 ? prev + 1 : prev
-        );
-      }, 8000); // ~8s per stage across ~60-90s generation
-    } else {
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current);
-        progressInterval.current = null;
-      }
-    }
-
     return () => {
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current);
+      if (!exportState.isExporting) {
+        stopProgressCycle();
       }
     };
-  }, [isExporting]);
+  }, []);
 
   // Expose startExport for programmatic triggering (e.g., from ExportReadinessModal)
   useImperativeHandle(ref, () => ({
@@ -119,10 +139,12 @@ export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkd
       return;
     }
 
-    setIsExporting(true);
+    if (exportState.isExporting) return;
+
+    setExportState({ isExporting: true });
+    startProgressCycle();
 
     try {
-      // Update brandData with current user ID
       const exportBrandData = {
         ...brandData,
         userInfo: {
@@ -132,7 +154,6 @@ export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkd
         },
       };
 
-      // Initialize services
       const knowledgeRepo = await KnowledgeBaseFactory.createRepository();
       const chatService = new SupabaseChatService();
       const exportService = new MarkdownExportService(
@@ -141,7 +162,6 @@ export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkd
         exportBrandData
       );
 
-      // Generate export - include up to 10 recent conversations for context
       const result = await exportService.generateExport({
         includeChats,
         maxChatExcerpts: 10,
@@ -152,19 +172,14 @@ export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkd
         throw result.error || new Error('Export generation failed');
       }
 
-      // Create downloadable file
       const blob = exportService.createDownloadableFile(result.markdown!);
-
-      // Trigger download
       exportService.downloadFile(blob, result.filename);
 
-      // Success toast
       toast({
         title: 'Export Successful',
         description: `Your brand strategy has been exported as ${result.filename}`,
       });
 
-      // Log metadata for debugging
       console.log('Export metadata:', result.metadata);
     } catch (error) {
       console.error('Export failed:', error);
@@ -175,7 +190,8 @@ export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkd
         variant: 'destructive',
       });
     } finally {
-      setIsExporting(false);
+      stopProgressCycle();
+      setExportState({ isExporting: false, progressStage: 0 });
     }
   };
 
