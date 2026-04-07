@@ -151,7 +151,7 @@ describe('SupabaseChatService', () => {
 
       expect(result.message.role).toBe('assistant');
       expect(result.message.content).toBe(mockResponse);
-      expect(supabase.functions.invoke).toHaveBeenCalledWith('idea-framework-consultant',
+      expect(supabase.functions.invoke).toHaveBeenCalledWith('idea-framework-consultant-claude',
         expect.objectContaining({
           body: expect.objectContaining({
             message: mockMessage.content,
@@ -260,17 +260,9 @@ describe('SupabaseChatService', () => {
   describe('getChatHistory', () => {
     it('should fetch chat history successfully', async () => {
       const mockUser = { id: 'user-123' };
+      // Mock data in descending order (newest first) to match service's
+      // .order('created_at', { ascending: false }) — service then .reverse()s
       const mockMessages = [
-        {
-          id: 'msg-1',
-          user_id: 'user-123',
-          role: 'user',
-          content: 'Hello',
-          chatbot_type: 'idea-framework-consultant',
-          created_at: '2025-01-01T00:00:00Z',
-          updated_at: '2025-01-01T00:00:00Z',
-          metadata: null,
-        },
         {
           id: 'msg-2',
           user_id: 'user-123',
@@ -279,6 +271,16 @@ describe('SupabaseChatService', () => {
           chatbot_type: 'idea-framework-consultant',
           created_at: '2025-01-01T00:00:01Z',
           updated_at: '2025-01-01T00:00:01Z',
+          metadata: null,
+        },
+        {
+          id: 'msg-1',
+          user_id: 'user-123',
+          role: 'user',
+          content: 'Hello',
+          chatbot_type: 'idea-framework-consultant',
+          created_at: '2025-01-01T00:00:00Z',
+          updated_at: '2025-01-01T00:00:00Z',
           metadata: null,
         },
       ];

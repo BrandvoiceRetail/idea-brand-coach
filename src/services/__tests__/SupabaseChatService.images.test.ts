@@ -125,7 +125,7 @@ describe('SupabaseChatService - Image Processing', () => {
 
       // Verify edge function was called with images in metadata
       expect(mockEdgeFunctionInvoke).toHaveBeenCalledWith(
-        'idea-framework-consultant',
+        'idea-framework-consultant-claude',
         expect.objectContaining({
           headers: {
             Authorization: `Bearer ${mockSession.access_token}`,
@@ -234,7 +234,7 @@ describe('SupabaseChatService - Image Processing', () => {
 
       // Verify edge function was called without images
       expect(mockEdgeFunctionInvoke).toHaveBeenCalledWith(
-        'idea-framework-consultant',
+        'idea-framework-consultant-claude',
         expect.objectContaining({
           headers: {
             Authorization: `Bearer ${mockSession.access_token}`,
@@ -372,7 +372,22 @@ describe('SupabaseChatService - Image Processing', () => {
     it('should retrieve messages with image metadata', async () => {
       const mockUser = { id: 'user-123' };
 
+      // Mock data in descending order (newest first) to match service's
+      // .order('created_at', { ascending: false }) — service then .reverse()s
       const mockMessages = [
+        {
+          id: 'msg-2',
+          user_id: 'user-123',
+          role: 'assistant',
+          content: 'I can see the product image shows...',
+          chatbot_type: 'idea-framework-consultant',
+          metadata: {
+            suggestions: ['How can I improve the image?'],
+            sources: [],
+          },
+          created_at: '2025-01-01T00:01:00Z',
+          updated_at: '2025-01-01T00:01:00Z',
+        },
         {
           id: 'msg-1',
           user_id: 'user-123',
@@ -390,19 +405,6 @@ describe('SupabaseChatService - Image Processing', () => {
           },
           created_at: '2025-01-01T00:00:00Z',
           updated_at: '2025-01-01T00:00:00Z',
-        },
-        {
-          id: 'msg-2',
-          user_id: 'user-123',
-          role: 'assistant',
-          content: 'I can see the product image shows...',
-          chatbot_type: 'idea-framework-consultant',
-          metadata: {
-            suggestions: ['How can I improve the image?'],
-            sources: [],
-          },
-          created_at: '2025-01-01T00:01:00Z',
-          updated_at: '2025-01-01T00:01:00Z',
         },
       ];
 
