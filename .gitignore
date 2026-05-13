@@ -18,6 +18,10 @@ dist
 dist-ssr
 *.local
 
+# Python build artifacts (from docs/spec build scripts)
+__pycache__/
+*.pyc
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
