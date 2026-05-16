@@ -2254,6 +2254,17 @@ RISKS: list[tuple] = [
         "Lock the v2 Brief; require written sign-off on changes; version-tag the build",
         "",
     ),
+    (
+        "R-015",
+        "Product doesn't solve enough user problems well enough to earn value",
+        "All",
+        "Critical",
+        "monitoring",
+        "At Alpha exit, fewer than 2 of {P-001, P-002, P-003} verified PARTIAL+ via tester debriefs; OR <50% of testers can articulate one concrete way the canvas changed how they think about their customer; OR fewer than 60% of shipped features map to ≥1 problem.",
+        "Matthew",
+        "Problems sheet operationalises tracking. Alpha feedback Moments 1 + 2 measure perceived value directly. If signal is low at Alpha midpoint, narrow scope to deepen 1-2 problems rather than adding features.",
+        "Meta-risk above R-003 (form not conversation) and R-007 (no testimonials). The failure mode where every feature ships on time but the product still doesn't matter to anyone. Operational tool: the Problems sheet — every feature should tag to at least one problem.",
+    ),
 ]
 
 
