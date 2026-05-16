@@ -959,6 +959,71 @@ FEATURES: list[tuple] = [
         0,
         "Refactor patterns shipped (SupabaseChatService split, FieldSyncService, AIAssistant decomposition). Verify all Gen 3 work picks up new patterns.",
     ),
+    # --- Power-user / multi-variant features (added 2026-05-16 per Matthew) ---
+    (
+        "F-053",
+        "Multiple positioning angles per avatar",
+        "avatar_builder",
+        "Support multiple positioning / marketing angle variants for the same avatar — each angle has its own brand strategy doc / canvas section, but shares the underlying avatar.",
+        "Beta",
+        "P1",
+        "not_started",
+        0,
+        "",
+        "Matthew",
+        "F-008,F-031",
+        40,
+        0,
+        "Validates A/B angle testing for paying users. Each angle = a strategy variant tied to a canonical avatar. Surfaces in Coach mode and Export. OPEN: schema choice — separate canvases per angle vs angle-tagged sections within one canvas.",
+    ),
+    (
+        "F-054",
+        "Image asset side-by-side comparison and tracking",
+        "asset_tracking",
+        "Upload current image/video assets, view side-by-side, tag against avatar + angle, flag gaps and emotional-connection opportunities.",
+        "GA",
+        "P1",
+        "not_started",
+        0,
+        "Conditional on F-028 (asset tracking decision)",
+        "Matthew",
+        "F-028,F-053",
+        56,
+        0,
+        "Extension of asset_tracking that goes beyond text. Anchored to InfinityVault need N-002 (assess images/videos, identify what's missing, surface emotional-connection opportunities). Requires image storage (Supabase Storage) and a comparison UI.",
+    ),
+    (
+        "F-055",
+        "Design brief creation",
+        "create_mode",
+        "Generate a design brief document from the Forensic Canvas + selected positioning angle. Output briefs creative work (image, video, packaging) for designers or agencies.",
+        "Beta",
+        "P1",
+        "not_started",
+        0,
+        "",
+        "Matthew",
+        "F-008,F-053",
+        32,
+        0,
+        "Sibling to F-020 (Amazon listing copy) and F-021 (Brand Voice Guide). Bridges the canvas to creative work. Required to make F-054 actionable (gap → brief → asset).",
+    ),
+    (
+        "F-056",
+        "Image generation (coming soon)",
+        "create_mode",
+        "Generate brand-aligned imagery directly from canvas + design brief. Marked 'coming soon' — Post-GA feature, not in active build.",
+        "Post-GA",
+        "P2",
+        "not_started",
+        0,
+        "",
+        "Matthew",
+        "F-055",
+        80,
+        0,
+        "Surfaced as 'coming soon' in UI (teaser). Closes the loop from canvas → design brief → generated imagery. No model choice locked in; defer until Post-GA stability work is done.",
+    ),
     (
         "F-052",
         "Lovable.dev vs existing codebase decision",
@@ -2192,13 +2257,55 @@ RISKS: list[tuple] = [
 ]
 
 
+# Brand Needs — concrete user-need rows that anchor the feature inventory to
+# real brand use cases. Each leaf need maps to one or more feature ids so the
+# Phase Gate / Summary sheets can be cross-referenced against actual demand.
+# (need_id, brand, need, mapped_features, notes)
+BRAND_NEEDS: list[tuple] = [
+    (
+        "N-001",
+        "InfinityVault",
+        "Create brand strategy doc using the Coach for the 'collector' avatar",
+        "F-001,F-004,F-005,F-006,F-007,F-008,F-022,F-023",
+        "End-to-end happy path: Layer 1 conversation → Avatar Builder (collector) → Forensic Canvas → Coach refinement → Export. Validates the core product loop with a real brand.",
+    ),
+    (
+        "N-002",
+        "InfinityVault",
+        "Assess current set of images and videos",
+        "F-054",
+        "Top-level need under which the gap-identification and emotional-connection needs sit.",
+    ),
+    (
+        "N-002.1",
+        "InfinityVault",
+        "Identify what's missing in the current image/video set",
+        "F-054",
+        "Gap analysis on visual assets — requires side-by-side comparison + tagging against the canvas.",
+    ),
+    (
+        "N-002.1.1",
+        "InfinityVault",
+        "Surface opportunities to improve emotional connection with the customer",
+        "F-006,F-007,F-054,F-055",
+        "Connects Emotional Journey Mapping (Avatar Builder Sec 3) + Voice of Customer (Sec 4) to the asset gaps surfaced by F-054, with design briefs (F-055) closing the loop into action.",
+    ),
+]
+
+
 # Change Log seed entry.
 CHANGE_LOG: list[tuple] = [
     (
-        TODAY.isoformat(),
+        "2026-05-13",
         "Matthew (via Claude Code)",
         "Initial workbook created",
         "Operational counterpart to Launch Roadmap; seeded from Gen 3 brief, V2 PRD, and Launch Roadmap workbook.",
+    ),
+    (
+        TODAY.isoformat(),
+        "Matthew (via Claude Code)",
+        "Added F-053..F-056 + Brand Needs sheet",
+        "Captured multi-angle, image comparison, design brief, and (post-GA) image generation features. Added Brand Needs sheet seeded with InfinityVault as the first validation case.",
     ),
 ]
 
@@ -2826,6 +2933,107 @@ def build_risks_sheet(wb: Workbook) -> Worksheet:
     return ws
 
 
+def build_brand_needs_sheet(wb: Workbook, n_features: int) -> Worksheet:
+    ws = wb.create_sheet("Brand Needs")
+    write_title(ws, 1, 6, "Brand Needs — concrete user needs mapped to features")
+    ws.cell(
+        row=2,
+        column=1,
+        value=(
+            "Anchors the feature inventory to real brand use cases. Each leaf need maps to one or more feature ids. "
+            "fulfilment_status is derived: MET if all mapped features complete, BLOCKED if any are blocked, otherwise OPEN with count."
+        ),
+    ).font = BODY_FONT
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=6)
+
+    headers = [
+        "need_id",
+        "brand",
+        "need",
+        "mapped_features",
+        "fulfilment_status",
+        "notes",
+    ]
+    write_header_row(ws, 4, headers)
+
+    feature_id_range = f"'Features'!$A$3:$A${3 + n_features - 1}"
+    feature_status_range = f"'Features'!$G$3:$G${3 + n_features - 1}"
+
+    first_data_row = 5
+    for offset, need in enumerate(BRAND_NEEDS):
+        row = first_data_row + offset
+        need_id, brand, text, mapped, notes = need
+        ws.cell(row=row, column=1, value=need_id)
+        ws.cell(row=row, column=2, value=brand)
+        ws.cell(row=row, column=3, value=text)
+        ws.cell(row=row, column=4, value=mapped)
+
+        ids = [i.strip() for i in mapped.split(",") if i.strip()]
+        if not ids:
+            status_formula = '"N/A"'
+        else:
+            total = len(ids)
+            complete_terms = [
+                f'COUNTIFS({feature_id_range},"{fid}",{feature_status_range},"complete")'
+                for fid in ids
+            ]
+            blocked_terms = [
+                f'COUNTIFS({feature_id_range},"{fid}",{feature_status_range},"blocked")'
+                for fid in ids
+            ]
+            complete_sum = "(" + "+".join(complete_terms) + ")"
+            blocked_sum = "(" + "+".join(blocked_terms) + ")"
+            status_formula = (
+                f'=IF({blocked_sum}>0,"BLOCKED — see mapped features",'
+                f'IF({complete_sum}={total},"MET",'
+                f'"OPEN — "&({total}-{complete_sum})&" of {total} remaining"))'
+            )
+        ws.cell(row=row, column=5, value=status_formula)
+        ws.cell(row=row, column=6, value=notes)
+        for col in range(1, 7):
+            style_body_cell(ws.cell(row=row, column=col))
+        ws.row_dimensions[row].height = 42
+
+    last_data_row = first_data_row + len(BRAND_NEEDS) - 1
+
+    # Conditional formatting on fulfilment_status (column E)
+    cell_range = f"E{first_data_row}:E{last_data_row}"
+    ws.conditional_formatting.add(
+        cell_range,
+        FormulaRule(formula=[f'E{first_data_row}="MET"'], fill=STATUS_FILLS["complete"]),
+    )
+    ws.conditional_formatting.add(
+        cell_range,
+        FormulaRule(
+            formula=[f'ISNUMBER(SEARCH("BLOCKED",E{first_data_row}))'],
+            fill=STATUS_FILLS["blocked"],
+        ),
+    )
+    ws.conditional_formatting.add(
+        cell_range,
+        FormulaRule(
+            formula=[f'ISNUMBER(SEARCH("OPEN",E{first_data_row}))'],
+            fill=STATUS_FILLS["in_progress"],
+        ),
+    )
+
+    ws.freeze_panes = "C5"
+
+    set_column_widths(
+        ws,
+        {
+            "A": 12,
+            "B": 18,
+            "C": 60,
+            "D": 30,
+            "E": 36,
+            "F": 50,
+        },
+    )
+
+    return ws
+
+
 def build_change_log_sheet(wb: Workbook) -> Worksheet:
     ws = wb.create_sheet("Change Log")
     write_title(ws, 1, 4, "Change Log — append-only")
@@ -2865,16 +3073,26 @@ def main() -> None:
     build_summary_sheet(wb, n_features)
     build_phase_gate_sheet(wb, n_features)
     build_risks_sheet(wb)
+    build_brand_needs_sheet(wb, n_features)
     build_change_log_sheet(wb)
 
-    # Reorder so Summary is first, then Features, Sub-features, Phase Gate, Risks, Change Log
-    order = ["Summary", "Features", "Sub-features", "Phase Gate", "Risks", "Change Log"]
+    # Reorder: Summary first, then Features inventory, then derived views.
+    order = [
+        "Summary",
+        "Features",
+        "Sub-features",
+        "Phase Gate",
+        "Brand Needs",
+        "Risks",
+        "Change Log",
+    ]
     wb._sheets = [wb[name] for name in order]
 
     wb.save(OUTPUT_PATH)
     print(f"Wrote {OUTPUT_PATH}")
     print(f"Features: {len(FEATURES)} | Sub-features: {len(SUBFEATURES)} | "
-          f"Phase gates: {len(PHASE_GATES)} | Risks: {len(RISKS)}")
+          f"Phase gates: {len(PHASE_GATES)} | Brand needs: {len(BRAND_NEEDS)} | "
+          f"Risks: {len(RISKS)}")
 
 
 if __name__ == "__main__":
