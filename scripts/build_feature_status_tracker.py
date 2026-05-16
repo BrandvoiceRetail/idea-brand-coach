@@ -2257,6 +2257,112 @@ RISKS: list[tuple] = [
 ]
 
 
+# Problems we solve for the user — the grand-vision list, mapped to features.
+# Stored here as the source of truth; the Features sheet's `problems_addressed`
+# column is derived at build time from this mapping so the two sides can't
+# drift.
+# (problem_id, problem_statement, earliest_phase_solvable, alpha_testable,
+#  mapped_features, notes)
+PROBLEMS: list[tuple] = [
+    (
+        "P-001",
+        "Generic AI doesn't know my customer deeply enough.",
+        "Alpha",
+        "Yes",
+        "F-004,F-005,F-006,F-007,F-008,F-009,F-012,F-022",
+        "Core Alpha thesis: Avatar Builder + Forensic Canvas produce a depth of customer understanding generic prompting can't reach. F-022 (Coach mode) extends this in Beta.",
+    ),
+    (
+        "P-002",
+        "I don't know what to ask myself about my customer.",
+        "Alpha",
+        "Yes",
+        "F-001,F-004,F-005,F-006,F-007,F-009",
+        "10-Q conversation + 4 Avatar Builder sections provide the inquiry structure. F-009 'Think About This' mode explicitly generates reflective questions per field.",
+    ),
+    (
+        "P-003",
+        "My brand strategy doc is shallow or doesn't exist.",
+        "Alpha",
+        "Partial",
+        "F-003,F-008,F-023,F-053",
+        "F-008 (Forensic Canvas via generate-brand-strategy-document) is the primary fulfilment — substantially shipped. Polished Word export (F-023) and multi-angle (F-053) are Beta extensions.",
+    ),
+    (
+        "P-004",
+        "My copy and creative aren't grounded in strategy.",
+        "Beta",
+        "No",
+        "F-008,F-020,F-021,F-055",
+        "Requires Create mode outputs (F-020 Amazon, F-021 Voice Guide, F-055 Design brief). None ship in Alpha. The canvas (F-008) is the anchor but not the deliverable for this problem.",
+    ),
+    (
+        "P-005",
+        "My customer's actual language doesn't make it into my copy.",
+        "Beta",
+        "Partial",
+        "F-007,F-008,F-020,F-021",
+        "F-007 Voice of Customer extracts verbatim language in Alpha. F-020/F-021 (Beta) consume it. Alpha can prove 'we capture the language'; only Beta proves 'it shows up in your copy'.",
+    ),
+    (
+        "P-006",
+        "My existing image/video set is doing something — but I can't tell what's missing or off.",
+        "GA",
+        "No",
+        "F-006,F-007,F-054,F-055",
+        "InfinityVault's specific need (N-002). F-054 is conditional on the asset-tracking decision gate. F-006/F-007 supply the 'what should this connect to' context.",
+    ),
+    (
+        "P-007",
+        "I have no thinking partner who remembers my brand.",
+        "Beta",
+        "No",
+        "F-022,F-031,F-049",
+        "F-022 Coach mode is the answer. RAG (F-049) makes the memory queryable. F-031 (My Brands) lets the partner know which brand we're discussing.",
+    ),
+    (
+        "P-008",
+        "I can't cheaply test multiple positioning angles.",
+        "Beta",
+        "No",
+        "F-042,F-053,F-055",
+        "F-053 is the primary fulfilment. F-055 lets each angle drive its own design brief. F-042 comparison view (GA) lets the user A/B them.",
+    ),
+    (
+        "P-009",
+        "I can't tell when my strategy and my live assets have drifted apart.",
+        "GA",
+        "No",
+        "F-028,F-029,F-030,F-043,F-054",
+        "Conditional on the asset-tracking decision. F-043 field edit history adds the temporal dimension on the strategy side.",
+    ),
+    (
+        "P-010",
+        "Every marketing decision feels reactive.",
+        "GA",
+        "No",
+        "F-008,F-022,F-038,F-053",
+        "Forensic Canvas as North Star (F-008), Coach for ongoing decisions (F-022), performance metrics (F-038) close the loop. F-053 lets decisions live at the angle level.",
+    ),
+]
+
+
+# Reverse index — for each feature, which problems does it address? Computed
+# from PROBLEMS at build time so the Features sheet's problems_addressed column
+# stays in lockstep with the Problems sheet.
+def _build_feature_to_problems() -> dict[str, list[str]]:
+    mapping: dict[str, list[str]] = {}
+    for problem_id, _, _, _, mapped, _ in PROBLEMS:
+        for fid in mapped.split(","):
+            fid = fid.strip()
+            if fid:
+                mapping.setdefault(fid, []).append(problem_id)
+    return mapping
+
+
+FEATURE_TO_PROBLEMS = _build_feature_to_problems()
+
+
 # Brand Needs — concrete user-need rows that anchor the feature inventory to
 # real brand use cases. Each leaf need maps to one or more feature ids so the
 # Phase Gate / Summary sheets can be cross-referenced against actual demand.
@@ -2302,10 +2408,16 @@ CHANGE_LOG: list[tuple] = [
         "Operational counterpart to Launch Roadmap; seeded from Gen 3 brief, V2 PRD, and Launch Roadmap workbook.",
     ),
     (
-        TODAY.isoformat(),
+        "2026-05-13",
         "Matthew (via Claude Code)",
         "Added F-053..F-056 + Brand Needs sheet",
         "Captured multi-angle, image comparison, design brief, and (post-GA) image generation features. Added Brand Needs sheet seeded with InfinityVault as the first validation case.",
+    ),
+    (
+        TODAY.isoformat(),
+        "Matthew (via Claude Code)",
+        "Corrected status for brand strategy doc + PDF export; added Problems sheet",
+        "F-008 was wrongly marked not_started — corrected to in_review 80% based on shipped generate-brand-strategy-document. F-023 corrected to in_progress 65% (PDF + Markdown shipped, Word still missing). Added Problems sheet with the 10 problems we solve mapped to features; added problems_addressed column on Features.",
     ),
 ]
 
@@ -2390,7 +2502,7 @@ def style_body_cell(cell) -> None:
 def build_features_sheet(wb: Workbook) -> Worksheet:
     ws = wb.create_sheet("Features")
 
-    write_title(ws, 1, 15, "Features — implementation status by launch phase")
+    write_title(ws, 1, 16, "Features — implementation status by launch phase")
     headers = [
         "feature_id",
         "feature_name",
@@ -2403,6 +2515,7 @@ def build_features_sheet(wb: Workbook) -> Worksheet:
         "blocker",
         "owner",
         "depends_on",
+        "problems_addressed",
         "effort_estimate_hours",
         "actual_hours",
         "notes",
@@ -2429,6 +2542,7 @@ def build_features_sheet(wb: Workbook) -> Worksheet:
             actual_h,
             notes,
         ) = feature
+        problems_addressed = ",".join(FEATURE_TO_PROBLEMS.get(fid, []))
         values = [
             fid,
             name,
@@ -2441,6 +2555,7 @@ def build_features_sheet(wb: Workbook) -> Worksheet:
             blocker,
             owner,
             depends_on,
+            problems_addressed,
             effort_h,
             actual_h,
             notes,
@@ -2449,8 +2564,8 @@ def build_features_sheet(wb: Workbook) -> Worksheet:
         for col_idx, value in enumerate(values, start=1):
             cell = ws.cell(row=row, column=col_idx, value=value)
             style_body_cell(cell)
-        # last_updated as date
-        ws.cell(row=row, column=15).number_format = "yyyy-mm-dd"
+        # last_updated as date (column P / 16)
+        ws.cell(row=row, column=16).number_format = "yyyy-mm-dd"
         ws.cell(row=row, column=8).number_format = "0"
         ws.row_dimensions[row].height = 42
 
@@ -2482,10 +2597,11 @@ def build_features_sheet(wb: Workbook) -> Worksheet:
             "I": 32,
             "J": 12,
             "K": 18,
-            "L": 10,
+            "L": 22,
             "M": 10,
-            "N": 60,
-            "O": 12,
+            "N": 10,
+            "O": 60,
+            "P": 12,
         },
     )
 
@@ -2933,6 +3049,162 @@ def build_risks_sheet(wb: Workbook) -> Worksheet:
     return ws
 
 
+def build_problems_sheet(wb: Workbook, n_features: int) -> Worksheet:
+    ws = wb.create_sheet("Problems")
+    write_title(ws, 1, 8, "Problems — the grand-vision list, mapped to features")
+    ws.cell(
+        row=2,
+        column=1,
+        value=(
+            "Each problem is mapped to the features that help solve it. fulfilment_status derives from the status of mapped features. "
+            "alpha_testable = whether Alpha-stage features alone are enough to validate this problem with testers."
+        ),
+    ).font = BODY_FONT
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=8)
+
+    headers = [
+        "problem_id",
+        "problem_statement",
+        "earliest_phase_solvable",
+        "alpha_testable",
+        "mapped_features",
+        "feature_count",
+        "complete_or_review_count",
+        "fulfilment_status",
+    ]
+    write_header_row(ws, 4, headers)
+
+    feature_id_range = f"'Features'!$A$3:$A${3 + n_features - 1}"
+    feature_status_range = f"'Features'!$G$3:$G${3 + n_features - 1}"
+
+    first_data_row = 5
+    for offset, problem in enumerate(PROBLEMS):
+        row = first_data_row + offset
+        pid, statement, earliest_phase, alpha_testable, mapped, notes = problem
+        ws.cell(row=row, column=1, value=pid)
+        ws.cell(row=row, column=2, value=statement)
+        ws.cell(row=row, column=3, value=earliest_phase)
+        ws.cell(row=row, column=4, value=alpha_testable)
+        ws.cell(row=row, column=5, value=mapped)
+
+        ids = [i.strip() for i in mapped.split(",") if i.strip()]
+        total = len(ids)
+        ws.cell(row=row, column=6, value=total)
+
+        if not ids:
+            ws.cell(row=row, column=7, value=0)
+            ws.cell(row=row, column=8, value='"N/A"')
+        else:
+            complete_terms = [
+                (
+                    f'COUNTIFS({feature_id_range},"{fid}",{feature_status_range},"complete")'
+                    f'+COUNTIFS({feature_id_range},"{fid}",{feature_status_range},"in_review")'
+                )
+                for fid in ids
+            ]
+            blocked_terms = [
+                f'COUNTIFS({feature_id_range},"{fid}",{feature_status_range},"blocked")'
+                for fid in ids
+            ]
+            complete_sum = "(" + "+".join(complete_terms) + ")"
+            blocked_sum = "(" + "+".join(blocked_terms) + ")"
+            ws.cell(row=row, column=7, value=f"={complete_sum}")
+            ws.cell(
+                row=row,
+                column=8,
+                value=(
+                    f'=IF({blocked_sum}>0,"BLOCKED — see mapped features",'
+                    f'IF({complete_sum}={total},"MET",'
+                    f'IF({complete_sum}=0,"OPEN — 0 of {total}",'
+                    f'"PARTIAL — "&{complete_sum}&" of {total}")))'
+                ),
+            )
+
+        for col in range(1, 9):
+            style_body_cell(ws.cell(row=row, column=col))
+        ws.row_dimensions[row].height = 48
+
+    # Notes row underneath each problem? Keep notes as a separate column block.
+    # Append notes as col 9 for visibility.
+    notes_header_cell = ws.cell(row=4, column=9, value="notes")
+    notes_header_cell.font = HEADER_FONT
+    notes_header_cell.fill = HEADER_FILL
+    notes_header_cell.alignment = HEADER_ALIGN
+    notes_header_cell.border = CELL_BORDER
+    for offset, problem in enumerate(PROBLEMS):
+        row = first_data_row + offset
+        ws.cell(row=row, column=9, value=problem[5])
+        style_body_cell(ws.cell(row=row, column=9))
+
+    last_data_row = first_data_row + len(PROBLEMS) - 1
+
+    # Data validation
+    add_validation(ws, PHASE_OPTIONS, "C", first_data_row, last_data_row + 50)
+    add_validation(ws, ["Yes", "Partial", "No"], "D", first_data_row, last_data_row + 50)
+
+    # Conditional formatting on fulfilment_status (column H)
+    status_range = f"H{first_data_row}:H{last_data_row}"
+    ws.conditional_formatting.add(
+        status_range,
+        FormulaRule(formula=[f'H{first_data_row}="MET"'], fill=STATUS_FILLS["complete"]),
+    )
+    ws.conditional_formatting.add(
+        status_range,
+        FormulaRule(
+            formula=[f'ISNUMBER(SEARCH("BLOCKED",H{first_data_row}))'],
+            fill=STATUS_FILLS["blocked"],
+        ),
+    )
+    ws.conditional_formatting.add(
+        status_range,
+        FormulaRule(
+            formula=[f'ISNUMBER(SEARCH("PARTIAL",H{first_data_row}))'],
+            fill=STATUS_FILLS["in_progress"],
+        ),
+    )
+    ws.conditional_formatting.add(
+        status_range,
+        FormulaRule(
+            formula=[f'ISNUMBER(SEARCH("OPEN",H{first_data_row}))'],
+            fill=STATUS_FILLS["not_started"],
+        ),
+    )
+
+    # Conditional formatting on alpha_testable (column D)
+    alpha_range = f"D{first_data_row}:D{last_data_row}"
+    ws.conditional_formatting.add(
+        alpha_range,
+        CellIsRule(operator="equal", formula=['"Yes"'], fill=STATUS_FILLS["complete"]),
+    )
+    ws.conditional_formatting.add(
+        alpha_range,
+        CellIsRule(operator="equal", formula=['"Partial"'], fill=STATUS_FILLS["in_progress"]),
+    )
+    ws.conditional_formatting.add(
+        alpha_range,
+        CellIsRule(operator="equal", formula=['"No"'], fill=STATUS_FILLS["not_started"]),
+    )
+
+    ws.freeze_panes = "C5"
+
+    set_column_widths(
+        ws,
+        {
+            "A": 10,
+            "B": 60,
+            "C": 18,
+            "D": 14,
+            "E": 32,
+            "F": 10,
+            "G": 12,
+            "H": 28,
+            "I": 60,
+        },
+    )
+
+    return ws
+
+
 def build_brand_needs_sheet(wb: Workbook, n_features: int) -> Worksheet:
     ws = wb.create_sheet("Brand Needs")
     write_title(ws, 1, 6, "Brand Needs — concrete user needs mapped to features")
@@ -3072,13 +3344,16 @@ def main() -> None:
     n_features = len(FEATURES)
     build_summary_sheet(wb, n_features)
     build_phase_gate_sheet(wb, n_features)
+    build_problems_sheet(wb, n_features)
     build_risks_sheet(wb)
     build_brand_needs_sheet(wb, n_features)
     build_change_log_sheet(wb)
 
     # Reorder: Summary first, then Features inventory, then derived views.
+    # Problems sits high in the order — it's the why behind everything else.
     order = [
         "Summary",
+        "Problems",
         "Features",
         "Sub-features",
         "Phase Gate",
@@ -3091,8 +3366,8 @@ def main() -> None:
     wb.save(OUTPUT_PATH)
     print(f"Wrote {OUTPUT_PATH}")
     print(f"Features: {len(FEATURES)} | Sub-features: {len(SUBFEATURES)} | "
-          f"Phase gates: {len(PHASE_GATES)} | Brand needs: {len(BRAND_NEEDS)} | "
-          f"Risks: {len(RISKS)}")
+          f"Phase gates: {len(PHASE_GATES)} | Problems: {len(PROBLEMS)} | "
+          f"Brand needs: {len(BRAND_NEEDS)} | Risks: {len(RISKS)}")
 
 
 if __name__ == "__main__":
