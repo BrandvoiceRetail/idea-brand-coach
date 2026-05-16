@@ -76,7 +76,7 @@ SECTION_FILL = PatternFill("solid", fgColor=COLOR_GLD_LT)
 THIN = Side(border_style="thin", color="FFBFBFBF")
 CELL_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
-TODAY = date(2026, 5, 13)
+TODAY = date(2026, 5, 16)
 
 
 # ---------------------------------------------------------------------------
