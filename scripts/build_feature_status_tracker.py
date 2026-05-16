@@ -2102,6 +2102,17 @@ PHASE_GATES: list[tuple] = [
 RISKS: list[tuple] = [
     (
         "R-001",
+        "Product doesn't solve enough user problems well enough to earn value",
+        "All",
+        "Critical",
+        "monitoring",
+        "At Alpha exit, fewer than 2 of {P-001, P-002, P-003} verified PARTIAL+ via tester debriefs; OR <50% of testers can articulate one concrete way the canvas changed how they think about their customer; OR fewer than 60% of shipped features map to ≥1 problem.",
+        "Matthew",
+        "Problems sheet operationalises tracking. Alpha feedback Moments 1 + 2 measure perceived value directly. If signal is low at Alpha midpoint, narrow scope to deepen 1-2 problems rather than adding features.",
+        "Meta-risk above R-004 (form not conversation) and R-008 (no testimonials). The failure mode where every feature ships on time but the product still doesn't matter to anyone. Operational tool: the Problems sheet — every feature should tag to at least one problem.",
+    ),
+    (
+        "R-002",
         "Alpha testers don't complete the flow",
         "Alpha",
         "High",
@@ -2112,7 +2123,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-002",
+        "R-003",
         "Trevor's voice doesn't land for younger demographic",
         "Alpha",
         "Medium",
@@ -2123,7 +2134,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-003",
+        "R-004",
         "Avatar Builder feels like a form not a conversation",
         "Alpha",
         "High",
@@ -2131,10 +2142,10 @@ RISKS: list[tuple] = [
         "Any tester says 'this is just a long form'",
         "Matthew",
         "F-009 AI assistance wired before alpha; F-010 progressive disclosure tested; question phrasing reviewed by Trevor",
-        "Kills Trevor's core thesis if it materialises.",
+        "Kills Trevor's core thesis if it materialises. Specific symptom of R-001.",
     ),
     (
-        "R-004",
+        "R-005",
         "Pay gate conversion too low",
         "Beta",
         "High",
@@ -2145,7 +2156,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-005",
+        "R-006",
         "Refund rate is high",
         "Beta",
         "Medium",
@@ -2156,7 +2167,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-006",
+        "R-007",
         "Asset tracking sucks Beta scope dry",
         "Beta",
         "Medium",
@@ -2167,7 +2178,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-007",
+        "R-008",
         "ROI testimonials don't materialise",
         "Beta",
         "High",
@@ -2175,10 +2186,10 @@ RISKS: list[tuple] = [
         "<3 testimonials by week 4 of beta",
         "Matthew",
         "Testimonial harvest sequence baked in from day 1; results-focused user selection",
-        "Kills the marketing engine if it materialises.",
+        "Kills the marketing engine if it materialises. Downstream symptom of R-001.",
     ),
     (
-        "R-008",
+        "R-009",
         "GA acquisition CAC too high",
         "GA",
         "High",
@@ -2189,7 +2200,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-009",
+        "R-010",
         "Retention below unit economics floor",
         "GA",
         "Critical",
@@ -2200,7 +2211,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-010",
+        "R-011",
         "TikTok algorithm de-prioritises long-form B2B content",
         "Post-GA",
         "Medium",
@@ -2211,7 +2222,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-011",
+        "R-012",
         "Trevor's bandwidth limits content production",
         "All",
         "Medium",
@@ -2222,7 +2233,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-012",
+        "R-013",
         "Lovable.dev vs existing codebase architectural collision",
         "Alpha",
         "Critical",
@@ -2233,7 +2244,7 @@ RISKS: list[tuple] = [
         "Status set to triggered because the decision is currently open and Gen 3 work is paused on this call.",
     ),
     (
-        "R-013",
+        "R-014",
         "Competitor launches similar tool",
         "Beta",
         "Medium",
@@ -2244,7 +2255,7 @@ RISKS: list[tuple] = [
         "",
     ),
     (
-        "R-014",
+        "R-015",
         "Trevor changes framework spec mid-build",
         "All",
         "High",
@@ -2253,17 +2264,6 @@ RISKS: list[tuple] = [
         "Matthew",
         "Lock the v2 Brief; require written sign-off on changes; version-tag the build",
         "",
-    ),
-    (
-        "R-015",
-        "Product doesn't solve enough user problems well enough to earn value",
-        "All",
-        "Critical",
-        "monitoring",
-        "At Alpha exit, fewer than 2 of {P-001, P-002, P-003} verified PARTIAL+ via tester debriefs; OR <50% of testers can articulate one concrete way the canvas changed how they think about their customer; OR fewer than 60% of shipped features map to ≥1 problem.",
-        "Matthew",
-        "Problems sheet operationalises tracking. Alpha feedback Moments 1 + 2 measure perceived value directly. If signal is low at Alpha midpoint, narrow scope to deepen 1-2 problems rather than adding features.",
-        "Meta-risk above R-003 (form not conversation) and R-007 (no testimonials). The failure mode where every feature ships on time but the product still doesn't matter to anyone. Operational tool: the Problems sheet — every feature should tag to at least one problem.",
     ),
 ]
 
