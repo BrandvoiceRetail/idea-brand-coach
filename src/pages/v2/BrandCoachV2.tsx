@@ -1,7 +1,10 @@
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Loader2, Download, Trash2, Copy, Check, Menu, BookOpen, CheckCircle } from 'lucide-react';
+import { Loader2, Download, Trash2, Copy, Check, Menu, BookOpen, CheckCircle, Target, ArrowRight } from 'lucide-react';
+import { parseGapParam, gapOpenerPrompt } from '@/lib/journeyBridge';
+import { TRUST_GAP_DIMENSION_META } from '@/lib/trustGap';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { TwoPanelTemplate } from '@/components/templates/TwoPanelTemplate';
@@ -106,6 +109,18 @@ const BrandCoachV2 = (): JSX.Element => {
     handleReopenReview,
     dismissMilestone,
   } = useBrandCoachV2State();
+
+  // ── Journey bridge entry (F-059) ───────────────────────────────────────
+  // When arriving from the Trust Gap™ bridge (`?gap=`), open the conversation on
+  // the user's weakest pillar with a one-click opener. Shown only before the
+  // conversation has started, so it never disturbs an in-progress chat.
+  const [searchParams] = useSearchParams();
+  const gap = parseGapParam(searchParams.get('gap'));
+  // Gate the opener on an empty conversation AND a ready session, so it never
+  // disturbs an in-progress chat and never fires handleSendMessage before the
+  // session exists.
+  const showGapOpener = !!gap && !!currentSessionId && displayMessages.length === 0;
+  const gapLabel = gap ? TRUST_GAP_DIMENSION_META[gap].label : null;
 
   // ── Loading gate ──────────────────────────────────────────────────────
   if (isLoading) {
@@ -228,6 +243,26 @@ const BrandCoachV2 = (): JSX.Element => {
               alwaysAccept={alwaysAccept}
               onToggleAlwaysAccept={toggleAlwaysAccept}
             />
+
+            {showGapOpener && gap && (
+              <div
+                role="region"
+                aria-label={`Trust Gap quick start: ${gapLabel}`}
+                className="flex-shrink-0 border-b bg-primary/5 px-4 py-3"
+              >
+                <div className="flex items-center gap-2 text-primary mb-1">
+                  <Target className="h-4 w-4" />
+                  <span className="text-sm font-semibold">Your biggest Trust Gap: {gapLabel}</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Let's build the Signature that closes your {gapLabel} gap. Start the conversation here.
+                </p>
+                <Button size="sm" onClick={() => handleSendMessage(gapOpenerPrompt(gap))} disabled={isSending || isStreaming}>
+                  Work on my {gapLabel} gap
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            )}
 
             <ChatMessageList
               messages={messagesWithPending}

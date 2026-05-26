@@ -25,6 +25,7 @@ import Dashboard from "./pages/Dashboard";
 import BrandDiagnostic from "./pages/BrandDiagnostic";
 import FreeDiagnostic from "./pages/FreeDiagnostic";
 import DiagnosticResults from "./pages/DiagnosticResults";
+import JourneyBridge from "./components/diagnostic/JourneyBridge";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
 import IdeaFrameworkConsultant from "./pages/IdeaFrameworkConsultant";
@@ -103,6 +104,8 @@ const App = () => {
                 <Route path="/subscribe" element={<Navigate to="/v1/subscribe" replace />} />
 
                 <Route path="/diagnostic/results" element={<Navigate to="/v1/diagnostic/results" replace />} />
+
+                <Route path="/diagnostic/bridge" element={<Navigate to="/v1/diagnostic/bridge" replace />} />
 
                 <Route path="/dashboard" element={<Navigate to="/v1/dashboard" replace />} />
 
@@ -186,6 +189,8 @@ const App = () => {
                 <Route path="/v1/subscribe" element={<PricingPaywall />} />
 
                 <Route path="/v1/diagnostic/results" element={<DiagnosticResults />} />
+
+                <Route path="/v1/diagnostic/bridge" element={<JourneyBridge />} />
 
                 <Route path="/v1/dashboard" element={
                   <Layout>

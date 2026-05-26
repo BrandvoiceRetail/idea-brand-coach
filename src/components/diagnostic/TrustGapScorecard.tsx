@@ -38,6 +38,7 @@ import {
   useTrustGapInterpretation,
   type TrustGapInterpretation,
 } from '@/hooks/useTrustGapInterpretation';
+import { buildBridgePath } from '@/lib/journeyBridge';
 
 interface TrustGapScorecardProps {
   scores: TrustGapInputScores;
@@ -222,7 +223,7 @@ export function TrustGapScorecard({ scores }: TrustGapScorecardProps): JSX.Eleme
           <Button
             size="lg"
             className="w-full sm:w-auto"
-            onClick={() => navigate(gap.route)}
+            onClick={() => navigate(buildBridgePath(gap.key))}
           >
             Let's go deeper on {gap.label}
             <ArrowRight className="w-4 h-4 ml-2" />
