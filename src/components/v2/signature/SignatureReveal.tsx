@@ -26,6 +26,7 @@ import {
 import { Sparkles, Loader2, Info, ArrowLeft, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSignatureReveal, type SignatureConversationTurn } from '@/hooks/v2/useSignatureReveal';
+import { FeedbackMoment1 } from '@/components/v2/feedback/FeedbackMoment1';
 
 interface SignatureRevealProps {
   /** Chat turns used as discovery context (role + content). */
@@ -34,14 +35,20 @@ interface SignatureRevealProps {
   fieldValues: Record<string, string | string[]>;
   /** Optional trigger sizing/styling. */
   triggerClassName?: string;
+  /** Optional chat session id, forwarded to the Moment 1 feedback event. */
+  sessionId?: string | null;
 }
 
 export function SignatureReveal({
   messages,
   fieldValues,
   triggerClassName,
+  sessionId,
 }: SignatureRevealProps): JSX.Element {
   const [open, setOpen] = useState(false);
+  // Moment 1 feedback prompt — opened right after the user PICKS a Signature.
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [pickedSignature, setPickedSignature] = useState('');
   const {
     stage,
     reviews,
@@ -78,6 +85,7 @@ export function SignatureReveal({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
@@ -191,7 +199,12 @@ export function SignatureReveal({
                 <button
                   key={index}
                   type="button"
-                  onClick={() => pickOption(index)}
+                  onClick={() => {
+                    pickOption(index);
+                    // Minimal hook: arm the Moment 1 feedback prompt with the picked Signature.
+                    setPickedSignature(option);
+                    setFeedbackOpen(true);
+                  }}
                   className={cn(
                     'w-full rounded-lg border bg-card p-4 text-left text-sm leading-relaxed transition-all',
                     'hover:border-amber-400 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400',
@@ -273,5 +286,13 @@ export function SignatureReveal({
         )}
       </DialogContent>
     </Dialog>
+
+    <FeedbackMoment1
+      open={feedbackOpen}
+      onClose={() => setFeedbackOpen(false)}
+      chosenSignature={pickedSignature}
+      sessionId={sessionId}
+    />
+    </>
   );
 }
