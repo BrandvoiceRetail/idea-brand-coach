@@ -10,6 +10,7 @@ import { BrandCoachHeader } from '@/components/v2/BrandCoachHeader';
 import { ExportReadinessModal } from '@/components/v2/ExportReadinessModal';
 import { ChatMessageList } from '@/components/v2/ChatMessageList';
 import { ChatInputBar } from '@/components/v2/ChatInputBar';
+import { SignatureReveal } from '@/components/v2/signature/SignatureReveal';
 import { MilestoneOverlay } from '@/components/v2/MilestoneOverlay';
 import { BatchReviewOrchestrator } from '@/components/v2/BatchReviewOrchestrator';
 import { useBrandCoachV2State } from '@/hooks/v2/useBrandCoachV2State';
@@ -197,6 +198,7 @@ const BrandCoachV2 = (): JSX.Element => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <SignatureReveal messages={displayMessages} fieldValues={fieldValues} />
                 {pendingCount > 0 && (
                   <Button variant="outline" size="sm" className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={handleReviewAcceptAll} title={`Accept all ${pendingCount} pending field(s)`}>
                     <CheckCircle className="h-3 w-3 mr-1" />{pendingCount} pending
