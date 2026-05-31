@@ -326,9 +326,12 @@ serve(async (req) => {
       throw new Error("No authorization header");
     }
 
+    // Forward the caller's JWT so SECURITY DEFINER RPCs (e.g. match_user_documents)
+    // can authorize the caller via auth.uid(). Matches the other coaching edge fns.
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
     );
 
     const token = authHeader.replace("Bearer ", "");
