@@ -57,6 +57,9 @@ $$;
 
 -- Fire AFTER the existing set_timestamp trigger is irrelevant here (both are
 -- BEFORE UPDATE and touch disjoint columns); name keeps it grouped with locking.
+-- DROP IF EXISTS keeps this migration idempotent (re-runnable / safe under a
+-- repeated `supabase db push`).
+DROP TRIGGER IF EXISTS trg_enforce_avatar_field_lock ON public.avatar_field_values;
 CREATE TRIGGER trg_enforce_avatar_field_lock
 BEFORE UPDATE ON public.avatar_field_values
 FOR EACH ROW
