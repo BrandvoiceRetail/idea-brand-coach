@@ -25,6 +25,14 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+// Match text that the UI splits across sibling nodes (e.g. `73` + `/100`),
+// returning only the deepest element that carries the full text.
+const fullText = (text: string) => (_: string, element: Element | null): boolean => {
+  const norm = (t: string | null | undefined) => (t ?? '').replace(/\s+/g, '');
+  if (norm(element?.textContent) !== text) return false;
+  return !Array.from(element?.children ?? []).some((c) => norm(c.textContent) === text);
+};
+
 describe('DiagnosticResults', () => {
   let queryClient: QueryClient;
 
@@ -124,11 +132,12 @@ describe('DiagnosticResults', () => {
     render(<DiagnosticResults />, { wrapper });
 
     expect(screen.getByText('Your Brand Diagnostic Results')).toBeInTheDocument();
-    expect(screen.getByText('73%')).toBeInTheDocument();
-    expect(screen.getByText('75%')).toBeInTheDocument(); // Insight score
-    expect(screen.getByText('60%')).toBeInTheDocument(); // Distinctive score
-    expect(screen.getByText('85%')).toBeInTheDocument(); // Empathetic score
-    expect(screen.getByText('70%')).toBeInTheDocument(); // Authentic score
+    expect(screen.getByText(fullText('73/100'))).toBeInTheDocument();
+    // Per-dimension /25 scores (Math.round(raw / 4)), rendered as split nodes
+    expect(screen.getByText(fullText('19/25'))).toBeInTheDocument(); // Insight 75
+    expect(screen.getByText(fullText('15/25'))).toBeInTheDocument(); // Distinctive 60
+    expect(screen.getByText(fullText('21/25'))).toBeInTheDocument(); // Empathetic 85
+    expect(screen.getByText(fullText('18/25'))).toBeInTheDocument(); // Authentic 70
   });
 
   it('should render results from localStorage for non-authenticated users', () => {
@@ -157,7 +166,7 @@ describe('DiagnosticResults', () => {
     render(<DiagnosticResults />, { wrapper });
     
     expect(screen.getByText('Your Brand Diagnostic Results')).toBeInTheDocument();
-    expect(screen.getByText('73%')).toBeInTheDocument();
+    expect(screen.getByText(fullText('73/100'))).toBeInTheDocument();
   });
 
   it('should show Brand Coach CTA for authenticated users', () => {
@@ -233,10 +242,10 @@ describe('DiagnosticResults', () => {
     localStorage.setItem('diagnosticData', JSON.stringify({
       ...mockDiagnosticData,
       scores: {
-        insight: 90, // Excellent
-        distinctive: 70, // Good
-        empathetic: 50, // Fair
-        authentic: 30  // Needs Improvement
+        insight: 90, // strong -> 'Building trust'
+        distinctive: 70, // strong -> 'Building trust'
+        empathetic: 50, // mixed -> 'Developing'
+        authentic: 30  // weak -> 'Trust gap'
       },
       overallScore: 60
     }));
@@ -263,11 +272,10 @@ describe('DiagnosticResults', () => {
 
     render(<DiagnosticResults />, { wrapper });
     
-    expect(screen.getByText('Excellent')).toBeInTheDocument();
-    // 'Good' appears for both the overall score (60) and the category score (70)
-    expect(screen.getAllByText('Good').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Fair')).toBeInTheDocument();
-    expect(screen.getByText('Needs Improvement')).toBeInTheDocument();
+    // Trust Gap band badges (per-dimension /25): 90->strong, 70->strong, 50->mixed, 30->weak
+    expect(screen.getAllByText('Building trust').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Developing')).toBeInTheDocument();
+    expect(screen.getByText('Trust gap')).toBeInTheDocument();
   });
 
   it('should navigate to auth page when create account button is clicked', () => {
