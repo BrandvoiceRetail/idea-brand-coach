@@ -11,6 +11,7 @@ import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useAuth } from '@/hooks/useAuth';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { ROUTES } from '@/config/routes';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 interface Question {
   id: string;
@@ -110,6 +111,11 @@ export default function FreeDiagnostic() {
   const currentQ = diagnosticQuestions[currentQuestion];
   const hasAnswer = answers[currentQ.id];
 
+  // Funnel: first diagnostic question shown
+  useEffect(() => {
+    captureAlphaEvent('diagnostic_started');
+  }, []);
+
   const handleAnswer = (value: string) => {
     setAnswers(prev => ({
       ...prev,
@@ -192,6 +198,15 @@ export default function FreeDiagnostic() {
     };
 
     localStorage.setItem('diagnosticData', JSON.stringify(diagnosticData));
+
+    // Funnel: answers submitted, scores computed (scores only — never answers)
+    captureAlphaEvent('diagnostic_completed', {
+      overall_score: overallScore,
+      score_insight: averageScores.insight,
+      score_distinctive: averageScores.distinctive,
+      score_empathetic: averageScores.empathetic,
+      score_authentic: averageScores.authentic,
+    });
 
     // Navigate to results page
     setIsCompleting(false);

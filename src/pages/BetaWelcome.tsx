@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { captureAlphaEvent } from "@/lib/posthogClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,11 @@ export default function BetaWelcome() {
       setIsRegistered(true);
     }
   });
+
+  // Funnel: top of the Alpha journey
+  useEffect(() => {
+    captureAlphaEvent('beta_welcome_viewed', { referrer: document.referrer || null });
+  }, []);
 
   const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault();

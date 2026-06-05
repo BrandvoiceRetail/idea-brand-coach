@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Loader2, Download, Trash2, Copy, Check, Menu, BookOpen, CheckCircle, Target, ArrowRight } from 'lucide-react';
@@ -122,6 +123,15 @@ const BrandCoachV2 = (): JSX.Element => {
   const showGapOpener = !!gap && !!currentSessionId && displayMessages.length === 0;
   const gapLabel = gap ? TRUST_GAP_DIMENSION_META[gap].label : null;
 
+  // Funnel: Layer-1 coach session begins (once per page load, when the
+  // session is ready)
+  const conversationStartedRef = useRef(false);
+  useEffect(() => {
+    if (isLoading || !currentSessionId || conversationStartedRef.current) return;
+    conversationStartedRef.current = true;
+    captureAlphaEvent('conversation_started', { avatar_id: currentAvatar?.id ?? null });
+  }, [isLoading, currentSessionId, currentAvatar?.id]);
+
   // ── Loading gate ──────────────────────────────────────────────────────
   if (isLoading) {
     return (
@@ -213,7 +223,7 @@ const BrandCoachV2 = (): JSX.Element => {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <SignatureReveal messages={displayMessages} fieldValues={fieldValues} />
+                <SignatureReveal messages={displayMessages} fieldValues={fieldValues} sessionId={currentSessionId} />
                 {pendingCount > 0 && (
                   <Button variant="outline" size="sm" className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={handleReviewAcceptAll} title={`Accept all ${pendingCount} pending field(s)`}>
                     <CheckCircle className="h-3 w-3 mr-1" />{pendingCount} pending

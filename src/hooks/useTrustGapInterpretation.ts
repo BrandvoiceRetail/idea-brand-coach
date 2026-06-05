@@ -14,6 +14,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import {
   buildTrustGap,
   trustGapSignature,
@@ -109,6 +110,7 @@ export function useTrustGapInterpretation(
         if (invokeError || (data && (data as { error?: string }).error)) {
           const message = (data as { error?: string })?.error ?? invokeError?.message ?? 'Unknown error';
           console.error('[useTrustGapInterpretation] invoke failed:', message);
+          captureAlphaEvent('llm_call_failed', { which_call: 'interpretation', error_type: 'invoke_error' });
           setError('We could not generate your personalised read right now.');
           setInterpretation(null);
           return;
@@ -116,6 +118,7 @@ export function useTrustGapInterpretation(
 
         if (!isValidInterpretation(data)) {
           console.error('[useTrustGapInterpretation] unexpected response shape:', data);
+          captureAlphaEvent('llm_call_failed', { which_call: 'interpretation', error_type: 'invalid_response' });
           setError('We could not generate your personalised read right now.');
           setInterpretation(null);
           return;
@@ -128,6 +131,7 @@ export function useTrustGapInterpretation(
       .catch((err: unknown) => {
         if (cancelled || activeSignatureRef.current !== signature) return;
         console.error('[useTrustGapInterpretation] unexpected error:', err);
+        captureAlphaEvent('llm_call_failed', { which_call: 'interpretation', error_type: 'exception' });
         setError('We could not generate your personalised read right now.');
         setInterpretation(null);
       })

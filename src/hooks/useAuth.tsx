@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useServices } from '@/services/ServiceProvider';
+import { captureAlphaEvent, identifyUser, resetIdentity } from '@/lib/posthogClient';
 
 interface AuthContextType {
   user: User | null;
@@ -22,6 +23,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  // Guards auth_completed against duplicate SIGNED_IN emissions (tab refocus,
+  // token refresh) — one event per user per page load.
+  const authCompletedForRef = useRef<string | null>(null);
 
   // Safely get services - this can be undefined during HMR
   let authService;
@@ -45,6 +49,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Thread the anonymous PostHog journey into the identified person.
+        // identify() is idempotent, so calling on every session-bearing event
+        // (INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED) is safe.
+        if (session?.user) {
+          identifyUser(session.user.id);
+          // auth_completed fires only at a true sign-in, once per page load.
+          if (event === 'SIGNED_IN' && authCompletedForRef.current !== session.user.id) {
+            authCompletedForRef.current = session.user.id;
+            captureAlphaEvent('auth_completed');
+          }
+        }
       }
     );
 
@@ -118,6 +134,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear local state immediately
       setUser(null);
       setSession(null);
+      // Drop analytics identity so the next tester on this device starts fresh
+      resetIdentity();
       // Clear all user-specific localStorage data to prevent cross-user data leaks
       try {
         const keysToRemove = Object.keys(localStorage).filter(k =>

@@ -6,8 +6,9 @@
  * handleSendMessage flow including chapter context building.
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { CHAPTER_FIELDS_MAP, BOOK_CHAPTER_NUMBER_TO_FIELDS_KEY } from '@/config/chapterFields';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import type { ChapterContext, ChapterId } from '@/types/chapter';
 import type { ChatMessage, ChatMessageCreate } from '@/types/chat';
 
@@ -117,6 +118,13 @@ export function useBrandCoachChat(config: UseBrandCoachChatConfig): UseBrandCoac
 
   const [pendingUserMessage, setPendingUserMessage] = useState<PendingUserMessage | null>(null);
   const [fieldInteractionCounts, setFieldInteractionCounts] = useState<Record<string, number>>({});
+
+  // Mirrors the user-message count for conversation_message_sent's
+  // message_index without widening handleSendMessage's dependency list.
+  const userMessageCountRef = useRef(0);
+  useEffect(() => {
+    userMessageCountRef.current = messages.filter((m) => m.role === 'user').length;
+  }, [messages]);
 
   // Pure display transformation — builds extractedFields from metadata for badge rendering
   const processedMessages = useMemo<ProcessedMessage[]>(() => {
@@ -263,6 +271,9 @@ export function useBrandCoachChat(config: UseBrandCoachChatConfig): UseBrandCoac
         role: 'user',
         created_at: new Date().toISOString(),
       });
+
+      // Funnel: each tester message (index only — never the content)
+      captureAlphaEvent('conversation_message_sent', { message_index: userMessageCountRef.current });
 
       await sendMessageStreaming(messagePayload);
     } catch (error) {

@@ -14,6 +14,7 @@ import { useServices } from '@/services/ServiceProvider';
 import { ChatMessageCreate, ChatbotType } from '@/types/chat';
 import { ChapterId, ChapterMetadata } from '@/types/chapter';
 import { useToast } from '@/hooks/use-toast';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 interface UseChatOptions {
   chatbotType?: ChatbotType;
@@ -83,6 +84,7 @@ export const useChat = (options: UseChatOptions = {}) => {
       }
     },
     onError: (error: Error) => {
+      captureAlphaEvent('llm_call_failed', { which_call: 'conversation', error_type: 'send_error' });
       toast({
         title: 'Error Sending Message',
         description: error.message,
@@ -126,6 +128,8 @@ export const useChat = (options: UseChatOptions = {}) => {
           onError: (error: Error) => {
             setIsStreaming(false);
             setStreamingContent('');
+            // Covers stream-body errors too (HTTP 200 wrapping a failure)
+            captureAlphaEvent('llm_call_failed', { which_call: 'conversation', error_type: 'stream_error' });
             toast({
               title: 'Streaming Error',
               description: error.message,
@@ -137,6 +141,7 @@ export const useChat = (options: UseChatOptions = {}) => {
     } catch (error) {
       setIsStreaming(false);
       setStreamingContent('');
+      captureAlphaEvent('llm_call_failed', { which_call: 'conversation', error_type: 'exception' });
       toast({
         title: 'Error Sending Message',
         description: error instanceof Error ? error.message : 'Unknown error',

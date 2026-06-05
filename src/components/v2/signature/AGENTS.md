@@ -20,8 +20,11 @@ VOCABULARY but synthesises a TRUTH they had not articulated.
 |-------|------|-------|
 | UI (dialog, cards, gold result) | `src/components/v2/signature/SignatureReveal.tsx` | Self-contained `<Dialog>`. State machine: paste → loading → options → picked. |
 | State / API call | `src/hooks/v2/useSignatureReveal.ts` | Calls `supabase.functions.invoke('reveal-signature', …)`. |
-| Mount point | `src/pages/v2/BrandCoachV2.tsx` | `<SignatureReveal messages={displayMessages} fieldValues={fieldValues} />` in the chat header. |
+| Mount point | `src/pages/v2/BrandCoachV2.tsx` | `<SignatureReveal messages={displayMessages} fieldValues={fieldValues} sessionId={currentSessionId} />` in the chat header. |
 | Edge function | `supabase/functions/reveal-signature/index.ts` | Claude **Sonnet** (`claude-sonnet-4-20250514`), `verify_jwt: true`, JSON-prefill output. Needs the `ANTHROPIC_API_KEY` secret. Returns `{ options, usedReviews, inference }`. |
+| Moment-1 feedback (Alpha) | `src/components/v2/signature/SignatureFeedbackForm.tsx` | Renders inside the picked stage AFTER the surprise answer. Writes to `feedback_events` via the `save-feedback-event` edge fn (no-JWT). Every row carries `posthog_distinct_id` — THE JOIN KEY to the PostHog funnel. |
+| Feedback edge fn | `supabase/functions/save-feedback-event/index.ts` | Service-role insert into `feedback_events`; rejects requests without `posthogDistinctId` (400). |
+| Analytics | `src/lib/posthogClient.ts` | All funnel events (`signature_reveal_cta_shown`, `reviews_paste_shown/pasted`, `signature_reveal_requested/options_shown/picked`, `feedback_modal_opened/submitted`, `thank_you_viewed`, `llm_call_failed`). No-ops when `VITE_POSTHOG_KEY` is unset. Counts/booleans/IDs only — NEVER review text or conversation content in event props. |
 
 ## CRITICAL rule — do NOT parrot
 
@@ -43,7 +46,20 @@ the four InfinityVault few-shot examples intact.
 4. Expect **3–4 DISTINCT, equal-weight** option cards (no pre-pick). Each in the
    "isn't buying X / they're buying Y" shape, UK English, no markdown, no em dashes.
 5. Pick one → dominant **gold-accent** result + "Did this surprise you?".
-6. Confirm **no console errors**.
+6. Answer the surprise prompt → the **Moment-1 feedback form** appears (two
+   yes/partially/no questions + optional free text). Submit requires both
+   questions answered. On success a thank-you note replaces the form.
+7. Verify the write: `SELECT moment, posthog_distinct_id, chosen_signature,
+   q1_score_felt_right, q2_signature_felt_right, q3_whats_off FROM
+   feedback_events ORDER BY created_at DESC LIMIT 1` (service role —
+   clients cannot SELECT this table). `posthog_distinct_id` must be non-empty.
+8. Confirm **no console errors**.
+
+**Analytics check (when `VITE_POSTHOG_KEY` is set):** the journey above should
+emit `signature_reveal_cta_shown → reviews_paste_shown → reviews_pasted →
+signature_reveal_requested → signature_options_shown → signature_picked →
+feedback_modal_opened → feedback_submitted → thank_you_viewed` in PostHog.
+Without the env key all capture calls no-op (nothing to assert).
 
 **No-reviews path:** leave the textarea empty → the dialog shows an inference
 warning and the function returns `inference: true` (usually 3 options).

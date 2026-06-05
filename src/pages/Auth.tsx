@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,14 @@ export default function Auth() {
   // If no redirect specified, check if user completed diagnostic (should go to subscribe)
   const defaultRedirect = localStorage.getItem('diagnosticData') ? '/subscribe' : '/';
   const redirectUrl = searchParams.get('redirect') || defaultRedirect;
+
+  // Funnel: the signup/login prompt is shown to a guest (auth is itself a
+  // drop-off point — see the diagnostic → bridge → coach journey).
+  useEffect(() => {
+    if (!loading && !user) {
+      captureAlphaEvent('auth_started');
+    }
+  }, [loading, user]);
 
   const validateEmail = (value: string) => {
     try {
