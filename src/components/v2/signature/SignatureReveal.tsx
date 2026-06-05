@@ -34,12 +34,22 @@ interface SignatureRevealProps {
   fieldValues: Record<string, string | string[]>;
   /** Optional trigger sizing/styling. */
   triggerClassName?: string;
+  /**
+   * Reviews imported from the seller's Amazon listings, used to prefill the
+   * textarea so the founder does not have to paste them by hand. They can still
+   * edit or replace them.
+   */
+  preloadedReviews?: string;
+  /** Number of imported reviews behind {@link preloadedReviews}, for the banner. */
+  preloadedReviewCount?: number;
 }
 
 export function SignatureReveal({
   messages,
   fieldValues,
   triggerClassName,
+  preloadedReviews = '',
+  preloadedReviewCount = 0,
 }: SignatureRevealProps): JSX.Element {
   const [open, setOpen] = useState(false);
   const {
@@ -56,7 +66,9 @@ export function SignatureReveal({
     answerSurprise,
     backToOptions,
     reset,
-  } = useSignatureReveal();
+  } = useSignatureReveal({ initialReviews: preloadedReviews });
+
+  const hasPreloadedReviews = preloadedReviewCount > 0 && preloadedReviews.trim().length > 0;
 
   const conversation = useMemo<SignatureConversationTurn[]>(
     () =>
@@ -111,6 +123,15 @@ export function SignatureReveal({
             </DialogHeader>
 
             <div className="space-y-3">
+              {hasPreloadedReviews && (
+                <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50/60 px-3 py-2 text-xs text-emerald-800">
+                  <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                  <span>
+                    Using your {preloadedReviewCount.toLocaleString()} imported review
+                    {preloadedReviewCount === 1 ? '' : 's'}. You can edit or paste over them below.
+                  </span>
+                </div>
+              )}
               <Textarea
                 value={reviews}
                 onChange={(e) => setReviews(e.target.value)}

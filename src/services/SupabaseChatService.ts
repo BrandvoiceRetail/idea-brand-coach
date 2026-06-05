@@ -42,7 +42,7 @@ interface MessageContext {
 export class SupabaseChatService implements IChatService {
   private chatbotType: ChatbotType = 'idea-framework-consultant';
   private currentSessionId: string | undefined;
-  private competitiveInsightsContext: string | null = null;
+  private productContext: string | null = null;
 
   private messageService = new ChatMessageService();
   private sessionService = new ChatSessionService();
@@ -50,10 +50,10 @@ export class SupabaseChatService implements IChatService {
   private edgeFunctionService = new ChatEdgeFunctionService();
 
   /**
-   * Set competitive analysis context to be included in chat messages.
+   * Set imported-product context to be included in chat messages.
    */
-  setCompetitiveInsightsContext(context: string | null): void {
-    this.competitiveInsightsContext = context;
+  setProductContext(context: string | null): void {
+    this.productContext = context;
   }
 
   setChatbotType(chatbotType: ChatbotType): void {
@@ -365,7 +365,7 @@ export class SupabaseChatService implements IChatService {
     const body = this.edgeFunctionService.buildRequestBody({
       message: message.content,
       chapterContext: message.chapterContext,
-      competitiveInsights: this.competitiveInsightsContext,
+      productContext: this.productContext,
       metadata: message.metadata,
       hasUploadedDocuments,
       chatHistory,

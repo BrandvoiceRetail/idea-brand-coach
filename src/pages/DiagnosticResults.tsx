@@ -17,6 +17,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/config/routes';
 import { DiagnosticResultsPDFExport } from '@/components/export/DiagnosticResultsPDFExport';
 import { TrustGapScorecard } from '@/components/diagnostic/TrustGapScorecard';
+import { ProductImportCta } from '@/components/diagnostic/ProductImportCta';
+import { useServices } from '@/services/ServiceProvider';
+import type {
+  ImportedProduct,
+  TrustGapEvidence,
+} from '@/services/interfaces/IProductDataService';
 
 interface DiagnosticData {
   answers: Record<string, string>;
@@ -62,9 +68,42 @@ export default function DiagnosticResults() {
   const [diagnosticData, setDiagnosticData] = useState<DiagnosticData | null>(null);
   const [hasSynced, setHasSynced] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [importedProducts, setImportedProducts] = useState<ImportedProduct[]>([]);
+  const [evidence, setEvidence] = useState<TrustGapEvidence | undefined>(undefined);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { productDataService } = useServices();
   const { latestDiagnostic, isLoadingLatest, syncFromLocalStorage, isSyncing } = useDiagnostic();
+
+  // Stable key for the imported evidence: changes only when the set of products
+  // changes, so the Trust Gap interpretation refetches exactly once per import.
+  const evidenceKey = importedProducts.length
+    ? importedProducts.map((product) => product.id).join(',')
+    : undefined;
+
+  // Load any previously imported products + rebuild evidence (authed users only).
+  const refreshImportedProducts = async (): Promise<void> => {
+    try {
+      const products = await productDataService.getProducts();
+      setImportedProducts(products);
+      setEvidence(
+        products.length ? await productDataService.buildTrustGapEvidence(products) : undefined,
+      );
+    } catch (error) {
+      console.error('[DiagnosticResults] failed to load imported products:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      void refreshImportedProducts();
+    } else {
+      setImportedProducts([]);
+      setEvidence(undefined);
+    }
+    // refreshImportedProducts is stable for this purpose; re-run only on user change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // 1. For non-authenticated users, load from localStorage immediately
   useEffect(() => {
@@ -181,7 +220,19 @@ export default function DiagnosticResults() {
 
           {/* Trust Gap™ 4-Dimension Scorecard with coach-style interpretation */}
           <div className="mb-8">
-            <TrustGapScorecard scores={trustGapScores} />
+            <TrustGapScorecard
+              scores={trustGapScores}
+              evidence={evidence}
+              evidenceKey={evidenceKey}
+            />
+          </div>
+
+          {/* Import your Amazon listing to ground the read in real evidence */}
+          <div className="mb-8">
+            <ProductImportCta
+              importedProducts={importedProducts}
+              onImportComplete={refreshImportedProducts}
+            />
           </div>
 
           {/* Download + help */}

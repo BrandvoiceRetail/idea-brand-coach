@@ -11,6 +11,28 @@ const mockNavigate = vi.hoisted(() => vi.fn());
 
 vi.mock('@/hooks/useAuth');
 vi.mock('@/hooks/useDiagnostic');
+// The interpretation hook fires a real edge-fn invoke on render; it has its own
+// dedicated tests (useTrustGapInterpretation.test.ts), so stub it at page level.
+vi.mock('@/hooks/useTrustGapInterpretation', () => ({
+  useTrustGapInterpretation: () => ({
+    interpretation: null,
+    isLoading: false,
+    error: null,
+    retry: vi.fn(),
+  }),
+}));
+vi.mock('@/services/ServiceProvider', () => ({
+  useServices: () => ({
+    productDataService: {
+      importProducts: vi.fn().mockResolvedValue({ results: [] }),
+      getProducts: vi.fn().mockResolvedValue([]),
+      getAllReviews: vi.fn().mockResolvedValue([]),
+      getAllReviewsAsString: vi.fn().mockResolvedValue(''),
+      buildCoachContext: vi.fn().mockReturnValue(''),
+      buildTrustGapEvidence: vi.fn().mockResolvedValue({ listings: [], topReviews: [] }),
+    },
+  }),
+}));
 vi.mock('@/components/BetaNavigationWidget', () => ({
   BetaNavigationWidget: () => <div>Beta Navigation</div>
 }));
@@ -124,11 +146,13 @@ describe('DiagnosticResults', () => {
     render(<DiagnosticResults />, { wrapper });
 
     expect(screen.getByText('Your Brand Diagnostic Results')).toBeInTheDocument();
-    expect(screen.getByText('73%')).toBeInTheDocument();
-    expect(screen.getByText('75%')).toBeInTheDocument(); // Insight score
-    expect(screen.getByText('60%')).toBeInTheDocument(); // Distinctive score
-    expect(screen.getByText('85%')).toBeInTheDocument(); // Empathetic score
-    expect(screen.getByText('70%')).toBeInTheDocument(); // Authentic score
+    // Scorecard renders overall /100 plus the four /25 dimension cards
+    expect(screen.getByText('Your Trust Gap™ Score')).toBeInTheDocument();
+    expect(screen.getByText('/100')).toBeInTheDocument();
+    expect(screen.getAllByText('Insight').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Distinctive').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Empathetic').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Authentic').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render results from localStorage for non-authenticated users', () => {
@@ -157,7 +181,8 @@ describe('DiagnosticResults', () => {
     render(<DiagnosticResults />, { wrapper });
     
     expect(screen.getByText('Your Brand Diagnostic Results')).toBeInTheDocument();
-    expect(screen.getByText('73%')).toBeInTheDocument();
+    expect(screen.getByText('Your Trust Gap™ Score')).toBeInTheDocument();
+    expect(screen.getByText('/100')).toBeInTheDocument();
   });
 
   it('should show Brand Coach CTA for authenticated users', () => {
@@ -263,11 +288,11 @@ describe('DiagnosticResults', () => {
 
     render(<DiagnosticResults />, { wrapper });
     
-    expect(screen.getByText('Excellent')).toBeInTheDocument();
-    // 'Good' appears for both the overall score (60) and the category score (70)
-    expect(screen.getAllByText('Good').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Fair')).toBeInTheDocument();
-    expect(screen.getByText('Needs Improvement')).toBeInTheDocument();
+    // Bands per /25 rescale: insight 90→23 strong, distinctive 70→18 strong,
+    // empathetic 50→13 mixed, authentic 30→8 weak
+    expect(screen.getAllByText('Building trust').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Developing').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Trust gap').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should navigate to auth page when create account button is clicked', () => {

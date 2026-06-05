@@ -30,6 +30,15 @@ interface RevealArgs {
   fields: Record<string, string | string[]>;
 }
 
+/** Optional configuration for the reveal flow. */
+interface UseSignatureRevealConfig {
+  /**
+   * Reviews to seed the textarea with on mount and on reset (e.g. the seller's
+   * imported Amazon reviews). The user can still edit or replace them.
+   */
+  initialReviews?: string;
+}
+
 interface UseSignatureRevealReturn {
   stage: SignatureStage;
   reviews: string;
@@ -56,9 +65,11 @@ interface RevealResponse {
   error?: string;
 }
 
-export function useSignatureReveal(): UseSignatureRevealReturn {
+export function useSignatureReveal(
+  { initialReviews = '' }: UseSignatureRevealConfig = {},
+): UseSignatureRevealReturn {
   const [stage, setStage] = useState<SignatureStage>('paste');
-  const [reviews, setReviews] = useState('');
+  const [reviews, setReviews] = useState(initialReviews);
   const [options, setOptions] = useState<string[]>([]);
   const [isInference, setIsInference] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -115,13 +126,13 @@ export function useSignatureReveal(): UseSignatureRevealReturn {
 
   const reset = useCallback((): void => {
     setStage('paste');
-    setReviews('');
+    setReviews(initialReviews);
     setOptions([]);
     setIsInference(false);
     setSelectedIndex(null);
     setSurprise(null);
     setError(null);
-  }, []);
+  }, [initialReviews]);
 
   return {
     stage,

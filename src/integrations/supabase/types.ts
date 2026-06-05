@@ -397,6 +397,33 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_events: {
+        Row: {
+          created_at: string
+          id: string
+          moment: string
+          payload: Json
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          moment: string
+          payload?: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          moment?: string
+          payload?: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       idea_framework_submissions: {
         Row: {
           buyer_intent: string | null
@@ -693,6 +720,107 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_product_reviews: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          product_id: string
+          rating: number | null
+          review_date: string | null
+          reviewer_name: string | null
+          source_url: string | null
+          title: string | null
+          verified_purchase: boolean
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          product_id: string
+          rating?: number | null
+          review_date?: string | null
+          reviewer_name?: string | null
+          source_url?: string | null
+          title?: string | null
+          verified_purchase?: boolean
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          rating?: number | null
+          review_date?: string | null
+          reviewer_name?: string | null
+          source_url?: string | null
+          title?: string | null
+          verified_purchase?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "user_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_products: {
+        Row: {
+          asin: string
+          bullets: Json
+          created_at: string
+          description: string | null
+          id: string
+          images: Json
+          price: number | null
+          rating: number | null
+          review_count: number
+          scraped_at: string
+          source_url: string | null
+          status: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asin: string
+          bullets?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: Json
+          price?: number | null
+          rating?: number | null
+          review_count?: number
+          scraped_at?: string
+          source_url?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asin?: string
+          bullets?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: Json
+          price?: number | null
+          rating?: number | null
+          review_count?: number
+          scraped_at?: string
+          source_url?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
