@@ -91,11 +91,17 @@ export function useTrustGapInterpretation(
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
+  // Guard against the key/payload race: the evidence key only participates in the
+  // signature when the evidence payload itself is present, so a render where the
+  // key arrives before the (async-built) evidence cannot cache a generic result
+  // under the evidence signature.
+  const effectiveEvidenceKey = evidence ? evidenceKey : undefined;
+
   useEffect(() => {
     if (!scores) return;
 
     const model = buildTrustGap(scores);
-    const signature = buildSignature(scores, evidenceKey);
+    const signature = buildSignature(scores, effectiveEvidenceKey);
     activeSignatureRef.current = signature;
 
     const cached = readCache(signature);
@@ -158,10 +164,10 @@ export function useTrustGapInterpretation(
     return () => {
       cancelled = true;
     };
-    // `attempt` re-triggers a fetch on retry; `evidenceKey` folds into the signature
-    // so an import refetches once; the signature guards against stale writes.
+    // `attempt` re-triggers a fetch on retry; the effective evidence key folds into
+    // the signature so an import refetches once; the signature guards stale writes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scores ? buildSignature(scores, evidenceKey) : null, attempt]);
+  }, [scores ? buildSignature(scores, effectiveEvidenceKey) : null, attempt]);
 
   return { interpretation, isLoading, error, retry };
 }

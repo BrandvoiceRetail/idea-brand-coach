@@ -77,18 +77,22 @@ export default function DiagnosticResults() {
 
   // Stable key for the imported evidence: changes only when the set of products
   // changes, so the Trust Gap interpretation refetches exactly once per import.
-  const evidenceKey = importedProducts.length
+  const evidenceKey = evidence && importedProducts.length
     ? importedProducts.map((product) => product.id).join(',')
     : undefined;
 
   // Load any previously imported products + rebuild evidence (authed users only).
+  // Both states are set together AFTER the evidence is built — setting products
+  // first would define evidenceKey while evidence is still undefined, and the
+  // interpretation would fire (and cache) an evidence-keyed call with no evidence.
   const refreshImportedProducts = async (): Promise<void> => {
     try {
       const products = await productDataService.getProducts();
+      const builtEvidence = products.length
+        ? await productDataService.buildTrustGapEvidence(products)
+        : undefined;
       setImportedProducts(products);
-      setEvidence(
-        products.length ? await productDataService.buildTrustGapEvidence(products) : undefined,
-      );
+      setEvidence(builtEvidence);
     } catch (error) {
       console.error('[DiagnosticResults] failed to load imported products:', error);
     }

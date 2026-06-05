@@ -10,7 +10,7 @@
  * All options are equal weight — there is deliberately NO pre-picked "primary".
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 /** Stage of the reveal flow. */
@@ -75,6 +75,17 @@ export function useSignatureReveal(
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [surprise, setSurprise] = useState<SurpriseAnswer>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Imported reviews load asynchronously, so they usually arrive AFTER the first
+  // render seeded the state with ''. Re-seed when they land, but never clobber
+  // text the user has already typed and never touch a reveal in progress.
+  useEffect(() => {
+    if (initialReviews && stage === 'paste') {
+      setReviews((current) => (current.trim().length === 0 ? initialReviews : current));
+    }
+    // Only the arrival of initialReviews should trigger a re-seed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialReviews]);
 
   const reveal = useCallback(async ({ conversation, fields }: RevealArgs): Promise<void> => {
     setStage('loading');
