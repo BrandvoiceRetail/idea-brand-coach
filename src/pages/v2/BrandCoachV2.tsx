@@ -214,6 +214,7 @@ const BrandCoachV2 = (): JSX.Element => {
                   fieldValues={fieldValues}
                   preloadedReviews={preloadedReviews}
                   preloadedReviewCount={preloadedReviewCount}
+                  sessionId={currentSessionId ?? null}
                 />
                 {pendingCount > 0 && (
                   <Button variant="outline" size="sm" className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={handleReviewAcceptAll} title={`Accept all ${pendingCount} pending field(s)`}>
