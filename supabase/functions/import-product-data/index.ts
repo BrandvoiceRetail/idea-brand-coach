@@ -25,7 +25,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-import { parseAmazonProduct, type ParsedAmazonProduct } from "./parse-amazon.ts";
+import { isLikelyRealListing, parseAmazonProduct, type ParsedAmazonProduct } from "./parse-amazon.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -252,6 +252,15 @@ serve(async (req) => {
       const parsed = parseAmazonProduct(scraped.markdown, scraped.html, asin);
       if (!parsed.success || !parsed.data) {
         results.push({ asin, ok: false, error: parsed.error ?? 'Failed to parse listing' });
+        continue;
+      }
+
+      // Amazon serves its error/dog page with HTTP 200, so a nonexistent ASIN
+      // would otherwise persist as a garbage product and pollute the Trust Gap
+      // evidence and coach context. Reject before any write.
+      if (!isLikelyRealListing(parsed.data)) {
+        console.error(`[import-product-data] rejected non-listing page | asin=${asin} | title="${(parsed.data.title ?? '').slice(0, 120)}"`);
+        results.push({ asin, ok: false, error: 'No Amazon listing found for this ASIN. Double-check it and try again.' });
         continue;
       }
 

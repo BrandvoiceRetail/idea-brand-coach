@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { parseAmazonProduct, type ParsedAmazonProduct } from '../parseAmazonProduct';
+import { isLikelyRealListing, parseAmazonProduct, type ParsedAmazonProduct } from '../parseAmazonProduct';
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), 'fixtures');
 const ASIN = 'B0CJBQ7F5C';
@@ -89,5 +89,47 @@ describe('parseAmazonProduct', () => {
       expect(review.body).not.toContain('Brief content visible');
       expect(review.body).not.toContain('Full content visible');
     }
+  });
+});
+
+describe('isLikelyRealListing', () => {
+  const base: ParsedAmazonProduct = {
+    asin: 'B0CJBQ7F5C',
+    title: 'Premium 9 Pocket Toploader Card Binder',
+    price: 21.99,
+    rating: 4.6,
+    reviewCount: 72,
+    bullets: ['Fits 216 cards in toploaders without tenting'],
+    description: '',
+    images: [],
+    reviews: [],
+    parsedAt: '2026-06-05T00:00:00.000Z',
+  };
+
+  it('accepts a real listing parse', () => {
+    expect(isLikelyRealListing(base)).toBe(true);
+  });
+
+  it("rejects Amazon's error/dog page (markdown-image-link title, no signals)", () => {
+    expect(
+      isLikelyRealListing({
+        ...base,
+        title: '[![Amazon](https://images-na.ssl-images-amazon.com/images/G/01/error/logo._TTD_.png)](https://www.amazon.com/)',
+        rating: 0,
+        reviewCount: 0,
+        bullets: [],
+        reviews: [],
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects an Unknown Title parse with no product signals', () => {
+    expect(
+      isLikelyRealListing({ ...base, title: 'Unknown Title', rating: 0, reviewCount: 0, bullets: [], reviews: [] }),
+    ).toBe(false);
+  });
+
+  it('does not reject legitimate titles containing the word Sorry', () => {
+    expect(isLikelyRealListing({ ...base, title: 'Sorry! Classic Family Board Game' })).toBe(true);
   });
 });

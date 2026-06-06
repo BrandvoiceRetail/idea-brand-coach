@@ -437,3 +437,26 @@ function stripHtml(value: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+/**
+ * Heuristic: does this parse look like a REAL product listing rather than
+ * Amazon's error/dog page (which Firecrawl happily scrapes with HTTP 200)?
+ * A real /dp/ page always exposes a plain-text productTitle and at least one
+ * of: rating, review count, bullets, or embedded reviews. The error page's
+ * "title" falls back to a markdown image link for the Amazon logo.
+ */
+export function isLikelyRealListing(product: ParsedAmazonProduct): boolean {
+  const title = product.title ?? '';
+  const titleLooksReal =
+    title.length > 0 &&
+    title !== 'Unknown Title' &&
+    !/https?:\/\//i.test(title) &&
+    !title.includes('![') &&
+    !/page not found|couldn't find that page/i.test(title);
+  const hasSignal =
+    product.rating > 0 ||
+    product.reviewCount > 0 ||
+    product.bullets.length > 0 ||
+    product.reviews.length > 0;
+  return titleLooksReal && hasSignal;
+}

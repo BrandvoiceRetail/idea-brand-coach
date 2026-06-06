@@ -165,7 +165,7 @@ export function ProductImportCta({
                 onClick={() => user ? setIsReimporting(true) : guestRedirect()}
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Re-import
+                Add or re-import
               </Button>
             )}
           </div>
