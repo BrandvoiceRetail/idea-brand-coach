@@ -54,6 +54,13 @@ npm test -- src/mcp        # all host tests (vitest)
 `__tests__/server.test.ts` connects a real MCP `Client` over `InMemoryTransport` and
 asserts the advertised tool set + handler behavior end-to-end.
 
+## Child Areas
+
+| Area | Focus |
+|------|-------|
+| `contracts/` | Output-engine artifact contracts (single source of truth) — local AGENTS.md |
+| `service/workbook/` | Workbook assemblers + gold-workbook export engine — local AGENTS.md |
+
 ## Guardrails
 
 - **Consume, never duplicate.** No asset-storage / test-storage / brand-canon tools here
