@@ -3,12 +3,10 @@ import { render } from '@testing-library/react';
 import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { SignatureFeedbackForm } from '../SignatureFeedbackForm';
-import { useAuth } from '@/hooks/useAuth';
 import { useAvatarContext } from '@/contexts/AvatarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { captureAlphaEvent, getPostHogDistinctId } from '@/lib/posthogClient';
 
-vi.mock('@/hooks/useAuth');
 vi.mock('@/contexts/AvatarContext');
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { functions: { invoke: vi.fn() } },
@@ -35,7 +33,6 @@ describe('SignatureFeedbackForm', () => {
     vi.clearAllMocks();
     localStorage.clear();
 
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-1' } } as ReturnType<typeof useAuth>);
     vi.mocked(useAvatarContext).mockReturnValue({
       currentAvatar: { id: 'avatar-1' },
     } as ReturnType<typeof useAvatarContext>);
@@ -90,7 +87,6 @@ describe('SignatureFeedbackForm', () => {
       expect(supabase.functions.invoke).toHaveBeenCalledWith('save-feedback-event', {
         body: {
           moment: 'moment_1',
-          userId: 'user-1',
           posthogDistinctId: 'ph-distinct-1',
           avatarId: 'avatar-1',
           sessionId: 'session-9',
@@ -120,8 +116,7 @@ describe('SignatureFeedbackForm', () => {
     expect(captureAlphaEvent).toHaveBeenCalledWith('thank_you_viewed');
   });
 
-  it('handles anonymous testers (null user and avatar) and empty q3', async () => {
-    vi.mocked(useAuth).mockReturnValue({ user: null } as ReturnType<typeof useAuth>);
+  it('handles a missing avatar and empty q3', async () => {
     vi.mocked(useAvatarContext).mockReturnValue({ currentAvatar: null } as ReturnType<typeof useAvatarContext>);
     const user = userEvent.setup();
     renderForm();
@@ -135,7 +130,6 @@ describe('SignatureFeedbackForm', () => {
         'save-feedback-event',
         expect.objectContaining({
           body: expect.objectContaining({
-            userId: null,
             avatarId: null,
             q3WhatsOff: null,
             posthogDistinctId: 'ph-distinct-1',

@@ -17,7 +17,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, MessageSquareHeart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { useAvatarContext } from '@/contexts/AvatarContext';
 import { captureAlphaEvent, getPostHogDistinctId } from '@/lib/posthogClient';
 
@@ -88,7 +87,6 @@ export function SignatureFeedbackForm({
   signatureOptions,
   sessionId,
 }: SignatureFeedbackFormProps): JSX.Element {
-  const { user } = useAuth();
   const { currentAvatar } = useAvatarContext();
 
   const [q1ScoreFeltRight, setQ1ScoreFeltRight] = useState<FeltRightAnswer | null>(null);
@@ -116,10 +114,10 @@ export function SignatureFeedbackForm({
     setError(null);
 
     try {
+      // user_id is derived server-side from the verified JWT — not sent here.
       const { error: invokeError } = await supabase.functions.invoke('save-feedback-event', {
         body: {
           moment: 'moment_1',
-          userId: user?.id ?? null,
           // THE JOIN KEY — connects this row to the PostHog funnel journey
           posthogDistinctId: getPostHogDistinctId(),
           avatarId: currentAvatar?.id ?? null,
