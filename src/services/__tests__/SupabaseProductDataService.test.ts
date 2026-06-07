@@ -131,6 +131,50 @@ describe('SupabaseProductDataService', () => {
     });
   });
 
+  describe('getAllReviews dedupe', () => {
+    it('drops duplicate review bodies across variant products', async () => {
+      const sharedBody = 'My favourite top loader binder here on amazon, the discrete logo looks sleek.';
+      mockFromProductsThenReviews(
+        [productRow({ id: 'prod-1', asin: 'B000000001' }), productRow({ id: 'prod-2', asin: 'B000000002' })],
+        [
+          reviewRow({ id: 'rev-1', product_id: 'prod-1', body: sharedBody }),
+          reviewRow({ id: 'rev-2', product_id: 'prod-2', body: sharedBody }),
+          reviewRow({ id: 'rev-3', product_id: 'prod-2', body: 'A genuinely different review about the 288 card capacity.' }),
+        ],
+      );
+
+      const reviews = await service.getAllReviews();
+
+      expect(reviews).toHaveLength(2);
+      expect(reviews.filter((r) => r.body === sharedBody)).toHaveLength(1);
+    });
+
+    it('treats whitespace/case variants of the same body as duplicates', async () => {
+      mockFromProductsThenReviews(
+        [productRow()],
+        [
+          reviewRow({ id: 'rev-1', body: 'Keeps cards secure, fits toploaders perfectly. Great binder' }),
+          reviewRow({ id: 'rev-2', body: '  keeps Cards secure,  fits toploaders perfectly. great BINDER ' }),
+        ],
+      );
+
+      const reviews = await service.getAllReviews();
+
+      expect(reviews).toHaveLength(1);
+    });
+
+    it('keeps very short bodies even when identical (too little signal to dedupe)', async () => {
+      mockFromProductsThenReviews(
+        [productRow()],
+        [reviewRow({ id: 'rev-1', body: 'Great!' }), reviewRow({ id: 'rev-2', body: 'Great!' })],
+      );
+
+      const reviews = await service.getAllReviews();
+
+      expect(reviews).toHaveLength(2);
+    });
+  });
+
   describe('getAllReviewsAsString', () => {
     it('formats reviews as "★{rating} — {body}" newline-joined', async () => {
       mockFromProductsThenReviews(

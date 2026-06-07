@@ -92,7 +92,33 @@ export class SupabaseProductDataService implements IProductDataService {
 
     if (error) throw error;
 
-    return (data ?? []).map((row) => this.mapReview(row));
+    return this.dedupeReviews((data ?? []).map((row) => this.mapReview(row)));
+  }
+
+  /**
+   * Drop duplicate reviews across products. Variant ASINs of the same parent
+   * share Amazon's parent-level review corpus, so importing two variants stores
+   * the same reviews twice; without this the Signature prefill and Trust Gap
+   * evidence repeat themselves. Keyed on the normalised body prefix (same
+   * scheme as the scraper-side dedupe); first occurrence wins (newest-first).
+   */
+  private dedupeReviews(reviews: ProductReview[]): ProductReview[] {
+    const seen = new Set<string>();
+    const unique: ProductReview[] = [];
+
+    for (const review of reviews) {
+      const key = review.body.toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 100);
+      if (key.length < 10) {
+        unique.push(review);
+        continue;
+      }
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(review);
+      }
+    }
+
+    return unique;
   }
 
   async getAllReviewsAsString(max: number = REVIEWS_STRING_MAX): Promise<string> {

@@ -196,17 +196,39 @@ function extractReviewCount(markdown: string): number {
   return 0;
 }
 
+/**
+ * Extract the inner HTML of the element whose opening tag begins at `openTagStart`,
+ * by walking <div> open/close tags and tracking depth. The naive non-greedy regex
+ * (`[\\s\\S]*?<\\/div>`) stops at the FIRST close tag, which truncated Amazon's
+ * nested feature-bullets markup to ~1 bullet.
+ */
+function extractBalancedDivInner(html: string, openTagStart: number): string {
+  const openTagEnd = html.indexOf('>', openTagStart);
+  if (openTagEnd === -1) return '';
+
+  const tagPattern = /<div\b[^>]*>|<\/div>/gi;
+  tagPattern.lastIndex = openTagEnd + 1;
+
+  let depth = 1;
+  let match: RegExpExecArray | null;
+  while ((match = tagPattern.exec(html)) !== null) {
+    depth += match[0][1] === '/' ? -1 : 1;
+    if (depth === 0) {
+      return html.slice(openTagEnd + 1, match.index);
+    }
+  }
+  return '';
+}
+
 /** Extract feature bullets (HTML feature-bullets → filtered markdown bullets). */
 function extractBullets(markdown: string, html: string): string[] {
   const bullets: string[] = [];
 
-  // PRIORITY 1: HTML feature-bullets
-  const featureBulletsMatch = html.match(
-    /<div[^>]*id="feature-bullets"[^>]*>([\s\S]*?)<\/div>/i,
-  );
+  // PRIORITY 1: HTML feature-bullets (depth-aware — see extractBalancedDivInner)
+  const featureBulletsOpen = html.search(/<div[^>]*id="feature-bullets"[^>]*>/i);
 
-  if (featureBulletsMatch) {
-    const bulletsSection = featureBulletsMatch[1];
+  if (featureBulletsOpen !== -1) {
+    const bulletsSection = extractBalancedDivInner(html, featureBulletsOpen);
     const htmlBullets = bulletsSection.match(
       /<span[^>]*class="a-list-item"[^>]*>([\s\S]*?)<\/span>/gi,
     );

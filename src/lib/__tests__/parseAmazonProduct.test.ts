@@ -92,6 +92,28 @@ describe('parseAmazonProduct', () => {
   });
 });
 
+describe('extractBullets nested-div handling', () => {
+  it('captures bullets past nested divs inside feature-bullets (depth-aware)', () => {
+    // The old non-greedy regex stopped at the FIRST </div>, which would
+    // truncate this structure after the inner expander div.
+    const html = `
+      <div id="feature-bullets" class="a-section">
+        <div class="a-expander-content">
+          <ul>
+            <span class="a-list-item">First bullet about premium card protection quality</span>
+            <span class="a-list-item">Second bullet about side loading pockets keeping cards secure</span>
+          </ul>
+        </div>
+        <span class="a-list-item">Third bullet about water repellent material for card shows</span>
+      </div>`;
+
+    const result = parseAmazonProduct('no markdown content here', html, 'B000000001');
+
+    expect(result.success).toBe(true);
+    expect(result.data?.bullets).toHaveLength(3);
+  });
+});
+
 describe('isLikelyRealListing', () => {
   const base: ParsedAmazonProduct = {
     asin: 'B0CJBQ7F5C',
