@@ -379,7 +379,15 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
 
   // ── Side effects ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (!isLoadingAuth && !user) navigate('/auth');
+    // Preserve the intended destination (incl. ?gap=) so a guest who lands on the
+    // coach directly round-trips back here after creating their free account
+    // (journey bridge F-059). Read window.location at fire time (not as deps) so
+    // an in-page URL change cannot re-fire this redirect. Minimal gate edit only —
+    // hook extraction is RF-04.
+    if (!isLoadingAuth && !user) {
+      const dest = window.location.pathname + window.location.search;
+      navigate(`/auth?redirect=${encodeURIComponent(dest)}`);
+    }
   }, [isLoadingAuth, user, navigate]);
 
   useEffect(() => {

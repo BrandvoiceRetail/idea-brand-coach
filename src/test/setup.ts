@@ -27,7 +27,10 @@ vi.mock('@/integrations/supabase/client', () => ({
     },
     from: vi.fn(),
     functions: {
-      invoke: vi.fn(),
+      // Default to a resolved empty envelope so components that fire-and-forget
+      // edge-fn calls on mount (e.g. useTrustGapInterpretation) degrade gracefully
+      // instead of crashing on undefined.then; tests override per-case as needed.
+      invoke: vi.fn(() => Promise.resolve({ data: null, error: null })),
     },
   },
 }));
