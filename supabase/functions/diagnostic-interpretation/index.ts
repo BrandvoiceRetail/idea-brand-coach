@@ -105,6 +105,7 @@ You have NOT seen their actual products, listings, prices, reviews or customers,
 Respond with ONLY a single JSON object and nothing else. No commentary, no code fences. Use exactly this shape and these keys:
 {"interpretations":{"insight":"...","distinctive":"...","empathetic":"...","authentic":"..."},"primaryGapSummary":"..."}
 Every string value must obey the voice rules above.
+NEVER use the double quote character inside a JSON string value. When quoting short phrases from the evidence, wrap them in single quotes (') instead. Broken JSON makes the whole response unusable.
 </output-format>`;
 
 /** Defensively normalise incoming evidence into a safe, bounded shape. Returns
@@ -266,41 +267,51 @@ serve(async (req) => {
     // The scorecard is often the tester's FIRST impression, so absorb one
     // transient upstream failure (429/5xx/network) with a single retry rather
     // than degrading the render. Bounded: max 2 attempts, 1.5s backoff.
-    let response: Response | null = null;
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        response = await fetch(CLAUDE_API_URL, { method: 'POST', headers, body: requestBody });
-      } catch (fetchError) {
-        console.error(`[diagnostic-interpretation] attempt ${attempt} network error:`, fetchError);
-        response = null;
+    async function callAnthropic(): Promise<Response> {
+      let response: Response | null = null;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          response = await fetch(CLAUDE_API_URL, { method: 'POST', headers, body: requestBody });
+        } catch (fetchError) {
+          console.error(`[diagnostic-interpretation] attempt ${attempt} network error:`, fetchError);
+          response = null;
+        }
+
+        if (response?.ok) return response;
+
+        const upstreamStatus = response?.status ?? 'network-error';
+        const errorBody = response ? (await response.text()).slice(0, 300) : '';
+        const retryable = !response || response.status === 429 || response.status >= 500;
+        console.error(
+          `[diagnostic-interpretation] attempt ${attempt} failed | upstream=${upstreamStatus} | retryable=${retryable} | evidencePresent=${evidencePresent} |`,
+          errorBody,
+        );
+        if (!retryable || attempt === 2) {
+          throw new Error(`Anthropic API error: ${upstreamStatus} ${errorBody.slice(0, 120)}`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       }
-
-      if (response?.ok) break;
-
-      const upstreamStatus = response?.status ?? 'network-error';
-      const errorBody = response ? (await response.text()).slice(0, 300) : '';
-      const retryable = !response || response.status === 429 || response.status >= 500;
-      console.error(
-        `[diagnostic-interpretation] attempt ${attempt} failed | upstream=${upstreamStatus} | retryable=${retryable} | evidencePresent=${evidencePresent} |`,
-        errorBody,
-      );
-      if (!retryable || attempt === 2) {
-        throw new Error(`Anthropic API error: ${upstreamStatus}`);
-      }
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-    }
-
-    if (!response || !response.ok) {
       throw new Error('Anthropic API error: exhausted retries');
     }
 
-    const data = await response.json();
-    const rawText: string = data?.content?.[0]?.text ?? '';
-    const parsed = parseModelJson(rawText);
+    // Up to 2 generations: when citing evidence the model occasionally emits an
+    // unescaped double quote inside a JSON string (observed live: stop_reason
+    // end_turn but unparseable output) — one reroll recovers it.
+    let parsed: ReturnType<typeof parseModelJson> = null;
+    let lastStopReason = '';
+    for (let generation = 1; generation <= 2 && !parsed; generation++) {
+      const response = await callAnthropic();
+      const data = await response.json();
+      const rawText: string = data?.content?.[0]?.text ?? '';
+      parsed = parseModelJson(rawText);
+      if (!parsed) {
+        lastStopReason = String(data?.stop_reason ?? 'unknown');
+        console.error(`[diagnostic-interpretation] generation ${generation} unparseable | stop_reason=${lastStopReason} |`, rawText.slice(0, 500));
+      }
+    }
 
     if (!parsed) {
-      console.error(`[diagnostic-interpretation] Could not parse model JSON | stop_reason=${data?.stop_reason} |`, rawText.slice(0, 500));
-      throw new Error('Interpretation response was not valid JSON');
+      throw new Error(`Interpretation response was not valid JSON (stop_reason=${lastStopReason})`);
     }
 
     console.log('[diagnostic-interpretation] Generated interpretation for primary gap:', primaryGap);
@@ -321,8 +332,11 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in diagnostic-interpretation function:', error);
+    // detail carries only server-side failure class (upstream status / parse
+    // failure) — no user data. The UI ignores it; it exists for diagnosis.
+    const detail = error instanceof Error ? error.message.slice(0, 200) : 'unknown';
     return new Response(
-      JSON.stringify({ error: 'Unable to generate your interpretation right now. Please try again.' }),
+      JSON.stringify({ error: 'Unable to generate your interpretation right now. Please try again.', detail }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
