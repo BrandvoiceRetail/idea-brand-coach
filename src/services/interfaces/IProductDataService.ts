@@ -128,12 +128,14 @@ export interface IProductDataService {
 
   /**
    * Build a compact product-context block for the coach chat from the given
-   * products.
+   * products, optionally embedding a capped sample of verbatim customer
+   * reviews (deduped, max 10) so the coach can reference real customer language.
    *
    * @param products - Imported products to summarize
+   * @param reviews - Optional imported reviews to sample into the context
    * @returns A compact, human-readable context string
    */
-  buildCoachContext(products: ImportedProduct[]): string;
+  buildCoachContext(products: ImportedProduct[], reviews?: ProductReview[]): string;
 
   /**
    * Build the Trust Gap evidence bundle from the given products and their

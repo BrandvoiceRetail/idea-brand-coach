@@ -384,11 +384,10 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   // the seller's listings. Fire-and-forget; failures are non-fatal to chat.
   useEffect(() => {
     if (!user) return;
-    productDataService
-      .getProducts()
-      .then((products) => {
+    Promise.all([productDataService.getProducts(), productDataService.getAllReviews()])
+      .then(([products, reviews]) => {
         if (products.length > 0) {
-          chatService.setProductContext(productDataService.buildCoachContext(products));
+          chatService.setProductContext(productDataService.buildCoachContext(products, reviews));
         }
       })
       .catch((error) => {
