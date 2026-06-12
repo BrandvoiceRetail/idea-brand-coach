@@ -12,6 +12,7 @@ import { createServer } from './server.js';
 import { loadConfig, type HostConfig } from './config.js';
 import { resolveIdentity, runWithIdentity } from './context/identity.js';
 import { safeLog } from './logging/redact.js';
+import { captureMcpEvent, captureMcpException } from './posthog.js';
 
 const MCP_PATH = '/mcp';
 
@@ -66,6 +67,8 @@ export function createHttpServer(config: HostConfig = loadConfig()): http.Server
     if (req.method === 'POST' && (req.url === MCP_PATH || req.url?.startsWith(`${MCP_PATH}?`))) {
       handleMcp(req, res).catch((err) => {
         safeLog({ level: 'error', event: 'http.mcp_error', reason: err instanceof Error ? err.name : 'unknown' });
+        captureMcpException(err, undefined, { layer: 'http' });
+        captureMcpEvent('server', 'mcp_http_error', { error_name: err instanceof Error ? err.name : 'unknown' });
         if (!res.headersSent) {
           res.writeHead(500, { 'content-type': 'application/json' });
           res.end(JSON.stringify({ error: 'internal error' }));

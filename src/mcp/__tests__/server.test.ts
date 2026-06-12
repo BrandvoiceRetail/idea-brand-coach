@@ -27,16 +27,28 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([
+      'build_avatar_stage',
       'design_test',
       'draft_asset',
+      'export_workbook',
+      'generate_audit_idea_map',
+      'generate_brief',
+      'generate_canvas',
       'generate_concepts',
+      'generate_signature',
       'get_asset',
       'get_asset_history',
+      'get_context_status',
       'health',
+      'ingest_evidence',
       'list_assets',
       'log_asset',
+      'persist_signature',
+      'provide_context',
       'publish_filter_check',
       'record_assessment',
+      'run_diagnostic_evidence',
+      'run_marketing_audit',
       'run_trust_gap',
       'update_asset_status',
     ]);

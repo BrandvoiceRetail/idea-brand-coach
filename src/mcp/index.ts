@@ -6,5 +6,13 @@
  */
 import { startHttpServer } from './http.js';
 import { loadConfig } from './config.js';
+import { shutdownPostHog } from './posthog.js';
 
 startHttpServer(loadConfig());
+
+const shutdown = async (): Promise<void> => {
+  await shutdownPostHog();
+  process.exit(0);
+};
+process.on('SIGINT', () => void shutdown());
+process.on('SIGTERM', () => void shutdown());
