@@ -255,7 +255,9 @@ serve(async (req) => {
 
     const requestBody = JSON.stringify({
       model: HAIKU_MODEL,
-      max_tokens: evidencePresent ? 1600 : 1200,
+      // Headroom matters: evidence-grounded generations measured ~1400+ tokens;
+      // a max_tokens truncation yields unparseable JSON and a user-facing 500.
+      max_tokens: evidencePresent ? 2400 : 1800,
       temperature: 0.6,
       system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userMessage }],
@@ -297,7 +299,7 @@ serve(async (req) => {
     const parsed = parseModelJson(rawText);
 
     if (!parsed) {
-      console.error('[diagnostic-interpretation] Could not parse model JSON:', rawText.slice(0, 500));
+      console.error(`[diagnostic-interpretation] Could not parse model JSON | stop_reason=${data?.stop_reason} |`, rawText.slice(0, 500));
       throw new Error('Interpretation response was not valid JSON');
     }
 
