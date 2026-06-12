@@ -1,0 +1,614 @@
+{
+  "workbook": "IDEA BrandCoach InfinityVault Mockup.xlsx",
+  "sheets": [
+    {
+      "sheet": "1. How IDEA Helps IV",
+      "title": "IDEA Brand Coach × InfinityVault",
+      "header_note": "The strategic case: how using the app on your own business changes what you sell, how you sell it, and where margin comes from.",
+      "tables": [
+        {
+          "name": "The honest starting point",
+          "note": "Right now InfinityVault sells card binders. The listings describe what the product IS — capacity, page type, material grade, premium feel. The marketing audit we just did fixes the EXECUTION layer: better PPC, better A+ content, better photos. But all of that execution rests on a quiet assumption — that you already know what your customer is actually buying.\n\nYou probably don't. Not at the level the IDEA framework demands. Most Amazon brands don't. They describe product, infer customer, and write copy that sounds like everyone else's in the category. The marketing audit assumed your current positioning is roughly right and tried to amplify it. IDEA would interrogate whether the positioning is right at all.",
+          "columns": [
+            "Module",
+            "What it produces",
+            "Impact on InfinityVault specifically"
+          ],
+          "rows": [
+            [
+              "What changes if you run InfinityVault through the IDEA framework"
+            ],
+            [
+              "Diagnostic",
+              "Trust Gap™ score across 4 dimensions",
+              "Tells you whether InfinityVault's main problem is an insight gap (you don't know your customer), distinctiveness gap (you sound like every other binder seller), empathy gap (your copy doesn't speak to the collector's actual feelings), or authenticity gap (your brand voice is inconsistent or borrowed). Without this, you're guessing where to invest."
+            ],
+            [
+              "Avatar 2.0™",
+              "Forensic customer avatar from your real reviews",
+              "Pulls the exact vocabulary collectors use about your product and category. Identifies the emotional job the binder is hired to do — which is almost certainly NOT 'storage'. Likely closer to 'proof that I'm a serious collector', 'protection of something irreplaceable', or 'order from chaos.' That distinction changes every listing word."
+            ],
+            [
+              "The Signature",
+              "One sentence: what they're actually buying",
+              "Forces a specific articulation. For InfinityVault this might be something like: 'My customer isn't buying a binder. They're buying the certainty that everything they've spent years building won't be lost in an instant.' Every piece of copy after that point gets measured against this sentence."
+            ],
+            [
+              "Decision Trigger™",
+              "What made today the day",
+              "TCG buyers don't browse binders for months. There's a moment: pulled a chase card, existing binder filled up, page tore and cards slid out, getting back into the hobby, prepping a collection for grading. Ad copy that names the trigger outperforms ad copy that names the product."
+            ],
+            [
+              "Brand Canvas",
+              "Position, voice, vocabulary in one document",
+              "Becomes the single source of truth for every listing, every A+ module, every ad. Solves the 'consistent voice' problem directly — every SKU under InfinityVault now reads like it came from one brand instead of three different copy passes."
+            ],
+            [
+              "The Brief",
+              "Export that feeds Pixii / Helium 10 / Claude / any tool",
+              "This is the actual leverage move. Take the Brand Canvas + Avatar 2.0 export into any image tool, listing copy generator, or freelancer brief. The output gets dramatically better because the brief is dramatically better. You become the seller who's two layers upstream of everyone else competing on Amazon binders."
+            ]
+          ]
+        },
+        {
+          "name": "The compounding effect on the marketing audit",
+          "note": "Every Tier 1 move from the marketing audit becomes 2–3x more effective with IDEA inputs feeding it:\n\n• Listing copy refresh — without Avatar 2.0, you write better-than-current copy. With it, you write copy that names the customer's exact emotional job in their own words.\n• A+ Content overhaul — without the Brand Canvas, A+ is a prettier version of the same generic story. With it, the A+ modules sequence the customer's emotional journey, not just feature-bullet lists.\n• Photography reshoot — without the Signature, you shoot product-on-white plus a lifestyle scene. With it, you shoot specifically against the Decision Trigger: the moment of the chase pull, the binder full of someone's collection.\n• PPC restructure — without forensic vocabulary, you bid on category keywords. With it, you bid on the exact phrases collectors use when they're in trigger mode.\n• Influencer briefs — without the Signature, creators describe your product. With it, they tell their audience what their audience is actually feeling. Different content. Different response.\n\nThe marketing audit was about doing the right things. IDEA is about saying the right things while doing them. The two compound, they don't substitute.",
+          "columns": [],
+          "rows": []
+        }
+      ]
+    },
+    {
+      "sheet": "2. Product Architecture",
+      "title": "IDEA Brand Coach — Ideal Software Tool Architecture",
+      "header_note": "The modules, the flow, the data structure. Inferred from the PDF — flag any structural changes and I'll regenerate.",
+      "tables": [
+        {
+          "name": "User journey — six stages",
+          "note": null,
+          "columns": [
+            "Stage",
+            "Module",
+            "Time",
+            "What happens"
+          ],
+          "rows": [
+            [
+              "Stage 0",
+              "Onboarding & Asset Capture",
+              "30 sec",
+              "User enters ASIN, paste of reviews (or auto-fetch), competitor URLs, category, current listing copy. App builds an internal asset record. This is the raw material that every downstream module pulls from. No questions yet — just evidence."
+            ],
+            [
+              "Stage 1",
+              "Trust Gap™ Diagnostic",
+              "10–15 min",
+              "Short questionnaire (12–18 questions) blended with auto-analysis of the assets from Stage 0. Output: a Trust Gap™ score across the four IDEA dimensions, plus a named primary gap. This is the HOOK. If the user doesn't feel the gap is real, the app fails here."
+            ],
+            [
+              "Stage 2",
+              "Avatar 2.0™ — Forensic Research",
+              "45–90 min across 5 sub-stages",
+              "Five guided research stages, each producing a specific output that feeds the next. Stage 2.5 culminates in The Signature. This is the RETENTION moment. The user finishes with one sentence they recognise as true and had never previously articulated."
+            ],
+            [
+              "Stage 3",
+              "Brand Canvas",
+              "Auto-generated, 15 min refinement",
+              "Synthesises Avatar 2.0 outputs into a single one-page document: positioning, voice attributes, vocabulary bank, story spine, Decision Trigger, Signature. Editable. Becomes the seller's source of truth."
+            ],
+            [
+              "Stage 4",
+              "Create — Output Generation",
+              "Per-asset, 5–10 min each",
+              "Listing copy (title, bullets, description), Brand Voice guide, A+ Content brief, ad copy briefs, image briefs (for Pixii / Midjourney / freelancer). All directly generated from the Brand Canvas. Not 'write me copy' — copy that's constrained by the brief."
+            ],
+            [
+              "Stage 5",
+              "Coach — Ongoing Conversation",
+              "Continuous",
+              "Chat interface with persistent memory of the seller's Canvas, Diagnostic, and Avatar. The seller asks 'should I launch a second product?' or 'how do I respond to this negative review?' The Coach answers IN BRAND — with reference to their specific Avatar and Signature, not generic advice."
+            ]
+          ]
+        },
+        {
+          "name": "Free tier vs paid tier — pricing logic",
+          "note": null,
+          "columns": [
+            "Tier",
+            "Included",
+            "Logic"
+          ],
+          "rows": [
+            [
+              "Free",
+              "Stage 0 + Trust Gap™ Diagnostic + first 3 of 5 Avatar 2.0 stages → ending with The Signature",
+              "Lets the user feel both moments of magic: the score that names their gap, and the sentence that surprises them. Free tier ends exactly where they've just had a 'this is real' moment — perfect conversion trigger."
+            ],
+            [
+              "Paid (£29/mo)",
+              "Full Avatar 2.0 + Brand Canvas + all Create tools + Coach + multi-ASIN support + version history",
+              "Everything that turns insight into ongoing production. The Coach is the retention engine — the conversation that keeps them logging in monthly even when they're not launching new products."
+            ],
+            [
+              "Paid annual (£290/yr)",
+              "All paid features + quarterly Diagnostic re-runs (track Trust Gap™ score over time)",
+              "Frames the relationship as a brand-management practice, not a one-time exercise. The annual tier sells the discipline."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "3. Diagnostic (IV)",
+      "title": "Trust Gap™ Diagnostic — InfinityVault",
+      "header_note": "Mocked output. Scores reflect my best estimate from prior context — real diagnostic would derive from your reviews + intake answers.",
+      "tables": [
+        {
+          "name": null,
+          "note": null,
+          "columns": [
+            "Overall Trust Gap™ Score",
+            null,
+            "58 / 100",
+            null,
+            "Primary gap: Empathy"
+          ],
+          "rows": []
+        },
+        {
+          "name": "Interpretation: InfinityVault is mid-band. Strong on product distinctiveness (Diamond Grain, Vintage, SL200 are all legible names with different positioning intent) but weaker on empathy — the listings still describe product, not the collector's emotional state. Insight and Authenticity sit between.",
+          "note": "The four dimensions",
+          "columns": [
+            "Dimension",
+            "Score / 25",
+            "What it measures",
+            "InfinityVault read",
+            "Where it shows up"
+          ],
+          "rows": [
+            [
+              "Insight",
+              "15 / 25",
+              "How well do you know what your customer is actually buying — the emotional job, not the product?",
+              "Mid-low. You know they collect cards and want to protect them. You probably don't have a forensic articulation of the deeper job — the identity reinforcement, the autobiography-in-pages, the anti-loss anxiety. Listings reveal this: still mostly functional.",
+              "Listing bullet 1 starts with capacity, not feeling. A+ content leads with material specs. No mention anywhere of the chase-pull moment."
+            ],
+            [
+              "Distinctiveness",
+              "17 / 25",
+              "How different is your brand from generic category competitors — in name, voice, position, visual?",
+              "Mid-high, and surprisingly so. Diamond Grain and Vintage as variant names create their own micro-identities. SL200 deck box is a recognisable SKU. The price-anchor strategy (Vintage at £29.99 making Diamond Grain look like value) is a real positioning move.",
+              "Product names are distinct. Brand name InfinityVault is evocative. But the COPY inside the listings reads similar to category — same claims, same structure as Vault X, Ultra Pro, etc."
+            ],
+            [
+              "Empathy",
+              "11 / 25",
+              "Does your copy speak to the customer's actual emotional state at the moment of purchase?",
+              "Low. This is the primary gap. Listings describe what the binder IS, not what the buyer is FEELING. No mention of the panic that comes with pulling a chase card and having nowhere safe to put it. No mention of finally consolidating five half-full binders. The emotional moments that drive purchase are absent from the copy.",
+              "Bullets focus on features (capacity, sleeves, materials). Ad copy is product-led. A+ doesn't tell a customer-emotion story. Photography doesn't show the collector's hands, the collection, the moment."
+            ],
+            [
+              "Authenticity",
+              "15 / 25",
+              "Is your brand voice consistent and credible across listings, ads, customer service, packaging?",
+              "Mid. The InfinityVault name and product variant names hold together. But voice across listings probably drifts — three different listings written at different times. No documented voice guide. Customer messaging from the support email probably has a different register than the listing copy.",
+              "Listings probably differ in tone (formal vs casual, feature-led vs benefit-led). No consistent vocabulary across SKUs. No documented brand voice rules for whoever writes the next listing."
+            ]
+          ]
+        },
+        {
+          "name": "What the Diagnostic recommends next",
+          "note": "Because the primary gap is EMPATHY, the next module the app routes you into is Avatar 2.0™ — specifically the emotional-job and Decision Trigger stages, which are designed to close exactly this gap.\n\nIf the primary gap had been INSIGHT, the app would route to the review forensics stage first. If DISTINCTIVENESS, to the vocabulary differentiation work. The Diagnostic isn't just a score — it's a triage that determines what the user does next inside the app. That's the design point most diagnostic tools miss.",
+          "columns": [],
+          "rows": []
+        }
+      ]
+    },
+    {
+      "sheet": "4. Avatar 2.0 (IV)",
+      "title": "Avatar 2.0™ — InfinityVault Diamond Grain 216 (worked example)",
+      "header_note": "The 5 research stages, populated with reasonable inference. The real version would derive every cell from forensic review analysis.",
+      "tables": [
+        {
+          "name": "Stage 1 — Vocabulary Forensics",
+          "note": "App pulls every customer review (yours + key competitors), extracts unprompted language, ranks by frequency, and clusters by emotion. This is the raw evidence everything else is built from.",
+          "columns": [
+            "Cluster",
+            "Customer words (unprompted)",
+            "Frequency signal",
+            "Why it matters"
+          ],
+          "rows": [
+            [
+              "Protection / damage anxiety",
+              "scratch, dent, ding, ringing, crease, rounded corners, dimple, sleeve, slip out, slide, fall out",
+              "Very high",
+              "Anxiety language. Buyers are protecting against loss they fear. Copy that names this fear (vs ignoring it) earns trust."
+            ],
+            [
+              "Capacity / consolidation",
+              "fits everything, one binder, no more, finally, all in one, doesn't fit, ran out of room, full",
+              "Very high",
+              "The dream is consolidation — collapsing multiple binders into one. 'Holds 216 cards' is functional. 'Finally fits everything you've been hoarding' is empathic."
+            ],
+            [
+              "Quality / dignity signals",
+              "premium, solid, sturdy, feels expensive, professional, not cheap, real leather feel, heavy",
+              "High",
+              "Buyers want their binder to match the perceived value of the collection inside. A cheap binder insults a serious collection."
+            ],
+            [
+              "Display / pride",
+              "show off, display, proud, friends, kids, show people, share, take to shows",
+              "Medium-high",
+              "The binder is performative. It's not private storage — it's a portfolio that gets shown. Copy and photography should reflect this."
+            ],
+            [
+              "Identity / seriousness",
+              "serious collector, real collector, getting into it again, started collecting, my collection",
+              "Medium-high",
+              "Buyers want validation of their identity as a collector. The binder isn't just storage — it's a status signal that they're doing the hobby properly."
+            ],
+            [
+              "Ritual / pleasure",
+              "love opening it, satisfying, organize, sort, flip through, look at, enjoy",
+              "Medium",
+              "Beyond function, the binder enables a recurring pleasure — the act of flipping through. This is what creates emotional attachment to the specific binder, not just any binder."
+            ]
+          ]
+        },
+        {
+          "name": "Stage 2 — Functional vs Emotional Job Map",
+          "note": "App separates what the product DOES from what the customer is HIRING it to do emotionally. Most listings only address the first column.",
+          "columns": [
+            "Functional job",
+            "Emotional job",
+            "Identity job",
+            "Villain (what they're hiring against)"
+          ],
+          "rows": [
+            [
+              "Store and protect 216 cards in one place",
+              "Stop the low-grade anxiety that your most valuable cards are at risk somewhere",
+              "Be the collector who has it together — who can answer 'where's that Charizard?' in 3 seconds",
+              "The cheap binder with thin pages, dimpling cards, slipping sleeves — and the friend who lost their grail card because of it"
+            ]
+          ]
+        },
+        {
+          "name": "Stage 3 — The Decision Trigger™",
+          "note": "App identifies the specific moments that turn a passive interest into a search. These are what ad copy, hero images, and listing first-bullets should speak to.",
+          "columns": [
+            "Trigger moment",
+            "What they feel",
+            "What they search",
+            "Estimated volume"
+          ],
+          "rows": [
+            [
+              "Just pulled a chase card",
+              "Adrenaline + panic — 'this needs to be safe NOW'",
+              "best binder for valuable cards, top loader binder, premium card binder",
+              "High"
+            ],
+            [
+              "Current binder is full / overflowing",
+              "Mild frustration + dignity hit — collection has outgrown its container",
+              "biggest card binder, 500 card binder, 9 pocket binder, large capacity",
+              "Very high"
+            ],
+            [
+              "Existing binder failed (page tore, cards slipped)",
+              "Anger + urgency — won't trust the same brand again",
+              "card binder that won't damage cards, side loading binder, no slip binder",
+              "Medium-high"
+            ],
+            [
+              "Coming back to the hobby after years away",
+              "Nostalgia + identity reconstruction — wants to do it 'properly' this time",
+              "best card binder 2026, what binder do collectors use, premium binder Pokemon",
+              "High and growing (TCG comeback wave)"
+            ],
+            [
+              "Buying for a kid",
+              "Wants to give them the gift of doing it right — protect their excitement",
+              "kids card binder, gift for card collector, Pokemon binder for kids",
+              "Medium, seasonal spikes"
+            ],
+            [
+              "Sending cards to PSA / BGS for grading",
+              "Anxiety about handling — need transit-safe storage pre-shipping",
+              "binder for grading prep, safe card storage, archival card binder",
+              "Low-medium, high intent"
+            ]
+          ]
+        },
+        {
+          "name": "Stage 4 — Hesitations & Objections (what's stopping the purchase)",
+          "note": null,
+          "columns": [
+            "Hesitation",
+            "Verbatim signal",
+            "What resolves it in copy / image / A+"
+          ],
+          "rows": [
+            [
+              "Will it actually damage my cards?",
+              "'I'm scared of dimpling' / 'last binder rounded my corners'",
+              "Hero close-up showing page texture next to a card with no compression. Explicit 'no-dimple' guarantee. Side-loading detail."
+            ],
+            [
+              "Is it worth £24.99 vs a £12 binder?",
+              "'why is this twice the price' / 'is it really better'",
+              "Vintage 216 visible as £29.99 anchor. Show what £12 binders fail at. Materials cross-section."
+            ],
+            [
+              "Will it fit MY cards (PSA slabs, thick sleeves, jumbos)?",
+              "'do PSA cards fit?' / 'will it hold double-sleeved?'",
+              "Compatibility chart in A+: standard, double-sleeved, thick top loader, PSA-graded (if applicable). Specific to the customer's situation."
+            ],
+            [
+              "Is the brand legit / will it last?",
+              "'never heard of InfinityVault' / 'how long does it hold up'",
+              "Brand story module. Founder voice. Real reviews with names. Comparison to known brands (Ultra Pro, Vault X)."
+            ]
+          ]
+        },
+        {
+          "name": "Stage 5 — The Signature (the retention moment)",
+          "note": "App synthesises everything above into one sentence. The user picks the version that lands hardest. If they recognise it as true and had never said it themselves — the app has earned the subscription.",
+          "columns": [
+            "Option 1",
+            "My customer isn't buying a card binder. They're buying the certainty that everything they've spent years building won't be lost in an instant."
+          ],
+          "rows": [
+            [
+              "Option 2",
+              "My customer isn't buying storage. They're buying the dignity of being taken seriously as a collector — by themselves and by anyone who flips through."
+            ],
+            [
+              "Option 3",
+              "My customer isn't buying a binder. They're buying the moment a chaotic, overflowing collection finally feels like a collection."
+            ],
+            [
+              "Option 4",
+              "My customer isn't buying pages and sleeves. They're buying permission to keep collecting without the quiet guilt that they're not taking care of it properly."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "5. Brand Canvas (IV)",
+      "title": "Brand Canvas — InfinityVault",
+      "header_note": "The one-page document the app generates from Avatar 2.0. The source of truth for every piece of content downstream.",
+      "tables": [
+        {
+          "name": "The Signature",
+          "note": "My customer isn't buying a card binder. They're buying the certainty that everything they've spent years building won't be lost in an instant.",
+          "columns": [
+            "Category",
+            "Premium trading card binders & accessories",
+            "Voice attributes",
+            "Confident without bragging. Knows the hobby. Speaks collector-to-collector, not seller-to-buyer."
+          ],
+          "rows": [
+            [
+              "Positioning"
+            ],
+            [
+              "Position",
+              "The binder serious collectors choose when their collection has outgrown anything from the gaming aisle.",
+              "Tone do's",
+              "Specific (name the situation), warm (acknowledge feelings), evidence-led (point to materials/construction)."
+            ],
+            [
+              "Promise",
+              "No dimples. No slips. No second-guessing whether your grail card is safe.",
+              "Tone don'ts",
+              "Hype, fake scarcity, vague superlatives ('the best!'), influencer-y exclamation marks."
+            ],
+            [
+              "Villain",
+              "The cheap big-box binder that dimples corners and the false economy that buys it.",
+              "Words we use",
+              "Collection, grail, chase, slab, sleeve, dignity, finally, serious, protect, fits everything."
+            ],
+            [
+              "Identity payoff",
+              "From 'I'm not sure my cards are safe' to 'My collection is exactly where it should be.'",
+              "Words we don't",
+              "Cheap, basic, kids', simple, just (as in 'just a binder'), starter."
+            ]
+          ]
+        },
+        {
+          "name": "Brand story spine (for A+ content, About section, ad lead-ins)",
+          "note": "For collectors who've ever opened a binder and seen a dimple on a card that mattered, InfinityVault is the binder built for the collection you've actually been working on. Premium materials. Side-loading pockets. Construction that takes the hobby as seriously as you do.\n\nWe don't make binders for backpacks or lunchboxes. We make the one binder you finally trust to hold the cards you've spent years tracking down, trading for, opening packs to find. Whether you collect Pokémon, MTG, sports cards, or all three — your collection deserves a vault, not a folder.\n\nInfinityVault: where collections become collections.",
+          "columns": [],
+          "rows": []
+        }
+      ]
+    },
+    {
+      "sheet": "6. Export Brief",
+      "title": "The Export Brief — what feeds Pixii, Helium 10, Claude, freelancers",
+      "header_note": "The actual leverage point. This is the brief that makes any execution tool produce on-brand work.",
+      "tables": [
+        {
+          "name": "Listing Copy Brief — Diamond Grain 216 (auto-generated from Brand Canvas)",
+          "note": null,
+          "columns": [
+            "Element",
+            "Brief",
+            "Example output"
+          ],
+          "rows": [
+            [
+              "TITLE FORMULA",
+              "[Brand] [Hero Feature] | [Capacity Claim] | [Identity Claim] — [Compatibility]",
+              "InfinityVault Diamond Grain 216 Premium Trading Card Binder | Holds 432 Cards Side-Loading | The Binder Serious Collectors Use | Pokemon MTG Sports Cards"
+            ],
+            [
+              "BULLET 1 — Lead with Decision Trigger",
+              "Open with the moment the customer is IN right now, not a feature",
+              "FOR THE COLLECTION YOU'VE OUTGROWN — Diamond Grain 216 holds 432 cards across 24 side-loading pages. Built for collectors whose current binder is full, whose pages keep tearing, or whose last cheap binder dimpled a card that mattered."
+            ],
+            [
+              "BULLET 2 — Name the villain",
+              "Acknowledge the cheap-binder failure mode and contrast with construction",
+              "NO MORE DIMPLES. NO MORE SLIPS. Standard pocket binders compress cards, round corners, and let sleeves slip out the top. Diamond Grain uses side-loading pockets, reinforced pages, and a premium textured cover that takes your hobby as seriously as you do."
+            ],
+            [
+              "BULLET 3 — Capacity dignity",
+              "Frame capacity as collection-worthiness, not specification",
+              "FINALLY, ONE BINDER FOR EVERYTHING — 432-card capacity (216 cards in standard sleeves, 432 in penny sleeves) means consolidating multiple half-full binders into one piece you're proud to flip through. PSA-slab compatible on outer pockets."
+            ],
+            [
+              "BULLET 4 — Authority + trust",
+              "Brand credibility without bragging",
+              "BUILT BY COLLECTORS, FOR COLLECTORS — InfinityVault is the binder line trusted by serious card collectors across Pokémon, MTG, and sports cards. Premium materials, archival-grade pages, and a build quality your grail card deserves."
+            ],
+            [
+              "BULLET 5 — Risk reversal",
+              "Make the buy feel safe",
+              "30-DAY GUARANTEE — If the binder doesn't feel like the upgrade we promise, return it. We're confident enough in the build that we'd rather have collectors who trust the brand than units in the wrong hands."
+            ]
+          ]
+        },
+        {
+          "name": "Image Brief — what to take into Pixii (or a photographer)",
+          "note": null,
+          "columns": [
+            "Slot",
+            "Intent",
+            "Brief"
+          ],
+          "rows": [
+            [
+              "Hero",
+              "Product on white, perfectly lit. Standard.",
+              "Diamond Grain 216 head-on. Slight angle showing texture of cover. White background. Subtle InfinityVault logo bottom-right."
+            ],
+            [
+              "Image 2",
+              "The MOMENT — pulling a chase card and placing it",
+              "Hands placing a high-value sleeved card (mock chase card mockup) into a Diamond Grain page. Background blurred TCG context (booster wrappers, other cards). Lifestyle, emotional."
+            ],
+            [
+              "Image 3",
+              "The FULL collection consolidated",
+              "Open binder, every page full. Cards visible through clear pockets. Slight overhead angle. Caption: 'Finally one binder for the whole collection.'"
+            ],
+            [
+              "Image 4",
+              "Side-by-side proof — the villain comparison",
+              "Cheap binder (anonymised) showing dimpled card next to Diamond Grain showing pristine card. Same card. Caption: 'The difference your collection deserves.'"
+            ],
+            [
+              "Image 5",
+              "Capacity infographic",
+              "Visual: 216 standard sleeve capacity, 432 penny sleeve capacity, PSA slab compatibility. Not text-heavy — iconographic."
+            ],
+            [
+              "Image 6",
+              "Materials cross-section",
+              "Cut-away or exploded view: cover material, page reinforcement, side-loading pocket detail. Premium-product visual language (think Apple, not Hasbro)."
+            ],
+            [
+              "Image 7",
+              "Identity / lifestyle scene",
+              "Adult collector at a desk, binder open, looking at it (not the camera). Mood: focused, satisfied. Caption: 'For the collection you've actually been working on.'"
+            ]
+          ]
+        },
+        {
+          "name": "PPC Keyword Brief — bidding against Decision Triggers, not category",
+          "note": "Standard PPC bids on 'card binder', '9 pocket binder', '216 card binder'. Everyone bids on those. IDEA's brief reframes the keyword strategy around the EMOTIONAL state at search time:\n\nTIER A — Trigger-state keywords (highest intent, lowest competition):\n• 'binder that won't damage cards'  • 'side loading card binder no slips'\n• 'best binder for valuable Pokemon cards'  • 'safe storage for chase card'\n• 'card binder no dimples'  • 'archival card binder'\n\nTIER B — Identity-state keywords (medium intent, medium competition):\n• 'serious collector binder'  • 'premium card binder'\n• 'professional Pokemon binder'  • 'best card binder 2026'\n\nTIER C — Category keywords (high competition, only for defensive):\n• '9 pocket card binder' • '216 card binder' • 'trading card binder'\n\nBid heaviest on Tier A. Most binder sellers ignore these phrases because they require the empathy work to even know they exist. That's the leverage — you're not competing for category eyeballs, you're competing for trigger-moment intent.",
+          "columns": [],
+          "rows": []
+        }
+      ]
+    },
+    {
+      "sheet": "7. Audit × IDEA",
+      "title": "How IDEA outputs upgrade every move in the marketing audit",
+      "header_note": "The two workbooks are designed to compound. This sheet maps the lift per investment when IDEA inputs are feeding it.",
+      "tables": [
+        {
+          "name": null,
+          "note": null,
+          "columns": [
+            "Audit investment",
+            "Without IDEA",
+            "With IDEA inputs",
+            "Estimated lift multiplier"
+          ],
+          "rows": [
+            [
+              "Listing copy + backend SEO refresh",
+              "Better-written version of current copy. Generic category phrasing improved.",
+              "Copy written against the Signature, using forensic vocabulary clusters. Tier A trigger keywords in backend.",
+              "2–3x conversion lift on the refresh"
+            ],
+            [
+              "A+ Content overhaul",
+              "Prettier feature comparison. Lifestyle module added.",
+              "A+ modules sequenced as customer emotional journey: trigger → villain → promise → proof → identity payoff. Specific to TCG collector psychology.",
+              "1.5–2.5x lift vs generic A+ refresh"
+            ],
+            [
+              "PPC restructure",
+              "Better ACoS on category keywords through bid discipline.",
+              "Tier A trigger-state keywords added — high-intent, low-competition. Sponsored Brands Video uses Signature as hook.",
+              "Same budget, ~30–50% better ROAS"
+            ],
+            [
+              "Photography reshoot",
+              "Cleaner product + lifestyle. Standard set.",
+              "Image brief built from Avatar 2.0: the chase-pull moment, the consolidated collection, the villain comparison. Photography that names emotional states.",
+              "Conversion lift compounding across the listing"
+            ],
+            [
+              "Amazon Vine on 288 single",
+              "Generic review prompts. Reviews speak in their own language.",
+              "Vine instructions guide reviewers toward the specific job the product solves. Reviews come back richer, more vocabulary-aligned.",
+              "Marginal — Vine reviewers are independent. But Vine instructions can be sharper."
+            ],
+            [
+              "Influencer seeding",
+              "Send product. Hope they describe it well. Inconsistent messaging across creators.",
+              "Send product + one-page Brand Canvas. Creators talk to their audience using your vocabulary. Brand consistency across 15 creators.",
+              "2x conversion on creator-driven traffic"
+            ],
+            [
+              "Sponsored Brands Video",
+              "Product-led 15s video. Standard.",
+              "Video opens on the Decision Trigger. Names the collector's state. Resolves to the product. Driven by the Signature.",
+              "Lower ACoS, higher click-through"
+            ],
+            [
+              "Subscribe & Save + coupon",
+              "Same offer, same listing context.",
+              "Offer copy uses brand vocabulary. Surrounding listing makes the discount feel like an invitation, not a clearance.",
+              "Marginal but reinforces brand"
+            ],
+            [
+              "TikTok Shop launch (later phase)",
+              "Generic TikTok content. Trying to figure out tone.",
+              "Tone, vocabulary, and trigger-moment hooks already documented. Creator briefs ready day one.",
+              "Faster ramp, fewer false starts"
+            ]
+          ]
+        },
+        {
+          "name": "The honest read: you don't NEED IDEA to execute the marketing audit. You can do all of it without running the framework on yourself.\n\nBut the audit estimates assumed you'd execute on whatever positioning InfinityVault already has. If you ran IDEA first — even just the free-tier Diagnostic and the first three Avatar 2.0 stages ending in the Signature — the same execution work would produce materially better results because the raw material feeding it would be sharper.\n\nThis is also the answer to your original product question: anyone using your app should see this exact compounding effect on their own marketing investments. That's the story. Not 'better strategy', but 'every dollar you spend on marketing works harder.' That's a more concrete sale than abstract brand work.",
+          "note": null,
+          "columns": [],
+          "rows": []
+        }
+      ]
+    }
+  ]
+}
