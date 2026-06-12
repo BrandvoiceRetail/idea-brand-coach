@@ -90,11 +90,6 @@ describe('SupabaseDiagnosticService', () => {
         return {} as any;
       });
 
-      vi.mocked(supabase.functions.invoke).mockResolvedValue({
-        data: null,
-        error: null,
-      });
-
       const result = await service.saveDiagnostic({
         answers: { insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
         scores: { overall: 75, insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
@@ -102,10 +97,7 @@ describe('SupabaseDiagnosticService', () => {
 
       expect(result).toBeDefined();
       expect(result.id).toBe('submission-123');
-      expect(supabase.functions.invoke).toHaveBeenCalledWith(
-        'sync-diagnostic-to-embeddings',
-        expect.any(Object)
-      );
+      expect(supabase.functions.invoke).not.toHaveBeenCalled();
     });
 
     it('should throw error when user not authenticated', async () => {
@@ -169,11 +161,6 @@ describe('SupabaseDiagnosticService', () => {
           eq: vi.fn().mockResolvedValue({ data: null, error: null }),
         }),
       } as any);
-
-      vi.mocked(supabase.functions.invoke).mockResolvedValue({
-        data: null,
-        error: null,
-      });
 
       const result = await service.syncFromLocalStorage();
 
@@ -248,11 +235,6 @@ describe('SupabaseDiagnosticService', () => {
           eq: vi.fn().mockResolvedValue({ data: null, error: null }),
         }),
       } as any);
-
-      vi.mocked(supabase.functions.invoke).mockResolvedValue({
-        data: null,
-        error: null,
-      });
 
       const result = await service.syncFromLocalStorage();
 
