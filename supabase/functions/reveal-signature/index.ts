@@ -20,7 +20,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 // Match the model used by the working idea-framework-consultant-claude function.
-const SONNET_MODEL = 'claude-sonnet-4-20250514';
+const SONNET_MODEL = 'claude-sonnet-4-6';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -205,32 +205,55 @@ serve(async (req) => {
       ? [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }]
       : systemPrompt;
 
-    const response = await fetch(CLAUDE_API_URL, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: SONNET_MODEL,
-        max_tokens: 1024,
-        system: systemContent,
-        messages: [
-          { role: 'user', content: userMessageParts.join('\n\n') },
-          // Prefill forces a JSON object response and suppresses preamble.
-          { role: 'assistant', content: '{"options":' },
-        ],
-        temperature: 0.9,
-      }),
+    const requestBody = JSON.stringify({
+      model: SONNET_MODEL,
+      max_tokens: 1024,
+      system: systemContent,
+      messages: [
+        // No assistant prefill — Sonnet 4.6 rejects last-turn prefills (400).
+        { role: 'user', content: userMessageParts.join('\n\n') },
+      ],
+      temperature: 0.9,
     });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('[reveal-signature] Anthropic API error:', response.status, errorBody);
-      throw new Error(`Anthropic API error: ${response.status}`);
+    // The reveal is the product's recognition moment, so absorb one transient
+    // upstream failure (429/5xx/network) with a single retry rather than
+    // degrading it. Bounded: max 2 attempts, 1.5s backoff. (Same pattern as
+    // diagnostic-interpretation.)
+    let response: Response | null = null;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        response = await fetch(CLAUDE_API_URL, { method: 'POST', headers, body: requestBody });
+      } catch (fetchError) {
+        console.error(`[reveal-signature] attempt ${attempt} network error:`, fetchError);
+        response = null;
+      }
+
+      if (response?.ok) break;
+
+      const upstreamStatus = response?.status ?? 'network-error';
+      const errorBody = response ? (await response.text()).slice(0, 300) : '';
+      const retryable = !response || response.status === 429 || response.status >= 500;
+      console.error(
+        `[reveal-signature] attempt ${attempt} failed | upstream=${upstreamStatus} | retryable=${retryable} | hasReviews=${hasReviews} |`,
+        errorBody,
+      );
+      if (!retryable || attempt === 2) {
+        throw new Error(`Anthropic API error: ${upstreamStatus}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+
+    if (!response || !response.ok) {
+      throw new Error('Anthropic API error: exhausted retries');
     }
 
     const data = await response.json();
     const rawText = data?.content?.[0]?.text ?? '';
-    // Reconstruct the full JSON object (the prefill is not echoed back by the API).
-    const reconstructed = `{"options":${rawText}`;
+    // Without the prefill the model returns the full object; fall back to the
+    // legacy fragment reconstruction if it ever emits a bare value.
+    const unfenced = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+    const reconstructed = unfenced.startsWith('{') ? unfenced : `{"options":${rawText}`;
 
     let options: string[] = [];
     try {
