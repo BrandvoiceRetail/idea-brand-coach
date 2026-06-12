@@ -73,6 +73,28 @@ function toolUseEvents(
   return events;
 }
 
+/** Tool-use-only response with NO text block — the silent-turn shape. */
+function toolOnlyEvents(
+  blocks: Array<{ name: string; id: string; input: Record<string, unknown> }>
+): Array<Record<string, unknown>> {
+  const events: Array<Record<string, unknown>> = [
+    { type: 'message_start', message: { usage: { input_tokens: 100 } } },
+  ];
+  blocks.forEach((block, i) => {
+    const json = JSON.stringify(block.input);
+    events.push(
+      { type: 'content_block_start', index: i, content_block: { type: 'tool_use', id: block.id, name: block.name } },
+      { type: 'content_block_delta', index: i, delta: { type: 'input_json_delta', partial_json: json } },
+      { type: 'content_block_stop', index: i }
+    );
+  });
+  events.push(
+    { type: 'message_delta', delta: { stop_reason: 'tool_use' }, usage: { output_tokens: 50 } },
+    { type: 'message_stop' }
+  );
+  return events;
+}
+
 /** Fake controller collecting emitted client SSE events. */
 function makeCollector(): { controller: ReadableStreamDefaultController; events: () => Array<Record<string, unknown>> } {
   const chunks: Uint8Array[] = [];
@@ -320,15 +342,72 @@ describe('runAgenticLoop', () => {
     expect(events.at(-1)).toEqual({ type: 'done' });
   });
 
-  it('injects fallback text when the model produced none', async () => {
+  it('forces one text-only turn when the model produced none', async () => {
     const noTextEvents = [
       { type: 'message_start', message: { usage: { input_tokens: 10 } } },
       { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 0 } },
       { type: 'message_stop' },
     ];
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(claudeSSE(noTextEvents)));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(claudeSSE(noTextEvents))
+      .mockResolvedValueOnce(claudeSSE(textEvents('Here is my answer after all.')));
+    vi.stubGlobal('fetch', fetchMock);
 
     const events = await readClientStream(runAgenticLoop(makeConfig()));
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const forcedBody = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(forcedBody.tool_choice).toEqual({ type: 'none' });
+    const text = events.filter((e) => e.type === 'text_delta').map((e) => e.delta).join('');
+    expect(text).toContain('Here is my answer after all.');
+    expect(text).not.toContain("wasn't able to generate a response");
+  });
+
+  it('honors pending tool calls then forces text when the cap is hit silently (memory bootstrap)', async () => {
+    const fetchMock = vi
+      .fn(async () => claudeSSE(toolOnlyEvents([MEMORY_CREATE])))
+      .mockResolvedValueOnce(claudeSSE(toolOnlyEvents([MEMORY_CREATE])))
+      .mockResolvedValueOnce(claudeSSE(toolOnlyEvents([MEMORY_CREATE])))
+      .mockResolvedValueOnce(claudeSSE(toolOnlyEvents([MEMORY_CREATE])))
+      .mockResolvedValueOnce(claudeSSE(toolOnlyEvents([MEMORY_CREATE])))
+      .mockResolvedValueOnce(claudeSSE(textEvents('All noted — multi-packs sound like a strong move.')));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const events = await readClientStream(runAgenticLoop(makeConfig()));
+
+    // 4 loop iterations + 1 forced text-only turn
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+    // 3 writes executed in-loop + the final turn's pending write honored before forcing
+    expect(vi.mocked(handleMemoryCommand)).toHaveBeenCalledTimes(4);
+    const forcedBody = JSON.parse(fetchMock.mock.calls[4][1].body);
+    expect(forcedBody.tool_choice).toEqual({ type: 'none' });
+    // the pending tool_use was answered so the forced request is API-valid
+    expect(forcedBody.messages.at(-1).content[0]).toMatchObject({
+      type: 'tool_result',
+      tool_use_id: 'toolu_mem_1',
+    });
+    const text = events.filter((e) => e.type === 'text_delta').map((e) => e.delta).join('');
+    expect(text).toContain('multi-packs sound like a strong move');
+    expect(text).not.toContain("wasn't able to generate a response");
+    expect(events.filter((e) => e.type === 'done')).toHaveLength(1);
+  });
+
+  it('still injects the fallback when even the forced turn yields no text', async () => {
+    const noTextEvents = [
+      { type: 'message_start', message: { usage: { input_tokens: 10 } } },
+      { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 0 } },
+      { type: 'message_stop' },
+    ];
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(claudeSSE(noTextEvents))
+      .mockResolvedValueOnce(claudeSSE(noTextEvents));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const events = await readClientStream(runAgenticLoop(makeConfig()));
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     const text = events.filter((e) => e.type === 'text_delta').map((e) => e.delta).join('');
     expect(text).toContain("wasn't able to generate a response");
   });

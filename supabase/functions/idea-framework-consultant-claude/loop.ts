@@ -45,7 +45,11 @@ export interface LoopConfig {
   startTime: number;
 }
 
-function callClaude(config: LoopConfig, stream: boolean): Promise<Response> {
+function callClaude(
+  config: LoopConfig,
+  stream: boolean,
+  overrides: Record<string, unknown> = {}
+): Promise<Response> {
   return fetch(config.apiUrl, {
     method: 'POST',
     headers: {
@@ -57,6 +61,7 @@ function callClaude(config: LoopConfig, stream: boolean): Promise<Response> {
       ...config.requestBody,
       messages: config.messages,
       ...(stream ? { stream: true } : {}),
+      ...overrides,
     }),
   });
 }
@@ -171,6 +176,7 @@ export function runAgenticLoop(config: LoopConfig): ReadableStream {
       const state = createSessionState();
       try {
         let previousToolResults: Array<Record<string, unknown>> | null = null;
+        let lastResult: IterationResult | null = null;
 
         for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
           const claudeResponse = await callClaude(config, true);
@@ -193,6 +199,7 @@ export function runAgenticLoop(config: LoopConfig): ReadableStream {
             controller,
             state
           );
+          lastResult = result;
 
           if (!shouldContinue(result, iteration, config)) {
             break;
@@ -206,6 +213,37 @@ export function runAgenticLoop(config: LoopConfig): ReadableStream {
             previousToolResults
           );
           console.log(`[Loop] Iteration ${iteration + 1}: executed ${result.memoryToolUses.length} memory command(s), continuing`);
+        }
+
+        // A turn can end with ONLY tool calls (e.g. a first-session memory
+        // bootstrap eats every iteration) — without this the user gets the
+        // apology fallback even though the turn worked. Honor any un-executed
+        // tool calls from the final response, then compel one tool-free,
+        // text-only reply. Bounded: exactly one extra upstream call.
+        if (!state.hasTextOutput) {
+          if (
+            lastResult &&
+            lastResult.stopReason === 'tool_use' &&
+            (lastResult.memoryToolUses.length > 0 || lastResult.extractionToolUses.length > 0) &&
+            config.supabaseClient !== null &&
+            config.userId !== null
+          ) {
+            const toolResults = await buildToolResults(lastResult, config);
+            previousToolResults = appendToolTurn(
+              config,
+              lastResult.assistantContent,
+              toolResults,
+              previousToolResults
+            );
+          }
+          console.log('[Loop] No text after tool iterations — forcing one text-only turn');
+          const finalResponse = await callClaude(config, true, { tool_choice: { type: 'none' } });
+          if (finalResponse.ok) {
+            await translateOneStream(finalResponse, controller, state);
+          } else {
+            const errorBody = await finalResponse.text();
+            console.error('[Loop] Forced text turn failed:', finalResponse.status, errorBody.substring(0, 300));
+          }
         }
 
         finalizeStream(controller, state, config.startTime);
@@ -235,6 +273,12 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
   let responseText = '';
   let extractedFields: unknown[] = [];
   let previousToolResults: Array<Record<string, unknown>> | null = null;
+  let lastPending: {
+    assistantContent: Array<Record<string, unknown>>;
+    memoryToolUses: Array<{ id: string; input: Record<string, unknown> }>;
+    extractionToolUses: Array<{ id: string }>;
+    stopReason: string | null;
+  } | null = null;
 
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
     const claudeResponse = await callClaude(config, false);
@@ -266,13 +310,46 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
       console.log(`[Usage] Input: ${u.input_tokens} (cache_read: ${u.cache_read_input_tokens || 0}), Output: ${u.output_tokens}`);
     }
 
+    lastPending = {
+      assistantContent: data.content || [],
+      memoryToolUses,
+      extractionToolUses,
+      stopReason: data.stop_reason ?? null,
+    };
+
     if (!shouldContinue({ stopReason: data.stop_reason, memoryToolUses }, iteration, config)) {
       break;
     }
+    lastPending = null; // this turn's tool uses get executed below
 
     const toolResults = await buildToolResults({ memoryToolUses, extractionToolUses }, config);
     previousToolResults = appendToolTurn(config, data.content, toolResults, previousToolResults);
     console.log(`[Loop] Iteration ${iteration + 1}: executed ${memoryToolUses.length} memory command(s), continuing`);
+  }
+
+  // Same guarantee as the streaming path: a tool-only turn still ends with text.
+  if (!responseText) {
+    if (
+      lastPending &&
+      lastPending.stopReason === 'tool_use' &&
+      (lastPending.memoryToolUses.length > 0 || lastPending.extractionToolUses.length > 0) &&
+      config.supabaseClient !== null &&
+      config.userId !== null
+    ) {
+      const toolResults = await buildToolResults(lastPending, config);
+      previousToolResults = appendToolTurn(config, lastPending.assistantContent, toolResults, previousToolResults);
+    }
+    console.log('[Loop] No text after tool iterations — forcing one text-only turn');
+    const finalResponse = await callClaude(config, false, { tool_choice: { type: 'none' } });
+    if (finalResponse.ok) {
+      const data = await finalResponse.json();
+      for (const block of data.content || []) {
+        if (block.type === 'text') responseText += block.text;
+      }
+    } else {
+      const errorBody = await finalResponse.text();
+      console.error('[Loop] Forced text turn failed:', finalResponse.status, errorBody.substring(0, 300));
+    }
   }
 
   return { responseText, extractedFields };
