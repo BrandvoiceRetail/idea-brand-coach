@@ -17,6 +17,8 @@ import { SignatureReveal } from '@/components/v2/signature/SignatureReveal';
 import { MilestoneOverlay } from '@/components/v2/MilestoneOverlay';
 import { BatchReviewOrchestrator } from '@/components/v2/BatchReviewOrchestrator';
 import { useBrandCoachV2State } from '@/hooks/v2/useBrandCoachV2State';
+import { useServices } from '@/services/ServiceProvider';
+import { SavedSignature } from '@/services/interfaces/ISignatureService';
 
 /**
  * BrandCoachV2 Page — Thin Orchestrator
@@ -26,6 +28,17 @@ import { useBrandCoachV2State } from '@/hooks/v2/useBrandCoachV2State';
  * This component focuses purely on rendering and composition.
  */
 const BrandCoachV2 = (): JSX.Element => {
+  const { signatureService } = useServices();
+  // The user's saved Signature pick — shown outside the reveal dialog so the
+  // recognition moment survives reloads (persistence is the Alpha bar).
+  const [savedSignature, setSavedSignature] = React.useState<SavedSignature | null>(null);
+  React.useEffect(() => {
+    signatureService
+      .getLatestSignature()
+      .then(setSavedSignature)
+      .catch((error) => console.warn('[BrandCoachV2] Failed to load saved Signature:', error));
+  }, [signatureService]);
+
   const {
     // State
     isLoading,
@@ -215,6 +228,7 @@ const BrandCoachV2 = (): JSX.Element => {
                   preloadedReviews={preloadedReviews}
                   preloadedReviewCount={preloadedReviewCount}
                   sessionId={currentSessionId ?? null}
+                  onSignatureSaved={setSavedSignature}
                 />
                 {pendingCount > 0 && (
                   <Button variant="outline" size="sm" className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={handleReviewAcceptAll} title={`Accept all ${pendingCount} pending field(s)`}>
@@ -232,6 +246,16 @@ const BrandCoachV2 = (): JSX.Element => {
                 </Button>
               </div>
             </div>
+
+            {savedSignature && (
+              <div
+                className="px-4 py-1.5 text-xs italic text-amber-700 bg-amber-500/10 border-b border-amber-500/20 truncate"
+                title={savedSignature.signatureText}
+                data-testid="saved-signature-strip"
+              >
+                Your Signature: {savedSignature.signatureText}
+              </div>
+            )}
 
             {/* Batch review controls (visible when extraction queue has items) */}
             <BatchReviewOrchestrator
