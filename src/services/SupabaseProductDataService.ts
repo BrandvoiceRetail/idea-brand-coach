@@ -140,7 +140,7 @@ export class SupabaseProductDataService implements IProductDataService {
     return lines.join('\n');
   }
 
-  buildCoachContext(products: ImportedProduct[]): string {
+  buildCoachContext(products: ImportedProduct[], reviews: ProductReview[] = []): string {
     if (products.length === 0) return '';
 
     const blocks = products.map((product) => {
@@ -162,6 +162,13 @@ export class SupabaseProductDataService implements IProductDataService {
 
       return lines.join('\n');
     });
+
+    const reviewLines = this.dedupeReviews(reviews)
+      .slice(0, COACH_CONTEXT_MAX_REVIEWS)
+      .map((review) => this.formatReviewLine(review));
+    if (reviewLines.length > 0) {
+      blocks.push(['Customer reviews (verbatim sample):', ...reviewLines].join('\n'));
+    }
 
     return blocks.join('\n\n');
   }

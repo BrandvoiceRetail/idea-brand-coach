@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SupabaseProductDataService } from '../SupabaseProductDataService';
 import { supabase } from '@/integrations/supabase/client';
-import type { ImportedProduct } from '../interfaces/IProductDataService';
+import type { ImportedProduct, ProductReview } from '../interfaces/IProductDataService';
 
 const AUTH_USER = { id: 'user-123' };
 
@@ -224,6 +224,66 @@ describe('SupabaseProductDataService', () => {
       expect(result.length).toBeLessThanOrEqual(8000);
       // Each line is ~4004 chars, so only one fits under 8000.
       expect(result.split('\n')).toHaveLength(1);
+    });
+  });
+
+  describe('buildCoachContext', () => {
+    const products: ImportedProduct[] = [
+      {
+        id: 'prod-1',
+        asin: 'B000000001',
+        title: 'Widget',
+        price: 19.99,
+        rating: 4.5,
+        reviewCount: 120,
+        bullets: ['Durable', 'Lightweight'],
+        description: 'A handy widget',
+        images: [{ url: 'https://img/1.jpg' }],
+        scrapedAt: '2026-06-01T00:00:00Z',
+      },
+    ];
+
+    function review(overrides: Partial<ProductReview> = {}): ProductReview {
+      return {
+        id: 'rev-1',
+        rating: 5,
+        title: 'Great',
+        body: 'Loved it for storing my Pokemon cards',
+        reviewerName: 'Jane',
+        verifiedPurchase: true,
+        ...overrides,
+      };
+    }
+
+    it('omits the review block when no reviews are given', () => {
+      const context = service.buildCoachContext(products);
+
+      expect(context).toContain('Product: Widget (ASIN B000000001)');
+      expect(context).not.toContain('Customer reviews');
+    });
+
+    it('embeds verbatim review lines when reviews are given', () => {
+      const context = service.buildCoachContext(products, [
+        review(),
+        review({ id: 'rev-2', rating: 3, body: 'Pages feel thin but holds cards well' }),
+      ]);
+
+      expect(context).toContain('Customer reviews (verbatim sample):');
+      expect(context).toContain('\u26055 \u2014 Loved it for storing my Pokemon cards');
+      expect(context).toContain('\u26053 \u2014 Pages feel thin but holds cards well');
+    });
+
+    it('dedupes duplicate review bodies and caps the sample at 10', () => {
+      const dupes = [review(), review({ id: 'rev-dup' })];
+      const many = Array.from({ length: 15 }, (_, i) =>
+        review({ id: `rev-${i}`, body: `Unique review body number ${i} with enough length` })
+      );
+
+      const context = service.buildCoachContext(products, [...dupes, ...many]);
+      const lines = context.split('Customer reviews (verbatim sample):')[1].trim().split('\n');
+
+      expect(lines).toHaveLength(10);
+      expect(lines.filter((l) => l.includes('Loved it for storing'))).toHaveLength(1);
     });
   });
 
