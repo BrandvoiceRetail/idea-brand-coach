@@ -10,7 +10,7 @@ describe('useFeedbackEvent', () => {
     vi.clearAllMocks();
   });
 
-  it('invokes save-feedback-event with moment, session_id and payload', async () => {
+  it('invokes save-feedback-event with moment, join key, sessionId and payload', async () => {
     invoke.mockResolvedValue({ data: { id: 'evt-1' }, error: null } as never);
     const { result } = renderHook(() => useFeedbackEvent());
 
@@ -26,14 +26,15 @@ describe('useFeedbackEvent', () => {
     expect(invoke).toHaveBeenCalledWith('save-feedback-event', {
       body: {
         moment: 'moment_1',
-        session_id: 'sess-9',
+        posthogDistinctId: expect.stringMatching(/.+/),
+        sessionId: 'sess-9',
         payload: { chosen_signature: 'X', scores: { score_felt_right: 'yes' }, free_text: 'good' },
       },
     });
     expect(res).toEqual({ ok: true, id: 'evt-1' });
   });
 
-  it('sends session_id null when none provided', async () => {
+  it('sends sessionId null when none provided', async () => {
     invoke.mockResolvedValue({ data: { id: 'evt-2' }, error: null } as never);
     const { result } = renderHook(() => useFeedbackEvent());
 
@@ -42,7 +43,12 @@ describe('useFeedbackEvent', () => {
     });
 
     expect(invoke).toHaveBeenCalledWith('save-feedback-event', {
-      body: { moment: 'moment_1', session_id: null, payload: { skipped: true } },
+      body: {
+        moment: 'moment_1',
+        posthogDistinctId: expect.stringMatching(/.+/),
+        sessionId: null,
+        payload: { skipped: true },
+      },
     });
   });
 
