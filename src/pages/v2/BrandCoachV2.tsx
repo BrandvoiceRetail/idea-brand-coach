@@ -48,6 +48,7 @@ const BrandCoachV2 = (): JSX.Element => {
     isSending,
     isStreaming,
     streamingContent,
+    memoryActivity,
     isExtractingFromDoc,
     isCopied,
     chapterAccordionData,
@@ -270,6 +271,7 @@ const BrandCoachV2 = (): JSX.Element => {
               messages={messagesWithPending}
               isStreaming={isStreaming}
               streamingContent={streamingContent}
+              memoryActivity={memoryActivity}
               isSending={isSending}
               isExtractingFromDoc={isExtractingFromDoc}
               messageExtractions={messageExtractions}

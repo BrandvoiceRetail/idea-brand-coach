@@ -112,6 +112,7 @@ export interface BrandCoachV2State {
   isSending: boolean;
   isStreaming: boolean;
   streamingContent: string;
+  memoryActivity: 'reading' | 'updating' | null;
   isExtractingFromDoc: boolean;
 
   /** Export actions */
@@ -268,7 +269,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   });
 
   // ── Chat ──────────────────────────────────────────────────────────────
-  const { messages, sendMessage, sendMessageStreaming, isSending, isStreaming, streamingContent, clearChat } = useChat({
+  const { messages, sendMessage, sendMessageStreaming, isSending, isStreaming, streamingContent, memoryActivity, clearChat } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
   });
@@ -499,6 +500,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     isSending,
     isStreaming,
     streamingContent,
+    memoryActivity,
     isExtractingFromDoc,
     isCopied,
     chapterAccordionData,

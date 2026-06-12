@@ -59,6 +59,8 @@ export interface IChatService {
       onExtractedFields: (fields: Array<{ identifier: string; value: unknown; confidence: number; source: string; context?: string }>) => void;
       onComplete: (responseId?: string) => void;
       onError: (error: Error) => void;
+      /** Optional: the coach is reading/updating his persistent memory mid-response. */
+      onMemoryActivity?: (action: 'reading' | 'updating') => void;
     }
   ): Promise<void>;
 

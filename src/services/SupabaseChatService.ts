@@ -135,6 +135,7 @@ export class SupabaseChatService implements IChatService {
       onExtractedFields: (fields: Array<{ identifier: string; value: unknown; confidence: number; source: string; context?: string }>) => void;
       onComplete: (responseId?: string) => void;
       onError: (error: Error) => void;
+      onMemoryActivity?: (action: 'reading' | 'updating') => void;
     }
   ): Promise<void> {
     const ctx = await this.prepareMessageContext(message, true);
@@ -151,6 +152,7 @@ export class SupabaseChatService implements IChatService {
     const result = await parseSSEStream(reader, {
       onTextDelta: callbacks.onTextDelta,
       onExtractedFields: callbacks.onExtractedFields,
+      onMemoryActivity: callbacks.onMemoryActivity,
       onError: (err) => {
         streamError = true;
         callbacks.onError(err);

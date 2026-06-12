@@ -189,7 +189,7 @@ serve(async (req) => {
     if (chat_history && Array.isArray(chat_history)) {
       const historyLimit = useComprehensiveMode ? 10 : 5;
       const recentHistory = chat_history.slice(-historyLimit);
-      recentHistory.forEach((msg: any, i: number) => {
+      recentHistory.forEach((msg: { role: string; content: unknown }, i: number) => {
         const isLastHistory = i === recentHistory.length - 1;
         const canBlockify = typeof msg.content === 'string' && msg.content.length > 0;
         messages.push({
@@ -203,7 +203,7 @@ serve(async (req) => {
 
     // Current user message (with images if present)
     if (messageImages.length > 0) {
-      const contentBlocks: any[] = [];
+      const contentBlocks: Array<Record<string, unknown>> = [];
       // Images first, then text (Claude's recommended order)
       for (const img of messageImages) {
         contentBlocks.push({
