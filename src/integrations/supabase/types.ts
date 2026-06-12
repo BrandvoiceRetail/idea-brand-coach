@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      artifacts: {
+        Row: {
+          avatar_id: string | null
+          content: Json
+          created_at: string
+          evidence_refs: Json
+          grounding: string
+          id: string
+          kind: string
+          model: string | null
+          schema_version: string | null
+          status: string
+          superseded_by: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_id?: string | null
+          content: Json
+          created_at?: string
+          evidence_refs?: Json
+          grounding: string
+          id?: string
+          kind: string
+          model?: string | null
+          schema_version?: string | null
+          status?: string
+          superseded_by?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_id?: string | null
+          content?: Json
+          created_at?: string
+          evidence_refs?: Json
+          grounding?: string
+          id?: string
+          kind?: string
+          model?: string | null
+          schema_version?: string | null
+          status?: string
+          superseded_by?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artifacts_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "artifacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       avatar_field_values: {
         Row: {
           avatar_id: string | null
@@ -278,6 +334,42 @@ export type Database = {
         }
         Relationships: []
       }
+      business_facts: {
+        Row: {
+          content: string | null
+          created_at: string
+          field_identifier: string
+          id: string
+          is_current: boolean
+          structured_data: Json | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          field_identifier: string
+          id?: string
+          is_current?: boolean
+          structured_data?: Json | null
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          field_identifier?: string
+          id?: string
+          is_current?: boolean
+          structured_data?: Json | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           chatbot_type: string
@@ -397,29 +489,86 @@ export type Database = {
         }
         Relationships: []
       }
+      evidence_snapshots: {
+        Row: {
+          avatar_id: string | null
+          created_at: string
+          id: string
+          listing: Json | null
+          reviews: Json | null
+          source: string
+          source_ref: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_id?: string | null
+          created_at?: string
+          id?: string
+          listing?: Json | null
+          reviews?: Json | null
+          source: string
+          source_ref?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_id?: string | null
+          created_at?: string
+          id?: string
+          listing?: Json | null
+          reviews?: Json | null
+          source?: string
+          source_ref?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       feedback_events: {
         Row: {
+          avatar_id: string | null
+          chosen_signature: string | null
           created_at: string
           id: string
           moment: string
           payload: Json
+          posthog_distinct_id: string
+          q1_score_felt_right: string | null
+          q2_signature_felt_right: string | null
+          q3_whats_off: string | null
+          scores: Json | null
           session_id: string | null
+          signature_options: Json | null
           user_id: string | null
         }
         Insert: {
-          created_at?: string
-          id?: string
-          moment: string
-          payload?: Json
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
+          avatar_id?: string | null
+          chosen_signature?: string | null
           created_at?: string
           id?: string
           moment?: string
           payload?: Json
+          posthog_distinct_id: string
+          q1_score_felt_right?: string | null
+          q2_signature_felt_right?: string | null
+          q3_whats_off?: string | null
+          scores?: Json | null
           session_id?: string | null
+          signature_options?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_id?: string | null
+          chosen_signature?: string | null
+          created_at?: string
+          id?: string
+          moment?: string
+          payload?: Json
+          posthog_distinct_id?: string
+          q1_score_felt_right?: string | null
+          q2_signature_felt_right?: string | null
+          q3_whats_off?: string | null
+          scores?: Json | null
+          session_id?: string | null
+          signature_options?: Json | null
           user_id?: string | null
         }
         Relationships: []
@@ -460,6 +609,36 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_audits: {
+        Row: {
+          constraints: Json | null
+          created_at: string
+          id: string
+          investments: Json | null
+          rollout: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          constraints?: Json | null
+          created_at?: string
+          id?: string
+          investments?: Json | null
+          rollout?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          constraints?: Json | null
+          created_at?: string
+          id?: string
+          investments?: Json | null
+          rollout?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -495,6 +674,53 @@ export type Database = {
           version_preference?: string | null
         }
         Relationships: []
+      }
+      signatures: {
+        Row: {
+          all_options: Json | null
+          artifact_id: string | null
+          avatar_id: string | null
+          chosen_index: number | null
+          created_at: string
+          id: string
+          inference: boolean | null
+          signature_text: string | null
+          used_reviews: boolean | null
+          user_id: string
+        }
+        Insert: {
+          all_options?: Json | null
+          artifact_id?: string | null
+          avatar_id?: string | null
+          chosen_index?: number | null
+          created_at?: string
+          id?: string
+          inference?: boolean | null
+          signature_text?: string | null
+          used_reviews?: boolean | null
+          user_id: string
+        }
+        Update: {
+          all_options?: Json | null
+          artifact_id?: string | null
+          avatar_id?: string | null
+          chosen_index?: number | null
+          created_at?: string
+          id?: string
+          inference?: boolean | null
+          signature_text?: string | null
+          used_reviews?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signatures_artifact_id_fkey"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "artifacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       uploaded_documents: {
         Row: {
@@ -721,6 +947,33 @@ export type Database = {
           },
         ]
       }
+      user_memories: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_product_reviews: {
         Row: {
           body: string
@@ -934,6 +1187,37 @@ export type Database = {
           metadata: Json
           similarity: number
         }[]
+      }
+      save_artifact_atomic: {
+        Args: {
+          p_avatar_id: string
+          p_content: Json
+          p_evidence_refs: Json
+          p_grounding: string
+          p_kind: string
+          p_user_id: string
+        }
+        Returns: {
+          avatar_id: string | null
+          content: Json
+          created_at: string
+          evidence_refs: Json
+          grounding: string
+          id: string
+          kind: string
+          model: string | null
+          schema_version: string | null
+          status: string
+          superseded_by: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "artifacts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       update_knowledge_entry: {
         Args: {

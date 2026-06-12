@@ -26,7 +26,7 @@ if (!anthropicApiKey) {
   throw new Error('ANTHROPIC_API_KEY environment variable is required');
 }
 
-const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+const CLAUDE_MODEL = 'claude-sonnet-4-6';
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 
 const corsHeaders = {
@@ -230,7 +230,6 @@ serve(async (req) => {
         headers: {
           'x-api-key': anthropicApiKey,
           'anthropic-version': '2023-06-01',
-          'anthropic-beta': 'prompt-caching-2024-07-31',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
@@ -282,7 +281,6 @@ serve(async (req) => {
       headers: {
         'x-api-key': anthropicApiKey,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),

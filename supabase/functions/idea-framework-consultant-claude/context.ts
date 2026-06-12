@@ -1,26 +1,14 @@
 /**
  * Context retrieval for the Claude edge function.
- * Retrieves user knowledge base and semantic context from Supabase pgvector.
+ * Retrieves the user's structured knowledge base from Supabase.
  *
- * Phase 2: Uses pgvector match_document_chunks RPC for semantic search.
- *          All data (documents, KB entries, diagnostics) lives in
- *          user_knowledge_chunks with category-scoped filtering.
- * Phase 4: Will switch embedding model from ada-002 to Voyage AI.
+ * 2026-06-11: semantic search (pgvector + OpenAI query embeddings) removed —
+ * user_knowledge_chunks is empty since the diagnostic-embeddings sync was
+ * retired, and the app is Anthropic-only. Structured KB reads + the memory
+ * snapshot (memory-context.ts) are the retrieval surfaces.
  */
 
 import { getFieldLabel } from './fields.ts';
-import { generateEmbedding as _generateEmbedding } from '../_shared/embeddings.ts';
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
-/** Wrapper that returns [] instead of throwing when API key is missing. */
-async function generateEmbedding(text: string): Promise<number[]> {
-  if (!openAIApiKey) {
-    console.warn('[Embeddings] No OPENAI_API_KEY -- skipping semantic search');
-    return [];
-  }
-  return _generateEmbedding(text, openAIApiKey);
-}
 
 /**
  * Retrieve user's structured knowledge base context from Supabase.
@@ -99,108 +87,7 @@ export async function retrieveUserContext(
 }
 
 /**
- * Retrieve relevant context using semantic search via pgvector.
- *
- * Uses match_document_chunks RPC which searches across all
- * user_knowledge_chunks (documents, KB entries, diagnostics)
- * with optional category filtering.
- */
-export async function retrieveSemanticContext(
-  supabaseClient: any,
-  userId: string,
-  query: string
-): Promise<{ content: string; sources: string[] }> {
-  try {
-    if (!openAIApiKey) {
-      return { content: '', sources: [] };
-    }
-
-    console.log('[Context] Generating embedding for semantic search...');
-    const queryEmbedding = await generateEmbedding(query);
-    if (queryEmbedding.length === 0) {
-      return { content: '', sources: [] };
-    }
-
-    // Use the new match_document_chunks RPC which supports category filtering
-    // and returns richer metadata than the old match_user_documents
-    const { data: matches, error } = await supabaseClient.rpc(
-      'match_document_chunks',
-      {
-        query_embedding: queryEmbedding,
-        match_user_id: userId,
-        match_count: 5,
-        match_threshold: 0.5,
-        filter_categories: null, // Search all categories
-      }
-    );
-
-    if (error) {
-      console.error('[Context] Semantic search error:', error);
-
-      // Fallback: try the legacy match_user_documents RPC
-      // (in case the migration hasn't been applied yet)
-      console.log('[Context] Falling back to match_user_documents...');
-      const { data: fallbackMatches, error: fallbackError } = await supabaseClient.rpc(
-        'match_user_documents',
-        {
-          query_embedding: queryEmbedding,
-          match_user_id: userId,
-          match_count: 5,
-        }
-      );
-
-      if (fallbackError || !fallbackMatches || fallbackMatches.length === 0) {
-        console.log('[Context] Fallback also returned no results');
-        return { content: '', sources: [] };
-      }
-
-      const contextParts = fallbackMatches.map((m: any) => m.content);
-      const sources = fallbackMatches.map((m: any, i: number) =>
-        `Source ${i + 1} (relevance: ${(m.similarity * 100).toFixed(1)}%)`
-      );
-      return {
-        content: `
-<semantic-context>
-The following information was retrieved based on relevance to the user's question:
-
-${contextParts.join('\n\n---\n\n')}
-</semantic-context>`,
-        sources,
-      };
-    }
-
-    if (!matches || matches.length === 0) {
-      console.log('[Context] No semantic matches found');
-      return { content: '', sources: [] };
-    }
-
-    console.log(`[Context] Found ${matches.length} semantic matches`);
-
-    const contextParts = matches.map((m: any) => m.content);
-    const sources = matches.map((m: any, i: number) => {
-      const catLabel = m.category ? ` [${m.category}]` : '';
-      const srcLabel = m.source_type ? ` (${m.source_type})` : '';
-      return `Source ${i + 1}${catLabel}${srcLabel} (relevance: ${(m.similarity * 100).toFixed(1)}%)`;
-    });
-
-    return {
-      content: `
-<semantic-context>
-The following information was retrieved based on relevance to the user's question:
-
-${contextParts.join('\n\n---\n\n')}
-</semantic-context>`,
-      sources,
-    };
-  } catch (error) {
-    console.error('[Context] Semantic search error:', error);
-    return { content: '', sources: [] };
-  }
-}
-
-/**
  * Retrieve all relevant context for the current message.
- * Returns structured context ready to be included in the user message.
  */
 export async function retrieveAllContext(
   supabaseClient: any,
@@ -212,34 +99,15 @@ export async function retrieveAllContext(
   }
 ): Promise<{
   userKnowledgeContext: string;
-  semanticContext: string;
-  sources: string[];
 }> {
-  if (options.needsFullContext) {
-    console.log('[Context] Full retrieval for complex query');
-    const startTime = Date.now();
+  const startTime = Date.now();
+  const knowledge = await retrieveUserContext(
+    supabaseClient,
+    userId,
+    message,
+    !options.needsFullContext
+  );
+  console.log(`[Context] Retrieval (${options.needsFullContext ? 'full' : 'minimal'}) took ${Date.now() - startTime}ms`);
 
-    const [knowledge, semantic] = await Promise.all([
-      retrieveUserContext(supabaseClient, userId, message),
-      retrieveSemanticContext(supabaseClient, userId, message),
-    ]);
-
-    console.log(`[Context] Full retrieval took ${Date.now() - startTime}ms`);
-
-    return {
-      userKnowledgeContext: knowledge,
-      semanticContext: semantic.content,
-      sources: semantic.sources,
-    };
-  }
-
-  // Minimal context for simple messages
-  console.log('[Context] Minimal retrieval for conversational query');
-  const knowledge = await retrieveUserContext(supabaseClient, userId, message, true);
-
-  return {
-    userKnowledgeContext: knowledge,
-    semanticContext: '',
-    sources: [],
-  };
+  return { userKnowledgeContext: knowledge };
 }
