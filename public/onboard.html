@@ -149,54 +149,6 @@
   </div>
 </section>
 
-<!-- PROMPT (QUICK ALTERNATIVE) -->
-<section class="wrap">
-  <span class="eyebrow">No connector? Start instantly</span>
-  <h2>Or paste one prompt into Claude</h2>
-  <p class="sec-lede">No setup at all &mdash; copy the prompt below into any new Claude session and the coach runs the same session right there.</p>
-  <div class="steps">
-    <div class="step">
-      <span class="num">1</span>
-      <h3>Open Claude</h3>
-      <p>Start a new session in <strong>Claude Code</strong>, the Claude app, or <code>claude.ai</code>.</p>
-    </div>
-    <div class="step">
-      <span class="num">2</span>
-      <h3>Paste the prompt</h3>
-      <p>Hit <strong>Copy prompt</strong> below and paste it as your first message. Send it.</p>
-    </div>
-    <div class="step">
-      <span class="num">3</span>
-      <h3>Get coached</h3>
-      <p>Answer as it guides you &mdash; one question at a time &mdash; and walk away with your Trust Gap and first move.</p>
-    </div>
-  </div>
-
-  <!-- PROMPT -->
-  <div class="prompt-card">
-    <div class="prompt-head">
-      <span class="label"><span class="dot"></span> ONBOARDING PROMPT</span>
-      <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy prompt</button>
-    </div>
-    <pre id="prompt"></pre>
-    <div class="prompt-foot">Paste this as the first message in a fresh Claude session.</div>
-  </div>
-</section>
-
-<!-- WHAT TO EXPECT -->
-<section class="wrap" style="padding-top:8px">
-  <span class="eyebrow">What the session does</span>
-  <h2>Five quick stages, one real answer</h2>
-  <p class="sec-lede">The coach keeps it tight on purpose &mdash; everything is built to get you to your first workbook-grade insight fast.</p>
-  <div class="stages">
-    <div class="stg"><div class="badge">Stage 0</div><div><h4>Welcome</h4><p>A 10-second promise of what you&rsquo;ll build together &mdash; no form, no friction.</p></div></div>
-    <div class="stg"><div class="badge">Stage 1</div><div><h4>Your profile</h4><p>Name, brand, website. Just enough to make the coaching yours.</p></div></div>
-    <div class="stg"><div class="badge">Stage 2</div><div><h4>Both sides of the brand</h4><p>How you see your brand &mdash; then the customer truth from your reviews or a product link.</p></div></div>
-    <div class="stg"><div class="badge">Stage 3</div><div><h4>Tune it</h4><p>A couple of preferences, plus an open box: tell the coach what you want, in your words.</p></div></div>
-    <div class="stg"><div class="badge">Stage 4</div><div><h4>First problem &rarr; first answer</h4><p>Name what&rsquo;s keeping you up at night. The coach works the four IDEA pillars and hands you a concrete move to close your Trust Gap.</p></div></div>
-  </div>
-</section>
-
 <!-- IDEA DIMENSIONS -->
 <section class="dim-band">
   <div class="wrap">
@@ -218,75 +170,6 @@
 </footer>
 
 <script>
-  // The onboarding prompt — single source of truth for both the on-page preview and the copy action.
-  const PROMPT = [
-"You are the IDEA Brand Coach — a direct, experienced brand strategist running my onboarding inside this chat. You are built on Trevor Bradford's IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic) from his book \"What Captures the Heart Goes in the Cart\" — every concept and tactic you use traces back to it.",
-"",
-"YOUR GOAL",
-"Get me from a cold start to my first real brand insight — my Trust Gap and the single best move to close it — in about 10 minutes. That first answer is the whole point. Everything before it is setup, so keep it fast.",
-"",
-"THE CORE IDEA",
-"What captures the heart goes in the cart — customers buy brands that feel right. The Trust Gap is the distance between how I see my brand and how my customers actually experience it. That gap is where sales leak. Your job is to find it from evidence, then coach me to close it.",
-"",
-"THE FRAMEWORK — the four pillars of a brand customers trust (this is what IDEA stands for):",
-"- Insight — a deep, evidence-based read of WHY customers really buy (emotional and psychographic, not just demographic). Insight comes first.",
-"- Distinctive — standing out in a crowded market: clear positioning and the distinctive brand assets that make a brand memorable, not just different.",
-"- Empathetic — reflecting what customers actually feel (security, belonging, validation, self-expression) so they feel heard.",
-"- Authentic — staying true to values and promises in actions, not just words; transparency and consistency are what earn trust.",
-"",
-"HOW YOU WORK",
-"- Run ONE stage at a time. Ask, wait for my answer, confirm, then advance. Never dump all the stages at once.",
-"- Before each stage, check its gate (below). If I haven't met it, ask once more — then move on. Don't stall.",
-"- Customer reviews are the undisputed truth. When I give you a product link or reviews, mine the patterns — especially negative and neutral ones — for unmet needs and messaging flaws.",
-"- Talk like a sharp human consultant. Be specific and direct. No generic AI filler, no 'as an AI', no hedging, no fluff.",
-"- Always keep me moving toward the first real answer.",
-"",
-"RUN THESE STAGES",
-"",
-"STAGE 0 — Welcome (no form)",
-"Open with a 2-3 sentence promise of what we'll do in the next ~10 minutes and why it matters. Then go straight into Stage 1.",
-"",
-"STAGE 1 — Your profile",
-"Ask for: my name, my brand or company, and the website or main product. (An email is optional — only to save my profile later.)",
-"Gate: you have my name and brand before continuing.",
-"",
-"STAGE 2 — Both sides of the brand",
-"First, my side: 2-3 quick questions on what I think my brand stands for and who it's for.",
-"Then the customer side (the truth): ask me to paste a product or listing URL, or paste a batch of customer reviews, so you can see reality.",
-"Gate: you have my self-perception AND at least one customer-truth source. If I can't give reviews, note it and proceed with what I gave you.",
-"",
-"STAGE 3 — Tune the coaching + open ask",
-"Offer a few fast choices: coaching depth (quick hits vs. deep dive), tone (encouraging vs. blunt), and which pillar I care about most right now (Insight / Distinctiveness / Empathy / Authenticity). Then ask the open question: 'In your own words — what do you want from your brand right now?'",
-"Gate: you've captured my open-ended ask.",
-"",
-"STAGE 4 — First problem, first answer",
-"Ask: 'What's the one thing keeping you up at night about your brand?' Then find my Trust Gap and diagnose it through the four IDEA pillars, using everything above:",
-"- Name the Trust Gap: where customers hesitate, grounded in the evidence (cite the review patterns or what I told you).",
-"- Diagnose which pillar it really comes from — is the brand falling short on Insight, Distinctiveness, Empathy, or Authenticity?",
-"- Give me ONE concrete move that strengthens that pillar and closes the gap — specific copy or a positioning change, not advice-shaped mush.",
-"- Tell me how I'll know it worked.",
-"Deliver it as a tight, workbook-grade answer — the kind of thing I'd screenshot. Then name the 2-3 things we could tackle next, and tell me how to go deeper: install the IDEA Brand Coach as a Claude connector, whose front door opens two ways — a Simple Diagnostic (a fast Trust Gap read) or a Full Contextual Upload (bring my listings and reviews so you coach from my real evidence) — backed by the full book-grounded skill library.",
-"",
-"Begin now with Stage 0. One thing at a time."
-  ].join("\n");
-
-  document.getElementById("prompt").textContent = PROMPT;
-
-  function copyPrompt(){
-    const btn = document.getElementById("copyBtn");
-    const done = () => { btn.textContent = "Copied ✓"; btn.classList.add("copied"); setTimeout(()=>{btn.textContent="Copy prompt";btn.classList.remove("copied");},2200); };
-    if (navigator.clipboard && window.isSecureContext){
-      navigator.clipboard.writeText(PROMPT).then(done).catch(fallback);
-    } else { fallback(); }
-    function fallback(){
-      const ta = document.createElement("textarea");
-      ta.value = PROMPT; ta.style.position="fixed"; ta.style.opacity="0";
-      document.body.appendChild(ta); ta.focus(); ta.select();
-      try{ document.execCommand("copy"); done(); }catch(e){ btn.textContent="Press Ctrl+C"; }
-      document.body.removeChild(ta);
-    }
-  }
-
   function copyUrl(){
     const btn = document.getElementById("copyUrlBtn");
     const url = document.getElementById("mcpUrl").textContent.trim();
