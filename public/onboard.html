@@ -46,6 +46,20 @@
   .step p{font-size:14px;color:var(--mut)}
   .step code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-family:var(--font);font-size:13px}
 
+  /* CONNECT WALKTHROUGH */
+  .updated{display:inline-block;font-size:12px;font-weight:700;color:var(--mut);margin:-22px 0 26px;letter-spacing:.2px}
+  .updated b{color:var(--blk)}
+  .walk{display:flex;flex-direction:column;gap:18px}
+  .wstep{background:var(--wht);border:1px solid var(--line);border-radius:10px;padding:20px 22px}
+  .whead{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+  .whead .num{flex:none;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--blk);color:var(--wht);font-weight:900;font-size:14px}
+  .whead h3{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:3px}
+  .whead p{font-size:14px;color:var(--mut)}
+  .whead code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-family:var(--font);font-size:13px}
+  .shot{display:block;width:100%;border-radius:8px;box-shadow:0 6px 18px rgba(11,11,11,.10)}
+  .then{margin-top:24px;font-size:15px;color:var(--ink)}
+  .then code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-size:13px}
+
   /* PROMPT CARD */
   .prompt-card{background:var(--blk);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(11,11,11,.22);margin-top:28px}
   .prompt-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
@@ -121,21 +135,37 @@
   <span class="eyebrow">Start here</span>
   <h2>Add the IDEA Brand Coach to Claude</h2>
   <p class="sec-lede">Connect the coach once as a Claude connector &mdash; then it&rsquo;s always a click away, with the full book-grounded coaching library behind it. No account needed.</p>
-  <div class="steps">
-    <div class="step">
-      <span class="num">1</span>
-      <h3>Open connector settings</h3>
-      <p>In Claude (the desktop app or <code>claude.ai</code>), go to <strong>Settings &rarr; Connectors &rarr; Add custom connector</strong>.</p>
+  <p class="updated">Setup steps verified against Claude &mdash; <b>last updated June 14, 2026</b>. Claude&rsquo;s menus change; if yours looks different, the goal is the same: add a custom connector pointing at the URL below.</p>
+  <div class="walk">
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">1</span>
+        <div>
+          <h3>Open Settings</h3>
+          <p>In Claude (desktop or <code>claude.ai</code>), click your name in the bottom-left and choose <strong>Settings</strong>.</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-1-settings.png" alt="Claude account menu open with Settings highlighted" loading="lazy" />
     </div>
-    <div class="step">
-      <span class="num">2</span>
-      <h3>Add the coach</h3>
-      <p>Name it <strong>IDEA Brand Coach</strong> and paste the server URL below. No login required.</p>
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">2</span>
+        <div>
+          <h3>Connectors &rarr; Add custom connector</h3>
+          <p>Open <strong>Connectors</strong>, click the <strong>+</strong>, then <strong>Add custom connector</strong>. (In some Claude versions Connectors lives under <strong>Customize</strong>.)</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-2-add.png" alt="Connectors panel with the plus menu showing Add custom connector" loading="lazy" />
     </div>
-    <div class="step">
-      <span class="num">3</span>
-      <h3>Start coaching</h3>
-      <p>Open a new chat, run the <code>onboard</code> prompt, and pick <strong>Simple Diagnostic</strong> or <strong>Full Contextual Upload</strong>.</p>
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">3</span>
+        <div>
+          <h3>Paste the URL and click Add</h3>
+          <p>Name it <strong>IDEA Brand Coach</strong>, paste the <strong>Remote MCP server URL</strong> below, and click <strong>Add</strong>. No login required.</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-3-modal.png" alt="Add custom connector dialog with Name and Remote MCP server URL fields" loading="lazy" />
     </div>
   </div>
 
@@ -147,6 +177,8 @@
     <pre id="mcpUrl" style="padding:20px 22px;max-height:none">https://ideabrandcoach.icodemybusiness.com/mcp</pre>
     <div class="prompt-foot">Prefer Claude Code? Run <code style="background:rgba(255,255,255,.08);color:#f6e8bf;padding:1px 6px;border-radius:3px">claude mcp add --transport http idea-brand-coach https://ideabrandcoach.icodemybusiness.com/mcp</code></div>
   </div>
+
+  <p class="then">Then open a new chat, run the <code>onboard</code> prompt, and pick <strong>Simple Diagnostic</strong> or <strong>Full Contextual Upload</strong>.</p>
 </section>
 
 <!-- IDEA DIMENSIONS -->

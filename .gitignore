@@ -3,6 +3,8 @@
 
 # Playwright test screenshots
 *.png
+# ...but track committed onboarding page assets (real connector-setup screenshots)
+!public/onboard-assets/*.png
 
 # Logs
 logs
@@ -15,8 +17,13 @@ lerna-debug.log*
 
 node_modules
 dist
+dist-mcp
 dist-ssr
 *.local
+
+# Python build artifacts (from docs/spec build scripts)
+__pycache__/
+*.pyc
 
 # Editor directories and files
 .vscode/*
