@@ -15,6 +15,7 @@ import {
   type HostConfig,
 } from './config.js';
 import { IvosLedgerClient } from './ivos/client.js';
+import { registerOnboard } from './tools/onboard.js';
 import { registerHealthTool } from './tools/health.js';
 import { registerListAssetsTool } from './tools/listAssets.js';
 import { registerGetAssetTool } from './tools/getAsset.js';
@@ -47,6 +48,11 @@ export function createServer(
 
   const ivos = ivosClient ?? new IvosLedgerClient(config);
   const edge = edgeFn ?? new EdgeFnClient(config);
+
+  // Anonymous front door: the branded `onboard` prompt + `onboard_choose` router.
+  // Requires no identity (it runs before any account exists); the two paths are
+  // walking-skeleton stubs that name what's coming next.
+  registerOnboard(server);
 
   // Gateway substrate + the consumed IV-OS asset-tracking surface: the STABLE
   // ledger reads, the change-log read, and the identity-gated writes (D5 resolved

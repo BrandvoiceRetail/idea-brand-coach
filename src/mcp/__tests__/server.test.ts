@@ -35,6 +35,8 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'health',
       'list_assets',
       'log_asset',
+      'onboard_choose',
+      'onboard_panel',
       'publish_filter_check',
       'record_assessment',
       'run_trust_gap',

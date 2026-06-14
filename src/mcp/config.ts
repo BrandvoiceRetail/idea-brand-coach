@@ -15,6 +15,13 @@ export const SERVER_VERSION = '0.1.0';
  * initiatives. This host is the gateway + the consumed IV-OS asset-tracking surface.
  */
 export const SERVER_INSTRUCTIONS = [
+  // POSTURE — leads everything: this gateway coaches, it does not auto-evaluate.
+  'POSTURE: This is a coach, not a form. Invite the user in and gather their brand story ONE',
+  'PIECE AT A TIME, conversationally — lead with the customer and the heart of the brand. NEVER',
+  'evaluate, score, or generate before the user has shared real context. NEVER call a',
+  'diagnostic/scoring/generation tool with values the user did not explicitly provide — do not',
+  'infer, default, or invent inputs (e.g. never assume dimension ratings). If a tool errors or',
+  "lacks inputs, ASK for what's missing; never fabricate or hand-compute a result to avoid stalling.",
   'Brand-Coach MCP gateway. Brand-coach OWNS the generative/strategy front (diagnostics,',
   'concept generation, publish-filter, asset drafting, test design); IV-OS OWNS the asset/test',
   'ledger + knowledge reads. This host currently exposes: `health`; the IV-OS ledger reads',

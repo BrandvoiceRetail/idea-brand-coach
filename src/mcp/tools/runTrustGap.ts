@@ -27,7 +27,7 @@ export function registerRunTrustGapTool(server: McpServer): void {
     {
       title: 'Run Trust Gap™ scorecard',
       description:
-        'Diagnostic (convenience): compute the Trust Gap™ 4-dimension scorecard from IDEA dimension scores (0-100 each) using the exact same deterministic engine as the app (Calculation Parity). Returns per-dimension /25 rescaling, bands, primary gap, and routing.',
+        'Diagnostic (convenience): compute the Trust Gap™ 4-dimension scorecard from IDEA dimension scores (0-100 each) using the exact same deterministic engine as the app (Calculation Parity). Returns per-dimension /25 rescaling, bands, primary gap, and routing. Only call AFTER the user has explicitly worked through all four IDEA dimensions with you. Never infer, default, or invent the four values; if you lack a real answer for any dimension, ask — do not score.',
       inputSchema,
     },
     async ({ insight, distinctive, empathetic, authentic, overall }) => {
