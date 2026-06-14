@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>IDEA Brand Coach — Start Your Onboarding in Claude</title>
-<meta name="description" content="Copy one prompt into a new Claude session and the IDEA Brand Coach — built on Trevor Bradford's book What Captures the Heart Goes in the Cart — guides you from cold start to your Trust Gap in about 10 minutes." />
+<title>IDEA Brand Coach — Add the Coach to Claude</title>
+<meta name="description" content="Connect the IDEA Brand Coach to Claude once, then chat with it in plain language. Built on Trevor Bradford's book What Captures the Heart Goes in the Cart, it finds your Trust Gap and helps you close it." />
 <style>
   :root{
     --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -28,44 +28,56 @@
 
   /* LAYOUT */
   .wrap{max-width:920px;margin:0 auto;padding:0 24px}
-  section{padding:64px 0}
+  section{padding:56px 0}
   .eyebrow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--gld);margin-bottom:18px}
 
   /* HERO */
-  .hero{padding-top:72px;padding-bottom:40px;text-align:center}
-  .hero h1{font-size:clamp(34px,5.5vw,58px);font-weight:900;letter-spacing:-1.6px;line-height:1.02;color:var(--blk);max-width:760px;margin:0 auto 20px}
+  .hero{padding-top:72px;padding-bottom:32px;text-align:center}
+  .hero h1{font-size:clamp(32px,5vw,56px);font-weight:900;letter-spacing:-1.6px;line-height:1.03;color:var(--blk);max-width:780px;margin:0 auto 20px}
   .hero h1 .accent{color:var(--gld)}
-  .hero .lede{font-size:clamp(16px,2.2vw,20px);color:var(--mut);max-width:620px;margin:0 auto 14px;font-weight:500}
+  .hero .lede{font-size:clamp(16px,2.2vw,20px);color:var(--mut);max-width:640px;margin:0 auto 16px;font-weight:500}
+  .hero .lede em{color:var(--ink);font-style:italic}
   .hero .timebox{font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--blk)}
 
-  /* STEPS */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0 8px}
+  /* CONNECT CARD */
+  .connect{background:var(--blk);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(11,11,11,.22);margin-top:28px}
+  .connect-head{display:flex;align-items:center;gap:10px;padding:16px 22px;border-bottom:1px solid rgba(255,255,255,.1);color:var(--wht);font-size:13px;font-weight:800;letter-spacing:.5px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--gld)}
+  .connect-body{padding:22px}
+  .url-row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+  .url{flex:1;min-width:240px;display:flex;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:0 14px;color:#e9e7e1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;overflow:auto;white-space:nowrap}
+  .copy-btn{background:var(--gld);color:var(--blk);font-family:var(--font);font-size:14px;font-weight:800;padding:12px 22px;border:none;border-radius:6px;cursor:pointer;min-height:46px;white-space:nowrap;transition:background .15s,transform .05s}
+  .copy-btn:hover{background:#e8ac28}
+  .copy-btn:active{transform:translateY(1px)}
+  .copy-btn.copied{background:var(--d);color:var(--wht)}
+  .methods{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  .method{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:16px 16px 18px}
+  .method h4{color:var(--wht);font-size:14px;font-weight:800;letter-spacing:-.2px;margin-bottom:8px}
+  .method p{color:rgba(255,255,255,.62);font-size:13px;line-height:1.5}
+  .method ol{color:rgba(255,255,255,.66);font-size:13px;line-height:1.6;padding-left:18px}
+  .cmd{display:flex;gap:8px;align-items:stretch;margin-top:10px}
+  .cmd code{flex:1;min-width:0;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);border-radius:5px;padding:9px 11px;color:#e9e7e1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;overflow:auto;white-space:nowrap}
+  .copy-sm{background:transparent;color:var(--gld);border:1px solid var(--gld);border-radius:5px;font-family:var(--font);font-weight:800;font-size:12px;padding:0 12px;cursor:pointer;white-space:nowrap}
+  .copy-sm:hover{background:var(--gld);color:var(--blk)}
+  .copy-sm.copied{background:var(--d);border-color:var(--d);color:var(--wht)}
+  .connect-foot{padding:13px 22px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);font-size:12px;text-align:center}
+
+  /* SECTION HEADINGS */
+  h2{font-size:clamp(26px,3.6vw,38px);font-weight:900;letter-spacing:-1px;line-height:1.05;margin-bottom:10px;color:var(--blk)}
+  .sec-lede{color:var(--mut);font-size:16px;max-width:620px;margin-bottom:32px}
+
+  /* FIRST SESSION STEPS */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   .step{background:var(--wht);border:1px solid var(--line);border-radius:8px;padding:22px 20px;text-align:left}
   .step .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--blk);color:var(--wht);font-weight:900;font-size:14px;margin-bottom:12px}
   .step h3{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px}
   .step p{font-size:14px;color:var(--mut)}
   .step code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-family:var(--font);font-size:13px}
 
-  /* PROMPT CARD */
-  .prompt-card{background:var(--blk);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(11,11,11,.22);margin-top:28px}
-  .prompt-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
-  .prompt-head .label{display:flex;align-items:center;gap:10px;color:var(--wht);font-size:13px;font-weight:800;letter-spacing:.5px}
-  .dot{width:10px;height:10px;border-radius:50%;background:var(--gld)}
-  .copy-btn{background:var(--gld);color:var(--blk);font-family:var(--font);font-size:14px;font-weight:800;padding:11px 22px;border:none;border-radius:4px;cursor:pointer;min-height:42px;transition:background .15s,transform .05s}
-  .copy-btn:hover{background:#e8ac28}
-  .copy-btn:active{transform:translateY(1px)}
-  .copy-btn.copied{background:var(--d);color:var(--wht)}
-  pre#prompt{margin:0;padding:22px 22px 26px;max-height:380px;overflow:auto;color:#e9e7e1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.62;white-space:pre-wrap;word-break:break-word;text-align:left}
-  pre#prompt::-webkit-scrollbar{width:10px}
-  pre#prompt::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:6px}
-  .prompt-foot{padding:14px 20px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.55);font-size:12px;text-align:center}
-
   /* DIMENSIONS */
   .dim-band{background:var(--blk);color:var(--wht)}
   .dim-band .eyebrow{color:var(--gld)}
   .dim-band h2{color:var(--wht)}
-  h2{font-size:clamp(26px,3.6vw,38px);font-weight:900;letter-spacing:-1px;line-height:1.05;margin-bottom:10px;color:var(--blk)}
-  .sec-lede{color:var(--mut);font-size:16px;max-width:600px;margin-bottom:34px}
   .dim-band .sec-lede{color:rgba(255,255,255,.62)}
   .dims{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
   .dim{border-radius:8px;padding:20px;background:rgba(255,255,255,.04);border-top:4px solid}
@@ -77,12 +89,10 @@
   .dim.e{border-color:var(--e)} .dim.e .ltr{color:var(--e)}
   .dim.a{border-color:var(--a)} .dim.a .ltr{color:var(--a)}
 
-  /* STAGES (what to expect) */
-  .stages{display:grid;gap:12px}
-  .stg{display:grid;grid-template-columns:64px 1fr;align-items:start;gap:18px;background:var(--wht);border:1px solid var(--line);border-radius:8px;padding:20px 22px}
-  .stg .badge{font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--gld);padding-top:3px}
-  .stg h4{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
-  .stg p{font-size:14px;color:var(--mut)}
+  /* FALLBACK NOTE */
+  .note{background:var(--wht);border:1px solid var(--line);border-left:4px solid var(--gld);border-radius:8px;padding:18px 20px;font-size:14px;color:var(--mut)}
+  .note strong{color:var(--ink)}
+  .note code{background:var(--gld-lt);color:var(--blk);font-weight:700;padding:1px 6px;border-radius:3px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
 
   /* FOOTER */
   footer{background:var(--blk);color:rgba(255,255,255,.55);padding:34px;text-align:center;font-size:12.5px}
@@ -90,10 +100,9 @@
   footer a{color:var(--gld);text-decoration:none}
 
   @media(max-width:760px){
-    .steps,.dims{grid-template-columns:1fr}
-    .stg{grid-template-columns:1fr;gap:6px}
+    .steps,.dims,.methods{grid-template-columns:1fr}
     nav{padding:0 20px}
-    section{padding:48px 0}
+    section{padding:44px 0}
   }
 </style>
 </head>
@@ -105,61 +114,72 @@
     <div class="logo-rule"></div>
     <div class="logo-sub">Strategic Brand Creation</div>
   </div>
-  <div class="nav-tag">Brand Coach &middot; Onboarding</div>
+  <div class="nav-tag">Brand Coach &middot; Connect</div>
 </nav>
 
 <!-- HERO -->
 <header class="hero wrap">
   <span class="eyebrow">Your coach, inside Claude</span>
-  <h1>One prompt. Your <span class="accent">Trust Gap</span> in about 10 minutes.</h1>
-  <p class="lede"><em>What captures the heart goes in the cart.</em> Paste the prompt below into a new Claude session and the IDEA Brand Coach &mdash; built on Trevor Bradford&rsquo;s book of the same name &mdash; walks you from cold start to your first real brand insight: the gap between how you see your brand and how your customers actually experience it.</p>
-  <p class="timebox">No setup &middot; No account first &middot; Just paste &amp; go</p>
+  <h1>Add your IDEA Brand Coach <span class="accent">to Claude</span>.</h1>
+  <p class="lede"><em>What captures the heart goes in the cart.</em> Connect once, then talk to the coach in plain language. Built on Trevor Bradford&rsquo;s book of the same name, it finds your <strong>Trust Gap</strong> &mdash; the distance between how you see your brand and how your customers actually experience it &mdash; and helps you close it.</p>
+  <p class="timebox">One connector &middot; Works in Claude Code, Desktop &amp; claude.ai &middot; No account to start</p>
 </header>
 
-<!-- STEPS -->
+<!-- CONNECT -->
 <section class="wrap" style="padding-top:8px">
-  <div class="steps">
-    <div class="step">
-      <span class="num">1</span>
-      <h3>Open Claude</h3>
-      <p>Start a new session in <strong>Claude Code</strong>, the Claude app, or <code>claude.ai</code>.</p>
-    </div>
-    <div class="step">
-      <span class="num">2</span>
-      <h3>Paste the prompt</h3>
-      <p>Hit <strong>Copy prompt</strong> below and paste it as your first message. Send it.</p>
-    </div>
-    <div class="step">
-      <span class="num">3</span>
-      <h3>Get coached</h3>
-      <p>Answer as it guides you &mdash; one question at a time &mdash; and walk away with your Trust Gap and first move.</p>
-    </div>
-  </div>
+  <div class="connect">
+    <div class="connect-head"><span class="dot"></span> ADD THE CONNECTOR</div>
+    <div class="connect-body">
+      <div class="url-row">
+        <div class="url" id="mcpUrl">https://ideabrandcoach.icodemybusiness.com/mcp</div>
+        <button class="copy-btn" data-copy="https://ideabrandcoach.icodemybusiness.com/mcp">Copy URL</button>
+      </div>
 
-  <!-- PROMPT -->
-  <div class="prompt-card">
-    <div class="prompt-head">
-      <span class="label"><span class="dot"></span> ONBOARDING PROMPT</span>
-      <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy prompt</button>
+      <div class="methods">
+        <div class="method">
+          <h4>Claude Desktop &amp; claude.ai</h4>
+          <ol>
+            <li>Open <strong>Settings &rarr; Connectors</strong></li>
+            <li>Click <strong>Add custom connector</strong></li>
+            <li>Paste the URL above and save</li>
+          </ol>
+        </div>
+        <div class="method">
+          <h4>Claude Code</h4>
+          <p>Run this in your terminal:</p>
+          <div class="cmd">
+            <code>claude mcp add --transport http brand-coach https://ideabrandcoach.icodemybusiness.com/mcp</code>
+            <button class="copy-sm" data-copy="claude mcp add --transport http brand-coach https://ideabrandcoach.icodemybusiness.com/mcp">Copy</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <pre id="prompt"></pre>
-    <div class="prompt-foot">Paste this as the first message in a fresh Claude session.</div>
+    <div class="connect-foot">Anonymous front door &mdash; you can start without an account.</div>
   </div>
 </section>
 
-<!-- WHAT TO EXPECT -->
+<!-- FIRST SESSION -->
 <section class="wrap" style="padding-top:8px">
-  <span class="eyebrow">What the session does</span>
-  <h2>Five quick stages, one real answer</h2>
-  <p class="sec-lede">The coach keeps it tight on purpose &mdash; everything is built to get you to your first workbook-grade insight fast.</p>
-  <div class="stages">
-    <div class="stg"><div class="badge">Stage 0</div><div><h4>Welcome</h4><p>A 10-second promise of what you&rsquo;ll build together &mdash; no form, no friction.</p></div></div>
-    <div class="stg"><div class="badge">Stage 1</div><div><h4>Your profile</h4><p>Name, brand, website. Just enough to make the coaching yours.</p></div></div>
-    <div class="stg"><div class="badge">Stage 2</div><div><h4>Both sides of the brand</h4><p>How you see your brand &mdash; then the customer truth from your reviews or a product link.</p></div></div>
-    <div class="stg"><div class="badge">Stage 3</div><div><h4>Tune it</h4><p>A couple of preferences, plus an open box: tell the coach what you want, in your words.</p></div></div>
-    <div class="stg"><div class="badge">Stage 4</div><div><h4>First problem &rarr; first answer</h4><p>Name what&rsquo;s keeping you up at night. The coach runs the IDEA loop and hands you a concrete move to close your Trust Gap.</p></div></div>
+  <span class="eyebrow">Then start coaching</span>
+  <h2>Your first session</h2>
+  <p class="sec-lede">Once the connector is added, everything happens in a normal Claude chat.</p>
+  <div class="steps">
+    <div class="step">
+      <span class="num">1</span>
+      <h3>Open a new chat</h3>
+      <p>Run the <code>onboard</code> prompt &mdash; or just say &ldquo;onboard me with the IDEA Brand Coach.&rdquo;</p>
+    </div>
+    <div class="step">
+      <span class="num">2</span>
+      <h3>Pick how to start</h3>
+      <p><strong>Simple Diagnostic</strong> &mdash; a guided conversation. Or <strong>Full Contextual Upload</strong> &mdash; bring your listings &amp; reviews.</p>
+    </div>
+    <div class="step">
+      <span class="num">3</span>
+      <h3>See your Trust Gap</h3>
+      <p>The coach reflects back where trust is leaking &mdash; and the first move to close it.</p>
+    </div>
   </div>
-  <p style="margin-top:20px;font-size:14px;color:var(--mut)">Want the full version? The IDEA Brand Coach also runs as a Claude connector with two front doors &mdash; a <strong>Simple Diagnostic</strong> for a fast Trust Gap read, or a <strong>Full Contextual Upload</strong> that coaches from your real listings and reviews &mdash; backed by the complete, book-grounded coaching library.</p>
 </section>
 
 <!-- IDEA DIMENSIONS -->
@@ -167,13 +187,21 @@
   <div class="wrap">
     <span class="eyebrow">The framework behind it</span>
     <h2>IDEA</h2>
-    <p class="sec-lede">The four dimensions at the heart of Trevor Bradford&rsquo;s book <em>What Captures the Heart Goes in the Cart</em> &mdash; the complete framework, now running your session.</p>
+    <p class="sec-lede">The four parts of trust Trevor Bradford has built brands on for 35 years &mdash; the lens the coach works through with you.</p>
     <div class="dims">
-      <div class="dim i"><div class="ltr">I</div><div class="nm">Identify</div><p>Where customers hesitate before they feel confident enough to buy &mdash; your Trust Gap.</p></div>
-      <div class="dim d"><div class="ltr">D</div><div class="nm">Discover</div><p>What customer reality actually says. Reviews are the undisputed truth.</p></div>
-      <div class="dim e"><div class="ltr">E</div><div class="nm">Execute</div><p>The specific brand and messaging move that closes the gap.</p></div>
-      <div class="dim a"><div class="ltr">A</div><div class="nm">Analyze</div><p>How you&rsquo;ll know it worked &mdash; and what to tune next.</p></div>
+      <div class="dim i"><div class="ltr">I</div><div class="nm">Insight</div><p>Understand what your customer truly wants &mdash; the unmet need beneath the purchase.</p></div>
+      <div class="dim d"><div class="ltr">D</div><div class="nm">Distinctive</div><p>Stand apart in a way only a brand like yours could &mdash; not louder, different.</p></div>
+      <div class="dim e"><div class="ltr">E</div><div class="nm">Empathetic</div><p>Meet customers in their world &mdash; speak to the feeling, not just the feature.</p></div>
+      <div class="dim a"><div class="ltr">A</div><div class="nm">Authentic</div><p>Make promises your brand actually keeps, so trust compounds with every buy.</p></div>
     </div>
+  </div>
+</section>
+
+<!-- FALLBACK -->
+<section class="wrap" style="padding-top:8px">
+  <div class="note">
+    <strong>Power-user fallback.</strong> On a stdio-only Claude setup, bridge to the connector with
+    <code>npx mcp-remote https://ideabrandcoach.icodemybusiness.com/mcp</code>.
   </div>
 </section>
 
@@ -183,74 +211,28 @@
 </footer>
 
 <script>
-  // The onboarding prompt — single source of truth for both the on-page preview and the copy action.
-  const PROMPT = [
-"You are the IDEA Brand Coach — a direct, experienced brand strategist running my onboarding inside this chat. You are built on Trevor Bradford's IDEA framework (Identify, Discover, Execute, Analyze) from his book \"What Captures the Heart Goes in the Cart\" — every concept and tactic you use traces back to it.",
-"",
-"YOUR GOAL",
-"Get me from a cold start to my first real brand insight — my Trust Gap and the single best move to close it — in about 10 minutes. That first answer is the whole point. Everything before it is setup, so keep it fast.",
-"",
-"THE CORE IDEA",
-"What captures the heart goes in the cart — customers buy brands that feel right. The Trust Gap is the distance between how I see my brand and how my customers actually experience it. That gap is where sales leak. Your job is to find it from evidence, then coach me to close it.",
-"",
-"THE FRAMEWORK",
-"- Identify — where customers hesitate before they feel confident enough to buy",
-"- Discover — what customer reality (especially reviews) actually says",
-"- Execute — the specific brand or messaging move that closes the gap",
-"- Analyze — how we'll measure whether it worked",
-"",
-"HOW YOU WORK",
-"- Run ONE stage at a time. Ask, wait for my answer, confirm, then advance. Never dump all the stages at once.",
-"- Before each stage, check its gate (below). If I haven't met it, ask once more — then move on. Don't stall.",
-"- Customer reviews are the undisputed truth. When I give you a product link or reviews, mine the patterns — especially negative and neutral ones — for unmet needs and messaging flaws.",
-"- Talk like a sharp human consultant. Be specific and direct. No generic AI filler, no 'as an AI', no hedging, no fluff.",
-"- Always keep me moving toward the first real answer.",
-"",
-"RUN THESE STAGES",
-"",
-"STAGE 0 — Welcome (no form)",
-"Open with a 2-3 sentence promise of what we'll do in the next ~10 minutes and why it matters. Then go straight into Stage 1.",
-"",
-"STAGE 1 — Your profile",
-"Ask for: my name, my brand or company, and the website or main product. (An email is optional — only to save my profile later.)",
-"Gate: you have my name and brand before continuing.",
-"",
-"STAGE 2 — Both sides of the brand",
-"First, my side: 2-3 quick questions on what I think my brand stands for and who it's for.",
-"Then the customer side (the truth): ask me to paste a product or listing URL, or paste a batch of customer reviews, so you can see reality.",
-"Gate: you have my self-perception AND at least one customer-truth source. If I can't give reviews, note it and proceed with what I gave you.",
-"",
-"STAGE 3 — Tune the coaching + open ask",
-"Offer a few fast choices: coaching depth (quick hits vs. deep dive), tone (encouraging vs. blunt), and which dimension I care about most right now (Identify / Discover / Execute / Analyze). Then ask the open question: 'In your own words — what do you want from your brand right now?'",
-"Gate: you've captured my open-ended ask.",
-"",
-"STAGE 4 — First problem, first answer",
-"Ask: 'What's the one thing keeping you up at night about your brand?' Then run the IDEA loop on it using everything above:",
-"- Identify the most likely Trust Gap (where customers hesitate).",
-"- Discover the evidence (cite the review patterns or what I told you).",
-"- Execute: give me ONE concrete move — specific copy or a positioning change, not advice-shaped mush.",
-"- Analyze: tell me how I'll know if it worked.",
-"Deliver it as a tight, workbook-grade answer — the kind of thing I'd screenshot. Then name the 2-3 things we could tackle next, and tell me how to go deeper: install the IDEA Brand Coach as a Claude connector, whose front door opens two ways — a Simple Diagnostic (a fast Trust Gap read) or a Full Contextual Upload (bring my listings and reviews so you coach from my real evidence) — backed by the full book-grounded skill library.",
-"",
-"Begin now with Stage 0. One thing at a time."
-  ].join("\n");
-
-  document.getElementById("prompt").textContent = PROMPT;
-
-  function copyPrompt(){
-    const btn = document.getElementById("copyBtn");
-    const done = () => { btn.textContent = "Copied ✓"; btn.classList.add("copied"); setTimeout(()=>{btn.textContent="Copy prompt";btn.classList.remove("copied");},2200); };
+  // One handler for every [data-copy] button (URL + the Claude Code command).
+  function flash(btn, label){
+    const original = btn.textContent;
+    btn.textContent = label; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 2000);
+  }
+  function copyText(text, btn){
+    const done = () => flash(btn, btn.classList.contains('copy-sm') ? 'Copied' : 'Copied ✓');
     if (navigator.clipboard && window.isSecureContext){
-      navigator.clipboard.writeText(PROMPT).then(done).catch(fallback);
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
     } else { fallback(); }
     function fallback(){
-      const ta = document.createElement("textarea");
-      ta.value = PROMPT; ta.style.position="fixed"; ta.style.opacity="0";
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.focus(); ta.select();
-      try{ document.execCommand("copy"); done(); }catch(e){ btn.textContent="Press Ctrl+C"; }
+      try { document.execCommand('copy'); done(); } catch(e) { btn.textContent = 'Press Ctrl+C'; }
       document.body.removeChild(ta);
     }
   }
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', () => copyText(btn.getAttribute('data-copy'), btn));
+  });
 </script>
 </body>
 </html>
