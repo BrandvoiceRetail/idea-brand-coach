@@ -42,6 +42,11 @@ jobs:
       - run: cp dist/index.html dist/404.html
 
       - uses: actions/configure-pages@v5
+        with:
+          # Enable Pages (build_type=workflow) via GITHUB_TOKEN if not already on.
+          # Repo has no Pages site yet and no one here has repo-admin to toggle it
+          # in Settings, so the workflow token enables it.
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
