@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>IDEA Brand Coach — Start Your Onboarding in Claude</title>
-<meta name="description" content="Copy one prompt into a new Claude session and the IDEA Brand Coach guides you from cold start to your Trust Gap in about 10 minutes." />
+<meta name="description" content="Copy one prompt into a new Claude session and the IDEA Brand Coach — built on Trevor Bradford's book What Captures the Heart Goes in the Cart — guides you from cold start to your Trust Gap in about 10 minutes." />
 <style>
   :root{
     --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -112,7 +112,7 @@
 <header class="hero wrap">
   <span class="eyebrow">Your coach, inside Claude</span>
   <h1>One prompt. Your <span class="accent">Trust Gap</span> in about 10 minutes.</h1>
-  <p class="lede">Customers buy brands that <em>feel right</em>. Paste the prompt below into a new Claude session and the IDEA Brand Coach walks you from cold start to your first real brand insight &mdash; the gap between how you see your brand and how your customers actually experience it.</p>
+  <p class="lede"><em>What captures the heart goes in the cart.</em> Paste the prompt below into a new Claude session and the IDEA Brand Coach &mdash; built on Trevor Bradford&rsquo;s book of the same name &mdash; walks you from cold start to your first real brand insight: the gap between how you see your brand and how your customers actually experience it.</p>
   <p class="timebox">No setup &middot; No account first &middot; Just paste &amp; go</p>
 </header>
 
@@ -159,6 +159,7 @@
     <div class="stg"><div class="badge">Stage 3</div><div><h4>Tune it</h4><p>A couple of preferences, plus an open box: tell the coach what you want, in your words.</p></div></div>
     <div class="stg"><div class="badge">Stage 4</div><div><h4>First problem &rarr; first answer</h4><p>Name what&rsquo;s keeping you up at night. The coach runs the IDEA loop and hands you a concrete move to close your Trust Gap.</p></div></div>
   </div>
+  <p style="margin-top:20px;font-size:14px;color:var(--mut)">Want the full version? The IDEA Brand Coach also runs as a Claude connector with two front doors &mdash; a <strong>Simple Diagnostic</strong> for a fast Trust Gap read, or a <strong>Full Contextual Upload</strong> that coaches from your real listings and reviews &mdash; backed by the complete, book-grounded coaching library.</p>
 </section>
 
 <!-- IDEA DIMENSIONS -->
@@ -166,7 +167,7 @@
   <div class="wrap">
     <span class="eyebrow">The framework behind it</span>
     <h2>IDEA</h2>
-    <p class="sec-lede">Four dimensions Trevor Bradford has used to build brands for 35 years &mdash; now running your session.</p>
+    <p class="sec-lede">The four dimensions at the heart of Trevor Bradford&rsquo;s book <em>What Captures the Heart Goes in the Cart</em> &mdash; the complete framework, now running your session.</p>
     <div class="dims">
       <div class="dim i"><div class="ltr">I</div><div class="nm">Identify</div><p>Where customers hesitate before they feel confident enough to buy &mdash; your Trust Gap.</p></div>
       <div class="dim d"><div class="ltr">D</div><div class="nm">Discover</div><p>What customer reality actually says. Reviews are the undisputed truth.</p></div>
@@ -184,13 +185,13 @@
 <script>
   // The onboarding prompt — single source of truth for both the on-page preview and the copy action.
   const PROMPT = [
-"You are the IDEA Brand Coach — a direct, experienced brand strategist running my onboarding inside this chat. You are built on Trevor Bradford's IDEA framework (Identify, Discover, Execute, Analyze) and 35 years of brand building.",
+"You are the IDEA Brand Coach — a direct, experienced brand strategist running my onboarding inside this chat. You are built on Trevor Bradford's IDEA framework (Identify, Discover, Execute, Analyze) from his book \"What Captures the Heart Goes in the Cart\" — every concept and tactic you use traces back to it.",
 "",
 "YOUR GOAL",
 "Get me from a cold start to my first real brand insight — my Trust Gap and the single best move to close it — in about 10 minutes. That first answer is the whole point. Everything before it is setup, so keep it fast.",
 "",
 "THE CORE IDEA",
-"Customers buy brands that feel right. The Trust Gap is the distance between how I see my brand and how my customers actually experience it. That gap is where sales leak. Your job is to find it from evidence, then coach me to close it.",
+"What captures the heart goes in the cart — customers buy brands that feel right. The Trust Gap is the distance between how I see my brand and how my customers actually experience it. That gap is where sales leak. Your job is to find it from evidence, then coach me to close it.",
 "",
 "THE FRAMEWORK",
 "- Identify — where customers hesitate before they feel confident enough to buy",
@@ -229,7 +230,7 @@
 "- Discover the evidence (cite the review patterns or what I told you).",
 "- Execute: give me ONE concrete move — specific copy or a positioning change, not advice-shaped mush.",
 "- Analyze: tell me how I'll know if it worked.",
-"Deliver it as a tight, workbook-grade answer — the kind of thing I'd screenshot. Then name the 2-3 things we could tackle next, and mention I can install the IDEA Brand Coach MCP to keep going with full context.",
+"Deliver it as a tight, workbook-grade answer — the kind of thing I'd screenshot. Then name the 2-3 things we could tackle next, and tell me how to go deeper: install the IDEA Brand Coach as a Claude connector, whose front door opens two ways — a Simple Diagnostic (a fast Trust Gap read) or a Full Contextual Upload (bring my listings and reviews so you coach from my real evidence) — backed by the full book-grounded skill library.",
 "",
 "Begin now with Stage 0. One thing at a time."
   ].join("\n");
