@@ -157,7 +157,7 @@
     <div class="stg"><div class="badge">Stage 1</div><div><h4>Your profile</h4><p>Name, brand, website. Just enough to make the coaching yours.</p></div></div>
     <div class="stg"><div class="badge">Stage 2</div><div><h4>Both sides of the brand</h4><p>How you see your brand &mdash; then the customer truth from your reviews or a product link.</p></div></div>
     <div class="stg"><div class="badge">Stage 3</div><div><h4>Tune it</h4><p>A couple of preferences, plus an open box: tell the coach what you want, in your words.</p></div></div>
-    <div class="stg"><div class="badge">Stage 4</div><div><h4>First problem &rarr; first answer</h4><p>Name what&rsquo;s keeping you up at night. The coach runs the IDEA loop and hands you a concrete move to close your Trust Gap.</p></div></div>
+    <div class="stg"><div class="badge">Stage 4</div><div><h4>First problem &rarr; first answer</h4><p>Name what&rsquo;s keeping you up at night. The coach works the four IDEA pillars and hands you a concrete move to close your Trust Gap.</p></div></div>
   </div>
   <p style="margin-top:20px;font-size:14px;color:var(--mut)">Want the full version? The IDEA Brand Coach also runs as a Claude connector with two front doors &mdash; a <strong>Simple Diagnostic</strong> for a fast Trust Gap read, or a <strong>Full Contextual Upload</strong> that coaches from your real listings and reviews &mdash; backed by the complete, book-grounded coaching library.</p>
 </section>
@@ -174,6 +174,39 @@
       <div class="dim e"><div class="ltr">E</div><div class="nm">Empathetic</div><p>Tuning into what customers actually feel &mdash; security, belonging, validation &mdash; so they feel heard and understood.</p></div>
       <div class="dim a"><div class="ltr">A</div><div class="nm">Authentic</div><p>Staying true to your values and promises &mdash; in actions, not just words. Transparency and consistency earn trust.</p></div>
     </div>
+  </div>
+</section>
+
+<!-- CONNECT THE FULL COACH (MCP) -->
+<section class="wrap" style="padding-top:8px">
+  <span class="eyebrow">Go further</span>
+  <h2>Connect the full coach in Claude</h2>
+  <p class="sec-lede">The copy-paste prompt above is the quick start. For the full experience &mdash; the two front doors plus the complete, book-grounded coaching library &mdash; add the IDEA Brand Coach to Claude as a connector. One time, no account.</p>
+  <div class="steps">
+    <div class="step">
+      <span class="num">1</span>
+      <h3>Open connector settings</h3>
+      <p>In Claude (the desktop app or <code>claude.ai</code>), go to <strong>Settings &rarr; Connectors &rarr; Add custom connector</strong>.</p>
+    </div>
+    <div class="step">
+      <span class="num">2</span>
+      <h3>Add the coach</h3>
+      <p>Name it <strong>IDEA Brand Coach</strong> and paste the server URL below. No login required.</p>
+    </div>
+    <div class="step">
+      <span class="num">3</span>
+      <h3>Start coaching</h3>
+      <p>Open a new chat, run the <code>onboard</code> prompt, and pick <strong>Simple Diagnostic</strong> or <strong>Full Contextual Upload</strong>.</p>
+    </div>
+  </div>
+
+  <div class="prompt-card" style="margin-top:24px">
+    <div class="prompt-head">
+      <span class="label"><span class="dot"></span> MCP SERVER URL</span>
+      <button class="copy-btn" id="copyUrlBtn" onclick="copyUrl()">Copy URL</button>
+    </div>
+    <pre id="mcpUrl" style="padding:20px 22px;max-height:none">https://mcp.ideabrandcoach.icodemybusiness.com/mcp</pre>
+    <div class="prompt-foot">Prefer Claude Code? Run <code style="background:rgba(255,255,255,.08);color:#f6e8bf;padding:1px 6px;border-radius:3px">claude mcp add --transport http idea-brand-coach https://mcp.ideabrandcoach.icodemybusiness.com/mcp</code></div>
   </div>
 </section>
 
@@ -250,6 +283,15 @@
       try{ document.execCommand("copy"); done(); }catch(e){ btn.textContent="Press Ctrl+C"; }
       document.body.removeChild(ta);
     }
+  }
+
+  function copyUrl(){
+    const btn = document.getElementById("copyUrlBtn");
+    const url = document.getElementById("mcpUrl").textContent.trim();
+    const done = () => { btn.textContent = "Copied ✓"; btn.classList.add("copied"); setTimeout(()=>{btn.textContent="Copy URL";btn.classList.remove("copied");},2200); };
+    if (navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(url).then(done).catch(()=>{ btn.textContent="Press Ctrl+C"; });
+    } else { btn.textContent="Press Ctrl+C"; }
   }
 </script>
 </body>
