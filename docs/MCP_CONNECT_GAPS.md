@@ -5,28 +5,43 @@ The onboarding page (`public/onboard.html`, live at
 **IDEA Brand Coach** to Claude as a custom connector at:
 
 ```
-https://mcp.ideabrandcoach.icodemybusiness.com/mcp
+https://ideabrandcoach.icodemybusiness.com/mcp
 ```
 
+We reuse the **existing** static-site domain (no new subdomain/DNS) — the gateway is
+exposed via a **Caddy path route** on the current vhost: `/mcp*` reverse-proxies to the
+gateway; every other path stays the static `file_server`.
+
 Those are the *final* instructions — the intended end state. **Today they will not
-work yet:** the hosted endpoint doesn't exist and the two paths are stubs. This is the
-build list to make them true. (The copy-paste prompt on the page is the working path
-in the meantime.)
+work yet:** the gateway isn't hosted and the two paths are stubs. This is the build list
+to make them true. (The copy-paste prompt on the page is the working path in the meantime.)
 
 ---
 
-## 1. Host the MCP gateway on a public HTTPS endpoint — hard blocker
+## 1. Host the MCP gateway behind the existing domain — hard blocker
 - **Today:** `brand-coach-mcp` (`src/mcp/`) runs **local-only** — streamable-HTTP
   `POST /mcp`, `GET /healthz`, port `8787` (`MCP_PORT`), **no TLS**. Started with
-  `npm run mcp:dev` / `npm run mcp:start`.
+  `npm run mcp:dev` / `npm run mcp:start`. **The gateway code (host + http transport +
+  the `onboard` front door + the `mcp:*` scripts) lives on `feat/alpha-instrumentation`,
+  NOT on `main`** — main has only the static site. The `onboard` tool is also still
+  uncommitted in the onboarding worktree; reconcile a single source before deploying.
 - **Why it matters:** Claude Desktop / claude.ai custom connectors are **HTTPS-only** —
   `localhost` won't work for end users.
-- **Build:** deploy the Node gateway to a public host and terminate TLS at
-  `mcp.ideabrandcoach.icodemybusiness.com`. Mirror the static-site deploy pattern on the
-  mango Lightsail box (`54.243.53.44`):
-  - run the gateway as a long-lived process (docker/systemd),
-  - Namecheap **A record** `mcp → 54.243.53.44`,
-  - a Caddy vhost `reverse_proxy`-ing to the gateway port (Caddy auto-issues the cert).
+- **Build (chosen approach — same domain, no new DNS):** run the gateway on the mango
+  Lightsail box (`54.243.53.44`) as a long-lived process (Docker like mango, or
+  node+systemd) on `localhost:8787`, then add a **path route** to the EXISTING
+  `ideabrandcoach.icodemybusiness.com` Caddy vhost:
+  ```
+  ideabrandcoach.icodemybusiness.com {
+      encode gzip
+      handle /mcp* { reverse_proxy localhost:8787 }   # MCP gateway
+      handle      { root * /srv/ideabrandcoach
+                    try_files {path} /index.html
+                    file_server }                       # static site
+  }
+  ```
+  The domain's TLS cert already exists; no Namecheap change. (Ensure Caddy doesn't buffer
+  the streamable-HTTP response.)
 - **Env to set server-side:** `SUPABASE_URL`, `SUPABASE_ANON_KEY` (JWT verification),
   optional `IVOS_MCP_URL` / token. Decide single-tenant vs multi-tenant.
 - Power-user fallback to document if helpful: the `mcp-remote` stdio bridge (some Desktop
