@@ -355,7 +355,7 @@ Generate the document in clean Markdown format with:
 
 ## About IDEA Brand Coach
 
-IDEA Brand Coach is a behavioural-science-driven brand coaching application for e-commerce sellers. It helps users build high-trust, emotionally resonant brands using the IDEA Framework (Identify, Discover, Execute, Analyse).
+IDEA Brand Coach is a behavioural-science-driven brand coaching application for e-commerce sellers. It helps users build high-trust, emotionally resonant brands using the IDEA Framework (Insight-Driven, Distinctive, Empathetic, Authentic).
 
 The Brand Strategy Document you are generating is the definitive reference for the user's brand. This is not a summary or overview; it is the comprehensive strategic foundation that will:
 - Guide all marketing and communication decisions

@@ -2,7 +2,7 @@
 
 **Status:** ✅ Active
 **Agent Type:** Brand Coaching & Consultation
-**Framework:** IDEA (Identify, Discover, Execute, Analyze) + BMAD (Brand Mastery And Development)
+**Framework:** IDEA (Insight-Driven, Distinctive, Empathetic, Authentic) + BMAD (Brand Mastery And Development)
 **Knowledge Sources:** Trevor's proprietary book (15 chapters), Classic marketing frameworks, Real-world case studies
 **Tools:** `system_*_search`, `user_*_search`, `web_search` (domain-specific)
 **Output Formats:** Conversational coaching, Field extraction JSON, Follow-up suggestions

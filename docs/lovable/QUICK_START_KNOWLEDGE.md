@@ -28,7 +28,7 @@ When updating shared code (interfaces, utilities, hooks):
 - Example: "// TODO: Update to use new useBrandData hook (see src/hooks/useBrandData.ts)"
 - Do NOT spend time implementing P1 features unless explicitly requested
 
-Purpose: Help businesses build brands using IDEA framework (Identify, Discover, Execute, Analyze)
+Purpose: Help businesses build brands using IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic)
 ```
 
 ## Coding Conventions (Essential Rules)
