@@ -90,7 +90,7 @@ export const FEATURES: Record<string, Feature> = {
     id: 'BRAND_DIAGNOSTIC',
     name: 'Brand Diagnostic',
     shortDescription: '6-question IDEA framework assessment',
-    fullDescription: 'Complete a comprehensive 6-question diagnostic to assess your brand across the IDEA framework (Identify, Discover, Execute, Analyze). Get instant insights and personalized recommendations.',
+    fullDescription: 'Complete a comprehensive 6-question diagnostic to assess your brand across the IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic). Get instant insights and personalized recommendations.',
     phase: 'P0',
     route: '/diagnostic',
     icon: FileCheck,

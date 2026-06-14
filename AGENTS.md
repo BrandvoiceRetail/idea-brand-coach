@@ -3,7 +3,7 @@
 ## Scope
 
 Universal rules for AI agents working on **IDEA Brand Coach** — a React/TypeScript/Vite app for
-AI-powered brand consulting using the IDEA framework (Identify, Discover, Execute, Analyze), built
+AI-powered brand consulting using the IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic), built
 on Supabase (Auth, Postgres, Edge Functions) and a LangChain RAG pipeline. Area-specific rules live
 in local `AGENTS.md` files (`src/services/`, `src/components/`); this file holds what applies everywhere.
 
