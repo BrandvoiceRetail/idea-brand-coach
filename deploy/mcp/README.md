@@ -21,18 +21,29 @@ no `node_modules`. It has no coupling to the SPA, so it can later move to its ow
 
 ## A. Build the image (local — already done by the developer)
 
+The box is **linux/amd64** — build for that arch (use `--platform` if you're on an
+Apple-Silicon/arm64 machine, or just build on the box).
+
 ```bash
 # from the repo root
 npm run typecheck:mcp          # type-check the gateway
 npm run test                   # MCP suites in src/mcp/__tests__
-npm run mcp:build:docker       # bundles dist-mcp/server.mjs + builds brand-coach-mcp:latest
+npm run mcp:bundle             # -> dist-mcp/server.mjs
+
+# build the runtime image for the box arch, tagged :latest (what compose expects)
+docker build --platform linux/amd64 -f deploy/mcp/Dockerfile -t brand-coach-mcp:latest .
 
 # export the image for the box (no registry needed)
 docker save brand-coach-mcp:latest | gzip > brand-coach-mcp.tar.gz
 ```
 
 Then copy `brand-coach-mcp.tar.gz` and this `deploy/mcp/` directory to the box, e.g.
-`/opt/brand-coach-mcp/`.
+`/opt/brand-coach-mcp/`:
+
+```bash
+scp -i ~/.ssh/lightsail-mango.pem brand-coach-mcp.tar.gz deploy/mcp/{docker-compose.yml,.env.example} \
+    <user>@54.243.53.44:/opt/brand-coach-mcp/
+```
 
 ## B. Bring it up on the box (privileged — run over SSH)
 
