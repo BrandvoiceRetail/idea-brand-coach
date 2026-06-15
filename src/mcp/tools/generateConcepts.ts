@@ -36,7 +36,6 @@ export function registerGenerateConceptsTool(server: McpServer, edgeFn: EdgeFnCl
       const prompt = buildConceptPrompt({ brief, channel, count });
       const res = await edgeFn.invoke<ConsultantResponse>('idea-framework-consultant-claude', {
         message: prompt,
-        competitiveInsights: null,
         hasUploadedDocuments: false,
         stream: false,
       });

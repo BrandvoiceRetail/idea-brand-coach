@@ -23,6 +23,17 @@ Object.defineProperty(global, 'crypto', {
   writable: true,
 });
 
+/**
+ * Build a File whose `size` reports `mb` megabytes WITHOUT allocating the bytes.
+ * The component only reads `file.size`; constructing real multi-MB strings made
+ * these tests CPU-bound and flaky under full-suite load (waitFor timeouts).
+ */
+function fileOfSize(mb: number, name: string, type: string): File {
+  const file = new File(['x'], name, { type });
+  Object.defineProperty(file, 'size', { value: Math.round(mb * 1024 * 1024) });
+  return file;
+}
+
 describe('ImageUpload - Compression Features', () => {
   const mockToast = vi.fn();
   const mockOnImagesChange = vi.fn();
@@ -54,9 +65,7 @@ describe('ImageUpload - Compression Features', () => {
   describe('Compression Function', () => {
     it('should compress images larger than 1MB', async () => {
       // Create mock file larger than 1MB but less than 2MB
-      const largeFile = new File(['a'.repeat(1.5 * 1024 * 1024)], 'large-image.jpg', {
-        type: 'image/jpeg',
-      });
+      const largeFile = fileOfSize(1.5, 'large-image.jpg', 'image/jpeg');
 
       const compressedFile = new File(['a'.repeat(600 * 1024)], 'large-image.jpg', {
         type: 'image/jpeg',
@@ -164,13 +173,9 @@ describe('ImageUpload - Compression Features', () => {
 
     it('should apply different compression levels based on file size', async () => {
       // Test file between 2-5MB
-      const mediumFile = new File(['a'.repeat(3 * 1024 * 1024)], 'medium-image.jpg', {
-        type: 'image/jpeg',
-      });
+      const mediumFile = fileOfSize(3, 'medium-image.jpg', 'image/jpeg');
 
-      const compressedFile = new File(['a'.repeat(1.5 * 1024 * 1024)], 'medium-image.jpg', {
-        type: 'image/jpeg',
-      });
+      const compressedFile = fileOfSize(1.5, 'medium-image.jpg', 'image/jpeg');
 
       (imageCompression as unknown as Mock).mockResolvedValueOnce(compressedFile);
 
@@ -206,13 +211,9 @@ describe('ImageUpload - Compression Features', () => {
 
     it('should apply heavy compression for files larger than 5MB', async () => {
       // Test file larger than 5MB
-      const largeFile = new File(['a'.repeat(8 * 1024 * 1024)], 'huge-image.jpg', {
-        type: 'image/jpeg',
-      });
+      const largeFile = fileOfSize(8, 'huge-image.jpg', 'image/jpeg');
 
-      const compressedFile = new File(['a'.repeat(2.5 * 1024 * 1024)], 'huge-image.jpg', {
-        type: 'image/jpeg',
-      });
+      const compressedFile = fileOfSize(2.5, 'huge-image.jpg', 'image/jpeg');
 
       (imageCompression as unknown as Mock).mockResolvedValueOnce(compressedFile);
 
@@ -277,9 +278,7 @@ describe('ImageUpload - Compression Features', () => {
     });
 
     it('should not compress when compression is disabled', async () => {
-      const largeFile = new File(['a'.repeat(2 * 1024 * 1024)], 'large-image.jpg', {
-        type: 'image/jpeg',
-      });
+      const largeFile = fileOfSize(2, 'large-image.jpg', 'image/jpeg');
 
       const { container } = render(
         <ImageUpload onImagesChange={mockOnImagesChange} />
@@ -320,9 +319,7 @@ describe('ImageUpload - Compression Features', () => {
 
   describe('Compression UI Feedback', () => {
     it('should show "Optimizing..." during compression', async () => {
-      const largeFile = new File(['a'.repeat(2 * 1024 * 1024)], 'large-image.jpg', {
-        type: 'image/jpeg',
-      });
+      const largeFile = fileOfSize(2, 'large-image.jpg', 'image/jpeg');
 
       // Mock compression to take some time
       (imageCompression as unknown as Mock).mockImplementation(() =>
@@ -362,9 +359,7 @@ describe('ImageUpload - Compression Features', () => {
     });
 
     it('should show compression ratio in image preview', async () => {
-      const largeFile = new File(['a'.repeat(2 * 1024 * 1024)], 'test-image.jpg', {
-        type: 'image/jpeg',
-      });
+      const largeFile = fileOfSize(2, 'test-image.jpg', 'image/jpeg');
 
       const compressedFile = new File(['a'.repeat(800 * 1024)], 'test-image.jpg', {
         type: 'image/jpeg',
@@ -411,9 +406,7 @@ describe('ImageUpload - Compression Features', () => {
 
   describe('Error Handling', () => {
     it('should fallback to original file if compression fails', async () => {
-      const file = new File(['a'.repeat(2 * 1024 * 1024)], 'image.jpg', {
-        type: 'image/jpeg',
-      });
+      const file = fileOfSize(2, 'image.jpg', 'image/jpeg');
 
       // Mock compression failure
       (imageCompression as unknown as Mock).mockRejectedValueOnce(new Error('Compression failed'));
@@ -465,12 +458,8 @@ describe('ImageUpload - Compression Features', () => {
     });
 
     it('should handle multiple file compression with mixed success/failure', async () => {
-      const file1 = new File(['a'.repeat(2 * 1024 * 1024)], 'image1.jpg', {
-        type: 'image/jpeg',
-      });
-      const file2 = new File(['a'.repeat(3 * 1024 * 1024)], 'image2.jpg', {
-        type: 'image/jpeg',
-      });
+      const file1 = fileOfSize(2, 'image1.jpg', 'image/jpeg');
+      const file2 = fileOfSize(3, 'image2.jpg', 'image/jpeg');
 
       const compressedFile1 = new File(['a'.repeat(800 * 1024)], 'image1.jpg', {
         type: 'image/jpeg',
@@ -521,9 +510,7 @@ describe('ImageUpload - Compression Features', () => {
 
   describe('File Format Handling', () => {
     it('should preserve MIME type during compression', async () => {
-      const pngFile = new File(['a'.repeat(2 * 1024 * 1024)], 'image.png', {
-        type: 'image/png',
-      });
+      const pngFile = fileOfSize(2, 'image.png', 'image/png');
 
       const compressedFile = new File(['a'.repeat(800 * 1024)], 'image.png', {
         type: 'image/png',
@@ -571,9 +558,7 @@ describe('ImageUpload - Compression Features', () => {
     });
 
     it('should handle WebP format without errors', async () => {
-      const webpFile = new File(['a'.repeat(1.5 * 1024 * 1024)], 'image.webp', {
-        type: 'image/webp',
-      });
+      const webpFile = fileOfSize(1.5, 'image.webp', 'image/webp');
 
       const compressedFile = new File(['a'.repeat(600 * 1024)], 'image.webp', {
         type: 'image/webp',

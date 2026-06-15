@@ -48,6 +48,8 @@ interface ChatMessageListProps {
   messages: DisplayMessage[];
   isStreaming: boolean;
   streamingContent: string | null;
+  /** Trevor is reading/updating his persistent memory mid-response. */
+  memoryActivity?: 'reading' | 'updating' | null;
   isSending: boolean;
   isExtractingFromDoc: boolean;
   messageExtractions: Record<string, MessageExtractionRecord>;
@@ -194,6 +196,7 @@ export function ChatMessageList({
   messages,
   isStreaming,
   streamingContent,
+  memoryActivity,
   isSending,
   isExtractingFromDoc,
   messageExtractions,
@@ -273,6 +276,20 @@ export function ChatMessageList({
               <div className="text-sm whitespace-pre-wrap">{streamingContent}</div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Memory activity (Trevor reading/updating his notes mid-response) */}
+      {isStreaming && memoryActivity && (
+        <div className="flex justify-start">
+          <div className="flex items-center gap-2 px-3 py-1 text-xs text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span>
+              {memoryActivity === 'reading'
+                ? 'Trevor is checking his notes…'
+                : 'Trevor is updating his notes…'}
+            </span>
+          </div>
         </div>
       )}
 

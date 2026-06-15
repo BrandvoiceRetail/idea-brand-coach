@@ -112,6 +112,7 @@ export interface BrandCoachV2State {
   isSending: boolean;
   isStreaming: boolean;
   streamingContent: string;
+  memoryActivity: 'reading' | 'updating' | null;
   isExtractingFromDoc: boolean;
 
   /** Export actions */
@@ -138,11 +139,6 @@ export interface BrandCoachV2State {
   chatContainerRef: React.RefObject<HTMLDivElement>;
   accordionRef: React.RefObject<ChapterAccordionHandle>;
 
-  /** Review context state */
-  reviewContextActive: boolean;
-  reviewEnrichmentStatus: 'none' | 'pending' | 'complete';
-  reviewCount: number;
-
   /** Field locked check */
   isFieldLocked: (fieldId: string) => boolean;
 
@@ -165,6 +161,11 @@ export interface BrandCoachV2State {
   extractionQueueIndex: number;
   isReviewOpen: boolean;
   alwaysAccept: boolean;
+
+  /** Imported reviews prefilled into the Signature reveal textarea. */
+  preloadedReviews: string;
+  /** Number of imported reviews behind {@link preloadedReviews}. */
+  preloadedReviewCount: number;
 }
 
 export interface BrandCoachV2Actions {
@@ -209,11 +210,6 @@ export interface BrandCoachV2Actions {
   /** Document upload */
   handleDocumentUploadComplete: (doc: { id: string; filename: string }) => Promise<void>;
 
-  /** Review context actions */
-  handleSendReviewContext: (contextString: string) => void;
-  handleEnrichmentComplete: (contextString: string, totalReviews: number) => void;
-  handleClearReviewContext: () => void;
-
   /** Field click handler */
   handleFieldClick: (field: { fieldId: string }) => void;
 
@@ -229,35 +225,10 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading: isLoadingAuth } = useAuth();
-  const { chatService } = useServices();
+  const { chatService, productDataService } = useServices();
   const { isMobile } = useDeviceType();
   const { latestDiagnostic } = useDiagnostic();
   const { useSystemKB: isSystemKBEnabled } = useSystemKB();
-
-  // ── Review context state ──────────────────────────────────────────────
-  const [reviewContextActive, setReviewContextActive] = useState(false);
-  const [reviewEnrichmentStatus, setReviewEnrichmentStatus] = useState<'none' | 'pending' | 'complete'>('none');
-  const [reviewCount, setReviewCount] = useState(0);
-
-  const handleSendReviewContext = (contextString: string): void => {
-    chatService.setCompetitiveInsightsContext(contextString);
-    setReviewContextActive(true);
-    setReviewEnrichmentStatus('pending');
-    toast({ title: 'Review data shared with Trevor', description: 'Competitor analysis context is now available in chat.' });
-  };
-
-  const handleEnrichmentComplete = (contextString: string, totalReviews: number): void => {
-    chatService.setCompetitiveInsightsContext(contextString);
-    setReviewEnrichmentStatus('complete');
-    setReviewCount(totalReviews);
-  };
-
-  const handleClearReviewContext = (): void => {
-    chatService.setCompetitiveInsightsContext(null);
-    setReviewContextActive(false);
-    setReviewEnrichmentStatus('none');
-    setReviewCount(0);
-  };
 
   // ── Avatar management ─────────────────────────────────────────────────
   const { avatars, currentAvatar, isLoading: isLoadingAvatars, createAvatar, selectAvatarById } = useAvatarService();
@@ -298,7 +269,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   });
 
   // ── Chat ──────────────────────────────────────────────────────────────
-  const { messages, sendMessage, sendMessageStreaming, isSending, isStreaming, streamingContent, clearChat } = useChat({
+  const { messages, sendMessage, sendMessageStreaming, isSending, isStreaming, streamingContent, memoryActivity, clearChat } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
   });
@@ -309,6 +280,8 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   const [mobileAccordionOpen, setMobileAccordionOpen] = useState(false);
   const [userDocuments, setUserDocuments] = useState<UploadedDocument[]>([]);
   const [focusedFieldId, setFocusedFieldId] = useState<string | null>(null);
+  const [preloadedReviews, setPreloadedReviews] = useState('');
+  const [preloadedReviewCount, setPreloadedReviewCount] = useState(0);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const accordionRef = useRef<ChapterAccordionHandle>(null);
 
@@ -407,6 +380,35 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     clearRejectionMessages();
   }, [currentSessionId, clearRejectionMessages]);
 
+  // Seed the chat service with imported-product context so Trevor can reference
+  // the seller's listings. Fire-and-forget; failures are non-fatal to chat.
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([productDataService.getProducts(), productDataService.getAllReviews()])
+      .then(([products, reviews]) => {
+        if (products.length > 0) {
+          chatService.setProductContext(productDataService.buildCoachContext(products, reviews));
+        }
+      })
+      .catch((error) => {
+        console.warn('[BrandCoachV2] Failed to seed product context:', error);
+      });
+  }, [user, chatService, productDataService]);
+
+  // Preload the seller's imported reviews into the Signature reveal textarea.
+  // Fire-and-forget; failures simply leave the textarea empty (paste fallback).
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([productDataService.getAllReviewsAsString(), productDataService.getAllReviews()])
+      .then(([reviewsString, reviews]) => {
+        setPreloadedReviews(reviewsString);
+        setPreloadedReviewCount(reviews.length);
+      })
+      .catch((error) => {
+        console.warn('[BrandCoachV2] Failed to preload Signature reviews:', error);
+      });
+  }, [user, productDataService]);
+
   // ── Rejection-to-chat handler ──────────────────────────────────────────
   const handleRejectField = useCallback((fieldId: string): void => {
     const pending = reviewQueue.find((f) => f.fieldId === fieldId);
@@ -497,6 +499,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     isSending,
     isStreaming,
     streamingContent,
+    memoryActivity,
     isExtractingFromDoc,
     isCopied,
     chapterAccordionData,
@@ -514,9 +517,6 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     setFocusedFieldId,
     chatContainerRef,
     accordionRef,
-    reviewContextActive,
-    reviewEnrichmentStatus,
-    reviewCount,
     isFieldLocked,
     activeMilestone,
     prefersReducedMotion,
@@ -530,6 +530,8 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     extractionQueueIndex: reviewQueueIndex,
     isReviewOpen,
     alwaysAccept,
+    preloadedReviews,
+    preloadedReviewCount,
 
     // Actions
     handleSessionSelect,
@@ -552,9 +554,6 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     handleFieldAcceptFromBadge,
     handleAcceptAllFromBadge,
     handleDocumentUploadComplete,
-    handleSendReviewContext,
-    handleEnrichmentComplete,
-    handleClearReviewContext,
     handleFieldClick,
     handleReopenReview,
     handleRejectField,

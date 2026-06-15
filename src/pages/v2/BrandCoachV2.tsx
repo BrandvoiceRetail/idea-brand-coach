@@ -48,6 +48,7 @@ const BrandCoachV2 = (): JSX.Element => {
     isSending,
     isStreaming,
     streamingContent,
+    memoryActivity,
     isExtractingFromDoc,
     isCopied,
     chapterAccordionData,
@@ -64,9 +65,6 @@ const BrandCoachV2 = (): JSX.Element => {
     setFocusedFieldId,
     chatContainerRef,
     accordionRef,
-    reviewContextActive,
-    reviewEnrichmentStatus,
-    reviewCount,
     isFieldLocked,
     activeMilestone,
     prefersReducedMotion,
@@ -80,6 +78,8 @@ const BrandCoachV2 = (): JSX.Element => {
     extractionQueueIndex,
     isReviewOpen,
     alwaysAccept,
+    preloadedReviews,
+    preloadedReviewCount,
 
     // Actions
     handleSessionSelect,
@@ -102,9 +102,6 @@ const BrandCoachV2 = (): JSX.Element => {
     handleFieldAcceptFromBadge,
     handleAcceptAllFromBadge,
     handleDocumentUploadComplete,
-    handleSendReviewContext,
-    handleEnrichmentComplete,
-    handleClearReviewContext,
     handleFieldClick,
     handleReopenReview,
     dismissMilestone,
@@ -213,7 +210,13 @@ const BrandCoachV2 = (): JSX.Element => {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <SignatureReveal messages={displayMessages} fieldValues={fieldValues} />
+                <SignatureReveal
+                  messages={displayMessages}
+                  fieldValues={fieldValues}
+                  preloadedReviews={preloadedReviews}
+                  preloadedReviewCount={preloadedReviewCount}
+                  sessionId={currentSessionId ?? null}
+                />
                 {pendingCount > 0 && (
                   <Button variant="outline" size="sm" className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={handleReviewAcceptAll} title={`Accept all ${pendingCount} pending field(s)`}>
                     <CheckCircle className="h-3 w-3 mr-1" />{pendingCount} pending
@@ -268,6 +271,7 @@ const BrandCoachV2 = (): JSX.Element => {
               messages={messagesWithPending}
               isStreaming={isStreaming}
               streamingContent={streamingContent}
+              memoryActivity={memoryActivity}
               isSending={isSending}
               isExtractingFromDoc={isExtractingFromDoc}
               messageExtractions={messageExtractions}
@@ -302,12 +306,6 @@ const BrandCoachV2 = (): JSX.Element => {
               showUploadPanel={showDocumentUpload}
               onToggleUpload={() => setShowDocumentUpload(!showDocumentUpload)}
               userDocumentCount={userDocuments.length}
-              reviewContextActive={reviewContextActive}
-              reviewEnrichmentStatus={reviewEnrichmentStatus}
-              reviewCount={reviewCount}
-              onClearReviewContext={handleClearReviewContext}
-              onSendReviewContext={handleSendReviewContext}
-              onEnrichmentComplete={handleEnrichmentComplete}
             />
           </div>
         }

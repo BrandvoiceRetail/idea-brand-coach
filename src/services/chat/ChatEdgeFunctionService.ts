@@ -38,7 +38,7 @@ export interface EdgeFunctionResponse {
 export interface ConsultantRequestParams {
   message: string;
   chapterContext?: unknown;
-  competitiveInsights: string | null;
+  productContext: string | null;
   metadata?: Record<string, unknown>;
   hasUploadedDocuments: boolean;
   chatHistory?: Array<{ role: string; content: string }>;
@@ -91,12 +91,15 @@ export class ChatEdgeFunctionService {
     const body: Record<string, unknown> = {
       message: params.message,
       chapterContext: params.chapterContext,
-      competitiveInsights: params.competitiveInsights,
       metadata: {
         ...params.metadata,
         hasUploadedDocuments: params.hasUploadedDocuments,
       },
     };
+
+    if (params.productContext) {
+      body.productContext = params.productContext;
+    }
 
     if (params.stream) {
       body.stream = true;

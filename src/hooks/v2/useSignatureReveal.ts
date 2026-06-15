@@ -10,7 +10,7 @@
  * All options are equal weight — there is deliberately NO pre-picked "primary".
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 /** Stage of the reveal flow. */
@@ -28,6 +28,15 @@ export type SurpriseAnswer = 'yes' | 'no' | null;
 interface RevealArgs {
   conversation: SignatureConversationTurn[];
   fields: Record<string, string | string[]>;
+}
+
+/** Optional configuration for the reveal flow. */
+interface UseSignatureRevealConfig {
+  /**
+   * Reviews to seed the textarea with on mount and on reset (e.g. the seller's
+   * imported Amazon reviews). The user can still edit or replace them.
+   */
+  initialReviews?: string;
 }
 
 interface UseSignatureRevealReturn {
@@ -56,14 +65,27 @@ interface RevealResponse {
   error?: string;
 }
 
-export function useSignatureReveal(): UseSignatureRevealReturn {
+export function useSignatureReveal(
+  { initialReviews = '' }: UseSignatureRevealConfig = {},
+): UseSignatureRevealReturn {
   const [stage, setStage] = useState<SignatureStage>('paste');
-  const [reviews, setReviews] = useState('');
+  const [reviews, setReviews] = useState(initialReviews);
   const [options, setOptions] = useState<string[]>([]);
   const [isInference, setIsInference] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [surprise, setSurprise] = useState<SurpriseAnswer>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Imported reviews load asynchronously, so they usually arrive AFTER the first
+  // render seeded the state with ''. Re-seed when they land, but never clobber
+  // text the user has already typed and never touch a reveal in progress.
+  useEffect(() => {
+    if (initialReviews && stage === 'paste') {
+      setReviews((current) => (current.trim().length === 0 ? initialReviews : current));
+    }
+    // Only the arrival of initialReviews should trigger a re-seed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialReviews]);
 
   const reveal = useCallback(async ({ conversation, fields }: RevealArgs): Promise<void> => {
     setStage('loading');
@@ -115,13 +137,13 @@ export function useSignatureReveal(): UseSignatureRevealReturn {
 
   const reset = useCallback((): void => {
     setStage('paste');
-    setReviews('');
+    setReviews(initialReviews);
     setOptions([]);
     setIsInference(false);
     setSelectedIndex(null);
     setSurprise(null);
     setError(null);
-  }, []);
+  }, [initialReviews]);
 
   return {
     stage,

@@ -21,6 +21,7 @@ import {
   type TrustGapDimension,
   type TrustGapInputScores,
 } from '@/lib/trustGap';
+import type { TrustGapEvidence } from '@/services/interfaces/IProductDataService';
 
 export type TrustGapInterpretations = Record<TrustGapDimension, string>;
 
@@ -28,6 +29,8 @@ export interface TrustGapInterpretation {
   interpretations: TrustGapInterpretations;
   primaryGap: TrustGapDimension;
   primaryGapSummary: string;
+  /** True when the interpretation was grounded in imported listing evidence. */
+  evidencePresent: boolean;
 }
 
 interface UseTrustGapInterpretationResult {
@@ -38,6 +41,16 @@ interface UseTrustGapInterpretationResult {
 }
 
 const CACHE_PREFIX = 'trustGapInterpretation:';
+
+/**
+ * Build the cache / fetch signature. The optional `evidenceKey` is folded in so an
+ * import (new evidence) yields a distinct signature and triggers exactly one fresh
+ * call, while the no-evidence signature stays stable and keeps serving its cache.
+ */
+function buildSignature(scores: TrustGapInputScores, evidenceKey?: string): string {
+  const base = trustGapSignature(scores);
+  return evidenceKey ? `${base}|evidence:${evidenceKey}` : base;
+}
 
 function readCache(signature: string): TrustGapInterpretation | null {
   try {
@@ -67,6 +80,8 @@ function isValidInterpretation(data: unknown): data is TrustGapInterpretation {
 
 export function useTrustGapInterpretation(
   scores: TrustGapInputScores | null,
+  evidence?: TrustGapEvidence,
+  evidenceKey?: string,
 ): UseTrustGapInterpretationResult {
   const [interpretation, setInterpretation] = useState<TrustGapInterpretation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,11 +91,17 @@ export function useTrustGapInterpretation(
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
+  // Guard against the key/payload race: the evidence key only participates in the
+  // signature when the evidence payload itself is present, so a render where the
+  // key arrives before the (async-built) evidence cannot cache a generic result
+  // under the evidence signature.
+  const effectiveEvidenceKey = evidence ? evidenceKey : undefined;
+
   useEffect(() => {
     if (!scores) return;
 
     const model = buildTrustGap(scores);
-    const signature = trustGapSignature(scores);
+    const signature = buildSignature(scores, effectiveEvidenceKey);
     activeSignatureRef.current = signature;
 
     const cached = readCache(signature);
@@ -99,6 +120,7 @@ export function useTrustGapInterpretation(
       scores: Object.fromEntries(model.dimensions.map((d) => [d.key, d.score])) as Record<TrustGapDimension, number>,
       overall: model.overall,
       primaryGap: model.primaryGap,
+      ...(evidence ? { evidence } : {}),
     };
 
     supabase.functions
@@ -121,8 +143,12 @@ export function useTrustGapInterpretation(
           return;
         }
 
-        writeCache(signature, data);
-        setInterpretation(data);
+        const normalised: TrustGapInterpretation = {
+          ...data,
+          evidencePresent: (data as { evidencePresent?: boolean }).evidencePresent === true,
+        };
+        writeCache(signature, normalised);
+        setInterpretation(normalised);
         setError(null);
       })
       .catch((err: unknown) => {
@@ -138,9 +164,10 @@ export function useTrustGapInterpretation(
     return () => {
       cancelled = true;
     };
-    // `attempt` re-triggers a fetch on retry; the signature guards against stale writes.
+    // `attempt` re-triggers a fetch on retry; the effective evidence key folds into
+    // the signature so an import refetches once; the signature guards stale writes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scores ? trustGapSignature(scores) : null, attempt]);
+  }, [scores ? buildSignature(scores, effectiveEvidenceKey) : null, attempt]);
 
   return { interpretation, isLoading, error, retry };
 }

@@ -51,6 +51,10 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
       
       if (syncError) {
         console.error('❌ Failed to sync diagnostic to embeddings:', syncError);
+      } else if (syncResult && syncResult.success === false) {
+        // Expected-degraded state (e.g. embedding provider quota) — the fn kept
+        // prior chunks intact and reported a structured skip. One warn, no spam.
+        console.warn('⚠️ Diagnostic embedding sync skipped:', syncResult.reason ?? 'unknown', syncResult.detail ?? '');
       } else {
         console.log('✅ Diagnostic embedding sync result:', syncResult);
       }
