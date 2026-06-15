@@ -75,3 +75,6 @@ verify_jwt = false
 
 [functions.diagnostic-interpretation]
 verify_jwt = false
+
+[functions.import-product-data]
+verify_jwt = false

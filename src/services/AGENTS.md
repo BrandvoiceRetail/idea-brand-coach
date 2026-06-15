@@ -26,3 +26,21 @@ Use the guide skills `refactor-detector` → `refactor-planner` → `refactor-ex
 - All Supabase access goes through `src/integrations/supabase/client.ts` with generated types.
 - New service ⇒ new interface in `interfaces/` ⇒ register in `ServiceProvider` ⇒ tests in `__tests__/`.
 - Database schema changes go through migrations / the `database-migrator` guide agent — never DDL from a service.
+
+## Product data (`SupabaseProductDataService`)
+
+`IProductDataService` / `SupabaseProductDataService` is the client gateway to a seller's imported
+Amazon listings. It is the single source for the three downstream consumers and **owns the shared
+`TrustGapEvidence` type** — UI lanes import that type from `interfaces/IProductDataService`, not
+from a duplicate.
+
+- `importProducts(asins)` batches ASINs **≤5 per `import-product-data` edge call**, sequentially, and
+  merges every batch's `results` into one `ImportResult` (mirrors the edge `{ status, results }`
+  contract). Auth-guarded via `supabase.auth.getUser()` like `SupabaseDiagnosticService`.
+- `getProducts()` reads `user_products` newest-first (`scraped_at desc`); `getAllReviews()` joins
+  reviews by the user's product ids. jsonb `bullets`/`images` are normalized in-service.
+- Formatting caps live as named constants: reviews string ≤40 reviews / 8000 chars; coach context
+  top-3 bullets + ≤10 reviews; `buildTrustGapEvidence` ≤12 reviews, body ≤300 chars, lines
+  `"★{rating} — {body}"`. Keep these in sync with the shared contracts if they change.
+- Tests (`__tests__/SupabaseProductDataService.test.ts`) follow the `vi.mock` supabase pattern; run
+  with `--pool=threads` if the default forks pool times out on startup in this environment.

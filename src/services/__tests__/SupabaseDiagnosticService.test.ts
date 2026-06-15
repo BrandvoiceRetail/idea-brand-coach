@@ -102,7 +102,8 @@ describe('SupabaseDiagnosticService', () => {
 
       expect(result).toBeDefined();
       expect(result.id).toBe('submission-123');
-      expect(supabase.functions.invoke).toHaveBeenCalledWith(
+      // Embedding sync retired (410 tombstone) — saving must NOT call it.
+      expect(supabase.functions.invoke).not.toHaveBeenCalledWith(
         'sync-diagnostic-to-embeddings',
         expect.any(Object)
       );

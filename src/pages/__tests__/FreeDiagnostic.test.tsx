@@ -134,12 +134,16 @@ describe('FreeDiagnostic', () => {
       fireEvent.click(screen.getAllByRole('radio')[2]); // Select middle option
 
       if (i < 5) {
-        fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+        const nextBtn = screen.getByRole('button', { name: /Next/i });
+        await waitFor(() => expect(nextBtn).toBeEnabled());
+        fireEvent.click(nextBtn);
         await waitFor(() => {
           expect(screen.getByText(`Question ${i + 2} of 6`)).toBeInTheDocument();
         });
       } else {
-        fireEvent.click(screen.getByRole('button', { name: /Complete Assessment/i }));
+        const completeBtn = screen.getByRole('button', { name: /Complete Assessment/i });
+        await waitFor(() => expect(completeBtn).toBeEnabled());
+        fireEvent.click(completeBtn);
       }
     }
 
@@ -156,12 +160,16 @@ describe('FreeDiagnostic', () => {
       fireEvent.click(screen.getAllByRole('radio')[2]);
 
       if (i < 5) {
-        fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+        const nextBtn = screen.getByRole('button', { name: /Next/i });
+        await waitFor(() => expect(nextBtn).toBeEnabled());
+        fireEvent.click(nextBtn);
         await waitFor(() => {
           expect(screen.getByText(`Question ${i + 2} of 6`)).toBeInTheDocument();
         });
       } else {
-        fireEvent.click(screen.getByRole('button', { name: /Complete Assessment/i }));
+        const completeBtn = screen.getByRole('button', { name: /Complete Assessment/i });
+        await waitFor(() => expect(completeBtn).toBeEnabled());
+        fireEvent.click(completeBtn);
       }
     }
 
@@ -195,12 +203,16 @@ describe('FreeDiagnostic', () => {
     for (let i = 0; i < 6; i++) {
       fireEvent.click(screen.getAllByRole('radio')[2]);
       if (i < 5) {
-        fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+        const nextBtn = screen.getByRole('button', { name: /Next/i });
+        await waitFor(() => expect(nextBtn).toBeEnabled());
+        fireEvent.click(nextBtn);
         await waitFor(() => {
           expect(screen.getByText(`Question ${i + 2} of 6`)).toBeInTheDocument();
         });
       } else {
-        fireEvent.click(screen.getByRole('button', { name: /Complete Assessment/i }));
+        const completeBtn = screen.getByRole('button', { name: /Complete Assessment/i });
+        await waitFor(() => expect(completeBtn).toBeEnabled());
+        fireEvent.click(completeBtn);
       }
     }
 
@@ -221,12 +233,16 @@ describe('FreeDiagnostic', () => {
     for (let i = 0; i < 6; i++) {
       fireEvent.click(screen.getAllByRole('radio')[2]); // Score 3
       if (i < 5) {
-        fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+        const nextBtn = screen.getByRole('button', { name: /Next/i });
+        await waitFor(() => expect(nextBtn).toBeEnabled());
+        fireEvent.click(nextBtn);
         await waitFor(() => {
           expect(screen.getByText(`Question ${i + 2} of 6`)).toBeInTheDocument();
         });
       } else {
-        fireEvent.click(screen.getByRole('button', { name: /Complete Assessment/i }));
+        const completeBtn = screen.getByRole('button', { name: /Complete Assessment/i });
+        await waitFor(() => expect(completeBtn).toBeEnabled());
+        fireEvent.click(completeBtn);
       }
     }
 

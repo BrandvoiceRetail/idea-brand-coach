@@ -24,6 +24,7 @@ import {
   ArrowRight,
   RefreshCw,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import {
   buildTrustGap,
@@ -39,9 +40,14 @@ import {
   type TrustGapInterpretation,
 } from '@/hooks/useTrustGapInterpretation';
 import { buildBridgePath } from '@/lib/journeyBridge';
+import type { TrustGapEvidence } from '@/services/interfaces/IProductDataService';
 
 interface TrustGapScorecardProps {
   scores: TrustGapInputScores;
+  /** Imported-listing evidence sent to the interpretation so it cites real copy. */
+  evidence?: TrustGapEvidence;
+  /** Stable key for the evidence (e.g. joined product ids) — drives one refetch on import. */
+  evidenceKey?: string;
 }
 
 interface DimensionPresentation {
@@ -155,10 +161,10 @@ function DimensionCard({
   );
 }
 
-export function TrustGapScorecard({ scores }: TrustGapScorecardProps): JSX.Element {
+export function TrustGapScorecard({ scores, evidence, evidenceKey }: TrustGapScorecardProps): JSX.Element {
   const navigate = useNavigate();
   const model = buildTrustGap(scores);
-  const { interpretation, isLoading, error, retry } = useTrustGapInterpretation(scores);
+  const { interpretation, isLoading, error, retry } = useTrustGapInterpretation(scores, evidence, evidenceKey);
 
   const interpretations: TrustGapInterpretation['interpretations'] | undefined = interpretation?.interpretations;
   const overallBand = getTrustGapBand(Math.round(model.overall / 4));
@@ -178,6 +184,19 @@ export function TrustGapScorecard({ scores }: TrustGapScorecardProps): JSX.Eleme
           <p className="text-primary-foreground/90 max-w-xl mx-auto">{OVERALL_BAND_COPY[overallBand]}</p>
         </CardContent>
       </Card>
+
+      {/* Grounded badge — shown when the interpretation cited imported listing evidence */}
+      {interpretation?.evidencePresent && (
+        <div className="flex justify-center">
+          <Badge
+            variant="outline"
+            className="bg-primary/10 text-primary border-primary/20 gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Grounded in your listing
+          </Badge>
+        </div>
+      )}
 
       {/* Four pillars, each /25, each with its interpretation */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

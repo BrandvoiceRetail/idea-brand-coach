@@ -29,6 +29,14 @@ export interface IChatService {
    * @param chatbotType - Type of chatbot ('idea-framework-consultant')
    */
   setChatbotType(chatbotType: ChatbotType): void;
+
+  /**
+   * Set imported-product context to be included with outgoing chat messages.
+   *
+   * @param context - Coach product-context block, or null to clear it
+   */
+  setProductContext(context: string | null): void;
+
   /**
    * Send a message to IDEA Framework Consultant and receive an AI-generated response.
    *

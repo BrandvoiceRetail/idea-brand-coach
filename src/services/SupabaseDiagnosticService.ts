@@ -42,25 +42,9 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
 
     if (profileError) throw profileError;
 
-    // 3. Trigger embedding generation via edge function
-    console.log('🔄 Triggering diagnostic embedding sync for submission:', submission.id);
-    try {
-      const { data: syncResult, error: syncError } = await supabase.functions.invoke('sync-diagnostic-to-embeddings', {
-        body: { submission_id: submission.id },
-      });
-      
-      if (syncError) {
-        console.error('❌ Failed to sync diagnostic to embeddings:', syncError);
-      } else {
-        console.log('✅ Diagnostic embedding sync result:', syncResult);
-      }
-    } catch (error) {
-      console.error('❌ Exception during diagnostic embedding sync:', error);
-      // Don't throw - embeddings can be generated async or retried later
-    }
-
-    // TODO: Phase 2 - Implement server-side trigger for User KB sync
-    // Current issue: Edge function auth not working from client-side invocation
+    // Embedding sync retired: sync-diagnostic-to-embeddings is a 410 tombstone
+    // (user-KB chunks come from the pgvector path now). Calling it only produced
+    // console errors after every submission.
 
     return {
       id: submission.id,

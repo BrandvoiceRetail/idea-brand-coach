@@ -2,15 +2,14 @@
  * useChatOrchestration Hook
  *
  * Owns chat message processing (useBrandCoachChat), export actions,
- * document upload flow, and review context state.
+ * and the document upload flow.
  *
  * Note: useChat and useChatSessions are called in the composer because
  * their outputs (messages, currentSessionId) are shared with useFieldOrchestration.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
 import { useBrandCoachChat } from '@/hooks/useBrandCoachChat';
 import { useChatExportActions } from '@/hooks/useChatExportActions';
 import { useDocumentUploadFlow } from '@/hooks/useDocumentUploadFlow';
@@ -19,7 +18,6 @@ import type { ProcessedMessage } from '@/hooks/useBrandCoachChat';
 import type { ChatMessage, ChatMessageCreate } from '@/types/chat';
 import type { Chapter } from '@/types/chapter';
 import type { UploadedDocument } from '@/types/document';
-import { useServices } from '@/services/ServiceProvider';
 
 // ============================================================================
 // Types
@@ -72,14 +70,6 @@ export interface UseChatOrchestrationReturn {
 
   /** Inject a local assistant message without triggering edge function */
   injectLocalMessage: (content: string, metadata?: Record<string, unknown>) => void;
-
-  /** Review context state */
-  reviewContextActive: boolean;
-  reviewEnrichmentStatus: 'none' | 'pending' | 'complete';
-  reviewCount: number;
-  handleSendReviewContext: (contextString: string) => void;
-  handleEnrichmentComplete: (contextString: string, totalReviews: number) => void;
-  handleClearReviewContext: () => void;
 }
 
 // ============================================================================
@@ -100,35 +90,8 @@ export function useChatOrchestration({
   isSystemKBEnabled,
   latestDiagnostic,
 }: UseChatOrchestrationConfig): UseChatOrchestrationReturn {
-  const { toast } = useToast();
-  const { chatService } = useServices();
   const queryClient = useQueryClient();
   const chatMessageServiceRef = useRef(new ChatMessageService());
-
-  // ── Review context state ──────────────────────────────────────────────
-  const [reviewContextActive, setReviewContextActive] = useState(false);
-  const [reviewEnrichmentStatus, setReviewEnrichmentStatus] = useState<'none' | 'pending' | 'complete'>('none');
-  const [reviewCount, setReviewCount] = useState(0);
-
-  const handleSendReviewContext = useCallback((contextString: string): void => {
-    chatService.setCompetitiveInsightsContext(contextString);
-    setReviewContextActive(true);
-    setReviewEnrichmentStatus('pending');
-    toast({ title: 'Review data shared with Trevor', description: 'Competitor analysis context is now available in chat.' });
-  }, [chatService, toast]);
-
-  const handleEnrichmentComplete = useCallback((contextString: string, totalReviews: number): void => {
-    chatService.setCompetitiveInsightsContext(contextString);
-    setReviewEnrichmentStatus('complete');
-    setReviewCount(totalReviews);
-  }, [chatService]);
-
-  const handleClearReviewContext = useCallback((): void => {
-    chatService.setCompetitiveInsightsContext(null);
-    setReviewContextActive(false);
-    setReviewEnrichmentStatus('none');
-    setReviewCount(0);
-  }, [chatService]);
 
   // ── Brand coach chat processing ───────────────────────────────────────
   const { messagesWithPending, displayMessages, handleSendMessage } = useBrandCoachChat({
@@ -216,11 +179,5 @@ export function useChatOrchestration({
     isExtractingFromDoc,
     handleDocumentUploadComplete,
     injectLocalMessage,
-    reviewContextActive,
-    reviewEnrichmentStatus,
-    reviewCount,
-    handleSendReviewContext,
-    handleEnrichmentComplete,
-    handleClearReviewContext,
   };
 }

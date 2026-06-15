@@ -75,6 +75,7 @@ serve(async (req) => {
       metadata,
       chapterContext,
       isFirstMessage,
+      productContext,
       stream: streamRequested,
     } = await req.json();
 
@@ -132,6 +133,7 @@ serve(async (req) => {
 
     // Stable context first (benefits from prompt caching)
     if (userKnowledgeContext) contextParts.push(userKnowledgeContext);
+    if (productContext) contextParts.push(`THE FOUNDER'S OWN PRODUCT (from their live Amazon listing):\n${productContext}`);
     if (context) contextParts.push(`ADDITIONAL CONTEXT:\n${context}`);
     if (semanticContext) contextParts.push(semanticContext);
 

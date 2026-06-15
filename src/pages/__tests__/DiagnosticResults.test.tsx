@@ -11,6 +11,28 @@ const mockNavigate = vi.hoisted(() => vi.fn());
 
 vi.mock('@/hooks/useAuth');
 vi.mock('@/hooks/useDiagnostic');
+// The interpretation hook fires a real edge-fn invoke on render; it has its own
+// dedicated tests (useTrustGapInterpretation.test.ts), so stub it at page level.
+vi.mock('@/hooks/useTrustGapInterpretation', () => ({
+  useTrustGapInterpretation: () => ({
+    interpretation: null,
+    isLoading: false,
+    error: null,
+    retry: vi.fn(),
+  }),
+}));
+vi.mock('@/services/ServiceProvider', () => ({
+  useServices: () => ({
+    productDataService: {
+      importProducts: vi.fn().mockResolvedValue({ results: [] }),
+      getProducts: vi.fn().mockResolvedValue([]),
+      getAllReviews: vi.fn().mockResolvedValue([]),
+      getAllReviewsAsString: vi.fn().mockResolvedValue(''),
+      buildCoachContext: vi.fn().mockReturnValue(''),
+      buildTrustGapEvidence: vi.fn().mockResolvedValue({ listings: [], topReviews: [] }),
+    },
+  }),
+}));
 vi.mock('@/components/BetaNavigationWidget', () => ({
   BetaNavigationWidget: () => <div>Beta Navigation</div>
 }));

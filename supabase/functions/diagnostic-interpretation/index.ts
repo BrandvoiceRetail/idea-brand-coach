@@ -98,10 +98,27 @@ const DIMENSION_LABELS: Record<Dimension, string> = {
   authentic: 'Authentic',
 };
 
+/** Optional listing/review evidence so each interpretation can cite WHERE a gap
+ *  shows up in the founder's own live Amazon listing. Shape is the shared
+ *  TrustGapEvidence contract. Parsed defensively — malformed evidence is ignored,
+ *  never rejected with a 400. */
+interface TrustGapListing {
+  asin: string;
+  title: string;
+  bullets: string[];
+  description?: string;
+}
+
+interface TrustGapEvidence {
+  listings: TrustGapListing[];
+  topReviews: string[];
+}
+
 interface InterpretationRequest {
   scores?: Partial<Record<Dimension, number>>;
   overall?: number;
   primaryGap?: Dimension;
+  evidence?: TrustGapEvidence;
 }
 
 /** Trevor system prompt. Voice rules lifted from idea-framework-consultant-claude
@@ -142,7 +159,7 @@ Write 2 to 3 sentences. Name the primary gap as their single biggest opportunity
 </primary-gap-summary>
 
 <do-not-fabricate>
-You have NOT seen their actual products, listings, prices, reviews or customers. Do NOT invent specific details about them. Speak to the likely pattern at their score level, not fabricated specifics. It is fine to say what TENDS to be true at a given score.
+You have NOT seen their actual products, listings, prices, reviews or customers, UNLESS an evidence block is provided in the user message. Without evidence, do NOT invent specific details about them; speak to the likely pattern at their score level. When an evidence block IS provided, ground your read in it and quote only from it.
 </do-not-fabricate>
 
 <voice>
@@ -158,14 +175,83 @@ You have NOT seen their actual products, listings, prices, reviews or customers.
 Respond with ONLY a single JSON object and nothing else. No commentary, no code fences. Use exactly this shape and these keys:
 {"interpretations":{"insight":"...","distinctive":"...","empathetic":"...","authentic":"..."},"primaryGapSummary":"..."}
 Every string value must obey the voice rules above.
+NEVER use the double quote character inside a JSON string value. When quoting short phrases from the evidence, wrap them in single quotes (') instead. Broken JSON makes the whole response unusable.
 </output-format>`;
 
-function buildUserMessage(scores: Record<Dimension, number>, overall: number, primaryGap: Dimension): string {
+/** Defensively normalise incoming evidence into a safe, bounded shape. Returns
+ *  null when the payload is absent or so malformed that nothing usable remains.
+ *  Never throws — callers treat null as "no evidence" and keep happy-path
+ *  behaviour. Mirrors the shared TrustGapEvidence contract (topReviews already
+ *  pre-formatted as "★{rating} — {body}", body ≤300 chars, max 12). */
+function normaliseEvidence(raw: unknown): TrustGapEvidence | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const candidate = raw as { listings?: unknown; topReviews?: unknown };
+
+  const listings: TrustGapListing[] = Array.isArray(candidate.listings)
+    ? candidate.listings
+        .filter((l): l is Record<string, unknown> => !!l && typeof l === 'object')
+        .map((l) => ({
+          asin: typeof l.asin === 'string' ? l.asin : '',
+          title: typeof l.title === 'string' ? l.title : '',
+          bullets: Array.isArray(l.bullets)
+            ? l.bullets.filter((b): b is string => typeof b === 'string' && b.trim().length > 0)
+            : [],
+          description: typeof l.description === 'string' ? l.description : undefined,
+        }))
+        .filter((l) => l.title.length > 0 || l.bullets.length > 0)
+    : [];
+
+  const topReviews: string[] = Array.isArray(candidate.topReviews)
+    ? candidate.topReviews
+        .filter((r): r is string => typeof r === 'string' && r.trim().length > 0)
+        .slice(0, 12)
+    : [];
+
+  if (listings.length === 0 && topReviews.length === 0) return null;
+  return { listings, topReviews };
+}
+
+/** Render the normalised evidence as an XML block appended to the USER message
+ *  (never the system prompt, which must stay byte-identical for prompt caching). */
+function buildEvidenceBlock(evidence: TrustGapEvidence): string {
+  const listingXml = evidence.listings
+    .map((l) => {
+      const bulletsXml = l.bullets.map((b) => `      <bullet>${b}</bullet>`).join('\n');
+      return `    <listing asin="${l.asin}">
+      <title>${l.title}</title>
+${bulletsXml}
+    </listing>`;
+    })
+    .join('\n');
+  const reviewsXml = evidence.topReviews.map((r) => `    <review>${r}</review>`).join('\n');
+
+  return `<evidence>
+  <listings>
+${listingXml}
+  </listings>
+  <top-reviews>
+${reviewsXml}
+  </top-reviews>
+</evidence>
+
+Use the evidence above. For EACH pillar interpretation, cite WHERE the gap (or strength) shows up in their actual listing or reviews, quoting short phrases from the listing title, bullets or reviews. Ground your read in this evidence, do not speak only in generalities. Do not quote anything that is not present in the evidence.`;
+}
+
+function buildUserMessage(
+  scores: Record<Dimension, number>,
+  overall: number,
+  primaryGap: Dimension,
+  evidence: TrustGapEvidence | null,
+): string {
   const lines = DIMENSIONS.map((dim) => `- ${DIMENSION_LABELS[dim]}: ${scores[dim]} out of 25`);
-  return `Here are the four trust pillar scores:
+  const base = `Here are the four trust pillar scores:
 ${lines.join('\n')}
 Overall trust score: ${overall} out of 100.
-The primary gap, their weakest pillar, is: ${DIMENSION_LABELS[primaryGap]}.
+The primary gap, their weakest pillar, is: ${DIMENSION_LABELS[primaryGap]}.`;
+
+  const evidenceSection = evidence ? `\n\n${buildEvidenceBlock(evidence)}` : '';
+
+  return `${base}${evidenceSection}
 
 Write the interpretations and the primary gap summary now as the JSON object.`;
 }
@@ -269,7 +355,11 @@ serve(async (req) => {
       ? body.primaryGap
       : DIMENSIONS.reduce((lowest, dim) => (scores[dim] < scores[lowest] ? dim : lowest), DIMENSIONS[0]);
 
-    const userMessage = buildUserMessage(scores, overall, primaryGap);
+    // Evidence is optional and parsed defensively; malformed payloads are ignored.
+    const evidence = normaliseEvidence(body?.evidence);
+    const evidencePresent = evidence !== null;
+
+    const userMessage = buildUserMessage(scores, overall, primaryGap, evidence);
 
     // System prompt is large and identical across calls, so cache it.
     const headers: Record<string, string> = {
@@ -279,31 +369,64 @@ serve(async (req) => {
       'Content-Type': 'application/json',
     };
 
-    const response = await fetch(CLAUDE_API_URL, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: HAIKU_MODEL,
-        max_tokens: 1200,
-        temperature: 0.6,
-        system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
-        messages: [{ role: 'user', content: userMessage }],
-      }),
+    const requestBody = JSON.stringify({
+      model: HAIKU_MODEL,
+      // Headroom matters: evidence-grounded generations measured ~1400+ tokens;
+      // a max_tokens truncation yields unparseable JSON and a user-facing 500.
+      max_tokens: evidencePresent ? 2400 : 1800,
+      temperature: 0.6,
+      system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: userMessage }],
     });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('[diagnostic-interpretation] Anthropic API error:', response.status, errorBody);
-      throw new Error(`Anthropic API error: ${response.status}`);
+    // The scorecard is often the tester's FIRST impression, so absorb one
+    // transient upstream failure (429/5xx/network) with a single retry rather
+    // than degrading the render. Bounded: max 2 attempts, 1.5s backoff.
+    async function callAnthropic(): Promise<Response> {
+      let response: Response | null = null;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          response = await fetch(CLAUDE_API_URL, { method: 'POST', headers, body: requestBody });
+        } catch (fetchError) {
+          console.error(`[diagnostic-interpretation] attempt ${attempt} network error:`, fetchError);
+          response = null;
+        }
+
+        if (response?.ok) return response;
+
+        const upstreamStatus = response?.status ?? 'network-error';
+        const errorBody = response ? (await response.text()).slice(0, 300) : '';
+        const retryable = !response || response.status === 429 || response.status >= 500;
+        console.error(
+          `[diagnostic-interpretation] attempt ${attempt} failed | upstream=${upstreamStatus} | retryable=${retryable} | evidencePresent=${evidencePresent} |`,
+          errorBody,
+        );
+        if (!retryable || attempt === 2) {
+          throw new Error(`Anthropic API error: ${upstreamStatus} ${errorBody.slice(0, 120)}`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+      throw new Error('Anthropic API error: exhausted retries');
     }
 
-    const data = await response.json();
-    const rawText: string = data?.content?.[0]?.text ?? '';
-    const parsed = parseModelJson(rawText);
+    // Up to 2 generations: when citing evidence the model occasionally emits an
+    // unescaped double quote inside a JSON string (observed live: stop_reason
+    // end_turn but unparseable output) — one reroll recovers it.
+    let parsed: ReturnType<typeof parseModelJson> = null;
+    let lastStopReason = '';
+    for (let generation = 1; generation <= 2 && !parsed; generation++) {
+      const response = await callAnthropic();
+      const data = await response.json();
+      const rawText: string = data?.content?.[0]?.text ?? '';
+      parsed = parseModelJson(rawText);
+      if (!parsed) {
+        lastStopReason = String(data?.stop_reason ?? 'unknown');
+        console.error(`[diagnostic-interpretation] generation ${generation} unparseable | stop_reason=${lastStopReason} |`, rawText.slice(0, 500));
+      }
+    }
 
     if (!parsed) {
-      console.error('[diagnostic-interpretation] Could not parse model JSON:', rawText.slice(0, 500));
-      throw new Error('Interpretation response was not valid JSON');
+      throw new Error(`Interpretation response was not valid JSON (stop_reason=${lastStopReason})`);
     }
 
     console.log('[diagnostic-interpretation] Generated interpretation for primary gap:', primaryGap);
@@ -318,6 +441,7 @@ serve(async (req) => {
         },
         primaryGap,
         primaryGapSummary: parsed.primaryGapSummary.trim(),
+        evidencePresent,
       }),
       { headers: { ...cors, 'Content-Type': 'application/json' } },
     );
