@@ -15,7 +15,9 @@
     "mcp:dev": "tsx watch src/mcp/index.ts",
     "mcp:start": "tsx src/mcp/index.ts",
     "typecheck:mcp": "tsc -p tsconfig.mcp.json --noEmit",
-    "build:panel": "node scripts/build-onboard-panel.mjs"
+    "build:panel": "node scripts/build-onboard-panel.mjs",
+    "mcp:bundle": "node scripts/build-mcp.mjs",
+    "mcp:build:docker": "npm run mcp:bundle && docker build -f deploy/mcp/Dockerfile -t brand-coach-mcp:latest ."
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
