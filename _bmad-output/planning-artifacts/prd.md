@@ -362,19 +362,19 @@ if (isEnabled) {
 ### Book Content Integration (Existing RAG Solution)
 
 **Already Implemented:**
-- ✅ **Trevor's book in OpenAI Vector Store** (ID: `vs_6948707b318c81918a90e9b44970a99e`)
-- ✅ **System KB always enabled** via 'idea-framework-consultant-test' edge function
-- ✅ **OpenAI Responses API with file_search** for semantic search
-- ✅ **5+5 Vector Store Architecture** (5 system KBs + 5 user KBs per user)
+- ✅ **Trevor's book indexed in pgvector** (Supabase-native vector search)
+- ✅ **System KB always enabled** via 'idea-framework-consultant-claude' edge function
+- ✅ **pgvector semantic search** via `match_document_chunks`, `match_user_documents`, `match_user_knowledge` RPCs
+- ✅ **Shared embeddings module** (`supabase/functions/_shared/embeddings.ts`) — single point of change for embedding provider
 
 **How Chat Accesses Book Content:**
 ```typescript
 // Edge function automatically searches book based on user queries
-const response = await supabase.functions.invoke('idea-framework-consultant-test', {
+const response = await supabase.functions.invoke('idea-framework-consultant-claude', {
   body: {
     message: userMessage,
     chat_history: recentMessages,
-    // System KB search happens automatically inside edge function
+    // pgvector semantic search happens automatically inside edge function
   }
 });
 ```
@@ -497,7 +497,7 @@ const validateAvatarField = (field: string, value: any) => {
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| **OpenAI API Rate Limits** | Chat becomes unavailable | Implement exponential backoff, queue requests, cache responses |
+| **Anthropic API Rate Limits** | Chat becomes unavailable | Implement exponential backoff, queue requests, cache responses |
 | **Large Chat Histories** | Performance degradation | Pagination, virtual scrolling, summarize old messages |
 | **Concurrent Edits** | Data conflicts | Optimistic locking, last-write-wins with history |
 | **Mobile Data Usage** | High bandwidth costs | Compress images, lazy load, offline mode |
@@ -509,8 +509,6 @@ const validateAvatarField = (field: string, value: any) => {
 # Existing (already configured)
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
-VITE_OPENAI_API_KEY=
-
 # New for V2
 VITE_ENABLE_V2_INTERFACE=false
 ```
@@ -735,8 +733,8 @@ User Input → Entity Recognition → Field Mapping → Validation → Database 
 **Token Management**
 - Cache book excerpts (24hr TTL)
 - Summarize old messages
-- Use GPT-4o-mini for extraction
-- GPT-4 for complex generation only
+- Use Claude Haiku for extraction
+- Claude Sonnet for complex generation only
 - Request batching
 
 **Response Caching**
@@ -1075,7 +1073,7 @@ Based on `~/workspace/software-development-best-practices-guide`:
 #### NFR5: Integration
 
 **NFR5.1 External Services**
-- System SHALL integrate with OpenAI GPT-5.3 for chat
+- System SHALL integrate with Anthropic Claude for chat
 - System SHALL support Supabase for data persistence
 - System SHALL implement Stripe for payments (future)
 - System SHALL provide webhook endpoints for events
@@ -1094,7 +1092,7 @@ Based on `~/workspace/software-development-best-practices-guide`:
 - Field Persistence: usePersistedField hook (existing)
 - Styling: Tailwind CSS with Shadcn/ui components
 - Backend: Supabase (PostgreSQL + Auth + Realtime)
-- AI: OpenAI API with streaming responses
+- AI: Anthropic Claude API with streaming responses
 - Hosting: Vercel or Netlify
 - UI Layout: Two-panel responsive design (simplified from three-panel)
 

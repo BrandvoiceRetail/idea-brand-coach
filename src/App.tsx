@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { initPostHog } from "@/lib/posthogClient";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -51,6 +52,10 @@ import FeatureGate from "@/components/FeatureGate";
 import { VersionGate } from "@/components/VersionGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
+// Initialise analytics before the React tree mounts so the auth listener can
+// identify the user as soon as a session arrives. No-op when no key is set.
+initPostHog();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

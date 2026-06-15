@@ -39,6 +39,9 @@ __pycache__/
 # Auto Claude data directory
 .auto-claude/
 
+# Agent-build harness runtime state (sessions, objectives, HALTs, routing)
+.agent-build/
+
 # Claude Code settings
 .claude_settings.json
 

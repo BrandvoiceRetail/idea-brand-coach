@@ -55,6 +55,11 @@ verify_jwt = false
 [functions.save-beta-feedback]
 verify_jwt = false
 
+# verify_jwt stays true: the anon key is itself a valid JWT, so anonymous
+# app submissions pass; user_id is derived from the verified token in-function.
+[functions.save-feedback-event]
+verify_jwt = true
+
 [functions.send-framework-email]
 verify_jwt = false
 

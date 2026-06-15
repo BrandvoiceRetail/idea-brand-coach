@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useServices } from '@/services/ServiceProvider';
 import { SavedSignature } from '@/services/interfaces/ISignatureService';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 /** Stage of the reveal flow. */
 export type SignatureStage = 'paste' | 'loading' | 'options' | 'picked';
@@ -118,12 +119,21 @@ export function useSignatureReveal(
         throw new Error(data?.error || 'No Signature options were returned.');
       }
 
-      setOptions(returnedOptions.slice(0, 4));
+      const shownOptions = returnedOptions.slice(0, 4);
+      setOptions(shownOptions);
       setIsInference(Boolean(data?.inference));
       setUsedReviews(Boolean(data?.usedReviews));
       setStage('options');
+
+      // Funnel: 3-4 options rendered
+      captureAlphaEvent('signature_options_shown', {
+        option_count: shownOptions.length,
+        used_reviews: Boolean(data?.usedReviews),
+        inference: Boolean(data?.inference),
+      });
     } catch (err) {
       console.error('[useSignatureReveal] reveal failed:', err);
+      captureAlphaEvent('llm_call_failed', { which_call: 'signature', error_type: 'invoke_error' });
       setError('Trevor could not reveal your Signature right now. Please try again.');
       setStage('paste');
     }
@@ -133,6 +143,10 @@ export function useSignatureReveal(
     setSelectedIndex(index);
     setSurprise(null);
     setStage('picked');
+
+    // Funnel: tester selected a Signature (index only — content goes to
+    // Supabase feedback_events at submission time)
+    captureAlphaEvent('signature_picked', { chosen_index: index });
 
     // Persist the pick so it survives reloads and feeds downstream use.
     // Fire-and-forget: a save failure must never break the reveal moment.

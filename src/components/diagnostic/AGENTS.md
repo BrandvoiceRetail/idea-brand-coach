@@ -1,29 +1,40 @@
 # Diagnostic Results — Agent & Testing Context
 
-Feature-local instructions for the diagnostic results experience: the **Trust Gap™
-scorecard** and the **product-import CTA** that grounds its interpretation in a
-seller's real Amazon listing. For the shared test account and browser-QA setup, see
-`docs/TEST_ACCOUNT.md` (pointed to from the top-level `CLAUDE.md`).
+Feature-local instructions for the diagnostic results experience. Root `AGENTS.md` applies; this adds
+only what's specific here. Two capabilities live side by side on this page:
+
+1. **Trust Gap™ scorecard → journey bridge → /v2/coach Signature** hand-off (F-059).
+2. The **product-import CTA** that grounds the scorecard's interpretation in a seller's real Amazon listing.
+
+For the shared QA account and browser-QA setup, see `docs/TEST_ACCOUNT.md` (pointed to from the
+top-level `CLAUDE.md`).
 
 ## What this feature is
 
-After a seller completes the brand diagnostic, `DiagnosticResults` renders the Trust
-Gap™ scorecard with a Trevor-voice interpretation per dimension. `ProductImportCta`
-lets the seller import one or more Amazon listings by ASIN; the imported listing copy
-and ~8 embedded reviews are turned into `TrustGapEvidence` and fed back into the
-interpretation so the read cites the seller's real customers instead of generic
-advice. When evidence is present, a small **"Grounded in your listing"** badge shows
-near the four-pillar grid.
+After the 6-question diagnostic, `DiagnosticResults` renders a Trust Gap™ scorecard: an overall
+score (/100) plus the four IDEA pillars (insight, distinctive, empathetic, authentic — each /25),
+each paired with a Trevor-voice interpretation. It names the user's **primary gap** and routes
+"Let's go deeper" to the **journey bridge**, which hands off to the Layer 1 coach to build the
+Signature that closes that gap. Scorecard geometry is deterministic; only the interpretation is LLM.
+
+`ProductImportCta` lets the seller import one or more Amazon listings by ASIN; the imported listing
+copy and ~8 embedded reviews are turned into `TrustGapEvidence` and fed back into the interpretation
+so the read cites the seller's real customers instead of generic advice. When evidence is present, a
+small **"Grounded in your listing"** badge shows near the four-pillar grid.
 
 ## The pieces
 
 | Layer | Path | Notes |
 |-------|------|-------|
-| Page / wiring | `src/pages/DiagnosticResults.tsx` | Holds `importedProducts` + `evidence`; loads products on mount (authed), rebuilds evidence on import, passes `evidence` + `evidenceKey` into the scorecard. |
+| Scorecard UI | `src/components/diagnostic/TrustGapScorecard.tsx` | Renders overall + 4 pillar cards; degrades gracefully if interpretation fails. Accepts optional `evidence`/`evidenceKey` and renders the grounded badge when `evidencePresent`. Fires `scorecard_viewed` (once/mount) + `scorecard_interpretation_shown`. |
+| Bridge UI | `src/components/diagnostic/JourneyBridge.tsx` | Sign-up gate (arch.md D3): guests invited to create a free account vs. bounced to `/auth`. Reads primary gap from `?gap=`. Route `/v1/diagnostic/bridge`. |
 | Import CTA | `src/components/diagnostic/ProductImportCta.tsx` | Inline card (NOT a modal). States: idle → importing → done → error. Multi-ASIN textarea parsed via `parseAsinInput`. |
-| Scorecard | `src/components/diagnostic/TrustGapScorecard.tsx` | Accepts optional `evidence`/`evidenceKey`, forwards to the interpretation hook, renders the grounded badge when `evidencePresent`. |
-| Interpretation hook | `src/hooks/useTrustGapInterpretation.ts` | Folds `evidenceKey` into the cache signature; sends `evidence` in the body; exposes `evidencePresent`. |
-| Service | `useServices().productDataService` (Lane D) | `importProducts`, `getProducts`, `buildTrustGapEvidence` — see `src/services/interfaces/IProductDataService.ts`. |
+| Page / wiring | `src/pages/DiagnosticResults.tsx` | Loads scores from `localStorage` (guest) or DB (authed, via `useDiagnostic`); holds `importedProducts` + `evidence`; loads products on mount (authed), rebuilds evidence on import, passes `evidence` + `evidenceKey` into the scorecard. Route `/v1/diagnostic/results`. |
+| Interpretation hook | `src/hooks/useTrustGapInterpretation.ts` | Calls `diagnostic-interpretation` edge fn with scores in the body (no DB read → guest-safe). Folds `evidenceKey` into the cache signature; sends `evidence` in the body; exposes `evidencePresent`. |
+| Deterministic model | `src/lib/trustGap.ts` | `buildTrustGap`, bands, dimension meta, `trustGapSignature`. |
+| Routing helpers | `src/lib/journeyBridge.ts` | `buildBridgePath`, `parseGapParam`, `buildDeepDiveDestination` (authed → coach; guest → `/auth?redirect=`). Framework-free, unit-tested. |
+| Product-data service | `useServices().productDataService` (Lane D) | `importProducts`, `getProducts`, `buildTrustGapEvidence` — see `src/services/interfaces/IProductDataService.ts`. |
+| Analytics | `src/lib/posthogClient.ts` | `captureAlphaEvent`; no-ops without `VITE_POSTHOG_KEY`. Scores/IDs only — never free text. |
 
 ## Evidence contract (the seam to keep stable)
 
@@ -39,16 +50,21 @@ the service's `buildTrustGapEvidence`). The hook sends `evidence` in the
 `diagnostic-interpretation` request body; the edge function returns
 `evidencePresent: boolean`, which drives the grounded badge.
 
-### Cache-key rule (why the badge appears exactly once)
+## Key seams / rules
 
-The interpretation is cached in `sessionStorage` by a score signature. `evidenceKey`
-(the joined imported-product ids) is folded into that signature, so:
-
-- No evidence → stable signature → cache stays valid (no re-bill on revisit).
-- Import happens → new `evidenceKey` → distinct signature → exactly ONE fresh call.
-
-Covered by `src/hooks/__tests__/useTrustGapInterpretation.test.ts`. Run:
-`npx vitest run src/hooks/__tests__/useTrustGapInterpretation.test.ts`.
+- **Interpretation cache (sessionStorage).** The hook caches by score signature under key
+  `trustGapInterpretation:<signature>` so returning to results with identical scores does NOT re-bill
+  the model. `evidenceKey` (the joined imported-product ids) is folded into that signature, so:
+  - No evidence → stable signature → cache stays valid (no re-bill on revisit).
+  - Import happens → new `evidenceKey` → distinct signature → exactly ONE fresh call.
+  Cache is bypassed on `retry`. sessionStorage failures (private mode / quota) are non-fatal.
+  Covered by `src/hooks/__tests__/useTrustGapInterpretation.test.ts`.
+- **No templated fallback (Trevor Decision 5).** On failure the hook surfaces an honest error + retry —
+  it never invents a fallback interpretation. UI shows "Personalised read unavailable right now."
+- **Gap carried via `?gap=`** (arch.md D1): guest-safe, survives reload and the `/auth` round-trip.
+  Always validate untrusted values with `parseGapParam`.
+- **Don't touch `trustGap.ts` frozen `route` metadata** when changing routing (arch.md D6) — routing
+  lives in `journeyBridge.ts`.
 
 ## Guest behavior
 
@@ -57,27 +73,31 @@ routes to `/auth?redirect=/diagnostic/results` instead of importing — matching
 auth-prompt pattern already used elsewhere on the results page. Product loading and
 evidence building only run for authenticated users.
 
-## How to test the import flow manually (browser, end-to-end)
+## How to test manually (browser, end-to-end)
 
-1. Log in with the test account (`docs/TEST_ACCOUNT.md`) and complete (or revisit) the
-   diagnostic so `/diagnostic/results` renders the scorecard.
-2. In the **"Import your Amazon listing"** card, paste a known ASIN — e.g.
-   `B0CJBQ7F5C` — (one ASIN or Amazon URL per line; multi-ASIN supported, cap 5).
-   Confirm the **"N listings detected"** line updates as you type.
-3. Click **Import listing**. Expect the importing spinner, then a per-ASIN result row
-   (title + reviews saved on success, error text on failure) and a summary line.
-4. After a successful import the scorecard re-fetches its interpretation once and the
-   **"Grounded in your listing"** badge appears near the four-pillar grid.
-5. Reload the page: previously imported listings render with a **Re-import**
-   affordance; the badge persists (evidence is rebuilt on mount).
-6. Confirm **no console errors**.
+1. Sign in with the QA account (`docs/TEST_ACCOUNT.md`); restore Supabase if it auto-paused.
+2. Complete `/diagnostic`, or seed `localStorage.diagnosticData`, then open `/v1/diagnostic/results`.
+3. Confirm overall + four pillar scores render and each pillar shows a Trevor-voice interpretation
+   (skeletons while loading); reload — interpretation should return from cache, no second edge call.
+4. Force a failure (block `diagnostic-interpretation`): expect the error line + "Try again", no fake copy.
+5. Click "Let's go deeper" → lands on `/v1/diagnostic/bridge?gap=<dim>`; "Build my Signature" routes
+   authed users to `/v2/coach?gap=<dim>`, guests to `/auth?redirect=...`.
+6. **Import flow:** in the **"Import your Amazon listing"** card, paste a known ASIN — e.g.
+   `B0CJBQ7F5C` (one ASIN or Amazon URL per line; multi-ASIN supported, cap 5). Confirm the
+   **"N listings detected"** line updates as you type. Click **Import listing** → importing spinner,
+   then a per-ASIN result row + summary line. The scorecard re-fetches its interpretation once and the
+   **"Grounded in your listing"** badge appears. Reload: imported listings render with a **Re-import**
+   affordance; the badge persists (evidence rebuilt on mount).
+7. Confirm **no console errors**.
 
 **Guest path:** open `/diagnostic/results` while logged out → the import button reads
 "Sign in to import" and navigates to `/auth?redirect=/diagnostic/results`.
 
 ## Scope guardrails
 
-`/product-reviews/` pages are login-walled (verified dead 2026-06-04) — the import
-relies on the `/dp/{asin}` scrape only; do not add a reviews-page fetch path. Keep the
-`TrustGapEvidence` type single-sourced from the service interface. The CTA is an inline
-card, not a modal — do not convert it.
+- Keep analytics props to scores/bands/IDs — never put interpretation or answer text in event properties.
+- Interpretation copy is owned by the edge fn (`supabase/functions/`), not these components.
+- `/product-reviews/` pages are login-walled (verified dead 2026-06-04) — the import relies on the
+  `/dp/{asin}` scrape only; do not add a reviews-page fetch path.
+- Keep the `TrustGapEvidence` type single-sourced from the service interface. The CTA is an inline
+  card, not a modal — do not convert it.

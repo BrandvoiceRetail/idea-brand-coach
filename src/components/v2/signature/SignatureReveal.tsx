@@ -12,7 +12,7 @@
  * When no reviews are pasted, the copy softens and options are labelled inference.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -27,12 +27,16 @@ import { Sparkles, Loader2, Info, ArrowLeft, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSignatureReveal, type SignatureConversationTurn } from '@/hooks/v2/useSignatureReveal';
 import { FeedbackMoment1 } from '@/components/v2/feedback/FeedbackMoment1';
+import { SignatureFeedbackForm } from '@/components/v2/signature/SignatureFeedbackForm';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 interface SignatureRevealProps {
   /** Chat turns used as discovery context (role + content). */
   messages: Array<{ role: string; content: string }>;
   /** Extracted brand/customer field values. */
   fieldValues: Record<string, string | string[]>;
+  /** Chat session id, threaded into the Moment-1 feedback row. */
+  sessionId?: string | null;
   /** Optional trigger sizing/styling. */
   triggerClassName?: string;
   /**
@@ -43,8 +47,6 @@ interface SignatureRevealProps {
   preloadedReviews?: string;
   /** Number of imported reviews behind {@link preloadedReviews}, for the banner. */
   preloadedReviewCount?: number;
-  /** Optional chat session id, forwarded to the Moment 1 feedback event. */
-  sessionId?: string | null;
   /** Called after a picked Signature has been persisted (see useSignatureReveal). */
   onSignatureSaved?: (saved: import('@/services/interfaces/ISignatureService').SavedSignature) => void;
 }
@@ -52,10 +54,10 @@ interface SignatureRevealProps {
 export function SignatureReveal({
   messages,
   fieldValues,
+  sessionId,
   triggerClassName,
   preloadedReviews = '',
   preloadedReviewCount = 0,
-  sessionId,
   onSignatureSaved,
 }: SignatureRevealProps): JSX.Element {
   const [open, setOpen] = useState(false);
@@ -90,13 +92,40 @@ export function SignatureReveal({
 
   const hasReviews = reviews.trim().length > 0;
 
+  // Funnel: the reveal CTA is permanently visible in the coach header
+  useEffect(() => {
+    captureAlphaEvent('signature_reveal_cta_shown', { trigger: 'always_visible' });
+  }, []);
+
+  // Funnel: paste field presented (each time the dialog reaches the paste stage)
+  useEffect(() => {
+    if (open && stage === 'paste') {
+      captureAlphaEvent('reviews_paste_shown');
+    }
+  }, [open, stage]);
+
   const handleOpenChange = (next: boolean): void => {
     setOpen(next);
     if (!next) reset();
   };
 
   const handleReveal = (): void => {
+    captureAlphaEvent('signature_reveal_requested');
     reveal({ conversation, fields: fieldValues });
+  };
+
+  // Funnel: tester pasted reviews — counts only, NEVER the text
+  const handleReviewsPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>): void => {
+    const pasted = e.clipboardData.getData('text');
+    if (!pasted.trim()) return;
+    const reviewCountEstimate = pasted
+      .split(/\n{2,}/)
+      .map((block) => block.trim())
+      .filter(Boolean).length;
+    captureAlphaEvent('reviews_pasted', {
+      char_count: pasted.length,
+      review_count_estimate: reviewCountEstimate,
+    });
   };
 
   return (
@@ -146,6 +175,7 @@ export function SignatureReveal({
               <Textarea
                 value={reviews}
                 onChange={(e) => setReviews(e.target.value)}
+                onPaste={handleReviewsPaste}
                 placeholder="Paste customer reviews here — yours and competitors'. The more raw, unprompted language, the sharper the Signature. (Optional, but reviews make it land harder.)"
                 rows={8}
                 className="resize-y"
@@ -288,11 +318,21 @@ export function SignatureReveal({
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  {surprise === 'yes'
-                    ? 'That recognition is the whole point. That is your Signature.'
-                    : 'Good — then it is already true to you. Keep it close; it is your Signature.'}
-                </p>
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    {surprise === 'yes'
+                      ? 'That recognition is the whole point. That is your Signature.'
+                      : 'Good — then it is already true to you. Keep it close; it is your Signature.'}
+                  </p>
+
+                  {/* Moment-1 feedback — opens after the surprise answer so the
+                      recognition moment lands first */}
+                  <SignatureFeedbackForm
+                    chosenSignature={options[selectedIndex]}
+                    signatureOptions={options}
+                    sessionId={sessionId}
+                  />
+                </>
               )}
 
               <div className="flex items-center justify-between pt-1">

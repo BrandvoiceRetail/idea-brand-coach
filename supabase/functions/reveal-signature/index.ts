@@ -20,7 +20,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 // Match the model used by the working idea-framework-consultant-claude function.
-const SONNET_MODEL = 'claude-sonnet-4-20250514';
+const SONNET_MODEL = 'claude-sonnet-4-6';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -210,9 +210,8 @@ serve(async (req) => {
       max_tokens: 1024,
       system: systemContent,
       messages: [
+        // No assistant prefill — Sonnet 4.6 rejects last-turn prefills (400).
         { role: 'user', content: userMessageParts.join('\n\n') },
-        // Prefill forces a JSON object response and suppresses preamble.
-        { role: 'assistant', content: '{"options":' },
       ],
       temperature: 0.9,
     });
@@ -251,8 +250,10 @@ serve(async (req) => {
 
     const data = await response.json();
     const rawText = data?.content?.[0]?.text ?? '';
-    // Reconstruct the full JSON object (the prefill is not echoed back by the API).
-    const reconstructed = `{"options":${rawText}`;
+    // Without the prefill the model returns the full object; fall back to the
+    // legacy fragment reconstruction if it ever emits a bare value.
+    const unfenced = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+    const reconstructed = unfenced.startsWith('{') ? unfenced : `{"options":${rawText}`;
 
     let options: string[] = [];
     try {

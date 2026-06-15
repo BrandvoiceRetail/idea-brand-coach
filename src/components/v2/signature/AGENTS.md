@@ -19,11 +19,14 @@ VOCABULARY but synthesises a TRUTH they had not articulated.
 | Layer | Path | Notes |
 |-------|------|-------|
 | UI (dialog, cards, gold result) | `src/components/v2/signature/SignatureReveal.tsx` | Self-contained `<Dialog>`. State machine: paste → loading → options → picked. Accepts `preloadedReviews`/`preloadedReviewCount` — when present, shows a "Using your N imported reviews" banner and prefills the textarea (manual paste/edit still works). |
-| State / API call | `src/hooks/v2/useSignatureReveal.ts` | Calls `supabase.functions.invoke('reveal-signature', …)`. Takes `{ initialReviews }` to seed (and re-seed on reset) the reviews state. |
+| State / API call | `src/hooks/v2/useSignatureReveal.ts` | Calls `supabase.functions.invoke('reveal-signature', …)`. Takes `{ initialReviews }` to seed (and re-seed on reset) the reviews state. Fires the `signature_picked` funnel event on pick. |
 | Reviews source | `src/services/SupabaseProductDataService.ts` (`getAllReviewsAsString`) | Reviews imported from the seller's Amazon listings (product-data-hookup feature, 2026-06-04) — aggregated across all their `user_products`, formatted "★{rating} — {body}". Fetched in `BrandCoachV2` and passed down. The old paste-only path remains the fallback when nothing was imported. |
 | Persistence | `src/services/SupabaseSignatureService.ts` (+ `interfaces/ISignatureService.ts`) | Picking an option fire-and-forget saves `{signature_text, all_options, chosen_index, used_reviews, inference}` to the `signatures` table (RLS owner-only). `BrandCoachV2` loads the latest pick on mount and shows it OUTSIDE the dialog as the "Your Signature: …" strip (`data-testid="saved-signature-strip"`); a save failure never breaks the reveal moment. Added 2026-06-12 (Loop 05 Alpha bar: pick → reload → still shown). |
-| Mount point | `src/pages/v2/BrandCoachV2.tsx` | `<SignatureReveal messages={displayMessages} fieldValues={fieldValues} preloadedReviews={…} preloadedReviewCount={…} />` in the chat header. |
-| Edge function | `supabase/functions/reveal-signature/index.ts` | Claude **Sonnet** (`claude-sonnet-4-20250514`), `verify_jwt: true`, JSON-prefill output. Needs the `ANTHROPIC_API_KEY` secret. Returns `{ options, usedReviews, inference }`. |
+| Mount point | `src/pages/v2/BrandCoachV2.tsx` | `<SignatureReveal messages={displayMessages} fieldValues={fieldValues} preloadedReviews={…} preloadedReviewCount={…} sessionId={currentSessionId} onSignatureSaved={…} />` in the chat header. |
+| Edge function | `supabase/functions/reveal-signature/index.ts` | Claude **Sonnet** (`claude-sonnet-4-6`), `verify_jwt: true`. No assistant prefill — Sonnet 4.6 rejects last-turn prefills (400); the handler unfences/reconstructs the JSON object instead. Needs the `ANTHROPIC_API_KEY` secret. Returns `{ options, usedReviews, inference }`. |
+| Moment-1 feedback (Alpha) | `src/components/v2/signature/SignatureFeedbackForm.tsx` | Renders inside the picked stage AFTER the surprise answer. Writes to `feedback_events` via the `save-feedback-event` edge fn. Every row carries `posthog_distinct_id` — THE JOIN KEY to the PostHog funnel. |
+| Feedback edge fn | `supabase/functions/save-feedback-event/index.ts` | `verify_jwt: true` (anon key passes); `user_id` derived from the verified JWT, never the body. Service-role insert into `feedback_events`; rejects requests without `posthogDistinctId` (400). |
+| Analytics | `src/lib/posthogClient.ts` | All funnel events (`signature_reveal_cta_shown`, `reviews_paste_shown/pasted`, `signature_reveal_requested/options_shown/picked`, `feedback_modal_opened/submitted`, `thank_you_viewed`, `llm_call_failed`). No-ops when `VITE_POSTHOG_KEY` is unset. Counts/booleans/IDs only — NEVER review text or conversation content in event props. |
 
 > **Removed 2026-06-04:** the Review Analyzer (competitor ASIN scrape modal: `ReviewAnalyzerModal`, `ChatToolsMenu`) and the `competitiveInsights` chat plumbing were deleted in favour of the product-data import path (`src/components/diagnostic/AGENTS.md`). `review-scraper-deep` is gone too — Amazon login-walls `/product-reviews/` pages; reviews now come embedded in the `/dp/` listing scrape.
 
@@ -51,7 +54,20 @@ the four InfinityVault few-shot examples intact.
 5. Pick one → dominant **gold-accent** result + "Did this surprise you?". The pick is
    persisted: expect a new `signatures` row AND, after a page reload, the
    "Your Signature: …" strip under the chat header.
-6. Confirm **no console errors**.
+6. Answer the surprise prompt → the **Moment-1 feedback form** appears (two
+   yes/partially/no questions + optional free text). Submit requires both
+   questions answered. On success a thank-you note replaces the form.
+7. Verify the write: `SELECT moment, posthog_distinct_id, chosen_signature,
+   q1_score_felt_right, q2_signature_felt_right, q3_whats_off FROM
+   feedback_events ORDER BY created_at DESC LIMIT 1` (service role —
+   clients cannot SELECT this table). `posthog_distinct_id` must be non-empty.
+8. Confirm **no console errors**.
+
+**Analytics check (when `VITE_POSTHOG_KEY` is set):** the journey above should
+emit `signature_reveal_cta_shown → reviews_paste_shown → reviews_pasted →
+signature_reveal_requested → signature_options_shown → signature_picked →
+feedback_modal_opened → feedback_submitted → thank_you_viewed` in PostHog.
+Without the env key all capture calls no-op (nothing to assert).
 
 **No-reviews path:** leave the textarea empty → the dialog shows an inference
 warning and the function returns `inference: true` (usually 3 options).

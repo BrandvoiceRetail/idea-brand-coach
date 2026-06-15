@@ -11,7 +11,9 @@
  * /beta-journey quick/comprehensive paths) on 2026-06-07.
  */
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { captureAlphaEvent } from "@/lib/posthogClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -62,6 +64,11 @@ const PATH_STEPS: PathStep[] = [
 ];
 
 export default function BetaWelcome(): JSX.Element {
+  // Funnel: top of the Alpha journey
+  useEffect(() => {
+    captureAlphaEvent('beta_welcome_viewed', { referrer: document.referrer || null });
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4">
       <div className="max-w-2xl mx-auto py-10">

@@ -9,6 +9,7 @@
  * and degrades gracefully if unavailable.
  */
 
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,7 @@ import {
 } from '@/hooks/useTrustGapInterpretation';
 import { buildBridgePath } from '@/lib/journeyBridge';
 import type { TrustGapEvidence } from '@/services/interfaces/IProductDataService';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 interface TrustGapScorecardProps {
   scores: TrustGapInputScores;
@@ -169,6 +171,28 @@ export function TrustGapScorecard({ scores, evidence, evidenceKey }: TrustGapSco
   const interpretations: TrustGapInterpretation['interpretations'] | undefined = interpretation?.interpretations;
   const overallBand = getTrustGapBand(Math.round(model.overall / 4));
   const gap = model.primaryGapMeta;
+
+  // Funnel: scorecard rendered (once per mount)
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (viewedRef.current) return;
+    viewedRef.current = true;
+    captureAlphaEvent('scorecard_viewed', {
+      primary_gap: model.primaryGap,
+      overall_score: model.overall,
+      ...Object.fromEntries(model.dimensions.map((d) => [`score_${d.key}`, d.score])),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Funnel: per-dimension interpretation rendered (no templated fallback
+  // exists — Trevor Decision 5 — so the source is always the LLM)
+  const interpretationShownRef = useRef(false);
+  useEffect(() => {
+    if (!interpretation || interpretationShownRef.current) return;
+    interpretationShownRef.current = true;
+    captureAlphaEvent('scorecard_interpretation_shown', { interpretation_source: 'llm' });
+  }, [interpretation]);
 
   return (
     <div className="space-y-6">
