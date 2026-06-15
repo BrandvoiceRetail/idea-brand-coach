@@ -93,7 +93,7 @@ export function BrandCoachHeader({
     : 0;
 
   return (
-    <header className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between">
+    <header className="flex-shrink-0 border-b px-4 py-3 flex flex-wrap items-center justify-between gap-y-2">
       <div className={isMobile ? 'flex flex-col gap-1' : 'flex items-center gap-3'}>
         <h1 className="font-semibold text-sm lg:text-base">IDEA Brand Coach</h1>
         <div className="flex items-center gap-2">

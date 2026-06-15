@@ -12,6 +12,7 @@
 
 import { useCallback, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getPostHogDistinctId } from '@/lib/distinctId';
 
 export interface RecordEventArgs {
   /** Event moment tag, e.g. 'moment_1'. */
@@ -47,9 +48,18 @@ export function useFeedbackEvent(): UseFeedbackEventReturn {
       setIsSubmitting(true);
       setError(null);
       try {
+        // v3 contract: posthogDistinctId is REQUIRED (the funnel join key) and
+        // the session id field is camelCase. See supabase/functions/save-feedback-event.
         const { data, error: invokeError } = await supabase.functions.invoke<SaveFeedbackEventResponse>(
           'save-feedback-event',
-          { body: { moment, session_id: sessionId ?? null, payload } },
+          {
+            body: {
+              moment,
+              posthogDistinctId: getPostHogDistinctId(),
+              sessionId: sessionId ?? null,
+              payload,
+            },
+          },
         );
 
         if (invokeError || data?.error) {

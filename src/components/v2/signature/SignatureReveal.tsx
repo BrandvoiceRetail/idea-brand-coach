@@ -45,6 +45,8 @@ interface SignatureRevealProps {
   preloadedReviewCount?: number;
   /** Optional chat session id, forwarded to the Moment 1 feedback event. */
   sessionId?: string | null;
+  /** Called after a picked Signature has been persisted (see useSignatureReveal). */
+  onSignatureSaved?: (saved: import('@/services/interfaces/ISignatureService').SavedSignature) => void;
 }
 
 export function SignatureReveal({
@@ -54,6 +56,7 @@ export function SignatureReveal({
   preloadedReviews = '',
   preloadedReviewCount = 0,
   sessionId,
+  onSignatureSaved,
 }: SignatureRevealProps): JSX.Element {
   const [open, setOpen] = useState(false);
   // Moment 1 feedback prompt — opened right after the user PICKS a Signature.
@@ -73,7 +76,7 @@ export function SignatureReveal({
     answerSurprise,
     backToOptions,
     reset,
-  } = useSignatureReveal({ initialReviews: preloadedReviews });
+  } = useSignatureReveal({ initialReviews: preloadedReviews, onSignatureSaved });
 
   const hasPreloadedReviews = preloadedReviewCount > 0 && preloadedReviews.trim().length > 0;
 

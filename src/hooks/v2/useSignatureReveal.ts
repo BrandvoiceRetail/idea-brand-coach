@@ -12,6 +12,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useServices } from '@/services/ServiceProvider';
+import { SavedSignature } from '@/services/interfaces/ISignatureService';
 
 /** Stage of the reveal flow. */
 export type SignatureStage = 'paste' | 'loading' | 'options' | 'picked';
@@ -37,6 +39,11 @@ interface UseSignatureRevealConfig {
    * imported Amazon reviews). The user can still edit or replace them.
    */
   initialReviews?: string;
+  /**
+   * Called after a picked Signature has been persisted, so the page can show
+   * the saved pick outside the dialog without refetching.
+   */
+  onSignatureSaved?: (saved: SavedSignature) => void;
 }
 
 interface UseSignatureRevealReturn {
@@ -66,12 +73,14 @@ interface RevealResponse {
 }
 
 export function useSignatureReveal(
-  { initialReviews = '' }: UseSignatureRevealConfig = {},
+  { initialReviews = '', onSignatureSaved }: UseSignatureRevealConfig = {},
 ): UseSignatureRevealReturn {
+  const { signatureService } = useServices();
   const [stage, setStage] = useState<SignatureStage>('paste');
   const [reviews, setReviews] = useState(initialReviews);
   const [options, setOptions] = useState<string[]>([]);
   const [isInference, setIsInference] = useState(false);
+  const [usedReviews, setUsedReviews] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [surprise, setSurprise] = useState<SurpriseAnswer>(null);
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +120,7 @@ export function useSignatureReveal(
 
       setOptions(returnedOptions.slice(0, 4));
       setIsInference(Boolean(data?.inference));
+      setUsedReviews(Boolean(data?.usedReviews));
       setStage('options');
     } catch (err) {
       console.error('[useSignatureReveal] reveal failed:', err);
@@ -123,7 +133,25 @@ export function useSignatureReveal(
     setSelectedIndex(index);
     setSurprise(null);
     setStage('picked');
-  }, []);
+
+    // Persist the pick so it survives reloads and feeds downstream use.
+    // Fire-and-forget: a save failure must never break the reveal moment.
+    const signatureText = options[index];
+    if (signatureText) {
+      signatureService
+        .saveSignature({
+          signatureText,
+          allOptions: options,
+          chosenIndex: index,
+          usedReviews,
+          inference: isInference,
+        })
+        .then((saved) => onSignatureSaved?.(saved))
+        .catch((saveError) => {
+          console.warn('[useSignatureReveal] Failed to persist Signature pick:', saveError);
+        });
+    }
+  }, [options, usedReviews, isInference, signatureService, onSignatureSaved]);
 
   const answerSurprise = useCallback((answer: SurpriseAnswer): void => {
     setSurprise(answer);

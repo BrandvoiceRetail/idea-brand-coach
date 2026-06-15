@@ -10,12 +10,14 @@ import { IChatService } from './interfaces/IChatService';
 import { IAuthService } from './interfaces/IAuthService';
 import { IAvatarService } from './interfaces/IAvatarService';
 import { IProductDataService } from './interfaces/IProductDataService';
+import { ISignatureService } from './interfaces/ISignatureService';
 import { SupabaseDiagnosticService } from './SupabaseDiagnosticService';
 import { SupabaseUserProfileService } from './SupabaseUserProfileService';
 import { SupabaseChatService } from './SupabaseChatService';
 import { SupabaseAuthService } from './SupabaseAuthService';
 import { SupabaseAvatarService } from './SupabaseAvatarService';
 import { SupabaseProductDataService } from './SupabaseProductDataService';
+import { SupabaseSignatureService } from './SupabaseSignatureService';
 
 interface Services {
   diagnosticService: IDiagnosticService;
@@ -24,6 +26,7 @@ interface Services {
   authService: IAuthService;
   avatarService: IAvatarService;
   productDataService: IProductDataService;
+  signatureService: ISignatureService;
 }
 
 const ServicesContext = createContext<Services | null>(null);
@@ -49,6 +52,7 @@ export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children }) =>
     authService: new SupabaseAuthService(),
     avatarService: new SupabaseAvatarService(),
     productDataService: new SupabaseProductDataService(),
+    signatureService: new SupabaseSignatureService(),
   };
 
   return (
