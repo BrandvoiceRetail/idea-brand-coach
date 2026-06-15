@@ -72,3 +72,6 @@ verify_jwt = false
 
 [functions.sync-diagnostic-to-user-kb]
 verify_jwt = false
+
+[functions.diagnostic-interpretation]
+verify_jwt = false

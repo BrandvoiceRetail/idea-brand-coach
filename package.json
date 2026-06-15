@@ -11,11 +11,17 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "mcp:dev": "tsx watch src/mcp/index.ts",
+    "mcp:start": "tsx src/mcp/index.ts",
+    "typecheck:mcp": "tsc -p tsconfig.mcp.json --noEmit",
+    "build:panel": "node scripts/build-onboard-panel.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@huggingface/transformers": "^3.7.1",
+    "@modelcontextprotocol/ext-apps": "^1.7.4",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -91,6 +97,7 @@
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.20",
+    "esbuild": "^0.21.5",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
@@ -99,6 +106,7 @@
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
+    "tsx": "^4.22.4",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
