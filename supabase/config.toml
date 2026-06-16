@@ -78,3 +78,6 @@ verify_jwt = false
 
 [functions.import-product-data]
 verify_jwt = false
+
+[functions.identify-decision-trigger]
+verify_jwt = false
