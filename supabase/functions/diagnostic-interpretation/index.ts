@@ -9,15 +9,85 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 // so this function performs NO database read — it works for guests and is immune
 // to the diagnostic-read path. Cloned from brand-ai-assistant (CORS, prompt
 // caching, raw-fetch Anthropic call, try/catch). Anthropic key only, server-side.
+//
+// PUBLIC by design (verify_jwt = false): the free diagnostic is a top-of-funnel
+// lead magnet that anonymous users run before signup. Because it calls a paid LLM
+// unauthenticated, it carries lightweight abuse controls (below). Note: per-call
+// cost is already bounded structurally — the only inputs that reach the model are
+// the four scores (clamped 0-25), the overall (clamped 0-100) and the enum primary
+// gap; NO free text from the request is ever placed in the prompt.
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+// ── Abuse controls (public endpoint) ────────────────────────────────────────
+// Tunable via env without a redeploy of logic.
+const MAX_BODY_BYTES = Number(Deno.env.get('DIAGNOSTIC_MAX_BODY_BYTES') ?? '4096');
+const RATE_LIMIT_MAX = Number(Deno.env.get('DIAGNOSTIC_RATE_LIMIT_MAX') ?? '20');          // requests...
+const RATE_LIMIT_WINDOW_MS = Number(Deno.env.get('DIAGNOSTIC_RATE_LIMIT_WINDOW_MS') ?? '60000'); // ...per window (default 60s)
+// Comma-separated allowlist of browser origins. If UNSET, origin is not enforced
+// (kept permissive so an unconfigured prod deploy is not broken) — set this in the
+// function's secrets to restrict the endpoint to the app's domain(s).
+const ALLOWED_ORIGINS = (Deno.env.get('DIAGNOSTIC_ALLOWED_ORIGINS') ?? '')
+  .split(',').map((o) => o.trim()).filter(Boolean);
+
+const BASE_CORS: Record<string, string> = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+/** Resolve CORS headers for this request. When an allowlist is configured, reflect
+ *  the caller's origin only if allowed (else the first allowed origin, so browsers
+ *  block it); when unset, stay permissive ('*'). */
+function resolveCors(req: Request): Record<string, string> {
+  if (ALLOWED_ORIGINS.length === 0) {
+    return { 'Access-Control-Allow-Origin': '*', ...BASE_CORS };
+  }
+  const origin = req.headers.get('origin') ?? '';
+  const allowed = ALLOWED_ORIGINS.includes(origin);
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
+    'Vary': 'Origin',
+    ...BASE_CORS,
+  };
+}
+
+/** Whether the request's Origin is allowed. Unset allowlist => allow (no enforcement).
+ *  A request with no Origin header (e.g. a raw script) is allowed only when the
+ *  allowlist is unset; with an allowlist configured, a missing/unknown origin is denied. */
+function isOriginAllowed(req: Request): boolean {
+  if (ALLOWED_ORIGINS.length === 0) return true;
+  return ALLOWED_ORIGINS.includes(req.headers.get('origin') ?? '');
+}
+
+function clientIp(req: Request): string {
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  return req.headers.get('cf-connecting-ip') ?? 'unknown';
+}
+
+// Best-effort, per-isolate sliding-window limiter keyed by client IP. It bounds
+// rapid-fire abuse from a single IP hitting a warm instance. It is NOT a global
+// limit (each edge isolate keeps its own map and it resets on cold start); for a
+// hard cross-instance guarantee, back this with a shared store (Postgres/Upstash)
+// or a CDN/WAF rate rule. Good enough as a first layer for a cheap Haiku endpoint
+// whose per-call cost is already bounded.
+const ipHits = new Map<string, number[]>();
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const recent = (ipHits.get(ip) ?? []).filter((t) => t > windowStart);
+  recent.push(now);
+  ipHits.set(ip, recent);
+  // Opportunistic cleanup so the map can't grow unbounded.
+  if (ipHits.size > 5000) {
+    for (const [k, v] of ipHits) {
+      if (v.length === 0 || v[v.length - 1] <= windowStart) ipHits.delete(k);
+    }
+  }
+  return recent.length > RATE_LIMIT_MAX;
+}
 
 type Dimension = 'insight' | 'distinctive' | 'empathetic' | 'authentic';
 const DIMENSIONS: Dimension[] = ['insight', 'distinctive', 'empathetic', 'authentic'];
@@ -205,19 +275,64 @@ function parseModelJson(text: string): { interpretations: Record<string, string>
 }
 
 serve(async (req) => {
+  const cors = resolveCors(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: cors });
+  }
+
+  // ── Abuse controls ────────────────────────────────────────────────────────
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { status: 405, headers: { ...cors, 'Content-Type': 'application/json' } },
+    );
+  }
+
+  if (!isOriginAllowed(req)) {
+    return new Response(
+      JSON.stringify({ error: 'Origin not allowed' }),
+      { status: 403, headers: { ...cors, 'Content-Type': 'application/json' } },
+    );
+  }
+
+  const ip = clientIp(req);
+  if (isRateLimited(ip)) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests. Please slow down and try again shortly.' }),
+      {
+        status: 429,
+        headers: { ...cors, 'Content-Type': 'application/json', 'Retry-After': String(Math.ceil(RATE_LIMIT_WINDOW_MS / 1000)) },
+      },
+    );
   }
 
   if (!anthropicApiKey) {
     return new Response(
       JSON.stringify({ error: 'Anthropic API key not configured' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
     );
   }
 
   try {
-    const body = (await req.json()) as InterpretationRequest;
+    // Bound the request body before parsing (the legitimate payload is ~100 bytes).
+    const rawBody = await req.text();
+    if (rawBody.length > MAX_BODY_BYTES) {
+      return new Response(
+        JSON.stringify({ error: 'Request body too large' }),
+        { status: 413, headers: { ...cors, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    let body: InterpretationRequest;
+    try {
+      body = JSON.parse(rawBody) as InterpretationRequest;
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON body' }),
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
+      );
+    }
 
     // Normalise and validate the incoming scores (each clamped to 0-25).
     const scores = {} as Record<Dimension, number>;
@@ -226,7 +341,7 @@ serve(async (req) => {
       if (typeof raw !== 'number' || !Number.isFinite(raw)) {
         return new Response(
           JSON.stringify({ error: `Missing or invalid score for "${dim}".` }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         );
       }
       scores[dim] = Math.max(0, Math.min(25, Math.round(raw)));
@@ -328,7 +443,7 @@ serve(async (req) => {
         primaryGapSummary: parsed.primaryGapSummary.trim(),
         evidencePresent,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { headers: { ...cors, 'Content-Type': 'application/json' } },
     );
   } catch (error) {
     console.error('Error in diagnostic-interpretation function:', error);
@@ -337,7 +452,7 @@ serve(async (req) => {
     const detail = error instanceof Error ? error.message.slice(0, 200) : 'unknown';
     return new Response(
       JSON.stringify({ error: 'Unable to generate your interpretation right now. Please try again.', detail }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
     );
   }
 });
