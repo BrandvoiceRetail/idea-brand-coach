@@ -31,6 +31,7 @@ import { buildAgentTools } from './tools.ts';
 import { buildTieredFieldContext } from './fields.ts';
 import { retrieveAllContext } from './context.ts';
 import { buildMemorySnapshot } from './memory-context.ts';
+import { buildDecisionTriggerSnapshot } from './decision-trigger-context.ts';
 import { runAgenticLoop, runNonStreamingLoop } from './loop.ts';
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
@@ -119,17 +120,21 @@ serve(async (req) => {
 
     let userKnowledgeContext = '';
     let memorySnapshot = '';
+    let decisionTriggerSnapshot = '';
 
     if (userId && supabaseClient) {
-      const [ctxResult, snapshot] = await Promise.all([
+      const [ctxResult, snapshot, triggerSnapshot] = await Promise.all([
         retrieveAllContext(supabaseClient, userId, message, {
           needsFullContext,
           hasUploadedDocuments,
         }),
         memoryEnabled ? buildMemorySnapshot(supabaseClient, userId) : Promise.resolve(''),
+        // One indexed lookup, runs alongside the other context reads (no added latency).
+        buildDecisionTriggerSnapshot(supabaseClient, userId),
       ]);
       userKnowledgeContext = ctxResult.userKnowledgeContext;
       memorySnapshot = snapshot;
+      decisionTriggerSnapshot = triggerSnapshot;
     }
 
     // ── Static system block (BP1 — shared across users per variant) ─────
@@ -149,6 +154,7 @@ serve(async (req) => {
     const perUserParts: string[] = [];
     if (userKnowledgeContext) perUserParts.push(userKnowledgeContext);
     if (productContext) perUserParts.push(`THE FOUNDER'S OWN PRODUCT (from their live Amazon listing):\n${productContext}`);
+    if (decisionTriggerSnapshot) perUserParts.push(decisionTriggerSnapshot);
     if (memorySnapshot) perUserParts.push(memorySnapshot);
 
     const sessionContext = buildSessionContext({
