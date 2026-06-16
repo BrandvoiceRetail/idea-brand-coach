@@ -1,0 +1,150 @@
+{
+  "book": "What Captures The Heart Goes In The Cart \u2014 Trevor Bradford (2025)",
+  "source": "skills/idea/_source/book.txt (full pdftotext, 4959 lines, 11 chapters + front/back matter); book_layout.txt for tables; _inventory.md = canonical section map",
+  "resume_protocol": "Read _state.json + _coverage.md + _source/_inventory.md first. Author the chapter named in `next`. Do NOT re-run the inventory agents \u2014 the map is in _inventory.md. After authoring: fill the chapter's forward-mapping table in _coverage.md, mark it done here, run the structure check (<=5 children per content folder), then schedule the next iteration.",
+  "granularity_rule": "one skill = one concept or one tactic; verbatim composite assets (the 15-row trigger table, canvas tables, the 5-stage signpost map, the risk/timing/friction brand lists, the MyBrand Supplements system-prompt, the reading list) stay as ONE skill, word-for-word.",
+  "structure_rule": "<=5 children per folder INCLUDING root, recursive. All content categories (00-foundations..04-science-and-research) live under skills/idea/framework/ so root stays at <=5 (README.md,_state.json,_coverage.md,_source/,framework/). Justified in _coverage.md.",
+  "format_spec": "YAML frontmatter {chapter, section, source_pages, type: concept|tactic|framework|science|reference, status} + '# SKILL \u2014 <Title>' + '## Purpose' + '---' + content. Cross-link related skills with [[slug]].",
+  "top_level": {
+    "00-foundations": "Introduction, Ch1 Ecommerce Landscape, Ch2 IDEA Framework",
+    "01-customer": "Ch3 Avatar 2.0, Ch8 Customer Journey",
+    "02-brand": "Ch4 Authentically Human, Ch5 Brand Canvas, Ch6 Brand Voice",
+    "03-apply": "Ch7 Custom GPT, Ch9 Product Development, Ch10 Personal Brand",
+    "04-science-and-research": "Ch11 Research Guide, cross-cutting behavioral science, Further Reading"
+  },
+  "chapters": {
+    "intro": {
+      "lines": "1-450",
+      "sections": 5,
+      "planned_skills": 8,
+      "status": "done",
+      "dir": "framework/00-foundations/00-introduction"
+    },
+    "ch1": {
+      "lines": "451-845",
+      "sections": 18,
+      "planned_skills": 11,
+      "status": "done",
+      "dir": "framework/00-foundations/01-ecommerce-landscape"
+    },
+    "ch2": {
+      "lines": "846-1907",
+      "sections": 33,
+      "planned_skills": 27,
+      "status": "done",
+      "dir": "framework/00-foundations/02-idea-framework"
+    },
+    "ch3": {
+      "lines": "1908-2289",
+      "sections": 26,
+      "planned_skills": 16,
+      "status": "done",
+      "dir": "framework/01-customer/00-avatar-2.0"
+    },
+    "ch8": {
+      "lines": "3713-4234",
+      "sections": 24,
+      "planned_skills": 19,
+      "status": "done",
+      "dir": "framework/01-customer/01-customer-journey"
+    },
+    "ch4": {
+      "lines": "2290-2565",
+      "sections": 19,
+      "planned_skills": 13,
+      "status": "done",
+      "dir": "framework/02-brand/00-authentically-human"
+    },
+    "ch5": {
+      "lines": "2566-3114",
+      "sections": 18,
+      "planned_skills": 14,
+      "status": "done",
+      "dir": "framework/02-brand/01-brand-canvas"
+    },
+    "ch6": {
+      "lines": "3115-3284",
+      "sections": 12,
+      "planned_skills": 10,
+      "status": "done",
+      "dir": "framework/02-brand/02-brand-voice"
+    },
+    "ch7": {
+      "lines": "3285-3712",
+      "sections": 22,
+      "planned_skills": 11,
+      "status": "done",
+      "dir": "framework/03-apply/00-custom-gpt"
+    },
+    "ch9": {
+      "lines": "4235-4524",
+      "sections": 13,
+      "planned_skills": 11,
+      "status": "done",
+      "dir": "framework/03-apply/01-product-development"
+    },
+    "ch10": {
+      "lines": "4525-4740",
+      "sections": 18,
+      "planned_skills": 13,
+      "status": "done",
+      "dir": "framework/03-apply/02-personal-brand"
+    },
+    "ch11": {
+      "lines": "4741-4959",
+      "sections": 8,
+      "planned_skills": 7,
+      "status": "done",
+      "dir": "framework/04-science-and-research/00-research-guide"
+    },
+    "science": {
+      "lines": "woven",
+      "sections": 0,
+      "planned_skills": 4,
+      "status": "done",
+      "dir": "framework/04-science-and-research/01-behavioral-science (+ 02-further-reading)"
+    }
+  },
+  "sections_total": 218,
+  "sections_done": [
+    "intro",
+    "ch1",
+    "ch2",
+    "ch3",
+    "ch4",
+    "ch5",
+    "ch6",
+    "ch7",
+    "ch8",
+    "ch9",
+    "ch10",
+    "ch11",
+    "science"
+  ],
+  "skills_written_count": 158,
+  "skills_written_note": "per-file list lives in _coverage.md forward-mapping tables; chapter `status:done` flags are the resume source of truth",
+  "gaps": [],
+  "next": "DONE \u2014 all chapters authored, verified, cleaned up, README written",
+  "done_gate": [
+    "100% coverage both directions",
+    "<=5 children per content folder",
+    "atomic+format+verbatim",
+    "completeness-critic re-read",
+    "README.md full map"
+  ],
+  "top_level_note": "content lives under framework/; the 5 categories are framework/00-foundations, framework/01-customer, framework/02-brand, framework/03-apply, framework/04-science-and-research",
+  "corrections": [
+    "emotional-triggers table = 13 rows (inventory said 15)",
+    "anticipating-barriers = 7 brands (inventory said 8)",
+    "Read-tool line numbers run ~+184 vs grep/wc late in book (form-feeds); verification is content-based"
+  ],
+  "status": "COMPLETE",
+  "done_gate_result": {
+    "coverage_both_directions": "PASS (3 critics, gap closed)",
+    "structure_<=5": "PASS",
+    "atomicity_format_verbatim": "PASS",
+    "completeness_critic": "PASS",
+    "readme_map": "written"
+  },
+  "old_19_disposition": "12 pure-duplicates removed; 7 beyond-the-book skills MOVED to skills/idea-bonus-pack/ (paid add-on). Launch library skills/idea/ is book-only."
+}
