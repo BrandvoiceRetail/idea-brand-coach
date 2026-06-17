@@ -31,6 +31,12 @@ export interface SessionStreamState {
   hasTextOutput: boolean;
   extractedFieldsCount: number;
   textLength: number;
+  /**
+   * Optional time-to-first-token hook. Invoked once, on the first text byte
+   * forwarded to the client, so the loop can record TTFT for telemetry. No-op
+   * when unset (keeps the stream layer free of telemetry concerns).
+   */
+  onFirstText?: () => void;
 }
 
 export function createSessionState(): SessionStreamState {
@@ -156,6 +162,7 @@ export async function translateOneStream(
           const block = blocks.get(event.index ?? 0);
           if (event.delta?.type === 'text_delta') {
             const text = event.delta.text || '';
+            if (!state.hasTextOutput) state.onFirstText?.();
             state.hasTextOutput = true;
             state.textLength += text.length;
             if (block) block.text += text;

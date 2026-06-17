@@ -32,6 +32,7 @@ import { buildTieredFieldContext } from './fields.ts';
 import { retrieveAllContext } from './context.ts';
 import { buildMemorySnapshot } from './memory-context.ts';
 import { runAgenticLoop, runNonStreamingLoop } from './loop.ts';
+import { resolveCountry } from './telemetry.ts';
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 if (!anthropicApiKey) {
@@ -41,6 +42,10 @@ if (!anthropicApiKey) {
 const CLAUDE_MODEL = 'claude-sonnet-4-6';
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const MEMORY_TOOL_ENABLED = Deno.env.get('MEMORY_TOOL_ENABLED') !== 'false';
+// ADR Phase 1 flag — default OFF. ON routes tool dispatch through the registry
+// (registry.ts), the extension seam for future MCP-backed tools. OFF keeps the
+// original hardcoded memory+extraction branches (byte-identical rollback).
+const TOOL_LOOP_ENABLED = Deno.env.get('CONSULTANT_TOOL_LOOP_ENABLED') === 'true';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -263,7 +268,7 @@ serve(async (req) => {
       requestBody.tool_choice = { type: 'auto' };
     }
 
-    console.log(`[Claude] Starting request. Model: ${CLAUDE_MODEL}, max_tokens: ${maxTokens}, tools: ${tools.length}, memory: ${memoryEnabled}, stream: ${!!streamRequested}`);
+    console.log(`[Claude] Starting request. Model: ${CLAUDE_MODEL}, max_tokens: ${maxTokens}, tools: ${tools.length}, memory: ${memoryEnabled}, toolLoop: ${TOOL_LOOP_ENABLED}, stream: ${!!streamRequested}`);
 
     const loopConfig = {
       apiKey: anthropicApiKey,
@@ -273,6 +278,10 @@ serve(async (req) => {
       supabaseClient,
       userId,
       startTime,
+      toolLoopEnabled: TOOL_LOOP_ENABLED,
+      model: CLAUDE_MODEL,
+      // Best-effort caller geo for per-country latency slicing (telemetry only).
+      country: resolveCountry(req),
     };
 
     // ── Streaming path ───────────────────────────────────────────────────

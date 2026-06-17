@@ -17,13 +17,40 @@ streaming SSE to the browser, two client-visible tools:
 
 | File | Owns |
 |---|---|
-| `index.ts` | auth, request parse, context assembly, cache layout, loop dispatch |
+| `index.ts` | auth, request parse, context assembly, cache layout, loop dispatch, flag + country resolution |
 | `prompt.ts` | STATIC system block only (persona, framework-identity, memory + extraction policy); per-session pieces via `buildSessionContext` |
 | `memory-context.ts` | `<memory-snapshot>` builder (deterministic memory injection) |
-| `loop.ts` | agentic loop (streaming + non-streaming), tool_result rules, BP4 movement |
-| `stream.ts` | `translateOneStream` — ONE upstream stream per call, caller-owned controller; never emits `done` |
+| `loop.ts` | agentic loop (streaming + non-streaming), tool_result rules, BP4 movement, per-call + handler latency |
+| `registry.ts` | tool-dispatch registry (ADR Phase 1 extension seam); `continue` vs `terminal` tool kinds |
+| `telemetry.ts` | per-call (`consultant_llm_latency`) + handler (`consultant_handler_latency`) latency logs; `resolveCountry` |
+| `stream.ts` | `translateOneStream` — ONE upstream stream per call, caller-owned controller; never emits `done`; `onFirstText` TTFT hook |
 | `context.ts` | `user_knowledge_base` structured reads (NO embeddings — Anthropic-only) |
 | `../_shared/memory.ts` | six memory commands, path/size/secret guards, Supabase store adapter |
+
+## ADR Phase 1 — tool loop + registry + latency (flag-gated)
+
+Implements Phase 1 of `docs/v2/architecture/adr/ADR-UNIFIED-COACH-CAPABILITY-LAYER.md`.
+The agentic loop already existed (memory tool); Phase 1 added the generic seam.
+
+- **Registry (`registry.ts`):** one table classifies tools as `continue` (tool_result
+  fed back → loop calls the model again; today: `memory`) or `terminal` (acknowledged,
+  no continuation; `extract_brand_fields`). The `<<< PHASE-2 EXTENSION POINT >>>` is
+  where MCP-backed `continue` tools plug in later (their `execute` POSTs to `/mcp` with
+  the caller's JWT). Phase 1 does NOT build the MCP client.
+- **Flag `CONSULTANT_TOOL_LOOP_ENABLED` (default OFF):** ON routes `buildToolResults`
+  through the registry; OFF keeps the original hardcoded memory+extraction branches —
+  **byte-identical for the two built-in tools** (instant rollback). The flag governs
+  only whether the generic extension seam is live; it does NOT disable the memory loop
+  (use `MEMORY_TOOL_ENABLED=false` for that). Both paths share the identical tool_result
+  content + loop policy, so the 15 agentic-loop tests pass under either flag value.
+- **Latency telemetry (`telemetry.ts`):** every Anthropic call emits
+  `consultant_llm_latency { duration_ms, ttft_ms, ok, iteration, model, country }`;
+  each entry point emits one `consultant_handler_latency { duration_ms, ttft_ms, ok,
+  iteration_count, tool_loop, model, country }`. Structured console logs (no server-side
+  PostHog edge path exists yet — matches the MCP `mcp_tool_latency` field vocabulary so a
+  future sink swap is trivial). `country` is best-effort from `x-client-country` /
+  `cf-ipcountry` / CloudFront / Vercel headers, null when absent. **Content discipline:
+  durations/booleans/counts/model/country ONLY — never prompt or message content.**
 
 ## Cache layout (do not break)
 
@@ -51,8 +78,10 @@ Verify after changes: `[Usage] ... cache_read` > 0 on turn 2 in fn logs.
 ## Testing
 
 - Unit: `supabase/functions/_shared/__tests__/memory.test.ts` (30 tests — commands, traversal,
-  caps, secrets) and `__tests__/agentic-loop.test.ts` (13 tests — scripted SSE fixtures,
-  iteration caps, mixed tools, handler failure, upstream 429). Run with `--pool=threads`.
+  caps, secrets), `__tests__/agentic-loop.test.ts` (15 tests — scripted SSE fixtures,
+  iteration caps, mixed tools, handler failure, upstream 429) and
+  `__tests__/tool-registry.test.ts` (9 tests — registry kinds, flag ON/OFF parity, country
+  resolution, TTFT recorder, per-call/handler latency emission). Run with `--pool=threads`.
 - Live smoke (QA account per `docs/TEST_ACCOUNT.md`): (1) authed streamed message stating a
   durable fact → expect `memory_activity` events + rows in `user_memories` + `index.md`
   updated; (2) NEW session, "what do you remember?" → recall with ZERO `memory_activity`
