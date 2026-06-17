@@ -41,6 +41,9 @@ import { registerGenerateBriefTool } from './tools/generateBrief.js';
 import { registerGenerateAuditIdeaMapTool } from './tools/generateAuditIdeaMap.js';
 import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
+import { registerGetFunnelAssetsTool } from './tools/getFunnelAssets.js';
+import { registerAuditAssetTool } from './tools/auditAsset.js';
+import { registerGetFunnelCoverageTool } from './tools/getFunnelCoverage.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -141,6 +144,13 @@ export function createServer(
   // the optional Storage upload is never-fail (the local file is the deliverable).
   // gateWrite identity-gated.
   registerExportWorkbookTool(server);
+
+  // Brand Funnel Tracker (OWNED, brand-coach is system of record; decoupled from D5):
+  // see + audit a brand's funnel assets from chat. Reads are RLS-scoped to the caller;
+  // audit_asset is identity-gated and reuses the audit-asset edge fn (calculation parity).
+  registerGetFunnelAssetsTool(server);
+  registerAuditAssetTool(server);
+  registerGetFunnelCoverageTool(server);
 
   return { server, ivos, edgeFn: edge };
 }
