@@ -13,6 +13,8 @@ import { loadConfig, type HostConfig } from './config.js';
 import { resolveIdentity, runWithIdentity } from './context/identity.js';
 import { safeLog } from './logging/redact.js';
 import { captureMcpEvent, captureMcpException } from './posthog.js';
+import { emitLog } from './instrumentation.js';
+import { SeverityNumber } from '@opentelemetry/api-logs';
 
 const MCP_PATH = '/mcp';
 
@@ -106,6 +108,7 @@ export function createHttpServer(config: HostConfig = loadConfig()): http.Server
         safeLog({ level: 'error', event: 'http.mcp_error', reason: err instanceof Error ? err.name : 'unknown' });
         captureMcpException(err, undefined, { layer: 'http' });
         captureMcpEvent('server', 'mcp_http_error', { error_name: err instanceof Error ? err.name : 'unknown' });
+        emitLog('mcp http request failed', { error_name: err instanceof Error ? err.name : 'unknown' }, SeverityNumber.ERROR);
         if (!res.headersSent) {
           res.writeHead(500, { 'content-type': 'application/json' });
           res.end(JSON.stringify({ error: 'internal error' }));
