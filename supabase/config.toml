@@ -83,3 +83,21 @@ verify_jwt = false
 
 [functions.import-product-data]
 verify_jwt = false
+
+# Figma integration. verify_jwt stays true so the platform requires a valid JWT;
+# each function additionally derives user_id from the verified token (getAuthedUserId)
+# and rejects anonymous callers. All Figma access is tied to auth.uid().
+[functions.figma-oauth-start]
+verify_jwt = true
+
+[functions.figma-oauth-exchange]
+verify_jwt = true
+
+[functions.figma-status]
+verify_jwt = true
+
+[functions.figma-sync]
+verify_jwt = true
+
+[functions.figma-disconnect]
+verify_jwt = true

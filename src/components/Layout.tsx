@@ -18,6 +18,7 @@ import {
   MoreHorizontal,
   ChevronDown,
   HelpCircle,
+  Settings,
 } from "lucide-react";
 import { BetaNavigationWidget } from "@/components/BetaNavigationWidget";
 import { getNavigationFeatures, getCurrentPhase } from "@/config/features";
@@ -234,6 +235,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     >
                       <HelpCircle className="w-4 h-4 mr-2" />
                       Start Tour
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to={ROUTES.SETTINGS}>
+                        <Settings className="w-4 h-4 mr-2" />
+                        Settings
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive focus:text-destructive">

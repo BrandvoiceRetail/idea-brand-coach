@@ -2,7 +2,8 @@
 
 Root `AGENTS.md` applies; this adds only what's specific here. Deno edge
 functions. `_shared/` holds reused modules (`cors.ts`, `chunking.ts`,
-`embeddings.ts`) imported by others — not a deployable function.
+`embeddings.ts`, `edge-auth.ts`, `figma.ts`, `figma-extract.ts`) imported by
+others — not a deployable function.
 
 ## Functions
 
@@ -24,6 +25,11 @@ functions. `_shared/` holds reused modules (`cors.ts`, `chunking.ts`,
 | diagnostic-interpretation | Trust Gap™ diagnostic interpretation |
 | diagnostic-interpretation-evidence | Workbook A sheet 3 — Trust Gap™ diagnostic (evidence-tiered) |
 | document-processor | Chunks/embeds uploaded documents |
+| figma-oauth-start | Begins Figma OAuth — stores CSRF state, returns the authorize URL (authed) |
+| figma-oauth-exchange | Completes Figma OAuth — exchanges code for tokens, stores encrypted connection (authed) |
+| figma-status | Returns the user's Figma connection status + recent imports (no tokens) (authed) |
+| figma-sync | Imports a Figma file → palette/typography/components → figma_imports + coach visual_identity KB (authed) |
+| figma-disconnect | Deletes the user's Figma connection/tokens; keeps imported design data (authed) |
 | export-brief | Workbook A sheet 6 — Export Brief |
 | generate-brand-strategy-document | Builds full brand strategy doc via semantic retrieval |
 | generate-brand-strategy-pdf | Renders strategy PDF |
