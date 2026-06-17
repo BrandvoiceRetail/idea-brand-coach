@@ -36,6 +36,15 @@ export const SERVER_INSTRUCTIONS = [
   '`list_coach_conversations` indexes their threads (each with its avatar_id + avatar_name; null =',
   'brand-level — pass avatar_id to scope to one avatar) and `get_coach_conversation` returns one',
   'thread’s full transcript by session_id (both RLS-scoped reads; anonymous callers are refused).',
+  'Avatars are managed via `create_avatar` (brand_id is stamped server-side — never supply it),',
+  '`list_avatars`, `get_avatar`, `record_avatar_build`, `set_current_avatar` (the avatar-switch:',
+  'it sets the coach current-avatar server-side; pass an avatar_id you own), and `set_primary_avatar`',
+  '(pins the brand’s primary avatar — the default the funnel-audit tools use, distinct from the coach',
+  'current-avatar). The funnel is brand-level:',
+  '`list_funnel_inventory` / `upsert_funnel_touchpoint` carry NO avatar_id, while `run_funnel_audit` /',
+  '`get_funnel_audit` default to the brand’s primary avatar when avatar_id is omitted (set it with',
+  '`set_primary_avatar`). Any tool that',
+  'takes an avatar_id refuses one you do not own.',
   'Never send PII or raw prompts in tool args beyond what a tool explicitly requires.',
 ].join(' ');
 

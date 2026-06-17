@@ -28,6 +28,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([
       'build_avatar_stage',
+      'create_avatar',
       'design_test',
       'draft_asset',
       'export_workbook',
@@ -38,12 +39,16 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'generate_signature',
       'get_asset',
       'get_asset_history',
+      'get_avatar',
       'get_coach_conversation',
       'get_context_status',
+      'get_funnel_audit',
       'health',
       'ingest_evidence',
       'list_assets',
+      'list_avatars',
       'list_coach_conversations',
+      'list_funnel_inventory',
       'log_asset',
       'onboard_choose',
       'onboard_panel',
@@ -51,10 +56,15 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'provide_context',
       'publish_filter_check',
       'record_assessment',
+      'record_avatar_build',
       'run_diagnostic_evidence',
+      'run_funnel_audit',
       'run_marketing_audit',
       'run_trust_gap',
+      'set_current_avatar',
+      'set_primary_avatar',
       'update_asset_status',
+      'upsert_funnel_touchpoint',
     ]);
   });
 

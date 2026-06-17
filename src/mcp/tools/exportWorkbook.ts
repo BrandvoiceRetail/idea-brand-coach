@@ -43,6 +43,7 @@ import { getChain as getChainLive, type ArtifactRow } from '../service/artifactS
 import { getUserSupabase } from '../supabaseUser.js';
 import type { ArtifactKind } from '../contracts/index.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 
@@ -275,6 +276,8 @@ export function registerExportWorkbookTool(server: McpServer, deps?: Partial<Exp
     async ({ which, avatar_id, out_dir, brand_name, upload }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
 
       const result = await runExportWorkbook({
         which,

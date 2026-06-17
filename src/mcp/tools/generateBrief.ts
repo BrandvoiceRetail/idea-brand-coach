@@ -37,6 +37,7 @@ import {
 } from '../service/artifactStore.js';
 import { scanBrief, type ConfirmedClaim, type ClaimViolation } from '../service/claimGate.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
 import { captureMcpEvent } from '../posthog.js';
@@ -255,6 +256,8 @@ export function registerGenerateBriefTool(server: McpServer, deps?: Partial<Gene
     async ({ avatar_id }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
 
       const result = await runGenerateBrief(avatar_id ?? null, resolved);
       safeLog({

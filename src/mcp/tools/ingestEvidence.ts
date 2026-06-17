@@ -20,6 +20,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getUserSupabase } from '../supabaseUser.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
 import { captureMcpEvent } from '../posthog.js';
@@ -111,6 +112,9 @@ export function registerIngestEvidenceTool(server: McpServer): void {
     async ({ reviews_text, listing_text, asin, source_label, product_id, avatar_id }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
 
       const userId = identity.userId as string; // gateWrite guarantees authenticated.
       const supabase = getUserSupabase();

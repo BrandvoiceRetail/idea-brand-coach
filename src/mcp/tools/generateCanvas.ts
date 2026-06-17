@@ -32,6 +32,7 @@ import {
   saveArtifact as saveArtifactLive,
 } from '../service/artifactStore.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
 import { captureMcpEvent } from '../posthog.js';
@@ -198,6 +199,8 @@ export function registerGenerateCanvasTool(server: McpServer, deps?: Partial<Gen
     async ({ avatar_id }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
 
       const result = await runGenerateCanvas(avatar_id ?? null, resolved);
       safeLog({ event: 'tool.generate_canvas', caller: userTag(identity), status: result.status });

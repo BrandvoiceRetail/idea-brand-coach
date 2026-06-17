@@ -20,6 +20,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { resolve, type ResolvedSlot, type SlotStatus } from '../service/contextResolver.js';
 import { CONTRACTS, getSlot, type ArtifactKind, type SlotId } from '../contracts/index.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 
@@ -116,6 +117,13 @@ export function registerGetContextStatusTool(server: McpServer): void {
       inputSchema,
     },
     async ({ target, avatar_id }) => {
+      // Ownership gate (consistent with the write-tool retrofit): a present-but-foreign
+      // avatar_id is refused rather than silently degrading to a brand-level fill-map. RLS
+      // already scopes the resolver to the caller, so an anon caller needs no separate gate
+      // (requireOwnedAvatar no-ops on a null avatar_id; a foreign one resolves to a denial).
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
+
       const slots = requiredSlotsFor(target as Target);
       const resolved = await resolve(slots, { avatarId: avatar_id ?? null });
 

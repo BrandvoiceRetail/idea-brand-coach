@@ -43,6 +43,16 @@ import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
 import { registerListCoachConversationsTool } from './tools/listCoachConversations.js';
 import { registerGetCoachConversationTool } from './tools/getCoachConversation.js';
+import { registerCreateAvatarTool } from './tools/createAvatar.js';
+import { registerListAvatarsTool } from './tools/listAvatars.js';
+import { registerGetAvatarTool } from './tools/getAvatar.js';
+import { registerSetCurrentAvatarTool } from './tools/setCurrentAvatar.js';
+import { registerSetPrimaryAvatarTool } from './tools/setPrimaryAvatar.js';
+import { registerRecordAvatarBuildTool } from './tools/recordAvatarBuild.js';
+import { registerListFunnelInventoryTool } from './tools/listFunnelInventory.js';
+import { registerUpsertFunnelTouchpointTool } from './tools/upsertFunnelTouchpoint.js';
+import { registerRunFunnelAuditTool } from './tools/runFunnelAudit.js';
+import { registerGetFunnelAuditTool } from './tools/getFunnelAudit.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -151,6 +161,33 @@ export function createServer(
   // read-only. The avatar scope comes from chat_sessions.avatar_id (nullable FK → avatars).
   registerListCoachConversationsTool(server);
   registerGetCoachConversationTool(server);
+
+  // Avatar lifecycle (Phase 2, §4.3): create_avatar stamps brand_id SERVER-SIDE (never
+  // caller-supplied) under the caller's brand and can flip the coach current-avatar via the
+  // set_current_avatar RPC; list_avatars / get_avatar are the RLS-scoped reads; set_current_avatar
+  // is the stateless avatar-switch (§2 — the RPC is the sole pointer write path, ownership-checked
+  // server-side, so the MCP holds no session state); set_primary_avatar pins the brand primary
+  // (brands.primary_avatar_id — the funnel-audit default, locked #7) via its own RPC, distinct from
+  // the coach current-avatar; record_avatar_build writes avatar_build_state.
+  // Every existing avatar-scoped tool now calls requireOwnedAvatar (service/avatarOwnership.ts)
+  // before any avatar-scoped work — RLS-backed defense-in-depth that converts a foreign avatar_id
+  // from a silent brand-level write into an explicit denial. gateWrite identity-gated.
+  registerCreateAvatarTool(server);
+  registerListAvatarsTool(server);
+  registerGetAvatarTool(server);
+  registerSetCurrentAvatarTool(server);
+  registerSetPrimaryAvatarTool(server);
+  registerRecordAvatarBuildTool(server);
+
+  // Funnel engine (Phase 2, §4.4): the funnel stays BRAND-LEVEL (inventory in brand_assets,
+  // avatar_id NULL) with per-avatar scoring ON DEMAND (overlay in brand_asset_audits via
+  // save_asset_audit_atomic). list_funnel_inventory / upsert_funnel_touchpoint are brand-level
+  // (no avatar_id); run_funnel_audit / get_funnel_audit default avatar_id to brands.primary_avatar_id
+  // (locked #7) — NEVER the coach current-avatar. brand_id is resolved server-side throughout.
+  registerListFunnelInventoryTool(server);
+  registerUpsertFunnelTouchpointTool(server);
+  registerRunFunnelAuditTool(server);
+  registerGetFunnelAuditTool(server);
 
   return { server, ivos, edgeFn: edge };
 }

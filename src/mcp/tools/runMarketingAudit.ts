@@ -56,6 +56,7 @@ import { getSlot } from '../contracts/slots.js';
 import { getUserSupabase } from '../supabaseUser.js';
 import { getIdentity } from '../context/identity.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
 import { captureMcpEvent, captureMcpException } from '../posthog.js';
@@ -338,6 +339,8 @@ export function registerRunMarketingAuditTool(server: McpServer, deps?: Partial<
     async ({ avatar_id }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
 
       try {
         const result = await runMarketingAudit(avatar_id ?? null, deps);

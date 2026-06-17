@@ -274,6 +274,8 @@ describe('provide_context tool', () => {
 
   it('OWNER-INTENT answer routes to avatar_field_values with the avatar scope', async () => {
     const stub = install();
+    // requireOwnedAvatar reads the avatar first (RLS ownership gate) before any write.
+    stub.on('avatars', 'select', { data: { id: 'av-1', brand_id: 'brand-1' }, error: null });
     stub.on('avatar_field_values', 'insert', { data: { id: 'afv-1' }, error: null });
     // Re-resolve read for slot 12 (avatar_field_values first).
     stub.on('avatar_field_values', 'select', {
