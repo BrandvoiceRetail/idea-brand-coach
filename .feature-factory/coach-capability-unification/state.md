@@ -18,8 +18,14 @@ grounded in `skills/idea/`. Per `docs/v2/architecture/adr/ADR-UNIFIED-COACH-CAPA
       Prereqs present: skills/idea/ (158) + loop.ts + registry.ts + src/mcp/server.ts.
 - [x] **P2 SKILL LOADER** — load skills/idea/ and ground the MCP coach surface (config.ts
       SERVER_INSTRUCTIONS / tool handlers) in the relevant skills; test asserts a tool cites its book skill.
-- [ ] **P3 TOOL LOOP** — real tool_use->tool_result loop on registry.ts (built on loop.ts; mostly
-      present from Phase-1 — verify + extend). Streaming + single-shot fallback behind CONSULTANT_TOOL_LOOP_ENABLED.
+- [x] **P3 TOOL LOOP** — VERIFIED (already built in Phase-1, no new code needed). loop.ts does the real
+      tool_use->execute->tool_result->continue round-trip, routes through registry.ts behind
+      CONSULTANT_TOOL_LOOP_ENABLED, keeps SSE streaming across iterations, answers every tool_use id, has
+      the forced-text/single-shot fallback. agentic-loop.test.ts (15 tests) covers it. The registry today
+      only holds built-in tools (memory continue + extraction terminal) — MCP-backed 'continue' entries
+      are added by P4. ENV FIX (2026-06-16): replaced the node_modules symlink with a real npm install so
+      the already-declared @modelcontextprotocol/ext-apps resolves; the 5 src/mcp suites collect again
+      (server/onboard/assetChain verified 33/33). Not a new dep.
 - [ ] **P4 MCP CLIENT** — inverse of EdgeFnClient: tool_use -> POST /mcp with JWT, LOCAL host.
       Read-only first (get_context_status, list_assets, run_trust_gap).
 - [ ] **P5 VERIFY** — mcp-conversation-replay harness proving >=3 tools fire via the loop, grounded.
