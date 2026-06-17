@@ -51,7 +51,13 @@ export type AlphaEventName =
   | 'app_error_caught'
   // Coach answer quality — thumbs up/down on an assistant message. message_id
   // joins to chat_messages for the rated content.
-  | 'coach_message_rated';
+  | 'coach_message_rated'
+  // Brand Funnel Tracker — asset audit + fix + lift events.
+  | 'funnel_asset_uploaded'
+  | 'funnel_asset_audited'
+  | 'funnel_fix_started'
+  | 'funnel_test_recorded'
+  | 'funnel_coverage_viewed';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

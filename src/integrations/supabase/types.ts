@@ -301,6 +301,134 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_assets: {
+        Row: {
+          audit_result: Json | null
+          avatar_id: string
+          content_text: string | null
+          context_description: string
+          created_at: string
+          id: string
+          overall_score: number | null
+          previous_score: number | null
+          signature_version: string | null
+          stage: string
+          status: string
+          storage_path: string | null
+          superseded_by: string | null
+          touchpoint_id: string
+          updated_at: string
+        }
+        Insert: {
+          audit_result?: Json | null
+          avatar_id: string
+          content_text?: string | null
+          context_description: string
+          created_at?: string
+          id?: string
+          overall_score?: number | null
+          previous_score?: number | null
+          signature_version?: string | null
+          stage: string
+          status?: string
+          storage_path?: string | null
+          superseded_by?: string | null
+          touchpoint_id: string
+          updated_at?: string
+        }
+        Update: {
+          audit_result?: Json | null
+          avatar_id?: string
+          content_text?: string | null
+          context_description?: string
+          created_at?: string
+          id?: string
+          overall_score?: number | null
+          previous_score?: number | null
+          signature_version?: string | null
+          stage?: string
+          status?: string
+          storage_path?: string | null
+          superseded_by?: string | null
+          touchpoint_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_assets_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_assets_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_tests: {
+        Row: {
+          asset_id: string
+          baseline_value: number | null
+          created_at: string
+          deployed_at: string | null
+          hypothesis: string | null
+          id: string
+          measured_at: string | null
+          messaging_version_after: string | null
+          messaging_version_before: string | null
+          metric_type: string | null
+          result_value: number | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          baseline_value?: number | null
+          created_at?: string
+          deployed_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          measured_at?: string | null
+          messaging_version_after?: string | null
+          messaging_version_before?: string | null
+          metric_type?: string | null
+          result_value?: number | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          baseline_value?: number | null
+          created_at?: string
+          deployed_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          measured_at?: string | null
+          messaging_version_after?: string | null
+          messaging_version_before?: string | null
+          metric_type?: string | null
+          result_value?: number | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_tests_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           created_at: string

@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Brand Funnel Tracker — Mockups (IDEA Brand Coach)</title>
+<!--
+  Funnel Tracker mockups — BMAD UX methodology (discovery → design-system → screens/states → components).
+  Style: Trevor's IDEA_site_v11 editorial palette (warm off-white, near-black, gold #D89B0D, Helvetica Neue,
+  IDEA dimension colours) reconciled with the project's shipped tokens (8px radius, golden CTA, card/badge/progress).
+  Self-contained, no external deps. Sample brand = InfinityVault (collector card game) — Matthew's case study.
+-->
+<style>
+:root{
+  --blk:#0B0B0B; --ink:#1A1A1A; --body:#3A3630; --muted:#8A847D;
+  --wrm:#F3F2EE; --wht:#FFFFFF; --line:#E7E2D8; --line-2:#EFEBE2;
+  --gld:#D89B0D; --gld-lt:#F6E8BF; --gld-dk:#B07E07;
+  /* IDEA dimensions */
+  --i:#D89B0D; --d:#54B657; --e:#3BA0D1; --a:#F08A00;
+  /* status semantics (reuse the dimension family) */
+  --ok:#54B657; --stale:#D89B0D; --warn:#F08A00; --miss:#B8B2A8;
+  --ok-bg:#EAF5EA; --stale-bg:#FBF1D6; --warn-bg:#FCEAD8; --miss-bg:#EFECE6;
+  --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --radius:10px; --radius-sm:7px;
+  --shadow:0 4px 20px -8px rgba(11,11,11,.18);
+  --shadow-gld:0 12px 40px -16px rgba(216,155,13,.45);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);background:var(--wrm);color:var(--body);-webkit-font-smoothing:antialiased;line-height:1.5}
+h1,h2,h3,h4{color:var(--ink);margin:0;letter-spacing:-.01em}
+.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mono{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:rgba(243,242,238,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1180px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink);font-size:15px;letter-spacing:-.02em}
+.brand .dot{width:22px;height:22px;border-radius:6px;background:var(--blk);display:inline-flex;align-items:center;justify-content:center;color:var(--gld);font-weight:800;font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--wht);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--body)}
+.pill .av{width:16px;height:16px;border-radius:999px;background:linear-gradient(135deg,var(--gld),var(--a))}
+.pill b{color:var(--ink);font-weight:600}
+.spacer{flex:1}
+.btn{font-family:inherit;cursor:pointer;border:1px solid var(--line);background:var(--wht);color:var(--ink);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;transition:.18s}
+.btn:hover{border-color:var(--gld)}
+.btn-gold{background:var(--gld);border-color:var(--gld);color:#1a1407}
+.btn-gold:hover{box-shadow:var(--shadow-gld);border-color:var(--gld)}
+
+/* tabs */
+.tabs{max-width:1180px;margin:0 auto;padding:0 28px;display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tab{appearance:none;background:none;border:none;font-family:inherit;cursor:pointer;padding:14px 16px;font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--ink);border-bottom-color:var(--gld)}
+.tab .n{display:inline-block;min-width:18px;text-align:center;font-size:11px;background:var(--gld-lt);color:var(--gld-dk);border-radius:999px;padding:1px 6px;margin-left:7px}
+
+/* layout */
+.wrap{max-width:1180px;margin:0 auto;padding:28px}
+.screen{display:none}
+.screen.active{display:block}
+.screen-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.screen-head h2{font-size:24px;font-weight:700}
+.screen-head p{margin:6px 0 0;color:var(--muted);font-size:14px;max-width:560px}
+
+/* summary stat strip */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:26px}
+.stat{background:var(--wht);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.stat .stat-n{font-size:26px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.stat .stat-l{font-size:12px;color:var(--muted);margin-top:3px}
+.stat .chip{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.delta-up{color:#2f8f33} .delta-dn{color:#c4571f}
+
+/* coverage meter (current vs desired) */
+.coverage{background:var(--wht);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:26px}
+.coverage-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.coverage-top .big{font-size:20px;font-weight:700;color:var(--ink)}
+.meter{position:relative;height:14px;border-radius:999px;background:var(--miss-bg);overflow:hidden}
+.meter .fill{position:absolute;inset:0 auto 0 0;border-radius:999px;background:linear-gradient(90deg,var(--gld),var(--a))}
+.meter .target{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.meter-legend{display:flex;gap:18px;margin-top:11px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.dotlab{display:inline-flex;align-items:center;gap:6px}
+.dotlab i{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+/* funnel map */
+.funnel{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;align-items:start}
+.stage{background:transparent}
+.stage-h{display:flex;align-items:center;justify-content:space-between;padding:0 2px 10px}
+.stage-h .name{font-size:13px;font-weight:700;color:var(--ink)}
+.stage-h .em{font-size:11px;color:var(--muted)}
+.stage-col{display:flex;flex-direction:column;gap:10px}
+.tp{background:var(--wht);border:1px solid var(--line);border-left:3px solid var(--miss);border-radius:var(--radius-sm);padding:12px 13px;transition:.16s;cursor:default}
+.tp:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.tp.ok{border-left-color:var(--ok)} .tp.stale{border-left-color:var(--stale)}
+.tp.warn{border-left-color:var(--warn)} .tp.miss{border-left-color:var(--miss);border-style:dashed;background:#FBFAF7}
+.tp .tp-name{font-size:13px;font-weight:600;color:var(--ink);line-height:1.3}
+.tp .tp-meta{display:flex;align-items:center;justify-content:space-between;margin-top:9px}
+.status{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
+.s-ok{background:var(--ok-bg);color:#2f7a33} .s-stale{background:var(--stale-bg);color:var(--gld-dk)}
+.s-warn{background:var(--warn-bg);color:#c4571f} .s-miss{background:var(--miss-bg);color:#6f6a61}
+.tp .score{font-size:11px;color:var(--muted)}
+
+/* dimension bars (Trevor dc-*) */
+.dims{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.dim{display:grid;grid-template-columns:14px 1fr 30px;align-items:center;gap:8px}
+.dim .lab{font-size:10px;font-weight:700;color:var(--muted)}
+.dim .track{height:5px;border-radius:999px;background:var(--line-2);overflow:hidden}
+.dim .fill{height:100%;border-radius:999px}
+.dim .pct{font-size:10px;color:var(--muted);text-align:right}
+.f-i{background:var(--i)} .f-d{background:var(--d)} .f-e{background:var(--e)} .f-a{background:var(--a)}
+
+/* needs-work rows */
+.rows{display:flex;flex-direction:column;gap:12px}
+.row{background:var(--wht);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:1.5fr 1.4fr 1.1fr auto;gap:20px;align-items:center}
+.row .rk{font-size:11px;color:var(--muted);font-weight:700}
+.row .tp-name{font-size:15px;font-weight:700;color:var(--ink)}
+.row .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.metric{font-size:12.5px;color:var(--body)}
+.metric .v{font-weight:700;color:var(--ink)}
+.tag{display:inline-block;font-size:11px;font-weight:600;color:var(--gld-dk);background:var(--gld-lt);border-radius:999px;padding:2px 9px;margin-top:6px}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.col{background:#FBFAF7;border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.col-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--ink)}
+.col-h .n{font-size:11px;color:var(--muted);background:var(--wht);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.card{background:var(--wht);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px;margin-bottom:10px}
+.card .ct{font-size:13px;font-weight:600;color:var(--ink)}
+.card .cs{font-size:11.5px;color:var(--muted);margin-top:5px}
+.who{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:11.5px;color:var(--body)}
+.who .av{width:18px;height:18px;border-radius:999px;background:linear-gradient(135deg,var(--e),var(--d));color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.ver{font-family:inherit;font-size:11px;color:var(--muted)}
+.ver b{color:var(--gld-dk)}
+
+/* tests */
+.tests{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.test{background:var(--wht);border:1px solid var(--line);border-radius:var(--radius);padding:20px;border-top:3px solid var(--e)}
+.test.won{border-top-color:var(--ok)} .test.run{border-top-color:var(--gld)} .test.lost{border-top-color:var(--warn)}
+.test-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.test-h .tt{font-size:15px;font-weight:700;color:var(--ink)}
+.test-h .hy{font-size:12.5px;color:var(--muted);margin-top:4px;max-width:38ch}
+.beaker{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.b-run{background:var(--stale-bg);color:var(--gld-dk)} .b-won{background:var(--ok-bg);color:#2f7a33} .b-lost{background:var(--warn-bg);color:#c4571f}
+.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin:16px 0 4px}
+.ba .box{background:#FBFAF7;border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px}
+.ba .box .k{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.ba .box .val{font-size:20px;font-weight:700;color:var(--ink);margin-top:4px}
+.ba .box .ver{margin-top:6px}
+.ba .arr{color:var(--muted);font-size:18px}
+.lift{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.lift .l{font-size:12px;color:var(--muted)}
+.lift .v{font-size:17px;font-weight:700}
+.v.up{color:#2f8f33} .v.dn{color:#c4571f} .v.flat{color:var(--muted)}
+
+.note{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media(max-width:1000px){.stats{grid-template-columns:repeat(2,1fr)}.funnel{grid-template-columns:1fr;}.tests{grid-template-columns:1fr}.board{grid-template-columns:1fr}.row{grid-template-columns:1fr;gap:12px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <span class="brand"><span class="dot">i</span>IDEA Brand Coach</span>
+    <span class="pill"><span class="av"></span>InfinityVault · <b>The Collector</b> avatar</span>
+    <span class="pill">✦ Signature: <b>“What Captures the Heart…”</b></span>
+    <span class="spacer"></span>
+    <button class="btn">Upload assets</button>
+    <button class="btn btn-gold">Re-run audit</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-s="map">Funnel Map</button>
+    <button class="tab" data-s="work">What Needs Work <span class="n">7</span></button>
+    <button class="tab" data-s="prog">In Progress <span class="n">3</span></button>
+    <button class="tab" data-s="test">Testing &amp; Lift <span class="n">4</span></button>
+  </div>
+</div>
+
+<!-- ======================= SCREEN 1 — FUNNEL MAP ======================= -->
+<section class="screen active" id="map">
+  <div class="wrap">
+    <div class="screen-head">
+      <div>
+        <div class="eyebrow">Brand Funnel · current vs desired</div>
+        <h2>Your whole funnel, mapped</h2>
+        <p>Every customer touchpoint, scored against your avatar + Signature. Colour shows alignment, not just whether the asset exists.</p>
+      </div>
+      <button class="btn btn-gold">Fix top gap with coach →</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-n">26</div><div class="stat-l">Touchpoints tracked</div></div>
+      <div class="stat"><div class="stat-n" style="color:#2f7a33">11</div><div class="stat-l">Aligned</div></div>
+      <div class="stat"><div class="stat-n" style="color:var(--gld-dk)">6</div><div class="stat-l">Stale</div></div>
+      <div class="stat"><div class="stat-n" style="color:#c4571f">5</div><div class="stat-l">Misaligned</div></div>
+      <div class="stat"><div class="stat-n" style="color:#6f6a61">4</div><div class="stat-l">Missing</div></div>
+    </div>
+
+    <div class="coverage">
+      <div class="coverage-top">
+        <div><div class="eyebrow">On-brand coverage</div></div>
+        <div class="big mono">62% <span style="font-size:13px;color:var(--muted);font-weight:400">current · target 90%</span></div>
+      </div>
+      <div class="meter"><div class="fill" style="width:62%"></div><div class="target" style="left:90%"></div></div>
+      <div class="meter-legend">
+        <span class="dotlab"><i style="background:var(--ok)"></i>Aligned</span>
+        <span class="dotlab"><i style="background:var(--stale)"></i>Stale (Signature changed since)</span>
+        <span class="dotlab"><i style="background:var(--warn)"></i>Misaligned (off-strategy)</span>
+        <span class="dotlab"><i style="background:var(--miss)"></i>Missing</span>
+        <span class="dotlab" style="margin-left:auto"><i style="background:var(--ink)"></i>Target</span>
+      </div>
+    </div>
+
+    <div class="funnel">
+      <!-- AWARENESS -->
+      <div class="stage">
+        <div class="stage-h"><span class="name">Awareness</span><span class="em">curiosity</span></div>
+        <div class="stage-col">
+          <div class="tp warn"><div class="tp-name">Amazon main image</div><div class="tp-meta"><span class="status s-warn">Misaligned</span><span class="score mono">48</span></div></div>
+          <div class="tp ok"><div class="tp-name">Paid social creative</div><div class="tp-meta"><span class="status s-ok">Aligned</span><span class="score mono">86</span></div></div>
+          <div class="tp stale"><div class="tp-name">Organic social profile</div><div class="tp-meta"><span class="status s-stale">Stale</span><span class="score mono">71</span></div></div>
+          <div class="tp miss"><div class="tp-name">Founder social</div><div class="tp-meta"><span class="status s-miss">Missing</span><span class="score mono">—</span></div></div>
+        </div>
+      </div>
+      <!-- CONSIDERATION -->
+      <div class="stage">
+        <div class="stage-h"><span class="name">Consideration</span><span class="em">hope</span></div>
+        <div class="stage-col">
+          <div class="tp warn"><div class="tp-name">Amazon listing copy</div><div class="tp-meta"><span class="status s-warn">Misaligned</span><span class="score mono">52</span></div></div>
+          <div class="tp ok"><div class="tp-name">Amazon brand story / A+</div><div class="tp-meta"><span class="status s-ok">Aligned</span><span class="score mono">88</span></div></div>
+          <div class="tp stale"><div class="tp-name">Shopify PDP</div><div class="tp-meta"><span class="status s-stale">Stale</span><span class="score mono">69</span></div></div>
+          <div class="tp ok"><div class="tp-name">Brand store / About</div><div class="tp-meta"><span class="status s-ok">Aligned</span><span class="score mono">82</span></div></div>
+        </div>
+      </div>
+      <!-- PURCHASE -->
+      <div class="stage">
+        <div class="stage-h"><span class="name">Purchase</span><span class="em">trust</span></div>
+        <div class="stage-col">
+          <div class="tp ok"><div class="tp-name">Cart / checkout</div><div class="tp-meta"><span class="status s-ok">Aligned</span><span class="score mono">84</span></div></div>
+          <div class="tp warn"><div class="tp-name">Shipping &amp; returns</div><div class="tp-meta"><span class="status s-warn">Misaligned</span><span class="score mono">55</span></div></div>
+          <div class="tp stale"><div class="tp-name">Trust badges / proof</div><div class="tp-meta"><span class="status s-stale">Stale</span><span class="score mono">73</span></div></div>
+        </div>
+      </div>
+      <!-- RETENTION -->
+      <div class="stage">
+        <div class="stage-h"><span class="name">Retention</span><span class="em">satisfaction</span></div>
+        <div class="stage-col">
+          <div class="tp warn"><div class="tp-name">Welcome series</div><div class="tp-meta"><span class="status s-warn">Misaligned</span><span class="score mono">44</span></div></div>
+          <div class="tp ok"><div class="tp-name">Order confirmation</div><div class="tp-meta"><span class="status s-ok">Aligned</span><span class="score mono">90</span></div></div>
+          <div class="tp stale"><div class="tp-name">Packaging / unboxing</div><div class="tp-meta"><span class="status s-stale">Stale</span><span class="score mono">68</span></div></div>
+          <div class="tp miss"><div class="tp-name">Insert cards</div><div class="tp-meta"><span class="status s-miss">Missing</span><span class="score mono">—</span></div></div>
+        </div>
+      </div>
+      <!-- ADVOCACY -->
+      <div class="stage">
+        <div class="stage-h"><span class="name">Advocacy</span><span class="em">pride</span></div>
+        <div class="stage-col">
+          <div class="tp ok"><div class="tp-name">Review request flow</div><div class="tp-meta"><span class="status s-ok">Aligned</span><span class="score mono">81</span></div></div>
+          <div class="tp miss"><div class="tp-name">Referral program</div><div class="tp-meta"><span class="status s-miss">Missing</span><span class="score mono">—</span></div></div>
+          <div class="tp miss"><div class="tp-name">Loyalty / community</div><div class="tp-meta"><span class="status s-miss">Missing</span><span class="score mono">—</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Mockup · sample data for InfinityVault. Score = alignment of the asset to the avatar + current Signature (0–100). “Stale” = the Signature was refined after this asset was last deployed.</div>
+  </div>
+</section>
+
+<!-- ======================= SCREEN 2 — WHAT NEEDS WORK ======================= -->
+<section class="screen" id="work">
+  <div class="wrap">
+    <div class="screen-head">
+      <div>
+        <div class="eyebrow">Prioritised · impact × misalignment</div>
+        <h2>What needs work</h2>
+        <p>Ranked by how much the gap is costing you. Each row scores the touchpoint on the four IDEA dimensions and ties it to the metric it moves.</p>
+      </div>
+      <button class="btn">Sort: Highest impact ▾</button>
+    </div>
+
+    <div class="rows">
+      <!-- row 1 -->
+      <div class="row">
+        <div>
+          <div class="rk">01 · Retention</div>
+          <div class="tp-name">Welcome series</div>
+          <div class="sub">Email · last edited before Signature v3 · <span style="color:#c4571f;font-weight:600">Misaligned</span></div>
+          <div class="tag">Empathy gap → opens but no connection</div>
+        </div>
+        <div class="dims">
+          <div class="dim"><span class="lab">I</span><div class="track"><div class="fill f-i" style="width:58%"></div></div><span class="pct">58</span></div>
+          <div class="dim"><span class="lab">D</span><div class="track"><div class="fill f-d" style="width:64%"></div></div><span class="pct">64</span></div>
+          <div class="dim"><span class="lab">E</span><div class="track"><div class="fill f-e" style="width:31%"></div></div><span class="pct">31</span></div>
+          <div class="dim"><span class="lab">A</span><div class="track"><div class="fill f-a" style="width:49%"></div></div><span class="pct">49</span></div>
+        </div>
+        <div class="metric">Welcome→2nd-order<br><span class="v">12.4%</span> <span class="delta-dn">▼ 4.1pp vs cohort</span></div>
+        <button class="btn btn-gold">Fix with coach</button>
+      </div>
+      <!-- row 2 -->
+      <div class="row">
+        <div>
+          <div class="rk">02 · Awareness</div>
+          <div class="tp-name">Amazon main image</div>
+          <div class="sub">Image · generic studio shot · <span style="color:#c4571f;font-weight:600">Misaligned</span></div>
+          <div class="tag">No distinctive trigger for collectors</div>
+        </div>
+        <div class="dims">
+          <div class="dim"><span class="lab">I</span><div class="track"><div class="fill f-i" style="width:52%"></div></div><span class="pct">52</span></div>
+          <div class="dim"><span class="lab">D</span><div class="track"><div class="fill f-d" style="width:33%"></div></div><span class="pct">33</span></div>
+          <div class="dim"><span class="lab">E</span><div class="track"><div class="fill f-e" style="width:55%"></div></div><span class="pct">55</span></div>
+          <div class="dim"><span class="lab">A</span><div class="track"><div class="fill f-a" style="width:50%"></div></div><span class="pct">50</span></div>
+        </div>
+        <div class="metric">Listing CTR<br><span class="v">0.38%</span> <span class="delta-dn">▼ 0.21pp vs category</span></div>
+        <button class="btn btn-gold">Fix with coach</button>
+      </div>
+      <!-- row 3 -->
+      <div class="row">
+        <div>
+          <div class="rk">03 · Consideration</div>
+          <div class="tp-name">Amazon listing copy</div>
+          <div class="sub">Title + bullets · feature-led, not trust-led · <span style="color:#c4571f;font-weight:600">Misaligned</span></div>
+          <div class="tag">Bullets list specs, not the heart</div>
+        </div>
+        <div class="dims">
+          <div class="dim"><span class="lab">I</span><div class="track"><div class="fill f-i" style="width:61%"></div></div><span class="pct">61</span></div>
+          <div class="dim"><span class="lab">D</span><div class="track"><div class="fill f-d" style="width:47%"></div></div><span class="pct">47</span></div>
+          <div class="dim"><span class="lab">E</span><div class="track"><div class="fill f-e" style="width:50%"></div></div><span class="pct">50</span></div>
+          <div class="dim"><span class="lab">A</span><div class="track"><div class="fill f-a" style="width:54%"></div></div><span class="pct">54</span></div>
+        </div>
+        <div class="metric">Unit session %<br><span class="v">9.1%</span> <span class="delta-dn">▼ 1.8pp vs benchmark</span></div>
+        <button class="btn btn-gold">Fix with coach</button>
+      </div>
+      <!-- row 4 -->
+      <div class="row">
+        <div>
+          <div class="rk">04 · Purchase</div>
+          <div class="tp-name">Shipping &amp; returns</div>
+          <div class="sub">Policy page · risk language too cold · <span style="color:#c4571f;font-weight:600">Misaligned</span></div>
+          <div class="tag">Fear unaddressed at decision moment</div>
+        </div>
+        <div class="dims">
+          <div class="dim"><span class="lab">I</span><div class="track"><div class="fill f-i" style="width:55%"></div></div><span class="pct">55</span></div>
+          <div class="dim"><span class="lab">D</span><div class="track"><div class="fill f-d" style="width:60%"></div></div><span class="pct">60</span></div>
+          <div class="dim"><span class="lab">E</span><div class="track"><div class="fill f-e" style="width:42%"></div></div><span class="pct">42</span></div>
+          <div class="dim"><span class="lab">A</span><div class="track"><div class="fill f-a" style="width:58%"></div></div><span class="pct">58</span></div>
+        </div>
+        <div class="metric">Cart→purchase<br><span class="v">68%</span> <span class="delta-dn">▼ 6pp vs site avg</span></div>
+        <button class="btn btn-gold">Fix with coach</button>
+      </div>
+      <!-- row 5 (stale) -->
+      <div class="row">
+        <div>
+          <div class="rk">05 · Consideration</div>
+          <div class="tp-name">Shopify PDP</div>
+          <div class="sub">Product page · pre-Signature v3 · <span style="color:var(--gld-dk);font-weight:600">Stale</span></div>
+          <div class="tag">Was aligned — Signature moved on</div>
+        </div>
+        <div class="dims">
+          <div class="dim"><span class="lab">I</span><div class="track"><div class="fill f-i" style="width:72%"></div></div><span class="pct">72</span></div>
+          <div class="dim"><span class="lab">D</span><div class="track"><div class="fill f-d" style="width:70%"></div></div><span class="pct">70</span></div>
+          <div class="dim"><span class="lab">E</span><div class="track"><div class="fill f-e" style="width:66%"></div></div><span class="pct">66</span></div>
+          <div class="dim"><span class="lab">A</span><div class="track"><div class="fill f-a" style="width:68%"></div></div><span class="pct">68</span></div>
+        </div>
+        <div class="metric">PDP conversion<br><span class="v">3.0%</span> <span class="delta-up">▲ 0.2pp held</span></div>
+        <button class="btn">Refresh to v3</button>
+      </div>
+    </div>
+    <div class="note">Mockup · I/D/E/A = Insight, Distinctive, Empathetic, Authentic. Metric deltas are illustrative; in P0 they’re entered manually, later pulled from the analytics warehouse.</div>
+  </div>
+</section>
+
+<!-- ======================= SCREEN 3 — IN PROGRESS ======================= -->
+<section class="screen" id="prog">
+  <div class="wrap">
+    <div class="screen-head">
+      <div>
+        <div class="eyebrow">Active work</div>
+        <h2>What’s being worked on</h2>
+        <p>Touchpoints in flight, with the Signature version being applied to each.</p>
+      </div>
+      <button class="btn btn-gold">+ Queue a touchpoint</button>
+    </div>
+    <div class="board">
+      <div class="col">
+        <div class="col-h">Queued <span class="n">2</span></div>
+        <div class="card"><div class="ct">Amazon main image</div><div class="cs">Distinctive trigger redesign brief drafted by coach.</div><div class="ver">apply <b>Signature v3</b></div><div class="who"><span class="av">M</span>Matthew · Awareness</div></div>
+        <div class="card"><div class="ct">Shipping &amp; returns</div><div class="cs">Rewrite risk language warmer; address collector fear.</div><div class="ver">apply <b>Signature v3</b></div><div class="who"><span class="av">M</span>Matthew · Purchase</div></div>
+      </div>
+      <div class="col">
+        <div class="col-h">In progress <span class="n">1</span></div>
+        <div class="card"><div class="ct">Welcome series</div><div class="cs">3-email rewrite for the Empathy gap. Draft 2 of 5 done.</div>
+          <div class="meter" style="height:6px;margin-top:10px"><div class="fill" style="width:40%"></div></div>
+          <div class="ver" style="margin-top:8px">apply <b>Signature v3</b> · drafting</div><div class="who"><span class="av">C</span>Coach + Matthew · Retention</div></div>
+      </div>
+      <div class="col">
+        <div class="col-h">In review <span class="n">1</span></div>
+        <div class="card"><div class="ct">Amazon listing copy</div><div class="cs">New trust-led bullets ready. Awaiting your approve / publish-filter pass.</div>
+          <div class="ver" style="margin-top:8px">v3 draft · <span style="color:#2f7a33">publish-filter ✓ passed</span></div>
+          <div class="who"><span class="av">M</span>Matthew · Consideration</div>
+          <div style="margin-top:11px;display:flex;gap:8px"><button class="btn btn-gold" style="padding:6px 11px;font-size:12px">Approve</button><button class="btn" style="padding:6px 11px;font-size:12px">View diff</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Mockup · work items are created from “Fix with coach” on the What-Needs-Work screen and carry the Signature version forward into the test record.</div>
+  </div>
+</section>
+
+<!-- ======================= SCREEN 4 — TESTING & LIFT ======================= -->
+<section class="screen" id="test">
+  <div class="wrap">
+    <div class="screen-head">
+      <div>
+        <div class="eyebrow">Before / after · messaging change → lift</div>
+        <h2>What’s being tested</h2>
+        <p>Each test pins a touchpoint to a baseline, the messaging version applied, and the result — so you can prove a fix moved the needle.</p>
+      </div>
+      <button class="btn">P0: manual metric entry ▾</button>
+    </div>
+    <div class="tests">
+      <!-- won -->
+      <div class="test won">
+        <div class="test-h"><div><div class="tt">Amazon brand story / A+</div><div class="hy">Lead with the heart-of-the-brand line instead of specs.</div></div><span class="beaker b-won">Won</span></div>
+        <div class="ba">
+          <div class="box"><div class="k">Baseline</div><div class="val mono">88%</div><div class="ver">Signature <b>v2</b></div></div>
+          <div class="arr">→</div>
+          <div class="box"><div class="k">Result</div><div class="val mono">— </div><div class="ver">Signature <b>v3</b></div></div>
+        </div>
+        <div class="lift"><span class="l">A+ assisted conversion · 21 days</span><span class="v up">▲ +14.2%</span></div>
+      </div>
+      <!-- running -->
+      <div class="test run">
+        <div class="test-h"><div><div class="tt">Paid social creative</div><div class="hy">Open on the collector’s fear-of-missing-the-drop, not the product.</div></div><span class="beaker b-run">Running · d6/14</span></div>
+        <div class="ba">
+          <div class="box"><div class="k">Baseline CTR</div><div class="val mono">1.9%</div><div class="ver">Signature <b>v2</b></div></div>
+          <div class="arr">→</div>
+          <div class="box"><div class="k">So far</div><div class="val mono">2.4%</div><div class="ver">Signature <b>v3</b></div></div>
+        </div>
+        <div class="lift"><span class="l">CTR · interim, not significant yet</span><span class="v up">▲ +0.5pp</span></div>
+      </div>
+      <!-- running 2 -->
+      <div class="test run">
+        <div class="test-h"><div><div class="tt">Order confirmation email</div><div class="hy">Reinforce the right-choice feeling with the Signature promise.</div></div><span class="beaker b-run">Running · d3/14</span></div>
+        <div class="ba">
+          <div class="box"><div class="k">Baseline open</div><div class="val mono">61%</div><div class="ver">Signature <b>v2</b></div></div>
+          <div class="arr">→</div>
+          <div class="box"><div class="k">So far</div><div class="val mono">63%</div><div class="ver">Signature <b>v3</b></div></div>
+        </div>
+        <div class="lift"><span class="l">Repeat-order rate · too early</span><span class="v flat">— tracking</span></div>
+      </div>
+      <!-- lost / inconclusive -->
+      <div class="test lost">
+        <div class="test-h"><div><div class="tt">Urgency messaging</div><div class="hy">Add scarcity countdown on the PDP for limited drops.</div></div><span class="beaker b-lost">No lift</span></div>
+        <div class="ba">
+          <div class="box"><div class="k">Baseline</div><div class="val mono">3.0%</div><div class="ver">Signature <b>v2</b></div></div>
+          <div class="arr">→</div>
+          <div class="box"><div class="k">Result</div><div class="val mono">2.9%</div><div class="ver">v3 + urgency</div></div>
+        </div>
+        <div class="lift"><span class="l">PDP conversion · reverted</span><span class="v dn">▼ −0.1pp</span></div>
+      </div>
+    </div>
+    <div class="note">Mockup · a test is opened from an in-review fix. P0 captures baseline + result by hand; “Won” tests roll into the brand-ROI story and unlock the next gap.</div>
+  </div>
+</section>
+
+<script>
+  const tabs=document.querySelectorAll('.tab'), screens=document.querySelectorAll('.screen');
+  tabs.forEach(t=>t.addEventListener('click',()=>{
+    tabs.forEach(x=>x.classList.remove('active')); t.classList.add('active');
+    screens.forEach(s=>s.classList.toggle('active', s.id===t.dataset.s));
+    window.scrollTo({top:0,behavior:'instant'});
+  }));
+</script>
+</body>
+</html>
