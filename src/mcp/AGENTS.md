@@ -16,6 +16,17 @@ IV-OS asset/test ledger + knowledge reads. Today the host exposes:
   IV-OS MCP client adapter (`ivos/client.ts`). These never throw: they return
   `available:false` when IV-OS is unconfigured/unreachable.
 
+- `list_coach_conversations` / `get_coach_conversation` — **READ, per avatar.** Surface the
+  authenticated caller's own Brand-Coach chat threads (`chat_sessions` + `chat_messages`,
+  `chatbot_type = idea-framework-consultant`) over the JWT-bound RLS client
+  (`service/coachConversations.ts`). `list_coach_conversations` indexes threads — each
+  annotated with its avatar (`avatar_id` + resolved `avatar_name`; null = brand-level) and
+  turn count — and takes an optional `avatar_id` filter; `get_coach_conversation` returns one
+  thread's full transcript (chronological) by `session_id`. Identity-gated (anon refused; reads
+  are private user data). MF-5: only counts/flags logged — never titles or message content.
+  The avatar scope rides on `chat_sessions.avatar_id` (nullable FK → `avatars`, migration
+  `20260301065818`); a NULL row is a brand-level thread.
+
 The IV-OS **write** tools (`log_asset`/`record_test`/…) and **knowledge** reads
 (canon/product/funnel) are referenced by capability only (`ivos/capabilities.ts`
 → `DEFERRED_IVOS_CAPABILITIES`) and are intentionally **not bound** — pending the

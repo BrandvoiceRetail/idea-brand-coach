@@ -41,6 +41,8 @@ import { registerGenerateBriefTool } from './tools/generateBrief.js';
 import { registerGenerateAuditIdeaMapTool } from './tools/generateAuditIdeaMap.js';
 import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
+import { registerListCoachConversationsTool } from './tools/listCoachConversations.js';
+import { registerGetCoachConversationTool } from './tools/getCoachConversation.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -141,6 +143,14 @@ export function createServer(
   // the optional Storage upload is never-fail (the local file is the deliverable).
   // gateWrite identity-gated.
   registerExportWorkbookTool(server);
+
+  // Coach conversations (READ, per avatar): list_coach_conversations indexes the caller's
+  // Brand-Coach chat threads — each annotated with its avatar (avatar_id + avatar_name;
+  // null = brand-level) and turn count — and get_coach_conversation returns one thread's
+  // full transcript. Both are RLS-scoped to the caller (identity-gated; anon refused) and
+  // read-only. The avatar scope comes from chat_sessions.avatar_id (nullable FK → avatars).
+  registerListCoachConversationsTool(server);
+  registerGetCoachConversationTool(server);
 
   return { server, ivos, edgeFn: edge };
 }
