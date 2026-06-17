@@ -6,7 +6,8 @@
  * auto-closes when the queue empties.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 // ============================================================================
 // Types
@@ -69,6 +70,12 @@ export function useExtractionQueue(): UseExtractionQueueReturn {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
+  // Fresh mirror of the queue so the (empty-deps) callbacks below can read the
+  // field being acted on — to emit a rich, MF-5-safe review-signal event once,
+  // outside the state updater.
+  const queueRef = useRef<PendingField[]>(queue);
+  queueRef.current = queue;
+
   /**
    * Append fields to the queue. If the queue was empty, opens the review UI.
    * New extractions arriving during an active review are appended — the
@@ -98,6 +105,18 @@ export function useExtractionQueue(): UseExtractionQueueReturn {
    * Optionally accepts an edited value (for inline edits in the review modal).
    */
   const accept = useCallback((fieldId: string, _value?: string | string[]): void => {
+    const field = queueRef.current.find((f) => f.fieldId === fieldId);
+    if (field) {
+      // `_value` present = the user edited the AI's value before accepting — a
+      // stronger "the AI was close but off" signal than a clean accept.
+      captureAlphaEvent('field_review_accepted', {
+        field_id: field.fieldId,
+        chapter_id: field.chapterId,
+        source: field.source,
+        confidence: field.confidence,
+        edited: _value !== undefined,
+      });
+    }
     setQueue((prev) => {
       const next = prev.filter((f) => f.fieldId !== fieldId);
       if (next.length === 0) {
@@ -114,6 +133,15 @@ export function useExtractionQueue(): UseExtractionQueueReturn {
    * Reject a single field. Removes it from the queue and advances the index.
    */
   const reject = useCallback((fieldId: string): void => {
+    const field = queueRef.current.find((f) => f.fieldId === fieldId);
+    if (field) {
+      captureAlphaEvent('field_review_rejected', {
+        field_id: field.fieldId,
+        chapter_id: field.chapterId,
+        source: field.source,
+        confidence: field.confidence,
+      });
+    }
     setQueue((prev) => {
       const next = prev.filter((f) => f.fieldId !== fieldId);
       if (next.length === 0) {
@@ -132,6 +160,9 @@ export function useExtractionQueue(): UseExtractionQueueReturn {
    * trigger batch flash animations.
    */
   const acceptAll = useCallback((): PendingField[] => {
+    if (queueRef.current.length > 0) {
+      captureAlphaEvent('field_review_accept_all', { count: queueRef.current.length });
+    }
     let accepted: PendingField[] = [];
     setQueue((prev) => {
       accepted = [...prev];
@@ -147,6 +178,11 @@ export function useExtractionQueue(): UseExtractionQueueReturn {
    * Used when the user dismisses the review modal.
    */
   const clear = useCallback((): void => {
+    // Dismissing the modal with fields still pending = abandoned review (the
+    // user neither approved nor corrected the AI's extractions).
+    if (queueRef.current.length > 0) {
+      captureAlphaEvent('field_review_abandoned', { remaining_count: queueRef.current.length });
+    }
     setQueue([]);
     setIsOpen(false);
     setCurrentIndex(0);

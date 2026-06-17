@@ -37,7 +37,21 @@ export type AlphaEventName =
   | 'feedback_modal_opened'
   | 'feedback_submitted'
   | 'thank_you_viewed'
-  | 'llm_call_failed';
+  | 'llm_call_failed'
+  // Corrective signal — the user disagreeing with / redoing AI output. The
+  // highest-value feedback for improving extraction + generation quality.
+  | 'field_review_accepted'
+  | 'field_review_rejected'
+  | 'field_review_accept_all'
+  | 'field_review_abandoned'
+  | 'signature_reconsidered'
+  | 'signature_rerolled'
+  // Caught React render errors (relayed from ErrorBoundary; complements
+  // $exception autocapture, which only catches unhandled errors).
+  | 'app_error_caught'
+  // Coach answer quality — thumbs up/down on an assistant message. message_id
+  // joins to chat_messages for the rated content.
+  | 'coach_message_rated';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

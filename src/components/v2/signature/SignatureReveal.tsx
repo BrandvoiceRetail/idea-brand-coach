@@ -270,7 +270,16 @@ export function SignatureReveal({
             </div>
 
             <div className="flex justify-end">
-              <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5 text-muted-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  // Abandoned all options without picking — dissatisfaction with the set.
+                  captureAlphaEvent('signature_rerolled', { from: 'options', option_count: options.length });
+                  reset();
+                }}
+                className="gap-1.5 text-muted-foreground"
+              >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Start over
               </Button>
@@ -336,11 +345,36 @@ export function SignatureReveal({
               )}
 
               <div className="flex items-center justify-between pt-1">
-                <Button variant="ghost" size="sm" onClick={backToOptions} className="gap-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    // Reconsidering after a pick — the first choice didn't fully land.
+                    captureAlphaEvent('signature_reconsidered', {
+                      chosen_index: selectedIndex,
+                      option_count: options.length,
+                    });
+                    backToOptions();
+                  }}
+                  className="gap-1.5"
+                >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   See the other options
                 </Button>
-                <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5 text-muted-foreground">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    // Redo the whole reveal after picking — strongest dissatisfaction signal.
+                    captureAlphaEvent('signature_rerolled', {
+                      from: 'picked',
+                      chosen_index: selectedIndex,
+                      option_count: options.length,
+                    });
+                    reset();
+                  }}
+                  className="gap-1.5 text-muted-foreground"
+                >
                   <RotateCcw className="h-3.5 w-3.5" />
                   Reveal again
                 </Button>

@@ -21,8 +21,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { MessageSquare, Loader2, ListChecks, RotateCcw, Check, X } from 'lucide-react';
+import { MessageSquare, Loader2, ListChecks, RotateCcw, Check, X, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import { FieldExtractionBadges } from '@/components/v2/FieldExtractionBadges';
 import type { ExtractedField } from '@/components/v2/FieldExtractionBadges';
 import { CHAPTER_FIELDS_MAP } from '@/config/chapterFields';
@@ -192,6 +193,60 @@ function ExtractionSection({
   );
 }
 
+/**
+ * MessageRating — thumbs up/down on a coach (assistant) message. Fires a
+ * `coach_message_rated` PostHog event; `message_id` joins to `chat_messages`
+ * for the rated content (MF-5: no content in the event itself). Local state so
+ * the chosen thumb stays filled; re-clicking the same thumb is a no-op.
+ */
+function MessageRating({
+  messageId,
+  messageIndex,
+  messageLength,
+}: {
+  messageId: string;
+  messageIndex: number;
+  messageLength: number;
+}): JSX.Element {
+  const [rating, setRating] = useState<'up' | 'down' | null>(null);
+
+  const rate = (value: 'up' | 'down'): void => {
+    if (rating === value) return;
+    setRating(value);
+    captureAlphaEvent('coach_message_rated', {
+      rating: value,
+      message_id: messageId,
+      message_index: messageIndex,
+      message_length: messageLength,
+    });
+  };
+
+  return (
+    <div className="mt-2 flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 text-muted-foreground hover:text-green-600"
+        aria-label="Helpful"
+        aria-pressed={rating === 'up'}
+        onClick={() => rate('up')}
+      >
+        <ThumbsUp className={cn('h-3.5 w-3.5', rating === 'up' && 'fill-current text-green-600')} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 text-muted-foreground hover:text-red-600"
+        aria-label="Not helpful"
+        aria-pressed={rating === 'down'}
+        onClick={() => rate('down')}
+      >
+        <ThumbsDown className={cn('h-3.5 w-3.5', rating === 'down' && 'fill-current text-red-600')} />
+      </Button>
+    </div>
+  );
+}
+
 export function ChatMessageList({
   messages,
   isStreaming,
@@ -225,7 +280,7 @@ export function ChatMessageList({
           </p>
         </div>
       ) : (
-        messages.map((msg) => (
+        messages.map((msg, index) => (
           <div
             key={msg.id}
             className={cn(
@@ -262,6 +317,15 @@ export function ChatMessageList({
                 <div className="text-xs opacity-70 mt-1">
                   {new Date(msg.created_at).toLocaleTimeString()}
                 </div>
+
+                {/* Coach answer-quality thumbs — persisted assistant messages only */}
+                {msg.role !== 'user' && !msg.id.startsWith('pending-') && (
+                  <MessageRating
+                    messageId={msg.id}
+                    messageIndex={index}
+                    messageLength={msg.content.length}
+                  />
+                )}
               </CardContent>
             </Card>
           </div>
