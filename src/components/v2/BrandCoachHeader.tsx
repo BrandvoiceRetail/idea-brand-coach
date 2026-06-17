@@ -9,9 +9,11 @@
  * Responsive: stacks controls vertically on mobile, condenses chapter info.
  */
 
-import { LogOut } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ROUTES } from '@/config/routes';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useDeviceType } from '@/hooks/useDeviceType';
@@ -144,6 +146,19 @@ export function BrandCoachHeader({
             onAvatarSelect={(avatarId: string) => onAvatarChange({ id: avatarId })}
             onCreateAvatar={onCreateAvatar}
           />
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            title="Settings"
+            aria-label="Settings"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Link to={ROUTES.SETTINGS}>
+              <Settings className="h-4 w-4" />
+              {!isMobile && <span className="ml-1.5">Settings</span>}
+            </Link>
+          </Button>
           <Button
             variant="ghost"
             size="sm"

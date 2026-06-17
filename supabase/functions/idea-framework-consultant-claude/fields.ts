@@ -137,6 +137,7 @@ export const FIELD_LABELS: Record<string, string> = {
   'canvas_value_proposition': 'Value Proposition',
   'canvas_brand_personality': 'Brand Personality',
   'canvas_brand_voice': 'Brand Voice',
+  'figma_visual_identity': 'Design summary',
 };
 
 /**

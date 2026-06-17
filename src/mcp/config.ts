@@ -32,7 +32,11 @@ export const SERVER_INSTRUCTIONS = [
   'asset via `get_asset`, judge it against brand canon, record the verdict with',
   '`record_assessment`, drive approval via `update_asset_status`, audit anytime via',
   '`get_asset_history`. Treat the IV-OS test-ledger and knowledge tools as provisional — not',
-  'bound here. Never send PII or raw prompts in tool args beyond what a tool explicitly requires.',
+  'bound here. The authenticated caller can review their own Brand-Coach chat threads per avatar:',
+  '`list_coach_conversations` indexes their threads (each with its avatar_id + avatar_name; null =',
+  'brand-level — pass avatar_id to scope to one avatar) and `get_coach_conversation` returns one',
+  'thread’s full transcript by session_id (both RLS-scoped reads; anonymous callers are refused).',
+  'Never send PII or raw prompts in tool args beyond what a tool explicitly requires.',
 ].join(' ');
 
 /**
