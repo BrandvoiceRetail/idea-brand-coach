@@ -41,7 +41,19 @@ grounded in `skills/idea/`. Per `docs/v2/architecture/adr/ADR-UNIFIED-COACH-CAPA
       MCP HTTP call w/ JWT -> tool_result fed into 2nd Anthropic call -> final answer. app tsc exit 0;
       consultant suite 34/34 (threads). NO new dep. **P5 must validate the live stateless handshake**
       (whether the host needs an initialize before tools/call) against a real local host.
-- [ ] **P5 VERIFY** — mcp-conversation-replay harness proving >=3 tools fire via the loop, grounded.
+- [x] **P5 VERIFY** — DONE. Live integration proof `__tests__/mcp-loop-live.test.ts` (3 tests, spawns the
+      real Node MCP host via tsx on :8787, detached process-group teardown). HANDSHAKE VERDICT: the
+      stateless host accepts a BARE `tools/call` — NO `initialize` needed → mcpClient.ts required NO fix
+      (P4's open question resolved). Proof: (1) callMcpTool run_trust_gap → live host → real computed result
+      (overall/bands); (2) runAgenticLoop (flag ON) emits tool_use for 3 MCP tools → only /mcp hits the real
+      host (real fetch), Anthropic mocked → >=3 distinct tools dispatched with `Authorization: Bearer` →
+      3 tool_results fed into the 2nd Anthropic call (run_trust_gap's = live engine output) → final answer;
+      (3) run_trust_gap advertised with skills/idea grounding. run_trust_gap fully live; list_assets returned
+      ok; get_context_status returned an auth-gated error tool_result (fake JWT, no live Supabase) — handled,
+      as expected. tsc exit 0; consultant suite 37/37; FULL suite 1643 passed / 1 failed / 11 todo.
+      The 1 failure = `src/lib/__tests__/posthogClient.test.ts` "default host" — PRE-EXISTING + env-dependent
+      (the worktree's symlinked .env.local sets VITE_POSTHOG_HOST=EU; the test doesn't stub it), fails in
+      isolation too, P5 touched no PostHog code. NOT a regression.
 
 ## HALTs (stop + ask)
 prod/edge-fn deploy · MCP-hosting/infra provisioning · branch-strategy merge to main · new npm dependency.
