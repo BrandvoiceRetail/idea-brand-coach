@@ -128,7 +128,14 @@ npx supabase functions deploy figma-oauth-start figma-oauth-exchange \
 `verify_jwt = true` for all five (see `supabase/config.toml`); each also derives
 `user_id` from the verified token and rejects anonymous callers.
 
-### 6. Verify
+### 6. Enable the UI (feature flag)
+
+The Settings → Integrations surface is gated behind the `FIGMA_INTEGRATION` flag
+(driven by `VITE_ENABLE_FIGMA`) so production stays unchanged until the steps
+above are done. Once secrets are set, build the frontend with `VITE_ENABLE_FIGMA=true`
+and deploy. Until then the "Settings" nav + Figma card are hidden in prod.
+
+### 7. Verify
 
 Sign in, open `/settings/integrations`, click **Connect Figma**, authorize, then
 import a file. Confirm a palette renders and, in the coach, that the visual

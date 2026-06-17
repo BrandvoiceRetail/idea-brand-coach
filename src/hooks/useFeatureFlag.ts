@@ -103,6 +103,19 @@ const LOCAL_FEATURE_FLAGS: Record<string, FeatureFlag> = {
       // sessionPercentage: 100,
     },
   },
+
+  /**
+   * Figma Integration Flag
+   *
+   * Gates the Settings → Integrations surface (Connect Figma, import). OFF unless
+   * VITE_ENABLE_FIGMA === 'true' at build time, so production stays unchanged
+   * until the Figma OAuth app + FIGMA_* secrets are configured. Flip on by setting
+   * the env var (durable) or via the admin page (in-memory, this session).
+   */
+  'FIGMA_INTEGRATION': {
+    name: 'Figma Integration',
+    enabled: import.meta.env.VITE_ENABLE_FIGMA === 'true',
+  },
 };
 
 /**
