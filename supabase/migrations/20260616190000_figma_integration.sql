@@ -16,7 +16,11 @@
 --                              scoped with standard owner RLS; powers the import
 --                              history UI and the coach's visual-identity context.
 --   Also expands the user_knowledge_base.category CHECK so figma-sync can write a
---   readable "visual_identity" summary the brand coach already retrieves.
+--   readable "visual_identity" summary the brand coach already retrieves. The
+--   allowed list is the superset of categories observed in production
+--   (diagnostic/avatar/insights/canvas/copy + capture/core/consultant, which were
+--   added out-of-band) plus visual_identity, so applying this never NARROWS an
+--   environment's existing constraint.
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 1. figma_connections — service-role-only OAuth token store
@@ -150,7 +154,7 @@ END $$;
 
 ALTER TABLE public.user_knowledge_base
   ADD CONSTRAINT user_knowledge_base_category_check
-  CHECK (category IN ('diagnostic', 'avatar', 'insights', 'canvas', 'copy', 'visual_identity'));
+  CHECK (category IN ('diagnostic', 'avatar', 'insights', 'canvas', 'copy', 'capture', 'core', 'consultant', 'visual_identity'));
 
 COMMENT ON TABLE public.figma_connections IS 'Per-user Figma OAuth tokens (encrypted at rest). Service-role only; never exposed to the browser.';
 COMMENT ON TABLE public.figma_oauth_state IS 'Short-lived, single-use CSRF state for the Figma OAuth authorize round-trip. Service-role only.';
