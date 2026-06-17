@@ -17,6 +17,7 @@ export type Database = {
       artifacts: {
         Row: {
           avatar_id: string | null
+          brand_id: string | null
           content: Json
           created_at: string
           evidence_refs: Json
@@ -32,6 +33,7 @@ export type Database = {
         }
         Insert: {
           avatar_id?: string | null
+          brand_id?: string | null
           content: Json
           created_at?: string
           evidence_refs?: Json
@@ -47,6 +49,7 @@ export type Database = {
         }
         Update: {
           avatar_id?: string | null
+          brand_id?: string | null
           content?: Json
           created_at?: string
           evidence_refs?: Json
@@ -62,10 +65,52 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "artifacts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "artifacts_superseded_by_fkey"
             columns: ["superseded_by"]
             isOneToOne: false
             referencedRelation: "artifacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      avatar_build_state: {
+        Row: {
+          approved_at: string | null
+          avatar_id: string
+          stages_done: string[]
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          avatar_id: string
+          stages_done?: string[]
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          avatar_id?: string
+          stages_done?: string[]
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avatar_build_state_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: true
+            referencedRelation: "avatars"
             referencedColumns: ["id"]
           },
         ]
@@ -122,11 +167,13 @@ export type Database = {
       }
       avatars: {
         Row: {
+          brand_id: string
           buying_behavior: Json | null
           created_at: string
           demographics: Json | null
           description: string | null
           id: string
+          is_primary: boolean
           is_template: boolean
           name: string
           psychographics: Json | null
@@ -135,11 +182,13 @@ export type Database = {
           voice_of_customer: string | null
         }
         Insert: {
+          brand_id: string
           buying_behavior?: Json | null
           created_at?: string
           demographics?: Json | null
           description?: string | null
           id?: string
+          is_primary?: boolean
           is_template?: boolean
           name: string
           psychographics?: Json | null
@@ -148,11 +197,13 @@ export type Database = {
           voice_of_customer?: string | null
         }
         Update: {
+          brand_id?: string
           buying_behavior?: Json | null
           created_at?: string
           demographics?: Json | null
           description?: string | null
           id?: string
+          is_primary?: boolean
           is_template?: boolean
           name?: string
           psychographics?: Json | null
@@ -160,7 +211,15 @@ export type Database = {
           user_id?: string
           voice_of_customer?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "avatars_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       beta_comments: {
         Row: {
@@ -301,6 +360,215 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_asset_audits: {
+        Row: {
+          audit_result: Json | null
+          avatar_id: string
+          brand_asset_id: string
+          brand_id: string
+          created_at: string
+          evidence_refs: Json
+          grounding: string
+          id: string
+          overall_score: number | null
+          superseded_by: string | null
+          user_id: string
+        }
+        Insert: {
+          audit_result?: Json | null
+          avatar_id: string
+          brand_asset_id: string
+          brand_id: string
+          created_at?: string
+          evidence_refs?: Json
+          grounding?: string
+          id?: string
+          overall_score?: number | null
+          superseded_by?: string | null
+          user_id: string
+        }
+        Update: {
+          audit_result?: Json | null
+          avatar_id?: string
+          brand_asset_id?: string
+          brand_id?: string
+          created_at?: string
+          evidence_refs?: Json
+          grounding?: string
+          id?: string
+          overall_score?: number | null
+          superseded_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_asset_audits_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_asset_audits_brand_asset_id_fkey"
+            columns: ["brand_asset_id"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_asset_audits_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_asset_audits_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "brand_asset_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_assets: {
+        Row: {
+          audit_result: Json | null
+          avatar_id: string | null
+          brand_id: string | null
+          content_text: string | null
+          context_description: string
+          created_at: string
+          id: string
+          overall_score: number | null
+          previous_score: number | null
+          signature_version: string | null
+          stage: string
+          status: string
+          storage_path: string | null
+          superseded_by: string | null
+          touchpoint_id: string
+          updated_at: string
+        }
+        Insert: {
+          audit_result?: Json | null
+          avatar_id?: string | null
+          brand_id?: string | null
+          content_text?: string | null
+          context_description: string
+          created_at?: string
+          id?: string
+          overall_score?: number | null
+          previous_score?: number | null
+          signature_version?: string | null
+          stage: string
+          status?: string
+          storage_path?: string | null
+          superseded_by?: string | null
+          touchpoint_id: string
+          updated_at?: string
+        }
+        Update: {
+          audit_result?: Json | null
+          avatar_id?: string | null
+          brand_id?: string | null
+          content_text?: string | null
+          context_description?: string
+          created_at?: string
+          id?: string
+          overall_score?: number | null
+          previous_score?: number | null
+          signature_version?: string | null
+          stage?: string
+          status?: string
+          storage_path?: string | null
+          superseded_by?: string | null
+          touchpoint_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_assets_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_assets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_assets_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_tests: {
+        Row: {
+          asset_id: string
+          baseline_value: number | null
+          created_at: string
+          deployed_at: string | null
+          hypothesis: string | null
+          id: string
+          measured_at: string | null
+          messaging_version_after: string | null
+          messaging_version_before: string | null
+          metric_type: string | null
+          result_value: number | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          baseline_value?: number | null
+          created_at?: string
+          deployed_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          measured_at?: string | null
+          messaging_version_after?: string | null
+          messaging_version_before?: string | null
+          metric_type?: string | null
+          result_value?: number | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          baseline_value?: number | null
+          created_at?: string
+          deployed_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          measured_at?: string | null
+          messaging_version_after?: string | null
+          messaging_version_before?: string | null
+          metric_type?: string | null
+          result_value?: number | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_tests_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           created_at: string
@@ -309,6 +577,7 @@ export type Database = {
           industry: string | null
           metadata: Json | null
           name: string
+          primary_avatar_id: string | null
           updated_at: string
           user_id: string
         }
@@ -319,6 +588,7 @@ export type Database = {
           industry?: string | null
           metadata?: Json | null
           name: string
+          primary_avatar_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -329,10 +599,19 @@ export type Database = {
           industry?: string | null
           metadata?: Json | null
           name?: string
+          primary_avatar_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "brands_primary_avatar_id_fkey"
+            columns: ["primary_avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       business_facts: {
         Row: {
@@ -416,6 +695,8 @@ export type Database = {
       }
       chat_sessions: {
         Row: {
+          avatar_id: string | null
+          brand_id: string | null
           chapter_id: string | null
           chapter_metadata: Json | null
           chatbot_type: string
@@ -425,11 +706,14 @@ export type Database = {
           field_label: string | null
           id: string
           page_context: string | null
+          posthog_distinct_id: string | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          avatar_id?: string | null
+          brand_id?: string | null
           chapter_id?: string | null
           chapter_metadata?: Json | null
           chatbot_type?: string
@@ -439,11 +723,14 @@ export type Database = {
           field_label?: string | null
           id?: string
           page_context?: string | null
+          posthog_distinct_id?: string | null
           title?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          avatar_id?: string | null
+          brand_id?: string | null
           chapter_id?: string | null
           chapter_metadata?: Json | null
           chatbot_type?: string
@@ -453,45 +740,154 @@ export type Database = {
           field_label?: string | null
           id?: string
           page_context?: string | null
+          posthog_distinct_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_sessions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decision_triggers: {
+        Row: {
+          avatar_id: string | null
+          brand_anchor: string
+          brand_id: string | null
+          created_at: string
+          dominant_confidence: number | null
+          dominant_type: string
+          evidence_phrases: Json
+          generated_at: string
+          id: string
+          model_version: string | null
+          placement_instruction: string
+          session_id: string
+          supporting_confidence: number | null
+          supporting_type: string | null
+          updated_at: string
+          user_id: string
+          why_this_trigger: string | null
+        }
+        Insert: {
+          avatar_id?: string | null
+          brand_anchor: string
+          brand_id?: string | null
+          created_at?: string
+          dominant_confidence?: number | null
+          dominant_type: string
+          evidence_phrases?: Json
+          generated_at?: string
+          id?: string
+          model_version?: string | null
+          placement_instruction: string
+          session_id: string
+          supporting_confidence?: number | null
+          supporting_type?: string | null
+          updated_at?: string
+          user_id: string
+          why_this_trigger?: string | null
+        }
+        Update: {
+          avatar_id?: string | null
+          brand_anchor?: string
+          brand_id?: string | null
+          created_at?: string
+          dominant_confidence?: number | null
+          dominant_type?: string
+          evidence_phrases?: Json
+          generated_at?: string
+          id?: string
+          model_version?: string | null
+          placement_instruction?: string
+          session_id?: string
+          supporting_confidence?: number | null
+          supporting_type?: string | null
+          updated_at?: string
+          user_id?: string
+          why_this_trigger?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_triggers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       diagnostic_submissions: {
         Row: {
           answers: Json
+          avatar_id: string | null
+          brand_id: string | null
           completed_at: string
           created_at: string
           id: string
+          posthog_distinct_id: string | null
           scores: Json
           updated_at: string
           user_id: string
         }
         Insert: {
           answers: Json
+          avatar_id?: string | null
+          brand_id?: string | null
           completed_at?: string
           created_at?: string
           id?: string
+          posthog_distinct_id?: string | null
           scores: Json
           updated_at?: string
           user_id: string
         }
         Update: {
           answers?: Json
+          avatar_id?: string | null
+          brand_id?: string | null
           completed_at?: string
           created_at?: string
           id?: string
+          posthog_distinct_id?: string | null
           scores?: Json
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_submissions_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostic_submissions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       evidence_snapshots: {
         Row: {
           avatar_id: string | null
+          brand_id: string | null
           created_at: string
           id: string
           listing: Json | null
@@ -502,6 +898,7 @@ export type Database = {
         }
         Insert: {
           avatar_id?: string | null
+          brand_id?: string | null
           created_at?: string
           id?: string
           listing?: Json | null
@@ -512,6 +909,7 @@ export type Database = {
         }
         Update: {
           avatar_id?: string | null
+          brand_id?: string | null
           created_at?: string
           id?: string
           listing?: Json | null
@@ -520,7 +918,15 @@ export type Database = {
           source_ref?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "evidence_snapshots_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feedback_events: {
         Row: {
@@ -570,6 +976,134 @@ export type Database = {
           session_id?: string | null
           signature_options?: Json | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      figma_connections: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string | null
+          figma_email: string | null
+          figma_handle: string | null
+          figma_user_id: string | null
+          id: string
+          refresh_token: string | null
+          scope: string | null
+          token_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at?: string | null
+          figma_email?: string | null
+          figma_handle?: string | null
+          figma_user_id?: string | null
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          token_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string | null
+          figma_email?: string | null
+          figma_handle?: string | null
+          figma_user_id?: string | null
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          token_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      figma_imports: {
+        Row: {
+          brand_id: string | null
+          components: Json
+          created_at: string
+          file_key: string
+          file_name: string | null
+          id: string
+          last_modified: string | null
+          pages: Json
+          palette: Json
+          summary: string | null
+          thumbnail_url: string | null
+          typography: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_id?: string | null
+          components?: Json
+          created_at?: string
+          file_key: string
+          file_name?: string | null
+          id?: string
+          last_modified?: string | null
+          pages?: Json
+          palette?: Json
+          summary?: string | null
+          thumbnail_url?: string | null
+          typography?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_id?: string | null
+          components?: Json
+          created_at?: string
+          file_key?: string
+          file_name?: string | null
+          id?: string
+          last_modified?: string | null
+          pages?: Json
+          palette?: Json
+          summary?: string | null
+          thumbnail_url?: string | null
+          typography?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "figma_imports_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      figma_oauth_state: {
+        Row: {
+          created_at: string
+          expires_at: string
+          redirect_uri: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          redirect_uri: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          redirect_uri?: string
+          state?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -642,6 +1176,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          current_avatar_id: string | null
           diagnostic_completed_at: string | null
           email: string
           full_name: string | null
@@ -653,6 +1188,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_avatar_id?: string | null
           diagnostic_completed_at?: string | null
           email: string
           full_name?: string | null
@@ -664,6 +1200,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_avatar_id?: string | null
           diagnostic_completed_at?: string | null
           email?: string
           full_name?: string | null
@@ -673,17 +1210,27 @@ export type Database = {
           updated_at?: string
           version_preference?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_current_avatar_id_fkey"
+            columns: ["current_avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       signatures: {
         Row: {
           all_options: Json | null
           artifact_id: string | null
           avatar_id: string | null
+          brand_id: string | null
           chosen_index: number | null
           created_at: string
           id: string
           inference: boolean | null
+          posthog_distinct_id: string | null
           signature_text: string | null
           used_reviews: boolean | null
           user_id: string
@@ -692,10 +1239,12 @@ export type Database = {
           all_options?: Json | null
           artifact_id?: string | null
           avatar_id?: string | null
+          brand_id?: string | null
           chosen_index?: number | null
           created_at?: string
           id?: string
           inference?: boolean | null
+          posthog_distinct_id?: string | null
           signature_text?: string | null
           used_reviews?: boolean | null
           user_id: string
@@ -704,10 +1253,12 @@ export type Database = {
           all_options?: Json | null
           artifact_id?: string | null
           avatar_id?: string | null
+          brand_id?: string | null
           chosen_index?: number | null
           created_at?: string
           id?: string
           inference?: boolean | null
+          posthog_distinct_id?: string | null
           signature_text?: string | null
           used_reviews?: boolean | null
           user_id?: string
@@ -720,11 +1271,19 @@ export type Database = {
             referencedRelation: "artifacts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "signatures_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
         ]
       }
       uploaded_documents: {
         Row: {
           avatar_id: string | null
+          brand_id: string | null
           created_at: string
           extracted_content: string | null
           extraction_completed_at: string | null
@@ -744,6 +1303,7 @@ export type Database = {
         }
         Insert: {
           avatar_id?: string | null
+          brand_id?: string | null
           created_at?: string
           extracted_content?: string | null
           extraction_completed_at?: string | null
@@ -763,6 +1323,7 @@ export type Database = {
         }
         Update: {
           avatar_id?: string | null
+          brand_id?: string | null
           created_at?: string
           extracted_content?: string | null
           extraction_completed_at?: string | null
@@ -788,11 +1349,20 @@ export type Database = {
             referencedRelation: "avatars"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "uploaded_documents_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_diagnostic_results: {
         Row: {
+          avatar_id: string | null
           beta_tester_id: string | null
+          brand_id: string | null
           category_scores: Json | null
           created_at: string
           diagnostic_completion_date: string
@@ -802,7 +1372,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_id?: string | null
           beta_tester_id?: string | null
+          brand_id?: string | null
           category_scores?: Json | null
           created_at?: string
           diagnostic_completion_date?: string
@@ -812,7 +1384,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_id?: string | null
           beta_tester_id?: string | null
+          brand_id?: string | null
           category_scores?: Json | null
           created_at?: string
           diagnostic_completion_date?: string
@@ -823,16 +1397,32 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "user_diagnostic_results_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_diagnostic_results_beta_tester_id_fkey"
             columns: ["beta_tester_id"]
             isOneToOne: false
             referencedRelation: "beta_testers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_diagnostic_results_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_knowledge_base: {
         Row: {
+          avatar_id: string | null
+          brand_id: string | null
           category: string
           content: string
           created_at: string | null
@@ -844,6 +1434,7 @@ export type Database = {
           local_changes: boolean | null
           metadata: Json | null
           pgvector_synced_at: string | null
+          scope: string
           source_page: string | null
           structured_data: Json | null
           subcategory: string | null
@@ -852,6 +1443,8 @@ export type Database = {
           version: number
         }
         Insert: {
+          avatar_id?: string | null
+          brand_id?: string | null
           category: string
           content: string
           created_at?: string | null
@@ -863,6 +1456,7 @@ export type Database = {
           local_changes?: boolean | null
           metadata?: Json | null
           pgvector_synced_at?: string | null
+          scope?: string
           source_page?: string | null
           structured_data?: Json | null
           subcategory?: string | null
@@ -871,6 +1465,8 @@ export type Database = {
           version?: number
         }
         Update: {
+          avatar_id?: string | null
+          brand_id?: string | null
           category?: string
           content?: string
           created_at?: string | null
@@ -882,6 +1478,7 @@ export type Database = {
           local_changes?: boolean | null
           metadata?: Json | null
           pgvector_synced_at?: string | null
+          scope?: string
           source_page?: string | null
           structured_data?: Json | null
           subcategory?: string | null
@@ -889,10 +1486,27 @@ export type Database = {
           user_id?: string
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_knowledge_base_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_knowledge_base_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_knowledge_chunks: {
         Row: {
+          avatar_id: string | null
+          brand_id: string | null
           category: string | null
           chunk_index: number | null
           content: string
@@ -901,6 +1515,7 @@ export type Database = {
           field_identifier: string | null
           id: string
           metadata: Json | null
+          scope: string
           source_document_id: string | null
           source_id: string | null
           source_type: string
@@ -908,6 +1523,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_id?: string | null
+          brand_id?: string | null
           category?: string | null
           chunk_index?: number | null
           content: string
@@ -916,6 +1533,7 @@ export type Database = {
           field_identifier?: string | null
           id?: string
           metadata?: Json | null
+          scope?: string
           source_document_id?: string | null
           source_id?: string | null
           source_type: string
@@ -923,6 +1541,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_id?: string | null
+          brand_id?: string | null
           category?: string | null
           chunk_index?: number | null
           content?: string
@@ -931,6 +1551,7 @@ export type Database = {
           field_identifier?: string | null
           id?: string
           metadata?: Json | null
+          scope?: string
           source_document_id?: string | null
           source_id?: string | null
           source_type?: string
@@ -938,6 +1559,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_knowledge_chunks_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_knowledge_chunks_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_knowledge_chunks_source_document_id_fkey"
             columns: ["source_document_id"]
@@ -1138,25 +1773,47 @@ export type Database = {
     Functions: {
       handle_ai_insight_guidance: { Args: never; Returns: undefined }
       handle_buyer_intent_analysis: { Args: never; Returns: undefined }
-      match_document_chunks: {
-        Args: {
-          filter_categories?: string[]
-          match_count?: number
-          match_threshold?: number
-          match_user_id: string
-          query_embedding: string
-        }
-        Returns: {
-          category: string
-          chunk_index: number
-          content: string
-          field_identifier: string
-          id: string
-          metadata: Json
-          similarity: number
-          source_type: string
-        }[]
-      }
+      match_document_chunks:
+        | {
+            Args: {
+              filter_categories?: string[]
+              match_count?: number
+              match_threshold?: number
+              match_user_id: string
+              query_embedding: string
+            }
+            Returns: {
+              category: string
+              chunk_index: number
+              content: string
+              field_identifier: string
+              id: string
+              metadata: Json
+              similarity: number
+              source_type: string
+            }[]
+          }
+        | {
+            Args: {
+              filter_categories: string[]
+              match_avatar_id: string
+              match_brand_id: string
+              match_count: number
+              match_threshold: number
+              match_user_id: string
+              query_embedding: string
+            }
+            Returns: {
+              category: string
+              chunk_index: number
+              content: string
+              field_identifier: string
+              id: string
+              metadata: Json
+              similarity: number
+              source_type: string
+            }[]
+          }
       match_user_documents: {
         Args: {
           filter?: Json
@@ -1188,37 +1845,103 @@ export type Database = {
           similarity: number
         }[]
       }
-      save_artifact_atomic: {
+      save_artifact_atomic:
+        | {
+            Args: {
+              p_avatar_id: string
+              p_content: Json
+              p_evidence_refs: Json
+              p_grounding: string
+              p_kind: string
+              p_user_id: string
+            }
+            Returns: {
+              avatar_id: string | null
+              brand_id: string | null
+              content: Json
+              created_at: string
+              evidence_refs: Json
+              grounding: string
+              id: string
+              kind: string
+              model: string | null
+              schema_version: string | null
+              status: string
+              superseded_by: string | null
+              updated_at: string
+              user_id: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "artifacts"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_avatar_id: string
+              p_brand_id: string
+              p_content: Json
+              p_evidence_refs: Json
+              p_grounding: string
+              p_kind: string
+              p_user_id: string
+            }
+            Returns: {
+              avatar_id: string | null
+              brand_id: string | null
+              content: Json
+              created_at: string
+              evidence_refs: Json
+              grounding: string
+              id: string
+              kind: string
+              model: string | null
+              schema_version: string | null
+              status: string
+              superseded_by: string | null
+              updated_at: string
+              user_id: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "artifacts"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+      save_asset_audit_atomic: {
         Args: {
+          p_audit_result: Json
           p_avatar_id: string
-          p_content: Json
+          p_brand_asset_id: string
           p_evidence_refs: Json
           p_grounding: string
-          p_kind: string
-          p_user_id: string
+          p_overall_score: number
         }
         Returns: {
-          avatar_id: string | null
-          content: Json
+          audit_result: Json | null
+          avatar_id: string
+          brand_asset_id: string
+          brand_id: string
           created_at: string
           evidence_refs: Json
           grounding: string
           id: string
-          kind: string
-          model: string | null
-          schema_version: string | null
-          status: string
+          overall_score: number | null
           superseded_by: string | null
-          updated_at: string
           user_id: string
         }
         SetofOptions: {
           from: "*"
-          to: "artifacts"
+          to: "brand_asset_audits"
           isOneToOne: true
           isSetofReturn: false
         }
       }
+      set_current_avatar: { Args: { p_avatar_id: string }; Returns: undefined }
+      set_primary_avatar: { Args: { p_avatar_id: string }; Returns: undefined }
       update_knowledge_entry: {
         Args: {
           p_category: string
