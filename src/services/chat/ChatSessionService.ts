@@ -7,6 +7,8 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesInsert } from '@/integrations/supabase/types';
+import { getPostHogDistinctId } from '@/lib/posthogClient';
 import {
   ChatSession,
   ChatSessionCreate,
@@ -38,19 +40,25 @@ export class ChatSessionService {
     chatbotType: ChatbotType,
     sessionData?: ChatSessionCreate
   ): Promise<SessionResult<ChatSession>> {
+    // posthog_distinct_id threads this conversation back to the user's PostHog
+    // funnel + replay (parity with feedback_events). Column added in migration
+    // 20260617000000; cast because types.ts is intentionally NOT regenerated
+    // (it carries repo/live drift) so the generated insert type lacks the column.
+    const row = {
+      user_id: userId,
+      chatbot_type: sessionData?.chatbot_type || chatbotType,
+      title: sessionData?.title || 'New Chat',
+      conversation_type: sessionData?.conversation_type || 'general',
+      field_id: sessionData?.field_id,
+      field_label: sessionData?.field_label,
+      page_context: sessionData?.page_context,
+      chapter_id: sessionData?.chapter_id,
+      chapter_metadata: sessionData?.chapter_metadata,
+      posthog_distinct_id: getPostHogDistinctId(),
+    };
     const { data, error } = await supabase
       .from('chat_sessions')
-      .insert({
-        user_id: userId,
-        chatbot_type: sessionData?.chatbot_type || chatbotType,
-        title: sessionData?.title || 'New Chat',
-        conversation_type: sessionData?.conversation_type || 'general',
-        field_id: sessionData?.field_id,
-        field_label: sessionData?.field_label,
-        page_context: sessionData?.page_context,
-        chapter_id: sessionData?.chapter_id,
-        chapter_metadata: sessionData?.chapter_metadata,
-      })
+      .insert(row as unknown as TablesInsert<'chat_sessions'>)
       .select()
       .single();
 
