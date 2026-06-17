@@ -1,5 +1,17 @@
 # Coach capability unification — loop state
 
+## ✅ LOOP COMPLETE — 2026-06-16
+All phases P1–P5 + the security/architecture review gate are done on `worktree-skill-architecture`
+(9 commits ahead of `origin/main`, tip `cc3bbce`). DONE GATE met: tsc clean; the live MCP-loop
+harness proves >=3 grounded MCP tools fire via the real tool_use->tool_result loop with JWT
+forwarding; consultant + src/mcp suites 298/298; single-shot fallback (flag OFF) byte-identical.
+Full suite = 1642 pass / 2 fail, both pre-existing non-regressions (FreeDiagnostic = load-timeout
+flake, passes 8/8 in isolation; posthogClient = env-driven, fails in isolation too) — neither
+references this work. Review: 12 findings applied (`cc3bbce`); JWT seam / rollback / registry validated.
+**Remaining = designed HALTs (human decisions):** merge to main · deploy the MCP host + reachability
+(Phase-0 infra; VPS-vs-AWS) · set `CONSULTANT_TOOL_LOOP_ENABLED=true`. Flag is OFF by default so this
+is dormant until enabled.
+
 **Goal:** in-house coach (idea-framework-consultant) becomes an MCP client whose tools are
 grounded in `skills/idea/`. Per `docs/v2/architecture/adr/ADR-UNIFIED-COACH-CAPABILITY-LAYER.md`.
 **Base worktree:** `.claude/worktrees/skill-architecture` (branch `worktree-skill-architecture`).
