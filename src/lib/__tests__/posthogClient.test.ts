@@ -119,7 +119,7 @@ describe('posthogClient', () => {
       expect(mockPosthog.reset).not.toHaveBeenCalled();
     });
 
-    it('delegates when initialised (no email)', async () => {
+    it('delegates when initialised', async () => {
       vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
       const client = await importFreshClient();
       client.initPostHog();
@@ -127,18 +127,8 @@ describe('posthogClient', () => {
       client.identifyUser('user-1');
       client.resetIdentity();
 
-      expect(mockPosthog.identify).toHaveBeenCalledWith('user-1', undefined);
+      expect(mockPosthog.identify).toHaveBeenCalledWith('user-1');
       expect(mockPosthog.reset).toHaveBeenCalledTimes(1);
-    });
-
-    it('sets email as a person property when provided (PostHog flag targeting)', async () => {
-      vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
-      const client = await importFreshClient();
-      client.initPostHog();
-
-      client.identifyUser('user-1', 'qa@example.com');
-
-      expect(mockPosthog.identify).toHaveBeenCalledWith('user-1', { email: 'qa@example.com' });
     });
   });
 
