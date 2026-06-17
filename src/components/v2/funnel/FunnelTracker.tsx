@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AssetUploadDialog } from './AssetUploadDialog';
+import { BulkUploadDialog } from './BulkUploadDialog';
 import { FixDialog } from './FixDialog';
 import type { SupabaseBrandFunnelService } from '@/services/SupabaseBrandFunnelService';
 import type { AssetStatus, BrandAsset, CoverageCell } from '@/services/interfaces/IBrandFunnelService';
@@ -140,6 +141,7 @@ export function FunnelTracker(): JSX.Element {
           <Button variant="outline" onClick={() => void reauditAll()} disabled={loading || assets.length === 0}>
             {loading ? 'Working…' : 'Re-audit all'}
           </Button>
+          <BulkUploadDialog avatarId={selectedAvatarId} brandTags={brandTags} onUploaded={() => void refresh()} />
           <AssetUploadDialog avatarId={selectedAvatarId} onUploaded={() => void refresh()} />
         </div>
       </div>
