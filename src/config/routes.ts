@@ -23,6 +23,15 @@ export const ROUTES = {
 
   /** Feature Flag Admin */
   FEATURE_FLAG_ADMIN: '/admin/feature-flags',
+
+  /** Settings hub (Account, Integrations, …) */
+  SETTINGS: '/settings',
+
+  /** Integrations section of the Settings hub (deep link to the Figma card) */
+  INTEGRATIONS: '/settings/integrations',
+
+  /** Figma OAuth redirect handler (must match the Figma app's callback URL) */
+  FIGMA_CALLBACK: '/integrations/figma/callback',
 } as const;
 
 /**

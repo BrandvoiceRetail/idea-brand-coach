@@ -65,6 +65,7 @@ export async function retrieveUserContext(
       avatar: 'CUSTOMER AVATAR',
       diagnostic: 'BRAND DIAGNOSTIC',
       copy: 'BRAND COPY',
+      visual_identity: 'VISUAL IDENTITY (from Figma)',
     };
 
     const contextParts: string[] = ['USER BRAND KNOWLEDGE BASE:'];

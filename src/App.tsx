@@ -52,6 +52,8 @@ import FeatureGate from "@/components/FeatureGate";
 import { VersionGate } from "@/components/VersionGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
+import SettingsPage from "./pages/SettingsPage";
+import FigmaCallback from "./pages/FigmaCallback";
 // Initialise analytics before the React tree mounts so the auth listener can
 // identify the user as soon as a session arrives. No-op when no key is set.
 initPostHog();
@@ -169,6 +171,20 @@ const App = () => {
                     <FeatureFlagAdmin />
                   </Layout>
                 } />
+
+                <Route path={ROUTES.SETTINGS} element={
+                  <Layout>
+                    <SettingsPage />
+                  </Layout>
+                } />
+
+                <Route path={`${ROUTES.SETTINGS}/:section`} element={
+                  <Layout>
+                    <SettingsPage />
+                  </Layout>
+                } />
+
+                <Route path={ROUTES.FIGMA_CALLBACK} element={<FigmaCallback />} />
 
                 <Route path="/test/chapter-navigation" element={
                   <Layout>
