@@ -8,6 +8,7 @@
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { groundingPreamble } from '../skills/skillLoader.js';
 import type { EdgeFnClient } from '../edgeFn/client.js';
 import { buildConceptPrompt, parseConcepts } from '../service/concepts.js';
 import { safeLog } from '../logging/redact.js';
@@ -29,7 +30,7 @@ export function registerGenerateConceptsTool(server: McpServer, edgeFn: EdgeFnCl
     {
       title: 'Generate marketing concepts',
       description:
-        'First owned asset-chain tool: produce N on-brand marketing concept candidates from a brief, composed through the existing brand-coach consultant engine (Calculation Parity). Requires an authenticated Supabase JWT. IV-OS canon grounding + log_asset recording are deferred by capability.',
+        'First owned asset-chain tool: produce N on-brand marketing concept candidates from a brief, composed through the existing brand-coach consultant engine (Calculation Parity). Requires an authenticated Supabase JWT. IV-OS canon grounding + log_asset recording are deferred by capability.' + groundingPreamble('generate_concepts'),
       inputSchema,
     },
     async ({ brief, channel, count }) => {

@@ -16,7 +16,7 @@ grounded in `skills/idea/`. Per `docs/v2/architecture/adr/ADR-UNIFIED-COACH-CAPA
       memory loop.ts) into this skill-architecture worktree (which already has `skills/idea/`).
       Merge `e7a6374`, clean, 0 conflicts. Verified: tsc clean, 30/30 consultant tests pass.
       Prereqs present: skills/idea/ (158) + loop.ts + registry.ts + src/mcp/server.ts.
-- [ ] **P2 SKILL LOADER** — load skills/idea/ and ground the MCP coach surface (config.ts
+- [x] **P2 SKILL LOADER** — load skills/idea/ and ground the MCP coach surface (config.ts
       SERVER_INSTRUCTIONS / tool handlers) in the relevant skills; test asserts a tool cites its book skill.
 - [ ] **P3 TOOL LOOP** — real tool_use->tool_result loop on registry.ts (built on loop.ts; mostly
       present from Phase-1 — verify + extend). Streaming + single-shot fallback behind CONSULTANT_TOOL_LOOP_ENABLED.
@@ -30,3 +30,18 @@ prod/edge-fn deploy · MCP-hosting/infra provisioning · branch-strategy merge t
 ## Decisions / notes
 - 2026-06-16: base = skill-architecture worktree (operator directive "merge all you need here").
   loop.ts already in main; Phase-1 committed on agent-a075 as `0539668` then merged.
+- **P2 DONE 2026-06-16.** Loader `src/mcp/skills/skillLoader.ts` (hand-rolled front-matter parser,
+  no new dep; resolves skills dir via import.meta.url + cwd-walk fallback; caches). Tool→skill map
+  by framework path-prefix: run_trust_gap & run_diagnostic_evidence → 00-foundations/02-idea-framework;
+  build_avatar_stage → 01-customer/00-avatar-2.0; generate_concepts → 02-brand. `groundingPreamble(tool)`
+  appended to those 4 handlers' descriptions (live, model-facing). Test `src/mcp/__tests__/skillLoader.test.ts`
+  (4 cases: loads >=150 w/ front-matter; >=3 tools mapped; run_trust_gap description carries a citation
+  traceable to a real mapped-skill chapter; avatar+concepts grounded). App tsc clean; typecheck:mcp clean
+  for all P2 files; loader test 4/4 green.
+- **⚠️ PRE-EXISTING ENV-GAP BLOCKER (P5/DONE-gate risk):** the symlinked node_modules (from the main
+  checkout) is MISSING the declared dep `@modelcontextprotocol/ext-apps` (^1.7.4, used by
+  src/mcp/tools/onboard.ts + panel/onboardPanelClient.ts — both from the onboard/custom-ui merge, NOT P2).
+  → 5 src/mcp suites (assetChain, assetTracking, autoRecord, onboard, server) can't collect, and
+  typecheck:mcp errors on those 2 files. NOT a P2 regression. Fix = install the declared dep into this
+  worktree's node_modules (a real `npm install` instead of the main-checkout symlink). This is an
+  npm-install/env action → HALT class; flagged for the operator before the full-suite DONE gate can pass.

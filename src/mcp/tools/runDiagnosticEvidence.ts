@@ -27,6 +27,7 @@
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { groundingPreamble } from '../skills/skillLoader.js';
 import { EdgeFnClient } from '../edgeFn/client.js';
 import { resolve as resolveSlots, type ResolvedSlot } from '../service/contextResolver.js';
 import {
@@ -218,7 +219,7 @@ export function registerRunDiagnosticEvidenceTool(server: McpServer, deps?: Part
     {
       title: 'Run the evidence-grounded Trust Gap diagnostic',
       description:
-        'Write tool: produce the evidence-grounded Trust Gap diagnostic interpretation. Binds identity first (C1), resolves intake (#15) — needs_input if the diagnostic was never taken — plus listing copy (#3) and reviews (#1) KB-first, invokes the diagnostic-interpretation-evidence engine (every where_it_shows_up cites real evidence; dimensions with no evidence are flagged inference), validates against the diagnostic_interpretation contract, and persists the artifact RLS-scoped to the caller. Requires an authenticated Supabase JWT.',
+        'Write tool: produce the evidence-grounded Trust Gap diagnostic interpretation. Binds identity first (C1), resolves intake (#15) — needs_input if the diagnostic was never taken — plus listing copy (#3) and reviews (#1) KB-first, invokes the diagnostic-interpretation-evidence engine (every where_it_shows_up cites real evidence; dimensions with no evidence are flagged inference), validates against the diagnostic_interpretation contract, and persists the artifact RLS-scoped to the caller. Requires an authenticated Supabase JWT.' + groundingPreamble('run_diagnostic_evidence'),
       inputSchema,
     },
     async ({ scores, overall, primary_gap, avatar_id }) => {
