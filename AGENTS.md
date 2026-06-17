@@ -3,13 +3,13 @@
 ## Scope
 
 Universal rules for AI agents working on **IDEA Brand Coach** — a React/TypeScript/Vite app for
-AI-powered brand consulting using the IDEA framework (Identify, Discover, Execute, Analyze), built
+AI-powered brand consulting using the IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic), built
 on Supabase (Auth, Postgres, Edge Functions) and a LangChain RAG pipeline. Area-specific rules live
-in local `AGENTS.md` files (`src/services/`, `src/components/`); this file holds what applies everywhere.
+in local `AGENTS.md` files (see Child Areas below); this file holds what applies everywhere.
 
 Generic engineering standards (naming, function design, error handling, TDD, refactoring, SOLID) are
 **not restated here** — consult the shared guide via the `mango-tools` MCP server
-(`get_best_practice`, `get_checklist`) or `node_modules/@matthewkerns/software-development-best-practices-guide/`.
+(`get_best_practice`, `get_checklist`, `read_guide`).
 
 ## The 3-Layer Operating Model
 
@@ -26,7 +26,7 @@ doing it by hand. 90% accuracy per manual step compounds to ~59% over five steps
 ## On Startup
 
 - Load only this file via the `CLAUDE.md` reference.
-- Load a local `AGENTS.md` when entering `src/services/` or `src/components/`.
+- Load a local `AGENTS.md` when entering a covered area (see Child Areas).
 - Load a skill (`.claude/skills/` or `~/.claude/skills/`) only when the task matches its description.
 - Load `docs/` (IDEA framework + behavioral-science references) only when the task needs that domain knowledge.
 - Never bulk-load documentation.
@@ -81,6 +81,16 @@ Check here before proposing a new library; run a duplication check first.
 | Notifications | `sonner` toasts | user-facing errors only |
 | Testing | Vitest + @testing-library/react | see Testing Protocol |
 
+## Common Commands
+
+```bash
+npm run dev        # Vite dev server
+npm run build      # production build
+npm run lint       # ESLint
+npm test           # Vitest
+npx tsc --noEmit   # type check
+```
+
 ## Task Management & Parallel Execution
 
 - **RULE:** For >2 steps, create a task list before execution; keep status current.
@@ -107,14 +117,35 @@ Role profiles live in `.claude/settings/` and layer on top of `.claude/settings.
 3. Verify functionality you can test (build with `npm run build` if relevant).
 4. Report what requires human verification.
 
-## Documentation Areas
+### Browser QA & Test Account
+
+For any verification that needs an authenticated session (e.g. `/v2/coach`, the
+Brand Coach), use the shared QA account. **Credentials and the full browser-QA
+setup live in [`docs/TEST_ACCOUNT.md`](docs/TEST_ACCOUNT.md)** — start there before
+driving the app with Playwright or by hand. It also documents the Supabase
+auto-pause behaviour and the email-confirmation gotcha.
+
+### Feature-local testing context lives next to the feature
+
+Folders that own a non-trivial feature carry an `AGENTS.md` with that feature's testing steps,
+acceptance bar, sample data, and guardrails. When you build or modify a feature,
+add or update its folder `AGENTS.md`. Example:
+[`src/components/v2/signature/AGENTS.md`](src/components/v2/signature/AGENTS.md)
+covers how to test the Signature reveal engine end-to-end.
+
+## Child Areas
 
 | Area | Focus |
 |------|-------|
-| `src/services/` | Service-extraction & orchestration patterns (chat services) — see local AGENTS.md |
-| `src/components/` | Component composition, shadcn-ui usage — see local AGENTS.md |
-| `docs/` | IDEA framework core + behavioral-science references (Cialdini, brand psychology, customer journey). Domain knowledge — load on demand. |
-| `supabase/` | Edge functions (RAG consultant), migrations |
+| `src/components/` | Component composition, shadcn-ui usage — local AGENTS.md |
+| `src/components/diagnostic/` | Trust Gap scorecard + journey bridge — local AGENTS.md |
+| `src/components/v2/signature/` | Signature reveal engine, end-to-end testing — local AGENTS.md |
+| `src/services/` | Service-extraction & orchestration patterns — local AGENTS.md |
+| `src/mcp/` | Brand-coach MCP gateway (host, tools, guardrails) — local AGENTS.md |
+| `src/mcp/contracts/` | Output-engine artifact contracts (single source of truth) — local AGENTS.md |
+| `src/mcp/service/workbook/` | Gold-workbook export engine — local AGENTS.md |
+| `supabase/functions/` | Edge functions (RAG consultant, interpretation, instrumentation) — local AGENTS.md |
+| `docs/` | IDEA framework core + behavioral-science references. Domain knowledge — load on demand. |
 
 ## Skills
 
@@ -130,7 +161,7 @@ Project + shared skills live in `.claude/skills/` and `~/.claude/skills/` (synce
 | `initiate-team-review` | spawn the specialist reviewer roster on a diff before PR |
 | `feature-factory` (+ orchestrators) | end-to-end feature builds (arch → func → errors → obsv → review → docs) |
 
-The 64 `.claude/commands/bmad-*` BMAD workflow commands coexist with these shared skills.
+The 60+ `.claude/commands/bmad-*` BMAD workflow commands coexist with these shared skills.
 
 ## Communication
 
@@ -140,6 +171,7 @@ The 64 `.claude/commands/bmad-*` BMAD workflow commands coexist with these share
 
 ## Meta
 
-Migrated from the former monolithic `CLAUDE.md` to the `CLAUDE.md → @AGENTS.md` hierarchy on 2026-05-25.
-Generic standards now reference the shared best-practices guide (`mango-tools` MCP / npm package).
-See `07-agentic-coding/AGENT_INSTRUCTION_HIERARCHY.md` in the guide for the convention.
+Migrated from the former monolithic `CLAUDE.md` to the `CLAUDE.md → @AGENTS.md` hierarchy
+(originally 2026-05-25 on worktree branches; harvested into the main lineage 2026-06-07).
+Convention reference: `AGENT_INSTRUCTION_HIERARCHY.md` in the shared best-practices guide
+(via `mango-tools` MCP `read_guide`).

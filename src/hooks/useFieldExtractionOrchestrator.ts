@@ -75,6 +75,14 @@ export function useFieldExtractionOrchestrator({
   // Track which message IDs have already had side effects (extractFields, enqueueFields, etc.)
   const processedMessageIds = useRef<Set<string>>(new Set());
 
+  // Freshness baseline. Only assistant messages that ARRIVE after we start viewing
+  // the current session are auto-enqueued for review. Historical messages already
+  // present at load are marked processed (their badges still render, and the user
+  // can reopen review from a badge) but do NOT auto-open the review drawer — without
+  // this, every page load replayed the whole history and the drawer popped open.
+  const viewStartRef = useRef<string>(new Date().toISOString());
+  const hydratedSessionIdRef = useRef<string | null>(null);
+
   // Reverse lookup: fieldId -> book chapter ID (e.g. 'brandPurpose' -> 'chapter-01-introduction')
   const fieldToBookChapterId = useMemo<Record<string, string>>(() => {
     const map: Record<string, string> = {};
@@ -128,6 +136,21 @@ export function useFieldExtractionOrchestrator({
     }
     return map;
   }, []);
+
+  // Active session id (messages are per-session). When it changes — page load or an
+  // in-place session switch — reset the freshness baseline and the processed set so
+  // the newly loaded history is treated as history, not as fresh arrivals.
+  const currentSessionId = useMemo(
+    () => messages.find((m) => m.session_id)?.session_id ?? null,
+    [messages]
+  );
+  useEffect(() => {
+    if (hydratedSessionIdRef.current !== currentSessionId) {
+      hydratedSessionIdRef.current = currentSessionId;
+      viewStartRef.current = new Date().toISOString();
+      processedMessageIds.current = new Set();
+    }
+  }, [currentSessionId]);
 
   // Side-effect: extract fields from NEW assistant messages and enqueue for review.
   // Fields arrive via msg.metadata.extractedFields (from Claude tool calls).
@@ -188,7 +211,12 @@ export function useFieldExtractionOrchestrator({
         };
       });
 
-      enqueueFields(pending);
+      // Badges (setMessageExtraction above) render for all messages, but only
+      // freshly-arrived extractions auto-open the review drawer. History present at
+      // load is seeded into processedMessageIds without enqueuing.
+      if (msg.created_at > viewStartRef.current) {
+        enqueueFields(pending);
+      }
     });
   }, [messages, setMessageExtraction, enqueueFields, fieldMetaLookup, fieldToBookChapterId]);
 

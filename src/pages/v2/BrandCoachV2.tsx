@@ -1,7 +1,10 @@
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Loader2, Download, Trash2, Copy, Check, Menu, BookOpen, CheckCircle } from 'lucide-react';
+import { Loader2, Download, Trash2, Copy, Check, Menu, BookOpen, CheckCircle, Target, ArrowRight } from 'lucide-react';
+import { parseGapParam, gapOpenerPrompt } from '@/lib/journeyBridge';
+import { TRUST_GAP_DIMENSION_META } from '@/lib/trustGap';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { TwoPanelTemplate } from '@/components/templates/TwoPanelTemplate';
@@ -10,9 +13,12 @@ import { BrandCoachHeader } from '@/components/v2/BrandCoachHeader';
 import { ExportReadinessModal } from '@/components/v2/ExportReadinessModal';
 import { ChatMessageList } from '@/components/v2/ChatMessageList';
 import { ChatInputBar } from '@/components/v2/ChatInputBar';
+import { SignatureReveal } from '@/components/v2/signature/SignatureReveal';
 import { MilestoneOverlay } from '@/components/v2/MilestoneOverlay';
 import { BatchReviewOrchestrator } from '@/components/v2/BatchReviewOrchestrator';
 import { useBrandCoachV2State } from '@/hooks/v2/useBrandCoachV2State';
+import { useServices } from '@/services/ServiceProvider';
+import { SavedSignature } from '@/services/interfaces/ISignatureService';
 
 /**
  * BrandCoachV2 Page — Thin Orchestrator
@@ -22,6 +28,17 @@ import { useBrandCoachV2State } from '@/hooks/v2/useBrandCoachV2State';
  * This component focuses purely on rendering and composition.
  */
 const BrandCoachV2 = (): JSX.Element => {
+  const { signatureService } = useServices();
+  // The user's saved Signature pick — shown outside the reveal dialog so the
+  // recognition moment survives reloads (persistence is the Alpha bar).
+  const [savedSignature, setSavedSignature] = React.useState<SavedSignature | null>(null);
+  React.useEffect(() => {
+    signatureService
+      .getLatestSignature()
+      .then(setSavedSignature)
+      .catch((error) => console.warn('[BrandCoachV2] Failed to load saved Signature:', error));
+  }, [signatureService]);
+
   const {
     // State
     isLoading,
@@ -44,6 +61,7 @@ const BrandCoachV2 = (): JSX.Element => {
     isSending,
     isStreaming,
     streamingContent,
+    memoryActivity,
     isExtractingFromDoc,
     isCopied,
     chapterAccordionData,
@@ -60,9 +78,6 @@ const BrandCoachV2 = (): JSX.Element => {
     setFocusedFieldId,
     chatContainerRef,
     accordionRef,
-    reviewContextActive,
-    reviewEnrichmentStatus,
-    reviewCount,
     isFieldLocked,
     activeMilestone,
     prefersReducedMotion,
@@ -76,6 +91,8 @@ const BrandCoachV2 = (): JSX.Element => {
     extractionQueueIndex,
     isReviewOpen,
     alwaysAccept,
+    preloadedReviews,
+    preloadedReviewCount,
 
     // Actions
     handleSessionSelect,
@@ -98,13 +115,22 @@ const BrandCoachV2 = (): JSX.Element => {
     handleFieldAcceptFromBadge,
     handleAcceptAllFromBadge,
     handleDocumentUploadComplete,
-    handleSendReviewContext,
-    handleEnrichmentComplete,
-    handleClearReviewContext,
     handleFieldClick,
     handleReopenReview,
     dismissMilestone,
   } = useBrandCoachV2State();
+
+  // ── Journey bridge entry (F-059) ───────────────────────────────────────
+  // When arriving from the Trust Gap™ bridge (`?gap=`), open the conversation on
+  // the user's weakest pillar with a one-click opener. Shown only before the
+  // conversation has started, so it never disturbs an in-progress chat.
+  const [searchParams] = useSearchParams();
+  const gap = parseGapParam(searchParams.get('gap'));
+  // Gate the opener on an empty conversation AND a ready session, so it never
+  // disturbs an in-progress chat and never fires handleSendMessage before the
+  // session exists.
+  const showGapOpener = !!gap && !!currentSessionId && displayMessages.length === 0;
+  const gapLabel = gap ? TRUST_GAP_DIMENSION_META[gap].label : null;
 
   // ── Loading gate ──────────────────────────────────────────────────────
   if (isLoading) {
@@ -197,6 +223,14 @@ const BrandCoachV2 = (): JSX.Element => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <SignatureReveal
+                  messages={displayMessages}
+                  fieldValues={fieldValues}
+                  preloadedReviews={preloadedReviews}
+                  preloadedReviewCount={preloadedReviewCount}
+                  sessionId={currentSessionId ?? null}
+                  onSignatureSaved={setSavedSignature}
+                />
                 {pendingCount > 0 && (
                   <Button variant="outline" size="sm" className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={handleReviewAcceptAll} title={`Accept all ${pendingCount} pending field(s)`}>
                     <CheckCircle className="h-3 w-3 mr-1" />{pendingCount} pending
@@ -214,6 +248,16 @@ const BrandCoachV2 = (): JSX.Element => {
               </div>
             </div>
 
+            {savedSignature && (
+              <div
+                className="px-4 py-1.5 text-xs italic text-amber-700 bg-amber-500/10 border-b border-amber-500/20 truncate"
+                title={savedSignature.signatureText}
+                data-testid="saved-signature-strip"
+              >
+                Your Signature: {savedSignature.signatureText}
+              </div>
+            )}
+
             {/* Batch review controls (visible when extraction queue has items) */}
             <BatchReviewOrchestrator
               queue={extractionQueue}
@@ -227,10 +271,31 @@ const BrandCoachV2 = (): JSX.Element => {
               onToggleAlwaysAccept={toggleAlwaysAccept}
             />
 
+            {showGapOpener && gap && (
+              <div
+                role="region"
+                aria-label={`Trust Gap quick start: ${gapLabel}`}
+                className="flex-shrink-0 border-b bg-primary/5 px-4 py-3"
+              >
+                <div className="flex items-center gap-2 text-primary mb-1">
+                  <Target className="h-4 w-4" />
+                  <span className="text-sm font-semibold">Your biggest Trust Gap: {gapLabel}</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Let's build the Signature that closes your {gapLabel} gap. Start the conversation here.
+                </p>
+                <Button size="sm" onClick={() => handleSendMessage(gapOpenerPrompt(gap))} disabled={isSending || isStreaming}>
+                  Work on my {gapLabel} gap
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            )}
+
             <ChatMessageList
               messages={messagesWithPending}
               isStreaming={isStreaming}
               streamingContent={streamingContent}
+              memoryActivity={memoryActivity}
               isSending={isSending}
               isExtractingFromDoc={isExtractingFromDoc}
               messageExtractions={messageExtractions}
@@ -265,12 +330,6 @@ const BrandCoachV2 = (): JSX.Element => {
               showUploadPanel={showDocumentUpload}
               onToggleUpload={() => setShowDocumentUpload(!showDocumentUpload)}
               userDocumentCount={userDocuments.length}
-              reviewContextActive={reviewContextActive}
-              reviewEnrichmentStatus={reviewEnrichmentStatus}
-              reviewCount={reviewCount}
-              onClearReviewContext={handleClearReviewContext}
-              onSendReviewContext={handleSendReviewContext}
-              onEnrichmentComplete={handleEnrichmentComplete}
             />
           </div>
         }

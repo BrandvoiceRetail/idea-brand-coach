@@ -1,306 +1,151 @@
-import { useState } from "react";
+/**
+ * Alpha tester welcome (/beta) — the front door for invited testers.
+ *
+ * Static, framing-only page (T7): names Trevor Bradford and the IDEA Strategic
+ * Brand Framework™, sets expectations (~15 minutes, bring your Amazon ASIN,
+ * 7-day testing window), previews the path, and routes straight into the
+ * diagnostic. No registration form — account creation happens naturally in-flow
+ * when the tester imports their listing.
+ *
+ * Replaced the legacy beta-program registration page (save-beta-tester +
+ * /beta-journey quick/comprehensive paths) on 2026-06-07.
+ */
+
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { captureAlphaEvent } from "@/lib/posthogClient";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CheckCircle, Clock, Users, Target, UserPlus } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { ROUTES } from "@/config/routes";
+import {
+  ArrowRight,
+  ClipboardList,
+  Gauge,
+  MessageCircle,
+  PackageSearch,
+  Sparkles,
+  Clock,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
-export default function BetaWelcome() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+const DIAGNOSTIC_ROUTE = "/v1/diagnostic";
 
-  // Check if user is already registered
-  useState(() => {
-    const registered = localStorage.getItem('betaTesterRegistered');
-    if (registered) {
-      setIsRegistered(true);
-    }
-  });
+interface PathStep {
+  icon: JSX.Element;
+  title: string;
+  description: string;
+}
 
-  const handleRegistration = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email) {
-      toast({
-        title: "Required fields missing",
-        description: "Please fill in your name and email address.",
-        variant: "destructive"
-      });
-      return;
-    }
+const PATH_STEPS: PathStep[] = [
+  {
+    icon: <ClipboardList className="w-5 h-5" />,
+    title: "6-question diagnostic",
+    description: "Quick read on where your brand builds trust and where it leaks it.",
+  },
+  {
+    icon: <Gauge className="w-5 h-5" />,
+    title: "Your Trust Gap™ scorecard",
+    description: "Four pillars, each scored out of 25, with Trevor's read on your biggest gap.",
+  },
+  {
+    icon: <PackageSearch className="w-5 h-5" />,
+    title: "Import your Amazon listing",
+    description: "Give us your ASIN and we pull your listing and real customer reviews — no copy-pasting.",
+  },
+  {
+    icon: <MessageCircle className="w-5 h-5" />,
+    title: "A short conversation with Trevor",
+    description: "The AI brand coach digs into who your customer is and what they're really buying.",
+  },
+  {
+    icon: <Sparkles className="w-5 h-5" />,
+    title: "Your Signature",
+    description: "The one truth of what your customer is REALLY buying — grounded in their own words.",
+  },
+];
 
-    setIsSubmitting(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('save-beta-tester', {
-        body: {
-          name,
-          email,
-          company,
-          overallScore: 0, // Initial score
-          categoryScores: {}
-        }
-      });
-
-      if (error) throw error;
-
-      // Store registration info locally
-      localStorage.setItem('betaTesterRegistered', 'true');
-      localStorage.setItem('betaTesterInfo', JSON.stringify({ name, email, company, id: data.data?.[0]?.id }));
-      
-      setIsRegistered(true);
-      toast({
-        title: "Welcome to the beta program! 🎉",
-        description: "You're now registered. Choose your testing path below.",
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast({
-        title: "Registration failed",
-        description: "Please try again or contact support.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!isRegistered) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4">
-        <div className="max-w-2xl mx-auto py-8">
-          <div className="text-center mb-8">
-            <Badge variant="secondary" className="mb-4 text-sm">
-              Beta Testing Program
-            </Badge>
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Join Our Beta Program
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Help us perfect the IDEA Brand Coach™ by becoming a beta tester.
-            </p>
-          </div>
-
-          <Card className="border-2 border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <UserPlus className="h-6 w-6 text-primary" />
-                Beta Tester Registration
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleRegistration} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name *</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your full name"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company/Role (Optional)</Label>
-                  <Input
-                    id="company"
-                    type="text"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    placeholder="Your company or role"
-                  />
-                </div>
-
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">What You'll Do:</h4>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span>Test the brand diagnostic tool</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span>Explore brand building features</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span>Provide feedback on usability</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span>Report any issues or bugs</span>
-                    </div>
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "Registering..." : "Register for Beta Testing"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          <div className="text-center mt-8">
-            <Button variant="outline" asChild>
-              <Link to={ROUTES.HOME_PAGE}>Back to Start</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+export default function BetaWelcome(): JSX.Element {
+  // Funnel: top of the Alpha journey
+  useEffect(() => {
+    captureAlphaEvent('beta_welcome_viewed', { referrer: document.referrer || null });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4">
-      <div className="max-w-4xl mx-auto py-8">
-        {/* Header */}
-        <div className="text-center mb-12">
+      <div className="max-w-2xl mx-auto py-10">
+        {/* Framing */}
+        <div className="text-center mb-10">
           <Badge variant="secondary" className="mb-4 text-sm">
-            Beta Testing Program
+            Alpha · Invited testers
           </Badge>
           <h1 className="text-4xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-            Welcome Beta Tester!
+            Find out what your customers are really buying
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Help us perfect the IDEA Brand Coach™ by testing our core features and sharing your insights.
+          <p className="text-lg text-muted-foreground">
+            You're one of the first people to try the IDEA Brand Coach™ — built on
+            the IDEA Strategic Brand Framework™ by brand strategist{" "}
+            <span className="font-medium text-foreground">Trevor Bradford</span>.
+            It reads your brand the way Trevor would: where you're building trust,
+            where you're leaking it, and the deeper truth your customers recognise
+            but you've never put into words.
           </p>
         </div>
 
-        {/* Testing Options */}
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Clock className="h-6 w-6 text-primary" />
-                <CardTitle>Quick Test</CardTitle>
+        {/* Expectations */}
+        <Card className="mb-8 border-primary/20">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 justify-center text-sm">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary shrink-0" />
+                <span>About 15 minutes, start to finish</span>
               </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Perfect for busy testers. Focus on the core brand strategy workflow.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>12-18 minutes</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Avatar → Insights → Canvas → Coach flow</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Core AI features</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <PackageSearch className="w-4 h-4 text-primary shrink-0" />
+                <span>Bring your Amazon ASIN (or listing URL)</span>
               </div>
-              <Button asChild className="w-full">
-                <Link to="/beta-journey?mode=quick">
-                  Start Quick Test
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-primary/20 bg-primary/5">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Target className="h-6 w-6 text-primary" />
-                <CardTitle>Comprehensive Test</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Deep dive into all features. Help us identify edge cases and improvements.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>25-35 minutes</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Full diagnostic + signup flow</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>All brand tools + Copy Generator</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>PDF export and document review</span>
-                </div>
-              </div>
-              <Button asChild className="w-full" variant="default">
-                <Link to="/beta-journey?mode=comprehensive">
-                  Start Comprehensive Test
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* What We're Looking For */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <Users className="h-6 w-6 text-primary" />
-              What We're Looking For
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div>
-                <h4 className="font-semibold mb-2">Usability</h4>
-                <p className="text-sm text-muted-foreground">
-                  Is the interface intuitive? Can you complete tasks easily?
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Value</h4>
-                <p className="text-sm text-muted-foreground">
-                  Do the insights and recommendations feel valuable and actionable?
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Technical Issues</h4>
-                <p className="text-sm text-muted-foreground">
-                  Any bugs, broken links, or performance issues you encounter.
-                </p>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                <span>Open for the next 7 days</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Footer */}
+        {/* The path */}
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <h2 className="font-semibold mb-4">Here's the path</h2>
+            <ol className="space-y-4">
+              {PATH_STEPS.map((step, index) => (
+                <li key={step.title} className="flex gap-4">
+                  <div className="w-9 h-9 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    {step.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium">
+                      <span className="text-muted-foreground mr-1.5">{index + 1}.</span>
+                      {step.title}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{step.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+
+        {/* Why their reaction matters */}
+        <p className="text-sm text-muted-foreground text-center mb-8">
+          This is early. Your honest gut reaction — especially where something feels
+          off — is exactly what we need. A quick feedback prompt at the end takes
+          two taps.
+        </p>
+
+        {/* CTA */}
         <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-4">
-            Your feedback is invaluable in helping us create the best possible experience.
-          </p>
-          <Button variant="outline" asChild>
-            <Link to={ROUTES.HOME_PAGE}>
-              Back to Start
+          <Button size="lg" asChild className="w-full sm:w-auto">
+            <Link to={DIAGNOSTIC_ROUTE}>
+              Start the diagnostic
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>
         </div>

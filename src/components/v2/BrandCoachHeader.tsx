@@ -9,8 +9,11 @@
  * Responsive: stacks controls vertically on mobile, condenses chapter info.
  */
 
+import { LogOut } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { BrandMarkdownExport } from '@/components/export/BrandMarkdownExport';
 import type { BrandMarkdownExportRef } from '@/components/export/BrandMarkdownExport';
@@ -79,6 +82,7 @@ export function BrandCoachHeader({
   exportRef,
 }: BrandCoachHeaderProps): JSX.Element {
   const { isMobile } = useDeviceType();
+  const { signOut } = useAuth();
 
   // Calculate overall completion percentage
   const totalFields = Object.values(CHAPTER_FIELDS_MAP).reduce(
@@ -93,7 +97,7 @@ export function BrandCoachHeader({
     : 0;
 
   return (
-    <header className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between">
+    <header className="flex-shrink-0 border-b px-4 py-3 flex flex-wrap items-center justify-between gap-y-2">
       <div className={isMobile ? 'flex flex-col gap-1' : 'flex items-center gap-3'}>
         <h1 className="font-semibold text-sm lg:text-base">IDEA Brand Coach</h1>
         <div className="flex items-center gap-2">
@@ -133,12 +137,25 @@ export function BrandCoachHeader({
           />
           <VersionSwitcher />
         </div>
-        <AvatarHeaderDropdown
-          currentAvatar={avatarContext.currentAvatar}
-          avatars={avatarContext.avatars}
-          onAvatarSelect={(avatarId: string) => onAvatarChange({ id: avatarId })}
-          onCreateAvatar={onCreateAvatar}
-        />
+        <div className="flex items-center gap-2">
+          <AvatarHeaderDropdown
+            currentAvatar={avatarContext.currentAvatar}
+            avatars={avatarContext.avatars}
+            onAvatarSelect={(avatarId: string) => onAvatarChange({ id: avatarId })}
+            onCreateAvatar={onCreateAvatar}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={signOut}
+            title="Log out"
+            aria-label="Log out"
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <LogOut className="h-4 w-4" />
+            {!isMobile && <span className="ml-1.5">Log out</span>}
+          </Button>
+        </div>
       </div>
     </header>
   );

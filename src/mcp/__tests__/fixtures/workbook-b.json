@@ -1,0 +1,423 @@
+{
+  "workbook": "InfinityVault Marketing Investment Audit.xlsx",
+  "sheets": [
+    {
+      "sheet": "Investment Matrix",
+      "title": "InfinityVault — Advertising & Marketing Investment Audit",
+      "header_note": "Scored against current constraints: tight cash, thin margins, ~$1K/mo Uncapped repayment starting June, May inventory order priority.",
+      "tables": [
+        {
+          "name": null,
+          "note": null,
+          "columns": [
+            "Tier",
+            "Investment",
+            "What it is",
+            "Calendar time",
+            "Person-hours",
+            "Level of effort",
+            "Cash cost",
+            "1-mo benefit",
+            "3-mo benefit",
+            "6-mo benefit",
+            "12-mo benefit"
+          ],
+          "rows": [
+            [
+              "T1",
+              "A+ Content overhaul (all 3 listings)",
+              "Rebuild Enhanced Brand Content with comparison module, lifestyle imagery, FAQ. Free with Brand Registry.",
+              "1–2 weeks",
+              "8–12 hrs",
+              "Low (DIY) / Med (designer)",
+              "$0 DIY  /  $150–400 designer",
+              "+$200–500",
+              "+$900–1,800",
+              "+$2,000–4,200",
+              "+$4,500–9,000"
+            ],
+            [
+              "T1",
+              "Listing copy + backend SEO refresh",
+              "Rewrite titles, bullets, description for the 216 Diamond Grain, 288 single, 288 2-pack. Saturate backend keywords (Pokemon, sports cards, MTG, etc.).",
+              "3–5 days",
+              "4–6 hrs",
+              "Low",
+              "$0",
+              "+$150–400",
+              "+$600–1,400",
+              "+$1,400–3,200",
+              "+$3,000–7,000"
+            ],
+            [
+              "T1",
+              "Restructure PPC per the campaign plan",
+              "Implement the agreed plan: shift Vintage 216 to near-zero bids, push Diamond Grain, hit 14%/12% ACoS targets on 288 + 2-pack. Already scoped.",
+              "1 week to implement, ongoing",
+              "3 hrs setup + 1 hr/wk monitor",
+              "Low",
+              "$450/mo (replaces existing ~$618)",
+              "Saves ~$168 + recovers margin",
+              "+$600–900 cum.",
+              "+$1,500–2,200 cum.",
+              "+$3,500–5,000 cum."
+            ],
+            [
+              "T1",
+              "Amazon Posts (free brand content feed)",
+              "Auto-shows in competitor listings. Post 2–3x/week. Pure brand exposure on Amazon's owned surface.",
+              "Ongoing",
+              "30 min/week",
+              "Very low",
+              "$0",
+              "Negligible direct",
+              "+$50–150",
+              "+$200–500",
+              "+$500–1,200"
+            ],
+            [
+              "T1",
+              "Brand Story module + Storefront cleanup",
+              "Vertical scroll story above A+ content. Storefront with cross-sell between SL200, 216s, 288s.",
+              "1 week",
+              "4–6 hrs",
+              "Low",
+              "$0",
+              "+$80–200",
+              "+$300–700",
+              "+$700–1,600",
+              "+$1,600–3,500"
+            ],
+            [
+              "T1",
+              "DIY photography upgrade",
+              "Reshoot hero + lifestyle on white background with cards inside binder. Phone camera + softbox works.",
+              "1 weekend",
+              "6–10 hrs",
+              "Med",
+              "$0–80 (lights/backdrop)",
+              "+$150–400",
+              "+$600–1,400",
+              "+$1,400–3,200",
+              "+$3,000–7,000"
+            ],
+            [
+              "T1",
+              "Enroll Brand Referral Bonus program",
+              "Free Amazon program — earn ~10% back on sales from external traffic you drive. Pre-req for influencer/TikTok plays.",
+              "30 min",
+              "0.5 hr",
+              "Trivial",
+              "$0",
+              "$0 (no traffic yet)",
+              "+$30–120",
+              "+$150–400",
+              "+$400–1,200"
+            ],
+            [
+              "T2",
+              "Amazon Vine for 288 single (long-term storage risk)",
+              "Pay to enroll, get 5–30 verified reviews from Vine voices. Critical for the 288 single 1-packs at LTSF risk.",
+              "1 day enroll, 2–6 wks reviews",
+              "1–2 hrs",
+              "Low",
+              "$200 per ASIN (~$400 for both)",
+              "Velocity bump as reviews land",
+              "+$300–900",
+              "+$900–2,400",
+              "+$2,000–5,500"
+            ],
+            [
+              "T2",
+              "Professional product video (one shared video)",
+              "60–90 sec listing video. Pour cards in, zip it, flip through. Use on all 3 listings + Sponsored Brands video.",
+              "2–3 weeks",
+              "5 hrs your time + freelancer",
+              "Med",
+              "$300–700 one-time (Fiverr/Upwork)",
+              "+$100–300 (in production)",
+              "+$700–1,800",
+              "+$1,800–4,200",
+              "+$4,000–9,500"
+            ],
+            [
+              "T2",
+              "Sponsored Brands Video + Sponsored Display retargeting",
+              "New ad types layered onto existing $450 budget. SB Video typically 30–50% lower ACoS than SP for branded queries.",
+              "1 week to set up",
+              "2 hrs setup + monitor",
+              "Low",
+              "$0 incremental (reallocate from SP)",
+              "+$80–250 margin",
+              "+$400–1,000",
+              "+$1,000–2,400",
+              "+$2,500–5,500"
+            ],
+            [
+              "T2",
+              "Influencer seeding (TCG creators on YouTube/TikTok)",
+              "Send free binders to 10–20 small/mid TCG creators in exchange for honest review/mention. No paid post fee.",
+              "Ongoing, 2-mo ramp",
+              "3 hrs outreach + 1 hr/wk",
+              "Med",
+              "$150–300 (product cost + shipping for 10–15 sends)",
+              "Mostly negligible mo 1",
+              "+$200–800 (lumpy)",
+              "+$700–2,500",
+              "+$2,000–7,000"
+            ],
+            [
+              "T2",
+              "Subscribe & Save + coupon stack on 288 single",
+              "Drive sell-through on LTSF-risk inventory. 5% S&S + 5% clippable coupon.",
+              "1 day",
+              "1 hr",
+              "Low",
+              "~10% margin per unit on enrolled",
+              "Velocity +20–40%",
+              "Clears LTSF risk + ~+$200–500",
+              "+$500–1,200",
+              "+$1,000–2,500"
+            ],
+            [
+              "T3",
+              "TikTok Shop launch (TCG niche is hot there)",
+              "List the 3 SKUs on TikTok Shop. Free to join. Pair with organic short-form content (unboxings, before/after pulls).",
+              "2 weeks setup, 3-mo ramp",
+              "6 hrs setup + 3 hrs/wk content",
+              "High",
+              "$0 platform / opportunity cost of time",
+              "$0",
+              "+$200–800",
+              "+$800–3,500",
+              "+$2,500–10,000"
+            ],
+            [
+              "T3",
+              "Pinterest organic (collector-friendly platform)",
+              "Pinterest drives long-tail traffic for hobby/collectible niches. 20 pins/week tied to Storefront URL.",
+              "Ongoing",
+              "2 hrs/wk",
+              "Med",
+              "$0",
+              "Negligible",
+              "+$50–200",
+              "+$200–700",
+              "+$600–2,000"
+            ],
+            [
+              "T3",
+              "Email list / Klaviyo (off-Amazon brand asset)",
+              "Insert card in package with QR to sign up for binder care tips + early access. Builds an asset you own.",
+              "2 weeks setup, ongoing list build",
+              "5 hrs setup + 1 hr/wk",
+              "Med",
+              "$0 free tier → $30–60/mo at 500+ subs",
+              "$0",
+              "+$0–100",
+              "+$150–500",
+              "+$500–2,000"
+            ],
+            [
+              "T3",
+              "Reddit + TCG forum community presence",
+              "Genuine presence (not spam) in r/PokemonTCG, r/mtgfinance, r/sportscards. Answer questions, mention products when on-topic.",
+              "Ongoing",
+              "1–2 hrs/wk",
+              "Low (just consistent)",
+              "$0",
+              "+$50–150",
+              "+$200–500",
+              "+$500–1,500",
+              "+$1,200–4,000"
+            ],
+            [
+              "T3",
+              "Sponsored Display audience targeting (off-Amazon)",
+              "Retarget shoppers across the web who viewed competing binders. Only run once core PPC is at target ACoS.",
+              "1 week",
+              "2 hrs",
+              "Med",
+              "$100–200/mo trial",
+              "−$100 (test loss likely)",
+              "+$100–400 net",
+              "+$500–1,500",
+              "+$1,200–4,000"
+            ],
+            [
+              "T3",
+              "Lightning Deal / 7-Day Deal on a 216 SKU",
+              "Margin sacrifice for ranking boost. Only run after Diamond Grain ad structure proves out.",
+              "1 day setup, 7 days run",
+              "2 hrs",
+              "Low",
+              "$150–300 deal fee + 15–30% off margin",
+              "Big velocity spike",
+              "Lift carries +$300–800",
+              "+$700–1,800",
+              "+$1,500–3,500"
+            ],
+            [
+              "T3",
+              "Shopify D2C storefront",
+              "Direct sales channel. Long payoff — only worth it once Amazon house is in order and brand has email list.",
+              "1 month setup",
+              "20+ hrs",
+              "High",
+              "$30/mo + ~$300 theme/setup",
+              "$0",
+              "$0–200",
+              "+$200–800",
+              "+$800–3,500"
+            ]
+          ]
+        },
+        {
+          "name": "Tier legend:",
+          "note": null,
+          "columns": [
+            "T1",
+            "Do first — free/near-free, immediate ROI, no cash strain. Most of these are leverage moves you can't NOT do."
+          ],
+          "rows": [
+            [
+              "T2",
+              "Queue for after May inventory order + once Uncapped plan is signed. Small cash, real lift."
+            ],
+            [
+              "T3",
+              "Defer until base is profitable. Higher effort, slower payoff, or requires upstream foundation (email, brand registry assets, etc.)."
+            ]
+          ]
+        },
+        {
+          "name": "Notes on benefit estimates:",
+          "note": "• Benefits are revenue lift estimates, not profit. Apply your ~10% post-ad margin target to estimate profit impact.",
+          "columns": [],
+          "rows": [
+            [
+              "• Ranges reflect uncertainty — pick the low end if conservative, midpoint for planning."
+            ],
+            [
+              "• Benefits are NOT additive across all rows — they overlap (e.g., A+ content + photography both lift conversion on the same listing)."
+            ],
+            [
+              "• 12-month figures assume the work is maintained, not one-and-done."
+            ],
+            [
+              "• Estimates are calibrated to your business size from prior conversations — adjust if revenue is materially different than assumed."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "sheet": "Recommended Phasing",
+      "title": "Recommended 90-Day Rollout",
+      "header_note": "Sequenced for cash flow (May inventory first, June Uncapped payments begin) — front-loads free/high-ROI moves.",
+      "tables": [
+        {
+          "name": null,
+          "note": null,
+          "columns": [
+            "Phase",
+            "Window",
+            "Action",
+            "Cash needed",
+            "Why now"
+          ],
+          "rows": [
+            [
+              "Phase 1\n(Weeks 1–2)",
+              "Now → end of May",
+              "1) Restructure PPC per plan (Vintage 216 down, Diamond Grain up)\n2) Rewrite all 3 listings (titles, bullets, backend SEO)\n3) Enroll Brand Referral Bonus\n4) DIY photo reshoot",
+              "$0–80",
+              "Free wins. Stops the ad bleed identified as the #1 margin killer. No cash impact during May inventory squeeze."
+            ],
+            [
+              "Phase 2\n(Weeks 3–6)",
+              "Late May → mid June",
+              "1) A+ Content overhaul on all 3 listings\n2) Brand Story + Storefront tidy\n3) Enroll Amazon Vine for 288 single ASINs (×2)\n4) Start Amazon Posts cadence",
+              "$400–500 (Vine fees)",
+              "Coincides with first Uncapped payment in June, but Vine fees are small and Vine reviews are essential to clear 288 LTSF risk."
+            ],
+            [
+              "Phase 3\n(Weeks 7–12)",
+              "Mid June → end of July",
+              "1) Commission product video ($300–700)\n2) Add Sponsored Brands Video + SD retargeting\n3) Begin influencer seeding (10–15 creators)\n4) Subscribe & Save + coupon on 288 single",
+              "$450–1,000",
+              "Cash should be freer once Phase 1 ad savings + Phase 2 listing lifts compound. Video unlocks SBV ad type."
+            ],
+            [
+              "Phase 4\n(Months 4–6)",
+              "August onward",
+              "1) Evaluate TikTok Shop launch\n2) Start email list build via package inserts\n3) Test Sponsored Display off-Amazon\n4) Pinterest cadence",
+              "$0–200/mo",
+              "Only after the Amazon house is genuinely in order. Don't open new channels while the primary one is leaking."
+            ]
+          ]
+        },
+        {
+          "name": "Cumulative impact estimate (low–high range, revenue lift)",
+          "note": null,
+          "columns": [
+            "Horizon",
+            "Low estimate",
+            "Mid estimate",
+            "High estimate",
+            "Notes"
+          ],
+          "rows": [
+            [
+              "Month 1",
+              500,
+              900,
+              1500,
+              "Mostly PPC restructure savings + listing copy lift"
+            ],
+            [
+              "Month 3",
+              1800,
+              3200,
+              5500,
+              "A+ Content compounding + Vine reviews landing"
+            ],
+            [
+              "Month 6",
+              4500,
+              8000,
+              14000,
+              "Video + influencer seeding contributing; cleared LTSF risk"
+            ],
+            [
+              "Month 12",
+              11000,
+              20000,
+              35000,
+              "Full stack working; assumes consistent maintenance"
+            ]
+          ]
+        },
+        {
+          "name": "Caveats:",
+          "note": "• Estimates assume disciplined execution + maintenance. Skipping any one Tier 1 item materially lowers the range.",
+          "columns": [],
+          "rows": [
+            [
+              "• Numbers reflect REVENUE lift, not profit. Apply your post-ad margin target (~10%) to get profit impact."
+            ],
+            [
+              "• Doesn't account for inventory replenishment cash needs — coordinate with cash flow plan."
+            ],
+            [
+              "• Diamond Grain 216 (high stock) is the leverage SKU — most of the lift will flow through it."
+            ],
+            [
+              "• If Vintage 216 stays out of AWD, the price-anchor strategy weakens and Tier 1 estimates compress."
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

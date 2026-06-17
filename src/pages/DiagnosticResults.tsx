@@ -2,17 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowRight,
-  TrendingUp,
-  AlertCircle,
   CheckCircle2,
-  Star,
-  Lightbulb,
-  Heart,
-  Shield,
   Download,
   UserPlus,
   MessageSquare,
@@ -23,6 +16,13 @@ import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/config/routes';
 import { DiagnosticResultsPDFExport } from '@/components/export/DiagnosticResultsPDFExport';
+import { TrustGapScorecard } from '@/components/diagnostic/TrustGapScorecard';
+import { ProductImportCta } from '@/components/diagnostic/ProductImportCta';
+import { useServices } from '@/services/ServiceProvider';
+import type {
+  ImportedProduct,
+  TrustGapEvidence,
+} from '@/services/interfaces/IProductDataService';
 
 interface DiagnosticData {
   answers: Record<string, string>;
@@ -64,40 +64,50 @@ function parseDiagnosticFromLocalStorage(): DiagnosticData | null {
   }
 }
 
-const categoryDetails = {
-  insight: {
-    icon: <Lightbulb className="w-6 h-6" />,
-    title: 'Insight Driven',
-    description: 'Understanding customer motivations and emotional triggers',
-    color: 'from-yellow-500 to-orange-500'
-  },
-  distinctive: {
-    icon: <Star className="w-6 h-6" />,
-    title: 'Distinctive',
-    description: 'Standing out with unique brand assets and positioning',
-    color: 'from-green-500 to-emerald-500'
-  },
-  empathetic: {
-    icon: <Heart className="w-6 h-6" />,
-    title: 'Empathetic',
-    description: 'Connecting emotionally with your audience',
-    color: 'from-pink-500 to-rose-500'
-  },
-  authentic: {
-    icon: <Shield className="w-6 h-6" />,
-    title: 'Authentic',
-    description: 'Building genuine, transparent brand relationships',
-    color: 'from-blue-500 to-indigo-500'
-  }
-};
-
 export default function DiagnosticResults() {
   const [diagnosticData, setDiagnosticData] = useState<DiagnosticData | null>(null);
   const [hasSynced, setHasSynced] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [importedProducts, setImportedProducts] = useState<ImportedProduct[]>([]);
+  const [evidence, setEvidence] = useState<TrustGapEvidence | undefined>(undefined);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { productDataService } = useServices();
   const { latestDiagnostic, isLoadingLatest, syncFromLocalStorage, isSyncing } = useDiagnostic();
+
+  // Stable key for the imported evidence: changes only when the set of products
+  // changes, so the Trust Gap interpretation refetches exactly once per import.
+  const evidenceKey = evidence && importedProducts.length
+    ? importedProducts.map((product) => product.id).join(',')
+    : undefined;
+
+  // Load any previously imported products + rebuild evidence (authed users only).
+  // Both states are set together AFTER the evidence is built — setting products
+  // first would define evidenceKey while evidence is still undefined, and the
+  // interpretation would fire (and cache) an evidence-keyed call with no evidence.
+  const refreshImportedProducts = async (): Promise<void> => {
+    try {
+      const products = await productDataService.getProducts();
+      const builtEvidence = products.length
+        ? await productDataService.buildTrustGapEvidence(products)
+        : undefined;
+      setImportedProducts(products);
+      setEvidence(builtEvidence);
+    } catch (error) {
+      console.error('[DiagnosticResults] failed to load imported products:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      void refreshImportedProducts();
+    } else {
+      setImportedProducts([]);
+      setEvidence(undefined);
+    }
+    // refreshImportedProducts is stable for this purpose; re-run only on user change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // 1. For non-authenticated users, load from localStorage immediately
   useEffect(() => {
@@ -124,7 +134,7 @@ export default function DiagnosticResults() {
       if (latestDiagnostic) {
         // Use fresh data from database
         setDiagnosticData({
-          answers: latestDiagnostic.answers as any,
+          answers: latestDiagnostic.answers as unknown as Record<string, string>,
           scores: {
             insight: latestDiagnostic.scores.insight,
             distinctive: latestDiagnostic.scores.distinctive,
@@ -186,29 +196,12 @@ export default function DiagnosticResults() {
     );
   }
 
-  const getScoreLevel = (score: number) => {
-    if (score >= 80) return { level: 'Excellent', color: 'text-green-600', icon: <CheckCircle2 className="w-4 h-4" /> };
-    if (score >= 60) return { level: 'Good', color: 'text-blue-600', icon: <TrendingUp className="w-4 h-4" /> };
-    if (score >= 40) return { level: 'Fair', color: 'text-yellow-600', icon: <AlertCircle className="w-4 h-4" /> };
-    return { level: 'Needs Improvement', color: 'text-red-600', icon: <AlertCircle className="w-4 h-4" /> };
-  };
-
-  const overallLevel = getScoreLevel(diagnosticData.overallScore);
-
-  const getRecommendations = () => {
-    const weakestArea = Object.entries(diagnosticData.scores).reduce((min, [key, value]) => 
-      value < min.score ? { area: key, score: value } : min, 
-      { area: '', score: 100 }
-    );
-
-    const recommendations = {
-      insight: "Focus on customer research and behavioral analysis to understand what truly motivates your audience.",
-      distinctive: "Develop unique brand assets and positioning that clearly differentiate you from competitors.",
-      empathetic: "Create deeper emotional connections through storytelling and authentic customer experiences.",
-      authentic: "Build transparency and trust through genuine brand communication and consistent values."
-    };
-
-    return recommendations[weakestArea.area as keyof typeof recommendations];
+  const trustGapScores = {
+    insight: diagnosticData.scores.insight,
+    distinctive: diagnosticData.scores.distinctive,
+    empathetic: diagnosticData.scores.empathetic,
+    authentic: diagnosticData.scores.authentic,
+    overall: diagnosticData.overallScore,
   };
 
   return (
@@ -229,73 +222,28 @@ export default function DiagnosticResults() {
             </p>
           </div>
 
-          {/* Overall Score */}
-          <Card className="mb-8 bg-gradient-hero text-primary-foreground border-0">
-            <CardContent className="p-8 text-center">
-              <h2 className="text-2xl font-bold mb-4">Overall Brand Health Score</h2>
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <div className="text-5xl font-bold">{diagnosticData.overallScore}%</div>
-                <div className="flex items-center gap-2">
-                  {overallLevel.icon}
-                  <span className="text-lg font-semibold">{overallLevel.level}</span>
-                </div>
-              </div>
-              <Progress value={diagnosticData.overallScore} className="mb-4 bg-white/20" />
-              <p className="text-primary-foreground/90">
-                Your brand shows {overallLevel.level.toLowerCase()} performance across the IDEA framework dimensions.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Category Breakdown */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {Object.entries(diagnosticData.scores).map(([category, score]) => {
-              const details = categoryDetails[category as keyof typeof categoryDetails];
-              const level = getScoreLevel(score);
-              
-              return (
-                <Card key={category} className="border-border/50 hover:shadow-lg transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={`w-12 h-12 bg-gradient-to-r ${details.color} rounded-lg flex items-center justify-center text-white`}>
-                        {details.icon}
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">{details.title}</CardTitle>
-                        <CardDescription className="text-sm">{details.description}</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-2xl font-bold">{score}%</span>
-                      <div className={`flex items-center gap-1 ${level.color}`}>
-                        {level.icon}
-                        <span className="text-sm font-medium">{level.level}</span>
-                      </div>
-                    </div>
-                    <Progress value={score} className="mb-2" />
-                  </CardContent>
-                </Card>
-              );
-            })}
+          {/* Trust Gap™ 4-Dimension Scorecard with coach-style interpretation */}
+          <div className="mb-8">
+            <TrustGapScorecard
+              scores={trustGapScores}
+              evidence={evidence}
+              evidenceKey={evidenceKey}
+            />
           </div>
 
-          {/* Recommendations */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Key Recommendation
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                {getRecommendations()}
-              </p>
+          {/* Import your Amazon listing to ground the read in real evidence */}
+          <div className="mb-8">
+            <ProductImportCta
+              importedProducts={importedProducts}
+              onImportComplete={refreshImportedProducts}
+            />
+          </div>
 
+          {/* Download + help */}
+          <Card className="mb-8">
+            <CardContent className="pt-6">
               {/* Download Results Section */}
-              <div className="border-t pt-6 pb-6">
+              <div className="pb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Download className="w-5 h-5" />
                   <h3 className="text-lg font-semibold">Download Your Results</h3>

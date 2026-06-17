@@ -17,6 +17,9 @@ export interface StreamResult {
   responseId?: string;
 }
 
+/** Memory-tool activity reported by the edge function's agentic loop. */
+export type MemoryActivityAction = 'reading' | 'updating';
+
 /** Callbacks invoked during stream parsing */
 export interface StreamCallbacks {
   onTextDelta: (delta: string) => void;
@@ -24,6 +27,8 @@ export interface StreamCallbacks {
     fields: StreamResult['extractedFields']
   ) => void;
   onError: (error: Error) => void;
+  /** Optional: Trevor is reading/updating his memory mid-response. */
+  onMemoryActivity?: (action: MemoryActivityAction) => void;
 }
 
 /** Sentinel value returned by event handlers to signal early stream termination. */
@@ -60,6 +65,9 @@ export async function parseSSEStream(
     extracted_fields: (e) => {
       extractedFields = (e.fields as StreamResult['extractedFields']) || [];
       callbacks.onExtractedFields(extractedFields);
+    },
+    memory_activity: (e) => {
+      callbacks.onMemoryActivity?.((e.action as MemoryActivityAction) || 'updating');
     },
     done: (e) => {
       responseId = e.responseId as string;

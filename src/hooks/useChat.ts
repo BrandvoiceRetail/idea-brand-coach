@@ -14,6 +14,7 @@ import { useServices } from '@/services/ServiceProvider';
 import { ChatMessageCreate, ChatbotType } from '@/types/chat';
 import { ChapterId, ChapterMetadata } from '@/types/chapter';
 import { useToast } from '@/hooks/use-toast';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 interface UseChatOptions {
   chatbotType?: ChatbotType;
@@ -34,6 +35,8 @@ export const useChat = (options: UseChatOptions = {}) => {
   const [streamedExtractedFields, setStreamedExtractedFields] = useState<
     Array<{ identifier: string; value: unknown; confidence: number; source: string; context?: string }>
   >([]);
+  // Transient: Trevor is reading/updating his persistent memory mid-response.
+  const [memoryActivity, setMemoryActivity] = useState<'reading' | 'updating' | null>(null);
   const abortRef = useRef(false);
 
   // Reset streaming state on session switch
@@ -41,6 +44,7 @@ export const useChat = (options: UseChatOptions = {}) => {
     setStreamingContent('');
     setIsStreaming(false);
     setStreamedExtractedFields([]);
+    setMemoryActivity(null);
   }, [sessionId]);
 
   // Set chatbot type on service when it changes
@@ -83,6 +87,7 @@ export const useChat = (options: UseChatOptions = {}) => {
       }
     },
     onError: (error: Error) => {
+      captureAlphaEvent('llm_call_failed', { which_call: 'conversation', error_type: 'send_error' });
       toast({
         title: 'Error Sending Message',
         description: error.message,
@@ -109,15 +114,22 @@ export const useChat = (options: UseChatOptions = {}) => {
         {
           onTextDelta: (delta: string) => {
             if (!abortRef.current) {
+              setMemoryActivity(null);
               setStreamingContent(prev => prev + delta);
             }
           },
           onExtractedFields: (fields) => {
             setStreamedExtractedFields(fields);
           },
+          onMemoryActivity: (action) => {
+            if (!abortRef.current) {
+              setMemoryActivity(action);
+            }
+          },
           onComplete: () => {
             setIsStreaming(false);
             setStreamingContent('');
+            setMemoryActivity(null);
             // Refresh messages from DB (now includes the saved assistant message)
             queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType, sessionId] });
             // Refresh sidebar for potential title update
@@ -126,6 +138,9 @@ export const useChat = (options: UseChatOptions = {}) => {
           onError: (error: Error) => {
             setIsStreaming(false);
             setStreamingContent('');
+            setMemoryActivity(null);
+            // Covers stream-body errors too (HTTP 200 wrapping a failure)
+            captureAlphaEvent('llm_call_failed', { which_call: 'conversation', error_type: 'stream_error' });
             toast({
               title: 'Streaming Error',
               description: error.message,
@@ -137,6 +152,8 @@ export const useChat = (options: UseChatOptions = {}) => {
     } catch (error) {
       setIsStreaming(false);
       setStreamingContent('');
+      setMemoryActivity(null);
+      captureAlphaEvent('llm_call_failed', { which_call: 'conversation', error_type: 'exception' });
       toast({
         title: 'Error Sending Message',
         description: error instanceof Error ? error.message : 'Unknown error',
@@ -177,6 +194,7 @@ export const useChat = (options: UseChatOptions = {}) => {
     isStreaming,
     streamingContent,
     streamedExtractedFields,
+    memoryActivity,
     sendMessageStreaming,
 
     // Error

@@ -25,7 +25,7 @@ export function StartHere(): JSX.Element {
           platform="vimeo"
           hash="1e858fb0d6"
           title="Getting Started with IDEA Brand Coach"
-          description="Learn how to use the IDEA framework (Identify, Discover, Execute, Analyze) to build and grow your brand"
+          description="Learn how to use the IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic) to build and grow your brand"
           storageKey="startHere_intro"
         />
 

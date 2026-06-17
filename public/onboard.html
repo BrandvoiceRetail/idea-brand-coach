@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>IDEA Brand Coach — Start Your Onboarding in Claude</title>
-<meta name="description" content="Copy one prompt into a new Claude session and the IDEA Brand Coach guides you from cold start to your Trust Gap in about 10 minutes." />
+<meta name="description" content="Copy one prompt into a new Claude session and the IDEA Brand Coach — built on Trevor Bradford's book What Captures the Heart Goes in the Cart — guides you from cold start to your Trust Gap in about 10 minutes." />
 <style>
   :root{
     --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -45,6 +45,20 @@
   .step h3{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px}
   .step p{font-size:14px;color:var(--mut)}
   .step code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-family:var(--font);font-size:13px}
+
+  /* CONNECT WALKTHROUGH */
+  .updated{display:inline-block;font-size:12px;font-weight:700;color:var(--mut);margin:-22px 0 26px;letter-spacing:.2px}
+  .updated b{color:var(--blk)}
+  .walk{display:flex;flex-direction:column;gap:18px}
+  .wstep{background:var(--wht);border:1px solid var(--line);border-radius:10px;padding:20px 22px}
+  .whead{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+  .whead .num{flex:none;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--blk);color:var(--wht);font-weight:900;font-size:14px}
+  .whead h3{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:3px}
+  .whead p{font-size:14px;color:var(--mut)}
+  .whead code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-family:var(--font);font-size:13px}
+  .shot{display:block;width:100%;border-radius:8px;box-shadow:0 6px 18px rgba(11,11,11,.10)}
+  .then{margin-top:24px;font-size:15px;color:var(--ink)}
+  .then code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-size:13px}
 
   /* PROMPT CARD */
   .prompt-card{background:var(--blk);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(11,11,11,.22);margin-top:28px}
@@ -111,54 +125,70 @@
 <!-- HERO -->
 <header class="hero wrap">
   <span class="eyebrow">Your coach, inside Claude</span>
-  <h1>One prompt. Your <span class="accent">Trust Gap</span> in about 10 minutes.</h1>
-  <p class="lede">Customers buy brands that <em>feel right</em>. Paste the prompt below into a new Claude session and the IDEA Brand Coach walks you from cold start to your first real brand insight &mdash; the gap between how you see your brand and how your customers actually experience it.</p>
-  <p class="timebox">No setup &middot; No account first &middot; Just paste &amp; go</p>
+  <h1>Your <span class="accent">Trust Gap</span> in about 10 minutes.</h1>
+  <p class="lede"><em>What captures the heart goes in the cart.</em> Add the IDEA Brand Coach to Claude &mdash; built on Trevor Bradford&rsquo;s book of the same name &mdash; and it walks you from cold start to your first real brand insight: the gap between how you see your brand and how your customers actually experience it.</p>
+  <p class="timebox">Runs inside Claude &middot; No account first &middot; ~10 minutes</p>
 </header>
 
-<!-- STEPS -->
+<!-- CONNECT (PRIMARY) -->
 <section class="wrap" style="padding-top:8px">
-  <div class="steps">
-    <div class="step">
-      <span class="num">1</span>
-      <h3>Open Claude</h3>
-      <p>Start a new session in <strong>Claude Code</strong>, the Claude app, or <code>claude.ai</code>.</p>
+  <span class="eyebrow">Start here</span>
+  <h2>Add the IDEA Brand Coach to Claude</h2>
+  <p class="sec-lede">Connect the coach once as a Claude connector &mdash; then it&rsquo;s always a click away, with the full book-grounded coaching library behind it. No account needed.</p>
+  <p class="updated">Setup steps verified against Claude &mdash; <b>last updated June 14, 2026</b>. Claude&rsquo;s menus change; if yours looks different, the goal is the same: add a custom connector pointing at the URL below.</p>
+  <div class="walk">
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">1</span>
+        <div>
+          <h3>Open Settings</h3>
+          <p>In Claude (desktop or <code>claude.ai</code>), click your name in the bottom-left and choose <strong>Settings</strong>.</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-1-settings.png" alt="Claude account menu open with Settings highlighted" loading="lazy" />
     </div>
-    <div class="step">
-      <span class="num">2</span>
-      <h3>Paste the prompt</h3>
-      <p>Hit <strong>Copy prompt</strong> below and paste it as your first message. Send it.</p>
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">2</span>
+        <div>
+          <h3>Connectors &rarr; Add custom connector</h3>
+          <p>Open <strong>Connectors</strong>, click the <strong>+</strong>, then <strong>Add custom connector</strong>. (In some Claude versions Connectors lives under <strong>Customize</strong>.)</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-2-add.png" alt="Connectors panel with the plus menu showing Add custom connector" loading="lazy" />
     </div>
-    <div class="step">
-      <span class="num">3</span>
-      <h3>Get coached</h3>
-      <p>Answer as it guides you &mdash; one question at a time &mdash; and walk away with your Trust Gap and first move.</p>
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">3</span>
+        <div>
+          <h3>Paste the URL and click Add</h3>
+          <p>Name it <strong>IDEA Brand Coach</strong>, paste the <strong>Remote MCP server URL</strong> below, and click <strong>Add</strong>. No login required.</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-3-modal.png" alt="Add custom connector dialog with the IDEA Brand Coach name and MCP server URL filled in" loading="lazy" />
+    </div>
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">4</span>
+        <div>
+          <h3>You&rsquo;re connected</h3>
+          <p>The <strong>IDEA Brand Coach</strong> now appears in your connectors with its full toolset &mdash; ready to use in any chat.</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-4-connected.png" alt="IDEA Brand Coach connected in Claude, showing its available tools" loading="lazy" />
     </div>
   </div>
 
-  <!-- PROMPT -->
-  <div class="prompt-card">
+  <div class="prompt-card" style="margin-top:24px">
     <div class="prompt-head">
-      <span class="label"><span class="dot"></span> ONBOARDING PROMPT</span>
-      <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy prompt</button>
+      <span class="label"><span class="dot"></span> MCP SERVER URL</span>
+      <button class="copy-btn" id="copyUrlBtn" onclick="copyUrl()">Copy URL</button>
     </div>
-    <pre id="prompt"></pre>
-    <div class="prompt-foot">Paste this as the first message in a fresh Claude session.</div>
+    <pre id="mcpUrl" style="padding:20px 22px;max-height:none;color:#ffffff;font-size:15px;letter-spacing:.2px">https://ideabrandcoach.icodemybusiness.com/mcp</pre>
+    <div class="prompt-foot">Prefer Claude Code? Run <code style="background:rgba(255,255,255,.08);color:#f6e8bf;padding:1px 6px;border-radius:3px">claude mcp add --transport http idea-brand-coach https://ideabrandcoach.icodemybusiness.com/mcp</code></div>
   </div>
-</section>
 
-<!-- WHAT TO EXPECT -->
-<section class="wrap" style="padding-top:8px">
-  <span class="eyebrow">What the session does</span>
-  <h2>Five quick stages, one real answer</h2>
-  <p class="sec-lede">The coach keeps it tight on purpose &mdash; everything is built to get you to your first workbook-grade insight fast.</p>
-  <div class="stages">
-    <div class="stg"><div class="badge">Stage 0</div><div><h4>Welcome</h4><p>A 10-second promise of what you&rsquo;ll build together &mdash; no form, no friction.</p></div></div>
-    <div class="stg"><div class="badge">Stage 1</div><div><h4>Your profile</h4><p>Name, brand, website. Just enough to make the coaching yours.</p></div></div>
-    <div class="stg"><div class="badge">Stage 2</div><div><h4>Both sides of the brand</h4><p>How you see your brand &mdash; then the customer truth from your reviews or a product link.</p></div></div>
-    <div class="stg"><div class="badge">Stage 3</div><div><h4>Tune it</h4><p>A couple of preferences, plus an open box: tell the coach what you want, in your words.</p></div></div>
-    <div class="stg"><div class="badge">Stage 4</div><div><h4>First problem &rarr; first answer</h4><p>Name what&rsquo;s keeping you up at night. The coach runs the IDEA loop and hands you a concrete move to close your Trust Gap.</p></div></div>
-  </div>
+  <p class="then">Then open a new chat, run the <code>onboard</code> prompt, and pick <strong>Simple Diagnostic</strong> or <strong>Full Contextual Upload</strong>.</p>
 </section>
 
 <!-- IDEA DIMENSIONS -->
@@ -166,12 +196,12 @@
   <div class="wrap">
     <span class="eyebrow">The framework behind it</span>
     <h2>IDEA</h2>
-    <p class="sec-lede">Four dimensions Trevor Bradford has used to build brands for 35 years &mdash; now running your session.</p>
+    <p class="sec-lede">The four dimensions at the heart of Trevor Bradford&rsquo;s book <em>What Captures the Heart Goes in the Cart</em> &mdash; the complete framework, now running your session.</p>
     <div class="dims">
-      <div class="dim i"><div class="ltr">I</div><div class="nm">Identify</div><p>Where customers hesitate before they feel confident enough to buy &mdash; your Trust Gap.</p></div>
-      <div class="dim d"><div class="ltr">D</div><div class="nm">Discover</div><p>What customer reality actually says. Reviews are the undisputed truth.</p></div>
-      <div class="dim e"><div class="ltr">E</div><div class="nm">Execute</div><p>The specific brand and messaging move that closes the gap.</p></div>
-      <div class="dim a"><div class="ltr">A</div><div class="nm">Analyze</div><p>How you&rsquo;ll know it worked &mdash; and what to tune next.</p></div>
+      <div class="dim i"><div class="ltr">I</div><div class="nm">Insight</div><p>A deep read of <em>why</em> your customers really buy &mdash; the emotional, psychographic drivers under the demographics. Insight comes first.</p></div>
+      <div class="dim d"><div class="ltr">D</div><div class="nm">Distinctive</div><p>Standing out in a crowded market &mdash; clear positioning and the distinctive brand assets that make you memorable, not just different.</p></div>
+      <div class="dim e"><div class="ltr">E</div><div class="nm">Empathetic</div><p>Tuning into what customers actually feel &mdash; security, belonging, validation &mdash; so they feel heard and understood.</p></div>
+      <div class="dim a"><div class="ltr">A</div><div class="nm">Authentic</div><p>Staying true to your values and promises &mdash; in actions, not just words. Transparency and consistency earn trust.</p></div>
     </div>
   </div>
 </section>
@@ -182,73 +212,13 @@
 </footer>
 
 <script>
-  // The onboarding prompt — single source of truth for both the on-page preview and the copy action.
-  const PROMPT = [
-"You are the IDEA Brand Coach — a direct, experienced brand strategist running my onboarding inside this chat. You are built on Trevor Bradford's IDEA framework (Identify, Discover, Execute, Analyze) and 35 years of brand building.",
-"",
-"YOUR GOAL",
-"Get me from a cold start to my first real brand insight — my Trust Gap and the single best move to close it — in about 10 minutes. That first answer is the whole point. Everything before it is setup, so keep it fast.",
-"",
-"THE CORE IDEA",
-"Customers buy brands that feel right. The Trust Gap is the distance between how I see my brand and how my customers actually experience it. That gap is where sales leak. Your job is to find it from evidence, then coach me to close it.",
-"",
-"THE FRAMEWORK",
-"- Identify — where customers hesitate before they feel confident enough to buy",
-"- Discover — what customer reality (especially reviews) actually says",
-"- Execute — the specific brand or messaging move that closes the gap",
-"- Analyze — how we'll measure whether it worked",
-"",
-"HOW YOU WORK",
-"- Run ONE stage at a time. Ask, wait for my answer, confirm, then advance. Never dump all the stages at once.",
-"- Before each stage, check its gate (below). If I haven't met it, ask once more — then move on. Don't stall.",
-"- Customer reviews are the undisputed truth. When I give you a product link or reviews, mine the patterns — especially negative and neutral ones — for unmet needs and messaging flaws.",
-"- Talk like a sharp human consultant. Be specific and direct. No generic AI filler, no 'as an AI', no hedging, no fluff.",
-"- Always keep me moving toward the first real answer.",
-"",
-"RUN THESE STAGES",
-"",
-"STAGE 0 — Welcome (no form)",
-"Open with a 2-3 sentence promise of what we'll do in the next ~10 minutes and why it matters. Then go straight into Stage 1.",
-"",
-"STAGE 1 — Your profile",
-"Ask for: my name, my brand or company, and the website or main product. (An email is optional — only to save my profile later.)",
-"Gate: you have my name and brand before continuing.",
-"",
-"STAGE 2 — Both sides of the brand",
-"First, my side: 2-3 quick questions on what I think my brand stands for and who it's for.",
-"Then the customer side (the truth): ask me to paste a product or listing URL, or paste a batch of customer reviews, so you can see reality.",
-"Gate: you have my self-perception AND at least one customer-truth source. If I can't give reviews, note it and proceed with what I gave you.",
-"",
-"STAGE 3 — Tune the coaching + open ask",
-"Offer a few fast choices: coaching depth (quick hits vs. deep dive), tone (encouraging vs. blunt), and which dimension I care about most right now (Identify / Discover / Execute / Analyze). Then ask the open question: 'In your own words — what do you want from your brand right now?'",
-"Gate: you've captured my open-ended ask.",
-"",
-"STAGE 4 — First problem, first answer",
-"Ask: 'What's the one thing keeping you up at night about your brand?' Then run the IDEA loop on it using everything above:",
-"- Identify the most likely Trust Gap (where customers hesitate).",
-"- Discover the evidence (cite the review patterns or what I told you).",
-"- Execute: give me ONE concrete move — specific copy or a positioning change, not advice-shaped mush.",
-"- Analyze: tell me how I'll know if it worked.",
-"Deliver it as a tight, workbook-grade answer — the kind of thing I'd screenshot. Then name the 2-3 things we could tackle next, and mention I can install the IDEA Brand Coach MCP to keep going with full context.",
-"",
-"Begin now with Stage 0. One thing at a time."
-  ].join("\n");
-
-  document.getElementById("prompt").textContent = PROMPT;
-
-  function copyPrompt(){
-    const btn = document.getElementById("copyBtn");
-    const done = () => { btn.textContent = "Copied ✓"; btn.classList.add("copied"); setTimeout(()=>{btn.textContent="Copy prompt";btn.classList.remove("copied");},2200); };
+  function copyUrl(){
+    const btn = document.getElementById("copyUrlBtn");
+    const url = document.getElementById("mcpUrl").textContent.trim();
+    const done = () => { btn.textContent = "Copied ✓"; btn.classList.add("copied"); setTimeout(()=>{btn.textContent="Copy URL";btn.classList.remove("copied");},2200); };
     if (navigator.clipboard && window.isSecureContext){
-      navigator.clipboard.writeText(PROMPT).then(done).catch(fallback);
-    } else { fallback(); }
-    function fallback(){
-      const ta = document.createElement("textarea");
-      ta.value = PROMPT; ta.style.position="fixed"; ta.style.opacity="0";
-      document.body.appendChild(ta); ta.focus(); ta.select();
-      try{ document.execCommand("copy"); done(); }catch(e){ btn.textContent="Press Ctrl+C"; }
-      document.body.removeChild(ta);
-    }
+      navigator.clipboard.writeText(url).then(done).catch(()=>{ btn.textContent="Press Ctrl+C"; });
+    } else { btn.textContent="Press Ctrl+C"; }
   }
 </script>
 </body>

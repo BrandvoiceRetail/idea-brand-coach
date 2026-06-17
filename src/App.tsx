@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { initPostHog } from "@/lib/posthogClient";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +26,7 @@ import Dashboard from "./pages/Dashboard";
 import BrandDiagnostic from "./pages/BrandDiagnostic";
 import FreeDiagnostic from "./pages/FreeDiagnostic";
 import DiagnosticResults from "./pages/DiagnosticResults";
+import JourneyBridge from "./components/diagnostic/JourneyBridge";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
 import IdeaFramework from "./pages/IdeaFramework";
 import IdeaFrameworkConsultant from "./pages/IdeaFrameworkConsultant";
@@ -50,6 +52,10 @@ import FeatureGate from "@/components/FeatureGate";
 import { VersionGate } from "@/components/VersionGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
+// Initialise analytics before the React tree mounts so the auth listener can
+// identify the user as soon as a session arrives. No-op when no key is set.
+initPostHog();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -103,6 +109,8 @@ const App = () => {
                 <Route path="/subscribe" element={<Navigate to="/v1/subscribe" replace />} />
 
                 <Route path="/diagnostic/results" element={<Navigate to="/v1/diagnostic/results" replace />} />
+
+                <Route path="/diagnostic/bridge" element={<Navigate to="/v1/diagnostic/bridge" replace />} />
 
                 <Route path="/dashboard" element={<Navigate to="/v1/dashboard" replace />} />
 
@@ -186,6 +194,8 @@ const App = () => {
                 <Route path="/v1/subscribe" element={<PricingPaywall />} />
 
                 <Route path="/v1/diagnostic/results" element={<DiagnosticResults />} />
+
+                <Route path="/v1/diagnostic/bridge" element={<JourneyBridge />} />
 
                 <Route path="/v1/dashboard" element={
                   <Layout>

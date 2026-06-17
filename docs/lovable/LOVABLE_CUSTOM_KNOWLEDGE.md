@@ -6,7 +6,7 @@
 **Type:** AI-powered brand consulting SaaS application
 **Status:** P0 Beta Launch (~83% complete, verified 2025-11-08)
 **Phase:** Final Implementation & Testing
-**Purpose:** Help businesses build strong brands using the IDEA framework (Identify, Discover, Execute, Analyze)
+**Purpose:** Help businesses build strong brands using the IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic)
 
 **Core Value Proposition:**
 - Anonymous brand diagnostic assessment (6 questions)

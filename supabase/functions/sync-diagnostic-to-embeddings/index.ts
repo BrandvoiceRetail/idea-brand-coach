@@ -140,7 +140,42 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY not configured");
     }
 
-    // Delete existing diagnostic embeddings for this user
+    // Generate ALL embeddings first, BEFORE touching existing rows. The previous
+    // order (delete -> generate) destroyed the user's prior diagnostic chunks
+    // whenever the embedding provider failed mid-way.
+    let embeddings: number[][];
+    try {
+      embeddings = [];
+      for (let i = 0; i < contextChunks.length; i++) {
+        console.log(`Embedding chunk ${i + 1}/${contextChunks.length}`);
+        embeddings.push(await generateEmbedding(contextChunks[i], OPENAI_API_KEY));
+      }
+    } catch (embeddingError) {
+      // Provider billing/quota/auth failures are an expected-degraded state, not
+      // an application bug: report it as a structured skip (HTTP 200) so the
+      // client can warn once instead of logging a FunctionsHttpError, and keep
+      // the user's existing chunks intact.
+      const message = embeddingError instanceof Error ? embeddingError.message : String(embeddingError);
+      const isProviderIssue = /\b(401|403|429)\b|insufficient_quota|billing/i.test(message);
+      console.error(
+        `[sync-diagnostic-to-embeddings] embedding generation failed | providerIssue=${isProviderIssue} |`,
+        message.slice(0, 300),
+      );
+      if (isProviderIssue) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            skipped: true,
+            reason: "embedding-provider-unavailable",
+            detail: message.slice(0, 200),
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      throw embeddingError;
+    }
+
+    // Snapshot replace: only now that every embedding exists.
     const { error: deleteError } = await supabaseClient
       .from("user_knowledge_chunks")
       .delete()
@@ -151,20 +186,14 @@ serve(async (req) => {
       console.warn("Warning: Failed to delete existing chunks:", deleteError);
     }
 
-    // Generate and store embeddings for each chunk using shared utility
     let successCount = 0;
     for (let i = 0; i < contextChunks.length; i++) {
-      const chunk = contextChunks[i];
-      console.log(`Processing chunk ${i + 1}/${contextChunks.length}`);
-
-      const embedding = await generateEmbedding(chunk, OPENAI_API_KEY);
-
       const { error: insertError } = await supabaseClient
         .from("user_knowledge_chunks")
         .insert({
           user_id: userId,
-          content: chunk,
-          embedding: JSON.stringify(embedding),
+          content: contextChunks[i],
+          embedding: JSON.stringify(embeddings[i]),
           source_type: "diagnostic",
           source_id: submission_id,
           category: "diagnostic",
