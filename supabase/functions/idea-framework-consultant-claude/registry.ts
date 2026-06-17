@@ -32,6 +32,8 @@ import {
   MemoryCommandInput,
   SupabaseClientLike,
 } from '../_shared/memory.ts';
+import { callMcpTool } from './mcpClient.ts';
+import { MCP_TOOL_NAMES } from './mcpTools.ts';
 
 /** Result of executing one tool call. */
 export interface ToolExecResult {
@@ -45,6 +47,8 @@ export interface ToolExecResult {
 export interface ToolContext {
   supabaseClient: SupabaseClientLike | null;
   userId: string | null;
+  /** Caller's Supabase JWT, forwarded to the MCP host by MCP-backed tools. */
+  jwt: string | null;
 }
 
 export type ToolKind = 'continue' | 'terminal';
@@ -87,6 +91,19 @@ const ENTRIES: ToolEntry[] = [
     kind: 'terminal',
     // No execute: terminal tools are acknowledged with the fixed extraction ack.
   },
+  // ── MCP-backed tools (ADR Phase 2) ──────────────────────────────────────────
+  // Each 'continue' entry forwards to the brand-coach MCP host over HTTP with the
+  // caller's JWT (mcpClient.ts). The MCP runs the tool under that identity, reusing
+  // its RLS / gateWrite / grounding guardrails. Names + schemas live in mcpTools.ts;
+  // index.ts advertises them to the model only when CONSULTANT_TOOL_LOOP_ENABLED.
+  ...MCP_TOOL_NAMES.map((name): ToolEntry => ({
+    name,
+    kind: 'continue',
+    async execute(input, ctx): Promise<ToolExecResult> {
+      const { text, isError } = await callMcpTool({ name, args: input, jwt: ctx.jwt });
+      return { content: text, isError };
+    },
+  })),
 ];
 
 const BY_NAME = new Map<string, ToolEntry>(ENTRIES.map((e) => [e.name, e]));

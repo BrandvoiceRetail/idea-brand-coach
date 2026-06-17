@@ -16,6 +16,8 @@
  * needs to replay the turn with tool_results.
  */
 
+import { isContinueTool } from './registry.ts';
+
 const encoder = new TextEncoder();
 
 /** Emit a client-protocol SSE event. */
@@ -56,6 +58,8 @@ export interface IterationResult {
   assistantContent: Array<Record<string, unknown>>;
   memoryToolUses: ToolUseBlock[];
   extractionToolUses: ToolUseBlock[];
+  /** MCP-backed 'continue' tool uses (Phase 2), dispatched by name via the registry. */
+  mcpToolUses: ToolUseBlock[];
 }
 
 /** Per-block accumulator while a content block is streaming. */
@@ -86,6 +90,7 @@ export async function translateOneStream(
     assistantContent: [],
     memoryToolUses: [],
     extractionToolUses: [],
+    mcpToolUses: [],
   };
 
   const blocks = new Map<number, BlockAccumulator>();
@@ -130,6 +135,11 @@ export async function translateOneStream(
       console.log(`[Stream] Memory tool use: ${String(input.command)}`);
       emit(controller, { type: 'memory_activity', action });
       result.memoryToolUses.push({ id: block.id, name: block.name, input });
+    } else if (isContinueTool(block.name)) {
+      // MCP-backed 'continue' tool (Phase 2) — surfaced to the client as tool activity.
+      console.log(`[Stream] MCP tool use: ${block.name}`);
+      emit(controller, { type: 'tool_activity', tool: block.name });
+      result.mcpToolUses.push({ id: block.id, name: block.name, input });
     }
   };
 

@@ -26,8 +26,21 @@ grounded in `skills/idea/`. Per `docs/v2/architecture/adr/ADR-UNIFIED-COACH-CAPA
       are added by P4. ENV FIX (2026-06-16): replaced the node_modules symlink with a real npm install so
       the already-declared @modelcontextprotocol/ext-apps resolves; the 5 src/mcp suites collect again
       (server/onboard/assetChain verified 33/33). Not a new dep.
-- [ ] **P4 MCP CLIENT** — inverse of EdgeFnClient: tool_use -> POST /mcp with JWT, LOCAL host.
-      Read-only first (get_context_status, list_assets, run_trust_gap).
+- [x] **P4 MCP CLIENT** — DONE. mcpClient.ts: `callMcpTool({name,args,jwt,mcpUrl?})` POSTs a single
+      JSON-RPC `tools/call` to the host (default `MCP_URL` env / http://localhost:8787/mcp), forwarding
+      `Authorization: Bearer <jwt>`; parses JSON or SSE response, extracts content[].text; never throws
+      (errors → is_error result). Host is the STATELESS streamable-HTTP server (http.ts:
+      sessionIdGenerator undefined, enableJsonResponse true). mcpTools.ts: 3 read-only Anthropic tool
+      defs (get_context_status, list_assets, run_trust_gap; run_trust_gap cites framework/00-foundations/
+      02-idea-framework). registry.ts: ToolContext gained `jwt`; 3 MCP-backed 'continue' entries call
+      callMcpTool. loop.ts + stream.ts: added an `mcpToolUses` bucket to BOTH categorizers, dispatch by
+      name via the registry, shouldContinue + force-text guards include MCP uses. index.ts: hoisted `jwt`
+      to outer scope → loopConfig.jwt; advertises MCP_TOOL_DEFS only when CONSULTANT_TOOL_LOOP_ENABLED &&
+      authenticated. Test __tests__/mcp-tools.test.ts (3 groups): registry exposes >=3 continue tools +
+      grounding; callMcpTool POST shape (URL/Bearer/tools-call/params); end-to-end loop run_trust_gap ->
+      MCP HTTP call w/ JWT -> tool_result fed into 2nd Anthropic call -> final answer. app tsc exit 0;
+      consultant suite 34/34 (threads). NO new dep. **P5 must validate the live stateless handshake**
+      (whether the host needs an initialize before tools/call) against a real local host.
 - [ ] **P5 VERIFY** — mcp-conversation-replay harness proving >=3 tools fire via the loop, grounded.
 
 ## HALTs (stop + ask)

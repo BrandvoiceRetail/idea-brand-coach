@@ -28,6 +28,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { generateSystemPrompt, buildSessionContext } from './prompt.ts';
 import { buildAgentTools } from './tools.ts';
+import { MCP_TOOL_DEFS } from './mcpTools.ts';
 import { buildTieredFieldContext } from './fields.ts';
 import { retrieveAllContext } from './context.ts';
 import { buildMemorySnapshot } from './memory-context.ts';
@@ -69,6 +70,8 @@ serve(async (req) => {
     const authHeader = req.headers.get('authorization');
     let userId: string | null = null;
     let supabaseClient = null;
+    // Caller's JWT, forwarded to the MCP host by MCP-backed tools (Phase 2). Never logged.
+    let jwt: string | null = null;
 
     if (authHeader) {
       supabaseClient = createClient(
@@ -78,6 +81,7 @@ serve(async (req) => {
       );
 
       const token = authHeader.replace('Bearer ', '');
+      jwt = token;
       const { data: { user } } = await supabaseClient.auth.getUser(token);
       if (user) {
         userId = user.id;
@@ -228,6 +232,9 @@ serve(async (req) => {
     const tools: Array<Record<string, unknown>> = [
       ...(memoryEnabled ? [{ type: 'memory_20250818', name: 'memory' }] : []),
       ...buildAgentTools(extractionFields, scopeChapterKey, hasActiveExtraction),
+      // MCP-backed tools (ADR Phase 2) — advertised only with the tool loop on AND an
+      // authenticated caller (the MCP host scopes them to the forwarded JWT).
+      ...(TOOL_LOOP_ENABLED && userId ? MCP_TOOL_DEFS : []),
     ];
 
     // ── Token budget ─────────────────────────────────────────────────────
@@ -277,6 +284,7 @@ serve(async (req) => {
       messages,
       supabaseClient,
       userId,
+      jwt,
       startTime,
       toolLoopEnabled: TOOL_LOOP_ENABLED,
       model: CLAUDE_MODEL,

@@ -36,7 +36,7 @@ import {
   MemoryCommandInput,
   SupabaseClientLike,
 } from '../_shared/memory.ts';
-import { getToolEntry, ToolContext } from './registry.ts';
+import { getToolEntry, isContinueTool, ToolContext } from './registry.ts';
 import { emitHandlerLatency, emitLlmLatency, makeTtftRecorder } from './telemetry.ts';
 
 const MAX_ITERATIONS = 4;
@@ -52,6 +52,8 @@ export interface LoopConfig {
   messages: Array<{ role: string; content: unknown }>;
   supabaseClient: SupabaseClientLike | null;
   userId: string | null;
+  /** Caller's Supabase JWT, forwarded to the MCP host by MCP-backed tools (Phase 2). */
+  jwt?: string | null;
   startTime: number;
   /**
    * ADR Phase 1 flag. When true the loop dispatches tools through the registry
@@ -121,13 +123,15 @@ async function callClaude(
 }
 
 function shouldContinue(
-  result: { stopReason: string | null; memoryToolUses: unknown[] },
+  result: { stopReason: string | null; memoryToolUses: unknown[]; mcpToolUses?: unknown[] },
   iteration: number,
   config: LoopConfig
 ): boolean {
+  const hasContinueWork =
+    result.memoryToolUses.length > 0 || (result.mcpToolUses?.length ?? 0) > 0;
   return (
     result.stopReason === 'tool_use' &&
-    result.memoryToolUses.length > 0 &&
+    hasContinueWork &&
     iteration < MAX_ITERATIONS - 1 &&
     Date.now() - config.startTime < LOOP_DEADLINE_MS &&
     config.supabaseClient !== null &&
@@ -138,6 +142,8 @@ function shouldContinue(
 interface ExecutableToolUses {
   memoryToolUses: Array<{ id: string; input: Record<string, unknown> }>;
   extractionToolUses: Array<{ id: string }>;
+  /** MCP-backed 'continue' tool uses (Phase 2), dispatched by name via the registry. */
+  mcpToolUses?: Array<{ id: string; name: string; input: Record<string, unknown> }>;
 }
 
 /** Fixed ack for terminal (fire-and-forget) tools like extraction. */
@@ -207,6 +213,7 @@ async function buildToolResultsViaRegistry(
   const ctx: ToolContext = {
     supabaseClient: config.supabaseClient,
     userId: config.userId,
+    jwt: config.jwt ?? null,
   };
   const toolResults: Array<Record<string, unknown>> = [];
 
@@ -216,6 +223,22 @@ async function buildToolResultsViaRegistry(
       ? await entry.execute(toolUse.input, ctx)
       : { content: 'Tool unavailable.', isError: true };
     console.log(`[Tool] memory(${String(toolUse.input?.command)}) → ${outcome.isError ? 'ERROR' : 'ok'}`);
+    toolResults.push({
+      type: 'tool_result',
+      tool_use_id: toolUse.id,
+      content: outcome.content,
+      ...(outcome.isError ? { is_error: true } : {}),
+    });
+  }
+
+  // MCP-backed 'continue' tools — dispatch each by name through the registry, which
+  // forwards to the MCP host over HTTP with the caller's JWT (Phase 2).
+  for (const toolUse of uses.mcpToolUses ?? []) {
+    const entry = getToolEntry(toolUse.name);
+    const outcome = entry?.execute
+      ? await entry.execute(toolUse.input, ctx)
+      : { content: `Tool '${toolUse.name}' unavailable.`, isError: true };
+    console.log(`[Tool] ${toolUse.name} → ${outcome.isError ? 'ERROR' : 'ok'}`);
     toolResults.push({
       type: 'tool_result',
       tool_use_id: toolUse.id,
@@ -340,7 +363,7 @@ export function runAgenticLoop(config: LoopConfig): ReadableStream {
           if (
             lastResult &&
             lastResult.stopReason === 'tool_use' &&
-            (lastResult.memoryToolUses.length > 0 || lastResult.extractionToolUses.length > 0) &&
+            (lastResult.memoryToolUses.length > 0 || lastResult.extractionToolUses.length > 0 || (lastResult.mcpToolUses?.length ?? 0) > 0) &&
             config.supabaseClient !== null &&
             config.userId !== null
           ) {
@@ -407,6 +430,7 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
     assistantContent: Array<Record<string, unknown>>;
     memoryToolUses: Array<{ id: string; input: Record<string, unknown> }>;
     extractionToolUses: Array<{ id: string }>;
+    mcpToolUses: Array<{ id: string; name: string; input: Record<string, unknown> }>;
     stopReason: string | null;
   } | null = null;
 
@@ -426,6 +450,7 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
 
     const memoryToolUses: Array<{ id: string; input: Record<string, unknown> }> = [];
     const extractionToolUses: Array<{ id: string }> = [];
+    const mcpToolUses: Array<{ id: string; name: string; input: Record<string, unknown> }> = [];
 
     for (const block of data.content || []) {
       if (block.type === 'text') {
@@ -435,6 +460,9 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
         extractionToolUses.push({ id: block.id });
       } else if (block.type === 'tool_use' && block.name === 'memory') {
         memoryToolUses.push({ id: block.id, input: block.input || {} });
+      } else if (block.type === 'tool_use' && isContinueTool(block.name)) {
+        // MCP-backed 'continue' tool (Phase 2) — dispatched by name via the registry.
+        mcpToolUses.push({ id: block.id, name: block.name, input: block.input || {} });
       }
     }
 
@@ -447,15 +475,16 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
       assistantContent: data.content || [],
       memoryToolUses,
       extractionToolUses,
+      mcpToolUses,
       stopReason: data.stop_reason ?? null,
     };
 
-    if (!shouldContinue({ stopReason: data.stop_reason, memoryToolUses }, iteration, config)) {
+    if (!shouldContinue({ stopReason: data.stop_reason, memoryToolUses, mcpToolUses }, iteration, config)) {
       break;
     }
     lastPending = null; // this turn's tool uses get executed below
 
-    const toolResults = await buildToolResults({ memoryToolUses, extractionToolUses }, config);
+    const toolResults = await buildToolResults({ memoryToolUses, extractionToolUses, mcpToolUses }, config);
     previousToolResults = appendToolTurn(config, data.content, toolResults, previousToolResults);
     console.log(`[Loop] Iteration ${iteration + 1}: executed ${memoryToolUses.length} memory command(s), continuing`);
   }
@@ -465,7 +494,7 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
     if (
       lastPending &&
       lastPending.stopReason === 'tool_use' &&
-      (lastPending.memoryToolUses.length > 0 || lastPending.extractionToolUses.length > 0) &&
+      (lastPending.memoryToolUses.length > 0 || lastPending.extractionToolUses.length > 0 || lastPending.mcpToolUses.length > 0) &&
       config.supabaseClient !== null &&
       config.userId !== null
     ) {
