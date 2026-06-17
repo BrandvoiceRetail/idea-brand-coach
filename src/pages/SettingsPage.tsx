@@ -7,16 +7,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { FigmaConnectCard } from '@/components/integrations/FigmaConnectCard';
 import { AccountSettings } from '@/components/settings/AccountSettings';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
-const SECTIONS = ['integrations', 'account'] as const;
-type Section = (typeof SECTIONS)[number];
+type Section = 'integrations' | 'account';
 
 export default function SettingsPage(): JSX.Element {
   const navigate = useNavigate();
   const { section } = useParams<{ section?: string }>();
-  const active: Section = SECTIONS.includes(section as Section)
-    ? (section as Section)
-    : 'integrations';
+  const figmaEnabled = useFeatureFlag('FIGMA_INTEGRATION', false);
+
+  const valid = new Set<Section>(figmaEnabled ? ['integrations', 'account'] : ['account']);
+  const fallback: Section = figmaEnabled ? 'integrations' : 'account';
+  const active: Section = valid.has(section as Section) ? (section as Section) : fallback;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
@@ -27,12 +29,14 @@ export default function SettingsPage(): JSX.Element {
 
       <Tabs value={active} onValueChange={(value) => navigate(`/settings/${value}`)}>
         <TabsList>
-          <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          {figmaEnabled && <TabsTrigger value="integrations">Integrations</TabsTrigger>}
           <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
-        <TabsContent value="integrations" className="mt-6">
-          <FigmaConnectCard />
-        </TabsContent>
+        {figmaEnabled && (
+          <TabsContent value="integrations" className="mt-6">
+            <FigmaConnectCard />
+          </TabsContent>
+        )}
         <TabsContent value="account" className="mt-6">
           <AccountSettings />
         </TabsContent>

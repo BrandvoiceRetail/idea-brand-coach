@@ -17,6 +17,7 @@ import { ROUTES } from '@/config/routes';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { BrandMarkdownExport } from '@/components/export/BrandMarkdownExport';
 import type { BrandMarkdownExportRef } from '@/components/export/BrandMarkdownExport';
 import { VersionSwitcher } from '@/components/VersionSwitcher';
@@ -85,6 +86,7 @@ export function BrandCoachHeader({
 }: BrandCoachHeaderProps): JSX.Element {
   const { isMobile } = useDeviceType();
   const { signOut } = useAuth();
+  const figmaEnabled = useFeatureFlag('FIGMA_INTEGRATION', false);
 
   // Calculate overall completion percentage
   const totalFields = Object.values(CHAPTER_FIELDS_MAP).reduce(
@@ -146,19 +148,21 @@ export function BrandCoachHeader({
             onAvatarSelect={(avatarId: string) => onAvatarChange({ id: avatarId })}
             onCreateAvatar={onCreateAvatar}
           />
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            title="Settings"
-            aria-label="Settings"
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Link to={ROUTES.SETTINGS}>
-              <Settings className="h-4 w-4" />
-              {!isMobile && <span className="ml-1.5">Settings</span>}
-            </Link>
-          </Button>
+          {figmaEnabled && (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              title="Settings"
+              aria-label="Settings"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Link to={ROUTES.SETTINGS}>
+                <Settings className="h-4 w-4" />
+                {!isMobile && <span className="ml-1.5">Settings</span>}
+              </Link>
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"

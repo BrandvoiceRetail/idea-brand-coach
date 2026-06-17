@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import {
   Menu,
   X,
@@ -37,6 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, signOut, loading } = useAuth();
+  const figmaEnabled = useFeatureFlag('FIGMA_INTEGRATION', false);
   const navContainerRef = useRef<HTMLDivElement>(null);
   const { resetTour, startTour } = useOnboardingTourContext();
 
@@ -236,13 +238,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       <HelpCircle className="w-4 h-4 mr-2" />
                       Start Tour
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild className="cursor-pointer">
-                      <Link to={ROUTES.SETTINGS}>
-                        <Settings className="w-4 h-4 mr-2" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
+                    {figmaEnabled && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                          <Link to={ROUTES.SETTINGS}>
+                            <Settings className="w-4 h-4 mr-2" />
+                            Settings
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive focus:text-destructive">
                       <LogOut className="w-4 h-4 mr-2" />
