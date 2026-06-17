@@ -32,6 +32,7 @@ import {
   Clock,
   PlayCircle,
   FlaskConical,
+  Plug,
 } from 'lucide-react';
 
 export type DeploymentPhase = 'P0' | 'P1' | 'P2';
@@ -251,6 +252,21 @@ export const FEATURES: Record<string, Feature> = {
     requiresAuth: true,
   },
 
+  INTEGRATIONS: {
+    id: 'INTEGRATIONS',
+    name: 'Integrations',
+    shortDescription: 'Connect Canva and other tools',
+    fullDescription: 'Connect your favourite tools — like Canva — to bring brand assets into the Brand Coach and keep your brand visuals consistent.',
+    phase: 'P0',
+    route: '/v1/integrations',
+    icon: Plug,
+    statusMessage: 'Available Now',
+    estimatedRelease: 'Live',
+    showInNav: true,
+    category: 'core',
+    requiresAuth: true,
+  },
+
   BETA_TEST: {
     id: 'BETA_TEST',
     name: 'Beta Test',
@@ -438,6 +454,7 @@ export function getNavigationFeatures(currentPhase: DeploymentPhase): Feature[] 
     'BRAND_CANVAS',
     'BRAND_COPY_GENERATOR',
     'BETA_TEST',
+    'INTEGRATIONS',
     'DASHBOARD',
     'IDEA_FRAMEWORK',
     'FRAMEWORK_SUBMISSIONS',

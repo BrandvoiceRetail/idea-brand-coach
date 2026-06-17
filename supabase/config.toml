@@ -83,3 +83,24 @@ verify_jwt = false
 
 [functions.import-product-data]
 verify_jwt = false
+
+# Canva Connect integration. The callback is hit by Canva's browser redirect
+# (no app JWT) and is secured by the opaque OAuth state; every other function
+# derives the user from the verified JWT.
+[functions.canva-oauth-start]
+verify_jwt = true
+
+[functions.canva-oauth-callback]
+verify_jwt = false
+
+[functions.canva-status]
+verify_jwt = true
+
+[functions.canva-disconnect]
+verify_jwt = true
+
+[functions.canva-list-designs]
+verify_jwt = true
+
+[functions.canva-imports]
+verify_jwt = true

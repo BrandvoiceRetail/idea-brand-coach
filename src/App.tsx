@@ -39,6 +39,7 @@ import AvatarBuilder from "./pages/AvatarBuilder";
 import BrandCanvas from "./pages/BrandCanvas";
 import BrandCopyGenerator from "./pages/BrandCopyGenerator";
 import ConversationHistory from "./pages/ConversationHistory";
+import Integrations from "./pages/Integrations";
 import Auth from "./pages/Auth";
 import BetaWelcome from "./pages/BetaWelcome";
 import BetaJourney from "./pages/BetaJourney";
@@ -278,6 +279,12 @@ const App = () => {
                 <Route path="/v1/research-learning" element={
                   <Layout>
                     <ResearchLearning />
+                  </Layout>
+                } />
+
+                <Route path="/v1/integrations" element={
+                  <Layout>
+                    <Integrations />
                   </Layout>
                 } />
 

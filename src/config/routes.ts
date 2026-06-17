@@ -83,6 +83,9 @@ export const V1_ROUTES = {
 
   /** V1 conversation history */
   CONVERSATIONS: '/v1/conversations',
+
+  /** V1 third-party integrations (e.g. Canva) */
+  INTEGRATIONS: '/v1/integrations',
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
