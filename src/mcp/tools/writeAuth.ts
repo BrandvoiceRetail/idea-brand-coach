@@ -18,6 +18,15 @@ export function actorTag(identity: Identity): string {
  * Returns the current identity when writes are allowed, or a ready-to-return
  * denial result for anonymous callers.
  */
+// TODO(competitor-agents:LT-4): MCP exposure of the competitor agents. Post-D5
+// (cross-server write-auth resolved), register read tools `list_touchpoints`,
+// `analyze_touchpoint_competitors`, `get_competitor_gap`, `compare_competitors`
+// under src/mcp/tools/ (one register*Tool each, zod input, three-layer: a pure
+// service wrapping the competitor-analysis-asset edge fn + brand_asset_competitive_insights
+// reads — Calculation Parity: byte-identical to the in-app SupabaseCompetitorInsightsService).
+// `analyze_touchpoint_competitors` is a WRITE (persists an insight) so it MUST run
+// through this gateWrite() gate + attribute via actorTag(); the three reads do not.
+// See docs/brand-funnel-builder/COMPETITOR_AGENTS_LONGTERM.md §LT-4.
 export function gateWrite(): { identity: Identity; denied: CallToolResult | null } {
   const identity = getIdentity();
   if (identity.authenticated) return { identity, denied: null };

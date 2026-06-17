@@ -62,3 +62,9 @@ supabase/functions/.env
 logs/security/
 auto-claude-backup-keys.txt
 .env
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+tests/e2e/.auth/

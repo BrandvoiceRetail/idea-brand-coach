@@ -69,6 +69,16 @@ type AuditContent = ContractOutput<typeof auditXIdeaContract>;
  * the shape and only formats it. All keys are optional: a partial chain renders
  * only the sheets it can.
  */
+// TODO(competitor-agents:LT-3): brand-level competitor rollup into the gold workbooks.
+// Workbook A gains a "Competitor Positioning Map" sheet — the per-touchpoint IDEA
+// Trust-Gap scores from brand_asset_competitive_insights, aggregated to a brand-level
+// competitor×dimension matrix (our score vs each competitor across insight/distinctive/
+// empathetic/authentic). Add a `competitor_positioning?` artifact here + a SHEET_NAMES
+// entry + an appendSection call, fed by a new projectWorkbookAArtifacts branch reading
+// the insights chain. Workbook B's investment matrix (assembleWorkbookB) gains the
+// "competitor-informed move" column sourced from brand_tests.competitor_insight_applied.
+// Stays a PURE assembler — the insights read happens in exportWorkbook.ts, not here.
+// See docs/brand-funnel-builder/COMPETITOR_AGENTS_LONGTERM.md §LT-3.
 export interface WorkbookAArtifacts {
   diagnostic_interpretation?: DiagnosticContent;
   avatar_s1_vocab?: S1Content;

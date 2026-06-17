@@ -37,6 +37,18 @@ export type AlphaEventName =
   | 'feedback_modal_opened'
   | 'feedback_submitted'
   | 'thank_you_viewed'
+  | 'funnel_asset_uploaded'
+  | 'funnel_asset_audited'
+  | 'funnel_fix_started'
+  | 'funnel_test_recorded'
+  | 'funnel_coverage_viewed'
+  // Competitor-Agents — per-touchpoint competitor analysis + Brand Defense.
+  | 'funnel_competitor_analysis_run'
+  | 'funnel_competitor_analysis_viewed'
+  | 'funnel_competitor_countermeasure_drafted'
+  | 'funnel_competitor_test_recorded'
+  | 'funnel_defense_alerts_viewed'
+  | 'funnel_defense_alert_read'
   | 'llm_call_failed';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */

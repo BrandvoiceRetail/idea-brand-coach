@@ -83,3 +83,24 @@ verify_jwt = false
 
 [functions.import-product-data]
 verify_jwt = false
+
+# Competitor-Agents P2 analyzer. verify_jwt=false to match the IDEA fns
+# (diagnostic-interpretation / ai-insight-guidance): auth is OPTIONAL — the fn
+# forwards the Authorization header to getUser itself for the avatar KB fallback
+# and to scope persistence; the marketplace read works for the host without a user.
+[functions.competitor-analysis-asset]
+verify_jwt = false
+
+# Competitor-Agents P4 lift-loop rewrite. verify_jwt=false to match the other
+# generative coaching fns (brand-copy-generator pattern): the rewrite is a pure
+# generation over the supplied brief + context, no DB access, no persistence.
+[functions.funnel-rewrite]
+verify_jwt = false
+
+# Competitor-Agents P6 brand-defense monitor (Track B). verify_jwt=false to match
+# competitor-analysis-asset: auth is OPTIONAL — the fn forwards the Authorization
+# header to scope persistence (brand_defense_alerts) and works for the host
+# without a user. The only wired alert source is the Titan STUB (coverage
+# UNVERIFIED per Trevor); a real Titan adapter is a separate, human-gated build.
+[functions.brand-defense-monitor]
+verify_jwt = false

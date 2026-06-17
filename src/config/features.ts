@@ -524,6 +524,39 @@ export function getCurrentPhase(): DeploymentPhase {
   return (import.meta.env.VITE_DEPLOYMENT_PHASE || 'P0') as DeploymentPhase;
 }
 
+// ========================================
+// Launch-gated boolean flags
+// ========================================
+//
+// The FEATURES registry above is PHASE-gated (P0/P1/P2). A few in-flight
+// surfaces need a simple on/off launch gate that is independent of phase — they
+// stay OFF in every environment until launch, then flip via a build-time env var.
+// Those live here as boolean accessors (NOT registry entries).
+
+/**
+ * COMPETITOR_AGENTS — the whole Competitor-Agents surface (per-touchpoint
+ * competitor analysis, the lift loop, and the Brand Defense alerts).
+ *
+ * OFF by default in every environment. Enabled by setting VITE_COMPETITOR_AGENTS=true
+ * at build time. This is the canonical flag (P7 — Track C harden); the interim
+ * src/config/competitorAgentsFlag.ts module delegates here so existing consumers
+ * keep working.
+ *
+ * Note: this gates the CLIENT surface only. The edge functions
+ * (competitor-analysis-asset / brand-defense-monitor) carry their own auth +
+ * rate-limit controls and are additionally never reached while this flag is off.
+ */
+// TODO(competitor-agents:LT-6): productization / pricing. Ongoing competitor
+// monitoring (LT-2 scheduled re-analysis + alerts) carries a RECURRING per-tracked-
+// touchpoint cost (DataForSEO + Firecrawl + Sonnet/Haiku calls) that the one-time
+// £97 diagnostic does not cover. This boolean gate becomes a TIER check: a paid
+// "Brand Defense" recurring tier (entitlement read here) unlocks scheduled monitoring
+// + alerts, while the one-shot per-touchpoint analysis stays in the one-time product.
+// See docs/brand-funnel-builder/COMPETITOR_AGENTS_LONGTERM.md §LT-6.
+export function isCompetitorAgentsEnabled(): boolean {
+  return (import.meta.env.VITE_COMPETITOR_AGENTS as string | undefined) === 'true';
+}
+
 // Development helper
 if (import.meta.env.DEV) {
   const currentPhase = getCurrentPhase();
