@@ -66,6 +66,29 @@ export function isPostHogEnabled(): boolean {
   return isInitialized;
 }
 
+/**
+ * PostHog feature-flag key gating the MCP-first coach tool loop. Rollout is
+ * managed in the PostHog UI (per-user / cohort / %); the edge fn AND-s this with
+ * the `CONSULTANT_TOOL_LOOP_ENABLED` env kill-switch, so this is a rollout gate,
+ * not a security boundary.
+ */
+export const COACH_TOOL_LOOP_FLAG = 'coach-mcp-tool-loop';
+
+/**
+ * True only when PostHog is initialised AND the coach-tool-loop flag is enabled
+ * for the current (identified) distinct_id. Safe no-op → false when PostHog is
+ * unconfigured or evaluation throws, so the coach falls back to single-shot.
+ */
+export function isCoachToolLoopEnabled(): boolean {
+  if (!isInitialized) return false;
+  try {
+    return posthog.isFeatureEnabled(COACH_TOOL_LOOP_FLAG) === true;
+  } catch (err) {
+    console.warn('[posthogClient] feature flag check failed:', err);
+    return false;
+  }
+}
+
 /** Fire one Alpha funnel/error event. Safe no-op when PostHog is disabled. */
 export function captureAlphaEvent(name: AlphaEventName, properties?: AlphaEventProps): void {
   if (!isInitialized) return;

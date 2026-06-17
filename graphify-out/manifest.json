@@ -1,0 +1,792 @@
+{
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/01-why-authentically-human-is-vital.md": {
+    "mtime": 1781405309.256247,
+    "ast_hash": "0e4227e9b9954abca4bf1769a8cd9da0",
+    "semantic_hash": "0e4227e9b9954abca4bf1769a8cd9da0"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/00-integrating-the-idea-framework.md": {
+    "mtime": 1781405302.1371882,
+    "ast_hash": "a86a818ffc0b9b545832e28049c9cad8",
+    "semantic_hash": "a86a818ffc0b9b545832e28049c9cad8"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/02-four-trust-strategies/00-transparency-and-accountability.md": {
+    "mtime": 1781405316.3921623,
+    "ast_hash": "8556075a6a658a45dd2c0c900b8ba5d2",
+    "semantic_hash": "8556075a6a658a45dd2c0c900b8ba5d2"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/02-four-trust-strategies/02-values-driven-communication.md": {
+    "mtime": 1781405328.1916523,
+    "ast_hash": "b55808c45aef707b166dbe4926a39fc1",
+    "semantic_hash": "b55808c45aef707b166dbe4926a39fc1"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/02-four-trust-strategies/04-trust-is-an-investment.md": {
+    "mtime": 1781405344.8169825,
+    "ast_hash": "0e2f3ff93075b5ed079dbf7edcb81baa",
+    "semantic_hash": "0e2f3ff93075b5ed079dbf7edcb81baa"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/02-four-trust-strategies/03-personalized-empathetic-experiences.md": {
+    "mtime": 1781405333.9161522,
+    "ast_hash": "14e58385bd23683ad3136bc96d7632fc",
+    "semantic_hash": "14e58385bd23683ad3136bc96d7632fc"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/02-four-trust-strategies/01-engagement-on-a-human-level.md": {
+    "mtime": 1781405321.6398163,
+    "ast_hash": "06ee06b2e2f890c4b4f5aecf09d47322",
+    "semantic_hash": "06ee06b2e2f890c4b4f5aecf09d47322"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/03-trinny-london-case-study/00-personalization-and-match2me.md": {
+    "mtime": 1781405354.6715136,
+    "ast_hash": "de1a6c04a7cba3a62cd9c20a9b1a1728",
+    "semantic_hash": "de1a6c04a7cba3a62cd9c20a9b1a1728"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/03-trinny-london-case-study/04-transparency-and-conclusion.md": {
+    "mtime": 1781405392.8788311,
+    "ast_hash": "db3fe29520cb1a87e84b21e093db9fed",
+    "semantic_hash": "db3fe29520cb1a87e84b21e093db9fed"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/03-trinny-london-case-study/02-building-trust-through-tailored-recommendations.md": {
+    "mtime": 1781405372.5440779,
+    "ast_hash": "d1774d1c5ec76cd7687f14b94ed69244",
+    "semantic_hash": "d1774d1c5ec76cd7687f14b94ed69244"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/03-trinny-london-case-study/03-ugc-and-emotional-connection.md": {
+    "mtime": 1781405383.0182443,
+    "ast_hash": "336a145166906aceaef4b3753bc055fc",
+    "semantic_hash": "336a145166906aceaef4b3753bc055fc"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/00-authentically-human/03-trinny-london-case-study/01-match2me-maps-to-idea.md": {
+    "mtime": 1781405363.6065817,
+    "ast_hash": "96ebcaffe2bfe1739980d04d26d7c9d6",
+    "semantic_hash": "96ebcaffe2bfe1739980d04d26d7c9d6"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/00-canvas-overview-and-instructions.md": {
+    "mtime": 1781405791.0271757,
+    "ast_hash": "cb4d6ea0a3f7f0ed0cfefbd8b0b782be",
+    "semantic_hash": "cb4d6ea0a3f7f0ed0cfefbd8b0b782be"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/02-foundational-statements/00-brand-purpose.md": {
+    "mtime": 1781405837.5746222,
+    "ast_hash": "472a80bca9c5fd0a1c9381e5a9481e9f",
+    "semantic_hash": "472a80bca9c5fd0a1c9381e5a9481e9f"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/02-foundational-statements/02-brand-mission.md": {
+    "mtime": 1781405855.2499144,
+    "ast_hash": "bfe925c6b929b89b8861f8f944fcdf67",
+    "semantic_hash": "bfe925c6b929b89b8861f8f944fcdf67"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/02-foundational-statements/01-brand-vision.md": {
+    "mtime": 1781405843.2720754,
+    "ast_hash": "03fbb6c57e621a4fa2f6936d5379e839",
+    "semantic_hash": "03fbb6c57e621a4fa2f6936d5379e839"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/02-foundational-statements/03-brand-values.md": {
+    "mtime": 1781405863.2287247,
+    "ast_hash": "4983f012fa7ea56305da5bad7b0c614f",
+    "semantic_hash": "4983f012fa7ea56305da5bad7b0c614f"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/02-foundational-statements/04-target-audience.md": {
+    "mtime": 1781405876.4724994,
+    "ast_hash": "91cc868a1c986c445712cf6fc61780ff",
+    "semantic_hash": "91cc868a1c986c445712cf6fc61780ff"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/01-the-canvas-tables/02-brand-statements-canvas-table.md": {
+    "mtime": 1781405824.7681675,
+    "ast_hash": "cabcba5def948b1f0375d4ef6933962d",
+    "semantic_hash": "cabcba5def948b1f0375d4ef6933962d"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/01-the-canvas-tables/01-idea-framework-canvas-table.md": {
+    "mtime": 1781405809.1187484,
+    "ast_hash": "9e317e8795ba94d9aec150b21a20eb85",
+    "semantic_hash": "9e317e8795ba94d9aec150b21a20eb85"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/01-the-canvas-tables/00-avatar-2.0-canvas-table.md": {
+    "mtime": 1781405798.6550674,
+    "ast_hash": "36526cfbbba01c5743df6c4d8c802620",
+    "semantic_hash": "36526cfbbba01c5743df6c4d8c802620"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/03-positioning-statements/01-value-proposition.md": {
+    "mtime": 1781405895.2748306,
+    "ast_hash": "aaae5ae8b434914faf34421d3c85eae8",
+    "semantic_hash": "aaae5ae8b434914faf34421d3c85eae8"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/03-positioning-statements/00-positioning-statement.md": {
+    "mtime": 1781405884.1481993,
+    "ast_hash": "440f646d9ad03bdb96661ccad22dff5c",
+    "semantic_hash": "440f646d9ad03bdb96661ccad22dff5c"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/04-expression-statements/01-brand-voice.md": {
+    "mtime": 1781405915.70788,
+    "ast_hash": "45406b5a3fdfb9330914db790aba6e7e",
+    "semantic_hash": "45406b5a3fdfb9330914db790aba6e7e"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/04-expression-statements/00-brand-personality.md": {
+    "mtime": 1781405902.7348607,
+    "ast_hash": "ecfc093387767d9b83b42c427d9c906d",
+    "semantic_hash": "ecfc093387767d9b83b42c427d9c906d"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/01-brand-canvas/04-expression-statements/02-canvas-brings-strategy-to-life.md": {
+    "mtime": 1781405926.7368205,
+    "ast_hash": "f88eb7c857532cd69784afc67604f6a2",
+    "semantic_hash": "f88eb7c857532cd69784afc67604f6a2"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/03-aligning-voice-with-emotional-triggers.md": {
+    "mtime": 1781405397.468322,
+    "ast_hash": "9e322c3292a46261ef749ea7ffb2ecf5",
+    "semantic_hash": "9e322c3292a46261ef749ea7ffb2ecf5"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/00-brand-voice-overview.md": {
+    "mtime": 1781405318.3341644,
+    "ast_hash": "33573f0d57940ba44b3aef658d531b4b",
+    "semantic_hash": "33573f0d57940ba44b3aef658d531b4b"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/02-the-four-elements-of-voice/03-design-visual-language.md": {
+    "mtime": 1781405389.3815439,
+    "ast_hash": "5311c208f3b1781929e92f286e70516c",
+    "semantic_hash": "5311c208f3b1781929e92f286e70516c"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/02-the-four-elements-of-voice/00-cohesive-voice-overview.md": {
+    "mtime": 1781405362.0209486,
+    "ast_hash": "0bff6dd092feefc8185a4df3e0b619c0",
+    "semantic_hash": "0bff6dd092feefc8185a4df3e0b619c0"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/02-the-four-elements-of-voice/01-tone-of-voice.md": {
+    "mtime": 1781405371.9229088,
+    "ast_hash": "58673d5faffb755ad674e05962d9347e",
+    "semantic_hash": "58673d5faffb755ad674e05962d9347e"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/02-the-four-elements-of-voice/02-language.md": {
+    "mtime": 1781405379.496485,
+    "ast_hash": "d08518327a1c27d76c8c2df52db828ac",
+    "semantic_hash": "d08518327a1c27d76c8c2df52db828ac"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/01-voice-through-the-four-pillars/02-empathetic-voice.md": {
+    "mtime": 1781405342.338804,
+    "ast_hash": "7b6d3ebaac9bf9fe52167a2a52dfbc0f",
+    "semantic_hash": "7b6d3ebaac9bf9fe52167a2a52dfbc0f"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/01-voice-through-the-four-pillars/00-insight-driven-voice.md": {
+    "mtime": 1781405326.3291738,
+    "ast_hash": "be42abfd9bc537a80fd641dd24fda2dc",
+    "semantic_hash": "be42abfd9bc537a80fd641dd24fda2dc"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/01-voice-through-the-four-pillars/03-authentic-voice.md": {
+    "mtime": 1781405350.6812935,
+    "ast_hash": "ea77d25df281ef6ba8962a6cbd85613d",
+    "semantic_hash": "ea77d25df281ef6ba8962a6cbd85613d"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/02-brand/02-brand-voice/01-voice-through-the-four-pillars/01-distinctive-voice.md": {
+    "mtime": 1781405334.8056366,
+    "ast_hash": "4a0ffde4a932ecbb00ea9439bccad6c2",
+    "semantic_hash": "4a0ffde4a932ecbb00ea9439bccad6c2"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/00-personal-brand-foundations.md": {
+    "mtime": 1781405352.138775,
+    "ast_hash": "a39ce1e755bba622a66c0cdeac0e6f11",
+    "semantic_hash": "a39ce1e755bba622a66c0cdeac0e6f11"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/04-personal-brand-strategy.md": {
+    "mtime": 1781405428.026275,
+    "ast_hash": "942359674c4393b57546f37d6f047eb0",
+    "semantic_hash": "942359674c4393b57546f37d6f047eb0"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/02-distinctive-and-empathetic/00-your-unique-value-proposition.md": {
+    "mtime": 1781405380.9030035,
+    "ast_hash": "be81d925e163373327ce73ef72b767b6",
+    "semantic_hash": "be81d925e163373327ce73ef72b767b6"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/02-distinctive-and-empathetic/01-signature-style.md": {
+    "mtime": 1781405387.5288718,
+    "ast_hash": "8d7d92d8b9a0babe1c1d87e702170338",
+    "semantic_hash": "8d7d92d8b9a0babe1c1d87e702170338"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/02-distinctive-and-empathetic/02-speak-their-language.md": {
+    "mtime": 1781405393.6704378,
+    "ast_hash": "04e86c1ad452eb837e02b6c0db4a09b1",
+    "semantic_hash": "04e86c1ad452eb837e02b6c0db4a09b1"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/02-distinctive-and-empathetic/03-share-relatable-stories.md": {
+    "mtime": 1781405399.8322387,
+    "ast_hash": "16f9179f950bbe8e7ebcda3e2e05553a",
+    "semantic_hash": "16f9179f950bbe8e7ebcda3e2e05553a"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/03-authentic/00-non-negotiable-values.md": {
+    "mtime": 1781405412.5752761,
+    "ast_hash": "29e9253d7478fe52a1315e86b14f8493",
+    "semantic_hash": "29e9253d7478fe52a1315e86b14f8493"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/03-authentic/01-show-vulnerability.md": {
+    "mtime": 1781405418.2210007,
+    "ast_hash": "2c818ba277c4e81506fcb5ebbee72853",
+    "semantic_hash": "2c818ba277c4e81506fcb5ebbee72853"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/01-insight-audience-and-self/00-understand-your-audience.md": {
+    "mtime": 1781405360.151647,
+    "ast_hash": "8dc6e16ba2771ae23f1adb8a7618e008",
+    "semantic_hash": "8dc6e16ba2771ae23f1adb8a7618e008"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/02-personal-brand/01-insight-audience-and-self/01-reflect-on-yourself.md": {
+    "mtime": 1781405366.8641658,
+    "ast_hash": "6f29a1d53cd58232c4124e9698f41139",
+    "semantic_hash": "6f29a1d53cd58232c4124e9698f41139"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/00-product-development-overview.md": {
+    "mtime": 1781405340.7116725,
+    "ast_hash": "812a22ad4d1b3804c1af83fc9766ba53",
+    "semantic_hash": "812a22ad4d1b3804c1af83fc9766ba53"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/01-insight-driven/00-insight-driven-development.md": {
+    "mtime": 1781405350.297948,
+    "ast_hash": "e6e35801d152919cc2341113c1074ae7",
+    "semantic_hash": "e6e35801d152919cc2341113c1074ae7"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/01-insight-driven/01-insights-into-action.md": {
+    "mtime": 1781405360.990255,
+    "ast_hash": "4a961a6688bc19f55f54e810d48d7b8f",
+    "semantic_hash": "4a961a6688bc19f55f54e810d48d7b8f"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/03-empathetic/01-designing-empathetic-products.md": {
+    "mtime": 1781405402.584272,
+    "ast_hash": "0e3179b4047c3ff143757b20dc6d334a",
+    "semantic_hash": "0e3179b4047c3ff143757b20dc6d334a"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/03-empathetic/00-empathy-in-development.md": {
+    "mtime": 1781405388.7800066,
+    "ast_hash": "483bf22849f4a7881c06ee4c19fded01",
+    "semantic_hash": "483bf22849f4a7881c06ee4c19fded01"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/02-distinctive/00-distinctive-product-design.md": {
+    "mtime": 1781405374.1468964,
+    "ast_hash": "8fc49b92f1618a2e748cc2f177f92165",
+    "semantic_hash": "8fc49b92f1618a2e748cc2f177f92165"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/02-distinctive/01-applying-distinctiveness.md": {
+    "mtime": 1781405384.0736892,
+    "ast_hash": "e4965539115b3cf5dd07fcd974f821d9",
+    "semantic_hash": "e4965539115b3cf5dd07fcd974f821d9"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/04-authentic-and-conclusion/02-conclusion-competitive-advantage.md": {
+    "mtime": 1781405428.02635,
+    "ast_hash": "74b842fc538aeb049d299c7895dcdbdb",
+    "semantic_hash": "74b842fc538aeb049d299c7895dcdbdb"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/04-authentic-and-conclusion/01-staying-authentic.md": {
+    "mtime": 1781405420.9937038,
+    "ast_hash": "155ae1366f626c5794b291ff9c23e7b4",
+    "semantic_hash": "155ae1366f626c5794b291ff9c23e7b4"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/01-product-development/04-authentic-and-conclusion/00-authenticity-in-development.md": {
+    "mtime": 1781405408.427244,
+    "ast_hash": "0ebfa7ba703f5ad49f7ac0732be5d356",
+    "semantic_hash": "0ebfa7ba703f5ad49f7ac0732be5d356"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/00-custom-gpt-basics.md": {
+    "mtime": 1781405804.039673,
+    "ast_hash": "6d624d4f7b273d80ec69dcb574ca254e",
+    "semantic_hash": "6d624d4f7b273d80ec69dcb574ca254e"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/02-openai-gpt-builder-walkthrough/00-access-and-define-purpose.md": {
+    "mtime": 1781405896.0298648,
+    "ast_hash": "0adca73eed88ff21dbd9005005720f3c",
+    "semantic_hash": "0adca73eed88ff21dbd9005005720f3c"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/02-openai-gpt-builder-walkthrough/01-configure-settings.md": {
+    "mtime": 1781405902.2769942,
+    "ast_hash": "138e1f6ba9b5615cd2bea7fefb50b175",
+    "semantic_hash": "138e1f6ba9b5615cd2bea7fefb50b175"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/02-openai-gpt-builder-walkthrough/04-test-modify-delete.md": {
+    "mtime": 1781405930.5761476,
+    "ast_hash": "28d15da1b90797dd71fbc343eae6c635",
+    "semantic_hash": "28d15da1b90797dd71fbc343eae6c635"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/02-openai-gpt-builder-walkthrough/03-publish-and-share.md": {
+    "mtime": 1781405920.9415424,
+    "ast_hash": "2266f16758c84b85a8bd5ba0b6532939",
+    "semantic_hash": "2266f16758c84b85a8bd5ba0b6532939"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/02-openai-gpt-builder-walkthrough/02-upload-knowledge-and-features.md": {
+    "mtime": 1781405910.5758233,
+    "ast_hash": "d006c80accee9f7b7bd655e00754d74d",
+    "semantic_hash": "d006c80accee9f7b7bd655e00754d74d"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/01-idea-ai-training-workflow/00-prepare-the-worksheet.md": {
+    "mtime": 1781405816.5722742,
+    "ast_hash": "9b3890ecdb9c3fecef1e450b76c3dd15",
+    "semantic_hash": "9b3890ecdb9c3fecef1e450b76c3dd15"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/01-idea-ai-training-workflow/04-monitor-deploy-and-why-it-works.md": {
+    "mtime": 1781405882.8398235,
+    "ast_hash": "2b1b4699b9621f044c9c2c34bf64ba33",
+    "semantic_hash": "2b1b4699b9621f044c9c2c34bf64ba33"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/01-idea-ai-training-workflow/01-upload-to-ai.md": {
+    "mtime": 1781405823.7610517,
+    "ast_hash": "4d77d2f6a0d88385f46309be727ea589",
+    "semantic_hash": "4d77d2f6a0d88385f46309be727ea589"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/01-idea-ai-training-workflow/02-system-instructions-template.md": {
+    "mtime": 1781405856.9292545,
+    "ast_hash": "65f1c0ac2a8f8569d7a0776ba6b9fa52",
+    "semantic_hash": "65f1c0ac2a8f8569d7a0776ba6b9fa52"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/03-apply/00-custom-gpt/01-idea-ai-training-workflow/03-test-and-fine-tune.md": {
+    "mtime": 1781405870.198745,
+    "ast_hash": "c7c6902719208f68fb3d85c360449660",
+    "semantic_hash": "c7c6902719208f68fb3d85c360449660"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/00-introduction/03-who-this-is-for-and-the-trust-gap.md": {
+    "mtime": 1781406633.606525,
+    "ast_hash": "f509542ba14a74527cc1216dd1ffc2a2",
+    "semantic_hash": "f509542ba14a74527cc1216dd1ffc2a2"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/00-introduction/02-authentically-human-branding.md": {
+    "mtime": 1781404025.5143194,
+    "ast_hash": "4c95a1ab631f7043b37702a2ca68c955",
+    "semantic_hash": "4c95a1ab631f7043b37702a2ca68c955"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/00-introduction/00-core-thesis/01-buying-is-emotional-95-percent-subconscious.md": {
+    "mtime": 1781403983.26559,
+    "ast_hash": "fe2a15f385505ab48c2c0bc63dcc0988",
+    "semantic_hash": "fe2a15f385505ab48c2c0bc63dcc0988"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/00-introduction/00-core-thesis/02-capture-hearts-and-minds-in-that-order.md": {
+    "mtime": 1781403991.0498497,
+    "ast_hash": "85a1f443b706c5e5ed148cead3950795",
+    "semantic_hash": "85a1f443b706c5e5ed148cead3950795"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/00-introduction/00-core-thesis/00-what-captures-the-heart.md": {
+    "mtime": 1781403975.7636423,
+    "ast_hash": "1ac1fe438d88c1ecd1545b2e07f2b4d2",
+    "semantic_hash": "1ac1fe438d88c1ecd1545b2e07f2b4d2"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/00-introduction/01-trust-foundations/02-hesitation-the-silent-killer.md": {
+    "mtime": 1781404017.5099106,
+    "ast_hash": "b0b6e55c87db6bc14830698bcc53efc1",
+    "semantic_hash": "b0b6e55c87db6bc14830698bcc53efc1"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/00-introduction/01-trust-foundations/01-the-four-customer-questions.md": {
+    "mtime": 1781404009.520535,
+    "ast_hash": "81713533eba674eb4147c5efe5c2409d",
+    "semantic_hash": "81713533eba674eb4147c5efe5c2409d"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/00-introduction/01-trust-foundations/00-trust-is-the-deciding-factor.md": {
+    "mtime": 1781403998.7755582,
+    "ast_hash": "d93f574864fd2dfe66daa824cecc5071",
+    "semantic_hash": "d93f574864fd2dfe66daa824cecc5071"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/01-the-science-of-emotional-buying/02-brands-sell-feelings-not-features.md": {
+    "mtime": 1781405888.6872735,
+    "ast_hash": "24cd8005016959c847c5e6a9b8743712",
+    "semantic_hash": "24cd8005016959c847c5e6a9b8743712"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/01-the-science-of-emotional-buying/04-emotional-branding-examples.md": {
+    "mtime": 1781405917.7124434,
+    "ast_hash": "615853f0e9529a4d3ae69815dfdf57fe",
+    "semantic_hash": "615853f0e9529a4d3ae69815dfdf57fe"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/01-the-science-of-emotional-buying/00-decisions-are-subconscious.md": {
+    "mtime": 1781405856.1343358,
+    "ast_hash": "128be04bda7aa25d54cac01b365896f9",
+    "semantic_hash": "128be04bda7aa25d54cac01b365896f9"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/01-the-science-of-emotional-buying/03-emotion-drives-loyalty.md": {
+    "mtime": 1781405901.8274407,
+    "ast_hash": "7c2c8bd1d8f7a5c149554ec4f6c68891",
+    "semantic_hash": "7c2c8bd1d8f7a5c149554ec4f6c68891"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/01-the-science-of-emotional-buying/01-buying-outcomes-not-products.md": {
+    "mtime": 1781405871.5507016,
+    "ast_hash": "6129309874ee2c902ee2f35129892a40",
+    "semantic_hash": "6129309874ee2c902ee2f35129892a40"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/00-overview-and-why-trust-wins/01-the-idea-quadrant-grid.md": {
+    "mtime": 1781405794.508434,
+    "ast_hash": "f3966e151dff2aa6788e6787751be41e",
+    "semantic_hash": "f3966e151dff2aa6788e6787751be41e"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/00-overview-and-why-trust-wins/04-trust-the-ultimate-competitive-advantage.md": {
+    "mtime": 1781405841.674244,
+    "ast_hash": "00a5c736d907cfb0d1b1dceb322e54f3",
+    "semantic_hash": "00a5c736d907cfb0d1b1dceb322e54f3"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/00-overview-and-why-trust-wins/00-idea-framework-overview.md": {
+    "mtime": 1781405780.9418514,
+    "ast_hash": "428ff068219d82851add44eead8fcfba",
+    "semantic_hash": "428ff068219d82851add44eead8fcfba"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/00-overview-and-why-trust-wins/02-the-four-principles.md": {
+    "mtime": 1781405809.6164505,
+    "ast_hash": "555a8910f53bd36ff8e7d4ff2b7cdd81",
+    "semantic_hash": "555a8910f53bd36ff8e7d4ff2b7cdd81"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/00-overview-and-why-trust-wins/03-why-competing-on-price-and-ai-loses.md": {
+    "mtime": 1781405823.761048,
+    "ast_hash": "448746bf998134a6569a65473899add7",
+    "semantic_hash": "448746bf998134a6569a65473899add7"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/00-insight/00-insight-pillar.md": {
+    "mtime": 1781405993.2748516,
+    "ast_hash": "dea86767c6fc0026c0e4d1dd47c06e92",
+    "semantic_hash": "dea86767c6fc0026c0e4d1dd47c06e92"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/00-insight/02-step2-behavioral-and-emotional-data.md": {
+    "mtime": 1781406017.3515117,
+    "ast_hash": "ea53b8ca53417a23afc45cb01d3591da",
+    "semantic_hash": "ea53b8ca53417a23afc45cb01d3591da"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/00-insight/04-brands-that-anticipated-needs.md": {
+    "mtime": 1781406047.927241,
+    "ast_hash": "3df4100799f22189361c0241da8cdd69",
+    "semantic_hash": "3df4100799f22189361c0241da8cdd69"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/00-insight/03-step3-anticipate-needs.md": {
+    "mtime": 1781406026.7847223,
+    "ast_hash": "8c29dbe2e114ad8069ecfb954227a734",
+    "semantic_hash": "8c29dbe2e114ad8069ecfb954227a734"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/00-insight/01-step1-understand-your-avatar.md": {
+    "mtime": 1781406006.0786257,
+    "ast_hash": "023903ea77ee4da6c159fe2bca307a26",
+    "semantic_hash": "023903ea77ee4da6c159fe2bca307a26"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/03-authenticity/00-authenticity-pillar.md": {
+    "mtime": 1781406152.0512357,
+    "ast_hash": "14986a15aae82a5054742d1ce2985aeb",
+    "semantic_hash": "14986a15aae82a5054742d1ce2985aeb"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/03-authenticity/01-how-to-be-authentic.md": {
+    "mtime": 1781406166.5355947,
+    "ast_hash": "c629a49c9193aec6173c523df48b098e",
+    "semantic_hash": "c629a49c9193aec6173c523df48b098e"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/01-distinctiveness/00-distinctiveness-pillar.md": {
+    "mtime": 1781406061.5710957,
+    "ast_hash": "92e6411c0171b14d3ca8d1a606d5d8c9",
+    "semantic_hash": "92e6411c0171b14d3ca8d1a606d5d8c9"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/01-distinctiveness/04-applying-distinctiveness.md": {
+    "mtime": 1781406112.6568837,
+    "ast_hash": "3d4033c7d88bccca4cd25673d16c01ec",
+    "semantic_hash": "3d4033c7d88bccca4cd25673d16c01ec"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/01-distinctiveness/02-distinctiveness-memorable.md": {
+    "mtime": 1781406086.5290265,
+    "ast_hash": "a1c701068062ef6ca6e8441e1f28d51e",
+    "semantic_hash": "a1c701068062ef6ca6e8441e1f28d51e"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/01-distinctiveness/03-salience-and-dbas.md": {
+    "mtime": 1781406100.0793774,
+    "ast_hash": "c0646f657be1be98f99417aa555fd8f9",
+    "semantic_hash": "c0646f657be1be98f99417aa555fd8f9"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/01-distinctiveness/01-difference.md": {
+    "mtime": 1781406072.99731,
+    "ast_hash": "b00dc2204267e38969c0656dd7dd3741",
+    "semantic_hash": "b00dc2204267e38969c0656dd7dd3741"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/02-empathy/00-empathy-pillar.md": {
+    "mtime": 1781406126.700384,
+    "ast_hash": "2d4ce957ff6676d0e45c5eea007511dc",
+    "semantic_hash": "2d4ce957ff6676d0e45c5eea007511dc"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/03-the-four-pillars/02-empathy/01-how-to-apply-empathy.md": {
+    "mtime": 1781406140.5059462,
+    "ast_hash": "e4546018edf7a6e0062b371a22f43048",
+    "semantic_hash": "e4546018edf7a6e0062b371a22f43048"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/02-emotional-triggers/00-the-emotional-triggers-table.md": {
+    "mtime": 1781405941.4287164,
+    "ast_hash": "8a73253771bf749f7daf2dde8f33ebf5",
+    "semantic_hash": "8a73253771bf749f7daf2dde8f33ebf5"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/02-emotional-triggers/02-balancing-logic-and-emotion.md": {
+    "mtime": 1781405977.324963,
+    "ast_hash": "3b1a034a9dd2298e332f55d69f8e2cfb",
+    "semantic_hash": "3b1a034a9dd2298e332f55d69f8e2cfb"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/02-idea-framework/02-emotional-triggers/01-five-triggers-in-brand-messaging.md": {
+    "mtime": 1781405961.3552845,
+    "ast_hash": "0739cf2987e617f31e9c5895e134e1d5",
+    "semantic_hash": "0739cf2987e617f31e9c5895e134e1d5"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/00-mistrust-is-the-default-state.md": {
+    "mtime": 1781404767.5320601,
+    "ast_hash": "9cc3ff8fef2d5f528c7b3bb7ae14fa91",
+    "semantic_hash": "9cc3ff8fef2d5f528c7b3bb7ae14fa91"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/01-the-borrowed-trust-trap/02-influencer-marketing-vs-ugc.md": {
+    "mtime": 1781404798.083422,
+    "ast_hash": "85278f63f81e8f9668a41eff7070ca5f",
+    "semantic_hash": "85278f63f81e8f9668a41eff7070ca5f"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/01-the-borrowed-trust-trap/03-the-tiktok-dilemma.md": {
+    "mtime": 1781404813.774542,
+    "ast_hash": "eed84a09e551831a6ef6cbbfda9d98ed",
+    "semantic_hash": "eed84a09e551831a6ef6cbbfda9d98ed"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/01-the-borrowed-trust-trap/04-four-ways-to-own-your-trust.md": {
+    "mtime": 1781404823.0762923,
+    "ast_hash": "5e0d40dcfa3aabc242120232b7b464f0",
+    "semantic_hash": "5e0d40dcfa3aabc242120232b7b464f0"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/01-the-borrowed-trust-trap/01-why-borrowed-trust-is-risky.md": {
+    "mtime": 1781404785.0504107,
+    "ast_hash": "dbced34b624cd7daa002056263d615b2",
+    "semantic_hash": "dbced34b624cd7daa002056263d615b2"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/01-the-borrowed-trust-trap/00-the-rise-of-borrowed-trust.md": {
+    "mtime": 1781404776.1075315,
+    "ast_hash": "5b08f9f93dc3b8b8fa49d4f206cc219c",
+    "semantic_hash": "5b08f9f93dc3b8b8fa49d4f206cc219c"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/03-amazon-in-the-age-of-ai/01-how-sellers-must-adapt.md": {
+    "mtime": 1781404866.0408795,
+    "ast_hash": "2c92d12045129b629e0ea506dbfb8d6a",
+    "semantic_hash": "2c92d12045129b629e0ea506dbfb8d6a"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/03-amazon-in-the-age-of-ai/02-optimize-for-ai-not-keywords.md": {
+    "mtime": 1781404874.748856,
+    "ast_hash": "9fe8e7b52d0e1f466844405d954dc1f0",
+    "semantic_hash": "9fe8e7b52d0e1f466844405d954dc1f0"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/03-amazon-in-the-age-of-ai/00-rufus-and-cosmo.md": {
+    "mtime": 1781404855.9704478,
+    "ast_hash": "c53f13cac71ef83025fab4a9e9a7a284",
+    "semantic_hash": "c53f13cac71ef83025fab4a9e9a7a284"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/02-the-amazon-landscape/00-amazon-uneven-playing-field.md": {
+    "mtime": 1781404833.476136,
+    "ast_hash": "ef733fab565bf72f91013aacff08685d",
+    "semantic_hash": "ef733fab565bf72f91013aacff08685d"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/00-foundations/01-ecommerce-landscape/02-the-amazon-landscape/01-amazon-compliance-and-safety-tools.md": {
+    "mtime": 1781404842.0847008,
+    "ast_hash": "956d20d9cebe87c902621b1422cadf5b",
+    "semantic_hash": "956d20d9cebe87c902621b1422cadf5b"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/02-further-reading.md": {
+    "mtime": 1781405961.94436,
+    "ast_hash": "2b105e5df2a400854a05350d0fe6e2ee",
+    "semantic_hash": "2b105e5df2a400854a05350d0fe6e2ee"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/00-research-guide/03-social-listening-and-ugc.md": {
+    "mtime": 1781405886.5598795,
+    "ast_hash": "1af2eb294acada74dbb8c81ba4f26392",
+    "semantic_hash": "1af2eb294acada74dbb8c81ba4f26392"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/00-research-guide/00-research-detective-mindset.md": {
+    "mtime": 1781405858.6846068,
+    "ast_hash": "7c71bfd5365d6af6745cbb42aa5840c7",
+    "semantic_hash": "7c71bfd5365d6af6745cbb42aa5840c7"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/00-research-guide/04-ai-research-tools-and-action.md": {
+    "mtime": 1781405895.0527449,
+    "ast_hash": "87d0dcc7fe48e33352a9b00e102c0f55",
+    "semantic_hash": "87d0dcc7fe48e33352a9b00e102c0f55"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/00-research-guide/02-amazon-specific-research.md": {
+    "mtime": 1781405876.732159,
+    "ast_hash": "c7a89d8d7683ee11154eca54fa5c3504",
+    "semantic_hash": "c7a89d8d7683ee11154eca54fa5c3504"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/00-research-guide/01-customer-reviews-and-feedback.md": {
+    "mtime": 1781405866.2269022,
+    "ast_hash": "514bd11763f97e1f98054cc6820a7f61",
+    "semantic_hash": "514bd11763f97e1f98054cc6820a7f61"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/01-behavioral-science/03-lindstrom-emotion-over-logic.md": {
+    "mtime": 1781405933.9994767,
+    "ast_hash": "135eaf9c4f9aefc33b8183485a36a601",
+    "semantic_hash": "135eaf9c4f9aefc33b8183485a36a601"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/01-behavioral-science/00-zaltman-95-percent.md": {
+    "mtime": 1781405907.7741175,
+    "ast_hash": "9ec9b00310fc32d3d6664621e44533e8",
+    "semantic_hash": "9ec9b00310fc32d3d6664621e44533e8"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/01-behavioral-science/02-cialdini-influence-principles.md": {
+    "mtime": 1781405923.356167,
+    "ast_hash": "c9a72a67ffde64a4cb9d9ef191e336ab",
+    "semantic_hash": "c9a72a67ffde64a4cb9d9ef191e336ab"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/01-behavioral-science/04-foundational-thinkers.md": {
+    "mtime": 1781405943.96482,
+    "ast_hash": "4c07750bec143c4585a10693f5cd2c81",
+    "semantic_hash": "4c07750bec143c4585a10693f5cd2c81"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/04-science-and-research/01-behavioral-science/01-kahneman-system-1-and-2.md": {
+    "mtime": 1781405915.7537086,
+    "ast_hash": "204a9a36fb0c6febaf7dacd78ed6676c",
+    "semantic_hash": "204a9a36fb0c6febaf7dacd78ed6676c"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/00-what-is-avatar-2.0.md": {
+    "mtime": 1781405298.6861918,
+    "ast_hash": "0b08949361f9917e98202dc3206109f2",
+    "semantic_hash": "0b08949361f9917e98202dc3206109f2"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/03-the-neuroscience-of-shopping/03-subconscious-search-for-comfort.md": {
+    "mtime": 1781405420.2587414,
+    "ast_hash": "e038c1e11a5837beca7c7f2e23faec3a",
+    "semantic_hash": "e038c1e11a5837beca7c7f2e23faec3a"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/03-the-neuroscience-of-shopping/01-the-four-neurochemicals.md": {
+    "mtime": 1781405401.07491,
+    "ast_hash": "4b552e33161f7c7565a1316eef8966ba",
+    "semantic_hash": "4b552e33161f7c7565a1316eef8966ba"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/03-the-neuroscience-of-shopping/02-system-1-and-system-2-biochemistry.md": {
+    "mtime": 1781405407.7616866,
+    "ast_hash": "7196843758917a59a3b09651c1b48100",
+    "semantic_hash": "7196843758917a59a3b09651c1b48100"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/03-the-neuroscience-of-shopping/00-the-shoppers-high.md": {
+    "mtime": 1781405386.1180913,
+    "ast_hash": "c07f1b399aefb349862965959345fded",
+    "semantic_hash": "c07f1b399aefb349862965959345fded"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/01-the-five-fields/04-relevant-demographics.md": {
+    "mtime": 1781405343.9585783,
+    "ast_hash": "dd78c3c4755a6a720b2e4cb70f029754",
+    "semantic_hash": "dd78c3c4755a6a720b2e4cb70f029754"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/01-the-five-fields/02-emotional-triggers-field.md": {
+    "mtime": 1781405324.5498762,
+    "ast_hash": "ed93a27778f1f02117cc19a4a4c405bc",
+    "semantic_hash": "ed93a27778f1f02117cc19a4a4c405bc"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/01-the-five-fields/01-buyer-motivation.md": {
+    "mtime": 1781405316.3921854,
+    "ast_hash": "f5c2f9ffe24d860d5aa00901d257d44c",
+    "semantic_hash": "f5c2f9ffe24d860d5aa00901d257d44c"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/01-the-five-fields/00-buyer-intent.md": {
+    "mtime": 1781405306.233595,
+    "ast_hash": "46b8849b00b5f52b2f4e610c94ebeacc",
+    "semantic_hash": "46b8849b00b5f52b2f4e610c94ebeacc"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/01-the-five-fields/03-shopper-types.md": {
+    "mtime": 1781405337.354275,
+    "ast_hash": "e6aee01798ca7d6a5b6dc666e501b1e0",
+    "semantic_hash": "e6aee01798ca7d6a5b6dc666e501b1e0"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/02-the-seven-emotional-triggers/00-the-seven-triggers.md": {
+    "mtime": 1781405362.015786,
+    "ast_hash": "ef16bf318fc64e08d6c76cb555e8923e",
+    "semantic_hash": "ef16bf318fc64e08d6c76cb555e8923e"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/02-the-seven-emotional-triggers/01-triggers-work-together.md": {
+    "mtime": 1781405369.2343774,
+    "ast_hash": "8e8bebc2c1c82fe38bb903b1ba14f7f6",
+    "semantic_hash": "8e8bebc2c1c82fe38bb903b1ba14f7f6"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/02-the-seven-emotional-triggers/02-evolutionary-roots.md": {
+    "mtime": 1781405380.0188038,
+    "ast_hash": "6bec4df6948f6be6062e50904972b193",
+    "semantic_hash": "6bec4df6948f6be6062e50904972b193"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/04-avatar-and-ai/01-avatar-idea-and-ai-integration.md": {
+    "mtime": 1781405442.6360846,
+    "ast_hash": "6160c6884c402d1801ccfdc921d744ca",
+    "semantic_hash": "6160c6884c402d1801ccfdc921d744ca"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/00-avatar-2.0/04-avatar-and-ai/00-avatar-and-authentically-human-branding.md": {
+    "mtime": 1781405427.1826878,
+    "ast_hash": "79ed251c1337d279ec05f8265f59dc0e",
+    "semantic_hash": "79ed251c1337d279ec05f8265f59dc0e"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/04-positioning-in-the-journey/03-guiding-the-journey-conclusion.md": {
+    "mtime": 1781406016.1337564,
+    "ast_hash": "8e22637712ebf61e61057d45cb311365",
+    "semantic_hash": "8e22637712ebf61e61057d45cb311365"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/04-positioning-in-the-journey/01-framing-the-alternatives-and-competitive-set.md": {
+    "mtime": 1781406003.330809,
+    "ast_hash": "ed52a4ecc03baa3a5a964bdf1f927ba3",
+    "semantic_hash": "ed52a4ecc03baa3a5a964bdf1f927ba3"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/04-positioning-in-the-journey/00-customizing-the-sales-process.md": {
+    "mtime": 1781405994.401962,
+    "ast_hash": "57977a0972ad13166b3908ff4ed3e552",
+    "semantic_hash": "57977a0972ad13166b3908ff4ed3e552"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/04-positioning-in-the-journey/02-addressing-trade-offs.md": {
+    "mtime": 1781406010.3660684,
+    "ast_hash": "bb92d21bf038f54537fc9ad6e9bfa211",
+    "semantic_hash": "bb92d21bf038f54537fc9ad6e9bfa211"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/01-the-five-stages-and-signposts/03-brand-voice-through-the-journey.md": {
+    "mtime": 1781405880.0486412,
+    "ast_hash": "46c1c385739e1a8dcdd1fc0f3e1a35ef",
+    "semantic_hash": "46c1c385739e1a8dcdd1fc0f3e1a35ef"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/01-the-five-stages-and-signposts/01-cognitive-biases-and-heuristics.md": {
+    "mtime": 1781405855.308792,
+    "ast_hash": "b38e737ded23ad706975d6b89b11cb89",
+    "semantic_hash": "b38e737ded23ad706975d6b89b11cb89"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/01-the-five-stages-and-signposts/02-the-signposts-per-stage.md": {
+    "mtime": 1781405869.9599037,
+    "ast_hash": "705d9156b643d04b145d9640e277d0dd",
+    "semantic_hash": "705d9156b643d04b145d9640e277d0dd"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/01-the-five-stages-and-signposts/00-the-five-stage-funnel.md": {
+    "mtime": 1781405844.4291167,
+    "ast_hash": "ac925f96be0c67f81e8a274f342e77da",
+    "semantic_hash": "ac925f96be0c67f81e8a274f342e77da"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/03-timing-and-friction/02-the-internal-debate-of-change.md": {
+    "mtime": 1781405950.3050244,
+    "ast_hash": "97736b6546adc3479efbf989525a0eda",
+    "semantic_hash": "97736b6546adc3479efbf989525a0eda"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/03-timing-and-friction/03-addressing-friction-points.md": {
+    "mtime": 1781405969.3588052,
+    "ast_hash": "57bf8bea1b903fd0cb8440e7f56223c3",
+    "semantic_hash": "57bf8bea1b903fd0cb8440e7f56223c3"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/03-timing-and-friction/04-anticipating-barriers.md": {
+    "mtime": 1781405981.3286214,
+    "ast_hash": "037ca6cd3200a6b1190b56ad0cd4f280",
+    "semantic_hash": "037ca6cd3200a6b1190b56ad0cd4f280"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/03-timing-and-friction/00-context-and-timing.md": {
+    "mtime": 1781405929.6125052,
+    "ast_hash": "48ca1e7e1119123e2dab38d28a648ccb",
+    "semantic_hash": "48ca1e7e1119123e2dab38d28a648ccb"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/03-timing-and-friction/01-timing-related-messages.md": {
+    "mtime": 1781405941.4066863,
+    "ast_hash": "dbbb5f10999f658bc2919fbbe81f39a4",
+    "semantic_hash": "dbbb5f10999f658bc2919fbbe81f39a4"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/02-removing-anxiety-and-risk/01-risk-removal-strategies.md": {
+    "mtime": 1781405910.0509663,
+    "ast_hash": "36cbad7f1e19abfdbbb7f83fa7c668e7",
+    "semantic_hash": "36cbad7f1e19abfdbbb7f83fa7c668e7"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/02-removing-anxiety-and-risk/00-overcoming-anxiety-habit-of-the-present.md": {
+    "mtime": 1781405895.4276469,
+    "ast_hash": "3def427332c5cdae1e24f7bbf4d58e40",
+    "semantic_hash": "3def427332c5cdae1e24f7bbf4d58e40"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/02-removing-anxiety-and-risk/02-risk-mitigation.md": {
+    "mtime": 1781405915.8922873,
+    "ast_hash": "14d8b4dc4729367ed77dc8a84965e0b6",
+    "semantic_hash": "14d8b4dc4729367ed77dc8a84965e0b6"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/00-finding-value-in-pain/02-emotional-value-over-features.md": {
+    "mtime": 1781405832.2604754,
+    "ast_hash": "17739efa37257dec4f3d713141834299",
+    "semantic_hash": "17739efa37257dec4f3d713141834299"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/00-finding-value-in-pain/01-look-for-problems-not-products.md": {
+    "mtime": 1781405825.621178,
+    "ast_hash": "22cd13acdfb9ebe2763a67e31eee4558",
+    "semantic_hash": "22cd13acdfb9ebe2763a67e31eee4558"
+  },
+  "/Users/matthewkerns/workspace/ecommerce/ecommerce-tools/brand-systems/idea-brand-coach/.claude/worktrees/skill-architecture/skills/idea/framework/01-customer/01-customer-journey/00-finding-value-in-pain/00-pain-points-are-opportunities.md": {
+    "mtime": 1781405818.1242604,
+    "ast_hash": "c62e82b4a71414decfbfbaaa397c3548",
+    "semantic_hash": "c62e82b4a71414decfbfbaaa397c3548"
+  }
+}

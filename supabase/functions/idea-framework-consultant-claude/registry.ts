@@ -123,6 +123,22 @@ export function isContinueTool(name: string): boolean {
   return BY_NAME.get(name)?.kind === 'continue';
 }
 
+/**
+ * Effective gate for the MCP tool loop. All three must hold:
+ *  - `envEnabled`      the CONSULTANT_TOOL_LOOP_ENABLED env kill-switch (global off).
+ *  - `requestToolLoop` the per-user PostHog flag, forwarded by the SPA as `tool_loop`.
+ *  - `authenticated`   the caller has an identity (MCP tools are JWT-scoped).
+ * Env OFF disables for everyone regardless of the flag; the flag drives per-user
+ * rollout only while the env switch is ON.
+ */
+export function computeToolLoopActive(args: {
+  envEnabled: boolean;
+  requestToolLoop: boolean;
+  authenticated: boolean;
+}): boolean {
+  return args.envEnabled && args.requestToolLoop && args.authenticated;
+}
+
 export type ToolBucket = 'extraction' | 'memory' | 'mcp' | 'unknown';
 
 /**

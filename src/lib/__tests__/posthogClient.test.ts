@@ -6,6 +6,7 @@ const mockPosthog = vi.hoisted(() => ({
   identify: vi.fn(),
   reset: vi.fn(),
   get_distinct_id: vi.fn(),
+  isFeatureEnabled: vi.fn(),
 }));
 
 vi.mock('posthog-js', () => ({ default: mockPosthog }));
@@ -158,6 +159,42 @@ describe('posthogClient', () => {
       client.initPostHog();
 
       expect(client.getPostHogDistinctId()).toMatch(/^fallback:/);
+    });
+  });
+
+  describe('isCoachToolLoopEnabled', () => {
+    it('returns false when PostHog is not initialised', async () => {
+      vi.stubEnv('VITE_POSTHOG_KEY', '');
+      const client = await importFreshClient();
+      client.initPostHog();
+      expect(client.isCoachToolLoopEnabled()).toBe(false);
+    });
+
+    it('returns true when the coach-tool-loop flag is enabled for the user', async () => {
+      vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
+      const client = await importFreshClient();
+      client.initPostHog();
+      mockPosthog.isFeatureEnabled.mockReturnValue(true);
+      expect(client.isCoachToolLoopEnabled()).toBe(true);
+      expect(mockPosthog.isFeatureEnabled).toHaveBeenCalledWith(client.COACH_TOOL_LOOP_FLAG);
+    });
+
+    it('returns false when the flag is disabled', async () => {
+      vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
+      const client = await importFreshClient();
+      client.initPostHog();
+      mockPosthog.isFeatureEnabled.mockReturnValue(false);
+      expect(client.isCoachToolLoopEnabled()).toBe(false);
+    });
+
+    it('returns false (never throws) when evaluation errors', async () => {
+      vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
+      const client = await importFreshClient();
+      client.initPostHog();
+      mockPosthog.isFeatureEnabled.mockImplementation(() => {
+        throw new Error('boom');
+      });
+      expect(client.isCoachToolLoopEnabled()).toBe(false);
     });
   });
 });

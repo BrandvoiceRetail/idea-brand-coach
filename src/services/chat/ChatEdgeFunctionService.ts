@@ -43,6 +43,8 @@ export interface ConsultantRequestParams {
   hasUploadedDocuments: boolean;
   chatHistory?: Array<{ role: string; content: string }>;
   stream?: boolean;
+  /** PostHog-gated MCP tool loop (coach-mcp-tool-loop flag). Edge fn AND-s with its env kill-switch. */
+  toolLoop?: boolean;
 }
 
 export class ChatEdgeFunctionService {
@@ -108,6 +110,9 @@ export class ChatEdgeFunctionService {
     if (params.chatHistory) {
       body.chat_history = params.chatHistory;
     }
+
+    // Always a definite boolean so the edge fn reads it deterministically.
+    body.tool_loop = params.toolLoop === true;
 
     return body;
   }

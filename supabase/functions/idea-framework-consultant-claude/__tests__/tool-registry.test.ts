@@ -13,7 +13,7 @@ vi.mock('../../_shared/memory.ts', async (importOriginal) => {
 
 import { runAgenticLoop, runNonStreamingLoop, LoopConfig } from '../loop';
 import { handleMemoryCommand } from '../../_shared/memory';
-import { getToolEntry, isContinueTool } from '../registry';
+import { getToolEntry, isContinueTool, computeToolLoopActive } from '../registry';
 import { resolveCountry, makeTtftRecorder } from '../telemetry';
 
 const encoder = new TextEncoder();
@@ -247,4 +247,21 @@ describe('telemetry', () => {
     rec.mark();
     expect(rec.value()).toBe(first);
   });
+});
+
+describe('computeToolLoopActive — MCP tool-loop gate', () => {
+  const cases: Array<[boolean, boolean, boolean, boolean]> = [
+    // envEnabled, requestToolLoop, authenticated, expected
+    [true, true, true, true],    // all three → on
+    [true, false, true, false],  // PostHog flag off → off (per-user rollout)
+    [true, true, false, false],  // unauthenticated → off
+    [false, true, true, false],  // env kill-switch off → off for everyone
+    [false, false, false, false],
+  ];
+  it.each(cases)(
+    'env=%s flag=%s auth=%s → %s',
+    (envEnabled, requestToolLoop, authenticated, expected) => {
+      expect(computeToolLoopActive({ envEnabled, requestToolLoop, authenticated })).toBe(expected);
+    }
+  );
 });

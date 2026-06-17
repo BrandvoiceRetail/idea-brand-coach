@@ -104,6 +104,22 @@ prod/edge-fn deploy · MCP-hosting/infra provisioning · branch-strategy merge t
   - [M1] committed the cited ADR `docs/v2/architecture/adr/ADR-UNIFIED-COACH-CAPABILITY-LAYER.md`.
   - JWT seam, rollback posture, registry-as-extension-point all validated CLEAN by both reviewers.
 
+## PostHog feature-flag gate (2026-06-17)
+The MCP tool loop is now gated by a PostHog feature flag, **client-evaluated**, AND-ed with the env
+kill-switch. Effective gate = env `CONSULTANT_TOOL_LOOP_ENABLED` (global off) AND PostHog flag
+`coach-mcp-tool-loop` (per-user rollout) AND authenticated.
+- SPA: `isCoachToolLoopEnabled()` in `src/lib/posthogClient.ts` (posthog.isFeatureEnabled, safe→false)
+  → `SupabaseChatService.prepareMessageContext` passes `toolLoop` → `ChatEdgeFunctionService.buildRequestBody`
+  sets `tool_loop` (definite boolean) in the consultant request body.
+- Edge fn `index.ts`: parses `tool_loop`; `computeToolLoopActive({envEnabled,requestToolLoop,authenticated})`
+  (pure helper in `registry.ts`) drives the advertise gate + loopConfig + telemetry. Env const renamed
+  `TOOL_LOOP_ENV` (was TOOL_LOOP_ENABLED).
+- Tests: `tool-registry.test.ts` (computeToolLoopActive 5 cases), `chat/__tests__/ChatEdgeFunctionService.test.ts`
+  (tool_loop in body), `lib/__tests__/posthogClient.test.ts` (isCoachToolLoopEnabled 4 cases). tsc clean;
+  281/282 on edge-fn+services+lib (1 fail = pre-existing unrelated posthog "default host" env assertion).
+- **Still needed before live:** CREATE the flag `coach-mcp-tool-loop` in PostHog (project 195536) targeting
+  specific testers (e.g. QA distinct_id `1e8d7602-c19d-4d5d-9dea-1f7ecf8d3d11`), then merge → deploy → set env true.
+
 ## Follow-ups (deferred — not blockers)
 - Adopt `safeLog`/redaction across the consultant edge fn (parity with the MCP host; currently raw console.log).
 - Extract a shared MCP `textFrom` (currently mirrored in ivos/client.ts + mcpClient.ts) once a 3rd copy appears — needs a Deno-importable `_shared/` location (cross-runtime).

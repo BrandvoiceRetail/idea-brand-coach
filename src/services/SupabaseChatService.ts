@@ -16,6 +16,7 @@ import { ChatTitleService } from './chat/ChatTitleService';
 import { ChatEdgeFunctionService, CHAT_CONSTANTS } from './chat/ChatEdgeFunctionService';
 import { parseSSEStream } from './chat/ChatStreamParser';
 import { forceSyncUserData } from '@/lib/knowledge-base/sync-service-instance';
+import { isCoachToolLoopEnabled } from '@/lib/posthogClient';
 import { supabase } from '@/integrations/supabase/client';
 import {
   ChatMessage,
@@ -372,6 +373,8 @@ export class SupabaseChatService implements IChatService {
       hasUploadedDocuments,
       chatHistory,
       stream,
+      // Per-user MCP tool-loop rollout (PostHog flag); edge fn AND-s with its env kill-switch.
+      toolLoop: isCoachToolLoopEnabled(),
     });
 
     return { userId, chatbotType, sessionId, authToken: authSession.access_token, body };
