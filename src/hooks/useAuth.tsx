@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // identify() is idempotent, so calling on every session-bearing event
         // (INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED) is safe.
         if (session?.user) {
-          identifyUser(session.user.id);
+          identifyUser(session.user.id, session.user.email);
           // auth_completed fires only at a true sign-in, once per page load.
           if (event === 'SIGNED_IN' && authCompletedForRef.current !== session.user.id) {
             authCompletedForRef.current = session.user.id;

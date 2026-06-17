@@ -106,10 +106,13 @@ export function captureAlphaEvent(name: AlphaEventName, properties?: AlphaEventP
  * user, so pre-auth diagnostic events and post-auth coach events read as one
  * person. Idempotent.
  */
-export function identifyUser(userId: string): void {
+export function identifyUser(userId: string, email?: string): void {
   if (!isInitialized) return;
   try {
-    posthog.identify(userId);
+    // email is set as a person property so PostHog feature flags can target
+    // specific testers by email (e.g. the coach-mcp-tool-loop rollout gate)
+    // before they've generated any events.
+    posthog.identify(userId, email ? { email } : undefined);
   } catch (err) {
     console.warn('[posthogClient] identify failed:', err);
   }
