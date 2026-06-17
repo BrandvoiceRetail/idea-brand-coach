@@ -37,6 +37,11 @@ export type AlphaEventName =
   | 'feedback_modal_opened'
   | 'feedback_submitted'
   | 'thank_you_viewed'
+  | 'funnel_asset_uploaded'
+  | 'funnel_asset_audited'
+  | 'funnel_fix_started'
+  | 'funnel_test_recorded'
+  | 'funnel_coverage_viewed'
   | 'llm_call_failed';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */

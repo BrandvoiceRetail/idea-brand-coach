@@ -48,6 +48,7 @@ import { TestOfflineSync } from "./pages/TestOfflineSync";
 import { StartHere } from "./pages/StartHere";
 import PricingPaywall from "./pages/PricingPaywall";
 import { BrandCoachV2 } from "./pages/v2/BrandCoachV2";
+import { FunnelTracker } from "./components/v2/funnel/FunnelTracker";
 import FeatureGate from "@/components/FeatureGate";
 import { VersionGate } from "@/components/VersionGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
@@ -129,6 +130,8 @@ const App = () => {
                     <BrandCoachV2 />
                   </FeatureGate>
                 } />
+
+                <Route path="/v2/funnel" element={<FunnelTracker />} />
 
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
