@@ -4,6 +4,22 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createServer } from '../server.js';
 import type { HostConfig } from '../config.js';
+import { runWithIdentity } from '../context/identity.js';
+import { __setUserSupabaseFactory } from '../supabaseUser.js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+/** Minimal chainable Supabase stub for the funnel read tools. */
+function stubSupabase(rows: unknown[]): SupabaseClient {
+  const builder: Record<string, unknown> = {};
+  builder.select = () => builder;
+  builder.eq = () => builder;
+  builder.is = () => builder;
+  builder.order = () => builder;
+  builder.limit = () => Promise.resolve({ data: rows, error: null });
+  // resolving the builder itself (no .limit/.single) returns the rows too
+  (builder as { then?: unknown }).then = (res: (v: unknown) => unknown) => res({ data: rows, error: null });
+  return { from: () => builder } as unknown as SupabaseClient;
+}
 
 const cfg: HostConfig = {
   port: 0,
@@ -27,6 +43,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([
+      'audit_asset',
       'build_avatar_stage',
       'design_test',
       'draft_asset',
@@ -40,6 +57,8 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'get_asset_history',
       'get_coach_conversation',
       'get_context_status',
+      'get_funnel_assets',
+      'get_funnel_coverage',
       'health',
       'ingest_evidence',
       'list_assets',
@@ -72,6 +91,32 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
     const sc = res.structuredContent as { available: boolean; assets: unknown[] };
     expect(sc.available).toBe(false);
     expect(sc.assets).toEqual([]);
+  });
+
+  it("get_funnel_assets returns the caller's assets (RLS, mocked client)", async () => {
+    __setUserSupabaseFactory(() => stubSupabase([
+      { id: 'a1', touchpoint_id: 'amazon_main_image', stage: 'awareness', status: 'misaligned', overall_score: 48, audit_result: { grounding: { fields_used: 7 } } },
+    ]));
+    try {
+      const { client } = await connectedClient();
+      const res = await runWithIdentity({ userId: 'u1', token: 't1', authenticated: true }, () =>
+        client.callTool({ name: 'get_funnel_assets', arguments: { avatar_id: 'av1' } }));
+      const sc = res.structuredContent as { ok: boolean; assets: Array<{ status: string; fields_used: number | null }> };
+      expect(sc.ok).toBe(true);
+      expect(sc.assets).toHaveLength(1);
+      expect(sc.assets[0].status).toBe('misaligned');
+      expect(sc.assets[0].fields_used).toBe(7);
+    } finally {
+      __setUserSupabaseFactory(null);
+    }
+  });
+
+  it('get_funnel_assets denies an anonymous caller (identity gate)', async () => {
+    const { client } = await connectedClient();
+    const res = await client.callTool({ name: 'get_funnel_assets', arguments: { avatar_id: 'av1' } });
+    const sc = res.structuredContent as { ok: boolean; note: string };
+    expect(sc.ok).toBe(false);
+    expect(sc.note).toBe('unauthenticated');
   });
 
   it('advertises non-empty server instructions (SERVER_INSTRUCTIONS guard)', async () => {
