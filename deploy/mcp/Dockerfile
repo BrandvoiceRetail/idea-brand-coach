@@ -13,6 +13,11 @@ WORKDIR /app
 # The single bundled entry point (created by `npm run mcp:bundle`).
 COPY dist-mcp/server.mjs ./server.mjs
 
+# The IDEA skill library — read at runtime by skillLoader (skills/idea/framework/**)
+# to ground tool descriptions. The bundle does NOT inline these markdown files, so
+# they must ship in the image; skillLoader's cwd-walk resolves /app/skills/idea.
+COPY skills/idea ./skills/idea
+
 ENV NODE_ENV=production
 ENV MCP_PORT=8787
 EXPOSE 8787
