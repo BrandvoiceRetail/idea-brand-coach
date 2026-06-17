@@ -100,6 +100,12 @@ const ENTRIES: ToolEntry[] = [
     name,
     kind: 'continue',
     async execute(input, ctx): Promise<ToolExecResult> {
+      // Defense-in-depth: never forward to the MCP host without an identity.
+      // Advertisement is already auth-gated in index.ts; this guards the
+      // dispatch layer too, so the invariant doesn't rely on the gate alone.
+      if (!ctx.jwt) {
+        return { content: `Tool '${name}' requires an authenticated session.`, isError: true };
+      }
       const { text, isError } = await callMcpTool({ name, args: input, jwt: ctx.jwt });
       return { content: text, isError };
     },
@@ -115,4 +121,20 @@ export function getToolEntry(name: string): ToolEntry | undefined {
 /** Names of tools that, when emitted alone, should continue the loop. */
 export function isContinueTool(name: string): boolean {
   return BY_NAME.get(name)?.kind === 'continue';
+}
+
+export type ToolBucket = 'extraction' | 'memory' | 'mcp' | 'unknown';
+
+/**
+ * Single source of truth for which bucket a tool_use falls into. BOTH the
+ * streaming (stream.ts) and non-streaming (loop.ts) categorizers call this so
+ * the three-way branch can't drift. Order matters: extraction (terminal) and
+ * memory are special-cased before the generic MCP 'continue' tools — memory is
+ * itself a continue tool, so it must be matched first.
+ */
+export function categorizeToolUse(name: string): ToolBucket {
+  if (name === 'extract_brand_fields') return 'extraction';
+  if (name === 'memory') return 'memory';
+  if (isContinueTool(name)) return 'mcp';
+  return 'unknown';
 }

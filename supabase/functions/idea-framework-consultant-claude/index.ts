@@ -80,12 +80,16 @@ serve(async (req) => {
         { global: { headers: { Authorization: authHeader } } }
       );
 
-      const token = authHeader.replace('Bearer ', '');
+      // Anchored extraction (matches the MCP host's identity.ts). A malformed
+      // header yields no token → treated as unauthenticated.
+      const token = /^Bearer\s+(.+)$/i.exec(authHeader)?.[1] ?? null;
       jwt = token;
-      const { data: { user } } = await supabaseClient.auth.getUser(token);
-      if (user) {
-        userId = user.id;
-        console.log('[Auth] User:', userId);
+      if (token) {
+        const { data: { user } } = await supabaseClient.auth.getUser(token);
+        if (user) {
+          userId = user.id;
+          console.log('[Auth] User:', userId);
+        }
       }
     }
 
@@ -317,9 +321,11 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
+    // Full detail server-side only; the caller gets a generic message (no
+    // information disclosure — error.message can carry internal hosts/paths).
     console.error('[Fatal]', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

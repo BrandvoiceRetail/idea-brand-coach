@@ -16,8 +16,9 @@ grounded in `skills/idea/`. Per `docs/v2/architecture/adr/ADR-UNIFIED-COACH-CAPA
       memory loop.ts) into this skill-architecture worktree (which already has `skills/idea/`).
       Merge `e7a6374`, clean, 0 conflicts. Verified: tsc clean, 30/30 consultant tests pass.
       Prereqs present: skills/idea/ (158) + loop.ts + registry.ts + src/mcp/server.ts.
-- [x] **P2 SKILL LOADER** — load skills/idea/ and ground the MCP coach surface (config.ts
-      SERVER_INSTRUCTIONS / tool handlers) in the relevant skills; test asserts a tool cites its book skill.
+- [x] **P2 SKILL LOADER** — load skills/idea/ and ground the MCP coach surface in the relevant skills;
+      test asserts a tool cites its book skill. (Grounding is applied to the 4 TOOL-HANDLER descriptions
+      via groundingPreamble — NOT config.ts SERVER_INSTRUCTIONS, which stays static global posture.)
 - [x] **P3 TOOL LOOP** — VERIFIED (already built in Phase-1, no new code needed). loop.ts does the real
       tool_use->execute->tool_result->continue round-trip, routes through registry.ts behind
       CONSULTANT_TOOL_LOOP_ENABLED, keeps SSE streaming across iterations, answers every tool_use id, has
@@ -76,3 +77,23 @@ prod/edge-fn deploy · MCP-hosting/infra provisioning · branch-strategy merge t
   typecheck:mcp errors on those 2 files. NOT a P2 regression. Fix = install the declared dep into this
   worktree's node_modules (a real `npm install` instead of the main-checkout symlink). This is an
   npm-install/env action → HALT class; flagged for the operator before the full-suite DONE gate can pass.
+  **RESOLVED 2026-06-16:** replaced the node_modules symlink with a real `npm install` in this worktree
+  (declared dep, not a new one); the 5 suites collect again.
+
+- **REVIEW (2026-06-16) — security-auditor + technical-architect, findings APPLIED in one fix commit:**
+  - [HIGH] index.ts 500 handler no longer leaks `error.message` (generic body; detail server-side only).
+  - [MED] index.ts JWT extraction now anchored (`/^Bearer\s+(.+)$/i`), matching the MCP host.
+  - [MED] registry.ts MCP `execute` now hard-guards on `ctx.jwt` (defense-in-depth, not just the ad-gate).
+  - [MED] mcpClient.ts `resolveMcpUrl` allowlists the host (loopback + configured MCP_URL host) over http(s) — SSRF guard on the JWT destination.
+  - [M2] extracted `categorizeToolUse()` in registry.ts; loop.ts + stream.ts both call it (no drift).
+  - [M3] generate_concepts grounding narrowed `02-brand` → `02-brand/02-brand-voice` + `02-brand/00-authentically-human`.
+  - [LOW] stream.ts parse-error logs payload SIZE only (no PII); loop.ts iteration log includes MCP count.
+  - [L6/L7] front-matter key charclass widened to include `-` + documented; cwd-walk depth named MAX_CWD_WALK.
+  - [M1] committed the cited ADR `docs/v2/architecture/adr/ADR-UNIFIED-COACH-CAPABILITY-LAYER.md`.
+  - JWT seam, rollback posture, registry-as-extension-point all validated CLEAN by both reviewers.
+
+## Follow-ups (deferred — not blockers)
+- Adopt `safeLog`/redaction across the consultant edge fn (parity with the MCP host; currently raw console.log).
+- Extract a shared MCP `textFrom` (currently mirrored in ivos/client.ts + mcpClient.ts) once a 3rd copy appears — needs a Deno-importable `_shared/` location (cross-runtime).
+- skillLoader reads full skill files to extract ~5 metadata fields (fine at 158; revisit if the corpus grows).
+- Phase 2 continuation: expand the MCP-backed tool set beyond the 3 read-only tools toward the full 28-tool surface (per ADR); requires the Phase 0 infra HALT (MCP hosting decision) for live prod use.

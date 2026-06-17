@@ -40,11 +40,17 @@ const TOOL_SKILL_PREFIXES: Record<string, string[]> = {
   run_diagnostic_evidence: ['00-foundations/02-idea-framework'],
   // Avatar pipeline → Avatar 2.0 forensic method (Ch3).
   build_avatar_stage: ['01-customer/00-avatar-2.0'],
-  // Concept/asset generation → the brand pillars (Ch4 authentically-human, Ch5 canvas, Ch6 voice).
-  generate_concepts: ['02-brand'],
+  // Concept/asset generation → the concept-driving brand sections specifically
+  // (Ch6 brand voice + Ch4 authentically-human), not the whole 02-brand tree —
+  // a coarse "grounded in 36 skills" citation is too weak to steer the model.
+  generate_concepts: ['02-brand/02-brand-voice', '02-brand/00-authentically-human'],
 };
 
 let cache: IdeaSkill[] | null = null;
+
+/** How many parent dirs to walk from cwd when import.meta resolution fails —
+ *  covers running from repo root or a worktree a few levels deep. */
+const MAX_CWD_WALK = 6;
 
 function findFrameworkDir(): string | null {
   const candidates: string[] = [];
@@ -56,20 +62,26 @@ function findFrameworkDir(): string | null {
     // import.meta unavailable (non-ESM context) — fall through to cwd walk.
   }
   let d = process.cwd();
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < MAX_CWD_WALK; i++) {
     candidates.push(join(d, 'skills/idea/framework'));
     d = dirname(d);
   }
   return candidates.find((c) => existsSync(c)) ?? null;
 }
 
+/**
+ * Parse the skill's front-matter. Contract: scalar `key: value` lines only
+ * (keys are [A-Za-z_-]+) between the leading `---` fences — lists / block
+ * scalars / nested YAML are not supported (the corpus is authored to this shape;
+ * unmatched keys degrade to empty-string fields, never throw).
+ */
 function parseFrontMatter(raw: string): Record<string, string> {
   if (!raw.startsWith('---')) return {};
   const end = raw.indexOf('\n---', 3);
   if (end === -1) return {};
   const fm: Record<string, string> = {};
   for (const line of raw.slice(3, end).split('\n')) {
-    const m = line.match(/^([A-Za-z_]+):\s*(.*)$/);
+    const m = line.match(/^([A-Za-z_-]+):\s*(.*)$/);
     if (m) fm[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
   }
   return fm;

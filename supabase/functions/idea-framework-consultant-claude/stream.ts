@@ -16,7 +16,7 @@
  * needs to replay the turn with tool_results.
  */
 
-import { isContinueTool } from './registry.ts';
+import { categorizeToolUse } from './registry.ts';
 
 const encoder = new TextEncoder();
 
@@ -124,18 +124,21 @@ export async function translateOneStream(
       input,
     });
 
-    if (block.name === 'extract_brand_fields') {
+    // Bucket via the shared categorizer (registry.ts) so streaming +
+    // non-streaming can't drift; each branch still emits its own client event.
+    const bucket = categorizeToolUse(block.name);
+    if (bucket === 'extraction') {
       const fields = Array.isArray(input.fields) ? input.fields : [];
       state.extractedFieldsCount += fields.length;
       console.log(`[Stream] Extracted ${fields.length} fields`);
       emit(controller, { type: 'extracted_fields', fields });
       result.extractionToolUses.push({ id: block.id, name: block.name, input });
-    } else if (block.name === 'memory') {
+    } else if (bucket === 'memory') {
       const action = input.command === 'view' ? 'reading' : 'updating';
       console.log(`[Stream] Memory tool use: ${String(input.command)}`);
       emit(controller, { type: 'memory_activity', action });
       result.memoryToolUses.push({ id: block.id, name: block.name, input });
-    } else if (isContinueTool(block.name)) {
+    } else if (bucket === 'mcp') {
       // MCP-backed 'continue' tool (Phase 2) — surfaced to the client as tool activity.
       console.log(`[Stream] MCP tool use: ${block.name}`);
       emit(controller, { type: 'tool_activity', tool: block.name });
@@ -222,7 +225,9 @@ export async function translateOneStream(
         }
       }
     } catch (parseErr) {
-      console.warn('[Stream] Parse error:', parseErr, payload.substring(0, 200));
+      // Log the error + payload SIZE only — the raw payload can carry model
+      // output / user brand data (no PII in logs).
+      console.warn('[Stream] Parse error:', parseErr, `(payload ${payload.length} bytes)`);
     }
   };
 

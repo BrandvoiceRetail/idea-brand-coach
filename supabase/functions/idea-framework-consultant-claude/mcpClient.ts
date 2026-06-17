@@ -35,12 +35,39 @@ export interface McpToolResult {
   isError: boolean;
 }
 
+const ENV_GET = (k: string): string | undefined =>
+  (globalThis as { Deno?: { env: { get(k: string): string | undefined } } }).Deno?.env?.get(k);
+
+/** Hosts the JWT may be forwarded to: loopback + the configured MCP_URL host. */
+function allowedHosts(): Set<string> {
+  const hosts = new Set<string>(['localhost', '127.0.0.1']);
+  const fromEnv = ENV_GET('MCP_URL');
+  if (fromEnv) {
+    try {
+      hosts.add(new URL(fromEnv).hostname);
+    } catch {
+      /* malformed env MCP_URL — ignore; default host stays allowlisted */
+    }
+  }
+  return hosts;
+}
+
+/**
+ * Resolve + VALIDATE the MCP URL. The JWT is forwarded ONLY to an allowlisted
+ * host (loopback or the configured MCP_URL host) over http(s); an override
+ * pointing elsewhere is rejected (SSRF guard). Throws on violation — callMcpTool
+ * catches it into an isError result.
+ */
 function resolveMcpUrl(override?: string): string {
-  if (override) return override;
-  const fromEnv = (globalThis as { Deno?: { env: { get(k: string): string | undefined } } }).Deno?.env?.get(
-    'MCP_URL',
-  );
-  return fromEnv ?? DEFAULT_MCP_URL;
+  const raw = override ?? ENV_GET('MCP_URL') ?? DEFAULT_MCP_URL;
+  const url = new URL(raw);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error(`MCP URL scheme not allowed: ${url.protocol}`);
+  }
+  if (!allowedHosts().has(url.hostname)) {
+    throw new Error(`MCP URL host not allowlisted: ${url.hostname}`);
+  }
+  return url.toString();
 }
 
 /** Pull the JSON-RPC envelope out of a JSON body or an SSE ("data: {…}") frame. */
@@ -73,21 +100,21 @@ function textFromResult(result: unknown): string {
  * an `isError` result whose text the model can recover from.
  */
 export async function callMcpTool({ name, args, jwt, mcpUrl }: CallMcpToolArgs): Promise<McpToolResult> {
-  const url = resolveMcpUrl(mcpUrl);
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Accept: 'application/json, text/event-stream',
-  };
-  if (jwt) headers.Authorization = `Bearer ${jwt}`;
-
-  const body = JSON.stringify({
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'tools/call',
-    params: { name, arguments: args },
-  });
-
   try {
+    const url = resolveMcpUrl(mcpUrl);
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json, text/event-stream',
+    };
+    if (jwt) headers.Authorization = `Bearer ${jwt}`;
+
+    const body = JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'tools/call',
+      params: { name, arguments: args },
+    });
+
     const res = await fetch(url, { method: 'POST', headers, body });
     if (!res.ok) {
       return { text: `MCP tool '${name}' failed: HTTP ${res.status}.`, isError: true };

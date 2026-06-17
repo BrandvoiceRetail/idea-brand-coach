@@ -36,7 +36,7 @@ import {
   MemoryCommandInput,
   SupabaseClientLike,
 } from '../_shared/memory.ts';
-import { getToolEntry, isContinueTool, ToolContext } from './registry.ts';
+import { getToolEntry, categorizeToolUse, ToolContext } from './registry.ts';
 import { emitHandlerLatency, emitLlmLatency, makeTtftRecorder } from './telemetry.ts';
 
 const MAX_ITERATIONS = 4;
@@ -351,7 +351,7 @@ export function runAgenticLoop(config: LoopConfig): ReadableStream {
             toolResults,
             previousToolResults
           );
-          console.log(`[Loop] Iteration ${iteration + 1}: executed ${result.memoryToolUses.length} memory command(s), continuing`);
+          console.log(`[Loop] Iteration ${iteration + 1}: executed ${result.memoryToolUses.length} memory + ${result.mcpToolUses?.length ?? 0} MCP tool call(s), continuing`);
         }
 
         // A turn can end with ONLY tool calls (e.g. a first-session memory
@@ -455,14 +455,22 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
     for (const block of data.content || []) {
       if (block.type === 'text') {
         responseText += block.text;
-      } else if (block.type === 'tool_use' && block.name === 'extract_brand_fields') {
-        extractedFields = block.input?.fields || [];
-        extractionToolUses.push({ id: block.id });
-      } else if (block.type === 'tool_use' && block.name === 'memory') {
-        memoryToolUses.push({ id: block.id, input: block.input || {} });
-      } else if (block.type === 'tool_use' && isContinueTool(block.name)) {
-        // MCP-backed 'continue' tool (Phase 2) — dispatched by name via the registry.
-        mcpToolUses.push({ id: block.id, name: block.name, input: block.input || {} });
+        continue;
+      }
+      if (block.type !== 'tool_use') continue;
+      // Bucket via the shared categorizer (registry.ts) so streaming +
+      // non-streaming can't drift on tool-name classification.
+      switch (categorizeToolUse(block.name)) {
+        case 'extraction':
+          extractedFields = block.input?.fields || [];
+          extractionToolUses.push({ id: block.id });
+          break;
+        case 'memory':
+          memoryToolUses.push({ id: block.id, input: block.input || {} });
+          break;
+        case 'mcp':
+          mcpToolUses.push({ id: block.id, name: block.name, input: block.input || {} });
+          break;
       }
     }
 
