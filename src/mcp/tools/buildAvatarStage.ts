@@ -74,6 +74,19 @@ export function registerBuildAvatarStageTool(server: McpServer): void {
             signature_gated: !!result.signature_gated,
           });
         }
+        // Previously dark: pipeline short-circuits (blocked / failed) emitted no event.
+        if (result.needs_input) {
+          captureMcpEvent(identity.userId as string, 'mcp_avatar_pipeline_needs_input', {
+            stages_count: result.stages.length,
+            missing_count: result.needs_input.length,
+          });
+        }
+        if (result.failed) {
+          captureMcpEvent(identity.userId as string, 'mcp_avatar_pipeline_failed', {
+            stages_count: result.stages.length,
+            failed_stage: result.failed.stage,
+          });
+        }
         const summaryText = result.needs_input
           ? `Pipeline blocked: ${result.needs_input.length} context slot(s) need input (chain stopped after ${result.stages.length} stage(s)).`
           : result.failed
@@ -116,6 +129,10 @@ export function registerBuildAvatarStageTool(server: McpServer): void {
       }
 
       if (result.status === 'needs_input') {
+        captureMcpEvent(identity.userId as string, 'mcp_avatar_stage_needs_input', {
+          stage,
+          missing_count: result.needs_input.length,
+        });
         return {
           content: [
             {
@@ -128,6 +145,7 @@ export function registerBuildAvatarStageTool(server: McpServer): void {
       }
 
       // failed
+      captureMcpEvent(identity.userId as string, 'mcp_avatar_stage_failed', { stage });
       return {
         content: [{ type: 'text' as const, text: `Stage ${stage} failed: ${result.note}` }],
         structuredContent: { ok: false, mode: 'stage', stage, note: result.note },
