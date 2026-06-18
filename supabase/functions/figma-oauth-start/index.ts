@@ -8,6 +8,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient, getAuthedUserId, jsonResponse } from '../_shared/edge-auth.ts';
 import { buildAuthorizeUrl, generateState, FIGMA_DEFAULT_SCOPE } from '../_shared/figma.ts';
+import { captureServerException } from '../_shared/posthog.ts';
 
 const STATE_TTL_MS = Number(Deno.env.get('FIGMA_STATE_TTL_SECONDS') ?? '600') * 1000;
 const CALLBACK_SUFFIX = '/integrations/figma/callback';
@@ -20,7 +21,13 @@ serve(async (req) => {
     if (!userId) return jsonResponse({ error: 'Authentication required' }, 401);
 
     const clientId = Deno.env.get('FIGMA_CLIENT_ID');
-    if (!clientId) return jsonResponse({ error: 'Figma integration is not configured' }, 500);
+    if (!clientId) {
+      captureServerException('figma-oauth-start', new Error('FIGMA_CLIENT_ID not configured'), {
+        status_code: 500,
+        reason: 'not_configured',
+      });
+      return jsonResponse({ error: 'Figma integration is not configured' }, 500);
+    }
 
     const body = await req.json().catch(() => ({}));
     const redirectUri = typeof body?.redirectUri === 'string' ? body.redirectUri.trim() : '';
@@ -72,6 +79,7 @@ serve(async (req) => {
     return jsonResponse({ url, state });
   } catch (error) {
     console.error('[figma-oauth-start] error:', error);
+    captureServerException('figma-oauth-start', error, { status_code: 500 });
     return jsonResponse({ error: 'Unexpected error starting Figma connection' }, 500);
   }
 });

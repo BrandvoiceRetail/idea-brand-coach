@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { captureServerException } from "../_shared/posthog.ts";
 
 /**
  * reveal-signature
@@ -294,6 +295,7 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in reveal-signature function:', error);
+    captureServerException('reveal-signature', error, { status_code: 500 });
     return new Response(
       JSON.stringify({ error: 'Unable to reveal your Signature right now. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
