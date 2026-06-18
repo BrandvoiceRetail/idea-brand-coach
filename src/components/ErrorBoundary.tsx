@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 interface Props {
   children: ReactNode;
@@ -55,10 +56,13 @@ export class ErrorBoundary extends Component<Props, State> {
       this.props.onError(error, errorInfo);
     }
 
-    // In production, you might want to send this to an error reporting service
-    if (process.env.NODE_ENV === 'production') {
-      // Example: sendErrorToService(error, errorInfo);
-    }
+    // Relay to PostHog so caught render errors are visible alongside $exception
+    // autocapture (which only sees UNHANDLED errors). MF-5: name + booleans
+    // only — never the message or component stack (may contain user data).
+    captureAlphaEvent('app_error_caught', {
+      error_name: error.name,
+      has_component_stack: Boolean(errorInfo.componentStack),
+    });
   }
 
   handleReset = (): void => {

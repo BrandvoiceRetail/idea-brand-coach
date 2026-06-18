@@ -273,10 +273,10 @@ export function BetaFeedbackWidget({
               <Button
                 variant="link"
                 size="sm"
-                onClick={() => navigate('/beta-journey')}
+                onClick={() => navigate('/beta-feedback')}
                 className="text-xs p-0"
               >
-                Full Beta Journey →
+                Full feedback form →
               </Button>
 
               <Button

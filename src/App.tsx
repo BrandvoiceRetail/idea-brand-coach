@@ -19,6 +19,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { AuthGate } from "@/components/AuthGate";
 import { BetaFeedbackWidget } from "@/components/BetaFeedbackWidget";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES, V1_ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
@@ -77,6 +78,7 @@ const App = () => {
   }, []);
 
   return (
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <ServiceProvider>
         <AuthProvider>
@@ -312,6 +314,7 @@ const App = () => {
         </AuthProvider>
       </ServiceProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 export default App;

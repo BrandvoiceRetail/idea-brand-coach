@@ -9,6 +9,8 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesInsert } from '@/integrations/supabase/types';
+import { getPostHogDistinctId } from '@/lib/posthogClient';
 import {
   ISignatureService,
   SavedSignature,
@@ -44,16 +46,22 @@ export class SupabaseSignatureService implements ISignatureService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    // posthog_distinct_id threads this pick back to the user's PostHog funnel +
+    // session replay (parity with feedback_events). Column added in migration
+    // 20260617000000; typed locally because types.ts is intentionally not
+    // regenerated (it carries repo/live drift).
+    const row: TablesInsert<'signatures'> & { posthog_distinct_id: string } = {
+      user_id: user.id,
+      signature_text: input.signatureText,
+      all_options: input.allOptions,
+      chosen_index: input.chosenIndex,
+      used_reviews: input.usedReviews,
+      inference: input.inference,
+      posthog_distinct_id: getPostHogDistinctId(),
+    };
     const { data, error } = await supabase
       .from('signatures')
-      .insert({
-        user_id: user.id,
-        signature_text: input.signatureText,
-        all_options: input.allOptions,
-        chosen_index: input.chosenIndex,
-        used_reviews: input.usedReviews,
-        inference: input.inference,
-      })
+      .insert(row)
       .select()
       .single();
 

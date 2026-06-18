@@ -6,6 +6,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { IDiagnosticService } from './interfaces/IDiagnosticService';
 import { DiagnosticCreate, DiagnosticScores, DiagnosticSubmission } from '@/types/diagnostic';
+import { getPostHogDistinctId } from '@/lib/posthogClient';
 
 const DIAGNOSTIC_STORAGE_KEY = 'diagnosticData'; // Match key used in FreeDiagnostic component
 
@@ -20,6 +21,8 @@ export class SupabaseDiagnosticService implements IDiagnosticService {
       answers: data.answers,
       scores: data.scores,
       completed_at: new Date().toISOString(),
+      // Join key back to the PostHog funnel + replay (parity with feedback_events).
+      posthog_distinct_id: getPostHogDistinctId(),
     };
 
     const { data: submission, error: submissionError } = await supabase
