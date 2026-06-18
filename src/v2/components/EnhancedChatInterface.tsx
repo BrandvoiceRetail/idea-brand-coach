@@ -17,6 +17,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -84,6 +85,10 @@ export function EnhancedChatInterface({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
 
+  // Scope the chat to the current avatar (bleed firewall §2.1/§2.2).
+  const { currentAvatar } = useAvatarContext();
+  const avatarId = currentAvatar?.id;
+
   // Session management
   const {
     sessions,
@@ -99,12 +104,14 @@ export function EnhancedChatInterface({
   } = useChatSessions({
     chatbotType,
     autoCreate: true,
+    avatarId,
   });
 
   // Chat operations
   const { messages, sendMessage, isSending } = useChat({
     chatbotType,
     sessionId: currentSessionId,
+    avatarId,
   });
 
   // Toggle sidebar collapse state

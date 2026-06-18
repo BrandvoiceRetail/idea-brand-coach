@@ -42,7 +42,7 @@ export function AvatarServiceDemo(): JSX.Element {
 
   const {
     selectedAvatarId,
-    setSelectedAvatar,
+    setCurrentAvatar,
     currentAvatar,
   } = useAvatarContext();
 
@@ -188,7 +188,7 @@ export function AvatarServiceDemo(): JSX.Element {
                       <Button
                         size="sm"
                         variant={selectedAvatarId === avatar.id ? 'default' : 'outline'}
-                        onClick={() => setSelectedAvatar(avatar.id)}
+                        onClick={() => { void setCurrentAvatar(avatar.id); }}
                       >
                         {selectedAvatarId === avatar.id ? 'Selected' : 'Select'}
                       </Button>

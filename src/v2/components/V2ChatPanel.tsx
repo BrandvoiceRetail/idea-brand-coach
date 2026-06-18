@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import { usePanelCommunication } from '@/v2/contexts/PanelCommunicationContext';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageSquare, Plus } from 'lucide-react';
@@ -10,6 +11,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 
 export function V2ChatPanel() {
+  // Scope the chat to the current avatar (bleed firewall §2.1/§2.2) so this
+  // surface doesn't clobber the shared chat-service avatar scope with undefined.
+  const { currentAvatar } = useAvatarContext();
+  const avatarId = currentAvatar?.id;
+
   // Session management
   const {
     sessions,
@@ -22,12 +28,13 @@ export function V2ChatPanel() {
     deleteSession,
     regenerateTitle,
     switchToSession,
-  } = useChatSessions({ chatbotType: 'idea-framework-consultant' });
+  } = useChatSessions({ chatbotType: 'idea-framework-consultant', avatarId });
 
   // Chat for current session
   const { messages, sendMessage, isSending } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
+    avatarId,
   });
 
   // Panel communication for inter-panel updates

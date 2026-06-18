@@ -10,6 +10,7 @@ import { Brain, Lightbulb, Heart, Shield, MessageSquare, Loader2, Download, Tras
 import { useToast } from '@/hooks/use-toast';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { usePersistedSessionForm } from '@/hooks/usePersistedSessionField';
 import { useChapterProgress } from '@/hooks/useChapterProgress';
@@ -27,6 +28,9 @@ const IdeaFrameworkConsultant = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { latestDiagnostic } = useDiagnostic();
+  // Scope the consultant chat to the current avatar (bleed firewall §2.1/§2.2).
+  const { currentAvatar } = useAvatarContext();
+  const avatarId = currentAvatar?.id;
 
   // Session management
   const {
@@ -40,12 +44,13 @@ const IdeaFrameworkConsultant = () => {
     deleteSession,
     regenerateTitle,
     switchToSession,
-  } = useChatSessions({ chatbotType: 'idea-framework-consultant' });
+  } = useChatSessions({ chatbotType: 'idea-framework-consultant', avatarId });
 
   // Chat for current session
   const { messages, sendMessage, isSending, clearChat } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
+    avatarId,
   });
 
   // System KB state (always enabled)

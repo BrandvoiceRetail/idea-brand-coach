@@ -17,6 +17,7 @@ import { useChatSessions } from '@/hooks/useChatSessions';
 import { useChapterProgress } from '@/hooks/useChapterProgress';
 import { useFieldExtraction } from '@/hooks/useFieldExtraction';
 import { useAvatarService } from '@/hooks/useAvatarService';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import { useDefaultAvatar } from '@/hooks/useDefaultAvatar';
 import { useAvatarFieldSync } from '@/hooks/useAvatarFieldSync';
 import { useSimpleFieldSync } from '@/hooks/useSimpleFieldSync';
@@ -231,7 +232,10 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   const { useSystemKB: isSystemKBEnabled } = useSystemKB();
 
   // ── Avatar management ─────────────────────────────────────────────────
-  const { avatars, currentAvatar, isLoading: isLoadingAvatars, createAvatar, selectAvatarById } = useAvatarService();
+  // CRUD + list come from useAvatarService; the CURRENT avatar + switch path
+  // come from the canonical AvatarContext (design §4.1).
+  const { avatars, isLoading: isLoadingAvatars, createAvatar } = useAvatarService();
+  const { currentAvatar, setCurrentAvatar } = useAvatarContext();
 
   const avatarData: AvatarData[] = avatars.map(a => ({ id: a.id, name: a.name, image_url: a.image_url }));
 
@@ -272,6 +276,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   const { messages, sendMessage, sendMessageStreaming, isSending, isStreaming, streamingContent, memoryActivity, clearChat } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
+    avatarId: currentAvatar?.id,
   });
 
   // ── UI state ──────────────────────────────────────────────────────────
@@ -423,7 +428,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     setIsSidebarOpen(false);
   };
 
-  const handleAvatarSelect = (avatarId: string): void => selectAvatarById(avatarId);
+  const handleAvatarSelect = (avatarId: string): void => { void setCurrentAvatar(avatarId); };
 
   const handleCreateAvatar = async (): Promise<void> => {
     try {
@@ -442,7 +447,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
         status: 'active',
       });
       if (newAvatar) {
-        selectAvatarById(newAvatar.id);
+        void setCurrentAvatar(newAvatar.id);
         toast({ title: 'Avatar Created', description: 'Your new avatar has been created' });
       }
     } catch (error) {

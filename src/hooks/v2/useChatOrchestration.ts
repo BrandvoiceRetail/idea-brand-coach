@@ -14,6 +14,7 @@ import { useBrandCoachChat } from '@/hooks/useBrandCoachChat';
 import { useChatExportActions } from '@/hooks/useChatExportActions';
 import { useDocumentUploadFlow } from '@/hooks/useDocumentUploadFlow';
 import { ChatMessageService } from '@/services/chat/ChatMessageService';
+import { avatarChatMessagesKey } from '@/lib/queryKeys';
 import type { ProcessedMessage } from '@/hooks/useBrandCoachChat';
 import type { ChatMessage, ChatMessageCreate } from '@/types/chat';
 import type { Chapter } from '@/types/chapter';
@@ -28,6 +29,12 @@ export interface UseChatOrchestrationConfig {
   userId: string | undefined;
   /** Current chat session ID */
   sessionId: string | undefined;
+  /**
+   * Current avatar id (bleed firewall §2.2). Scopes the optimistic message-cache
+   * writes to the same ['avatar', …] namespace `useChat` reads from, so a switch
+   * invalidates them. `undefined` collapses to the brand-level bucket.
+   */
+  avatarId?: string;
   /** Raw messages from useChat */
   messages: ChatMessage[];
   /** Streaming send function from useChat */
@@ -79,6 +86,7 @@ export interface UseChatOrchestrationReturn {
 export function useChatOrchestration({
   userId,
   sessionId,
+  avatarId,
   messages,
   sendMessageStreaming,
   sendMessage,
@@ -111,6 +119,11 @@ export function useChatOrchestration({
     clearChat,
   });
 
+  // Avatar-scoped per-session message-cache key (bleed firewall §2.2) — must
+  // match the key `useChat` reads from so optimistic writes land in the right
+  // cache and a switch invalidates them.
+  const messagesKey = avatarChatMessagesKey(avatarId, 'idea-framework-consultant', sessionId);
+
   // ── Local message injection (no edge function) ───────────────────────
   const injectLocalMessage = useCallback((content: string, metadata?: Record<string, unknown>): void => {
     const mergedMetadata: Record<string, unknown> = {
@@ -132,7 +145,7 @@ export function useChatOrchestration({
     };
 
     queryClient.setQueryData<ChatMessage[]>(
-      ['chat', 'messages', 'idea-framework-consultant', sessionId],
+      messagesKey,
       (prev) => [...(prev || []), optimisticMessage],
     );
 
@@ -150,7 +163,7 @@ export function useChatOrchestration({
         } else if (data) {
           // Replace optimistic ID with real DB ID in the cache
           queryClient.setQueryData<ChatMessage[]>(
-            ['chat', 'messages', 'idea-framework-consultant', sessionId],
+            messagesKey,
             (prev) => prev?.map(msg =>
               msg.id === optimisticMessage.id ? data : msg
             ) || [],
@@ -158,7 +171,7 @@ export function useChatOrchestration({
         }
       });
     }
-  }, [userId, sessionId, queryClient]);
+  }, [userId, sessionId, queryClient, messagesKey]);
 
   // ── Document upload flow ──────────────────────────────────────────────
   const { isExtractingFromDoc, handleDocumentUploadComplete } = useDocumentUploadFlow({

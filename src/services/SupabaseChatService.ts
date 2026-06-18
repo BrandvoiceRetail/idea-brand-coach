@@ -43,6 +43,7 @@ interface MessageContext {
 export class SupabaseChatService implements IChatService {
   private chatbotType: ChatbotType = 'idea-framework-consultant';
   private currentSessionId: string | undefined;
+  private currentAvatarId: string | undefined;
   private productContext: string | null = null;
 
   private messageService = new ChatMessageService();
@@ -63,6 +64,15 @@ export class SupabaseChatService implements IChatService {
 
   setCurrentSession(sessionId: string | undefined): void {
     this.currentSessionId = sessionId;
+  }
+
+  /**
+   * Set the current avatar so outgoing messages and session reads/creates are
+   * scoped to it (multi-avatar design §2.1). Fed by `useChat` from the canonical
+   * AvatarContext selection.
+   */
+  setCurrentAvatar(avatarId: string | undefined): void {
+    this.currentAvatarId = avatarId;
   }
 
   getCurrentSessionId(): string | undefined {
@@ -241,14 +251,27 @@ export class SupabaseChatService implements IChatService {
 
   async createSession(sessionData?: ChatSessionCreate): Promise<ChatSession> {
     return this.withUserId((userId) =>
-      this.sessionService.createSession(userId, this.chatbotType, sessionData)
+      this.sessionService.createSession(userId, this.chatbotType, sessionData, this.currentAvatarId)
     );
   }
 
   async getSessions(): Promise<ChatSession[]> {
     return this.withUserId((userId) =>
-      this.sessionService.getSessions(userId, this.chatbotType)
+      this.sessionService.getSessions(userId, this.chatbotType, this.currentAvatarId)
     , []);
+  }
+
+  /**
+   * Ensure an open thread exists for the given avatar and return it (design
+   * §4.1). Called by the AvatarContext switch path so switching lands the user
+   * on that avatar's conversation. Sets the returned thread as current.
+   */
+  async ensureSessionForAvatar(avatarId: string): Promise<ChatSession> {
+    const session = await this.withUserId((userId) =>
+      this.sessionService.ensureSessionForAvatar(userId, this.chatbotType, avatarId)
+    );
+    this.currentSessionId = session.id;
+    return session;
   }
 
   async getSession(sessionId: string): Promise<ChatSession | null> {
@@ -373,6 +396,8 @@ export class SupabaseChatService implements IChatService {
       hasUploadedDocuments,
       chatHistory,
       stream,
+      // Per-thread avatar scope (design §2.1); edge fn falls back to the server pointer.
+      avatarId: this.currentAvatarId,
       // Per-user MCP tool-loop rollout (PostHog flag); edge fn AND-s with its env kill-switch.
       toolLoop: isCoachToolLoopEnabled(),
     });

@@ -93,4 +93,33 @@ export class SupabaseUserProfileService implements IUserProfileService {
     if (error) throw error;
     return data?.latest_diagnostic_score !== null && data?.latest_diagnostic_score !== undefined;
   }
+
+  /**
+   * Set the current coach avatar via the ownership-checked `set_current_avatar`
+   * RPC. The RPC (SECURITY INVOKER) verifies ownership server-side and updates
+   * `profiles.current_avatar_id`; it RAISEs `avatar_not_owned` otherwise, which
+   * surfaces here as a thrown error for the caller to roll back + toast.
+   */
+  async setCurrentAvatarRPC(avatarId: string): Promise<void> {
+    const { error } = await supabase.rpc('set_current_avatar', { p_avatar_id: avatarId });
+    if (error) throw error;
+  }
+
+  /**
+   * Read counterpart of {@link setCurrentAvatarRPC}. Reads
+   * `profiles.current_avatar_id` for the authenticated user (RLS-scoped to self).
+   */
+  async getCurrentAvatarId(): Promise<string | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('current_avatar_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data?.current_avatar_id ?? null;
+  }
 }

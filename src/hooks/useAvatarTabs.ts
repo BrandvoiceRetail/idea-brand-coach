@@ -38,6 +38,14 @@ interface UseAvatarTabsConfig {
    * @default "My First Avatar"
    */
   defaultAvatarName?: string;
+  /**
+   * Canonical switch delegate (design §4.1). When provided, `switchAvatar`
+   * funnels through it AFTER its local-first bookkeeping so the one canonical
+   * store (`AvatarContext.setCurrentAvatar`) is the single source of truth.
+   * Injected (not consumed via `useAvatarContext` directly) because this V1 hook
+   * runs above `AvatarProvider` in the tree; the caller wires it when available.
+   */
+  onSwitch?: (id: string) => void;
 }
 
 /**
@@ -78,7 +86,7 @@ function toError(err: unknown, fallbackMessage: string): Error {
  * Provides avatar CRUD operations and active avatar state
  */
 export function useAvatarTabs(config: UseAvatarTabsConfig = {}): UseAvatarTabsReturn {
-  const { autoCreate = true, defaultAvatarName = 'My First Avatar' } = config;
+  const { autoCreate = true, defaultAvatarName = 'My First Avatar', onSwitch } = config;
 
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [activeAvatarId, setActiveAvatarIdState] = useState<string | null>(null);
@@ -327,8 +335,11 @@ export function useAvatarTabs(config: UseAvatarTabsConfig = {}): UseAvatarTabsRe
       updateAvatars(updatedAvatars);
       storage.saveAvatars(updatedAvatars);
       setActiveAvatarId(id);
+
+      // Delegate to the canonical switch path when wired (design §4.1).
+      onSwitch?.(id);
     },
-    [updateAvatars, setActiveAvatarId, toast, storage],
+    [updateAvatars, setActiveAvatarId, toast, storage, onSwitch],
   );
 
   /**

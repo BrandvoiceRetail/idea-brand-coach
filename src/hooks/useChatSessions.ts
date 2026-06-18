@@ -5,11 +5,12 @@
  * @param chatbotType - The chatbot type to filter sessions by
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/services/ServiceProvider';
 import { ChatSession, ChatSessionCreate, ChatSessionUpdate, ChatbotType } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
+import { avatarChatSessionsKey } from '@/lib/queryKeys';
 
 interface UseChatSessionsOptions {
   chatbotType?: ChatbotType;
@@ -21,6 +22,12 @@ interface UseChatSessionsOptions {
   fieldId?: string;
   /** Field label for session title (used when creating field sessions) */
   fieldLabel?: string;
+  /**
+   * Current avatar to scope sessions to (design §4.1). Folds into the
+   * avatar-scoped query-key namespace so a switch invalidates this cache.
+   * `undefined` collapses to the brand-level `'brand'` bucket.
+   */
+  avatarId?: string;
 }
 
 export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
@@ -30,6 +37,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     conversationType,
     fieldId,
     fieldLabel,
+    avatarId,
   } = options;
   const { chatService } = useServices();
   const queryClient = useQueryClient();
@@ -43,10 +51,35 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     chatService.setChatbotType(chatbotType);
   }, [chatService, chatbotType]);
 
-  // Build query key based on filters
+  // Scope the service to the current avatar so getSessions/createSession filter
+  // and stamp by it (session-follows-avatar, design §4.1).
+  useEffect(() => {
+    chatService.setCurrentAvatar(avatarId);
+  }, [chatService, avatarId]);
+
+  // Reset the selected session when the avatar changes (design §4.1). Without
+  // this, the previous avatar's session id survives the switch and both
+  // auto-select effects below stay gated on `!currentSessionId`, so `useChat`
+  // would keep loading avatar A's messages into avatar B's view (cross-avatar
+  // bleed §2.1/§2.2). Clearing it lets the auto-select effects re-pick the new
+  // avatar's most-recent thread — which is the one `ensureSessionForAvatar`
+  // resolved during the switch, so hook + service agree on one session id.
+  // Skip the initial mount (avatarId may arrive after first render) by only
+  // clearing on an actual change of a defined avatar.
+  const prevAvatarIdRef = useRef<string | undefined>(avatarId);
+  useEffect(() => {
+    if (prevAvatarIdRef.current !== avatarId) {
+      prevAvatarIdRef.current = avatarId;
+      setCurrentSessionIdState(undefined);
+      chatService.setCurrentSession(undefined);
+    }
+  }, [avatarId, chatService]);
+
+  // Build query key under the avatar-scoped namespace (bleed firewall, §2.2/§4.1)
+  // so a switch (predicate q.queryKey[0] === 'avatar') invalidates this cache.
   const queryKey = conversationType === 'field' && fieldId
-    ? ['chat', 'sessions', chatbotType, 'field', fieldId]
-    : ['chat', 'sessions', chatbotType];
+    ? avatarChatSessionsKey(avatarId, chatbotType, 'field', fieldId)
+    : avatarChatSessionsKey(avatarId, chatbotType);
 
   // Query: Get all sessions (with optional filtering)
   const {

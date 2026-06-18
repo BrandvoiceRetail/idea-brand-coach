@@ -33,6 +33,8 @@ describe('useChat', () => {
       getRecentMessages: vi.fn().mockResolvedValue([]),
       setChatbotType: vi.fn(),
       setCurrentSession: vi.fn(),
+      setCurrentAvatar: vi.fn(),
+      ensureSessionForAvatar: vi.fn().mockResolvedValue({ id: 'test-session', user_id: 'test-user', chatbot_type: 'idea-framework-consultant', title: 'New Chat', conversation_type: 'general', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
       getCurrentSessionId: vi.fn().mockReturnValue(undefined),
       createSession: vi.fn().mockResolvedValue({ id: 'test-session', user_id: 'test-user', chatbot_type: 'idea-framework-consultant', title: 'New Chat', conversation_type: 'general', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
       getSessions: vi.fn().mockResolvedValue([]),

@@ -15,16 +15,19 @@ import { ChatMessageCreate, ChatbotType } from '@/types/chat';
 import { ChapterId, ChapterMetadata } from '@/types/chapter';
 import { useToast } from '@/hooks/use-toast';
 import { captureAlphaEvent } from '@/lib/posthogClient';
+import { avatarChatMessagesKey, avatarChatSessionsKey } from '@/lib/queryKeys';
 
 interface UseChatOptions {
   chatbotType?: ChatbotType;
   sessionId?: string;
   chapterId?: ChapterId;
   chapterMetadata?: ChapterMetadata;
+  /** Current avatar — scopes the outgoing message body per-thread (design §2.1). */
+  avatarId?: string;
 }
 
 export const useChat = (options: UseChatOptions = {}) => {
-  const { chatbotType = 'idea-framework-consultant', sessionId, chapterId, chapterMetadata } = options;
+  const { chatbotType = 'idea-framework-consultant', sessionId, chapterId, chapterMetadata, avatarId } = options;
   const { chatService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -57,13 +60,25 @@ export const useChat = (options: UseChatOptions = {}) => {
     chatService.setCurrentSession(sessionId);
   }, [chatService, sessionId]);
 
-  // Query: Get chat history (keyed by chatbot type AND session ID for per-session caching)
+  // Scope outgoing messages to the current avatar (design §2.1).
+  useEffect(() => {
+    chatService.setCurrentAvatar(avatarId);
+  }, [chatService, avatarId]);
+
+  // Avatar-scoped cache keys (bleed firewall §2.2): both the per-session message
+  // list AND the session list live under the ['avatar', …] namespace so the
+  // switch-invalidation predicate (q.queryKey[0] === 'avatar') nukes them. Brand-
+  // level surfaces (no avatarId) collapse to the 'brand' segment.
+  const messagesKey = avatarChatMessagesKey(avatarId, chatbotType, sessionId);
+  const sessionsKey = avatarChatSessionsKey(avatarId, chatbotType);
+
+  // Query: Get chat history (keyed by avatar + chatbot type + session ID)
   const {
     data: messages,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['chat', 'messages', chatbotType, sessionId],
+    queryKey: messagesKey,
     queryFn: () => chatService.getChatHistory(),
     retry: 1,
     enabled: !!sessionId, // Only fetch if we have a session
@@ -79,10 +94,10 @@ export const useChat = (options: UseChatOptions = {}) => {
       ...(chapterMetadata && { chapter_metadata: chapterMetadata }),
     }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType, sessionId] });
+      queryClient.invalidateQueries({ queryKey: messagesKey });
       if (data.titlePromise) {
         data.titlePromise.finally(() => {
-          queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+          queryClient.invalidateQueries({ queryKey: sessionsKey });
         });
       }
     },
@@ -131,9 +146,9 @@ export const useChat = (options: UseChatOptions = {}) => {
             setStreamingContent('');
             setMemoryActivity(null);
             // Refresh messages from DB (now includes the saved assistant message)
-            queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType, sessionId] });
+            queryClient.invalidateQueries({ queryKey: messagesKey });
             // Refresh sidebar for potential title update
-            queryClient.invalidateQueries({ queryKey: ['chat', 'sessions', chatbotType] });
+            queryClient.invalidateQueries({ queryKey: sessionsKey });
           },
           onError: (error: Error) => {
             setIsStreaming(false);
@@ -160,14 +175,16 @@ export const useChat = (options: UseChatOptions = {}) => {
         variant: 'destructive',
       });
     }
-  }, [chatService, chatbotType, chapterId, chapterMetadata, sessionId, queryClient, toast]);
+    // sessionId is encoded inside messagesKey/sessionsKey, so it is not a
+    // separate dependency here.
+  }, [chatService, chatbotType, chapterId, chapterMetadata, queryClient, toast, messagesKey, sessionsKey]);
 
   // Mutation: Clear chat history (keyed by session to reset state on session switch)
   const clearChatMutation = useMutation({
     mutationKey: ['chat', 'clearChat', chatbotType, sessionId],
     mutationFn: () => chatService.clearChatHistory(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType, sessionId] });
+      queryClient.invalidateQueries({ queryKey: messagesKey });
       toast({
         title: 'Chat Cleared',
         description: 'Your conversation has been cleared.',

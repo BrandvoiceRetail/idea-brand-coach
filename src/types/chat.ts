@@ -147,6 +147,16 @@ export interface ChatSession {
   /** ID of the user who owns this session */
   user_id: string;
 
+  /**
+   * Avatar this conversation thread is scoped to (multi-avatar design §2.1).
+   * The retrieval/scope anchor — the edge fn reads it per-thread. `null` for
+   * legacy/brand-level threads created before the avatar split.
+   */
+  avatar_id?: string | null;
+
+  /** Brand this thread belongs to (denormalized from the avatar for scoping). */
+  brand_id?: string | null;
+
   /** Type of chatbot this session belongs to */
   chatbot_type: ChatbotType;
 

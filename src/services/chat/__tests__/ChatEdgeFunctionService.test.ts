@@ -22,3 +22,16 @@ describe('ChatEdgeFunctionService.buildRequestBody — tool_loop', () => {
     expect(svc.buildRequestBody(base).tool_loop).toBe(false);
   });
 });
+
+describe('ChatEdgeFunctionService.buildRequestBody — avatar_id (design §2.1)', () => {
+  const svc = new ChatEdgeFunctionService();
+
+  it('includes avatar_id when an avatar is supplied', () => {
+    expect(svc.buildRequestBody({ ...base, avatarId: 'avatar-9' }).avatar_id).toBe('avatar-9');
+  });
+
+  it('omits avatar_id when absent so the edge fn falls back to the server pointer', () => {
+    expect(svc.buildRequestBody(base)).not.toHaveProperty('avatar_id');
+    expect(svc.buildRequestBody({ ...base, avatarId: null })).not.toHaveProperty('avatar_id');
+  });
+});
