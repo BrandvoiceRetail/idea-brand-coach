@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ContextualHelp } from "@/components/ContextualHelp";
 import { AISuggestionPreview } from "@/components/AISuggestionPreview";
+import { captureAlphaEvent } from "@/lib/posthogClient";
 import {
   Search,
   Brain,
@@ -214,6 +215,7 @@ export function InteractiveIdeaFramework({ onComplete }: InteractiveIdeaFramewor
       return data.guidance;
     } catch (error) {
       console.error('Error generating AI guidance:', error);
+      captureAlphaEvent('llm_call_failed', { which_call: 'idea_insight', error_type: error instanceof Error ? error.name : 'unknown' });
       toast({
         title: "AI Help Unavailable",
         description: "Continue with your current input. AI assistance will be available shortly.",
