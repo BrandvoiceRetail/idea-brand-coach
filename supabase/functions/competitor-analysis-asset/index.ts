@@ -31,6 +31,7 @@ import {
   type Modality,
   type VocSignals,
 } from "./lib.ts";
+import { getCached, upsertCached, CACHE_TTL } from "../_shared/asinCache.ts";
 
 /**
  * competitor-analysis-asset  (Competitor-Agents P2 — the analyzer engine)
@@ -146,6 +147,10 @@ async function scrapeMainContent(
   url: string,
 ): Promise<{ title?: string; markdown: string } | null> {
   if (!firecrawlApiKey) return null;
+  // Shared cross-tenant cache: a fetched page is the same for every tenant.
+  const cacheKey = { source: 'firecrawl', dataKind: 'page', cacheKey: url, marketplace: 'web' };
+  const cachedPage = await getCached<{ title?: string; markdown: string }>(cacheKey);
+  if (cachedPage && cachedPage.markdown) return cachedPage;
   try {
     const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
@@ -167,7 +172,9 @@ async function scrapeMainContent(
     const data = (await response.json()) as FirecrawlScrape;
     const markdown = data.data?.markdown;
     if (!markdown || !markdown.trim()) return null;
-    return { title: data.data?.metadata?.title, markdown };
+    const page = { title: data.data?.metadata?.title, markdown };
+    await upsertCached(cacheKey, page, CACHE_TTL.page);
+    return page;
   } catch (err) {
     console.error('[competitor-analysis-asset] Firecrawl scrape threw for', url, err);
     return null;
@@ -268,20 +275,26 @@ async function gatherReviewsEvidence(body: AnalyzeRequest): Promise<GatherResult
     if (seenAsin.has(asin)) continue;
     seenAsin.add(asin);
     attempted = true;
-    const res = await getAmazonReviews(asin, marketplace, 20);
-    if (res.status === 'not_configured') {
-      notConfigured = true;
-      continue;
+    const ck = { source: 'dataforseo', dataKind: 'reviews', cacheKey: asin, marketplace: marketplace ?? 'amazon.com' };
+    let reviews = await getCached<CompetitorReview[]>(ck);
+    if (!reviews) {
+      const res = await getAmazonReviews(asin, marketplace, 20);
+      if (res.status === 'not_configured') {
+        notConfigured = true;
+        continue;
+      }
+      if (res.reviews.length === 0) continue;
+      reviews = res.reviews.map((r: AmazonReview) => ({
+        reviewerName: r.reviewerName,
+        rating: r.rating,
+        title: r.title,
+        body: r.body,
+        verified: r.verified,
+        date: r.date,
+      }));
+      await upsertCached(ck, reviews, CACHE_TTL.reviews);
     }
-    if (res.reviews.length === 0) continue;
-    const reviews: CompetitorReview[] = res.reviews.map((r: AmazonReview) => ({
-      reviewerName: r.reviewerName,
-      rating: r.rating,
-      title: r.title,
-      body: r.body,
-      verified: r.verified,
-      date: r.date,
-    }));
+    if (!reviews || reviews.length === 0) continue;
     const ref = `reviews:asin:${asin}`;
     reviewsByRef.set(ref, reviews);
     evidence.push({
@@ -346,18 +359,38 @@ async function gatherMarketplaceEvidence(body: AnalyzeRequest): Promise<GatherRe
     });
   };
 
-  // Top-N competitor discovery by keyword/category.
+  const mkt = marketplace ?? 'amazon.com';
+
+  // Top-N competitor discovery by keyword/category (cache the product set).
   if (body.category && body.category.trim()) {
-    const res = await searchTopCompetitors(body.category.trim(), marketplace, 5);
-    if (res.status === 'not_configured') notConfigured = true;
-    res.products.forEach(pushProduct);
+    const cat = body.category.trim();
+    const ck = { source: 'dataforseo', dataKind: 'discovery', cacheKey: cat.toLowerCase(), marketplace: mkt };
+    const cached = await getCached<AmazonProduct[]>(ck);
+    if (cached) {
+      cached.forEach(pushProduct);
+    } else {
+      const res = await searchTopCompetitors(cat, marketplace, 5);
+      if (res.status === 'not_configured') notConfigured = true;
+      if (res.products.length > 0) await upsertCached(ck, res.products, CACHE_TTL.discovery);
+      res.products.forEach(pushProduct);
+    }
   }
 
   // An explicit competitor ASIN (or the asset's own ASIN as a reference point).
   if (body.asin && body.asin.trim()) {
-    const res = await getAmazonProductByAsin(body.asin.trim(), marketplace);
-    if (res.status === 'not_configured') notConfigured = true;
-    if (res.product) pushProduct(res.product);
+    const asin = body.asin.trim();
+    const ck = { source: 'dataforseo', dataKind: 'product', cacheKey: asin, marketplace: mkt };
+    const cached = await getCached<AmazonProduct>(ck);
+    if (cached) {
+      pushProduct(cached);
+    } else {
+      const res = await getAmazonProductByAsin(asin, marketplace);
+      if (res.status === 'not_configured') notConfigured = true;
+      if (res.product) {
+        await upsertCached(ck, res.product, CACHE_TTL.product);
+        pushProduct(res.product);
+      }
+    }
   }
 
   return { evidence, notConfigured };
