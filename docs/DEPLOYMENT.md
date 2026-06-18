@@ -3,32 +3,30 @@
 The app is a static Vite/React SPA. The backend (Supabase: Auth, Postgres, Edge
 Functions) is already cloud-hosted and unchanged by this deployment.
 
-## Hosting: GitHub Pages
+## Hosting: Lightsail + Caddy (NOT GitHub Pages)
 
-The site is served by **GitHub Pages** from this repo, at the custom domain
-**https://ideabrandcoach.icodemybusiness.com**. This matches how the rest of
-`icodemybusiness.com` is hosted (the apex/`www` site runs on GitHub Pages too;
-the `mango.` subdomain is a separate Lightsail box).
+The site is served by **Caddy `file_server` on the mango Lightsail box**
+(`54.243.53.44`) from `/opt/ideabrandcoach`, at
+**https://ideabrandcoach.icodemybusiness.com**. GitHub Pages is **disabled at the
+org level** (the old `deploy-pages.yml` failed on every run because
+`configure-pages` can't create a Pages site), so Pages is not the deploy path.
 
 ### How a deploy happens (CI/CD)
 
-`.github/workflows/deploy-pages.yml` runs on **push to `main`** (and via manual
-**workflow_dispatch** for a smoke test from any branch). It:
+`.github/workflows/deploy-frontend.yml` runs on **push to `main`** (or manual
+**workflow_dispatch**). It:
 
 1. `npm ci && npm run build` → `dist/`
-2. `cp dist/index.html dist/404.html` — SPA fallback. The app uses
-   `BrowserRouter`, so deep links (e.g. `/diagnostic`) are served the app shell;
-   React Router then renders the route.
-3. Uploads `dist/` and deploys it to Pages.
+2. `cp dist/index.html dist/404.html` — SPA fallback (BrowserRouter deep links).
+3. **rsyncs `dist/` to `ubuntu@54.243.53.44:/opt/ideabrandcoach/`** over SSH, then
+   verifies the live bundle hash matches the build.
 
-The job's `GITHUB_TOKEN` carries `pages: write` + `id-token: write`, so it
-enables and deploys Pages without anyone needing repo-admin in the GitHub UI.
+One-time setup (Settings → Secrets and variables → Actions):
+- Variable **`FRONTEND_AUTODEPLOY` = `true`** — opt-in switch (no-op until set).
+- Secret **`LIGHTSAIL_SSH_KEY`** — private key for `ubuntu@<box>` (shared with `deploy-mcp.yml`).
 
-`public/CNAME` (`ideabrandcoach.icodemybusiness.com`) is copied into `dist/` by
-Vite and tells Pages which custom domain to bind + request a TLS cert for.
-
-To deploy: merge to `main` (production), or run the workflow manually from the
-Actions tab.
+Manual fallback (what to run if CI is off): `npm run build` then
+`rsync -az --delete -e "ssh -i ~/.ssh/lightsail-mango.pem" dist/ ubuntu@54.243.53.44:/opt/ideabrandcoach/`.
 
 ## One-time setup (manual, outside this repo)
 

@@ -1,0 +1,67 @@
+name: Deploy frontend
+
+# Builds the Vite SPA and rsyncs it to the Lightsail box that actually serves
+# ideabrandcoach.icodemybusiness.com (Caddy file_server). Replaces the old
+# deploy-pages.yml, which could never work — GitHub Pages is disabled at the org
+# level, so configure-pages failed on every run.
+#
+# ONE-TIME SETUP (repo Settings → Secrets and variables → Actions):
+#   Variable FRONTEND_AUTODEPLOY = true   — opt-in switch (no-op until set).
+#   Secret   LIGHTSAIL_SSH_KEY            — private key for ubuntu@<box> (shared with deploy-mcp).
+#   (optional) Variable FRONTEND_DEPLOY_HOST (default 54.243.53.44),
+#              FRONTEND_DEPLOY_USER (default ubuntu),
+#              FRONTEND_DEPLOY_PATH (default /opt/ideabrandcoach).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Opt-in: stays a no-op until FRONTEND_AUTODEPLOY=true (+ the secret) are set,
+    # so it never produces a failing run before setup is done.
+    if: ${{ vars.FRONTEND_AUTODEPLOY == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      # SPA fallback so deep links resolve to the app shell.
+      - run: cp dist/index.html dist/404.html
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.LIGHTSAIL_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${FRONTEND_DEPLOY_HOST:-54.243.53.44}" >> ~/.ssh/known_hosts 2>/dev/null
+        env:
+          FRONTEND_DEPLOY_HOST: ${{ vars.FRONTEND_DEPLOY_HOST }}
+
+      - name: Rsync to the box
+        env:
+          DEPLOY_HOST: ${{ vars.FRONTEND_DEPLOY_HOST || '54.243.53.44' }}
+          DEPLOY_USER: ${{ vars.FRONTEND_DEPLOY_USER || 'ubuntu' }}
+          DEPLOY_PATH: ${{ vars.FRONTEND_DEPLOY_PATH || '/opt/ideabrandcoach' }}
+        run: |
+          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
+            dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+
+      - name: Verify live bundle matches the build
+        run: |
+          set -e
+          local_js=$(grep -oE 'assets/index-[A-Za-z0-9_-]+\.js' dist/index.html | head -1)
+          live_js=$(curl -fsS -m 20 https://ideabrandcoach.icodemybusiness.com/ | grep -oE 'assets/index-[A-Za-z0-9_-]+\.js' | head -1)
+          echo "local=$local_js  live=$live_js"
+          [ -n "$local_js" ] && [ "$local_js" = "$live_js" ] && echo "frontend live == build" || { echo "bundle mismatch"; exit 1; }
