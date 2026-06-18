@@ -128,17 +128,24 @@ export function isPostHogEnabled(): boolean {
 export const COACH_TOOL_LOOP_FLAG = 'coach-mcp-tool-loop';
 
 /**
- * True only when PostHog is initialised AND the coach-tool-loop flag is enabled
- * for the current (identified) distinct_id. Safe no-op → false when PostHog is
- * unconfigured or evaluation throws, so the coach falls back to single-shot.
+ * Whether the MCP-first coach tool loop is active for this client.
+ *
+ * DEFAULT-ON by design: the loop is at 100% rollout and the authoritative
+ * kill-switch is the server-side `CONSULTANT_TOOL_LOOP_ENABLED` env (AND-gated in
+ * the edge fn). The client flag's only job is to force it OFF (flag disabled / 0%
+ * rollout). So we disable ONLY on an explicit `false`; when PostHog is
+ * unconfigured, errors, or its feature flags simply haven't loaded yet
+ * (`isFeatureEnabled` → undefined — a real race that was silently dropping the
+ * coach to single-shot), we stay ON. Rollback levers are intact: env=false (hard
+ * kill) or set the flag to 0% / disabled (→ isFeatureEnabled returns false).
  */
 export function isCoachToolLoopEnabled(): boolean {
-  if (!isInitialized) return false;
+  if (!isInitialized) return true;
   try {
-    return posthog.isFeatureEnabled(COACH_TOOL_LOOP_FLAG) === true;
+    return posthog.isFeatureEnabled(COACH_TOOL_LOOP_FLAG) !== false;
   } catch (err) {
     console.warn('[posthogClient] feature flag check failed:', err);
-    return false;
+    return true;
   }
 }
 

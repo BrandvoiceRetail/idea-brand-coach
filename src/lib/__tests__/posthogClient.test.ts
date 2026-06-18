@@ -162,12 +162,12 @@ describe('posthogClient', () => {
     });
   });
 
-  describe('isCoachToolLoopEnabled', () => {
-    it('returns false when PostHog is not initialised', async () => {
+  describe('isCoachToolLoopEnabled (default-on)', () => {
+    it('defaults to true when PostHog is not initialised (env kill-switch is the real gate)', async () => {
       vi.stubEnv('VITE_POSTHOG_KEY', '');
       const client = await importFreshClient();
       client.initPostHog();
-      expect(client.isCoachToolLoopEnabled()).toBe(false);
+      expect(client.isCoachToolLoopEnabled()).toBe(true);
     });
 
     it('returns true when the coach-tool-loop flag is enabled for the user', async () => {
@@ -179,7 +179,15 @@ describe('posthogClient', () => {
       expect(mockPosthog.isFeatureEnabled).toHaveBeenCalledWith(client.COACH_TOOL_LOOP_FLAG);
     });
 
-    it('returns false when the flag is disabled', async () => {
+    it('stays ON when flags have not loaded yet (isFeatureEnabled undefined) — the race fix', async () => {
+      vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
+      const client = await importFreshClient();
+      client.initPostHog();
+      mockPosthog.isFeatureEnabled.mockReturnValue(undefined);
+      expect(client.isCoachToolLoopEnabled()).toBe(true);
+    });
+
+    it('returns false ONLY when the flag is explicitly disabled (force-off rollback lever)', async () => {
       vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
       const client = await importFreshClient();
       client.initPostHog();
@@ -187,14 +195,14 @@ describe('posthogClient', () => {
       expect(client.isCoachToolLoopEnabled()).toBe(false);
     });
 
-    it('returns false (never throws) when evaluation errors', async () => {
+    it('defaults to true (never throws) when evaluation errors', async () => {
       vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
       const client = await importFreshClient();
       client.initPostHog();
       mockPosthog.isFeatureEnabled.mockImplementation(() => {
         throw new Error('boom');
       });
-      expect(client.isCoachToolLoopEnabled()).toBe(false);
+      expect(client.isCoachToolLoopEnabled()).toBe(true);
     });
   });
 });
