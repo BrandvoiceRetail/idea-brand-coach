@@ -72,6 +72,11 @@ Reading live edge-function logs surfaced real prod state that "merged to main" h
 
 **None of these 500s are in PostHog today** — they live only in Supabase logs. That's the relay's whole point. Access them now: Supabase dashboard → Logs → Edge Functions, or `get_logs` MCP (`service: edge-function`, last 24h).
 
+## Backend errors in PostHog — TWO paths (one already live)
+
+1. **Client-side failure capture (LIVE, deployed).** Every client→edge call captures its failure as a PostHog event, so backend errors surface in PostHog **without an edge deploy**: `llm_call_failed` (coach/diagnostic/signature LLM edge fns), `figma_connect_failed`/`figma_import_failed` (figma edge fns — surfaces the live 500), `product_import_failed`. This covers all **user-facing** backend failures and is on the dashboard's "Feature & integration failures" tile.
+2. **Server-side relay (built, deploy-gated).** For errors that DON'T surface to a client (background/cron, or the precise server error class), the `_shared/posthog.ts` relay emits `$exception` server-side. This needs the edge-function deploy (below) — but path #1 already covers the user-facing gap, so this is now an enhancement, not the critical path.
+
 ## Relay — built this session, ACTIVATION steps
 - Sink: `supabase/functions/_shared/posthog.ts` (`captureServerException` / `captureServerEvent`) — POSTs to PostHog `/i/v0/e/` as `$exception` (→ Error Tracking) + custom events. No-op without `POSTHOG_API_KEY`.
 - Wired into: `save-feedback-event`, `reveal-signature`, `figma-oauth-start` (incl. the live-500 not-configured path).
