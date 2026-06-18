@@ -16,7 +16,7 @@ Synthesised from the test run ([`TEST_PLAN.md`](./TEST_PLAN.md)) + the build/gap
 ### Decisions taken 2026-06-17 (unblocking the deferred/gated set)
 - **Merge:** PR #17 opened to `main` (review-gated), not a direct fast-forward.
 - **Bulk upload + auto-touchpoint detection — BUILT.** `classify-touchpoint` edge fn (vision picks the touchpoint from the brand's applicable candidates) + `BulkUploadDialog` (multi-file → auto-classify each, editable + prefilled description → upload + audit all).
-- **MCP surface — UNBLOCKED** (decision: build against brand-coach's own data, decoupled from D5; brand-coach is system of record). Scoped next: funnel MCP tools (`list_touchpoints`, `upsert_brand_asset`, `audit_asset`, `get_funnel_coverage`, `record/close_brand_test`) in `src/mcp/tools/` + `server.ts`, using the gateway's per-request Supabase identity.
+- **MCP surface — BUILT** (code-complete + green; live MCP host NOT yet deployed). Three tools in the gateway: `get_funnel_assets` (read), `audit_asset` (identity-gated; reuses the audit-asset edge fn), `get_funnel_coverage` (aggregates `brand_assets`). All via `getUserSupabase()` (RLS); registered in `src/mcp/server.ts`; `server.test.ts` asserts they're advertised + a mocked happy-path + anonymous-deny. `typecheck:mcp` + `npm test -- src/mcp` (259) + lint green. Build prompts: `MCP_TOOLS_BUILD_PROMPTS.md`. **Deploy of the live MCP host is a separate gated step.**
 - **IV-OS `asset_events` reconciliation — RESOLVED (won't-do for now):** brand-coach stays system of record; revisit only if IV-OS needs to consume funnel data.
 
 **Still gated (external):** warehouse metric auto-pull — the analytics warehouse has no live data yet (IV-OS ingestion).

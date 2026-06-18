@@ -69,3 +69,4 @@ auto-claude-backup-keys.txt
 /blob-report/
 tests/e2e/.auth/
 .playwright-mcp/
+dist-mcp/
