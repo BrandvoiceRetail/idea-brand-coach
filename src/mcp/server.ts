@@ -43,6 +43,9 @@ import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
 import { registerListCoachConversationsTool } from './tools/listCoachConversations.js';
 import { registerGetCoachConversationTool } from './tools/getCoachConversation.js';
+import { registerGetFunnelAssetsTool } from './tools/getFunnelAssets.js';
+import { registerAuditAssetTool } from './tools/auditAsset.js';
+import { registerGetFunnelCoverageTool } from './tools/getFunnelCoverage.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -151,6 +154,13 @@ export function createServer(
   // read-only. The avatar scope comes from chat_sessions.avatar_id (nullable FK → avatars).
   registerListCoachConversationsTool(server);
   registerGetCoachConversationTool(server);
+
+  // Brand Funnel Tracker (OWNED, brand-coach is system of record; decoupled from D5):
+  // see + audit a brand's funnel assets from chat. Reads are RLS-scoped to the caller;
+  // audit_asset is identity-gated and reuses the audit-asset edge fn (calculation parity).
+  registerGetFunnelAssetsTool(server);
+  registerAuditAssetTool(server);
+  registerGetFunnelCoverageTool(server);
 
   return { server, ivos, edgeFn: edge };
 }

@@ -130,11 +130,28 @@ curl -s -X POST https://ideabrandcoach.icodemybusiness.com/mcp \
 | `IVOS_MCP_URL` / `IVOS_MCP_TOKEN` | no | IV-OS ledger reads; unset ⇒ reads degrade gracefully. |
 | `POSTHOG_API_KEY` / `POSTHOG_HOST` | no | Analytics; no-op if unset. |
 
-## Updating
+## Automated deploy (CI) — preferred
 
-Rebuild + re-export (step A), copy the new tarball, then on the box:
+`.github/workflows/deploy-mcp.yml` does steps A–B automatically **on merge to `main`**
+when gateway code changes (`src/mcp/**`, `deploy/mcp/**`, `scripts/build-mcp.mjs`,
+`tsconfig.mcp.json`), or on manual **workflow_dispatch**. It type-checks + runs the MCP
+test suite, builds the amd64 image, ships it to the box, `docker load && docker compose
+up -d --force-recreate`, and verifies `tools/list` over the public URL.
+
+One-time setup (repo Settings → Secrets and variables → Actions):
+- **Variable `MCP_AUTODEPLOY` = `true`** — the opt-in switch. Until set, the job is a no-op
+  (so merges never produce a failing deploy run before setup is finished).
+- **Secret `LIGHTSAIL_SSH_KEY`** — the full private key for `ubuntu@<box>` (the contents of
+  `~/.ssh/lightsail-mango.pem`).
+- (optional) **Variable `MCP_DEPLOY_HOST`** (default `54.243.53.44`), **`MCP_DEPLOY_USER`** (default `ubuntu`).
+
+After that, the gateway ships like the frontend — no hand-deploys.
+
+## Updating (manual fallback)
+
+Rebuild + re-export (step A), copy the new tarball to `~ubuntu/brand-coach-mcp/`, then on the box:
 ```bash
-docker load -i brand-coach-mcp.tar.gz && docker compose up -d
+docker load -i brand-coach-mcp.tar.gz && docker compose up -d --force-recreate
 ```
 
 ## Notes / not-yet-done

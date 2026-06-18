@@ -84,7 +84,13 @@ export type AlphaEventName =
   | 'brand_copy_failed'
   | 'contextual_help_failed'
   | 'ai_assist_failed'
-  | 'document_upload_failed';
+  | 'document_upload_failed'
+  // Brand Funnel Tracker — asset audit + fix + lift events.
+  | 'funnel_asset_uploaded'
+  | 'funnel_asset_audited'
+  | 'funnel_fix_started'
+  | 'funnel_test_recorded'
+  | 'funnel_coverage_viewed';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;
