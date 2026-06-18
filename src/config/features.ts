@@ -206,6 +206,21 @@ export const FEATURES: Record<string, Feature> = {
     requiresAuth: true,
   },
 
+  FUNNEL_TRACKER: {
+    id: 'FUNNEL_TRACKER',
+    name: 'Funnel',
+    shortDescription: 'Track brand assets across the customer funnel',
+    fullDescription: 'Map every brand asset across the customer journey, audit each against your avatar and strategy, and see coverage gaps stage by stage.',
+    phase: 'P0',
+    route: '/v2/funnel',
+    icon: TrendingUp,
+    statusMessage: 'Available Now',
+    estimatedRelease: 'Live',
+    showInNav: true,
+    category: 'analytics',
+    requiresAuth: true,
+  },
+
   DASHBOARD: {
     id: 'DASHBOARD',
     name: 'Dashboard',
@@ -437,6 +452,7 @@ export function getNavigationFeatures(currentPhase: DeploymentPhase): Feature[] 
     'JOURNEY',
     'BRAND_CANVAS',
     'BRAND_COPY_GENERATOR',
+    'FUNNEL_TRACKER',
     'BETA_TEST',
     'DASHBOARD',
     'IDEA_FRAMEWORK',
