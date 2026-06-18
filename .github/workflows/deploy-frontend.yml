@@ -36,7 +36,15 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run build
+      - name: Build SPA
+        run: npm run build
+        env:
+          # Publishable PostHog project key (203641) — safe to expose; the SPA
+          # ships telemetry-disabled without it. Mirrors the manual rsync build env
+          # so CI deploys don't regress observability.
+          VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST }}
+          VITE_ENABLE_BETA_FEEDBACK: ${{ vars.VITE_ENABLE_BETA_FEEDBACK }}
       # SPA fallback so deep links resolve to the app shell.
       - run: cp dist/index.html dist/404.html
 
