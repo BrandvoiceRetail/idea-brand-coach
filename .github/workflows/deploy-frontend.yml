@@ -63,7 +63,11 @@ jobs:
           DEPLOY_USER: ${{ vars.FRONTEND_DEPLOY_USER || 'ubuntu' }}
           DEPLOY_PATH: ${{ vars.FRONTEND_DEPLOY_PATH || '/opt/ideabrandcoach' }}
         run: |
-          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
+          # Preserve the separately-deployed MCP onboard panel — it is NOT part of
+          # this SPA build, so --delete must not wipe it.
+          rsync -az --delete \
+            --exclude='onboard.html' --exclude='onboard-assets/' --exclude='onboard.html.bak.prev' \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
             dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
 
       - name: Verify live bundle matches the build
