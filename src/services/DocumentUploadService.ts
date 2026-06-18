@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import { generateStoragePath, isValidUuid } from '@/utils/documentValidation';
 import type {
   IDocumentUploadService,
@@ -63,6 +64,7 @@ export class DocumentUploadService implements IDocumentUploadService {
 
         if (vectorError) {
           console.warn('Vector store upload failed:', vectorError);
+          captureAlphaEvent('document_upload_failed', { stage: 'vector_index', error_type: vectorError instanceof Error ? vectorError.name : 'unknown' });
           // Non-fatal — document is still saved
         }
       } else {
@@ -73,6 +75,7 @@ export class DocumentUploadService implements IDocumentUploadService {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to upload document';
       console.error('Upload error:', error);
+      captureAlphaEvent('document_upload_failed', { stage: 'upload', error_type: error instanceof Error ? error.name : 'unknown' });
       return { success: false, error: message };
     }
   }

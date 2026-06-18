@@ -78,7 +78,13 @@ export type AlphaEventName =
   | 'buyer_intent_completed'
   | 'buyer_intent_failed'
   | 'competitive_analysis_started'
-  | 'competitive_analysis_failed';
+  | 'competitive_analysis_failed'
+  // Remaining merged web features — failure capture (+ brand-copy completion).
+  | 'brand_copy_completed'
+  | 'brand_copy_failed'
+  | 'contextual_help_failed'
+  | 'ai_assist_failed'
+  | 'document_upload_failed';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

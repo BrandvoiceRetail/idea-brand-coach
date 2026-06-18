@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HelpCircle, X, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { captureAlphaEvent } from "@/lib/posthogClient";
 import { FormattedAIText } from "@/components/FormattedAIText";
 
 interface ContextualHelpProps {
@@ -54,6 +55,7 @@ export function ContextualHelp({ question, category, context, currentStep, isSte
       setIsOpen(true);
     } catch (error) {
       console.error('Error getting contextual help:', error);
+      captureAlphaEvent('contextual_help_failed', { error_type: error instanceof Error ? error.name : 'unknown' });
       toast({
         title: "Help Unavailable",
         description: "Unable to get AI assistance right now. Please try again later.",
