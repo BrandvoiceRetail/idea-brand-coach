@@ -38,7 +38,7 @@ async function connectedClient() {
 }
 
 describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
-  it('advertises exactly the gateway + consumed IV-OS asset-tracking + owned chain tools', async () => {
+  it('advertises exactly the gateway + native asset-tracking + owned chain tools', async () => {
     const { client } = await connectedClient();
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
@@ -77,15 +77,15 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
     ]);
   });
 
-  it('health returns status ok and ivosConfigured=false when IV-OS is unset', async () => {
+  it('health returns status ok and ledgerConfigured=true (native ledger)', async () => {
     const { client } = await connectedClient();
     const res = await client.callTool({ name: 'health', arguments: {} });
-    const sc = res.structuredContent as { status: string; ivosConfigured: boolean };
+    const sc = res.structuredContent as { status: string; ledgerConfigured: boolean };
     expect(sc.status).toBe('ok');
-    expect(sc.ivosConfigured).toBe(false);
+    expect(sc.ledgerConfigured).toBe(true);
   });
 
-  it('list_assets degrades gracefully (available=false) without IV-OS', async () => {
+  it('list_assets degrades gracefully (available=false) for an anonymous caller', async () => {
     const { client } = await connectedClient();
     const res = await client.callTool({ name: 'list_assets', arguments: {} });
     const sc = res.structuredContent as { available: boolean; assets: unknown[] };

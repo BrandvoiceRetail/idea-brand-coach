@@ -1,13 +1,13 @@
 /**
- * Layer 2 (tool) — `list_assets` (CONSUMED from IV-OS, STABLE read).
+ * Layer 2 (tool) — `list_assets` (native asset-ledger read).
  *
- * Thin pass-through to the IV-OS ledger via the consumption adapter. Brand-coach does
- * NOT own asset storage — this surfaces IV-OS's record. Degrades gracefully when IV-OS
- * is unconfigured/unreachable/empty (see adapter contract).
+ * Reads brand-coach's own asset ledger (native Supabase storage, RLS-scoped to the
+ * caller). Degrades gracefully (availability=false) when the caller is anonymous or a
+ * DB error occurs; returns an empty list when the ledger is reachable but empty.
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { IvosLedgerClient } from '../ivos/client.js';
+import type { LedgerClient } from '../ivos/capabilities.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 
@@ -18,13 +18,13 @@ const inputSchema = {
   limit: z.number().int().positive().max(200).optional(),
 };
 
-export function registerListAssetsTool(server: McpServer, ivos: IvosLedgerClient): void {
+export function registerListAssetsTool(server: McpServer, ivos: LedgerClient): void {
   server.registerTool(
     'list_assets',
     {
-      title: 'List assets (IV-OS ledger)',
+      title: 'List assets (asset ledger)',
       description:
-        'List produced marketing assets from the IV-OS asset ledger. Consumed from IV-OS (read-only); returns availability=false when the IV-OS ledger is not reachable.',
+        'List produced marketing assets from the asset ledger. Read-only; returns availability=false when the ledger is unavailable.',
       inputSchema,
     },
     async (args) => {
@@ -40,8 +40,8 @@ export function registerListAssetsTool(server: McpServer, ivos: IvosLedgerClient
           {
             type: 'text',
             text: result.available
-              ? `IV-OS ledger: ${result.data.length} asset(s).\n${JSON.stringify(result.data, null, 2)}`
-              : `IV-OS ledger unavailable: ${result.note}`,
+              ? `Asset ledger: ${result.data.length} asset(s).\n${JSON.stringify(result.data, null, 2)}`
+              : `Asset ledger unavailable: ${result.note}`,
           },
         ],
         structuredContent: { available: result.available, assets: result.data, note: result.note },

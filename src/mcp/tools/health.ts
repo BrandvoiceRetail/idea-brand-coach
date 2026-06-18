@@ -2,12 +2,12 @@
  * Layer 2 (tool) — `health`.
  */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { IvosLedgerClient } from '../ivos/client.js';
+import type { LedgerClient } from '../ivos/capabilities.js';
 import { getHealth } from '../service/health.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 
-export function registerHealthTool(server: McpServer, ivos: IvosLedgerClient): void {
+export function registerHealthTool(server: McpServer, ivos: LedgerClient): void {
   server.registerTool(
     'health',
     {
@@ -17,7 +17,7 @@ export function registerHealthTool(server: McpServer, ivos: IvosLedgerClient): v
     },
     async () => {
       const report = getHealth(ivos.configured);
-      safeLog({ event: 'tool.health', caller: userTag(getIdentity()), ivosConfigured: report.ivosConfigured });
+      safeLog({ event: 'tool.health', caller: userTag(getIdentity()), ledgerConfigured: report.ledgerConfigured });
       return {
         content: [{ type: 'text', text: JSON.stringify(report, null, 2) }],
         structuredContent: report as unknown as Record<string, unknown>,

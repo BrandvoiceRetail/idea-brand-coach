@@ -14,7 +14,8 @@ import {
   loadConfig,
   type HostConfig,
 } from './config.js';
-import { IvosLedgerClient } from './ivos/client.js';
+import type { LedgerClient } from './ivos/capabilities.js';
+import { NativeLedgerClient } from './service/nativeLedger.js';
 import { registerOnboard } from './tools/onboard.js';
 import { registerHealthTool } from './tools/health.js';
 import { registerListAssetsTool } from './tools/listAssets.js';
@@ -49,21 +50,21 @@ import { registerGetFunnelCoverageTool } from './tools/getFunnelCoverage.js';
 
 export interface BuiltServer {
   server: McpServer;
-  ivos: IvosLedgerClient;
+  ivos: LedgerClient;
   edgeFn: EdgeFnClient;
 }
 
 export function createServer(
   config: HostConfig = loadConfig(),
   edgeFn?: EdgeFnClient,
-  ivosClient?: IvosLedgerClient,
+  ledgerClient?: LedgerClient,
 ): BuiltServer {
   const server = new McpServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
     { instructions: assertServerInstructions(SERVER_INSTRUCTIONS) },
   );
 
-  const ivos = ivosClient ?? new IvosLedgerClient(config);
+  const ivos = ledgerClient ?? new NativeLedgerClient();
   const edge = edgeFn ?? new EdgeFnClient(config);
 
   // Anonymous front door: the branded `onboard` prompt + `onboard_choose` router.

@@ -4,7 +4,7 @@
  * Produces on-brand concept candidates by composing the existing
  * `idea-framework-consultant-claude` engine verbatim (Calculation Parity).
  * Requires an authenticated caller (the engine itself is JWT-gated).
- * Terminal `log_asset` write into the IV-OS ledger is DEFERRED by capability (D5).
+ * Terminal `log_asset` write into the asset ledger is DEFERRED by capability (D5).
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';

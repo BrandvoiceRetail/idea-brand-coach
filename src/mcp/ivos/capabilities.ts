@@ -60,12 +60,14 @@ export interface LedgerReads {
 
 export interface LogAssetParams {
   content: string;
-  content_type: string; // blog|social|amazon|competitor|other (IV-OS coerces unknowns to 'other')
+  content_type: string; // blog|social|amazon|competitor|other (unknowns coerced to 'other')
   agent_name?: string;
   prompt?: string;
   model?: string;
   status?: string; // success|partial|failed|pending
   campaign_id?: string;
+  /** Caller-supplied idempotency/dedup key: re-logging the same external_id reconciles to the existing asset. */
+  external_id?: string;
 }
 
 export interface UpdateAssetStatusParams {
@@ -108,6 +110,16 @@ export interface LedgerWrites {
 export interface LedgerHistoryRead {
   getAssetHistory(requestId: string): Promise<LedgerResult<string | null>>;
 }
+
+/**
+ * The full asset-ledger capability the host binds to its tools. Tools type on THIS
+ * interface, not on any concrete client, so the backing implementation is swappable
+ * (native Supabase-backed `NativeLedgerClient`, or a remote adapter). `configured`
+ * reports whether the backend is usable (the health probe surfaces it).
+ */
+export type LedgerClient = LedgerReads & LedgerWrites & LedgerHistoryRead & {
+  readonly configured: boolean;
+};
 
 /** Marker list of capabilities intentionally deferred (documentation, not bound). */
 export const DEFERRED_IVOS_CAPABILITIES = [
