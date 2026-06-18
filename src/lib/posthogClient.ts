@@ -69,7 +69,16 @@ export type AlphaEventName =
   | 'figma_disconnect_failed'
   | 'figma_import_started'
   | 'figma_import_completed'
-  | 'figma_import_failed';
+  | 'figma_import_failed'
+  // Output engine (web app) — PDF/strategy export, and the research features.
+  // `which` distinguishes brand_strategy_pdf vs competitor_pdf.
+  | 'export_started'
+  | 'export_completed'
+  | 'export_failed'
+  | 'buyer_intent_completed'
+  | 'buyer_intent_failed'
+  | 'competitive_analysis_started'
+  | 'competitive_analysis_failed';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

@@ -13,6 +13,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import { ICompetitiveAnalysisService } from './interfaces/ICompetitiveAnalysisService';
 import {
   CompetitiveAnalysis,
@@ -229,6 +230,7 @@ export class CompetitiveAnalysisService implements ICompetitiveAnalysisService {
 
     // Update status to processing
     await this.updateAnalysisStatus(analysisId, 'processing');
+    captureAlphaEvent('competitive_analysis_started', { competitor_count: competitors?.length ?? 0 });
 
     // Call the analysis orchestrator edge function
     const { error } = await supabase.functions.invoke('competitive-analysis-orchestrator', {
@@ -244,6 +246,7 @@ export class CompetitiveAnalysisService implements ICompetitiveAnalysisService {
 
     if (error) {
       console.error('[CompetitiveAnalysis] Edge function error:', error);
+      captureAlphaEvent('competitive_analysis_failed', { error_type: error instanceof Error ? error.name : 'unknown' });
       await this.updateAnalysisStatus(analysisId, 'failed');
       throw error;
     }
