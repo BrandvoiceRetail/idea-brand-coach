@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { CanvaConnectionCard } from '@/components/integrations/CanvaConnectionCard';
 import { CanvaDesignsList } from '@/components/integrations/CanvaDesignsList';
+import { CanvaCoachContextCard } from '@/components/integrations/CanvaCoachContextCard';
 import { useCanvaConnection } from '@/hooks/useCanvaConnection';
 import {
   getCanvaReturnToast,
@@ -70,16 +71,25 @@ export default function Integrations(): JSX.Element {
       />
 
       {canva.isConnected && (
-        <CanvaDesignsList
-          designs={canva.designs}
-          imports={canva.imports}
-          isLoadingDesigns={canva.isLoadingDesigns}
-          designsContinuation={canva.designsContinuation}
-          importingIds={canva.importingIds}
-          onLoadDesigns={(continuation) => void canva.loadDesigns(continuation)}
-          onImport={(design) => void canva.importDesign(design)}
-          onRemove={(canvaDesignId) => void canva.removeImport(canvaDesignId)}
-        />
+        <>
+          <CanvaDesignsList
+            designs={canva.designs}
+            imports={canva.imports}
+            isLoadingDesigns={canva.isLoadingDesigns}
+            designsContinuation={canva.designsContinuation}
+            importingIds={canva.importingIds}
+            onLoadDesigns={(continuation) => void canva.loadDesigns(continuation)}
+            onImport={(design) => void canva.importDesign(design)}
+            onRemove={(canvaDesignId) => void canva.removeImport(canvaDesignId)}
+          />
+
+          <CanvaCoachContextCard
+            importsCount={canva.imports.length}
+            coachContext={canva.coachContext}
+            isSyncing={canva.isSyncing}
+            onSync={() => void canva.syncToCoach()}
+          />
+        </>
       )}
     </div>
   );

@@ -10,6 +10,7 @@ import {
   listImports,
   addImport,
   removeImport,
+  syncToCoach,
 } from '../canvaService';
 import type { CanvaDesign, ImportedDesign } from '../types';
 
@@ -169,10 +170,30 @@ describe('canvaService', () => {
     });
   });
 
+  describe('syncToCoach', () => {
+    it('calls canva-sync with no body and returns the sync result', async () => {
+      resolveData({ coachUpdated: true, count: 3, category: 'visual_identity' });
+
+      const res = await syncToCoach();
+
+      expect(invokeMock).toHaveBeenCalledWith('canva-sync', { body: undefined });
+      expect(res).toEqual({ coachUpdated: true, count: 3, category: 'visual_identity' });
+    });
+  });
+
   describe('aggregate export', () => {
     it('exposes every method on the canvaService object', () => {
       expect(Object.keys(canvaService).sort()).toEqual(
-        ['addImport', 'disconnect', 'getStatus', 'listDesigns', 'listImports', 'removeImport', 'startConnect'].sort(),
+        [
+          'addImport',
+          'disconnect',
+          'getStatus',
+          'listDesigns',
+          'listImports',
+          'removeImport',
+          'startConnect',
+          'syncToCoach',
+        ].sort(),
       );
     });
   });

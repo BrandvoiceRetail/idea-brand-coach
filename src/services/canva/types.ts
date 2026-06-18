@@ -104,3 +104,17 @@ export interface AddImportResponse {
 export interface RemoveImportResponse {
   removed: true;
 }
+
+/**
+ * Result of syncing imported Canva designs into the brand-coach context.
+ * Returned by `canva-sync`; also echoed (as `coachUpdated`) by `canva-imports`
+ * add/remove, which re-sync the context server-side.
+ */
+export interface CanvaSyncResponse {
+  /** Whether the user_knowledge_base entry was written. */
+  coachUpdated: boolean;
+  /** Number of imported designs summarized into the context. */
+  count: number;
+  /** KB category used ('visual_identity' or 'core'), or null if the write failed. */
+  category: string | null;
+}

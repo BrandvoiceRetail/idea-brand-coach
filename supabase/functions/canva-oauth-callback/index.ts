@@ -44,14 +44,24 @@ function safeReturnUrl(returnUrl: string | null | undefined): string | null {
 }
 
 function redirect(returnUrl: string, params: Record<string, string>): Response {
-  const url = new URL(returnUrl);
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value);
+  try {
+    const url = new URL(returnUrl);
+    for (const [key, value] of Object.entries(params)) {
+      url.searchParams.set(key, value);
+    }
+    return new Response(null, {
+      status: 302,
+      headers: { ...corsHeaders, Location: url.toString() },
+    });
+  } catch {
+    // No valid absolute return URL (e.g. CANVA_ALLOWED_RETURN_ORIGINS unset).
+    // Never 500 the public endpoint — return a plain, closable message.
+    const reason = params.reason ? ` (${params.reason})` : '';
+    return new Response(
+      `Canva connection ${params.canva ?? 'error'}${reason}. You can close this tab and return to the app.`,
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'text/plain' } },
+    );
   }
-  return new Response(null, {
-    status: 302,
-    headers: { ...corsHeaders, Location: url.toString() },
-  });
 }
 
 serve(async (req) => {

@@ -13,7 +13,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { canvaService } from '@/services/canva/canvaService';
-import type { CanvaDesign, CanvaStatus, ImportedDesign } from '@/services/canva/types';
+import type { CanvaDesign, CanvaStatus, CanvaSyncResponse, ImportedDesign } from '@/services/canva/types';
 
 export const CANVA_STATUS_QUERY_KEY = ['canva', 'status'] as const;
 
@@ -61,6 +61,13 @@ export interface UseCanvaConnection {
   importingIds: ReadonlySet<string>;
   /** Remove an imported design by its canva design id. */
   removeImport: (canvaDesignId: string) => Promise<void>;
+
+  /** Latest Brand Coach context-sync result (after an explicit sync), or null. */
+  coachContext: CanvaSyncResponse | null;
+  /** True while syncing the imported designs into the coach context. */
+  isSyncing: boolean;
+  /** Re-summarize the imported designs into the Brand Coach context. */
+  syncToCoach: () => Promise<void>;
 }
 
 export function useCanvaConnection(): UseCanvaConnection {
@@ -84,6 +91,9 @@ export function useCanvaConnection(): UseCanvaConnection {
   const [imports, setImports] = useState<ImportedDesign[]>([]);
   const [isLoadingImports, setIsLoadingImports] = useState(false);
   const [importingIds, setImportingIds] = useState<Set<string>>(new Set());
+
+  const [coachContext, setCoachContext] = useState<CanvaSyncResponse | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const connect = useCallback(async (returnPath?: string): Promise<void> => {
     setIsConnecting(true);
@@ -183,6 +193,27 @@ export function useCanvaConnection(): UseCanvaConnection {
     }
   }, []);
 
+  const syncToCoach = useCallback(async (): Promise<void> => {
+    setIsSyncing(true);
+    try {
+      const result = await canvaService.syncToCoach();
+      setCoachContext(result);
+      if (result.coachUpdated) {
+        toast.success(
+          result.count > 0
+            ? `Synced ${result.count} design${result.count === 1 ? '' : 's'} into your Brand Coach.`
+            : 'Brand Coach context cleared.',
+        );
+      } else {
+        toast.error("We couldn't update your Brand Coach context. Please try again.");
+      }
+    } catch (error) {
+      reportError('syncToCoach', error, "We couldn't sync your designs to the Brand Coach. Please try again.");
+    } finally {
+      setIsSyncing(false);
+    }
+  }, []);
+
   return {
     status: statusQuery.data,
     isLoading: statusQuery.isLoading,
@@ -201,5 +232,8 @@ export function useCanvaConnection(): UseCanvaConnection {
     importDesign,
     importingIds,
     removeImport,
+    coachContext,
+    isSyncing,
+    syncToCoach,
   };
 }

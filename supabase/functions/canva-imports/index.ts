@@ -10,6 +10,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { syncCanvaContextToKb } from '../_shared/canvaClient.ts';
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -121,7 +122,12 @@ serve(async (req) => {
         console.error('canva-imports add error:', error.message);
         return jsonResponse({ error: 'imports_failed' }, 500);
       }
-      return jsonResponse({ design: toImportedDesign(data as ImportedDesignRow) }, 200);
+      // Keep the coach's context in sync with the imported set (best-effort).
+      const sync = await syncCanvaContextToKb(admin, user.id).catch(() => null);
+      return jsonResponse(
+        { design: toImportedDesign(data as ImportedDesignRow), coachUpdated: sync?.coachUpdated ?? false },
+        200,
+      );
     }
 
     if (action === 'remove') {
@@ -138,7 +144,9 @@ serve(async (req) => {
         console.error('canva-imports remove error:', error.message);
         return jsonResponse({ error: 'imports_failed' }, 500);
       }
-      return jsonResponse({ removed: true }, 200);
+      // Re-summarize the (now smaller) imported set into the coach's context.
+      const sync = await syncCanvaContextToKb(admin, user.id).catch(() => null);
+      return jsonResponse({ removed: true, coachUpdated: sync?.coachUpdated ?? false }, 200);
     }
 
     return jsonResponse({ error: 'invalid_action' }, 400);

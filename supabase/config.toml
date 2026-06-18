@@ -104,3 +104,6 @@ verify_jwt = true
 
 [functions.canva-imports]
 verify_jwt = true
+
+[functions.canva-sync]
+verify_jwt = true

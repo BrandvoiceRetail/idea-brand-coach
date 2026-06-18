@@ -17,6 +17,7 @@ import type {
   AddImportResponse,
   CanvaDesign,
   CanvaStatus,
+  CanvaSyncResponse,
   DisconnectResponse,
   ImportedDesign,
   ImportsRequest,
@@ -133,6 +134,15 @@ export async function removeImport(designId: string): Promise<RemoveImportRespon
   return invokeCanva<RemoveImportResponse>('canva-imports', body);
 }
 
+/**
+ * Push the user's imported Canva designs into their Brand Coach context.
+ * Imports already re-sync server-side; this drives an explicit re-sync and
+ * returns the current context state for display.
+ */
+export async function syncToCoach(): Promise<CanvaSyncResponse> {
+  return invokeCanva<CanvaSyncResponse>('canva-sync');
+}
+
 export const canvaService = {
   startConnect,
   getStatus,
@@ -141,4 +151,5 @@ export const canvaService = {
   listImports,
   addImport,
   removeImport,
+  syncToCoach,
 };

@@ -7,20 +7,33 @@
  * `./canva.ts`; this file just wires those into actual HTTP calls.
  */
 
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
   CANVA_TOKEN_URL,
   CANVA_REVOKE_URL,
   CANVA_PROFILE_URL,
   CANVA_IDENTITY_URL,
   CANVA_DESIGNS_URL,
+  CANVA_KB_FIELD,
+  CANVA_KB_CATEGORY_PREFERRED,
+  CANVA_KB_CATEGORY_FALLBACK,
   buildBasicAuthHeader,
   buildTokenExchangeBody,
   buildRefreshTokenBody,
+  buildCanvaContextSummary,
   expiresAtFromNow,
   normalizeDesign,
   type NormalizedDesign,
   type CodeExchangeParams,
 } from './canva.ts';
+
+/** Service-role Supabase client (bypasses RLS). Shared by the canva-* functions. */
+export function getServiceClient(): SupabaseClient {
+  return createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  );
+}
 
 export interface CanvaTokenResult {
   accessToken: string;
@@ -177,4 +190,77 @@ export async function revokeCanvaToken(
     },
     body: body.toString(),
   });
+}
+
+// ── Coach context ingestion ──────────────────────────────────────────────────
+
+export interface CanvaSyncResult {
+  /** Whether the user_knowledge_base entry was written. */
+  coachUpdated: boolean;
+  /** Number of imported designs summarized. */
+  count: number;
+  /** The KB category actually used ('visual_identity' or 'core'), or null on failure. */
+  category: string | null;
+}
+
+/** True when a Supabase error is the user_knowledge_base.category CHECK violation. */
+function isCategoryCheckViolation(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === '23514' || /category/i.test(error.message ?? '');
+}
+
+/**
+ * Summarize the user's imported Canva designs and write that summary into
+ * user_knowledge_base via the update_knowledge_entry RPC, so the brand coach
+ * references the user's real Canva collateral. Prefers the 'visual_identity'
+ * category; if the live category CHECK doesn't allow it yet, transparently
+ * falls back to 'core' (an always-allowed category the coach also reads).
+ *
+ * Best-effort: never throws. Returns what happened so callers can surface it.
+ */
+export async function syncCanvaContextToKb(
+  service: SupabaseClient,
+  userId: string,
+): Promise<CanvaSyncResult> {
+  const { data, error } = await service
+    .from('canva_imported_designs')
+    .select('title, view_url, imported_at')
+    .eq('user_id', userId)
+    .order('imported_at', { ascending: false });
+
+  if (error) {
+    console.warn('[canva-sync] could not read imported designs:', error.message);
+    return { coachUpdated: false, count: 0, category: null };
+  }
+
+  const rows = (data ?? []) as Array<{ title: string | null; view_url: string | null }>;
+  const summary = buildCanvaContextSummary(rows);
+  const structuredData = {
+    source: 'canva',
+    count: rows.length,
+    designs: rows.slice(0, 50).map((r) => ({ title: r.title, viewUrl: r.view_url })),
+  };
+
+  const writeWith = (category: string) =>
+    service.rpc('update_knowledge_entry', {
+      p_user_id: userId,
+      p_field_identifier: CANVA_KB_FIELD,
+      p_category: category,
+      p_new_content: summary,
+      p_new_structured_data: structuredData,
+      p_new_metadata: { source: 'canva', count: rows.length },
+    });
+
+  let category = CANVA_KB_CATEGORY_PREFERRED;
+  let { error: kbError } = await writeWith(category);
+  if (isCategoryCheckViolation(kbError)) {
+    category = CANVA_KB_CATEGORY_FALLBACK;
+    ({ error: kbError } = await writeWith(category));
+  }
+
+  if (kbError) {
+    console.warn('[canva-sync] KB write failed:', kbError.message);
+    return { coachUpdated: false, count: rows.length, category: null };
+  }
+  return { coachUpdated: true, count: rows.length, category };
 }

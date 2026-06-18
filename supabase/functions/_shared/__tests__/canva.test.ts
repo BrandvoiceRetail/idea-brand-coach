@@ -9,6 +9,7 @@ import {
   buildRefreshTokenBody,
   isTokenExpired,
   normalizeDesign,
+  buildCanvaContextSummary,
   DEFAULT_CANVA_SCOPES,
   CANVA_AUTHORIZE_URL,
 } from '../canva';
@@ -173,5 +174,42 @@ describe('normalizeDesign', () => {
     const result = normalizeDesign(null);
     expect(result.id).toBe('');
     expect(result.title).toBe('Untitled design');
+  });
+});
+
+describe('buildCanvaContextSummary', () => {
+  it('returns empty string when there are no designs', () => {
+    expect(buildCanvaContextSummary([])).toBe('');
+  });
+
+  it('summarizes titled designs with a numbered list and a count', () => {
+    const summary = buildCanvaContextSummary([
+      { title: 'Brand Logo 2024' },
+      { title: 'Instagram Launch Post' },
+    ]);
+    expect(summary).toContain('imported 2 designs');
+    expect(summary).toContain('1. "Brand Logo 2024"');
+    expect(summary).toContain('2. "Instagram Launch Post"');
+  });
+
+  it('uses the singular form for a single design', () => {
+    const summary = buildCanvaContextSummary([{ title: 'Pitch Deck' }]);
+    expect(summary).toContain('imported 1 design ');
+    expect(summary).toContain('1. "Pitch Deck"');
+  });
+
+  it('caps the list at 25 titles and notes the remainder', () => {
+    const designs = Array.from({ length: 30 }, (_, i) => ({ title: `Design ${i + 1}` }));
+    const summary = buildCanvaContextSummary(designs);
+    expect(summary).toContain('imported 30 designs');
+    expect(summary).toContain('25. "Design 25"');
+    expect(summary).not.toContain('26. "Design 26"');
+    expect(summary).toContain('…and 5 more.');
+  });
+
+  it('handles designs with no usable titles', () => {
+    const summary = buildCanvaContextSummary([{ title: null }, { title: '   ' }]);
+    expect(summary).toContain('imported 2 designs');
+    expect(summary).toContain('2 untitled designs');
   });
 });

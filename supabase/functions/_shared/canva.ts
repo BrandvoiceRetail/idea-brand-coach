@@ -210,3 +210,54 @@ export function normalizeDesign(raw: unknown): NormalizedDesign {
     updatedAt,
   };
 }
+
+// ── Coach context ingestion ──────────────────────────────────────────────────
+
+/** Minimal shape needed to summarize an imported design for the coach. */
+export interface CanvaDesignTitle {
+  title: string | null;
+}
+
+/** Field identifier + categories used when writing Canva context into the KB. */
+export const CANVA_KB_FIELD = 'canva_brand_assets';
+/** Preferred KB category; falls back to CANVA_KB_CATEGORY_FALLBACK if the live
+ *  user_knowledge_base.category CHECK doesn't allow it yet (see canvaClient.ts). */
+export const CANVA_KB_CATEGORY_PREFERRED = 'visual_identity';
+export const CANVA_KB_CATEGORY_FALLBACK = 'core';
+
+const SUMMARY_MAX_TITLES = 25;
+
+/**
+ * Build a readable brand-collateral summary the brand coach can reference. The
+ * consultant (idea-framework-consultant context) already injects every current
+ * user_knowledge_base entry, so this prose becomes part of the coach's context.
+ * Returns '' when there are no imported designs (an empty KB entry is filtered
+ * out by the consultant's `content > ''` guard, effectively clearing it).
+ */
+export function buildCanvaContextSummary(
+  designs: ReadonlyArray<CanvaDesignTitle>,
+): string {
+  if (designs.length === 0) return '';
+
+  const titles = designs
+    .map((d) => (typeof d.title === 'string' ? d.title.trim() : ''))
+    .filter((t) => t.length > 0);
+
+  const count = designs.length;
+  const header =
+    `The user has imported ${count} design${count === 1 ? '' : 's'} from their ` +
+    `Canva account — existing brand collateral to weigh when advising on visual ` +
+    `identity, brand consistency, and on-brand execution.`;
+
+  if (titles.length === 0) {
+    return `${header}\n(${count} untitled design${count === 1 ? '' : 's'}.)`;
+  }
+
+  const shown = titles.slice(0, SUMMARY_MAX_TITLES);
+  const lines = shown.map((t, i) => `${i + 1}. "${t}"`);
+  const moreCount = count - shown.length;
+  const body =
+    `Designs:\n${lines.join('\n')}` +
+    (moreCount > 0 ? `\n…and ${moreCount} more.` : '');
+  return `${header}\n${body}`;
+}
