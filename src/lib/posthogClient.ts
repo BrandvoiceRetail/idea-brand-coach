@@ -51,7 +51,25 @@ export type AlphaEventName =
   | 'app_error_caught'
   // Coach answer quality — thumbs up/down on an assistant message. message_id
   // joins to chat_messages for the rated content.
-  | 'coach_message_rated';
+  | 'coach_message_rated'
+  // Feature adoption + failure — previously-dark merged features. Product
+  // import (Amazon listings) and the onboarding tour.
+  | 'product_import_started'
+  | 'product_import_completed'
+  | 'product_import_failed'
+  | 'tour_started'
+  | 'tour_completed'
+  | 'tour_abandoned'
+  // Figma integration — client-side capture of connect/import outcomes. The
+  // `*_failed` events surface backend (edge-function) failures into PostHog
+  // from the client, without an edge deploy.
+  | 'figma_connect_started'
+  | 'figma_connect_failed'
+  | 'figma_disconnected'
+  | 'figma_disconnect_failed'
+  | 'figma_import_started'
+  | 'figma_import_completed'
+  | 'figma_import_failed';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

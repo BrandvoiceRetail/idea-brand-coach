@@ -30,6 +30,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { captureServerException } from "../_shared/posthog.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -134,6 +135,7 @@ serve(async (req) => {
     return jsonResponse({ id: data.id, success: true }, 200);
   } catch (err) {
     console.error("save-feedback-event error:", (err as Error)?.message ?? err);
+    captureServerException("save-feedback-event", err, { status_code: 500 });
     return jsonResponse({ error: "Failed to save feedback event" }, 500);
   }
 });

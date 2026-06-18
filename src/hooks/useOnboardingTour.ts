@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { UseTourReturn } from '@/types/tour';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 // Storage keys for persisting tour state
 const STORAGE_KEYS = {
@@ -169,6 +170,7 @@ export function useOnboardingTour(): UseTourReturn {
     if (!isReady) {
       return;
     }
+    captureAlphaEvent('tour_started');
     setStepIndex(0);
     setRun(true);
   }, [isReady]);
@@ -182,6 +184,7 @@ export function useOnboardingTour(): UseTourReturn {
 
   // Complete the tour
   const completeTour = useCallback((stepsCompleted: number = 4): void => {
+    captureAlphaEvent('tour_completed', { steps_completed: stepsCompleted });
     setRun(false);
     setStepIndex(0);
 
@@ -195,6 +198,7 @@ export function useOnboardingTour(): UseTourReturn {
 
   // Skip the tour
   const skipTour = useCallback((currentStep: number = 0): void => {
+    captureAlphaEvent('tour_abandoned', { step: currentStep });
     setRun(false);
     setStepIndex(0);
 
