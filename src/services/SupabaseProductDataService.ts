@@ -9,6 +9,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import {
   IProductDataService,
   ImportResult,
@@ -45,21 +46,34 @@ export class SupabaseProductDataService implements IProductDataService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    captureAlphaEvent('product_import_started', { asin_count: asins.length });
     const results: ImportResultItem[] = [];
 
-    for (let start = 0; start < asins.length; start += IMPORT_BATCH_SIZE) {
-      const batch = asins.slice(start, start + IMPORT_BATCH_SIZE);
+    try {
+      for (let start = 0; start < asins.length; start += IMPORT_BATCH_SIZE) {
+        const batch = asins.slice(start, start + IMPORT_BATCH_SIZE);
 
-      const { data, error } = await supabase.functions.invoke('import-product-data', {
-        body: { asins: batch },
+        const { data, error } = await supabase.functions.invoke('import-product-data', {
+          body: { asins: batch },
+        });
+
+        if (error) throw error;
+
+        const batchResults = (data as ImportResult | null)?.results ?? [];
+        results.push(...batchResults);
+      }
+    } catch (err) {
+      captureAlphaEvent('product_import_failed', {
+        asin_count: asins.length,
+        error_type: err instanceof Error ? err.name : 'unknown',
       });
-
-      if (error) throw error;
-
-      const batchResults = (data as ImportResult | null)?.results ?? [];
-      results.push(...batchResults);
+      throw err;
     }
 
+    captureAlphaEvent('product_import_completed', {
+      asin_count: asins.length,
+      result_count: results.length,
+    });
     return { status: 'ok', results };
   }
 

@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import { AISuggestionPreview } from '@/components/AISuggestionPreview';
 
 /**
@@ -89,6 +90,7 @@ export const AISuggestionHandler = forwardRef<AISuggestionHandlerRef, AISuggesti
 
       } catch (error) {
         console.error('AI Assistant Error:', error);
+        captureAlphaEvent('ai_assist_failed', { error_type: error instanceof Error ? error.name : 'unknown' });
         toast({
           title: "AI Assistant Error",
           description: "Unable to generate content right now. Please try again.",

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Copy, RefreshCw, Sparkles, CheckCircle, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { captureAlphaEvent } from "@/lib/posthogClient";
 import { useBrand } from "@/contexts/BrandContext";
 import { PaywallModal } from "@/components/PaywallModal";
 import { usePersistedField } from "@/hooks/usePersistedField";
@@ -169,6 +170,7 @@ export default function BrandCopyGenerator() {
 
       generatedCopy.onChange(data.copy);
       setHasUserContext(data.hasUserContext || false);
+      captureAlphaEvent('brand_copy_completed', { format: format.value || 'pdp-description' });
 
       toast({
         title: "Copy Generated!",
@@ -178,6 +180,7 @@ export default function BrandCopyGenerator() {
       });
     } catch (error) {
       console.error('Error generating copy:', error);
+      captureAlphaEvent('brand_copy_failed', { error_type: error instanceof Error ? error.name : 'unknown' });
       toast({
         title: "Generation Failed",
         description: "There was an error generating your copy. Please try again.",

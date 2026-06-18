@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Search, Target, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { captureAlphaEvent } from "@/lib/posthogClient";
 import { usePersistedField } from "@/hooks/usePersistedField";
 import { SyncStatusIndicator } from "@/components/SyncStatusIndicator";
 import type { SyncStatus } from "@/lib/knowledge-base/interfaces";
@@ -75,6 +76,7 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
 
       analysis.onChange(data.analysis || "");
       onInsightsGenerated(data.analysis || "");
+      captureAlphaEvent('buyer_intent_completed');
 
       toast({
         title: "Analysis Complete! 🎯",
@@ -82,6 +84,7 @@ export function BuyerIntentResearch({ onInsightsGenerated }: BuyerIntentResearch
       });
     } catch (error) {
       console.error('Error analyzing buyer intent:', error);
+      captureAlphaEvent('buyer_intent_failed', { error_type: error instanceof Error ? error.name : 'unknown' });
       toast({
         title: "Analysis Failed",
         description: "Unable to analyze buyer intent. Please try again.",

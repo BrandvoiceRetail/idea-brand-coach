@@ -52,6 +52,39 @@ export type AlphaEventName =
   // Coach answer quality — thumbs up/down on an assistant message. message_id
   // joins to chat_messages for the rated content.
   | 'coach_message_rated'
+  // Feature adoption + failure — previously-dark merged features. Product
+  // import (Amazon listings) and the onboarding tour.
+  | 'product_import_started'
+  | 'product_import_completed'
+  | 'product_import_failed'
+  | 'tour_started'
+  | 'tour_completed'
+  | 'tour_abandoned'
+  // Figma integration — client-side capture of connect/import outcomes. The
+  // `*_failed` events surface backend (edge-function) failures into PostHog
+  // from the client, without an edge deploy.
+  | 'figma_connect_started'
+  | 'figma_connect_failed'
+  | 'figma_disconnected'
+  | 'figma_disconnect_failed'
+  | 'figma_import_started'
+  | 'figma_import_completed'
+  | 'figma_import_failed'
+  // Output engine (web app) — PDF/strategy export, and the research features.
+  // `which` distinguishes brand_strategy_pdf vs competitor_pdf.
+  | 'export_started'
+  | 'export_completed'
+  | 'export_failed'
+  | 'buyer_intent_completed'
+  | 'buyer_intent_failed'
+  | 'competitive_analysis_started'
+  | 'competitive_analysis_failed'
+  // Remaining merged web features — failure capture (+ brand-copy completion).
+  | 'brand_copy_completed'
+  | 'brand_copy_failed'
+  | 'contextual_help_failed'
+  | 'ai_assist_failed'
+  | 'document_upload_failed'
   // Brand Funnel Tracker — asset audit + fix + lift events.
   | 'funnel_asset_uploaded'
   | 'funnel_asset_audited'

@@ -44,6 +44,7 @@ import { getUserSupabase } from '../supabaseUser.js';
 import type { ArtifactKind } from '../contracts/index.js';
 import { gateWrite } from './writeAuth.js';
 import { safeLog } from '../logging/redact.js';
+import { captureMcpEvent } from '../posthog.js';
 import { getIdentity, userTag } from '../context/identity.js';
 
 /** The artifact kinds Workbook A can render (the union over its five sheets). */
@@ -292,6 +293,12 @@ export function registerExportWorkbookTool(server: McpServer, deps?: Partial<Exp
       });
 
       if (result.status === 'exported') {
+        captureMcpEvent(identity.userId as string, 'mcp_workbook_exported', {
+          which,
+          sheet_count: result.sheets.length,
+          missing_count: result.missing.length,
+          uploaded: !!result.uploaded,
+        });
         return {
           content: [
             {
@@ -310,6 +317,10 @@ export function registerExportWorkbookTool(server: McpServer, deps?: Partial<Exp
       }
 
       if (result.status === 'needs_input') {
+        captureMcpEvent(identity.userId as string, 'mcp_workbook_needs_input', {
+          which,
+          missing_count: result.missing.length,
+        });
         return {
           content: [
             {
@@ -321,6 +332,7 @@ export function registerExportWorkbookTool(server: McpServer, deps?: Partial<Exp
         };
       }
 
+      captureMcpEvent(identity.userId as string, 'mcp_workbook_failed', { which });
       return {
         content: [{ type: 'text' as const, text: `export_workbook failed: ${result.note}` }],
         structuredContent: { ok: false, note: result.note },

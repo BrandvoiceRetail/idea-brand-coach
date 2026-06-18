@@ -10,6 +10,7 @@ import {
   type FigmaImport,
 } from '@/services/FigmaIntegrationService';
 import { ROUTES } from '@/config/routes';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 /** sessionStorage key for the client-side CSRF check on the OAuth round-trip. */
 export const FIGMA_STATE_KEY = 'figma_oauth_state';
@@ -53,11 +54,14 @@ export function useFigmaIntegration(): UseFigmaIntegration {
   }, [refresh]);
 
   const connect = useCallback(async (): Promise<void> => {
+    captureAlphaEvent('figma_connect_started');
     try {
       const { url, state } = await FigmaIntegrationService.startConnect(figmaRedirectUri());
       sessionStorage.setItem(FIGMA_STATE_KEY, state);
       window.location.href = url; // full-page redirect to Figma's consent screen
     } catch (e) {
+      // Surfaces the figma-oauth-start backend failure (e.g. 500 not_configured) into PostHog.
+      captureAlphaEvent('figma_connect_failed', { error_type: e instanceof Error ? e.name : 'unknown' });
       toast.error(e instanceof Error ? e.message : 'Could not start Figma connection');
     }
   }, []);
@@ -65,9 +69,11 @@ export function useFigmaIntegration(): UseFigmaIntegration {
   const disconnect = useCallback(async (): Promise<void> => {
     try {
       await FigmaIntegrationService.disconnect();
+      captureAlphaEvent('figma_disconnected');
       toast.success('Figma disconnected');
       await refresh();
     } catch (e) {
+      captureAlphaEvent('figma_disconnect_failed', { error_type: e instanceof Error ? e.name : 'unknown' });
       toast.error(e instanceof Error ? e.message : 'Could not disconnect Figma');
     }
   }, [refresh]);
@@ -75,12 +81,15 @@ export function useFigmaIntegration(): UseFigmaIntegration {
   const importFile = useCallback(
     async (fileUrlOrKey: string): Promise<FigmaImport | null> => {
       setImporting(true);
+      captureAlphaEvent('figma_import_started');
       try {
         const { import: imported } = await FigmaIntegrationService.importFile(fileUrlOrKey);
+        captureAlphaEvent('figma_import_completed');
         toast.success(`Imported "${imported.file_name ?? 'design'}" into your brand context`);
         await refresh();
         return imported;
       } catch (e) {
+        captureAlphaEvent('figma_import_failed', { error_type: e instanceof Error ? e.name : 'unknown' });
         toast.error(e instanceof Error ? e.message : 'Could not import from Figma');
         return null;
       } finally {
