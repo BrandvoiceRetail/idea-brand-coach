@@ -28,7 +28,8 @@ export type AvatarScopedDomain =
   | 'chat-sessions'
   | 'chat-messages'
   | 'field-values'
-  | 'artifacts';
+  | 'artifacts'
+  | 'diagnostic';
 
 /**
  * Build an avatar-scoped react-query key.
@@ -90,4 +91,18 @@ export function avatarArtifactsKey(
   ...rest: readonly (string | number)[]
 ): readonly (string | number)[] {
   return avatarScopedKey('artifacts', avatarId, ...rest);
+}
+
+/**
+ * Per-avatar diagnostic-overlay key (Diagnostic BOTH, locked #5). The brand
+ * BASELINE (avatar_id NULL) collapses to the literal `'brand'` segment so it
+ * shares one cache bucket and is still namespaced (a switch invalidates it too,
+ * which is harmless — the baseline is brand-stable). An avatar overlay keys on
+ * its own id. `kind` distinguishes baseline vs overlay reads under one avatar.
+ */
+export function avatarDiagnosticKey(
+  avatarId: string | undefined,
+  kind: 'baseline' | 'overlay',
+): readonly (string | number)[] {
+  return avatarScopedKey('diagnostic', avatarId ?? 'brand', kind);
 }

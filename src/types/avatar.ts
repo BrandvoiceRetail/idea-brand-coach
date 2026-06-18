@@ -132,6 +132,9 @@ export interface Avatar {
   /** Whether this avatar is a template (e.g., 'Weekend Warrior', 'Budget Conscious') */
   is_template: boolean;
 
+  /** Whether this avatar is the brand's primary (the star). One primary per brand (P1 partial unique idx). */
+  is_primary?: boolean;
+
   /** Overall completion percentage for multi-avatar tracking (0-100) */
   completion_percentage: number;
 

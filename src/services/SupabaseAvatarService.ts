@@ -53,6 +53,7 @@ export class SupabaseAvatarService implements IAvatarService {
       buying_behavior: data.buying_behavior as Avatar['buying_behavior'],
       voice_of_customer: data.voice_of_customer as string | null,
       is_template: data.is_template as boolean,
+      is_primary: (data.is_primary as boolean) ?? false,
       completion_percentage: (data.completion_percentage as number) ?? 0,
       created_at: data.created_at as string,
       updated_at: data.updated_at as string,

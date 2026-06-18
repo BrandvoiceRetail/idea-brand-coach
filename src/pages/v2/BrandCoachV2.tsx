@@ -10,6 +10,9 @@ import { DocumentUpload } from '@/components/DocumentUpload';
 import { TwoPanelTemplate } from '@/components/templates/TwoPanelTemplate';
 import { ChapterSectionAccordion } from '@/components/v2/ChapterSectionAccordion';
 import { BrandCoachHeader } from '@/components/v2/BrandCoachHeader';
+import { AvatarManageDialogs } from '@/components/v2/AvatarManageDialogs';
+import { AvatarSwitchConfirm } from '@/components/v2/AvatarSwitchConfirm';
+import { ForensicAvatarBuilder } from '@/components/v2/forensic/ForensicAvatarBuilder';
 import { ExportReadinessModal } from '@/components/v2/ExportReadinessModal';
 import { ChatMessageList } from '@/components/v2/ChatMessageList';
 import { ChatInputBar } from '@/components/v2/ChatInputBar';
@@ -45,6 +48,10 @@ const BrandCoachV2 = (): JSX.Element => {
     isMobile,
     currentAvatar,
     avatarData,
+    brandName,
+    renameTargetId,
+    deleteTargetId,
+    forensicBuildAvatarId,
     sessions,
     currentSessionId,
     isLoadingSessions,
@@ -102,6 +109,16 @@ const BrandCoachV2 = (): JSX.Element => {
     regenerateTitle,
     handleAvatarSelect,
     handleCreateAvatar,
+    handleRenameAvatar,
+    handleRenameSubmit,
+    handleDuplicateAvatar,
+    handleDeleteAvatar,
+    handleDeleteConfirm,
+    handleSetPrimaryAvatar,
+    handleForensicBuild,
+    setRenameTargetId,
+    setDeleteTargetId,
+    setForensicBuildAvatarId,
     handleSendMessage,
     handleCopyChat,
     handleClearChat,
@@ -160,10 +177,49 @@ const BrandCoachV2 = (): JSX.Element => {
         savedFieldCount={savedFieldCount}
         fieldValues={fieldValues}
         onCreateAvatar={handleCreateAvatar}
+        brandName={brandName}
+        onRenameAvatar={handleRenameAvatar}
+        onDuplicateAvatar={handleDuplicateAvatar}
+        onDeleteAvatar={handleDeleteAvatar}
+        onSetPrimaryAvatar={handleSetPrimaryAvatar}
+        onForensicBuild={handleForensicBuild}
         activeMilestone={activeMilestone}
         isMilestoneComplete={isMilestoneComplete}
         onBeforeExport={() => setIsExportReadinessOpen(true)}
         exportRef={exportRef}
+      />
+
+      {/* Avatar CRUD dialogs (P4b §4.5) */}
+      <AvatarManageDialogs
+        rename={{
+          open: renameTargetId !== null,
+          onOpenChange: (open) => { if (!open) setRenameTargetId(null); },
+          currentName: avatarData.find((a) => a.id === renameTargetId)?.name ?? '',
+          onSubmit: handleRenameSubmit,
+        }}
+      />
+      <AvatarSwitchConfirm
+        open={deleteTargetId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTargetId(null); }}
+        avatarName={avatarData.find((a) => a.id === deleteTargetId)?.name ?? ''}
+        isCurrent={deleteTargetId === currentAvatar?.id}
+        fallbackName={
+          deleteTargetId === currentAvatar?.id
+            ? (avatarData.find((a) => a.id !== deleteTargetId && a.is_primary)?.name
+                ?? avatarData.find((a) => a.id !== deleteTargetId)?.name
+                ?? null)
+            : null
+        }
+        onConfirm={handleDeleteConfirm}
+      />
+
+      {/* Forensic builder (§4.2) — opened from the dropdown kebab. */}
+      <ForensicAvatarBuilder
+        avatarId={forensicBuildAvatarId}
+        avatarName={avatarData.find((a) => a.id === forensicBuildAvatarId)?.name ?? ''}
+        open={forensicBuildAvatarId !== null}
+        onOpenChange={(open) => { if (!open) setForensicBuildAvatarId(null); }}
+        preloadedReviews={preloadedReviews}
       />
 
       <ExportReadinessModal

@@ -35,7 +35,6 @@ import IdeaInsight from "./pages/IdeaInsight";
 import IdeaDistinctive from "./pages/IdeaDistinctive";
 import IdeaEmpathy from "./pages/IdeaEmpathy";
 import IdeaAuthenticity from "./pages/IdeaAuthenticity";
-import AvatarBuilder from "./pages/AvatarBuilder";
 import BrandCanvas from "./pages/BrandCanvas";
 import BrandCopyGenerator from "./pages/BrandCopyGenerator";
 import ConversationHistory from "./pages/ConversationHistory";
@@ -82,8 +81,8 @@ const App = () => {
         <AuthProvider>
           <AuthGate>
             <VersionProvider>
-              <BrandProvider>
               <AvatarProvider>
+              <BrandProvider>
                 <SystemKBProvider>
                   <FieldReviewProvider>
                     <OnboardingTourProvider>
@@ -142,7 +141,9 @@ const App = () => {
 
                 <Route path="/idea/authenticity" element={<Navigate to="/v1/idea/authenticity" replace />} />
 
-                <Route path="/avatar" element={<Navigate to="/v1/avatar" replace />} />
+                {/* P4b §4.5: /avatar goes straight to the V2 coach (the V1 builder
+                    is gone) — avoids a double hop through /v1/avatar. */}
+                <Route path="/avatar" element={<Navigate to="/v2/coach" replace />} />
 
                 <Route path="/canvas" element={<Navigate to="/v1/canvas" replace />} />
 
@@ -273,11 +274,9 @@ const App = () => {
                   </Layout>
                 } />
 
-                <Route path="/v1/avatar" element={
-                  <Layout>
-                    <AvatarBuilder />
-                  </Layout>
-                } />
+                {/* P4b §4.5: the V1 avatar builder is superseded by the V2 coach's
+                    multi-avatar header + forensic builder. Redirect to /v2/coach. */}
+                <Route path="/v1/avatar" element={<Navigate to="/v2/coach" replace />} />
 
                 <Route path="/v1/canvas" element={
                   <Layout>
@@ -305,8 +304,8 @@ const App = () => {
                     </OnboardingTourProvider>
                   </FieldReviewProvider>
                 </SystemKBProvider>
-              </AvatarProvider>
               </BrandProvider>
+              </AvatarProvider>
             </VersionProvider>
           </AuthGate>
         </AuthProvider>

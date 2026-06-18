@@ -22,6 +22,33 @@ copy and ~8 embedded reviews are turned into `TrustGapEvidence` and fed back int
 so the read cites the seller's real customers instead of generic advice. When evidence is present, a
 small **"Grounded in your listing"** badge shows near the four-pillar grid.
 
+## Diagnostic BOTH — brand baseline vs per-avatar overlay (locked #5)
+
+A diagnostic submission is now **avatar-scoped**: `diagnostic_submissions.avatar_id`
+**NULL = brand baseline**, a set `avatar_id` = a **per-avatar overlay**. `brand_id` is
+resolved **server-side** in `SupabaseDiagnosticService.saveDiagnostic` (one brand per user)
+and never accepted from the caller. `getLatestDiagnostic(avatarId?)` scopes the read:
+`undefined` = any scope (back-compat), `null` = baseline only, `'<uuid>'` = that overlay only.
+
+**How an overlay row gets created (the authored write path).** `syncFromLocalStorage(avatarId?)`
+is the single write entry point for a newly-taken diagnostic. The first-signup sync (`Auth.tsx`)
+passes no avatar, so it establishes the **baseline**. On the results page, once a baseline
+already exists AND an avatar is current, the sync passes `selectedAvatarId`, so a re-take lands
+as that avatar's **overlay** — this is what makes compare-mode (`compareEnabled = overlay && baseline`)
+render. Both `useDiagnostic` mutations invalidate the avatar-scoped `'diagnostic'` keys (not just
+`['diagnostic']`) so a fresh overlay shows up in compare-mode immediately.
+
+`useAvatarDiagnosticCompare(avatarId)` reads baseline + the current avatar's overlay in
+parallel under the avatar-scoped query namespace (`avatarDiagnosticKey` in `src/lib/queryKeys.ts`
+— the bleed firewall, so an avatar switch invalidates them). `DiagnosticResults` prefers the
+**overlay** when present and passes the **baseline** as `baselineScores` to the scorecard;
+`TrustGapScorecard` then renders **compare-mode** — a "Comparing <avatar> against your brand
+baseline" banner, an overall `±N vs baseline` line, and a per-pillar `DeltaBadge`
+(`scorecard_compared` analytics, scores/delta only). With no overlay it falls back to the
+baseline / page scores (single-scope, legacy render). The `run_trust_gap` MCP tool is **pure
+compute** — it accepts an optional `avatar_id` echoed in its text output for attribution but
+**never persists**; its `structuredContent` stays byte-identical to the engine (Calculation Parity).
+
 ## The pieces
 
 | Layer | Path | Notes |

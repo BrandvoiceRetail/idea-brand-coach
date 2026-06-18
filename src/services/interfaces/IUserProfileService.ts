@@ -44,4 +44,14 @@ export interface IUserProfileService {
    * pointer is set.
    */
   getCurrentAvatarId(): Promise<string | null>;
+
+  /**
+   * Mark an avatar as the brand's primary (the star) via the ownership-checked
+   * `set_primary_avatar` RPC (P1). The RPC clears the prior primary and sets the
+   * new one in one tx, mirroring `brands.primary_avatar_id`. Rejects (throws) if
+   * the avatar is not owned by the caller or has no brand.
+   *
+   * @param avatarId - ID of the avatar to make primary
+   */
+  setPrimaryAvatarRPC(avatarId: string): Promise<void>;
 }

@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useAvatarTabs } from '@/hooks/useAvatarTabs';
+import { useAvatarContext } from '@/contexts/AvatarContext';
+import { useAvatarService } from '@/hooks/useAvatarService';
+import { SupabaseBrandService } from '@/services/SupabaseBrandService';
 import type { Avatar } from '@/types/avatar';
 import type { CompetitiveAnalysis } from '@/types/competitive-analysis';
 
@@ -163,8 +165,13 @@ interface BrandContextType {
   currentAvatarId: string | null;
   avatarsList: Avatar[];
   switchAvatar: (id: string) => void;
-  createAvatar: (data: { name: string; metadata?: any }) => Promise<Avatar>;
-  updateAvatar: (id: string, update: { name?: string; completion_percentage?: number; last_accessed_at?: string; metadata?: any }) => Promise<void>;
+  createAvatar: (data: { name: string; metadata?: Record<string, unknown> }) => Promise<Avatar>;
+  // Narrowed to `{ name? }`: the canonical store (AvatarContext) only exposes a
+  // rename through this compat shim. The old V1 fields
+  // (completion_percentage/last_accessed_at/metadata) are no longer routed —
+  // narrowing the type makes that explicit at the call site rather than silently
+  // dropping fields.
+  updateAvatar: (id: string, update: { name?: string }) => Promise<void>;
   deleteAvatar: (id: string) => Promise<void>;
   isLoadingAvatars: boolean;
 }
@@ -177,16 +184,49 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [competitiveAnalysis, setCompetitiveAnalysis] = useState<CompetitiveAnalysis | null>(null);
   const { user, loading: authLoading } = useAuth();
 
-  // Multi-avatar support
+  // Multi-avatar support — delegate ENTIRELY to the canonical AvatarContext store
+  // (P4b §4.5). The former localStorage `useAvatarTabs` store is gone; this is a
+  // thin compatibility shim over the one store so legacy `useBrand()` consumers
+  // keep working while reading/writing the same avatar state as everything else.
   const {
     avatars,
-    activeAvatarId,
-    isLoading: isLoadingAvatars,
-    createAvatar,
-    updateAvatar,
-    deleteAvatar,
-    switchAvatar,
-  } = useAvatarTabs();
+    selectedAvatarId,
+    isLoadingAvatars,
+    setCurrentAvatar,
+    renameAvatar,
+    deleteAvatar: deleteAvatarCanonical,
+  } = useAvatarContext();
+  const { createAvatar: createAvatarService } = useAvatarService();
+
+  const switchAvatar = useCallback((id: string): void => { void setCurrentAvatar(id); }, [setCurrentAvatar]);
+
+  const createAvatar = useCallback(
+    async (data: { name: string; metadata?: Record<string, unknown> }): Promise<Avatar> => {
+      const brandService = new SupabaseBrandService(supabase);
+      const { data: brand, error: brandError } = await brandService.getOrCreateDefaultBrand();
+      if (brandError || !brand) throw new Error('Could not resolve brand for avatar creation');
+      const created = await createAvatarService({
+        name: data.name,
+        brand_id: brand.id,
+      });
+      if (!created) throw new Error('Failed to create avatar');
+      void setCurrentAvatar(created.id);
+      return created as unknown as Avatar;
+    },
+    [createAvatarService, setCurrentAvatar],
+  );
+
+  const updateAvatar = useCallback(
+    async (id: string, update: { name?: string }): Promise<void> => {
+      if (update.name !== undefined) await renameAvatar(id, update.name);
+    },
+    [renameAvatar],
+  );
+
+  const deleteAvatar = useCallback(
+    async (id: string): Promise<void> => { await deleteAvatarCanonical(id); },
+    [deleteAvatarCanonical],
+  );
 
   // Load diagnostic status from database on mount
   useEffect(() => {
@@ -323,8 +363,8 @@ export const BrandProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       competitiveAnalysis,
       setCompetitiveAnalysis,
       // Multi-avatar support
-      currentAvatarId: activeAvatarId,
-      avatarsList: avatars,
+      currentAvatarId: selectedAvatarId,
+      avatarsList: avatars ?? [],
       switchAvatar,
       createAvatar,
       updateAvatar,

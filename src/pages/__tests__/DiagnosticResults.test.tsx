@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DiagnosticResults from '../DiagnosticResults';
 import { useAuth } from '@/hooks/useAuth';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
+import { useAvatarContext } from '@/contexts/AvatarContext';
+import { useAvatarDiagnosticCompare } from '@/hooks/useAvatarDiagnosticCompare';
 
 const mockNavigate = vi.hoisted(() => vi.fn());
 
@@ -31,7 +33,19 @@ vi.mock('@/services/ServiceProvider', () => ({
       buildCoachContext: vi.fn().mockReturnValue(''),
       buildTrustGapEvidence: vi.fn().mockResolvedValue({ listings: [], topReviews: [] }),
     },
+    diagnosticService: {
+      getLatestDiagnostic: vi.fn().mockResolvedValue(null),
+    },
   }),
+}));
+// AvatarContext + the compare hook drive Diagnostic BOTH; stub both at page level
+// (each has its own focused tests). Default: no current avatar, no overlay/baseline,
+// so the page renders the single-scope (page diagnosticData) scorecard as before.
+vi.mock('@/contexts/AvatarContext', () => ({
+  useAvatarContext: vi.fn(() => ({ selectedAvatarId: null, currentAvatar: null })),
+}));
+vi.mock('@/hooks/useAvatarDiagnosticCompare', () => ({
+  useAvatarDiagnosticCompare: vi.fn(() => ({ baseline: null, overlay: null, isLoading: false })),
 }));
 vi.mock('@/components/BetaNavigationWidget', () => ({
   BetaNavigationWidget: () => <div>Beta Navigation</div>
@@ -293,6 +307,49 @@ describe('DiagnosticResults', () => {
     expect(screen.getAllByText('Building trust').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Developing').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Trust gap').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should render compare-mode delta when both an overlay and a baseline exist', () => {
+    // Diagnostic BOTH: current avatar has an overlay; brand has a baseline →
+    // compare-mode renders the avatar-vs-baseline banner + delta.
+    vi.mocked(useAvatarContext).mockReturnValue({
+      selectedAvatarId: 'avatar-9',
+      currentAvatar: { id: 'avatar-9', name: 'Busy Parent' },
+    } as any);
+    vi.mocked(useAvatarDiagnosticCompare).mockReturnValue({
+      baseline: {
+        id: 'b', user_id: '123', answers: {},
+        scores: { overall: 50, insight: 50, distinctive: 50, empathetic: 50, authentic: 50 },
+        completed_at: '2025-01-01T00:00:00Z', created_at: '2025-01-01T00:00:00Z',
+      },
+      overlay: {
+        id: 'o', user_id: '123', answers: {},
+        scores: { overall: 73, insight: 75, distinctive: 60, empathetic: 85, authentic: 70 },
+        completed_at: '2025-01-02T00:00:00Z', created_at: '2025-01-02T00:00:00Z',
+      },
+      isLoading: false,
+    } as any);
+
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: '123', email: 'test@example.com' } as any,
+      loading: false, signIn: vi.fn(), signUp: vi.fn(), signOut: vi.fn(), resetPassword: vi.fn(),
+    } as any);
+
+    vi.mocked(useDiagnostic).mockReturnValue({
+      latestDiagnostic: {
+        id: '1', user_id: '123', answers: {},
+        scores: { overall: 73, insight: 75, distinctive: 60, empathetic: 85, authentic: 70 },
+        completed_at: '2025-01-02T00:00:00Z', created_at: '2025-01-02T00:00:00Z',
+      },
+      isLoadingLatest: false, diagnosticHistory: [], isLoadingHistory: false,
+      saveDiagnostic: vi.fn(), syncFromLocalStorage: vi.fn(), calculateScores: vi.fn(), isSyncing: false,
+    } as any);
+
+    render(<DiagnosticResults />, { wrapper });
+
+    expect(screen.getByTestId('trustgap-compare-banner')).toBeInTheDocument();
+    expect(screen.getByTestId('trustgap-overall-delta')).toBeInTheDocument();
+    expect(screen.getByText('Busy Parent')).toBeInTheDocument();
   });
 
   it('should navigate to auth page when create account button is clicked', () => {

@@ -8,12 +8,24 @@ import { useServices } from '@/services/ServiceProvider';
 import { DiagnosticCreate } from '@/types/diagnostic';
 import { useToast } from '@/hooks/use-toast';
 import { useBrand } from '@/contexts/BrandContext';
+import { AVATAR_KEY_PREFIX } from '@/lib/queryKeys';
 
 export const useDiagnostic = () => {
   const { diagnosticService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { updateBrandData } = useBrand();
+
+  // Invalidate BOTH the legacy `['diagnostic']` queries and the avatar-scoped
+  // diagnostic compare keys (`['avatar', …, 'diagnostic', …]`) so a fresh write
+  // — including a newly-created overlay — is reflected in compare-mode.
+  const invalidateDiagnostic = () => {
+    queryClient.invalidateQueries({ queryKey: ['diagnostic'] });
+    queryClient.invalidateQueries({
+      predicate: (q) =>
+        q.queryKey[0] === AVATAR_KEY_PREFIX && q.queryKey[2] === 'diagnostic',
+    });
+  };
 
   // Query: Get latest diagnostic
   const {
@@ -41,7 +53,7 @@ export const useDiagnostic = () => {
   const saveDiagnosticMutation = useMutation({
     mutationFn: (data: DiagnosticCreate) => diagnosticService.saveDiagnostic(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['diagnostic'] });
+      invalidateDiagnostic();
       updateBrandData('insight', { completed: true });
       toast({
         title: 'Diagnostic Saved',
@@ -57,12 +69,14 @@ export const useDiagnostic = () => {
     },
   });
 
-  // Mutation: Sync from localStorage
+  // Mutation: Sync from localStorage. Optional avatarId scopes the write to an
+  // overlay (locked #5) — passed by the results page when an avatar is current,
+  // omitted by the first-signup sync so the brand baseline is established first.
   const syncFromLocalStorageMutation = useMutation({
-    mutationFn: () => diagnosticService.syncFromLocalStorage(),
+    mutationFn: (avatarId?: string | null) => diagnosticService.syncFromLocalStorage(avatarId),
     onSuccess: (data) => {
       if (data) {
-        queryClient.invalidateQueries({ queryKey: ['diagnostic'] });
+        invalidateDiagnostic();
         updateBrandData('insight', { completed: true });
         toast({
           title: 'Diagnostic Synced',

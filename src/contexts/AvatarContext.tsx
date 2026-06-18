@@ -56,6 +56,24 @@ interface AvatarContextValue {
   avatars: Avatar[] | undefined;
   /** Loading state from useAvatars hook */
   isLoadingAvatars: boolean;
+
+  // ── Canonical avatar CRUD (P4b §4.5). This context is the ONE store, so CRUD
+  // funnels through here too — each op writes via the avatar service, refreshes
+  // the brand-level avatar list, and (for delete-current) honors the
+  // delete-row-then-clearCurrentAvatar contract so the server pointer can't
+  // strand on a deleted row.
+  /** Rename an avatar (display name only). */
+  renameAvatar: (id: string, name: string) => Promise<void>;
+  /** Duplicate an avatar (copies all persona data under a new unique name). */
+  duplicateAvatar: (id: string) => Promise<Avatar | null>;
+  /**
+   * Delete an avatar. When deleting the CURRENT avatar, repoints to a fallback
+   * (the brand's primary if present, else the first remaining non-template) AFTER
+   * the row is deleted — the AvatarContext delete contract.
+   */
+  deleteAvatar: (id: string) => Promise<void>;
+  /** Mark an avatar as the brand's primary (the star) via set_primary_avatar RPC. */
+  setPrimaryAvatar: (id: string) => Promise<void>;
 }
 
 const AvatarContext = createContext<AvatarContextValue | undefined>(undefined);
@@ -92,8 +110,15 @@ function writeStoredAvatarId(avatarId: string | null): void {
 export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProviderProps): JSX.Element {
   const { avatars, isLoading: isLoadingAvatars } = useAvatars();
   const { user } = useAuth();
-  const { userProfileService, chatService } = useServices();
+  const { userProfileService, chatService, avatarService } = useServices();
   const queryClient = useQueryClient();
+
+  // Refresh the brand-level avatar list (intentionally OUTSIDE the avatar-scoped
+  // namespace — see queryKeys.ts). CRUD ops below call this after a write.
+  const refreshAvatarList = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: ['avatars'] }),
+    [queryClient],
+  );
 
   // Session-follows-avatar (design §4.1): default to the chat service's thread
   // ensure; an explicit prop (tests) overrides it.
@@ -245,6 +270,67 @@ export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProvi
     });
   }, [setCurrentAvatar, queryClient]);
 
+  // ── Canonical CRUD (P4b §4.5). ───────────────────────────────────────────
+  const renameAvatar = useCallback(async (id: string, name: string): Promise<void> => {
+    try {
+      await avatarService.update(id, { name });
+      await refreshAvatarList();
+    } catch (error) {
+      console.error('[AvatarContext] renameAvatar failed:', error);
+      toast.error('Could not rename avatar');
+      throw error;
+    }
+  }, [avatarService, refreshAvatarList]);
+
+  const duplicateAvatar = useCallback(async (id: string): Promise<Avatar | null> => {
+    try {
+      const copy = await avatarService.duplicate(id);
+      await refreshAvatarList();
+      return copy;
+    } catch (error) {
+      console.error('[AvatarContext] duplicateAvatar failed:', error);
+      toast.error('Could not duplicate avatar');
+      throw error;
+    }
+  }, [avatarService, refreshAvatarList]);
+
+  const deleteAvatar = useCallback(async (id: string): Promise<void> => {
+    // Resolve the delete-current fallback BEFORE the row is gone: prefer the
+    // brand's primary, else the first remaining non-template, else null.
+    const isCurrent = id === selectedAvatarId;
+    const remaining = (avatars ?? []).filter((a) => a.id !== id);
+    const fallback = isCurrent
+      ? (remaining.find((a) => a.is_primary) ?? remaining.find((a) => !a.is_template) ?? remaining[0] ?? null)
+      : null;
+
+    try {
+      // Delete the row FIRST so `profiles.current_avatar_id` (ON DELETE SET NULL)
+      // self-clears, then repoint via the canonical switch path (the contract).
+      await avatarService.delete(id);
+      await refreshAvatarList();
+      if (isCurrent) {
+        await clearCurrentAvatar(fallback ? fallback.id : null);
+      }
+      toast.success('Avatar deleted');
+    } catch (error) {
+      console.error('[AvatarContext] deleteAvatar failed:', error);
+      toast.error('Could not delete avatar');
+      throw error;
+    }
+  }, [avatarService, refreshAvatarList, clearCurrentAvatar, selectedAvatarId, avatars]);
+
+  const setPrimaryAvatar = useCallback(async (id: string): Promise<void> => {
+    try {
+      await userProfileService.setPrimaryAvatarRPC(id);
+      await refreshAvatarList();
+      toast.success('Primary avatar updated');
+    } catch (error) {
+      console.error('[AvatarContext] setPrimaryAvatar failed:', error);
+      toast.error('Could not set primary avatar');
+      throw error;
+    }
+  }, [userProfileService, refreshAvatarList]);
+
   return (
     <AvatarContext.Provider
       value={{
@@ -254,6 +340,10 @@ export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProvi
         currentAvatar,
         avatars,
         isLoadingAvatars,
+        renameAvatar,
+        duplicateAvatar,
+        deleteAvatar,
+        setPrimaryAvatar,
       }}
     >
       {children}

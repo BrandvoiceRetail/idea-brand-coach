@@ -122,4 +122,14 @@ export class SupabaseUserProfileService implements IUserProfileService {
     if (error) throw error;
     return data?.current_avatar_id ?? null;
   }
+
+  /**
+   * Mark an avatar as the brand's primary via the ownership-checked
+   * `set_primary_avatar` RPC (P1). SECURITY INVOKER; RAISEs `avatar_not_owned`
+   * or `avatar_has_no_brand`, which surface here as thrown errors.
+   */
+  async setPrimaryAvatarRPC(avatarId: string): Promise<void> {
+    const { error } = await supabase.rpc('set_primary_avatar', { p_avatar_id: avatarId });
+    if (error) throw error;
+  }
 }
