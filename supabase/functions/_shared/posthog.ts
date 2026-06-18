@@ -17,13 +17,19 @@
 
 const POSTHOG_HOST = (Deno.env.get('POSTHOG_HOST') ?? 'https://eu.i.posthog.com').replace(/\/+$/, '');
 
-/** Fire one PostHog event from the edge runtime. No-op when unconfigured. */
+// Project 203641 ingestion key. This is a PUBLISHABLE (write-only) PostHog
+// project key — the same one shipped in the browser bundle, NOT a secret — so
+// it's a safe fallback that activates the relay without a Supabase secret. Set
+// the POSTHOG_API_KEY secret to override (e.g. to point at another project).
+const FALLBACK_KEY = 'phc_uo6fGZgjmjnBRZTHsE4mQCAyFPfcvJLsQrE2CkDDnSDg';
+
+/** Fire one PostHog event from the edge runtime. */
 export function captureServerEvent(
   event: string,
   distinctId: string,
   properties: Record<string, unknown> = {},
 ): void {
-  const key = Deno.env.get('POSTHOG_API_KEY');
+  const key = Deno.env.get('POSTHOG_API_KEY') ?? FALLBACK_KEY;
   if (!key) return;
   // fire-and-forget — telemetry must never break or slow the product
   void fetch(`${POSTHOG_HOST}/i/v0/e/`, {
