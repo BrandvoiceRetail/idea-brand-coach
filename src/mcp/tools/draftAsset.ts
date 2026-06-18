@@ -7,7 +7,7 @@
  * so MCP output is identical to the in-app path. The edge fn already grounds in the
  * caller's user-KB context server-side.
  *
- * AUTO-RECORDING: on success the produced copy is recorded into the IV-OS ledger via
+ * AUTO-RECORDING: on success the produced copy is recorded into the asset ledger via
  * `log_asset` (attributed to `brand-coach-mcp:<userTag>`), unless `record:false`.
  * Never-fail: a degraded write annotates `structuredContent.recorded` — it never
  * breaks the draft itself.
@@ -15,7 +15,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { EdgeFnClient } from '../edgeFn/client.js';
-import type { IvosLedgerClient } from '../ivos/client.js';
+import type { LedgerClient } from '../ivos/capabilities.js';
 import { actorTag } from './writeAuth.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
@@ -43,17 +43,17 @@ const inputSchema = {
   tone: z.string().min(1),
   format: z.string().min(1).describe('Copy format, e.g. amazon_bullets, product_description, social_post.'),
   additionalContext: z.string().optional(),
-  record: z.boolean().default(true).describe('Auto-record the produced copy into the IV-OS asset ledger (log_asset).'),
+  record: z.boolean().default(true).describe('Auto-record the produced copy into the asset ledger (log_asset).'),
   campaign_id: z.string().optional().describe('Optional campaign to attribute the recorded asset to.'),
 };
 
-export function registerDraftAssetTool(server: McpServer, edgeFn: EdgeFnClient, ivos: IvosLedgerClient): void {
+export function registerDraftAssetTool(server: McpServer, edgeFn: EdgeFnClient, ivos: LedgerClient): void {
   server.registerTool(
     'draft_asset',
     {
       title: 'Draft a copy asset',
       description:
-        'Owned asset-chain tool: draft emotionally resonant brand copy via the existing brand-copy-generator engine, wrapped verbatim (Calculation Parity — identical output to the in-app path, grounded in the caller’s knowledge base server-side). Requires an authenticated Supabase JWT. On success the copy is auto-recorded into the IV-OS asset ledger (log_asset) unless record:false; a degraded write never fails the draft.',
+        'Owned asset-chain tool: draft emotionally resonant brand copy via the existing brand-copy-generator engine, wrapped verbatim (Calculation Parity — identical output to the in-app path, grounded in the caller’s knowledge base server-side). Requires an authenticated Supabase JWT. On success the copy is auto-recorded into the asset ledger (log_asset) unless record:false; a degraded write never fails the draft.',
       inputSchema,
     },
     async (args) => {
@@ -70,7 +70,7 @@ export function registerDraftAssetTool(server: McpServer, edgeFn: EdgeFnClient, 
       // Auto-record (never-fail). EdgeFnClient already guaranteed an authenticated caller here.
       let recorded: RecordedNote;
       if (!record) {
-        recorded = { ok: false, note: 'opt-out (record:false) — not written to the IV-OS ledger' };
+        recorded = { ok: false, note: 'opt-out (record:false) — not written to the asset ledger' };
       } else {
         const write = await ivos.logAsset({
           content: res.data.copy,
@@ -83,7 +83,7 @@ export function registerDraftAssetTool(server: McpServer, edgeFn: EdgeFnClient, 
         recorded =
           write.available && write.data?.ok
             ? { ok: true, request_id: write.data.request_id }
-            : { ok: false, note: write.note ?? 'IV-OS ledger write degraded' };
+            : { ok: false, note: write.note ?? 'asset-ledger write degraded' };
       }
 
       safeLog({

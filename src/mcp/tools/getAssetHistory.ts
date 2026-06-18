@@ -1,14 +1,14 @@
 /**
- * Layer 2 (tool) — `get_asset_history` (CONSUMED from IV-OS, read).
+ * Layer 2 (tool) — `get_asset_history` (native asset-ledger read).
  *
  * Surfaces an asset's append-only change log (logged / status transitions /
  * assessments, each with actor + old/new values) — the change-tracking view
- * that pairs with `record_assessment` and `update_asset_status`. The IV-OS
- * Markdown report is forwarded verbatim.
+ * that pairs with `record_assessment` and `update_asset_status`. Rendered as a
+ * Markdown change-log report from the native event store.
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { IvosLedgerClient } from '../ivos/client.js';
+import type { LedgerClient } from '../ivos/capabilities.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 
@@ -16,15 +16,15 @@ const inputSchema = {
   request_id: z.string().min(1),
 };
 
-export function registerGetAssetHistoryTool(server: McpServer, ivos: IvosLedgerClient): void {
+export function registerGetAssetHistoryTool(server: McpServer, ivos: LedgerClient): void {
   server.registerTool(
     'get_asset_history',
     {
-      title: 'Get asset history (IV-OS change log)',
+      title: 'Get asset history (asset change log)',
       description:
         'Fetch the append-only change log for one asset by request_id: when it was logged, every approval ' +
-        'transition (old → new, with actor), and recorded assessments. Consumed from IV-OS (read-only); ' +
-        'availability=false when IV-OS is unreachable.',
+        'transition (old → new, with actor), and recorded assessments. Read-only; ' +
+        'availability=false when the ledger is unavailable.',
       inputSchema,
     },
     async ({ request_id }) => {
@@ -40,8 +40,8 @@ export function registerGetAssetHistoryTool(server: McpServer, ivos: IvosLedgerC
           {
             type: 'text',
             text: result.available
-              ? (result.data ?? 'IV-OS returned no history report.')
-              : `IV-OS ledger unavailable: ${result.note}`,
+              ? (result.data ?? 'No history available.')
+              : `Asset ledger unavailable: ${result.note}`,
           },
         ],
         structuredContent: { available: result.available, report: result.data, note: result.note },

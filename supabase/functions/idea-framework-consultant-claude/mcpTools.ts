@@ -31,7 +31,7 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
   {
     name: 'list_assets',
     description:
-      "List the user's logged brand assets from the IV-OS ledger (concepts, drafts, tests) with their status. Read-only; use it to ground the conversation in what already exists rather than asking the user to re-state it.",
+      "List the user's logged brand assets from their own asset ledger (concepts, drafts, copy, tests) with their status. Read-only; use it to ground the conversation in what already exists rather than asking the user to re-state it.",
     input_schema: {
       type: 'object',
       properties: {
@@ -445,6 +445,76 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
       "required": [
         "session_id"
       ]
+    },
+  },
+  {
+    name: 'get_asset',
+    description:
+      "Fetch one logged marketing asset by its request_id from the user's own asset ledger (content, type, status, approval status). Read-only. Only call with a request_id the user gave you or that came from list_assets — never invent one.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        request_id: { type: 'string', description: 'The asset request_id (e.g. from list_assets).' },
+      },
+      required: ['request_id'],
+    },
+  },
+  {
+    name: 'get_asset_history',
+    description:
+      "Return one asset's append-only change log by request_id — logged → status changes → assessments, each with actor and timestamp. Read-only; use it to ground the conversation in what has already happened to an asset.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        request_id: { type: 'string', description: 'The asset request_id.' },
+      },
+      required: ['request_id'],
+    },
+  },
+  {
+    name: 'log_asset',
+    description:
+      "Record a marketing asset the user has produced or pasted into their own asset ledger; returns the new request_id. WRITES — only call with content the user actually provided; never invent the asset. Pass external_id (a stable key from the user's source) to make re-logging idempotent (reconciles instead of duplicating).",
+    input_schema: {
+      type: 'object',
+      properties: {
+        content: { type: 'string', description: 'The asset body (copy/script/listing text). Use only what the user gave you.' },
+        content_type: { type: 'string', description: 'blog | social | amazon | competitor | other' },
+        status: { type: 'string', description: 'Optional production status: success | partial | failed | pending.' },
+        campaign_id: { type: 'string', description: 'Optional campaign to attribute the asset to.' },
+        external_id: { type: 'string', description: 'Optional idempotency/dedup key — re-logging the same external_id reconciles to the existing asset.' },
+      },
+      required: ['content', 'content_type'],
+    },
+  },
+  {
+    name: 'update_asset_status',
+    description:
+      "Move a logged asset through its approval lifecycle (draft → in_review → approved/rejected) by request_id; the transition is recorded in the asset's change log. WRITES — only call when the user explicitly asks to change an asset's status.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        request_id: { type: 'string', description: 'The asset request_id.' },
+        approval_status: { type: 'string', description: 'draft | in_review | approved | rejected' },
+        notes: { type: 'string', description: 'Optional note on the transition.' },
+      },
+      required: ['request_id', 'approval_status'],
+    },
+  },
+  {
+    name: 'record_assessment',
+    description:
+      "Record a brand/quality assessment of a logged asset (verdict + optional scores/summary/recommendations) in its change log, by request_id. Advisory — does NOT change the approval status. WRITES — only record a verdict you have actually reasoned to from the user's asset and context.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        request_id: { type: 'string', description: 'The asset request_id.' },
+        verdict: { type: 'string', description: 'pass | needs_work | fail' },
+        summary: { type: 'string', description: 'Optional one-line rationale.' },
+        scores: { type: 'object', description: 'Optional dimension→score map, e.g. {"distinctive": 18}.' },
+        recommendations: { type: 'string', description: 'Optional concrete fixes.' },
+      },
+      required: ['request_id', 'verdict'],
     },
   },
 ];

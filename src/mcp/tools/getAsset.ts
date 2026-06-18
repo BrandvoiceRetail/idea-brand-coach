@@ -1,9 +1,9 @@
 /**
- * Layer 2 (tool) — `get_asset` (CONSUMED from IV-OS, STABLE read).
+ * Layer 2 (tool) — `get_asset` (native asset-ledger read).
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { IvosLedgerClient } from '../ivos/client.js';
+import type { LedgerClient } from '../ivos/capabilities.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 
@@ -11,13 +11,13 @@ const inputSchema = {
   request_id: z.string().min(1),
 };
 
-export function registerGetAssetTool(server: McpServer, ivos: IvosLedgerClient): void {
+export function registerGetAssetTool(server: McpServer, ivos: LedgerClient): void {
   server.registerTool(
     'get_asset',
     {
-      title: 'Get asset (IV-OS ledger)',
+      title: 'Get asset (asset ledger)',
       description:
-        'Fetch one produced asset by request_id from the IV-OS asset ledger. Consumed from IV-OS (read-only); availability=false when IV-OS is unreachable.',
+        'Fetch one produced asset by request_id from the asset ledger. Read-only; availability=false when the ledger is unavailable.',
       inputSchema,
     },
     async ({ request_id }) => {
@@ -35,8 +35,8 @@ export function registerGetAssetTool(server: McpServer, ivos: IvosLedgerClient):
             text: result.available
               ? result.data
                 ? JSON.stringify(result.data, null, 2)
-                : 'Asset not found in IV-OS ledger.'
-              : `IV-OS ledger unavailable: ${result.note}`,
+                : 'Asset not found in the ledger.'
+              : `Asset ledger unavailable: ${result.note}`,
           },
         ],
         structuredContent: { available: result.available, asset: result.data, note: result.note },

@@ -1,14 +1,14 @@
 /**
- * Layer 2 (tool) — `update_asset_status` (CONSUMED IV-OS write, identity-gated).
+ * Layer 2 (tool) — `update_asset_status` (native asset-ledger write, identity-gated).
  *
  * Drives an asset's APPROVAL lifecycle (draft → in_review → approved/rejected)
- * in the IV-OS ledger. Each transition lands in IV-OS's append-only change log
+ * in the asset ledger. Each transition lands in the append-only change log
  * with the caller's tag as reviewer, so the full change history stays auditable
  * via `get_asset_history`.
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { IvosLedgerClient } from '../ivos/client.js';
+import type { LedgerClient } from '../ivos/capabilities.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 import { actorTag, gateWrite } from './writeAuth.js';
@@ -20,15 +20,15 @@ const inputSchema = {
   notes: z.string().optional(),
 };
 
-export function registerUpdateAssetStatusTool(server: McpServer, ivos: IvosLedgerClient): void {
+export function registerUpdateAssetStatusTool(server: McpServer, ivos: LedgerClient): void {
   server.registerTool(
     'update_asset_status',
     {
-      title: 'Update asset status (IV-OS ledger)',
+      title: 'Update asset status (asset ledger)',
       description:
         'Transition an asset through its APPROVAL lifecycle (draft → in_review → approved/rejected) in the ' +
-        'IV-OS ledger; the transition is recorded in the asset change log. Consumed IV-OS write — requires an ' +
-        'authenticated caller; availability=false when IV-OS is unreachable.',
+        'asset ledger; the transition is recorded in the asset change log. Asset-ledger write — requires an ' +
+        'authenticated caller; availability=false when the ledger is unavailable.',
       inputSchema,
     },
     async (args) => {
@@ -49,8 +49,8 @@ export function registerUpdateAssetStatusTool(server: McpServer, ivos: IvosLedge
           {
             type: 'text',
             text: result.available
-              ? (result.data?.report ?? 'IV-OS returned no report.')
-              : `IV-OS ledger unavailable: ${result.note}`,
+              ? (result.data?.report ?? 'No report returned.')
+              : `Asset ledger unavailable: ${result.note}`,
           },
         ],
         structuredContent: {

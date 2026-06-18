@@ -1,8 +1,8 @@
 /**
  * Layer 1 (service) — health.
  *
- * Pure-ish: reports host identity, bound-caller auth state, and whether the IV-OS
- * ledger consumer is configured. Emits NO secrets (only the boolean `ivosConfigured`).
+ * Pure-ish: reports host identity, bound-caller auth state, and whether the asset
+ * ledger backend is configured. Emits NO secrets (only the boolean `ledgerConfigured`).
  */
 import { SERVER_NAME, SERVER_VERSION } from '../config.js';
 import { getIdentity } from '../context/identity.js';
@@ -12,15 +12,15 @@ export interface HealthReport {
   version: string;
   status: 'ok';
   authenticated: boolean;
-  ivosConfigured: boolean;
+  ledgerConfigured: boolean;
 }
 
-export function getHealth(ivosConfigured: boolean): HealthReport {
+export function getHealth(ledgerConfigured: boolean): HealthReport {
   return {
     server: SERVER_NAME,
     version: SERVER_VERSION,
     status: 'ok',
     authenticated: getIdentity().authenticated,
-    ivosConfigured,
+    ledgerConfigured,
   };
 }
