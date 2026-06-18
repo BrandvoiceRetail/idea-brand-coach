@@ -118,9 +118,16 @@ export async function refreshAccessToken(params: {
 
 // ── REST ─────────────────────────────────────────────────────────────────────
 
+/** Figma personal access tokens authenticate via X-Figma-Token; OAuth tokens via Bearer. */
+function figmaAuthHeaders(accessToken: string): Record<string, string> {
+  return accessToken.startsWith('figd_')
+    ? { 'X-Figma-Token': accessToken }
+    : { Authorization: `Bearer ${accessToken}` };
+}
+
 async function figmaGet<T>(path: string, accessToken: string): Promise<T> {
   const res = await fetch(`${FIGMA_API_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: figmaAuthHeaders(accessToken),
   });
   const text = await res.text();
   if (!res.ok) {
