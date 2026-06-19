@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/config/routes';
 import { DiagnosticResultsPDFExport } from '@/components/export/DiagnosticResultsPDFExport';
 import { TrustGapScorecard } from '@/components/diagnostic/TrustGapScorecard';
+import { DecisionTriggerPanel } from '@/components/decision-trigger/DecisionTriggerPanel';
 import { ProductImportCta } from '@/components/diagnostic/ProductImportCta';
 import { useServices } from '@/services/ServiceProvider';
 import type {
@@ -204,6 +205,10 @@ export default function DiagnosticResults() {
     overall: diagnosticData.overallScore,
   };
 
+  // Stable session key for the Decision Trigger row: the diagnostic submission id
+  // when authed, else a local fallback (guests can't reach the authed trigger fn).
+  const decisionTriggerSessionId = latestDiagnostic?.id ?? 'local-session';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
       <div className="container mx-auto px-4 py-8">
@@ -228,6 +233,17 @@ export default function DiagnosticResults() {
               scores={trustGapScores}
               evidence={evidence}
               evidenceKey={evidenceKey}
+            />
+          </div>
+
+          {/* Decision Trigger™ — the named trigger derived after the scorecard, grounded in imported reviews */}
+          <div className="mb-8">
+            <DecisionTriggerPanel
+              scores={trustGapScores}
+              evidence={evidence}
+              evidenceKey={evidenceKey}
+              sessionId={decisionTriggerSessionId}
+              isAuthenticated={!!user}
             />
           </div>
 

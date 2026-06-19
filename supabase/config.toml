@@ -101,3 +101,8 @@ verify_jwt = true
 
 [functions.figma-disconnect]
 verify_jwt = true
+
+# Decision Trigger derivation — runs in the public Alpha diagnostic flow (pre-auth),
+# so verify_jwt=false; the function validates its own inputs (Trust Gap scores + reviews).
+[functions.identify-decision-trigger]
+verify_jwt = false
