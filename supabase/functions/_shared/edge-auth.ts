@@ -15,16 +15,23 @@ export function getServiceClient(): SupabaseClient {
   );
 }
 
-/** Resolve the authenticated user's id from the request's Authorization header. */
+/**
+ * Resolve the authenticated user's id from the request's Authorization header.
+ * The JWT is passed explicitly to getUser(jwt) — relying on the global-header
+ * client + no-arg getUser() does NOT resolve the user in the edge runtime
+ * (there is no stored session, and the header doesn't reach the GoTrue client),
+ * so it would return null even for a valid token.
+ */
 export async function getAuthedUserId(req: Request): Promise<string | null> {
   const authHeader = req.headers.get('Authorization') ?? '';
-  if (!authHeader) return null;
-  const userClient = createClient(
+  const token = authHeader.replace(/^[Bb]earer\s+/, '').trim();
+  if (!token) return null;
+  const client = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    { global: { headers: { Authorization: authHeader } } },
   );
-  const { data: { user } } = await userClient.auth.getUser();
+  const { data: { user }, error } = await client.auth.getUser(token);
+  if (error) return null;
   return user?.id ?? null;
 }
 
