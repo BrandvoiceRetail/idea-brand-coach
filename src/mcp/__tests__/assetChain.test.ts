@@ -17,6 +17,8 @@ const cfg: HostConfig = {
   ivosMcpToken: null,
   supabaseUrl: 'https://example.supabase.co',
   supabaseAnonKey: 'anon',
+  slackBotToken: null,
+  slackFeedbackChannelId: 'C0TEST',
 };
 
 /** Stub EdgeFnClient returning canned per-function responses. */

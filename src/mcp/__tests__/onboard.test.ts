@@ -13,6 +13,8 @@ const cfg: HostConfig = {
   ivosMcpToken: null,
   supabaseUrl: 'https://example.supabase.co',
   supabaseAnonKey: 'anon',
+  slackBotToken: null,
+  slackFeedbackChannelId: 'C0B9YT9TQ6T',
 };
 
 /** Connect a client WITHOUT wrapping in runWithIdentity → caller is anonymous. */

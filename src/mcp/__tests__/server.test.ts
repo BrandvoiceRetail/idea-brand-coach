@@ -27,6 +27,8 @@ const cfg: HostConfig = {
   ivosMcpToken: null,
   supabaseUrl: 'https://example.supabase.co',
   supabaseAnonKey: 'anon',
+  slackBotToken: null,
+  slackFeedbackChannelId: 'C0TEST',
 };
 
 async function connectedClient() {
@@ -73,6 +75,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'run_diagnostic_evidence',
       'run_marketing_audit',
       'run_trust_gap',
+      'submit_feedback',
       'update_asset_status',
     ]);
   });

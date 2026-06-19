@@ -17,6 +17,7 @@ import {
 import type { LedgerClient } from './ivos/capabilities.js';
 import { NativeLedgerClient } from './service/nativeLedger.js';
 import { registerOnboard } from './tools/onboard.js';
+import { instrumentToolLatency } from './instrument.js';
 import { registerHealthTool } from './tools/health.js';
 import { registerListAssetsTool } from './tools/listAssets.js';
 import { registerGetAssetTool } from './tools/getAsset.js';
@@ -47,6 +48,8 @@ import { registerGetCoachConversationTool } from './tools/getCoachConversation.j
 import { registerGetFunnelAssetsTool } from './tools/getFunnelAssets.js';
 import { registerAuditAssetTool } from './tools/auditAsset.js';
 import { registerGetFunnelCoverageTool } from './tools/getFunnelCoverage.js';
+import { registerSubmitFeedbackTool } from './tools/submitFeedback.js';
+import { FeedbackNotifier } from './slack/feedbackNotifier.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -63,6 +66,10 @@ export function createServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
     { instructions: assertServerInstructions(SERVER_INSTRUCTIONS) },
   );
+
+  // Time every tool uniformly (emits mcp_tool_latency per call). Must run before the
+  // register*Tool() calls below so their handlers are wrapped.
+  instrumentToolLatency(server);
 
   const ivos = ledgerClient ?? new NativeLedgerClient();
   const edge = edgeFn ?? new EdgeFnClient(config);
@@ -162,6 +169,13 @@ export function createServer(
   registerGetFunnelAssetsTool(server);
   registerAuditAssetTool(server);
   registerGetFunnelCoverageTool(server);
+
+  // User → team feedback channel: submit_feedback posts a short message to the team's
+  // Slack channel via SLACK_BOT_TOKEN + chat.postMessage. NOT identity-gated (anonymous
+  // callers may submit so feedback is never lost); the feedback text is the only user
+  // content sent and is never logged (MF-5). Degrades gracefully to a clear error when the
+  // Slack token/channel is unconfigured/unreachable — never throws.
+  registerSubmitFeedbackTool(server, new FeedbackNotifier(config));
 
   return { server, ivos, edgeFn: edge };
 }

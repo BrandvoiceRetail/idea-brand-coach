@@ -11,6 +11,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createServer } from './server.js';
 import { loadConfig, type HostConfig } from './config.js';
 import { resolveIdentity, runWithIdentity } from './context/identity.js';
+import { resolveRequestMeta, runWithRequestMeta } from './context/requestMeta.js';
 import { safeLog } from './logging/redact.js';
 import { captureMcpEvent, captureMcpException } from './posthog.js';
 import { emitLog } from './instrumentation.js';
@@ -75,8 +76,9 @@ async function handleMcp(req: http.IncomingMessage, res: http.ServerResponse): P
   }
 
   const identity = await resolveIdentity(req.headers['authorization'] as string | undefined);
+  const meta = resolveRequestMeta(req.headers);
 
-  await runWithIdentity(identity, async () => {
+  await runWithIdentity(identity, () => runWithRequestMeta(meta, async () => {
     const { server } = createServer();
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
     res.on('close', () => {
@@ -85,7 +87,7 @@ async function handleMcp(req: http.IncomingMessage, res: http.ServerResponse): P
     });
     await server.connect(transport);
     await transport.handleRequest(req, res, body);
-  });
+  }));
 }
 
 export function createHttpServer(config: HostConfig = loadConfig()): http.Server {

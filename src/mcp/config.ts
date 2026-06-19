@@ -36,7 +36,9 @@ export const SERVER_INSTRUCTIONS = [
   '`list_coach_conversations` indexes their threads (each with its avatar_id + avatar_name; null =',
   'brand-level — pass avatar_id to scope to one avatar) and `get_coach_conversation` returns one',
   'thread’s full transcript by session_id (both RLS-scoped reads; anonymous callers are refused).',
-  'Never send PII or raw prompts in tool args beyond what a tool explicitly requires.',
+  'Any user can send product feedback to the team via `submit_feedback` (no login',
+  'required) — it is delivered to the team channel for consideration; submit only what the user',
+  'actually said. Never send PII or raw prompts in tool args beyond what a tool explicitly requires.',
 ].join(' ');
 
 /**
@@ -61,6 +63,10 @@ export interface HostConfig {
   supabaseUrl: string;
   /** Supabase anon/publishable key — sufficient for `auth.getUser(token)` verification. */
   supabaseAnonKey: string;
+  /** Slack bot token (`xoxb-…`, needs `chat:write`) for posting feedback. Unset = `submit_feedback` degrades gracefully. */
+  slackBotToken: string | null;
+  /** Slack channel id `submit_feedback` posts to. Defaults to #idea-brand-coach; the bot must be a member. */
+  slackFeedbackChannelId: string;
 }
 
 function env(name: string): string | null {
@@ -78,5 +84,8 @@ export function loadConfig(): HostConfig {
     supabaseAnonKey:
       env('SUPABASE_ANON_KEY') ??
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjZHJ4dGJjbHhmcGtrbmFzbXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5ODE5ODYsImV4cCI6MjA2OTU1Nzk4Nn0.yPlOSq4l4PMD9RlchTBeXs5EBmzggGQGp7A8B3qGAAk',
+    slackBotToken: env('SLACK_BOT_TOKEN'),
+    // Fallback is the known #idea-brand-coach channel id (private; bot must be invited).
+    slackFeedbackChannelId: env('SLACK_FEEDBACK_CHANNEL_ID') ?? 'C0B9YT9TQ6T',
   };
 }
