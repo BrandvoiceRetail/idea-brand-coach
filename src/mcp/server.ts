@@ -50,6 +50,17 @@ import { registerAuditAssetTool } from './tools/auditAsset.js';
 import { registerGetFunnelCoverageTool } from './tools/getFunnelCoverage.js';
 import { registerSubmitFeedbackTool } from './tools/submitFeedback.js';
 import { FeedbackNotifier } from './slack/feedbackNotifier.js';
+import { registerCreateAvatarTool } from './tools/createAvatar.js';
+import { registerListAvatarsTool } from './tools/listAvatars.js';
+import { registerGetAvatarTool } from './tools/getAvatar.js';
+import { registerSetCurrentAvatarTool } from './tools/setCurrentAvatar.js';
+import { registerSetContextAvatarsTool } from './tools/setContextAvatars.js';
+import { registerSetPrimaryAvatarTool } from './tools/setPrimaryAvatar.js';
+import { registerRecordAvatarBuildTool } from './tools/recordAvatarBuild.js';
+import { registerListFunnelInventoryTool } from './tools/listFunnelInventory.js';
+import { registerUpsertFunnelTouchpointTool } from './tools/upsertFunnelTouchpoint.js';
+import { registerRunFunnelAuditTool } from './tools/runFunnelAudit.js';
+import { registerGetFunnelAuditTool } from './tools/getFunnelAudit.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -176,6 +187,23 @@ export function createServer(
   // content sent and is never logged (MF-5). Degrades gracefully to a clear error when the
   // Slack token/channel is unconfigured/unreachable — never throws.
   registerSubmitFeedbackTool(server, new FeedbackNotifier(config));
+
+  // Multi-avatar lifecycle (P2): create/list/get avatars; switch the current avatar or the
+  // multi-select context set; pin primary; record forensic build state. Each mutating tool is
+  // identity-gated + ownership-checked (requireOwnedAvatar) and drives the live brand_avatar_scope RPCs.
+  registerCreateAvatarTool(server);
+  registerListAvatarsTool(server);
+  registerGetAvatarTool(server);
+  registerSetCurrentAvatarTool(server);
+  registerSetContextAvatarsTool(server);
+  registerSetPrimaryAvatarTool(server);
+  registerRecordAvatarBuildTool(server);
+
+  // Brand Funnel inventory (brand-level) + per-avatar audit overlay (avatar-on-demand).
+  registerListFunnelInventoryTool(server);
+  registerUpsertFunnelTouchpointTool(server);
+  registerRunFunnelAuditTool(server);
+  registerGetFunnelAuditTool(server);
 
   return { server, ivos, edgeFn: edge };
 }
