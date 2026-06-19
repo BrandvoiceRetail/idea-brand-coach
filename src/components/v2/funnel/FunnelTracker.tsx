@@ -8,6 +8,7 @@ import { useState, type JSX } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAvatarContext } from '@/contexts/AvatarContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useFunnelTracker } from '@/hooks/useFunnelTracker';
 import { getTouchpoint, type ApplicabilityTag } from '@/config/touchpointTaxonomy';
 import { Card } from '@/components/ui/card';
@@ -108,6 +109,7 @@ function ChannelTags({ tags, onChange }: { tags: ApplicabilityTag[]; onChange: (
 }
 
 export function FunnelTracker(): JSX.Element {
+  const { user } = useAuth();
   const { selectedAvatarId, currentAvatar } = useAvatarContext();
   const { coverage, assets, tests, avatarFieldCount, loading, refresh, auditAsset, reauditAll, brandTags, setBrandTags, service } = useFunnelTracker(selectedAvatarId);
 
@@ -115,7 +117,14 @@ export function FunnelTracker(): JSX.Element {
     return (
       <div className="mx-auto max-w-3xl p-10 text-center">
         <p className="text-muted-foreground">Map your funnel against a customer avatar — upload your touchpoints and the coach audits each against your avatar + Signature.</p>
-        <Button asChild variant="coach" className="mt-4"><Link to="/v2/coach">Create an avatar</Link></Button>
+        {user ? (
+          <Button asChild variant="coach" className="mt-4"><Link to="/v2/coach">Create an avatar</Link></Button>
+        ) : (
+          // Logged-out visitors land here with no global nav — give them an explicit auth entry
+          // (the previous "Create an avatar" → /v2/coach path was the only one, and read as a feature
+          // action, not sign-in). redirect brings them back to the funnel after auth.
+          <Button asChild variant="coach" className="mt-4"><Link to="/auth?redirect=%2Fv2%2Ffunnel">Sign in or create an account</Link></Button>
+        )}
       </div>
     );
   }
