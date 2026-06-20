@@ -11,15 +11,9 @@ Synthesised from the test run ([`TEST_PLAN.md`](./TEST_PLAN.md)) + the build/gap
 - **P1 #6 stale prompt** — banner when N touchpoints have drifted since the Signature changed, with one-click Re-audit-all.
 - **P2 #10 loading skeletons** on the map.
 
-**Deferred (documented, not built — larger or lower-value):** P1 #5 coach deep-link seeding (needs coach-component work), P1 #7 full In-Progress board state machine, P2 #8 channel first-run picker, P2 #11 coverage trend (needs snapshots), P2 #12 configurable threshold, P2 #13 image cache.
+**Deferred (documented, not built — larger or lower-value):** P1 #5 coach deep-link seeding (needs coach-component work), P1 #7 full In-Progress board state machine, P2 #8 channel first-run picker, **P2 #9 bulk upload + auto-touchpoint detection (L)**, P2 #11 coverage trend (needs snapshots), P2 #12 configurable threshold, P2 #13 image cache.
 
-### Decisions taken 2026-06-17 (unblocking the deferred/gated set)
-- **Merge:** PR #17 opened to `main` (review-gated), not a direct fast-forward.
-- **Bulk upload + auto-touchpoint detection — BUILT.** `classify-touchpoint` edge fn (vision picks the touchpoint from the brand's applicable candidates) + `BulkUploadDialog` (multi-file → auto-classify each, editable + prefilled description → upload + audit all).
-- **MCP surface — BUILT** (code-complete + green; live MCP host NOT yet deployed). Three tools in the gateway: `get_funnel_assets` (read), `audit_asset` (identity-gated; reuses the audit-asset edge fn), `get_funnel_coverage` (aggregates `brand_assets`). All via `getUserSupabase()` (RLS); registered in `src/mcp/server.ts`; `server.test.ts` asserts they're advertised + a mocked happy-path + anonymous-deny. `typecheck:mcp` + `npm test -- src/mcp` (259) + lint green. Build prompts: `MCP_TOOLS_BUILD_PROMPTS.md`. **Deploy of the live MCP host is a separate gated step.**
-- **IV-OS `asset_events` reconciliation — RESOLVED (won't-do for now):** brand-coach stays system of record; revisit only if IV-OS needs to consume funnel data.
-
-**Still gated (external):** warehouse metric auto-pull — the analytics warehouse has no live data yet (IV-OS ingestion).
+**Gated (cannot build now):** warehouse metric auto-pull (warehouse is dark), MCP surface (waits on the D5 write-auth decision), IV-OS `asset_events` reconciliation (separate server).
 
 ## Test results in one line
 UI is **functionally correct** across every screen + control (live: auth + render pass; mocked: 8/8 pass). The real upload→audit→persist pipeline and audit *quality* are **not yet verified live** (gated on a QA avatar + tokens). The findings below come from that gap + the UX seams the tests expose.

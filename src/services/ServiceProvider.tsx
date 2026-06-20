@@ -11,6 +11,9 @@ import { IAuthService } from './interfaces/IAuthService';
 import { IAvatarService } from './interfaces/IAvatarService';
 import { IProductDataService } from './interfaces/IProductDataService';
 import { ISignatureService } from './interfaces/ISignatureService';
+import { ICompetitorInsightsService } from './interfaces/ICompetitorInsightsService';
+import { ITrustGapSnapshotService } from './interfaces/ITrustGapSnapshotService';
+import { INotificationChannel } from './interfaces/INotificationChannel';
 import { SupabaseDiagnosticService } from './SupabaseDiagnosticService';
 import { SupabaseUserProfileService } from './SupabaseUserProfileService';
 import { SupabaseChatService } from './SupabaseChatService';
@@ -18,6 +21,9 @@ import { SupabaseAuthService } from './SupabaseAuthService';
 import { SupabaseAvatarService } from './SupabaseAvatarService';
 import { SupabaseProductDataService } from './SupabaseProductDataService';
 import { SupabaseSignatureService } from './SupabaseSignatureService';
+import { SupabaseCompetitorInsightsService } from './SupabaseCompetitorInsightsService';
+import { SupabaseTrustGapSnapshotService } from './SupabaseTrustGapSnapshotService';
+import { SupabaseInAppNotificationChannel } from './SupabaseInAppNotificationChannel';
 
 interface Services {
   diagnosticService: IDiagnosticService;
@@ -27,6 +33,9 @@ interface Services {
   avatarService: IAvatarService;
   productDataService: IProductDataService;
   signatureService: ISignatureService;
+  competitorInsightsService: ICompetitorInsightsService;
+  trustGapSnapshotService: ITrustGapSnapshotService;
+  notificationChannel: INotificationChannel;
 }
 
 const ServicesContext = createContext<Services | null>(null);
@@ -53,6 +62,9 @@ export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children }) =>
     avatarService: new SupabaseAvatarService(),
     productDataService: new SupabaseProductDataService(),
     signatureService: new SupabaseSignatureService(),
+    competitorInsightsService: new SupabaseCompetitorInsightsService(),
+    trustGapSnapshotService: new SupabaseTrustGapSnapshotService(),
+    notificationChannel: new SupabaseInAppNotificationChannel(),
   };
 
   return (

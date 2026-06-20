@@ -92,7 +92,14 @@ export type AlphaEventName =
   | 'funnel_test_recorded'
   | 'funnel_coverage_viewed'
   // User-perceived chat latency (TTFT + total). PostHog GeoIP gives per-country slicing.
-  | 'chat_response_latency';
+  | 'chat_response_latency'
+  // Competitor-Agents — per-touchpoint competitor analysis + Brand Defense.
+  | 'funnel_competitor_analysis_run'
+  | 'funnel_competitor_analysis_viewed'
+  | 'funnel_competitor_countermeasure_drafted'
+  | 'funnel_competitor_test_recorded'
+  | 'funnel_defense_alerts_viewed'
+  | 'funnel_defense_alert_read';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

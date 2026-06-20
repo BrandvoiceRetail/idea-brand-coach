@@ -3,24 +3,38 @@
  * Four tabs: Funnel Map, What Needs Work, In Progress, Testing & Lift — wired to
  * SupabaseBrandFunnelService via useFunnelTracker. Style follows the brand's editorial
  * palette (gold + IDEA dimension colours).
+ *
+ * Competitor-Agents (behind COMPETITOR_AGENTS): each needs-work funnel piece mounts a
+ * TouchpointCompetitorAgentPanel scoped to that asset's touchpoint; the "What Needs
+ * Work" tab carries a CompetitorGapsAggregate rollup; the "Testing & Lift" tab folds in
+ * the competitor-informed lift surface (TestingLiftTab); and a fifth "Defense" tab hosts
+ * the brand-defense alert inbox with an unread badge on its trigger.
  */
-import { useState, type JSX } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAvatarContext } from '@/contexts/AvatarContext';
-import { useAuth } from '@/hooks/useAuth';
 import { useFunnelTracker } from '@/hooks/useFunnelTracker';
+import { useAuth } from '@/hooks/useAuth';
+import { useBrandDefenseAlerts } from '@/hooks/useBrandDefenseAlerts';
 import { getTouchpoint, type ApplicabilityTag } from '@/config/touchpointTaxonomy';
+import { isCompetitorAgentsEnabled } from '@/config/features';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AssetUploadDialog } from './AssetUploadDialog';
-import { BulkUploadDialog } from './BulkUploadDialog';
 import { FixDialog } from './FixDialog';
+import { TouchpointCompetitorAgentPanel } from './TouchpointCompetitorAgentPanel';
+import { CompetitorGapsAggregate } from './CompetitorGapsAggregate';
+import { TestingLiftTab } from './TestingLiftTab';
+import { BrandDefenseAlertsPanel } from './BrandDefenseAlertsPanel';
+import { pieceFromAsset, touchpointModality, type FunnelPiece } from './funnelPiece';
 import type { SupabaseBrandFunnelService } from '@/services/SupabaseBrandFunnelService';
 import type { AssetStatus, BrandAsset, CoverageCell } from '@/services/interfaces/IBrandFunnelService';
+
+export type { FunnelPiece } from './funnelPiece';
 
 const STATUS_COLOR: Record<AssetStatus, string> = {
   aligned: '#54B657', stale: '#D89B0D', misaligned: '#F08A00', missing: '#B8B2A8', pending: '#8A847D', failed: '#c4571f',
@@ -108,10 +122,35 @@ function ChannelTags({ tags, onChange }: { tags: ApplicabilityTag[]; onChange: (
   );
 }
 
+/**
+ * The "Defense" tab trigger (Competitor-Agents P6) with an unread-alert badge.
+ * Owns its own cheap unread-count fetch so the badge reflects new alerts without
+ * loading the full inbox. Rendered only when COMPETITOR_AGENTS is enabled.
+ */
+function DefenseTabTrigger({ avatarId }: { avatarId?: string }): JSX.Element {
+  const { unreadCount, refreshUnreadCount } = useBrandDefenseAlerts();
+
+  useEffect(() => {
+    if (avatarId) void refreshUnreadCount(avatarId);
+  }, [avatarId, refreshUnreadCount]);
+
+  return (
+    <TabsTrigger value="defense" className="gap-1.5">
+      Defense
+      {unreadCount > 0 && (
+        <Badge variant="destructive" className="h-5 min-w-5 px-1" aria-label={`${unreadCount} unread alerts`}>
+          {unreadCount}
+        </Badge>
+      )}
+    </TabsTrigger>
+  );
+}
+
 export function FunnelTracker(): JSX.Element {
   const { user } = useAuth();
   const { selectedAvatarId, currentAvatar } = useAvatarContext();
   const { coverage, assets, tests, avatarFieldCount, loading, refresh, auditAsset, reauditAll, brandTags, setBrandTags, service } = useFunnelTracker(selectedAvatarId);
+  const competitorEnabled = isCompetitorAgentsEnabled();
 
   if (!selectedAvatarId) {
     return (
@@ -120,9 +159,7 @@ export function FunnelTracker(): JSX.Element {
         {user ? (
           <Button asChild variant="coach" className="mt-4"><Link to="/v2/coach">Create an avatar</Link></Button>
         ) : (
-          // Logged-out visitors land here with no global nav — give them an explicit auth entry
-          // (the previous "Create an avatar" → /v2/coach path was the only one, and read as a feature
-          // action, not sign-in). redirect brings them back to the funnel after auth.
+          // Logged-out visitors land here with no global nav — give them an explicit auth entry.
           <Button asChild variant="coach" className="mt-4"><Link to="/auth?redirect=%2Fv2%2Ffunnel">Sign in or create an account</Link></Button>
         )}
       </div>
@@ -136,6 +173,9 @@ export function FunnelTracker(): JSX.Element {
   const staleCount = coverage?.counts.stale ?? 0;
   const avatarThin = avatarFieldCount > 0 && avatarFieldCount < 5;
   const labelFor = (a: BrandAsset): string => getTouchpoint(a.touchpoint_id)?.label ?? a.touchpoint_id;
+  // Competitor-Agents: the needs-work assets are the funnel pieces that get their
+  // own per-touchpoint competitor agent + the Tab-2 aggregate rollup.
+  const competitorPieces: FunnelPiece[] = competitorEnabled ? needsWork.map(pieceFromAsset) : [];
 
   return (
     <div className="mx-auto max-w-6xl p-6">
@@ -150,7 +190,6 @@ export function FunnelTracker(): JSX.Element {
           <Button variant="outline" onClick={() => void reauditAll()} disabled={loading || assets.length === 0}>
             {loading ? 'Working…' : 'Re-audit all'}
           </Button>
-          <BulkUploadDialog avatarId={selectedAvatarId} brandTags={brandTags} onUploaded={() => void refresh()} />
           <AssetUploadDialog avatarId={selectedAvatarId} onUploaded={() => void refresh()} />
         </div>
       </div>
@@ -177,6 +216,7 @@ export function FunnelTracker(): JSX.Element {
           <TabsTrigger value="work">What Needs Work ({needsWork.length})</TabsTrigger>
           <TabsTrigger value="prog">In Progress ({inProgress.length})</TabsTrigger>
           <TabsTrigger value="test">Testing &amp; Lift ({tests.length})</TabsTrigger>
+          {competitorEnabled && <DefenseTabTrigger avatarId={selectedAvatarId} />}
         </TabsList>
 
         {/* ---- Funnel Map ---- */}
@@ -236,31 +276,52 @@ export function FunnelTracker(): JSX.Element {
 
         {/* ---- What Needs Work ---- */}
         <TabsContent value="work" className="mt-5">
+          {/* Competitor-Agents: aggregate competitor-gap rollup across the needs-work funnel pieces. */}
+          {competitorEnabled && competitorPieces.length > 0 && (
+            <div className="mb-5">
+              <CompetitorGapsAggregate pieces={competitorPieces} />
+            </div>
+          )}
           <div className="flex flex-col gap-3">
             {needsWork.length === 0 && <p className="text-sm text-muted-foreground">Nothing flagged. Upload assets or your funnel is on-brand.</p>}
             {needsWork.map((a) => (
-              <Card key={a.id} className="p-5 grid gap-4 md:grid-cols-[1.4fr_1.3fr_auto] md:items-center">
-                <div>
-                  <div className="text-[15px] font-bold">{labelFor(a)}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{a.stage} · <StatusBadge status={a.status} /></div>
-                  {a.previous_score != null && a.overall_score != null && (
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      was {a.previous_score} → now <span className="font-semibold" style={{ color: a.overall_score >= a.previous_score ? '#2f8f33' : '#c4571f' }}>{a.overall_score}</span>
-                    </div>
-                  )}
-                  {a.audit_result?.fix && <div className="mt-2 text-xs text-foreground/80">{a.audit_result.fix}</div>}
-                  {a.audit_result?.grounding && (
-                    <div className="mt-1 text-[10px] text-muted-foreground">
-                      scored against {a.audit_result.grounding.fields_used} brand field{a.audit_result.grounding.fields_used === 1 ? '' : 's'}
-                      {a.audit_result.grounding.fields_used < 3 ? ' — finish your avatar for a sharper verdict' : ''}
-                    </div>
-                  )}
+              <Card key={a.id} className="p-5 flex flex-col gap-4">
+                <div className="grid gap-4 md:grid-cols-[1.4fr_1.3fr_auto] md:items-center">
+                  <div>
+                    <div className="text-[15px] font-bold">{labelFor(a)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">{a.stage} · <StatusBadge status={a.status} /></div>
+                    {a.previous_score != null && a.overall_score != null && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        was {a.previous_score} → now <span className="font-semibold" style={{ color: a.overall_score >= a.previous_score ? '#2f8f33' : '#c4571f' }}>{a.overall_score}</span>
+                      </div>
+                    )}
+                    {a.audit_result?.fix && <div className="mt-2 text-xs text-foreground/80">{a.audit_result.fix}</div>}
+                    {a.audit_result?.grounding && (
+                      <div className="mt-1 text-[10px] text-muted-foreground">
+                        scored against {a.audit_result.grounding.fields_used} brand field{a.audit_result.grounding.fields_used === 1 ? '' : 's'}
+                        {a.audit_result.grounding.fields_used < 3 ? ' — finish your avatar for a sharper verdict' : ''}
+                      </div>
+                    )}
+                  </div>
+                  <DimensionBars asset={a} />
+                  <div className="flex flex-col gap-2">
+                    <FixDialog asset={a} onDone={() => void refresh()} />
+                    <Button variant="outline" size="sm" onClick={() => void auditAsset(a.id)}>Re-run audit</Button>
+                  </div>
                 </div>
-                <DimensionBars asset={a} />
-                <div className="flex flex-col gap-2">
-                  <FixDialog asset={a} onDone={() => void refresh()} />
-                  <Button variant="outline" size="sm" onClick={() => void auditAsset(a.id)}>Re-run audit</Button>
-                </div>
+                {/* Per-funnel-piece competitor agent, scoped to this asset's touchpoint. */}
+                {competitorEnabled && (
+                  <TouchpointCompetitorAgentPanel
+                    assetId={a.id}
+                    touchpointId={a.touchpoint_id}
+                    touchpointLabel={labelFor(a)}
+                    avatarId={selectedAvatarId}
+                    modality={touchpointModality(a.touchpoint_id)}
+                    currentCopy={a.content_text ?? undefined}
+                    channel={getTouchpoint(a.touchpoint_id)?.appliesWhen[0]}
+                    onDraftCountermeasure={() => void refresh()}
+                  />
+                )}
               </Card>
             ))}
           </div>
@@ -310,7 +371,21 @@ export function FunnelTracker(): JSX.Element {
               );
             })}
           </div>
+          {/* Competitor-Agents: surface competitor-informed lift tests (brand_tests
+              tagged competitor_insight_applied) alongside the base ROI tests. */}
+          {competitorEnabled && (
+            <div className="mt-6">
+              <TestingLiftTab avatarId={selectedAvatarId} />
+            </div>
+          )}
         </TabsContent>
+
+        {/* ---- Brand Defense (Competitor-Agents P6) ---- */}
+        {competitorEnabled && (
+          <TabsContent value="defense" className="mt-5">
+            <BrandDefenseAlertsPanel avatarId={selectedAvatarId} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
