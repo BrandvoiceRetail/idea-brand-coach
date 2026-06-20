@@ -56,6 +56,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Injection guard: any body-supplied avatar_id must be a well-formed UUID
+// before it touches a query (multi-avatar Phase 3, design §2.3 / H1).
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const asUuidOrNull = (v: unknown): string | null =>
+  typeof v === 'string' && UUID_RE.test(v) ? v : null;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -107,6 +113,7 @@ serve(async (req) => {
       productContext,
       stream: streamRequested,
       tool_loop,
+      avatar_id,
     } = await req.json();
 
     const messageImages = metadata?.images || [];
@@ -147,10 +154,36 @@ serve(async (req) => {
     let memorySnapshot = '';
 
     if (userId && supabaseClient) {
+      // ── Avatar resolution (avatar-aware retrieval, Phase 3) ─────────────
+      // Only runs for an authenticated caller — a body-supplied avatar_id is
+      // never used to query without a verified session (security C2).
+      // Effective avatar = validated body avatar_id ELSE profiles
+      // .current_avatar_id (so retrieval re-scopes correctly even before the
+      // SPA wires avatar_id into the chat body in Phase 4).
+      // brand_id is intentionally NOT resolved here: KB is user_id-keyed (one
+      // brand per user) and brand rows are already bounded by user_id +
+      // scope='brand', so brand_id is not needed in the retrieval WHERE on this
+      // base (design MAP §4.1). Avoiding the lookup removes a serial round-trip
+      // on the hot path of every authenticated chat turn.
+      let avatarId: string | null = asUuidOrNull(avatar_id ?? metadata?.avatar_id);
+      try {
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('current_avatar_id')
+          .eq('id', userId)
+          .maybeSingle();
+        if (!avatarId) avatarId = asUuidOrNull(profile?.current_avatar_id);
+      } catch (e) {
+        // Non-fatal: fall back to brand-only retrieval (avatarId stays as-is).
+        console.error('[Context] Avatar resolution failed:', e);
+      }
+      console.log('[Context] Effective scope', { avatar: avatarId ?? 'none' });
+
       const [ctxResult, snapshot] = await Promise.all([
         retrieveAllContext(supabaseClient, userId, message, {
           needsFullContext,
           hasUploadedDocuments,
+          avatarId,
         }),
         memoryEnabled ? buildMemorySnapshot(supabaseClient, userId) : Promise.resolve(''),
       ]);

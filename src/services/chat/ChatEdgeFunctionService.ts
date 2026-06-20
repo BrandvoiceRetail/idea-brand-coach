@@ -45,6 +45,12 @@ export interface ConsultantRequestParams {
   stream?: boolean;
   /** PostHog-gated MCP tool loop (coach-mcp-tool-loop flag). Edge fn AND-s with its env kill-switch. */
   toolLoop?: boolean;
+  /**
+   * Current avatar for this conversation (multi-avatar design §2.1). The P3 edge
+   * fn scopes retrieval per-thread on this; when absent it falls back to
+   * profiles.current_avatar_id server-side.
+   */
+  avatarId?: string | null;
 }
 
 export class ChatEdgeFunctionService {
@@ -109,6 +115,12 @@ export class ChatEdgeFunctionService {
 
     if (params.chatHistory) {
       body.chat_history = params.chatHistory;
+    }
+
+    // Per-thread avatar scope (design §2.1). Only sent when known; the edge fn
+    // falls back to profiles.current_avatar_id when absent.
+    if (params.avatarId) {
+      body.avatar_id = params.avatarId;
     }
 
     // Always a definite boolean so the edge fn reads it deterministically.

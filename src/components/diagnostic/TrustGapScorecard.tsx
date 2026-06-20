@@ -23,9 +23,12 @@ import {
   Shield,
   Target,
   ArrowRight,
+  ArrowUpRight,
+  ArrowDownRight,
   RefreshCw,
   AlertCircle,
   Sparkles,
+  GitCompare,
 } from 'lucide-react';
 import {
   buildTrustGap,
@@ -50,6 +53,38 @@ interface TrustGapScorecardProps {
   evidence?: TrustGapEvidence;
   /** Stable key for the evidence (e.g. joined product ids) — drives one refetch on import. */
   evidenceKey?: string;
+  /**
+   * Diagnostic BOTH (locked #5): when set, the card renders compare-mode. `scores`
+   * is the per-avatar OVERLAY being shown; `baselineScores` is the brand baseline
+   * (avatar_id NULL). Each pillar and the overall score render the overlay − baseline
+   * delta. Omit to render the single-scope scorecard (legacy behaviour).
+   */
+  baselineScores?: TrustGapInputScores;
+  /** Display name of the avatar whose overlay is shown — labels the compare banner. */
+  avatarName?: string;
+}
+
+/** Rounded overlay − baseline delta on the displayed /25 (or /100 overall) scale. */
+function DeltaBadge({ delta, srLabel }: { delta: number; srLabel: string }): JSX.Element | null {
+  if (delta === 0) {
+    return (
+      <span className="text-xs font-medium text-muted-foreground tabular-nums" aria-label={`${srLabel} unchanged`}>
+        ±0
+      </span>
+    );
+  }
+  const positive = delta > 0;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-xs font-semibold tabular-nums ${
+        positive ? 'text-green-600' : 'text-red-600'
+      }`}
+      aria-label={`${srLabel} ${positive ? 'up' : 'down'} ${Math.abs(delta)} versus brand baseline`}
+    >
+      {positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+      {positive ? '+' : ''}{delta}
+    </span>
+  );
 }
 
 interface DimensionPresentation {
@@ -115,11 +150,14 @@ function DimensionCard({
   interpretationText,
   isLoading,
   hasError,
+  baselineScore,
 }: {
   dimension: TrustGapDimensionResult;
   interpretationText?: string;
   isLoading: boolean;
   hasError: boolean;
+  /** Brand-baseline /25 score for this pillar — present only in compare-mode. */
+  baselineScore?: number;
 }): JSX.Element {
   const presentation = DIMENSION_PRESENTATION[dimension.key];
   const badge = BAND_BADGE[dimension.band];
@@ -137,10 +175,18 @@ function DimensionCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-lg font-semibold">{dimension.label}</h3>
-              <span className="text-2xl font-bold tabular-nums">
-                {dimension.score}
-                <span className="text-base font-medium text-muted-foreground">/{TRUST_GAP_MAX_PER_DIMENSION}</span>
-              </span>
+              <div className="flex items-center gap-2">
+                {baselineScore !== undefined && (
+                  <DeltaBadge
+                    delta={dimension.score - baselineScore}
+                    srLabel={`${dimension.label} score`}
+                  />
+                )}
+                <span className="text-2xl font-bold tabular-nums">
+                  {dimension.score}
+                  <span className="text-base font-medium text-muted-foreground">/{TRUST_GAP_MAX_PER_DIMENSION}</span>
+                </span>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground">{dimension.measures}</p>
           </div>
@@ -163,7 +209,13 @@ function DimensionCard({
   );
 }
 
-export function TrustGapScorecard({ scores, evidence, evidenceKey }: TrustGapScorecardProps): JSX.Element {
+export function TrustGapScorecard({
+  scores,
+  evidence,
+  evidenceKey,
+  baselineScores,
+  avatarName,
+}: TrustGapScorecardProps): JSX.Element {
   const navigate = useNavigate();
   const model = buildTrustGap(scores);
   const { interpretation, isLoading, error, retry } = useTrustGapInterpretation(scores, evidence, evidenceKey);
@@ -171,6 +223,16 @@ export function TrustGapScorecard({ scores, evidence, evidenceKey }: TrustGapSco
   const interpretations: TrustGapInterpretation['interpretations'] | undefined = interpretation?.interpretations;
   const overallBand = getTrustGapBand(Math.round(model.overall / 4));
   const gap = model.primaryGapMeta;
+
+  // Compare-mode (Diagnostic BOTH): `scores` is the avatar overlay, `baselineScores`
+  // the brand baseline. Build the baseline model once so each pillar can render the
+  // overlay − baseline delta on the same /25 scale.
+  const compareMode = baselineScores !== undefined;
+  const baselineModel = compareMode ? buildTrustGap(baselineScores) : undefined;
+  const baselineByKey = baselineModel
+    ? Object.fromEntries(baselineModel.dimensions.map((d) => [d.key, d.score]))
+    : undefined;
+  const overallDelta = baselineModel ? model.overall - baselineModel.overall : 0;
 
   // Funnel: scorecard rendered (once per mount)
   const viewedRef = useRef(false);
@@ -185,6 +247,19 @@ export function TrustGapScorecard({ scores, evidence, evidenceKey }: TrustGapSco
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Funnel: compare-mode rendered (once/mount). Scores + delta only — never names/free text.
+  const comparedRef = useRef(false);
+  useEffect(() => {
+    if (!compareMode || comparedRef.current) return;
+    comparedRef.current = true;
+    captureAlphaEvent('scorecard_compared', {
+      overall_score: model.overall,
+      baseline_overall: baselineModel?.overall ?? 0,
+      overall_delta: overallDelta,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compareMode]);
+
   // Funnel: per-dimension interpretation rendered (no templated fallback
   // exists — Trevor Decision 5 — so the source is always the LLM)
   const interpretationShownRef = useRef(false);
@@ -196,6 +271,21 @@ export function TrustGapScorecard({ scores, evidence, evidenceKey }: TrustGapSco
 
   return (
     <div className="space-y-6">
+      {/* Compare-mode banner: which avatar overlay is shown vs the brand baseline. */}
+      {compareMode && (
+        <div
+          className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
+          data-testid="trustgap-compare-banner"
+        >
+          <GitCompare className="w-4 h-4" />
+          <span>
+            Comparing{' '}
+            <span className="font-semibold text-foreground">{avatarName || 'this avatar'}</span>{' '}
+            against your brand baseline
+          </span>
+        </div>
+      )}
+
       {/* Overall trust score */}
       <Card className="bg-gradient-hero text-primary-foreground border-0">
         <CardContent className="p-8 text-center">
@@ -204,6 +294,18 @@ export function TrustGapScorecard({ scores, evidence, evidenceKey }: TrustGapSco
             {model.overall}
             <span className="text-2xl font-medium text-primary-foreground/80">/100</span>
           </div>
+          {compareMode && (
+            <div
+              className="flex items-center justify-center gap-2 text-base font-semibold tabular-nums mb-1"
+              data-testid="trustgap-overall-delta"
+            >
+              {overallDelta > 0 && <ArrowUpRight className="w-4 h-4" />}
+              {overallDelta < 0 && <ArrowDownRight className="w-4 h-4" />}
+              <span>
+                {overallDelta > 0 ? '+' : ''}{overallDelta} vs baseline ({baselineModel?.overall}/100)
+              </span>
+            </div>
+          )}
           <Progress value={model.overall} className="my-4 bg-white/20" />
           <p className="text-primary-foreground/90 max-w-xl mx-auto">{OVERALL_BAND_COPY[overallBand]}</p>
         </CardContent>
@@ -231,6 +333,7 @@ export function TrustGapScorecard({ scores, evidence, evidenceKey }: TrustGapSco
             interpretationText={interpretations?.[dimension.key]}
             isLoading={isLoading}
             hasError={!!error}
+            baselineScore={baselineByKey?.[dimension.key]}
           />
         ))}
       </div>

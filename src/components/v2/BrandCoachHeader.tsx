@@ -50,6 +50,14 @@ interface BrandCoachHeaderProps {
   savedFieldCount: number;
   fieldValues: Record<string, string | string[]>;
   onCreateAvatar: () => void;
+  /** Brand name for the coaching-context banner ("Coaching: <avatar> · Brand: <brand>"). */
+  brandName?: string | null;
+  /** Avatar CRUD callbacks (forwarded to the dropdown kebab). */
+  onRenameAvatar: (avatarId: string) => void;
+  onDuplicateAvatar: (avatarId: string) => void;
+  onDeleteAvatar: (avatarId: string) => void;
+  onSetPrimaryAvatar: (avatarId: string) => void;
+  onForensicBuild: (avatarId: string) => void;
   /** Currently active milestone for visual effects (pulse/gold) */
   activeMilestone?: MilestoneData | null;
   /** Whether all 35 fields have been captured (persistent gold badge) */
@@ -79,6 +87,12 @@ export function BrandCoachHeader({
   savedFieldCount,
   fieldValues,
   onCreateAvatar,
+  brandName,
+  onRenameAvatar,
+  onDuplicateAvatar,
+  onDeleteAvatar,
+  onSetPrimaryAvatar,
+  onForensicBuild,
   activeMilestone,
   isMilestoneComplete,
   onBeforeExport,
@@ -100,8 +114,23 @@ export function BrandCoachHeader({
     ? Math.round((filledFields / totalFields) * 100)
     : 0;
 
+  const coachingAvatarName = avatarContext.currentAvatar?.name;
+
   return (
     <header className="flex-shrink-0 border-b px-4 py-3 flex flex-wrap items-center justify-between gap-y-2">
+      {coachingAvatarName && (
+        <div
+          className="w-full text-xs text-muted-foreground -mt-1 mb-1"
+          data-testid="coaching-context-banner"
+        >
+          Coaching: <span className="font-medium text-foreground">{coachingAvatarName}</span>
+          {brandName && (
+            <>
+              {' '}&middot; Brand: <span className="font-medium text-foreground">{brandName}</span>
+            </>
+          )}
+        </div>
+      )}
       <div className={isMobile ? 'flex flex-col gap-1' : 'flex items-center gap-3'}>
         <h1 className="font-semibold text-sm lg:text-base">IDEA Brand Coach</h1>
         <div className="flex items-center gap-2">
@@ -147,6 +176,11 @@ export function BrandCoachHeader({
             avatars={avatarContext.avatars}
             onAvatarSelect={(avatarId: string) => onAvatarChange({ id: avatarId })}
             onCreateAvatar={onCreateAvatar}
+            onRenameAvatar={onRenameAvatar}
+            onDuplicateAvatar={onDuplicateAvatar}
+            onDeleteAvatar={onDeleteAvatar}
+            onSetPrimaryAvatar={onSetPrimaryAvatar}
+            onForensicBuild={onForensicBuild}
           />
           {figmaEnabled && (
             <Button

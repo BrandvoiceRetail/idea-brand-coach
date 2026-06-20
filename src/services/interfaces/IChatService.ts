@@ -109,6 +109,23 @@ export interface IChatService {
   getCurrentSessionId(): string | undefined;
 
   /**
+   * Set the current avatar (multi-avatar design §2.1). Scopes outgoing messages
+   * and session reads/creates to this avatar.
+   *
+   * @param avatarId - ID of the avatar, or undefined to clear (brand-level)
+   */
+  setCurrentAvatar(avatarId: string | undefined): void;
+
+  /**
+   * Ensure an open conversation thread exists for the given avatar, returning
+   * it (the session-follows-avatar contract, design §4.1). Sets it as current.
+   *
+   * @param avatarId - ID of the avatar to find/create a thread for
+   * @returns Promise resolving to the existing-or-new session
+   */
+  ensureSessionForAvatar(avatarId: string): Promise<ChatSession>;
+
+  /**
    * Create a new chat session.
    *
    * @param session - Session creation data

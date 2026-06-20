@@ -17,6 +17,7 @@ import { useChatSessions } from '@/hooks/useChatSessions';
 import { useChapterProgress } from '@/hooks/useChapterProgress';
 import { useFieldExtraction } from '@/hooks/useFieldExtraction';
 import { useAvatarService } from '@/hooks/useAvatarService';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import { useDefaultAvatar } from '@/hooks/useDefaultAvatar';
 import { useAvatarFieldSync } from '@/hooks/useAvatarFieldSync';
 import { useSimpleFieldSync } from '@/hooks/useSimpleFieldSync';
@@ -84,6 +85,14 @@ export interface BrandCoachV2State {
   currentAvatar: Avatar | null;
   avatarData: AvatarData[];
   avatars: Avatar[];
+
+  /** Brand name for the coaching-context banner. */
+  brandName: string | null;
+
+  /** Avatar CRUD dialog state (P4b §4.5) */
+  renameTargetId: string | null;
+  deleteTargetId: string | null;
+  forensicBuildAvatarId: string | null;
 
   /** Session data */
   sessions: ChatSession[];
@@ -180,6 +189,18 @@ export interface BrandCoachV2Actions {
   handleAvatarSelect: (avatarId: string) => void;
   handleCreateAvatar: () => Promise<void>;
 
+  /** Avatar CRUD actions (P4b §4.5) */
+  handleRenameAvatar: (avatarId: string) => void;
+  handleRenameSubmit: (name: string) => void;
+  handleDuplicateAvatar: (avatarId: string) => void;
+  handleDeleteAvatar: (avatarId: string) => void;
+  handleDeleteConfirm: () => void;
+  handleSetPrimaryAvatar: (avatarId: string) => void;
+  handleForensicBuild: (avatarId: string) => void;
+  setRenameTargetId: (id: string | null) => void;
+  setDeleteTargetId: (id: string | null) => void;
+  setForensicBuildAvatarId: (id: string | null) => void;
+
   /** Chat actions */
   handleSendMessage: (content: string) => Promise<void>;
   handleCopyChat: () => void;
@@ -231,9 +252,33 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   const { useSystemKB: isSystemKBEnabled } = useSystemKB();
 
   // ── Avatar management ─────────────────────────────────────────────────
-  const { avatars, currentAvatar, isLoading: isLoadingAvatars, createAvatar, selectAvatarById } = useAvatarService();
+  // CRUD + list come from useAvatarService; the CURRENT avatar + switch path
+  // come from the canonical AvatarContext (design §4.1).
+  const { avatars, isLoading: isLoadingAvatars, createAvatar } = useAvatarService();
+  const {
+    currentAvatar, setCurrentAvatar,
+    renameAvatar, duplicateAvatar, deleteAvatar, setPrimaryAvatar,
+  } = useAvatarContext();
 
-  const avatarData: AvatarData[] = avatars.map(a => ({ id: a.id, name: a.name, image_url: a.image_url }));
+  const avatarData: AvatarData[] = avatars.map(a => ({
+    id: a.id, name: a.name, image_url: a.image_url, is_primary: a.is_primary,
+  }));
+
+  // ── Avatar CRUD dialog state (P4b §4.5) ────────────────────────────────
+  const [renameTargetId, setRenameTargetId] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [forensicBuildAvatarId, setForensicBuildAvatarId] = useState<string | null>(null);
+
+  // ── Brand name for the coaching-context banner ─────────────────────────
+  const [brandName, setBrandName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    const brandService = new SupabaseBrandService(supabase);
+    brandService
+      .getOrCreateDefaultBrand()
+      .then(({ data }) => { if (data) setBrandName(data.name ?? null); })
+      .catch((error) => console.warn('[BrandCoachV2] Failed to load brand name:', error));
+  }, [user]);
 
   // ── Session management ────────────────────────────────────────────────
   const {
@@ -272,6 +317,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   const { messages, sendMessage, sendMessageStreaming, isSending, isStreaming, streamingContent, memoryActivity, clearChat } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
+    avatarId: currentAvatar?.id,
   });
 
   // ── UI state ──────────────────────────────────────────────────────────
@@ -423,7 +469,39 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     setIsSidebarOpen(false);
   };
 
-  const handleAvatarSelect = (avatarId: string): void => selectAvatarById(avatarId);
+  const handleAvatarSelect = (avatarId: string): void => { void setCurrentAvatar(avatarId); };
+
+  // ── Avatar CRUD handlers (P4b §4.5) — funnel through the canonical store ──
+  const handleRenameAvatar = useCallback((avatarId: string): void => {
+    setRenameTargetId(avatarId);
+  }, []);
+
+  const handleRenameSubmit = useCallback((name: string): void => {
+    if (renameTargetId) void renameAvatar(renameTargetId, name);
+  }, [renameTargetId, renameAvatar]);
+
+  const handleDuplicateAvatar = useCallback((avatarId: string): void => {
+    void duplicateAvatar(avatarId);
+  }, [duplicateAvatar]);
+
+  const handleDeleteAvatar = useCallback((avatarId: string): void => {
+    setDeleteTargetId(avatarId);
+  }, []);
+
+  const handleDeleteConfirm = useCallback((): void => {
+    if (deleteTargetId) void deleteAvatar(deleteTargetId);
+    setDeleteTargetId(null);
+  }, [deleteTargetId, deleteAvatar]);
+
+  const handleSetPrimaryAvatar = useCallback((avatarId: string): void => {
+    void setPrimaryAvatar(avatarId);
+  }, [setPrimaryAvatar]);
+
+  // Forensic-build entry. Step-1 stub: records the target so the builder (step 3)
+  // can open against it. Wiring to ForensicAvatarBuilder lands in step 3.
+  const handleForensicBuild = useCallback((avatarId: string): void => {
+    setForensicBuildAvatarId(avatarId);
+  }, []);
 
   const handleCreateAvatar = async (): Promise<void> => {
     try {
@@ -442,7 +520,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
         status: 'active',
       });
       if (newAvatar) {
-        selectAvatarById(newAvatar.id);
+        void setCurrentAvatar(newAvatar.id);
         toast({ title: 'Avatar Created', description: 'Your new avatar has been created' });
       }
     } catch (error) {
@@ -481,6 +559,10 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     currentAvatar,
     avatarData,
     avatars,
+    brandName,
+    renameTargetId,
+    deleteTargetId,
+    forensicBuildAvatarId,
     sessions,
     currentSessionId,
     isLoadingSessions,
@@ -541,6 +623,16 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     regenerateTitle,
     handleAvatarSelect,
     handleCreateAvatar,
+    handleRenameAvatar,
+    handleRenameSubmit,
+    handleDuplicateAvatar,
+    handleDeleteAvatar,
+    handleDeleteConfirm,
+    handleSetPrimaryAvatar,
+    handleForensicBuild,
+    setRenameTargetId,
+    setDeleteTargetId,
+    setForensicBuildAvatarId,
     handleSendMessage,
     handleCopyChat,
     handleClearChat,

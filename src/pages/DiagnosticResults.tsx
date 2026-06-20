@@ -13,8 +13,11 @@ import {
 } from 'lucide-react';
 import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
+import { useAvatarDiagnosticCompare } from '@/hooks/useAvatarDiagnosticCompare';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/config/routes';
+import type { TrustGapInputScores } from '@/lib/trustGap';
 import { DiagnosticResultsPDFExport } from '@/components/export/DiagnosticResultsPDFExport';
 import { TrustGapScorecard } from '@/components/diagnostic/TrustGapScorecard';
 import { DecisionTriggerPanel } from '@/components/decision-trigger/DecisionTriggerPanel';
@@ -75,6 +78,11 @@ export default function DiagnosticResults() {
   const { user } = useAuth();
   const { productDataService } = useServices();
   const { latestDiagnostic, isLoadingLatest, syncFromLocalStorage, isSyncing } = useDiagnostic();
+  const { selectedAvatarId, currentAvatar } = useAvatarContext();
+
+  // Diagnostic BOTH (locked #5): read brand baseline + current-avatar overlay.
+  // Only meaningful for authed users; guests have no DB scope.
+  const { baseline, overlay, isLoading: isLoadingCompare } = useAvatarDiagnosticCompare(selectedAvatarId, !!user);
 
   // Stable key for the imported evidence: changes only when the set of products
   // changes, so the Trust Gap interpretation refetches exactly once per import.
@@ -121,13 +129,20 @@ export default function DiagnosticResults() {
     }
   }, [user]);
 
-  // 2. For authenticated users, sync localStorage to DB in background (once)
+  // 2. For authenticated users, sync localStorage to DB in background (once).
+  // Diagnostic BOTH (locked #5): if a baseline already exists AND an avatar is
+  // current, this newly-taken diagnostic is that avatar's OVERLAY — stamp its
+  // avatar_id so compare-mode has an overlay row to render the delta against.
+  // The first-ever diagnostic (no baseline yet) always lands as the baseline.
   useEffect(() => {
-    if (user && !hasSynced && localStorage.getItem('diagnosticData')) {
+    // Wait for the baseline read to settle so we don't misclassify an overlay
+    // re-take as a baseline (or vice-versa) while the scope is still loading.
+    if (user && !hasSynced && !isLoadingCompare && localStorage.getItem('diagnosticData')) {
       setHasSynced(true);
-      syncFromLocalStorage().catch(console.error);
+      const overlayAvatarId = baseline && selectedAvatarId ? selectedAvatarId : null;
+      syncFromLocalStorage(overlayAvatarId).catch(console.error);
     }
-  }, [user, hasSynced, syncFromLocalStorage]);
+  }, [user, hasSynced, isLoadingCompare, baseline, selectedAvatarId, syncFromLocalStorage]);
 
   // 3. For authenticated users, prefer DB data but fallback to localStorage
   useEffect(() => {
@@ -197,7 +212,8 @@ export default function DiagnosticResults() {
     );
   }
 
-  const trustGapScores = {
+  // Default (single-scope) scores from the page's resolved diagnosticData.
+  const fallbackScores: TrustGapInputScores = {
     insight: diagnosticData.scores.insight,
     distinctive: diagnosticData.scores.distinctive,
     empathetic: diagnosticData.scores.empathetic,
@@ -208,6 +224,15 @@ export default function DiagnosticResults() {
   // Stable session key for the Decision Trigger row: the diagnostic submission id
   // when authed, else a local fallback (guests can't reach the authed trigger fn).
   const decisionTriggerSessionId = latestDiagnostic?.id ?? 'local-session';
+
+  // Diagnostic BOTH: prefer the current avatar's OVERLAY when present, comparing it
+  // against the brand BASELINE. With an overlay but no baseline, show the overlay
+  // alone (no delta). With no overlay, fall back to the baseline / page scores.
+  const overlayScores: TrustGapInputScores | undefined = overlay?.scores;
+  const baselineScores: TrustGapInputScores | undefined = baseline?.scores;
+  const compareEnabled = !!overlayScores && !!baselineScores;
+
+  const scorecardScores: TrustGapInputScores = overlayScores ?? baselineScores ?? fallbackScores;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
@@ -230,9 +255,11 @@ export default function DiagnosticResults() {
           {/* Trust Gap™ 4-Dimension Scorecard with coach-style interpretation */}
           <div className="mb-8">
             <TrustGapScorecard
-              scores={trustGapScores}
+              scores={scorecardScores}
               evidence={evidence}
               evidenceKey={evidenceKey}
+              baselineScores={compareEnabled ? baselineScores : undefined}
+              avatarName={currentAvatar?.name}
             />
           </div>
 

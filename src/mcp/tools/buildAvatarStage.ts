@@ -22,6 +22,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { groundingPreamble } from '../skills/skillLoader.js';
 import { runPipeline, runStage, type AvatarStage } from '../service/avatarPipeline.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
 import { captureMcpEvent } from '../posthog.js';
@@ -55,6 +56,9 @@ export function registerBuildAvatarStageTool(server: McpServer): void {
     async ({ stage, avatar_id, allow_signature }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
 
       const opts = { avatarId: avatar_id ?? null, allowSignature: allow_signature };
 

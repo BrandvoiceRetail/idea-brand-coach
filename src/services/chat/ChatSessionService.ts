@@ -30,22 +30,40 @@ export class ChatSessionService {
   /**
    * Create a new chat session.
    *
+   * When `avatarId` is supplied the session is stamped with it (the retrieval
+   * anchor — multi-avatar design §2.1) and the avatar's `brand_id` is resolved
+   * server-side and denormalized onto the thread. The avatar is taken as an
+   * explicit argument (not from `sessionData`) so callers can't desync the
+   * thread from the active avatar.
+   *
    * @param userId - ID of the user creating the session
    * @param chatbotType - Type of chatbot for the session
    * @param sessionData - Optional session creation data (title, conversation_type, field context)
+   * @param avatarId - Avatar to scope the thread to (optional → brand-level thread)
    * @returns Promise resolving to SessionResult with created session or error
    */
   async createSession(
     userId: string,
     chatbotType: ChatbotType,
-    sessionData?: ChatSessionCreate
+    sessionData?: ChatSessionCreate,
+    avatarId?: string
   ): Promise<SessionResult<ChatSession>> {
-    // posthog_distinct_id threads this conversation back to the user's PostHog
-    // funnel + replay (parity with feedback_events). Column added in migration
-    // 20260617000000; cast because types.ts is intentionally NOT regenerated
-    // (it carries repo/live drift) so the generated insert type lacks the column.
+    // Resolve the avatar's brand so the thread carries both scope columns.
+    let brandId: string | null = null;
+    if (avatarId) {
+      const resolved = await this.resolveBrandId(avatarId, userId);
+      if (resolved.error) {
+        return { data: null, error: resolved.error };
+      }
+      brandId = resolved.brandId;
+    }
+
+    // posthog_distinct_id threads this conversation back to the user's PostHog funnel +
+    // replay (parity with feedback_events); avatar_id/brand_id carry the two-tier scope.
     const row = {
       user_id: userId,
+      avatar_id: avatarId ?? null,
+      brand_id: brandId,
       chatbot_type: sessionData?.chatbot_type || chatbotType,
       title: sessionData?.title || 'New Chat',
       conversation_type: sessionData?.conversation_type || 'general',
@@ -73,23 +91,93 @@ export class ChatSessionService {
   }
 
   /**
+   * Ensure an open thread exists for the given avatar and return it.
+   * Picks the most-recently-updated existing session for the avatar, or creates
+   * a fresh one. This is the session-follows-avatar contract (design §4.1):
+   * switching to an avatar lands the user on that avatar's conversation.
+   *
+   * @param userId - ID of the user
+   * @param chatbotType - Type of chatbot
+   * @param avatarId - Avatar to find/create a thread for
+   * @returns Promise resolving to SessionResult with the existing-or-new session
+   */
+  async ensureSessionForAvatar(
+    userId: string,
+    chatbotType: ChatbotType,
+    avatarId: string
+  ): Promise<SessionResult<ChatSession>> {
+    const { data: existing, error: listError } = await this.getSessions(
+      userId,
+      chatbotType,
+      avatarId
+    );
+    if (listError) {
+      return { data: null, error: listError };
+    }
+
+    // Prefer the most recent general thread for this avatar (getSessions is
+    // already ordered newest-first); skip field-scoped threads.
+    const openThread = existing?.find((s) => s.conversation_type === 'general');
+    if (openThread) {
+      return { data: openThread, error: null };
+    }
+
+    return this.createSession(userId, chatbotType, undefined, avatarId);
+  }
+
+  /**
+   * Resolve an avatar's brand_id, verifying the avatar belongs to the user.
+   * `avatars.brand_id` is NOT NULL (P1), so a found row always has a brand.
+   */
+  private async resolveBrandId(
+    avatarId: string,
+    userId: string
+  ): Promise<{ brandId: string | null; error: Error | null }> {
+    const { data, error } = await supabase
+      .from('avatars')
+      .select('brand_id')
+      .eq('id', avatarId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      return { brandId: null, error: error as Error };
+    }
+    if (!data) {
+      return { brandId: null, error: new Error('Avatar not found for current user') };
+    }
+    return { brandId: data.brand_id, error: null };
+  }
+
+  /**
    * Get all chat sessions for a user and chatbot type.
    * Returns sessions ordered by update time (newest first).
    *
+   * When `avatarId` is supplied, sessions are scoped to that avatar (the
+   * session-follows-avatar contract, design §4.1). Omitting it (or passing
+   * `undefined`) returns all of the user's threads for the chatbot type.
+   *
    * @param userId - ID of the user who owns the sessions
    * @param chatbotType - Type of chatbot to filter by
+   * @param avatarId - Optional avatar to scope sessions to
    * @returns Promise resolving to SessionResult with array of sessions or error
    */
   async getSessions(
     userId: string,
-    chatbotType: ChatbotType
+    chatbotType: ChatbotType,
+    avatarId?: string
   ): Promise<SessionResult<ChatSession[]>> {
-    const { data, error } = await supabase
+    let query = supabase
       .from('chat_sessions')
       .select('*')
       .eq('user_id', userId)
-      .eq('chatbot_type', chatbotType)
-      .order('updated_at', { ascending: false });
+      .eq('chatbot_type', chatbotType);
+
+    if (avatarId) {
+      query = query.eq('avatar_id', avatarId);
+    }
+
+    const { data, error } = await query.order('updated_at', { ascending: false });
 
     if (error) {
       return { data: null, error: error as Error };
@@ -209,6 +297,8 @@ export class ChatSessionService {
     return {
       id: item.id as string,
       user_id: item.user_id as string,
+      avatar_id: (item.avatar_id as string | null) ?? null,
+      brand_id: (item.brand_id as string | null) ?? null,
       chatbot_type: item.chatbot_type as ChatbotType,
       title: item.title as string,
       conversation_type: (item.conversation_type as ConversationType) || 'general',

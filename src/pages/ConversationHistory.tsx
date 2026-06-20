@@ -27,16 +27,29 @@ export default function ConversationHistory() {
   const [inputMessage, setInputMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch all sessions
+  // This page is ACCOUNT-WIDE: it lists every thread across all avatars (it
+  // splits field vs general for the whole account). Clear the shared chat
+  // service's avatar scope so getSessions() returns ALL threads, not just the
+  // singleton's last-set avatar (design §4.1 — this page is intentionally NOT
+  // avatar-scoped). Keyed outside the ['avatar', …] firewall namespace, so it
+  // does not auto-invalidate on a switch — correct, since it is not scoped to
+  // the current avatar.
+  useEffect(() => {
+    chatService.setCurrentAvatar(undefined);
+  }, [chatService]);
+
+  // Fetch all sessions (account-wide; deliberately non-namespaced key).
   const { data: sessions = [], isLoading: isLoadingSessions } = useQuery({
-    queryKey: ['chat', 'sessions', 'idea-framework-consultant'],
+    queryKey: ['chat', 'sessions', 'all-avatars', 'idea-framework-consultant'],
     queryFn: () => chatService.getSessions(),
   });
 
-  // Chat hook for messages and sending - this handles both fetching and updating messages
+  // Chat hook for messages and sending. Scope to the selected thread's avatar so
+  // the message cache + title invalidations land in the right namespace bucket.
   const { messages, sendMessage, isSending, isLoading: isLoadingMessages } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: selectedSession?.id,
+    avatarId: selectedSession?.avatar_id ?? undefined,
   });
 
   // System KB state (always enabled)

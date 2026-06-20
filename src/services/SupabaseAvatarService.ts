@@ -19,6 +19,26 @@ export class SupabaseAvatarService implements IAvatarService {
   }
 
   /**
+   * Resolve the current user's brand id (one brand per user — P1 `uq_brands_user_id`).
+   * P1 made `avatars.brand_id` NOT NULL, so every created avatar must be stamped with the
+   * caller's brand. The brand is resolved server-side here, never accepted from the caller.
+   * @throws Error if the user has no brand yet (the brand spine must exist first).
+   */
+  private async getBrandId(userId: string): Promise<string> {
+    const { data, error } = await supabase
+      .from('brands')
+      .select('id')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error('No brand found for the current user');
+    return data.id;
+  }
+
+  /**
    * Map a database row to a typed Avatar object.
    * Centralizes the DB-to-domain mapping to avoid repetition.
    */
@@ -33,6 +53,7 @@ export class SupabaseAvatarService implements IAvatarService {
       buying_behavior: data.buying_behavior as Avatar['buying_behavior'],
       voice_of_customer: data.voice_of_customer as string | null,
       is_template: data.is_template as boolean,
+      is_primary: (data.is_primary as boolean) ?? false,
       completion_percentage: (data.completion_percentage as number) ?? 0,
       created_at: data.created_at as string,
       updated_at: data.updated_at as string,
@@ -45,6 +66,8 @@ export class SupabaseAvatarService implements IAvatarService {
    */
   async create(avatar: AvatarCreate): Promise<Avatar> {
     const userId = await this.getUserId();
+    // P1: avatars.brand_id is NOT NULL — stamp the caller's brand server-side.
+    const brandId = await this.getBrandId(userId);
 
     // Generate unique name if not provided
     const name = avatar.name || await this.generateUniqueName();
@@ -53,6 +76,7 @@ export class SupabaseAvatarService implements IAvatarService {
       .from('avatars')
       .insert({
         user_id: userId,
+        brand_id: brandId,
         name,
         description: avatar.description || null,
         demographics: avatar.demographics || null,

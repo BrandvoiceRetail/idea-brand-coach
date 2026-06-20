@@ -27,6 +27,41 @@ IV-OS asset/test ledger + knowledge reads. Today the host exposes:
   The avatar scope rides on `chat_sessions.avatar_id` (nullable FK → `avatars`, migration
   `20260301065818`); a NULL row is a brand-level thread.
 
+- **Avatar lifecycle (Phase 2, §4.3).** `create_avatar` / `list_avatars` / `get_avatar` /
+  `set_current_avatar` / `set_primary_avatar` / `record_avatar_build`. Creation stamps `brand_id`
+  **server-side** via `service/avatarOwnership.resolveBrandId()` (one brand per user, P1
+  `uq_brands_user_id`) — the caller NEVER supplies `brand_id`. `set_current_avatar` is the
+  **stateless avatar-switch**: it only invokes the `set_current_avatar(uuid)` RPC (the sole write
+  path for `profiles.current_avatar_id`, ownership-checked server-side), so the host holds **no
+  session state** (matches `context/identity.ts`). `set_primary_avatar` is the only MCP write path
+  for `brands.primary_avatar_id` (the funnel-audit default, locked #7) — it invokes the
+  `set_primary_avatar(uuid)` RPC (ownership + brand-presence checked, surfacing
+  `avatar_not_owned`/`avatar_has_no_brand` as clean denials) and is **distinct** from the coach
+  current-avatar. `record_avatar_build` upserts `avatar_build_state` (S1→S4 progress +
+  draft/built/approved). Writes are `gateWrite`-gated; reads are identity-gated.
+
+- **Avatar-ownership gate (`service/avatarOwnership.ts`).** `requireOwnedAvatar(avatarId)` is the
+  per-call authorization seam: an RLS-bound `avatars` read that returns the avatar's `brand_id` or a
+  ready-to-return `CallToolResult` denial (gateWrite-shaped `{ denied, brandId }`). It is retrofitted
+  into **every** write tool that accepts `avatar_id` (build_avatar_stage, provide_context,
+  ingest_evidence, persist_signature, run_diagnostic_evidence, generate_canvas, generate_brief,
+  generate_audit_idea_map, run_marketing_audit, export_workbook, record_avatar_build, run_funnel_audit,
+  get_funnel_audit) — called right after `gateWrite()`, before any avatar-scoped work. RLS already
+  scopes `avatars` to `auth.uid()`; this converts a foreign `avatar_id` from a silent brand-level write
+  into an explicit refusal and surfaces `brand_id` for two-tier scoping. `get_context_status` (a READ
+  that takes `avatar_id`) also gates with `requireOwnedAvatar` so a foreign avatar_id is refused rather
+  than silently degrading to a brand-level fill-map — no `gateWrite` there since RLS already handles the
+  anon case. The gate **never throws**: a DB error during the check returns a generic denial (no raw
+  Postgres message), keeping the five non-try-wrapped retrofit sites MF-5-safe. `generate_signature`
+  is left RLS-only by design (a non-gated read).
+
+- **Funnel engine (Phase 2, §4.4).** `list_funnel_inventory` / `upsert_funnel_touchpoint` (BRAND-LEVEL,
+  **no `avatar_id`** — inventory is `brand_assets` with `avatar_id` NULL) + `run_funnel_audit` /
+  `get_funnel_audit` (per-avatar OVERLAY in `brand_asset_audits` via the `save_asset_audit_atomic` RPC).
+  The audit tools default `avatar_id` to `brands.primary_avatar_id` (locked #7) when omitted — the funnel
+  **never** reads/writes the coach current-avatar. `brand_id` is resolved server-side throughout
+  (`service/funnelInventory.ts`).
+
 The IV-OS **write** tools (`log_asset`/`record_test`/…) and **knowledge** reads
 (canon/product/funnel) are referenced by capability only (`ivos/capabilities.ts`
 → `DEFERRED_IVOS_CAPABILITIES`) and are intentionally **not bound** — pending the

@@ -39,6 +39,7 @@ import {
 } from '../service/artifactStore.js';
 import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
 
@@ -203,6 +204,8 @@ export function registerGenerateAuditIdeaMapTool(server: McpServer, deps?: Parti
     async ({ avatar_id }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
 
       const result = await runAuditIdeaMap(avatar_id ?? null, deps);
 

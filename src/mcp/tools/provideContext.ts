@@ -20,6 +20,7 @@ import { storeAnswer, ContextWritebackError, type WritebackStore } from '../serv
 import { resolve, type SlotStatus } from '../service/contextResolver.js';
 import { CONTEXT_SLOTS, type SlotId } from '../contracts/index.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
 import { captureMcpEvent } from '../posthog.js';
@@ -74,6 +75,9 @@ export function registerProvideContextTool(server: McpServer): void {
     async ({ answers, avatar_id, product_id }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
 
       const results: AnswerResult[] = [];
       const persistedSlots: SlotId[] = [];

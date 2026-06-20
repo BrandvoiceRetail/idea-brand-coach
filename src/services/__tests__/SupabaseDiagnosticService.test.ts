@@ -80,6 +80,20 @@ describe('SupabaseDiagnosticService', () => {
         if (table === 'diagnostic_submissions') {
           return { insert: mockInsert } as any;
         }
+        if (table === 'brands') {
+          // resolveBrandId chain: .select().eq().order().limit().maybeSingle()
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'brand-1' }, error: null }),
+                  }),
+                }),
+              }),
+            }),
+          } as any;
+        }
         if (table === 'profiles') {
           return {
             update: vi.fn().mockReturnValue({
@@ -158,6 +172,19 @@ describe('SupabaseDiagnosticService', () => {
       };
 
       vi.mocked(supabase.from).mockReturnValue({
+        // brands resolveBrandId chain (select→eq→order→limit→maybeSingle).
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'brand-1' }, error: null }),
+              }),
+            }),
+          }),
+          // diagnostic_submissions insert→select→single uses this same select node;
+          // it is never reached here because insert returns its own select below.
+          single: vi.fn().mockResolvedValue({ data: mockSubmission, error: null }),
+        }),
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
@@ -180,6 +207,120 @@ describe('SupabaseDiagnosticService', () => {
 
       expect(result).toBeDefined();
       expect(mockRemoveItem).toHaveBeenCalledWith('diagnosticData');
+    });
+
+    it('should stamp avatar_id on the insert when an overlay avatarId is passed', async () => {
+      // Diagnostic BOTH (locked #5): the results-page sync passes the current
+      // avatar's id when a baseline already exists, creating an OVERLAY row.
+      const mockData = {
+        answers: { insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
+        scores: { overall: 75, insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
+      };
+
+      Object.defineProperty(window, 'localStorage', {
+        value: { getItem: vi.fn().mockReturnValue(JSON.stringify(mockData)), removeItem: vi.fn() },
+        writable: true,
+      });
+
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: { id: 'user-123' } as any },
+        error: null,
+      });
+
+      const mockSubmission = {
+        id: 'submission-overlay',
+        user_id: 'user-123',
+        answers: mockData.answers,
+        scores: mockData.scores,
+        brand_id: 'brand-1',
+        avatar_id: 'avatar-9',
+        completed_at: '2025-01-01T00:00:00Z',
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
+      };
+
+      const insertSpy = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: mockSubmission, error: null }),
+        }),
+      });
+
+      vi.mocked(supabase.from).mockImplementation((table: string) => {
+        if (table === 'brands') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'brand-1' }, error: null }),
+                  }),
+                }),
+              }),
+            }),
+          } as any;
+        }
+        if (table === 'diagnostic_submissions') {
+          return { insert: insertSpy } as any;
+        }
+        if (table === 'profiles') {
+          return { update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: null, error: null }) }) } as any;
+        }
+        return {} as any;
+      });
+
+      const result = await service.syncFromLocalStorage('avatar-9');
+
+      expect(insertSpy).toHaveBeenCalledWith(expect.objectContaining({ avatar_id: 'avatar-9', brand_id: 'brand-1' }));
+      expect(result?.avatar_id).toBe('avatar-9');
+    });
+
+    it('should stamp avatar_id NULL (baseline) when no avatarId is passed', async () => {
+      const mockData = {
+        answers: { insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
+        scores: { overall: 75, insight: 80, distinctive: 60, empathetic: 70, authentic: 90 },
+      };
+
+      Object.defineProperty(window, 'localStorage', {
+        value: { getItem: vi.fn().mockReturnValue(JSON.stringify(mockData)), removeItem: vi.fn() },
+        writable: true,
+      });
+
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: { id: 'user-123' } as any },
+        error: null,
+      });
+
+      const insertSpy = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: 's', user_id: 'user-123', answers: mockData.answers, scores: mockData.scores, brand_id: 'brand-1', avatar_id: null, completed_at: 'x', created_at: 'x', updated_at: 'x' },
+            error: null,
+          }),
+        }),
+      });
+
+      vi.mocked(supabase.from).mockImplementation((table: string) => {
+        if (table === 'brands') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockReturnValue({
+                    maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'brand-1' }, error: null }),
+                  }),
+                }),
+              }),
+            }),
+          } as any;
+        }
+        if (table === 'diagnostic_submissions') return { insert: insertSpy } as any;
+        if (table === 'profiles') return { update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: null, error: null }) }) } as any;
+        return {} as any;
+      });
+
+      await service.syncFromLocalStorage();
+
+      expect(insertSpy).toHaveBeenCalledWith(expect.objectContaining({ avatar_id: null }));
     });
 
     it('should return null if no localStorage data', async () => {
@@ -237,6 +378,19 @@ describe('SupabaseDiagnosticService', () => {
       };
 
       vi.mocked(supabase.from).mockReturnValue({
+        // brands resolveBrandId chain (select→eq→order→limit→maybeSingle).
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'brand-1' }, error: null }),
+              }),
+            }),
+          }),
+          // diagnostic_submissions insert→select→single uses this same select node;
+          // it is never reached here because insert returns its own select below.
+          single: vi.fn().mockResolvedValue({ data: mockSubmission, error: null }),
+        }),
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({

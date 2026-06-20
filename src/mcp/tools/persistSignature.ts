@@ -19,6 +19,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { saveSignatureChoice, ArtifactStoreError } from '../service/artifactStore.js';
 import { signatureOptionSchema, type EvidenceRef, type Grounding } from '../contracts/index.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 import { captureMcpEvent, captureMcpException } from '../posthog.js';
@@ -56,6 +57,9 @@ export function registerPersistSignatureTool(server: McpServer): void {
     async ({ options, chosen_index, avatar_id, used_reviews, inference }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
 
       const grounding: Grounding = used_reviews ? 'evidence' : 'inference';
       const evidenceRefs: EvidenceRef[] = used_reviews

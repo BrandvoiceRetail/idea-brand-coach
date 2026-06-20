@@ -22,6 +22,7 @@ import { Loader2, Send, Check, MessageSquare, PanelLeftClose, PanelLeft } from '
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useChat } from '@/hooks/useChat';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ImperativePanelHandle } from 'react-resizable-panels';
@@ -72,6 +73,10 @@ export function FieldChatModal({
 
   const { toast } = useToast();
 
+  // Scope the field chat to the current avatar (bleed firewall §2.1/§2.2).
+  const { currentAvatar } = useAvatarContext();
+  const avatarId = currentAvatar?.id;
+
   // Session management - filtered to this field only
   const {
     sessions,
@@ -90,12 +95,14 @@ export function FieldChatModal({
     fieldId: field.fieldId,
     fieldLabel: field.fieldLabel,
     autoCreate: false, // Don't auto-create, let user start fresh
+    avatarId,
   });
 
   // Chat for current session
   const { messages, sendMessage, isSending } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
+    avatarId,
   });
 
   // Toggle sidebar collapse state

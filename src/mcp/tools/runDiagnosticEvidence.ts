@@ -46,6 +46,7 @@ import {
 } from '../contracts/index.js';
 import type { SlotId } from '../contracts/slots.js';
 import { gateWrite } from './writeAuth.js';
+import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag, type Identity } from '../context/identity.js';
 import { captureMcpEvent, captureMcpException } from '../posthog.js';
@@ -226,6 +227,8 @@ export function registerRunDiagnosticEvidenceTool(server: McpServer, deps?: Part
       // C1: bind identity BEFORE any leg (resolve / engine / persist) runs.
       const { identity, denied } = gateWrite();
       if (denied) return denied;
+      const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
+      if (avatarDenied) return avatarDenied;
       const avatarId = avatar_id ?? null;
 
       try {

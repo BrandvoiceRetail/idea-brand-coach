@@ -4,6 +4,28 @@ import { SupabaseAvatarService } from '../services/SupabaseAvatarService';
 import { Database } from '../integrations/supabase/types';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { useAvatarContext } from '@/contexts/AvatarContext';
+
+/**
+ * One-time migration: seed the canonical AvatarContext localStorage key from
+ * the legacy current-avatar key, then delete the legacy key so the bleed
+ * firewall's static guard stays green (design §4.1). Runs once per module load.
+ */
+const LEGACY_CURRENT_AVATAR_KEY = 'brandCoach_currentAvatarId'; // LEGACY-AVATAR-SHIM
+const CANONICAL_AVATAR_KEY = 'idea-selected-avatar-id';
+function seedCanonicalFromLegacyKeyOnce(): void {
+  try {
+    const legacy = localStorage.getItem(LEGACY_CURRENT_AVATAR_KEY); // LEGACY-AVATAR-SHIM
+    if (legacy) {
+      if (!localStorage.getItem(CANONICAL_AVATAR_KEY)) {
+        localStorage.setItem(CANONICAL_AVATAR_KEY, legacy);
+      }
+      localStorage.removeItem(LEGACY_CURRENT_AVATAR_KEY); // LEGACY-AVATAR-SHIM
+    }
+  } catch {
+    // localStorage unavailable — nothing to migrate.
+  }
+}
 
 export type Avatar = Database['public']['Tables']['avatars']['Row'];
 export type AvatarInsert = Database['public']['Tables']['avatars']['Insert'];
@@ -35,6 +57,10 @@ export function useAvatarService(): UseAvatarServiceResult {
   const userId = user?.id;
   const [avatarService] = useState(() => new SupabaseAvatarService(supabase));
 
+  // Canonical store (design §4.1): AvatarContext owns the current-avatar pointer
+  // and the single switch path. This hook delegates selection to it.
+  const { selectedAvatarId, setCurrentAvatar: setCurrentAvatarCanonical } = useAvatarContext();
+
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [currentAvatar, setCurrentAvatar] = useState<Avatar | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,11 +77,7 @@ export function useAvatarService(): UseAvatarServiceResult {
       const data = await avatarService.getAll();
 
       setAvatars(data || []);
-
-      // If no current avatar is set and we have avatars, select the first one
-      if (!currentAvatar && data && data.length > 0) {
-        setCurrentAvatar(data[0]);
-      }
+      // Selection (incl. auto-select) is owned by AvatarContext (design §4.1).
     } catch (err) {
       const error = err as Error;
       console.error('Error loading avatars:', error);
@@ -64,7 +86,7 @@ export function useAvatarService(): UseAvatarServiceResult {
     } finally {
       setIsLoading(false);
     }
-  }, [avatarService, currentAvatar]);
+  }, [avatarService]);
 
   /**
    * Create a new avatar
@@ -166,20 +188,15 @@ export function useAvatarService(): UseAvatarServiceResult {
   }, [avatarService, currentAvatar, avatars]);
 
   /**
-   * Select an avatar by ID
+   * Select an avatar by ID — thin delegator to the canonical switch path
+   * (design §4.1). The legacy localStorage write + window event are gone;
+   * AvatarContext.setCurrentAvatar owns the RPC + session ensure + cache
+   * invalidation. Local `currentAvatar` mirrors `selectedAvatarId` via the
+   * sync effect below.
    */
   const selectAvatarById = useCallback((id: string) => {
-    const avatar = avatars.find(a => a.id === id);
-    if (avatar) {
-      setCurrentAvatar(avatar);
-
-      // Store the current avatar ID in localStorage for persistence
-      localStorage.setItem('brandCoach_currentAvatarId', id);
-
-      // Trigger a custom event for other components to listen to
-      window.dispatchEvent(new CustomEvent('avatarChanged', { detail: { avatar } }));
-    }
-  }, [avatars]);
+    void setCurrentAvatarCanonical(id);
+  }, [setCurrentAvatarCanonical]);
 
   /**
    * Get avatars by brand ID
@@ -213,35 +230,22 @@ export function useAvatarService(): UseAvatarServiceResult {
     await loadAvatars();
   }, [loadAvatars]);
 
+  // One-time migration of the legacy localStorage key into the canonical key.
+  useEffect(() => {
+    seedCanonicalFromLegacyKeyOnce();
+  }, []);
+
   // Load avatars on mount (guarded behind auth)
   useEffect(() => {
     if (!userId) return;
     loadAvatars();
   }, [userId, loadAvatars]);
 
-  // Restore selected avatar from localStorage on mount
+  // Mirror the canonical selection (AvatarContext) into this hook's local
+  // `currentAvatar` so existing consumers keep working during the collapse.
   useEffect(() => {
-    const storedAvatarId = localStorage.getItem('brandCoach_currentAvatarId');
-    if (storedAvatarId && avatars.length > 0) {
-      const avatar = avatars.find(a => a.id === storedAvatarId);
-      if (avatar) {
-        setCurrentAvatar(avatar);
-      }
-    }
-  }, [avatars]);
-
-  // Listen for avatar changes from other components
-  useEffect(() => {
-    const handleAvatarChange = (event: CustomEvent<{ avatar: Avatar }>) => {
-      setCurrentAvatar(event.detail.avatar);
-    };
-
-    window.addEventListener('avatarChanged', handleAvatarChange as EventListener);
-
-    return () => {
-      window.removeEventListener('avatarChanged', handleAvatarChange as EventListener);
-    };
-  }, []);
+    setCurrentAvatar(selectedAvatarId ? avatars.find(a => a.id === selectedAvatarId) ?? null : null);
+  }, [selectedAvatarId, avatars]);
 
   return {
     avatars,
