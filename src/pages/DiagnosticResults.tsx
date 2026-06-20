@@ -266,7 +266,7 @@ export default function DiagnosticResults() {
           {/* Decision Trigger™ — the named trigger derived after the scorecard, grounded in imported reviews */}
           <div className="mb-8">
             <DecisionTriggerPanel
-              scores={trustGapScores}
+              scores={scorecardScores}
               evidence={evidence}
               evidenceKey={evidenceKey}
               sessionId={decisionTriggerSessionId}

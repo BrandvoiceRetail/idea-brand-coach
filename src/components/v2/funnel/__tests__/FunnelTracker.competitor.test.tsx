@@ -20,6 +20,7 @@ import type { BrandAsset } from '@/services/interfaces/IBrandFunnelService';
 
 vi.mock('@/contexts/AvatarContext');
 vi.mock('@/hooks/useFunnelTracker');
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'test-user' } }) }));
 
 // COMPETITOR_AGENTS gate. Default ON; the off-state is exercised explicitly.
 let competitorAgentsEnabled = true;

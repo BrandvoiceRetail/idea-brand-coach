@@ -76,6 +76,8 @@ describe('useChat', () => {
       getRecentMessages: vi.fn().mockResolvedValue([]),
       setChatbotType: vi.fn(),
       setCurrentSession: vi.fn(),
+      setCurrentAvatar: vi.fn(),
+      ensureSessionForAvatar: vi.fn().mockResolvedValue(null),
       getCurrentSessionId: vi.fn().mockReturnValue(undefined),
       createSession: vi.fn().mockResolvedValue(null),
       getSessions: vi.fn().mockResolvedValue([]),
