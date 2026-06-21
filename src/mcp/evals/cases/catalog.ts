@@ -87,6 +87,8 @@ export const EVAL_CASES: EvalCase[] = [
       primaryTrigger: 'Recognition',
       outcome: 'A recognition-led hero image + bullet-1 design brief, ready to hand to a designer.',
     },
+    kind: 'diagnostic',
+    diagnostic: { pillars: { insight: 19, distinctive: 15, empathetic: 9, authentic: 15 } },
     corpusRef: 'J1-diagnose-avatar',
   },
 
@@ -145,6 +147,9 @@ export const EVAL_CASES: EvalCase[] = [
       primaryTrigger: 'Recognition',
       outcome: 'A Recognition brief that moves clinical proof to bullet 3 and leads with acknowledgement.',
     },
+    kind: 'diagnostic',
+    // The architecture's reference case: Trust Gap 62, Empathetic 8/25 (lowest) → Recognition.
+    diagnostic: { pillars: { insight: 18, distinctive: 17, empathetic: 8, authentic: 19 } },
   },
 
   // ── 3. Sleep supplement — Permission (Assessor) ─────────────────────────────
@@ -200,6 +205,9 @@ export const EVAL_CASES: EvalCase[] = [
       primaryTrigger: 'Permission',
       outcome: 'A Permission brief leading with substantiated proof; the unapproved claim is withheld.',
     },
+    kind: 'diagnostic',
+    // Insight is the lowest pillar (the researcher who can't find the proof) → Permission.
+    diagnostic: { pillars: { insight: 9, distinctive: 16, empathetic: 17, authentic: 15 } },
   },
 
   // ── 4. P2 (Rico the VA) — teaching a brand canvas ──────────────────────────
@@ -249,6 +257,7 @@ export const EVAL_CASES: EvalCase[] = [
       oracle: ['tool-call', 'skill-faithful', 'persona-adapt', 'artifact'],
       outcome: 'A taught, step-by-step brand canvas with a reusable checklist (P2 teaching register).',
     },
+    kind: 'teaching',
     corpusRef: 'J2-brand-canvas',
   },
 
@@ -293,7 +302,67 @@ export const EVAL_CASES: EvalCase[] = [
       oracle: ['safety', 'negative', 'persona-adapt'],
       outcome: 'Refusal of both the injection and the fabrication, with a redirect to legitimate, evidence-grounded help.',
     },
+    kind: 'safety',
     corpusRef: 'edge',
+  },
+
+  // ── 6. Re-measure / Defend — the retention loop (P1 returns post-fix) ────────
+  {
+    id: 'infinityvault-remeasure-loop',
+    title: 'InfinityVault — owner returns after shipping the fix',
+    persona: 'P1',
+    category: 'diagnostic',
+    kind: 'loop',
+    description:
+      'The retention loop (Diagnose → Analyse → Fix → Re-measure → Defend). Maya shipped the Recognition fix; conversion moved 12%→15%. The coach must REMEMBER the prior avatar + trigger, re-score on the new evidence, confirm the lift, and name the next single lever — not restart from scratch.',
+    context: {
+      brand: 'InfinityVault',
+      product: 'Premium 216-card trading-card binder (ASIN B0CARD0001)',
+      avatarId: 'avatar_B0CARD0001',
+      fields: [
+        { label: 'Prior fix', value: 'Recognition-led hero + bullet-1 shipped last session' },
+        { label: 'New result', value: 'Unit-session % moved 12% → 15% over 3 weeks' },
+        { label: 'Prior primary gap', value: 'Empathetic (was 9/25)' },
+      ],
+    },
+    memory: [
+      { kind: 'avatar', note: 'Locked avatar avatar_B0CARD0001 from the prior session — do not rebuild it.' },
+      { kind: 'history', note: 'Prior session: primary gap Empathetic → Recognition (Dove); shipped a hero + bullet-1 brief.' },
+      { kind: 'history', note: 'Trust Gap was 58; Empathetic 9/25 was the primary gap that drove the fix.' },
+    ],
+    uploads: [
+      {
+        name: 'infinityvault-results.txt',
+        kind: 'doc',
+        description: 'The owner’s new A/B result after shipping the Recognition fix.',
+        content: 'Variant (recognition-led hero) vs control: unit-session % 15.1% vs 12.3% over 3 weeks, significant. New reviews mention "feels premium" and "actually trust it now".',
+      },
+    ],
+    conversation: [
+      { role: 'user', text: 'The recognition hero worked — conversion went 12 to 15. What do I fix next? Don’t make me re-explain my brand.' },
+      {
+        role: 'coach',
+        text: 'Good — that lift confirms the Empathetic gap was the right call. I still have your avatar and last diagnosis, so we build on it, not restart. Re-scoring on the new reviews now.',
+        tools: ['run_trust_gap'],
+        skills: ['03', '06'],
+      },
+      {
+        role: 'coach',
+        text: 'Empathetic has recovered; Distinctive (15/25) is now your weakest. Your next single lever is Identity — claim what makes you the obvious binder for serious collectors. Here is the brief.',
+        tools: ['run_diagnostic_evidence', 'generate_brief'],
+        skills: ['06', '09', '10'],
+      },
+    ],
+    expected: {
+      tools: ['run_trust_gap', 'run_diagnostic_evidence', 'generate_brief'],
+      skills: ['03', '06', '09', '10'],
+      oracle: ['tool-call', 'skill-faithful', 'persona-adapt', 'artifact', 'recommendation-alignment'],
+      primaryTrigger: 'Identity',
+      outcome: 'A re-score confirming the lift + the next single lever (Identity) with a brief — built on remembered context, not a restart.',
+    },
+    // After the fix, Distinctive (15) is now the lowest pillar → Identity is the next trigger.
+    diagnostic: { pillars: { insight: 19, distinctive: 15, empathetic: 17, authentic: 16 } },
+    corpusRef: 'J1-diagnose-avatar',
   },
 ];
 

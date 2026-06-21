@@ -12,6 +12,17 @@
 
 export type Persona = 'P1' | 'P2' | 'edge';
 
+/** Pillar key for a structured Trust Gap diagnostic (drives the deterministic trigger oracle). */
+export type Pillar = 'insight' | 'distinctive' | 'empathetic' | 'authentic';
+
+/** A structured Trust Gap diagnostic the deterministic oracles score against (pillars out of 25). */
+export interface CaseDiagnostic {
+  pillars: Record<Pillar, number>;
+}
+
+/** What this case exercises. 'loop' = a Re-measure/Defend return visit (the retention loop). */
+export type CaseKind = 'diagnostic' | 'teaching' | 'safety' | 'loop';
+
 /** A field of supplied brand/avatar context the coach is given for this test. */
 export interface ContextField {
   label: string;
@@ -76,6 +87,10 @@ export interface EvalCase {
   uploads: SampleUpload[];
   conversation: PracticeTurn[];
   expected: ExpectedOutcome;
+  /** What the case exercises; defaults to its category if unset. Used by loop-readiness. */
+  kind?: CaseKind;
+  /** Structured Trust Gap pillars — lets the deterministic oracle verify the trigger choice. */
+  diagnostic?: CaseDiagnostic;
   /** Related golden-corpus fixture (journey folder), if this case mirrors one. */
   corpusRef?: string;
 }

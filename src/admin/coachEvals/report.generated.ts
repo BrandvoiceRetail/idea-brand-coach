@@ -274,9 +274,35 @@ export const EVAL_REPORT: EvalReport = {
       "display": "5 / 11 tools",
       "category": "coverage",
       "detail": "Remaining labels are planned/aliased tools not yet grounded."
+    },
+    {
+      "id": "trigger-accuracy",
+      "label": "Decision Trigger accuracy",
+      "description": "Curated cases whose declared primary trigger matches the decision table derived from their Trust Gap pillars.",
+      "value": 1,
+      "display": "4 / 4",
+      "category": "grounding",
+      "detail": "The pillar→trigger decision table is consistent with every diagnosed case."
+    },
+    {
+      "id": "anchor-correctness",
+      "label": "Brand-anchor correctness",
+      "description": "Cases whose Decision Trigger maps to its fixed brand anchor (Recognition = Dove, never Lego).",
+      "value": 1,
+      "display": "4 / 4",
+      "category": "grounding"
+    },
+    {
+      "id": "loop-readiness",
+      "label": "Loop readiness",
+      "description": "Bench cases exercising the Diagnose→Analyse→Fix→Re-measure→Defend retention loop.",
+      "value": 1,
+      "display": "1 loop case",
+      "category": "coverage",
+      "detail": "A return-visit case verifies the coach re-scores on remembered context."
     }
   ],
-  "coachValueScore": 0.9272437611408201,
+  "coachValueScore": 0.9440336624160154,
   "guardrails": [
     {
       "id": "gr-buyer-state-rule",

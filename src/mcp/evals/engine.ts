@@ -7,6 +7,7 @@ import { loadCorpus } from './corpus.js';
 import {
   scoreConfig,
   buildCoachValue,
+  buildCorrectnessKpis,
   buildGuardrails,
   buildFlags,
   corpusSummary,
@@ -17,7 +18,8 @@ import type { EvalReport } from './types.js';
 export function buildReport(): EvalReport {
   const corpus = loadCorpus();
   const configs = CONFIGS.map((c) => scoreConfig(c, corpus));
-  const coachValue = buildCoachValue(corpus);
+  // Corpus-derived value KPIs + deterministic case-derived correctness KPIs (trigger/anchor/loop).
+  const coachValue = [...buildCoachValue(corpus), ...buildCorrectnessKpis()];
   const coachValueScore = coachValue.length
     ? coachValue.reduce((a, k) => a + k.value, 0) / coachValue.length
     : 0;

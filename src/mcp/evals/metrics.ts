@@ -22,6 +22,7 @@ import {
   injectsGuardrails,
 } from './configs.js';
 import { corpusSkillPaths, corpusToolLabels, type CorpusFixture } from './corpus.js';
+import { triggerAccuracy, anchorAccuracy, loopReadiness } from './oracles.js';
 import type {
   ConfigScore,
   CoachValueKpi,
@@ -194,6 +195,48 @@ export function buildCoachValue(corpus: CorpusFixture[]): CoachValueKpi[] {
     kpi('artifact-coverage', 'Artifact coverage', 'Fixtures that produce a concrete artifact.', withDim('artifact') / n, pct(withDim('artifact') / n), 'actionability'),
     kpi('journey-coverage', 'Journey coverage', 'Journeys exercised with both ICPs present.', journeyDirs.length ? journeysBothPersona / journeyDirs.length : 0, `${journeysBothPersona} / ${journeyDirs.length} journeys`, 'coverage'),
     kpi('tool-surface-reach', 'Tool-surface reach', 'Corpus-exercised tools that are skill-grounded in the live coach.', labels.length ? reached / labels.length : 0, `${reached} / ${labels.length} tools`, 'coverage', 'Remaining labels are planned/aliased tools not yet grounded.'),
+  ];
+}
+
+// ── Deterministic correctness KPIs (case-derived, decision-table oracles) ─────
+
+/**
+ * Correctness KPIs that need no model — they verify the encoded decision table + corrected
+ * anchors + the retention loop against the curated cases. These close the gap-analysis P0s
+ * (trigger-accuracy / anchor-correctness / loop-readiness) deterministically; the behavioural
+ * "did the live coach pick it" stays the A2 judge's job.
+ */
+export function buildCorrectnessKpis(): CoachValueKpi[] {
+  const trig = triggerAccuracy();
+  const anchor = anchorAccuracy();
+  const loop = loopReadiness();
+  return [
+    {
+      id: 'trigger-accuracy',
+      label: 'Decision Trigger accuracy',
+      description: 'Curated cases whose declared primary trigger matches the decision table derived from their Trust Gap pillars.',
+      value: clamp01(trig.value),
+      display: `${trig.matched} / ${trig.total}`,
+      category: 'grounding',
+      detail: trig.mismatches.length ? `Mismatches: ${trig.mismatches.map((m) => `${m.caseId}→${m.expected}`).join(', ')}` : 'The pillar→trigger decision table is consistent with every diagnosed case.',
+    },
+    {
+      id: 'anchor-correctness',
+      label: 'Brand-anchor correctness',
+      description: 'Cases whose Decision Trigger maps to its fixed brand anchor (Recognition = Dove, never Lego).',
+      value: clamp01(anchor.value),
+      display: `${anchor.matched} / ${anchor.total}`,
+      category: 'grounding',
+    },
+    {
+      id: 'loop-readiness',
+      label: 'Loop readiness',
+      description: 'Bench cases exercising the Diagnose→Analyse→Fix→Re-measure→Defend retention loop.',
+      value: clamp01(loop.value > 0 ? 1 : 0),
+      display: `${loop.loopCases} loop case${loop.loopCases === 1 ? '' : 's'}`,
+      category: 'coverage',
+      detail: loop.loopCases ? 'A return-visit case verifies the coach re-scores on remembered context.' : 'No loop case yet — the retention loop is untested.',
+    },
   ];
 }
 

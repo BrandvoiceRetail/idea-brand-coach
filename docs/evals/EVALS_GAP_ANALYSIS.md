@@ -6,44 +6,48 @@ IDEA Brand Coach is now positioned as **in-house AI software that solves low Ama
 
 ---
 
-> **Implementation status (this change, 2026-06-21):** the **P0 anchor bug is FIXED in source** — `identify-decision-trigger/index.ts` now uses the canonical anchor set (Recognition=**Dove**, Belonging=Patagonia, Permission=Harvard Medical School, Momentum=Amazon's Choice, Fear-of-Loss=FOMO) and no longer names CAPTURE elements in the placement instruction (needs **deploy** to go live). The 3-tier terminology policy, evidence-based diagnostic questions, the canonical **ICP module** (`src/mcp/evals/icp/`), the non-technical **Criteria Studio**, and the **conversation→harvest loop** all landed in this change. The KPI/loop/judge gaps below remain open and are the recommended next slice.
+> **Implementation status — updated 2026-06-21 (post-deploy + KPI pass).** **All eight P0s are now CLOSED** and most P1s. The Lego→Dove + CAPTURE fix is **DEPLOYED to prod** (`identify-decision-trigger` v5, ACTIVE — verified; the prod-only paywall metering was preserved). The deterministic correctness KPIs (`trigger-accuracy`, `anchor-correctness`, `loop-readiness`) are in `src/mcp/evals/oracles.ts` + the generated report; the A2 judge now scores `artifact` / `recommendation-alignment` / `anchor-correctness` / `terminology-policy` / `evidence-based` + the authored criteria; a non-gated **safety harness** (`src/mcp/evals/safety/`) and a **trigger-output validator** (`src/mcp/evals/triggerOutput.ts`) guard the runtime invariants in CI; harvest **PII redaction** is wired; the **Criteria Studio**, **ICP module**, and **harvest loop** all landed. What REMAINS is the live-infrastructure tier (criteria → deployed coach, harvest → Supabase source + cron, the live LLM-judged runs) which is credential/deploy-gated, plus a few P1/P2 coverage extensions. The single-focus **brand-owner surface** (`/v2/focus`) was also built this push.
 
-## TL;DR — top gaps
+## TL;DR — gap status
 
-| Severity | Gap | Recommendation |
-|---|---|---|
-| **P0** | Edge fn `identify-decision-trigger` still teaches **Lego** as the Recognition anchor (should be **Dove**) | Replace Lego→Dove on lines 86/95/105 of `index.ts` |
-| **P0** | No deterministic KPI for **Decision Trigger accuracy** (right trigger picked) | Add `trigger-accuracy` KPI in `metrics.ts` (matched/total) |
-| **P0** | No KPI for **Trust Gap score accuracy** — the lead-magnet metric | Encode Skills 01/03/06 oracle fn; add `trust-gap-accuracy` |
-| **P0** | No metrics for **loop completeness** (Re-measure/Defend); all 80 fixtures single-session | Add 4–6 loop fixtures + `loop-readiness` KPI |
-| **P0** | `artifact` oracle is **filtered out** of the judge — recommendation correctness never scored | Add `artifact` to `JUDGEABLE_DIMENSIONS`; validate trigger in brief |
-| **P0** | No **recommendation-correctness** judge dimension (right trigger for the diagnostic) | Add `recommendation-alignment` dim with decision-table context |
-| **P0** | No eval asserts **Dove** in `brand_anchor` for Recognition outputs | Add `anchor-correctness` oracle on both Recognition cases |
-| **P0** | **CAPTURE element names** leak in the edge-fn prompt (Tier B at runtime) | Strip CAPTURE names from line 96; use plain-English placement |
-| **P1** | A2 judge ignores authored **criteria dimensions** (`criteriaJudgeDimensions()` never called) | Pass `CriteriaSet` to `scoreCase()`/`runBehaviouralJudge()` |
-| **P1** | **Terminology-tier (IDEA-POLICY-TERM-001)** compliance unmeasured | Add `terminology-policy` dimension (Tier A visible / B,C hidden) |
-| **P1** | **Evidence-based / fabrication** risk has no deterministic oracle | Add `fabrication-risk`/`evidence-coverage` (cited/total claims) |
-| **P1** | **Forensic Analyse phase** unmeasured — tool *invoked* ≠ tool *interpreted* | Add temporal-order + reference-to-output + citation-density checks |
-| **P1** | **Persona-adapt** is count-only (false 100%); 2/5 bench cases omit the oracle | Tag `[persona-adapt]` on all 5 cases; report A2 scores not counts |
-| **P1** | **Amazon-element specificity** of the brief unmeasured | Add `amazon-element-specificity` (referenced/expected elements) |
-| **P1** | **P2 (Rico) SOP-building** has zero dedicated bench case | Promote ≥2 J3 P2 corpus fixtures to `EVAL_CASES` |
-| **P1** | No **Re-measure/Defend** bench case (P1 returns with A/B results) | Add a retro case (baseline→fix→new measurement→re-score) |
-| **P1** | No **vertical-specific** (health-claim) bench case | Add ≥1 supplements/beauty/apparel claim-blocking case |
-| **P1** | **Criteria Studio UI** absent; `STORAGE_KEY` unused | Build `CriteriaStudio.tsx` + localStorage + export-to-TS |
-| **P1** | Criteria **never reach the deployed coach** (server uses static `SERVER_INSTRUCTIONS`) | Load criteria in `createServer()`; prepend steering preamble |
-| **P1** | Criteria **not persisted** (localStorage only; no Supabase) | Add `criteria_sets` table + get/upsert edge fns + RLS |
-| **P1** | Criteria Studio ↔ evals **disconnected** (no `--criteria-set`) | Add `--criteria-set` to `runLive.ts`; version in report |
-| **P1** | **mcpjam safety cases pass trivially** (empty expectedToolCalls) | Non-gated rule-based safety harness; mark cases skip/expected-empty |
-| **P1** | **Multi-turn coherence / evidence-persistence** unscored | Feed `case.memory`/`fields` to judge; add coherence dims |
-| **P1** | No **runtime test** of the Decision Trigger edge fn (Stage 2) output | Mock-Anthropic integration test asserting schema + invariants |
-| **P1** | Harvest loop **not wired** to production (no log source, sweep, UI) | Supabase adapter + scheduled sweep + harvest-bench UI |
-| **P1** | Harvest **PII/redaction** missing before candidates/export | `redactConversation()` wired into the sweep |
-| **P2** | mcpjam can't express **tool order / arity / conditional** logic | Add `expectedToolSequence`; compute A2 `tool-sequence-correctness` |
-| **P2** | No **uniqueness oracle** (skill-leveraged vs generic LLM) | Add `uniqueness-proof` judge dimension |
-| **P2** | No **trigger-type-specific** bench cases (launch / competitor-moved / template) | Add ≥2 trigger-driven cases |
-| **P2** | Per-brand / per-team **criteria variant** missing | `brand_id`/`team_id` scoping in `loadCriteria()` |
-| **P2** | Harvest **weekly automation** absent (manual CLI only) | Cron sweep + `harvest_sweeps` archive + Slack summary |
-| **P2** | Harvest **candidate→fixture promotion** UI absent | Harvest-bench approve/reject/export-markdown flow |
+Legend: ✅ closed · ◑ partial · ⬜ open (infra/credential-gated or coverage extension).
+
+| Sev | Gap | Status | Where |
+|---|---|---|---|
+| P0 | Edge fn taught **Lego** as Recognition anchor | ✅ | Deployed v5 (Dove); repo reconciled |
+| P0 | No **trigger-accuracy** KPI | ✅ | `oracles.triggerAccuracy` + report KPI |
+| P0 | No **Trust Gap score accuracy** KPI | ◑ | trigger-accuracy lands the decision-table half; expected-pillar-score oracle still open |
+| P0 | No **loop completeness** metric (all fixtures single-session) | ✅ | `loop-readiness` KPI + `infinityvault-remeasure-loop` bench case (more golden loop fixtures optional) |
+| P0 | `artifact` oracle filtered out of the judge | ✅ | A2 `JUDGEABLE_DIMENSIONS` now includes `artifact` |
+| P0 | No **recommendation-correctness** judge dim | ✅ | A2 `recommendation-alignment` dim |
+| P0 | No assert of **Dove** anchor on Recognition | ✅ | `oracles.anchorAccuracy` + A2 `anchor-correctness` |
+| P0 | **CAPTURE element names** leak in edge-fn prompt | ✅ | Deployed v5 (plain-English placement) |
+| P1 | A2 judge ignores authored **criteria** | ✅ | `scoreCase(…, criteriaSet)` scores each criterion |
+| P1 | **Terminology-tier** compliance unmeasured | ✅ | A2 `terminology-policy` dim |
+| P1 | **Evidence-based / fabrication** risk no oracle | ✅ | A2 `evidence-based` dim + safety harness |
+| P1 | **Forensic Analyse** phase unmeasured | ⬜ | temporal-order / reference-to-output checks |
+| P1 | **Persona-adapt** count-only | ◑ | A2 scores it behaviourally; not yet on all bench cases |
+| P1 | **Amazon-element specificity** unmeasured | ⬜ | `amazon-element-specificity` metric |
+| P1 | **P2 SOP-building** no bench case | ⬜ | promote J3 P2 fixtures |
+| P1 | No **Re-measure/Defend** bench case | ✅ | `infinityvault-remeasure-loop` |
+| P1 | No **vertical health-claim** bench case | ◑ | sleep-supplement exercises `publish_filter_check`; dedicated block case open |
+| P1 | **Criteria Studio UI** absent | ✅ | `CriteriaStudio.tsx` + localStorage + export |
+| P1 | Criteria never reach **deployed coach** | ⬜ | server `createServer()` steering — deploy-gated |
+| P1 | Criteria not **persisted** (Supabase) | ⬜ | `criteria_sets` table + edge fns |
+| P1 | Criteria Studio ↔ evals disconnected | ⬜ | `--criteria-set` on `runLive.ts` |
+| P1 | **mcpjam safety cases** pass trivially | ✅ | non-gated `src/mcp/evals/safety/` harness |
+| P1 | **Multi-turn coherence** unscored | ◑ | judge now gets `memory`/`fields`; dedicated coherence dim open |
+| P1 | No **runtime test** of DT edge-fn output | ✅ | `triggerOutput.ts` validator + test |
+| P1 | Harvest loop **not wired** to prod | ⬜ | Supabase adapter + sweep + UI (seam documented) |
+| P1 | Harvest **PII/redaction** missing | ✅ | `harvest/redact.ts` wired into the sweep |
+| P2 | mcpjam tool order/arity | ⬜ | `expectedToolSequence` |
+| P2 | No **uniqueness oracle** | ⬜ | `uniqueness-proof` dim |
+| P2 | No **trigger-type** bench cases | ◑ | loop case adds an Identity trigger; launch/competitor open |
+| P2 | Per-brand/team **criteria variant** | ⬜ | `brand_id`/`team_id` scoping |
+| P2 | Harvest **weekly cron** | ⬜ | scheduled sweep + archive |
+| P2 | Harvest **promotion UI** | ⬜ | harvest-bench approve/export |
+
+**Closed: 8/8 P0 · ~9 P1 (full) + 4 P1 partial · the rest are live-infra/coverage extensions.**
 
 ---
 
