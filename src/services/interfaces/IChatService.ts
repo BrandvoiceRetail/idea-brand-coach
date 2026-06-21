@@ -126,6 +126,17 @@ export interface IChatService {
   ensureSessionForAvatar(avatarId: string): Promise<ChatSession>;
 
   /**
+   * Ensure an open thread exists for the active context SET (multi-avatar set
+   * model) and return it. Switching the set lands the user on that set's
+   * conversation; the thread records the FULL set as its retrieval anchor
+   * (`context_avatar_ids`), not just the focus avatar. Sets it as current.
+   *
+   * @param avatarIds - the active context set (non-empty; ids[0] is the focus)
+   * @returns Promise resolving to the existing-or-new session for the set
+   */
+  ensureSessionForContext(avatarIds: string[]): Promise<ChatSession>;
+
+  /**
    * Create a new chat session.
    *
    * @param session - Session creation data

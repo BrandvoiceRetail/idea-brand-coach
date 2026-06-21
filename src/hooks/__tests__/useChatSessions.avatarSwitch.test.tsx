@@ -92,4 +92,31 @@ describe('useChatSessions — avatar switch resets the selected session', () => 
     // The service was told to clear the session at least once during the switch.
     expect(setCurrentSession).toHaveBeenCalledWith(undefined);
   });
+
+  it('resets when the avatar SET changes (focus-only reorder does NOT reset)', async () => {
+    // Scope by FOCUS avatar (ids[0]); the hook tells the service the focus id.
+    mockService({
+      a1: [session('s-a1', 'a1')],
+      a2: [session('s-a2', 'a2')],
+    });
+
+    const { result, rerender } = renderHook(
+      ({ avatarIds }: { avatarIds: string[] }) =>
+        useChatSessions({ chatbotType: 'idea-framework-consultant', avatarIds }),
+      { wrapper, initialProps: { avatarIds: ['a1', 'a2'] } },
+    );
+
+    await waitFor(() => expect(result.current.currentSessionId).toBe('s-a1'));
+    setCurrentSession.mockClear();
+
+    // Same members, reordered → stable set key → NO reset (focus stays a1's data).
+    rerender({ avatarIds: ['a2', 'a1'] });
+    await waitFor(() => expect(result.current.currentSessionId).toBe('s-a1'));
+    expect(setCurrentSession).not.toHaveBeenCalledWith(undefined);
+
+    // Genuinely different set ([a2] only) → reset + re-pick a2's thread.
+    rerender({ avatarIds: ['a2'] });
+    await waitFor(() => expect(result.current.currentSessionId).toBe('s-a2'));
+    expect(setCurrentSession).toHaveBeenCalledWith(undefined);
+  });
 });
