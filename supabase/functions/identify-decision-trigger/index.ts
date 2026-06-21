@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getServiceClient } from "../_shared/edge-auth.ts";
+import { assertCredits, meterAndDebit } from "../_shared/meter.ts";
 
 // Decision Trigger™ derivation (Alpha — dominant trigger only).
 //
@@ -80,11 +82,11 @@ You are the derivation engine behind the IDEA Brand Coach Decision Trigger modul
 
 <the-six-triggers>
 1. Identity - 'I am this person'. Anchor: Apple. Signal: review language of self-assertion, personal standards, the purchase as a statement of who they are. Predicted by a LOW Distinctive score.
-2. Belonging - 'People like me buy this'. Anchor: Patagonia. Signal: community, tribe or group-identity and shared-values language ('as a serious runner', 'other parents like us'). Predicted by a LOW Authentic score.
+2. Belonging - 'People like me buy this'. Anchor: Patagonia. Signal: community, values and group-identity language ('as a serious runner', 'other parents like us', 'a brand that shares my values'). Predicted by a LOW Authentic score.
 3. Permission - 'Now I have reason to believe'. Anchor: Harvard Medical School. Signal: research-before-buying, relief at finding something credible, clinical data, certifications, expert endorsements. Predicted by a LOW Insight score. Never the lead trigger; it belongs mid-funnel.
-4. Fear-of-Loss - 'What am I losing by waiting'. Anchor: a time-sensitive category signal. Signal: regret or delay language ('wish I had found this sooner', 'months wasted on other products'). Derived from REVIEW TEXT, not a pillar score.
-5. Recognition - 'That is exactly me'. Anchor: Dove. Signal: high-specificity first-person language where the customer feels precisely seen and understood ('my treasured collection', 'quietly anxious about this for years'). Predicted by a LOW Empathetic score.
-6. Momentum - 'I am already most of the way there'. Anchor: Amazon's Choice signal. Signal: high review count plus comparison or research language ('after trying three other brands'); the final nudge that removes the last objection. Derived from REVIEW TEXT, not a pillar score.
+4. Fear-of-Loss - 'What am I losing by waiting'. Anchor: a FOMO / time-sensitivity signal. Signal: regret or delay language ('wish I had found this sooner', 'months wasted on other products'). Derived from REVIEW TEXT, not a pillar score.
+5. Recognition - 'That is exactly me'. Anchor: Dove (the Real Beauty campaign - emotional mirroring, the customer feels profoundly understood; NOT identity aspiration). Signal: high-specificity first-person language where the customer feels precisely seen ('my treasured collection', 'quietly anxious about this for years'). Predicted by a LOW Empathetic score.
+6. Momentum - 'I am already most of the way there'. Anchor: Amazon's Choice. Signal: high review count plus comparison or research language ('after trying three other brands'); the final nudge that removes the last objection. Derived from REVIEW TEXT, not a pillar score.
 </the-six-triggers>
 
 <derivation-rules>
@@ -92,8 +94,8 @@ You are the derivation engine behind the IDEA Brand Coach Decision Trigger modul
 - Momentum and Fear-of-Loss are NOT in the score prior. Choose either as dominant ONLY if the review text strongly and specifically supports it.
 - Choose exactly ONE dominant trigger. (Supporting triggers are out of scope here; do not return one.)
 - evidence_phrases MUST be quoted VERBATIM from the provided reviews or listing. Never paraphrase, never invent. Two to three phrases. If the corpus is thin, return fewer rather than inventing.
-- brand_anchor is one short line in the form 'like Dove, your customer buys ...' using the anchor that matches the chosen dominant trigger (Apple, Patagonia, Harvard Medical School, a time-sensitive signal, Dove, Amazon's Choice).
-- placement_instruction is at most two sentences and must name a CAPTURE element (Contextual, Attention, Pain/Problem, Transformation, Uniqueness, Reassurance, Emotional CTA).
+- brand_anchor is one short line in the form 'like Dove, your customer buys ...' using the anchor that matches the chosen dominant trigger (Identity=Apple, Belonging=Patagonia, Permission=Harvard Medical School, Fear-of-Loss=a FOMO/time-sensitivity signal, Recognition=Dove, Momentum=Amazon's Choice). These anchors are fixed - do not substitute.
+- placement_instruction is at most two sentences. Name the specific listing location in plain language (hero image headline, opening bullet point, image stack, A+ section) - do NOT use CAPTURE element names (Context, Attention, Pain, Transform, Uniqueness, Reassurance, Escalate); they are internal and the user has no context for them at this stage.
 - confidence is your own 0.0 to 1.0 certainty in the dominant choice.
 - why_this_trigger is one short plain-language paragraph a seller could read; refer to their evidence and their weak pillar in plain terms, never to scores, stages or models.
 </derivation-rules>
@@ -177,7 +179,7 @@ function parseDerived(text: string): DerivedTrigger | null {
   }
 }
 
-async function callSonnet(userMessage: string): Promise<{ text: string; status: number | string }> {
+async function callSonnet(userMessage: string): Promise<{ text: string; status: number | string; usage?: { input_tokens?: number; output_tokens?: number } }> {
   const headers = { 'x-api-key': anthropicApiKey!, 'anthropic-version': '2023-06-01', 'anthropic-beta': 'prompt-caching-2024-07-31', 'Content-Type': 'application/json' };
   const body = JSON.stringify({
     model: SONNET_MODEL,
@@ -196,7 +198,7 @@ async function callSonnet(userMessage: string): Promise<{ text: string; status: 
     }
     if (res?.ok) {
       const data = await res.json();
-      return { text: data?.content?.[0]?.text ?? '', status: res.status };
+      return { text: data?.content?.[0]?.text ?? '', status: res.status, usage: data?.usage };
     }
     const status = res?.status ?? 'network-error';
     const retryable = !res || res.status === 429 || res.status >= 500;
@@ -223,6 +225,11 @@ serve(async (req) => {
   const { data: { user } } = await supabaseClient.auth.getUser(token);
   if (!user) return jsonResponse({ error: 'Unauthorized' }, 401);
 
+  // Paid op: credit gate (no-op unless PAYWALL_ENFORCED) + metering after success (below).
+  const credits = getServiceClient();
+  const gate = await assertCredits(credits, user.id, 'decision_trigger');
+  if (!gate.ok) return jsonResponse({ error: 'needs_upgrade', needs_upgrade: true, balance: gate.balance }, 402);
+
   try {
     const body = (await req.json()) as DecisionTriggerRequest;
 
@@ -248,19 +255,28 @@ serve(async (req) => {
     const prior = derivePrior(scores);
     const userMessage = buildUserMessage(scores, prior, evidence);
 
-    let { text, status } = await callSonnet(userMessage);
+    const first = await callSonnet(userMessage);
+    let text = first.text;
+    let status = first.status;
+    let inTok = first.usage?.input_tokens ?? 0;
+    let outTok = first.usage?.output_tokens ?? 0;
     let derived = parseDerived(text);
     if (!derived && text) {
       // One reroll: unescaped quotes inside evidence citations are the known JSON-breakage (the
       // diagnostic-interpretation 500 class). Re-ask with the single-quote rule restated.
       const reroll = await callSonnet(userMessage + '\n\nYour previous reply was not valid JSON. Reply with ONLY the JSON object and use single quotes for any quotation inside string values.');
       text = reroll.text; status = reroll.status;
+      inTok += reroll.usage?.input_tokens ?? 0;
+      outTok += reroll.usage?.output_tokens ?? 0;
       derived = parseDerived(text);
     }
     if (!derived) {
       console.error('[identify-decision-trigger] underivable | upstream=', status, '| raw=', text.slice(0, 400));
       return jsonResponse({ error: 'Unable to derive your Decision Trigger right now. Please try again.', detail: typeof status === 'number' ? `upstream ${status}` : String(status) }, 500);
     }
+
+    // Meter the real token usage for this paid op (sums both model calls; never throws).
+    await meterAndDebit(credits, { userId: user.id, op: 'decision_trigger', model: SONNET_MODEL, usage: { input_tokens: inTok, output_tokens: outTok } });
 
     // Persist (RLS: auth.uid() = user_id). Supporting trigger is Beta -> left null.
     const { data: row, error: dbError } = await supabaseClient
