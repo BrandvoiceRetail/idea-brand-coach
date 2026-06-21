@@ -12,7 +12,7 @@ import type { DecisionTriggerType } from '@/lib/decisionTrigger';
 export interface DecisionTriggerResult {
   id: string | null;
   dominantType: DecisionTriggerType;
-  /** One-line brand analog, e.g. "like Lego, your customer buys the feeling of being understood". */
+  /** One-line brand analog, e.g. "like Dove, your customer buys the feeling of being understood". */
   brandAnchor: string;
   /** 2-3 verbatim phrases from the seller's own reviews/listing. */
   evidencePhrases: string[];

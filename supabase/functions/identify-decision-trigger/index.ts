@@ -80,11 +80,11 @@ You are the derivation engine behind the IDEA Brand Coach Decision Trigger modul
 
 <the-six-triggers>
 1. Identity - 'I am this person'. Anchor: Apple. Signal: review language of self-assertion, personal standards, the purchase as a statement of who they are. Predicted by a LOW Distinctive score.
-2. Belonging - 'People like me buy this'. Anchor: Nike. Signal: community, tribe or group-identity language ('as a serious runner', 'other parents like us'). Predicted by a LOW Authentic score.
-3. Permission - 'Now I have reason to believe'. Anchor: Authority. Signal: research-before-buying, relief at finding something credible, clinical data, certifications, expert endorsements. Predicted by a LOW Insight score. Never the lead trigger; it belongs mid-funnel.
-4. Fear-of-Loss - 'What am I losing by waiting'. Anchor: Gymshark. Signal: regret or delay language ('wish I had found this sooner', 'months wasted on other products'). Derived from REVIEW TEXT, not a pillar score.
-5. Recognition - 'That is exactly me'. Anchor: Lego. Signal: high-specificity first-person language where the customer feels precisely seen ('my treasured collection', 'quietly anxious about this for years'). Predicted by a LOW Empathetic score.
-6. Momentum - 'I am already most of the way there'. Anchor: Netflix. Signal: high review count plus comparison or research language ('after trying three other brands'); the final nudge that removes the last objection. Derived from REVIEW TEXT, not a pillar score.
+2. Belonging - 'People like me buy this'. Anchor: Patagonia. Signal: community, tribe or group-identity and shared-values language ('as a serious runner', 'other parents like us'). Predicted by a LOW Authentic score.
+3. Permission - 'Now I have reason to believe'. Anchor: Harvard Medical School. Signal: research-before-buying, relief at finding something credible, clinical data, certifications, expert endorsements. Predicted by a LOW Insight score. Never the lead trigger; it belongs mid-funnel.
+4. Fear-of-Loss - 'What am I losing by waiting'. Anchor: a time-sensitive category signal. Signal: regret or delay language ('wish I had found this sooner', 'months wasted on other products'). Derived from REVIEW TEXT, not a pillar score.
+5. Recognition - 'That is exactly me'. Anchor: Dove. Signal: high-specificity first-person language where the customer feels precisely seen and understood ('my treasured collection', 'quietly anxious about this for years'). Predicted by a LOW Empathetic score.
+6. Momentum - 'I am already most of the way there'. Anchor: Amazon's Choice signal. Signal: high review count plus comparison or research language ('after trying three other brands'); the final nudge that removes the last objection. Derived from REVIEW TEXT, not a pillar score.
 </the-six-triggers>
 
 <derivation-rules>
@@ -92,7 +92,7 @@ You are the derivation engine behind the IDEA Brand Coach Decision Trigger modul
 - Momentum and Fear-of-Loss are NOT in the score prior. Choose either as dominant ONLY if the review text strongly and specifically supports it.
 - Choose exactly ONE dominant trigger. (Supporting triggers are out of scope here; do not return one.)
 - evidence_phrases MUST be quoted VERBATIM from the provided reviews or listing. Never paraphrase, never invent. Two to three phrases. If the corpus is thin, return fewer rather than inventing.
-- brand_anchor is one short line in the form 'like Lego, your customer buys ...' using the anchor that matches the chosen dominant trigger (Apple, Nike, Authority, Gymshark, Lego, Netflix).
+- brand_anchor is one short line in the form 'like Dove, your customer buys ...' using the anchor that matches the chosen dominant trigger (Apple, Patagonia, Harvard Medical School, a time-sensitive signal, Dove, Amazon's Choice).
 - placement_instruction is at most two sentences and must name a CAPTURE element (Contextual, Attention, Pain/Problem, Transformation, Uniqueness, Reassurance, Emotional CTA).
 - confidence is your own 0.0 to 1.0 certainty in the dominant choice.
 - why_this_trigger is one short plain-language paragraph a seller could read; refer to their evidence and their weak pillar in plain terms, never to scores, stages or models.
@@ -102,7 +102,7 @@ You are the derivation engine behind the IDEA Brand Coach Decision Trigger modul
 
 <output-format>
 Respond with ONLY one JSON object, no code fences, exactly these keys:
-{"dominant_type":"Recognition","brand_anchor":"like Lego, ...","evidence_phrases":["...","..."],"placement_instruction":"...","confidence":0.0,"why_this_trigger":"..."}
+{"dominant_type":"Recognition","brand_anchor":"like Dove, ...","evidence_phrases":["...","..."],"placement_instruction":"...","confidence":0.0,"why_this_trigger":"..."}
 </output-format>`;
 
 function normaliseEvidence(raw: unknown): TrustGapEvidence {
