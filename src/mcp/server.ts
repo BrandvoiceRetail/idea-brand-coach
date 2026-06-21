@@ -47,6 +47,7 @@ import { registerCreateAvatarTool } from './tools/createAvatar.js';
 import { registerListAvatarsTool } from './tools/listAvatars.js';
 import { registerGetAvatarTool } from './tools/getAvatar.js';
 import { registerSetCurrentAvatarTool } from './tools/setCurrentAvatar.js';
+import { registerSetContextAvatarsTool } from './tools/setContextAvatars.js';
 import { registerSetPrimaryAvatarTool } from './tools/setPrimaryAvatar.js';
 import { registerRecordAvatarBuildTool } from './tools/recordAvatarBuild.js';
 import { registerListFunnelInventoryTool } from './tools/listFunnelInventory.js';
@@ -176,6 +177,7 @@ export function createServer(
   registerListAvatarsTool(server);
   registerGetAvatarTool(server);
   registerSetCurrentAvatarTool(server);
+  registerSetContextAvatarsTool(server);
   registerSetPrimaryAvatarTool(server);
   registerRecordAvatarBuildTool(server);
 

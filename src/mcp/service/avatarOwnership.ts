@@ -46,6 +46,26 @@ function avatarDenied(avatarId: string): CallToolResult {
 }
 
 /**
+ * A ready-to-return denial for an avatar SET that is not wholly owned by the caller.
+ * Generic by design (MF-5 posture): never names which member failed nor leaks a raw DB
+ * message — a foreign/absent member and a cross-brand mix both reduce to "not owned".
+ */
+function avatarSetDenied(): CallToolResult {
+  return {
+    content: [
+      {
+        type: 'text',
+        text:
+          'Denied: one or more avatars in the set were not found for the authenticated caller, ' +
+          'or the set spans more than one brand. Pass avatar_ids you own that share one brand (see list_avatars).',
+      },
+    ],
+    structuredContent: { available: false, ok: false, note: 'avatar not owned' },
+    isError: true,
+  };
+}
+
+/**
  * A ready-to-return denial for a DB error during the ownership check. Generic by design:
  * the raw Postgres message is never surfaced to the caller (MF-5 redaction posture) — only
  * logged server-side at the call site if needed. Mirrors `avatarDenied`'s shape.
@@ -93,6 +113,41 @@ export async function requireOwnedAvatar(
   if (!data) return { denied: avatarDenied(avatarId), brandId: null };
 
   return { denied: null, brandId: (data as { brand_id: string }).brand_id };
+}
+
+/**
+ * Confirm the caller owns EVERY avatar in `avatarIds` and that they all share ONE brand,
+ * returning that shared `brand_id`.
+ *
+ * gateWrite-shaped: `{ denied, brandId }`, mirroring `requireOwnedAvatar`. RLS on the
+ * `IN`-set SELECT enforces ownership: any foreign/absent member is simply absent from the
+ * returned rows, so a row-count mismatch is the foreign-member signal. A set that resolves
+ * to more than one distinct `brand_id` is also denied — the context set is a single-brand
+ * retrieval anchor (the RPC re-enforces ownership server-side too). Denials are generic
+ * (MF-5: no per-member detail, no raw DB message); a DB error returns `ownershipCheckFailed()`.
+ * NEVER throws.
+ */
+export async function requireOwnedAvatarSet(
+  avatarIds: string[],
+): Promise<{ denied: CallToolResult | null; brandId: string | null }> {
+  if (avatarIds.length === 0) return { denied: avatarSetDenied(), brandId: null };
+
+  // Dedupe so a repeated id can't inflate the row count past the distinct request.
+  const ids = Array.from(new Set(avatarIds));
+
+  const supabase = getUserSupabase();
+  const { data, error } = await supabase.from('avatars').select('id, brand_id').in('id', ids);
+
+  if (error) return { denied: ownershipCheckFailed(), brandId: null };
+
+  const rows = (data as Array<{ id: string; brand_id: string }> | null) ?? [];
+  // Any missing member (RLS-filtered or absent) → not wholly owned.
+  if (rows.length !== ids.length) return { denied: avatarSetDenied(), brandId: null };
+
+  const brandIds = new Set(rows.map((r) => r.brand_id));
+  if (brandIds.size !== 1) return { denied: avatarSetDenied(), brandId: null };
+
+  return { denied: null, brandId: rows[0].brand_id };
 }
 
 /**

@@ -61,6 +61,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'run_funnel_audit',
       'run_marketing_audit',
       'run_trust_gap',
+      'set_context_avatars',
       'set_current_avatar',
       'set_primary_avatar',
       'update_asset_status',

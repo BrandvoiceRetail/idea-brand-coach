@@ -7,6 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { registerCreateAvatarTool } from '../tools/createAvatar.js';
 import { registerListAvatarsTool } from '../tools/listAvatars.js';
 import { registerSetCurrentAvatarTool } from '../tools/setCurrentAvatar.js';
+import { registerSetContextAvatarsTool } from '../tools/setContextAvatars.js';
 import { registerSetPrimaryAvatarTool } from '../tools/setPrimaryAvatar.js';
 import { registerRecordAvatarBuildTool } from '../tools/recordAvatarBuild.js';
 import { registerUpsertFunnelTouchpointTool } from '../tools/upsertFunnelTouchpoint.js';
@@ -85,6 +86,9 @@ class Builder implements PromiseLike<Result> {
   }
   eq(col: string, val: unknown): this {
     return this.rec('eq', col, val);
+  }
+  in(col: string, val: unknown): this {
+    return this.rec('in', col, val);
   }
   is(col: string, val: unknown): this {
     return this.rec('is', col, val);
@@ -217,6 +221,103 @@ describe('set_current_avatar tool', () => {
     const client = await connect(registerSetCurrentAvatarTool);
     const res = await runWithIdentity(authed, () =>
       client.callTool({ name: 'set_current_avatar', arguments: { avatar_id: 'foreign' } }),
+    );
+    const sc = res.structuredContent as { ok: boolean; note: string };
+    expect(res.isError).toBe(true);
+    expect(sc.note).toMatch(/not owned/i);
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// set_context_avatars — pins profiles.context_avatar_ids; whole-set ownership-gated
+// ---------------------------------------------------------------------------------------
+describe('set_context_avatars tool', () => {
+  const avA = '11111111-1111-1111-1111-111111111111';
+  const avB = '22222222-2222-2222-2222-222222222222';
+
+  it('denies anonymous callers before any check', async () => {
+    const client = await connect(registerSetContextAvatarsTool);
+    const res = await client.callTool({ name: 'set_context_avatars', arguments: { avatar_ids: [avA] } });
+    const sc = res.structuredContent as { ok: boolean; note: string };
+    expect(res.isError).toBe(true);
+    expect(sc.note).toMatch(/unauthenticated/i);
+  });
+
+  it('sets the set via the RPC when every member is owned and shares one brand', async () => {
+    const stub = install();
+    stub.on('avatars', 'select', {
+      data: [
+        { id: avA, brand_id: 'brand-1' },
+        { id: avB, brand_id: 'brand-1' },
+      ],
+      error: null,
+    });
+    stub.on('set_context_avatars', 'rpc', { data: null, error: null });
+    const client = await connect(registerSetContextAvatarsTool);
+    const res = await runWithIdentity(authed, () =>
+      client.callTool({ name: 'set_context_avatars', arguments: { avatar_ids: [avA, avB] } }),
+    );
+    const sc = res.structuredContent as { ok: boolean; context_avatar_ids: string[] };
+    expect(sc.ok).toBe(true);
+    expect(sc.context_avatar_ids).toEqual([avA, avB]);
+    expect(stub.ops.find((o) => o.rpc === 'set_context_avatars')?.args).toMatchObject({
+      p_avatar_ids: [avA, avB],
+    });
+  });
+
+  it('denies the set when a member is foreign/absent (row-count mismatch) before the RPC', async () => {
+    const stub = install();
+    stub.on('avatars', 'select', { data: [{ id: avA, brand_id: 'brand-1' }], error: null }); // only 1 of 2 owned
+    const client = await connect(registerSetContextAvatarsTool);
+    const res = await runWithIdentity(authed, () =>
+      client.callTool({ name: 'set_context_avatars', arguments: { avatar_ids: [avA, avB] } }),
+    );
+    const sc = res.structuredContent as { ok: boolean; note: string };
+    expect(res.isError).toBe(true);
+    expect(sc.note).toMatch(/not owned/i);
+    expect(stub.ops.find((o) => o.rpc === 'set_context_avatars')).toBeUndefined();
+  });
+
+  it('denies a cross-brand set before the RPC', async () => {
+    const stub = install();
+    stub.on('avatars', 'select', {
+      data: [
+        { id: avA, brand_id: 'brand-1' },
+        { id: avB, brand_id: 'brand-2' },
+      ],
+      error: null,
+    });
+    const client = await connect(registerSetContextAvatarsTool);
+    const res = await runWithIdentity(authed, () =>
+      client.callTool({ name: 'set_context_avatars', arguments: { avatar_ids: [avA, avB] } }),
+    );
+    const sc = res.structuredContent as { ok: boolean; note: string };
+    expect(res.isError).toBe(true);
+    expect(sc.note).toMatch(/not owned/i);
+    expect(stub.ops.find((o) => o.rpc === 'set_context_avatars')).toBeUndefined();
+  });
+
+  it('returns a generic denial (no raw DB message) when the ownership check errors', async () => {
+    const stub = install();
+    stub.on('avatars', 'select', { data: null, error: { message: 'connection reset by peer' } });
+    const client = await connect(registerSetContextAvatarsTool);
+    const res = await runWithIdentity(authed, () =>
+      client.callTool({ name: 'set_context_avatars', arguments: { avatar_ids: [avA] } }),
+    );
+    const sc = res.structuredContent as { ok: boolean; note: string };
+    expect(res.isError).toBe(true);
+    expect(sc.note).toBe('ownership check failed');
+    expect(JSON.stringify(res)).not.toMatch(/connection reset/);
+    expect(stub.ops.find((o) => o.rpc === 'set_context_avatars')).toBeUndefined();
+  });
+
+  it('surfaces avatar_not_owned from the RPC as a clean denial', async () => {
+    const stub = install();
+    stub.on('avatars', 'select', { data: [{ id: avA, brand_id: 'brand-1' }], error: null });
+    stub.on('set_context_avatars', 'rpc', { data: null, error: { message: 'avatar_not_owned' } });
+    const client = await connect(registerSetContextAvatarsTool);
+    const res = await runWithIdentity(authed, () =>
+      client.callTool({ name: 'set_context_avatars', arguments: { avatar_ids: [avA] } }),
     );
     const sc = res.structuredContent as { ok: boolean; note: string };
     expect(res.isError).toBe(true);
