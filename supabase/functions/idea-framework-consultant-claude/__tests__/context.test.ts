@@ -46,6 +46,10 @@ function makeClient(rows: Row[]) {
         filters.push((r) => (r as any)[col] === val);
         return chain;
       },
+      in(col: string, vals: readonly unknown[]) {
+        filters.push((r) => vals.includes((r as any)[col]));
+        return chain;
+      },
       not(col: string, _op: string, val: unknown) {
         // .not('content','is',null) → content IS NOT null
         filters.push((r) => (r as any)[col] !== val);
@@ -175,10 +179,75 @@ describe('retrieveUserContext — two-tier avatar-aware KB', () => {
     const ctx = await retrieveUserContext(makeClient([]), USER, AVATAR_A, 'q', false);
     expect(ctx).toBe('');
   });
+
+  // ── M2: avatar anchor is now a SET (string[]) ──────────────────────────
+  it('SET over two avatars returns brand ∪ both avatars (union)', async () => {
+    const ctx = await retrieveUserContext(
+      makeClient(fixture()),
+      USER,
+      [AVATAR_A, AVATAR_B],
+      'q',
+      false
+    );
+    expect(ctx).toContain('BRAND CANVAS CONTENT'); // brand: always shared
+    expect(ctx).toContain('AVATAR A PAIN'); // member A
+    expect(ctx).toContain('AVATAR A INSIGHT'); // member A (insights)
+    expect(ctx).toContain('AVATAR B PAIN'); // member B — both in the set
+  });
+
+  it('single-element SET matches the single-avatar shim (back-compat)', async () => {
+    const asArray = await retrieveUserContext(makeClient(fixture()), USER, [AVATAR_A], 'q', false);
+    const asString = await retrieveUserContext(makeClient(fixture()), USER, AVATAR_A, 'q', false);
+    expect(asArray).toBe(asString);
+    expect(asArray).toContain('AVATAR A PAIN');
+    expect(asArray).not.toContain('AVATAR B PAIN'); // B excluded — no bleed
+  });
+
+  it('empty SET → brand-only (no avatar rows, no bleed)', async () => {
+    const ctx = await retrieveUserContext(makeClient(fixture()), USER, [], 'q', false);
+    expect(ctx).toContain('BRAND CANVAS CONTENT');
+    expect(ctx).not.toContain('AVATAR A PAIN');
+    expect(ctx).not.toContain('AVATAR B PAIN');
+  });
+
+  it('SET with all-invalid members → brand-only (no bleed)', async () => {
+    const ctx = await retrieveUserContext(
+      makeClient(fixture()),
+      USER,
+      ['not-a-uuid', "x' OR 1=1; --"] as string[],
+      'q',
+      false
+    );
+    expect(ctx).toContain('BRAND CANVAS CONTENT');
+    expect(ctx).not.toContain('AVATAR A PAIN');
+    expect(ctx).not.toContain('AVATAR B PAIN');
+  });
+
+  it('SET drops invalid members but keeps valid ones', async () => {
+    const ctx = await retrieveUserContext(
+      makeClient(fixture()),
+      USER,
+      ['not-a-uuid', AVATAR_A] as string[],
+      'q',
+      false
+    );
+    expect(ctx).toContain('AVATAR A PAIN'); // valid member survives
+    expect(ctx).not.toContain('AVATAR B PAIN'); // not in the set
+  });
 });
 
-describe('retrieveAllContext — threads avatarId through', () => {
-  it('forwards avatarId to the two-tier read', async () => {
+describe('retrieveAllContext — threads the avatar SET through', () => {
+  it('forwards avatarIds (SET) to the two-tier read — union over members', async () => {
+    const res = await retrieveAllContext(makeClient(fixture()), USER, 'q', {
+      needsFullContext: true,
+      hasUploadedDocuments: false,
+      avatarIds: [AVATAR_A, AVATAR_B],
+    });
+    expect(res.userKnowledgeContext).toContain('AVATAR A PAIN');
+    expect(res.userKnowledgeContext).toContain('AVATAR B PAIN');
+  });
+
+  it('forwards legacy avatarId (string shim) to the two-tier read', async () => {
     const res = await retrieveAllContext(makeClient(fixture()), USER, 'q', {
       needsFullContext: true,
       hasUploadedDocuments: false,
@@ -188,7 +257,7 @@ describe('retrieveAllContext — threads avatarId through', () => {
     expect(res.userKnowledgeContext).not.toContain('AVATAR B PAIN');
   });
 
-  it('missing avatarId → brand-only', async () => {
+  it('missing avatar anchor → brand-only', async () => {
     const res = await retrieveAllContext(makeClient(fixture()), USER, 'q', {
       needsFullContext: true,
       hasUploadedDocuments: false,
