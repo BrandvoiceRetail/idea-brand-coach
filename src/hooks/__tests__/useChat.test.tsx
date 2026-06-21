@@ -100,12 +100,7 @@ describe('useChat', () => {
     }) as unknown as IChatService;
 
   const renderWith = (chatService: IChatService) => {
-    vi.mocked(useServices).mockReturnValue({
-      diagnosticService: {} as never,
-      userProfileService: {} as never,
-      chatService,
-      authService: {} as never,
-    });
+    vi.mocked(useServices).mockReturnValue({ chatService } as unknown as ReturnType<typeof useServices>);
     return renderHook(() => useChat(), { wrapper });
   };
 

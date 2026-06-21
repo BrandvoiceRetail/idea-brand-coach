@@ -17,7 +17,6 @@ import {
   ConversationType,
 } from '@/types/chat';
 import type { ChapterId, ChapterMetadata } from '@/types/chapter';
-import type { TablesInsert } from '@/integrations/supabase/types';
 
 /**
  * Result type for session operations
