@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen, fireEvent, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
@@ -30,7 +30,25 @@ describe('Auth', () => {
   const mockSignUp = vi.fn();
   const mockSignOut = vi.fn();
   const mockResetPassword = vi.fn();
+  const mockUpdatePassword = vi.fn();
   const mockSignInWithGoogle = vi.fn();
+
+  const baseAuth = () => ({
+    user: null,
+    loading: false,
+    isRecovering: false,
+    signIn: mockSignIn,
+    signUp: mockSignUp,
+    signOut: mockSignOut,
+    resetPassword: mockResetPassword,
+    updatePassword: mockUpdatePassword,
+    signInWithGoogle: mockSignInWithGoogle,
+  });
+
+  // Tests below drive the URL via window.history; keep them isolated.
+  afterEach(() => {
+    window.history.pushState({}, '', '/');
+  });
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -332,5 +350,90 @@ describe('Auth', () => {
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });
+  });
+
+  it('shows a confirm-email panel and does NOT navigate when sign up needs email confirmation', async () => {
+    mockSignUp.mockResolvedValue({ error: null, needsConfirmation: true });
+    vi.mocked(useAuth).mockReturnValue(baseAuth() as any);
+
+    render(<Auth />, { wrapper });
+
+    await userEvent.click(screen.getByRole('tab', { name: /Sign Up/i }));
+    fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: 'Test User' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /Let's get started!/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Check your email')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/new@example.com/)).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('navigates into the app when sign up returns a session (no confirmation needed)', async () => {
+    mockSignUp.mockResolvedValue({ error: null, needsConfirmation: false });
+    vi.mocked(useAuth).mockReturnValue(baseAuth() as any);
+
+    render(<Auth />, { wrapper });
+
+    await userEvent.click(screen.getByRole('tab', { name: /Sign Up/i }));
+    fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: 'Test User' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /Let's get started!/i }));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('renders the set-new-password form for ?mode=reset and updates the password then lands in V2', async () => {
+    window.history.pushState({}, '', '/auth?mode=reset');
+    mockUpdatePassword.mockResolvedValue({ error: null });
+    vi.mocked(useAuth).mockReturnValue(baseAuth() as any);
+
+    render(<Auth />, { wrapper });
+
+    expect(screen.getByText('Set a new password')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'newpass123' } });
+    fireEvent.change(screen.getByLabelText('Confirm new password'), { target: { value: 'newpass123' } });
+    fireEvent.click(screen.getByRole('button', { name: /Update password/i }));
+
+    await waitFor(() => {
+      expect(mockUpdatePassword).toHaveBeenCalledWith('newpass123');
+    });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('does not update the password when confirmation does not match', async () => {
+    window.history.pushState({}, '', '/auth?mode=reset');
+    vi.mocked(useAuth).mockReturnValue(baseAuth() as any);
+
+    render(<Auth />, { wrapper });
+
+    fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'newpass123' } });
+    fireEvent.change(screen.getByLabelText('Confirm new password'), { target: { value: 'different1' } });
+    fireEvent.click(screen.getByRole('button', { name: /Update password/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Passwords do not match/i)).toBeInTheDocument();
+    });
+    expect(mockUpdatePassword).not.toHaveBeenCalled();
+  });
+
+  it('routes "Go to Dashboard" to the version-aware app root, not /v1', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      ...baseAuth(),
+      user: { id: '123', email: 'test@example.com' },
+    } as any);
+
+    render(<Auth />, { wrapper });
+
+    fireEvent.click(screen.getByRole('button', { name: /Go to Dashboard/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 });
