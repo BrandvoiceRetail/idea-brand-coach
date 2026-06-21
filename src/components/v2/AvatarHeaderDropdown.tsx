@@ -72,7 +72,7 @@ export function AvatarHeaderDropdown({
         <Button
           variant="outline"
           className={cn(
-            "flex items-center gap-2 min-w-[180px] justify-between",
+            "flex items-center gap-2 min-w-0 sm:min-w-[180px] justify-between",
             className
           )}
         >

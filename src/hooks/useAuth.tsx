@@ -164,6 +164,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           k.startsWith('v2_field_values_') ||
           k.startsWith('v2_field_locks_') ||
           k.startsWith('brandCoach_') ||
+          // Avatar selection — a stale id would otherwise render authed surfaces
+          // (e.g. the Funnel dashboard) for the next, signed-out visitor.
+          k === 'idea-selected-avatar-id' ||
+          k === 'idea-context-avatar-ids' ||
           k === 'betaProgress' ||
           k === 'betaTesterInfo' ||
           k === 'diagnosticData'

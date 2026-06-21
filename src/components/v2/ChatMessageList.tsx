@@ -61,7 +61,23 @@ interface ChatMessageListProps {
   onFieldAccept: (fieldId: string, value: string) => void;
   onReopenReview: (extractedFields: Record<string, string>) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  /**
+   * First-run helper: when provided, the empty state shows tappable starter
+   * prompts that seed the first message. Omitted when another opener already
+   * owns the empty state (e.g. the Trust Gap ?gap= opener).
+   */
+  onQuickStart?: (seed: string) => void;
 }
+
+/**
+ * First-run starter prompts shown in the empty chat so a new user has a clear
+ * "start here" first action instead of a blank box.
+ */
+const STARTER_PROMPTS = [
+  "Help me define my brand's purpose — the deeper reason it exists.",
+  'Help me get clear on who my ideal customer really is.',
+  'What makes my brand different from my competitors?',
+] as const;
 
 /**
  * ExtractionSection — renders the review button + field badges for a message.
@@ -262,6 +278,7 @@ export function ChatMessageList({
   onFieldAccept,
   onReopenReview,
   messagesEndRef,
+  onQuickStart,
 }: ChatMessageListProps): JSX.Element {
   const { isMobile } = useDeviceType();
 
@@ -278,6 +295,24 @@ export function ChatMessageList({
             I'm Trevor, your IDEA Framework coach. Let's build your brand together,
             chapter by chapter. Tell me about your brand to get started!
           </p>
+          {onQuickStart && (
+            <div className="mt-6 flex w-full max-w-md flex-col gap-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                Not sure where to start? Pick one:
+              </p>
+              {STARTER_PROMPTS.map((seed) => (
+                <Button
+                  key={seed}
+                  variant="outline"
+                  size="sm"
+                  className="h-auto justify-start whitespace-normal py-2 text-left"
+                  onClick={() => onQuickStart(seed)}
+                >
+                  {seed}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         messages.map((msg, index) => (

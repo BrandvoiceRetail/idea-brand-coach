@@ -140,9 +140,11 @@ export function SignatureReveal({
             triggerClassName,
           )}
           title="Reveal your Signature"
+          aria-label="Reveal Signature"
         >
           <Sparkles className="h-4 w-4" />
-          Reveal Signature
+          {/* Hide the label below sm so the chat sub-header fits a 375px viewport. */}
+          <span className="hidden sm:inline">Reveal Signature</span>
         </Button>
       </DialogTrigger>
 
