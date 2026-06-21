@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueries } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,12 +16,14 @@ import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { useDiagnostic } from '@/hooks/useDiagnostic';
 import { useAvatarDiagnosticCompare } from '@/hooks/useAvatarDiagnosticCompare';
 import { useAvatarContext } from '@/contexts/AvatarContext';
+import { avatarDiagnosticKey } from '@/lib/queryKeys';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/config/routes';
 import type { TrustGapInputScores } from '@/lib/trustGap';
 import { DiagnosticResultsPDFExport } from '@/components/export/DiagnosticResultsPDFExport';
-import { TrustGapScorecard } from '@/components/diagnostic/TrustGapScorecard';
+import { TrustGapScorecard, type AvatarOverlay } from '@/components/diagnostic/TrustGapScorecard';
 import { DecisionTriggerPanel } from '@/components/decision-trigger/DecisionTriggerPanel';
+import { AvatarCompareSelectorCard } from '@/components/diagnostic/AvatarCompareSelectorCard';
 import { ProductImportCta } from '@/components/diagnostic/ProductImportCta';
 import { useServices } from '@/services/ServiceProvider';
 import type {
@@ -76,13 +79,59 @@ export default function DiagnosticResults() {
   const [evidence, setEvidence] = useState<TrustGapEvidence | undefined>(undefined);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { productDataService } = useServices();
+  const { productDataService, diagnosticService } = useServices();
   const { latestDiagnostic, isLoadingLatest, syncFromLocalStorage, isSyncing } = useDiagnostic();
-  const { selectedAvatarId, currentAvatar } = useAvatarContext();
+  const { selectedAvatarId, currentAvatar, avatars, contextAvatarIds } = useAvatarContext();
 
   // Diagnostic BOTH (locked #5): read brand baseline + current-avatar overlay.
   // Only meaningful for authed users; guests have no DB scope.
   const { baseline, overlay, isLoading: isLoadingCompare } = useAvatarDiagnosticCompare(selectedAvatarId, !!user);
+
+  // Multi-avatar compare (Feature Map Loop 09 B2): the user checks which avatars to
+  // compare against the brand baseline. This is a read-only OVERLAY comparison — it
+  // never re-scopes the active context set (no blended coaching). Real (non-template)
+  // avatars only; default to the active context set so the funnel mirrors the focus.
+  const comparableAvatars = useMemo(
+    () => (avatars ?? []).filter((avatar) => !avatar.is_template),
+    [avatars],
+  );
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  // Seed the selection from the active context set once avatars are known, keeping
+  // only ids that are actually comparable. Runs while no explicit selection exists.
+  useEffect(() => {
+    if (!user || compareIds.length > 0 || comparableAvatars.length === 0) return;
+    const live = new Set(comparableAvatars.map((avatar) => avatar.id));
+    const seed = contextAvatarIds.filter((id) => live.has(id));
+    if (seed.length > 0) setCompareIds(seed);
+  }, [user, compareIds.length, comparableAvatars, contextAvatarIds]);
+
+  // Fetch each selected avatar's overlay in parallel. Only engaged for the multi
+  // (2+) path; the single-avatar compare keeps flowing through useAvatarDiagnosticCompare.
+  const multiCompareIds = compareIds.length >= 2 ? compareIds : [];
+  const overlayQueries = useQueries({
+    queries: multiCompareIds.map((avatarId) => ({
+      queryKey: avatarDiagnosticKey(avatarId, 'overlay'),
+      queryFn: () => diagnosticService.getLatestDiagnostic(avatarId),
+      enabled: !!user,
+      retry: 1,
+    })),
+  });
+
+  // Build the overlay columns for avatars that actually have an overlay row.
+  const avatarNameById = useMemo(
+    () => new Map(comparableAvatars.map((avatar) => [avatar.id, avatar.name])),
+    [comparableAvatars],
+  );
+  const compareOverlays: AvatarOverlay[] = multiCompareIds.flatMap((avatarId, index) => {
+    const submission = overlayQueries[index]?.data;
+    if (!submission) return [];
+    return [{
+      avatarId,
+      avatarName: avatarNameById.get(avatarId) ?? 'Avatar',
+      scores: submission.scores,
+    }];
+  });
 
   // Stable key for the imported evidence: changes only when the set of products
   // changes, so the Trust Gap interpretation refetches exactly once per import.
@@ -234,6 +283,12 @@ export default function DiagnosticResults() {
 
   const scorecardScores: TrustGapInputScores = overlayScores ?? baselineScores ?? fallbackScores;
 
+  // Multi-avatar grid is active only when 2+ selected overlays resolved AND a brand
+  // baseline exists to compare them against. Otherwise the single-avatar compare (or
+  // plain scorecard) renders as before.
+  const gridBaseline: TrustGapInputScores | undefined = baselineScores ?? overlayScores ?? fallbackScores;
+  const multiCompareActive = compareOverlays.length >= 2 && !!gridBaseline;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
       <div className="container mx-auto px-4 py-8">
@@ -258,8 +313,11 @@ export default function DiagnosticResults() {
               scores={scorecardScores}
               evidence={evidence}
               evidenceKey={evidenceKey}
-              baselineScores={compareEnabled ? baselineScores : undefined}
+              baselineScores={
+                multiCompareActive ? gridBaseline : compareEnabled ? baselineScores : undefined
+              }
               avatarName={currentAvatar?.name}
+              overlays={multiCompareActive ? compareOverlays : undefined}
             />
           </div>
 
@@ -273,6 +331,17 @@ export default function DiagnosticResults() {
               isAuthenticated={!!user}
             />
           </div>
+
+          {/* Compare avatars side by side against the brand baseline (Loop 09 B2) */}
+          {user && comparableAvatars.length > 0 && (
+            <div className="mb-8">
+              <AvatarCompareSelectorCard
+                avatars={comparableAvatars}
+                selectedIds={compareIds}
+                onChange={setCompareIds}
+              />
+            </div>
+          )}
 
           {/* Import your Amazon listing to ground the read in real evidence */}
           <div className="mb-8">

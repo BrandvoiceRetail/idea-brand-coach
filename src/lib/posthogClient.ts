@@ -99,7 +99,9 @@ export type AlphaEventName =
   | 'funnel_competitor_countermeasure_drafted'
   | 'funnel_competitor_test_recorded'
   | 'funnel_defense_alerts_viewed'
-  | 'funnel_defense_alert_read';
+  | 'funnel_defense_alert_read'
+  // Avatar compare on the funnel (diagnostic overlay vs brand baseline).
+  | 'scorecard_compared';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

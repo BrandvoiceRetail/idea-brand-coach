@@ -1,22 +1,27 @@
 /**
  * AvatarContext — THE single canonical avatar store + switch path.
  *
- * Multi-Avatar design §2.2 / §4.1. This context is the ONE place the "current
- * coach avatar" lives and the ONE code path every caller (V2 dropdown, V1 tabs,
- * agent set_current_avatar, onboarding, delete-fallback) funnels through. The
- * legacy `useAvatarService` event store (its localStorage key + window event)
- * is collapsed into this; those hooks now delegate here.
+ * Multi-Avatar design §2.2 / §4.1 (set model). This context is the ONE place the
+ * active context avatar SET lives and the ONE code path every caller (V2
+ * dropdown, V1 tabs, agent set_context_avatars, onboarding, delete-fallback)
+ * funnels through. The active set is `contextAvatarIds`; the FOCUS avatar
+ * (`selectedAvatarId` / `currentAvatar` = `contextAvatarIds[0]`) is kept for
+ * single-target ops + back-compat. The legacy `useAvatarService` event store
+ * (its localStorage key + window event) is collapsed into this.
  *
- * setCurrentAvatar contract (the bleed firewall in motion):
- *   1. idempotent — no-op if already current
+ * setContextAvatars contract (the bleed firewall in motion):
+ *   1. idempotent — no-op when the sorted set is unchanged
  *   2. optimistic local set + localStorage mirror (instant UI)
- *   3. set_current_avatar RPC (ownership-checked server pointer)
- *   4. ensureSessionForAvatar (thread anchor — the retrieval source of truth)
+ *   3. set_context_avatars RPC (ownership-checked profile-default set)
+ *   4. ensureSessionForContext (thread anchor — the retrieval source of truth)
  *   5. invalidate every ['avatar', …] react-query cache (design §2.2)
  *   6. rollback local + localStorage + toast on RPC failure
  *
- * Startup priority (design §4.1): server pointer (valid) → stored localStorage
- * → auto-select first NON-TEMPLATE avatar.
+ * `setCurrentAvatar(id)` is a thin single-id shim = `setContextAvatars([id])`.
+ *
+ * Startup priority (design §4.1, set model): profile-default set
+ * (`profiles.context_avatar_ids`) → stored localStorage array →
+ * `[current_avatar_id]` seed / auto-select first NON-TEMPLATE avatar.
  */
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
@@ -29,20 +34,36 @@ import { AVATAR_KEY_PREFIX } from '@/lib/queryKeys';
 import { Avatar } from '@/types/avatar';
 
 /**
- * Session-follows-avatar contract (design §4.1). The chat service stamps
- * `chat_sessions.avatar_id` and exposes `ensureSessionForAvatar`; the switch
- * path defaults to that (resolved from `useServices`). Still accepted as an
- * injectable prop so tests can stub it and the context never hard-couples to
- * the chat service construction.
+ * Session-follows-context contract (design §4.1, set model). The chat service
+ * stamps `chat_sessions.context_avatar_ids` and exposes a thread-ensure; the
+ * switch path defaults to anchoring on the FOCUS avatar (`ids[0]`) via
+ * `chatService.ensureSessionForAvatar` (resolved from `useServices`). Accepted
+ * as an injectable prop so tests can stub it (and provide a fully set-aware
+ * ensure) and the context never hard-couples to the chat service construction.
  */
-export type EnsureSessionForAvatar = (avatarId: string) => Promise<void>;
+export type EnsureSessionForContext = (avatarIds: string[]) => Promise<void>;
 
 interface AvatarContextValue {
-  /** Currently selected avatar ID */
+  /** The active context avatar SET (the retrieval anchor; ids[0] is the focus). */
+  contextAvatarIds: string[];
+  /** The FOCUS avatar id (= contextAvatarIds[0]) — single-target ops + back-compat. */
   selectedAvatarId: string | null;
   /**
-   * THE single switch path. Re-scopes the whole app to `avatarId`:
-   * optimistic local → RPC → session ensure → invalidate → rollback on failure.
+   * THE single switch path (set model). Re-scopes the whole app to `avatarIds`:
+   * idempotent → optimistic local → RPC → session ensure → invalidate →
+   * rollback on failure.
+   */
+  setContextAvatars: (avatarIds: string[]) => Promise<void>;
+  /**
+   * Add/remove a single avatar from the active set (multi-select toggle). Adding
+   * appends; removing drops it. Removing the last member falls back to keeping
+   * that member (the set never empties via toggle). Routes through
+   * {@link setContextAvatars}.
+   */
+  toggleAvatarInContext: (avatarId: string) => Promise<void>;
+  /**
+   * Single-target switch shim = `setContextAvatars([avatarId])`. Kept for
+   * back-compat with every single-avatar caller (V2 dropdown, agent, onboarding).
    */
   setCurrentAvatar: (avatarId: string) => Promise<void>;
   /**
@@ -81,33 +102,49 @@ const AvatarContext = createContext<AvatarContextValue | undefined>(undefined);
 interface AvatarProviderProps {
   children: ReactNode;
   /**
-   * Session-follows-avatar hook (design §4.1). Defaults to the chat service's
-   * `ensureSessionForAvatar` (resolved from `useServices`). Override to stub it
-   * in tests.
+   * Session-follows-context hook (design §4.1, set model). Defaults to the chat
+   * service's `ensureSessionForAvatar` anchored on the focus avatar (`ids[0]`)
+   * resolved from `useServices`. Override to stub it in tests (or to inject a
+   * fully set-aware ensure).
    */
-  ensureSessionForAvatar?: EnsureSessionForAvatar;
+  ensureSessionForContext?: EnsureSessionForContext;
 }
 
-const SELECTED_AVATAR_STORAGE_KEY = 'idea-selected-avatar-id';
+const CONTEXT_AVATAR_IDS_STORAGE_KEY = 'idea-context-avatar-ids';
 
-function readStoredAvatarId(): string | null {
+/** Read the persisted context set (JSON array). Empty on any parse failure. */
+function readStoredContextAvatarIds(): string[] {
   try {
-    return localStorage.getItem(SELECTED_AVATAR_STORAGE_KEY) || null;
+    const raw = localStorage.getItem(CONTEXT_AVATAR_IDS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((v): v is string => typeof v === 'string');
   } catch {
-    return null;
+    return [];
   }
 }
 
-function writeStoredAvatarId(avatarId: string | null): void {
+function writeStoredContextAvatarIds(ids: string[]): void {
   try {
-    if (avatarId) localStorage.setItem(SELECTED_AVATAR_STORAGE_KEY, avatarId);
-    else localStorage.removeItem(SELECTED_AVATAR_STORAGE_KEY);
+    if (ids.length > 0) {
+      localStorage.setItem(CONTEXT_AVATAR_IDS_STORAGE_KEY, JSON.stringify(ids));
+    } else {
+      localStorage.removeItem(CONTEXT_AVATAR_IDS_STORAGE_KEY);
+    }
   } catch (error) {
-    console.error('Failed to persist selected avatar ID:', error);
+    console.error('Failed to persist context avatar IDs:', error);
   }
 }
 
-export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProviderProps): JSX.Element {
+/** Order-insensitive equality for two avatar sets (dedupe → sort → compare). */
+function sameSet(a: readonly string[], b: readonly string[]): boolean {
+  const sa = [...new Set(a)].sort();
+  const sb = [...new Set(b)].sort();
+  return sa.length === sb.length && sa.every((v, i) => v === sb[i]);
+}
+
+export function AvatarProvider({ children, ensureSessionForContext }: AvatarProviderProps): JSX.Element {
   const { avatars, isLoading: isLoadingAvatars } = useAvatars();
   const { user } = useAuth();
   const { userProfileService, chatService, avatarService } = useServices();
@@ -120,42 +157,48 @@ export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProvi
     [queryClient],
   );
 
-  // Session-follows-avatar (design §4.1): default to the chat service's thread
-  // ensure; an explicit prop (tests) overrides it.
-  const ensureSession = useCallback<EnsureSessionForAvatar>(
-    async (avatarId: string) => {
-      if (ensureSessionForAvatar) {
-        await ensureSessionForAvatar(avatarId);
+  // Session-follows-context (design §4.1, set model): anchor the thread on the
+  // FULL set via the chat orchestrator's set-aware ensure, so switching to {A,B}
+  // lands on the {A,B} conversation (the thread records `context_avatar_ids`),
+  // not a focus-only thread. An explicit prop (tests) overrides the ensure.
+  const ensureSession = useCallback<EnsureSessionForContext>(
+    async (avatarIds: string[]) => {
+      if (avatarIds.length === 0) return;
+      if (ensureSessionForContext) {
+        await ensureSessionForContext(avatarIds);
         return;
       }
-      await chatService.ensureSessionForAvatar(avatarId);
+      await chatService.ensureSessionForContext(avatarIds);
     },
-    [ensureSessionForAvatar, chatService],
+    [ensureSessionForContext, chatService],
   );
 
-  // Canonical current-avatar state, seeded from localStorage for instant paint.
-  const [selectedAvatarId, setSelectedAvatarIdState] = useState<string | null>(readStoredAvatarId);
+  // Canonical active-set state, seeded from localStorage for instant paint.
+  const [contextAvatarIds, setContextAvatarIdsState] = useState<string[]>(readStoredContextAvatarIds);
+  // The FOCUS avatar (single-target ops + back-compat) = first set member.
+  const selectedAvatarId = contextAvatarIds[0] ?? null;
 
   // Startup resolution is STATE (not a ref) so flipping it re-runs the
   // auto-select effect — a ref flip schedules no render, which could strand the
-  // app with no avatar selected if the avatars list arrived before the server
-  // pointer resolved (correctness review). `startupResolvedRef` mirrors it for
+  // app with no avatar selected if the avatars list arrived before the profile
+  // default resolved (correctness review). `startupResolvedRef` mirrors it for
   // the once-only guard inside the async startup effect.
   const [startupResolved, setStartupResolved] = useState(false);
   const startupResolvedRef = useRef(false);
 
-  // Monotonic switch token: each setCurrentAvatar call captures the latest
+  // Monotonic switch token: each setContextAvatars call captures the latest
   // requested target so interleaved rapid switches (A→B→C) can bail if they are
   // no longer the in-flight target, and rollback only reverts the active switch.
   const switchTokenRef = useRef(0);
 
   // Keep localStorage mirror in sync with canonical state.
   useEffect(() => {
-    writeStoredAvatarId(selectedAvatarId);
-  }, [selectedAvatarId]);
+    writeStoredContextAvatarIds(contextAvatarIds);
+  }, [contextAvatarIds]);
 
-  // ── Startup priority: server pointer → stored localStorage → first non-template.
-  // Runs once we have a user (server pointer is the authoritative default).
+  // ── Startup priority (set model): profile-default set → stored localStorage
+  // → [current_avatar_id] seed → first non-template (auto-select effect below).
+  // Runs once we have a user (the profile default is the authoritative source).
   useEffect(() => {
     if (startupResolvedRef.current || !user) return;
     let cancelled = false;
@@ -166,23 +209,38 @@ export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProvi
     };
 
     (async () => {
-      // Read the server pointer through the service layer (mirrors the write
-      // path setCurrentAvatarRPC) rather than a raw PostgREST query.
-      const serverPointer = await userProfileService.getCurrentAvatarId();
+      // Read the profile-default SET through the service layer (mirrors the
+      // write path setContextAvatarsRPC) rather than a raw PostgREST query.
+      const profileSet = await userProfileService.getContextAvatarIds();
       if (cancelled) return;
 
-      markResolved();
-
-      // Server pointer wins when present (the UI default mirror).
-      if (serverPointer) {
-        setSelectedAvatarIdState(serverPointer);
+      if (profileSet.length > 0) {
+        markResolved();
+        setContextAvatarIdsState(profileSet);
         return;
       }
-      // Otherwise honor an existing stored selection; auto-select happens in the
-      // avatars-loaded effect below only when neither pointer nor selection exist.
+
+      // No profile-default set: honor a stored localStorage set if one survived
+      // a prior session (the optimistic mirror).
+      const stored = readStoredContextAvatarIds();
+      if (stored.length > 0) {
+        markResolved();
+        setContextAvatarIdsState(stored);
+        return;
+      }
+
+      // Seed from the single-target current-avatar pointer when present
+      // (single-active never shipped, so this is the legacy seed). Else fall
+      // through to the avatars-loaded auto-select effect.
+      const seed = await userProfileService.getCurrentAvatarId();
+      if (cancelled) return;
+      markResolved();
+      if (seed) {
+        setContextAvatarIdsState([seed]);
+      }
     })().catch((error) => {
       // Non-fatal — fall back to stored/auto-select. Don't block the UI.
-      console.warn('[AvatarContext] Failed to read server avatar pointer:', error);
+      console.warn('[AvatarContext] Failed to resolve startup avatar set:', error);
       if (!cancelled) markResolved();
     });
 
@@ -191,33 +249,45 @@ export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProvi
     };
   }, [user, userProfileService]);
 
-  // Auto-select first NON-TEMPLATE avatar only when no server pointer and no
-  // stored selection resolved (design §4.1 auto-select gate). Depends on
-  // `startupResolved` STATE so flipping resolution re-runs this effect even when
-  // the avatars list was already loaded and stable.
+  // Auto-select first NON-TEMPLATE avatar only when nothing else resolved
+  // (design §4.1 auto-select gate). Depends on `startupResolved` STATE so
+  // flipping resolution re-runs this effect even when the avatars list was
+  // already loaded and stable.
   useEffect(() => {
     if (!startupResolved) return;
-    if (selectedAvatarId || !avatars || avatars.length === 0) return;
+    if (contextAvatarIds.length > 0 || !avatars || avatars.length === 0) return;
     const firstReal = avatars.find((a) => !a.is_template) ?? avatars[0];
-    if (firstReal) setSelectedAvatarIdState(firstReal.id);
-  }, [startupResolved, selectedAvatarId, avatars]);
+    if (firstReal) setContextAvatarIdsState([firstReal.id]);
+  }, [startupResolved, contextAvatarIds, avatars]);
 
-  // Clear selection if the selected avatar no longer exists in the list.
+  // Drop any set members that no longer exist in the avatars list (delete-member
+  // reconciliation). If the set empties, fall back to the brand primary, else the
+  // first remaining non-template, else clear.
   useEffect(() => {
-    if (selectedAvatarId && avatars && !avatars.some((a) => a.id === selectedAvatarId)) {
-      setSelectedAvatarIdState(null);
+    if (!avatars || contextAvatarIds.length === 0) return;
+    const live = new Set(avatars.map((a) => a.id));
+    const kept = contextAvatarIds.filter((id) => live.has(id));
+    if (kept.length === contextAvatarIds.length) return; // nothing removed
+
+    if (kept.length > 0) {
+      setContextAvatarIdsState(kept);
+      return;
     }
-  }, [selectedAvatarId, avatars]);
+    const fallback = avatars.find((a) => a.is_primary) ?? avatars.find((a) => !a.is_template) ?? avatars[0] ?? null;
+    setContextAvatarIdsState(fallback ? [fallback.id] : []);
+  }, [contextAvatarIds, avatars]);
 
   const currentAvatar = selectedAvatarId && avatars
     ? avatars.find((a) => a.id === selectedAvatarId) || null
     : null;
 
-  // ── THE single switch path (design §2.2). ───────────────────────────────
-  const setCurrentAvatar = useCallback(async (avatarId: string): Promise<void> => {
-    if (avatarId === selectedAvatarId) return; // idempotent
+  // ── THE single switch path (design §2.2, set model). ────────────────────
+  const setContextAvatars = useCallback(async (avatarIds: string[]): Promise<void> => {
+    const next = [...new Set(avatarIds)]; // dedupe; preserve caller order (focus = [0])
+    if (next.length === 0) return; // never switch to an empty set
+    if (sameSet(next, contextAvatarIds)) return; // idempotent
 
-    const prev = selectedAvatarId;
+    const prev = contextAvatarIds;
     // Claim this switch as the latest in-flight target. Rapid A→B→C switches each
     // bump the token; a slower call that resolves out of order checks this before
     // committing/rolling back so it cannot clobber a newer target's state.
@@ -225,14 +295,14 @@ export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProvi
     const isStale = (): boolean => switchTokenRef.current !== token;
 
     // Optimistic local set + cache mirror for instant UI.
-    setSelectedAvatarIdState(avatarId);
-    writeStoredAvatarId(avatarId);
+    setContextAvatarIdsState(next);
+    writeStoredContextAvatarIds(next);
 
     try {
-      // Ownership-checked server pointer (the UI default mirror).
-      await userProfileService.setCurrentAvatarRPC(avatarId);
-      // Thread anchor — retrieval scopes on the conversation's avatar (design §2.1).
-      await ensureSession(avatarId);
+      // Ownership-checked profile-default set (the retrieval anchor).
+      await userProfileService.setContextAvatarsRPC(next);
+      // Thread anchor — retrieval scopes on the conversation's set (design §2.1).
+      await ensureSession(next);
       // A newer switch superseded us mid-flight — let it own the final state.
       if (isStale()) return;
       // Nuke every per-avatar react-query cache so no stale avatar data bleeds in.
@@ -240,35 +310,52 @@ export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProvi
         predicate: (q) => q.queryKey[0] === AVATAR_KEY_PREFIX,
       });
     } catch (error) {
-      console.error('[AvatarContext] setCurrentAvatar failed:', error);
+      console.error('[AvatarContext] setContextAvatars failed:', error);
       // Only roll back if we're still the active switch — a newer switch may have
       // already moved local state to a different (valid) target.
       if (isStale()) return;
-      setSelectedAvatarIdState(prev);
-      writeStoredAvatarId(prev);
+      setContextAvatarIdsState(prev);
+      writeStoredContextAvatarIds(prev);
       toast.error('Could not switch avatar');
     }
-  }, [selectedAvatarId, userProfileService, ensureSession, queryClient]);
+  }, [contextAvatarIds, userProfileService, ensureSession, queryClient]);
+
+  // Single-target shim (back-compat): one avatar = the one-member set.
+  const setCurrentAvatar = useCallback(
+    (avatarId: string): Promise<void> => setContextAvatars([avatarId]),
+    [setContextAvatars],
+  );
+
+  // Add/remove a single avatar from the active set (multi-select toggle).
+  const toggleAvatarInContext = useCallback(async (avatarId: string): Promise<void> => {
+    const isIn = contextAvatarIds.includes(avatarId);
+    const next = isIn
+      ? contextAvatarIds.filter((id) => id !== avatarId)
+      : [...contextAvatarIds, avatarId];
+    if (next.length === 0) return; // never empty the set via toggle
+    await setContextAvatars(next);
+  }, [contextAvatarIds, setContextAvatars]);
 
   // ── Delete-current fallback (design §4.1). ───────────────────────────────
   const clearCurrentAvatar = useCallback(async (fallbackAvatarId: string | null): Promise<void> => {
     if (fallbackAvatarId) {
-      await setCurrentAvatar(fallbackAvatarId);
+      await setContextAvatars([fallbackAvatarId]);
       return;
     }
-    // Last avatar deleted: clear local pointer + caches. No RPC nulls the server
-    // pointer here — `profiles.current_avatar_id` is ON DELETE SET NULL, so the
-    // pointer self-clears WHEN the avatar row is deleted.
+    // Last avatar deleted: clear local set + caches. No RPC nulls the server
+    // pointer here — `profiles.current_avatar_id` is ON DELETE SET NULL and
+    // `context_avatar_ids` members likewise self-clear WHEN the avatar row is
+    // deleted.
     // CONTRACT (P4b delete UX): callers MUST delete the avatar row before (or
     // atomically with) calling clearCurrentAvatar(null). If invoked while the row
-    // still exists, the server pointer keeps pointing at it and startup would
+    // still exists, the server set keeps pointing at it and startup would
     // re-select the "deleted" avatar. P4b's deleteAvatar owns that ordering.
-    setSelectedAvatarIdState(null);
-    writeStoredAvatarId(null);
+    setContextAvatarIdsState([]);
+    writeStoredContextAvatarIds([]);
     await queryClient.invalidateQueries({
       predicate: (q) => q.queryKey[0] === AVATAR_KEY_PREFIX,
     });
-  }, [setCurrentAvatar, queryClient]);
+  }, [setContextAvatars, queryClient]);
 
   // ── Canonical CRUD (P4b §4.5). ───────────────────────────────────────────
   const renameAvatar = useCallback(async (id: string, name: string): Promise<void> => {
@@ -334,7 +421,10 @@ export function AvatarProvider({ children, ensureSessionForAvatar }: AvatarProvi
   return (
     <AvatarContext.Provider
       value={{
+        contextAvatarIds,
         selectedAvatarId,
+        setContextAvatars,
+        toggleAvatarInContext,
         setCurrentAvatar,
         clearCurrentAvatar,
         currentAvatar,

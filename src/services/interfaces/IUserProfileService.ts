@@ -46,6 +46,27 @@ export interface IUserProfileService {
   getCurrentAvatarId(): Promise<string | null>;
 
   /**
+   * Set the active context avatar SET via the ownership-checked
+   * `set_context_avatars` RPC (multi-avatar set model). The RPC verifies every
+   * member is owned by the caller, then writes `profiles.context_avatar_ids`;
+   * it RAISEs `avatar_not_owned` / `empty_avatar_set` otherwise, which surface
+   * here as a thrown error for the caller to roll back + toast. This is the
+   * SET-aware counterpart of {@link setCurrentAvatarRPC}.
+   *
+   * @param avatarIds - the avatars that make up the active context set
+   */
+  setContextAvatarsRPC(avatarIds: string[]): Promise<void>;
+
+  /**
+   * Read the profile-default context avatar SET (`profiles.context_avatar_ids`)
+   * for the authenticated user. The read counterpart of
+   * {@link setContextAvatarsRPC}; the AvatarContext startup-priority read uses
+   * it before falling back to localStorage / the single-id seed. Returns `[]`
+   * when unauthenticated or no set is stored.
+   */
+  getContextAvatarIds(): Promise<string[]>;
+
+  /**
    * Mark an avatar as the brand's primary (the star) via the ownership-checked
    * `set_primary_avatar` RPC (P1). The RPC clears the prior primary and sets the
    * new one in one tx, mirroring `brands.primary_avatar_id`. Rejects (throws) if

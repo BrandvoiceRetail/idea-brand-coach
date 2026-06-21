@@ -35,6 +35,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, extname } from 'node:path';
 import {
   avatarScopedKey,
+  avatarScopeSegment,
   AVATAR_KEY_PREFIX,
   avatarChatSessionsKey,
   avatarChatMessagesKey,
@@ -90,6 +91,45 @@ describe('avatarScopedKey — bleed-firewall key shape', () => {
 
   it('uses a stable string for the prefix constant', () => {
     expect(AVATAR_KEY_PREFIX).toBe('avatar');
+  });
+});
+
+describe('avatarScopeSegment — stable SET collapse (set model)', () => {
+  it('passes a single id through unchanged', () => {
+    expect(avatarScopeSegment('a1')).toBe('a1');
+  });
+
+  it('collapses a one-member set to the bare id (single-target back-compat)', () => {
+    expect(avatarScopeSegment(['a1'])).toBe('a1');
+  });
+
+  it('collapses an empty set to the brand fallback', () => {
+    expect(avatarScopeSegment([])).toBe('brand');
+  });
+
+  it('produces an order-insensitive `set:` segment for multi-member sets', () => {
+    expect(avatarScopeSegment(['b', 'a', 'c'])).toBe('set:a,b,c');
+    // Same members, different order → identical segment (one cache bucket).
+    expect(avatarScopeSegment(['c', 'b', 'a'])).toBe(avatarScopeSegment(['a', 'b', 'c']));
+  });
+
+  it('a set still sits under the firewall prefix and is matched by the predicate', () => {
+    const key = avatarScopedKey('chat-sessions', ['a2', 'a1']);
+    const predicate = (q: { queryKey: readonly unknown[] }) => q.queryKey[0] === AVATAR_KEY_PREFIX;
+    expect(key[0]).toBe('avatar');
+    expect(key[1]).toBe('set:a1,a2');
+    expect(predicate({ queryKey: key })).toBe(true);
+  });
+
+  it('the chat helpers accept a set and fold the empty set into brand', () => {
+    expect(avatarChatSessionsKey(['a1', 'a2'], 'idea-framework-consultant')).toEqual([
+      'avatar',
+      'set:a1,a2',
+      'chat-sessions',
+      'idea-framework-consultant',
+    ]);
+    expect(avatarChatSessionsKey([], 'idea-framework-consultant')[1]).toBe('brand');
+    expect(avatarChatMessagesKey(['a1', 'a2'], 'idea-framework-consultant', 's1')[1]).toBe('set:a1,a2');
   });
 });
 

@@ -23,9 +23,14 @@ interface UseChatSessionsOptions {
   /** Field label for session title (used when creating field sessions) */
   fieldLabel?: string;
   /**
-   * Current avatar to scope sessions to (design §4.1). Folds into the
-   * avatar-scoped query-key namespace so a switch invalidates this cache.
-   * `undefined` collapses to the brand-level `'brand'` bucket.
+   * Active context avatar SET to scope sessions to (design §4.1, set model).
+   * Folds into the avatar-scoped query-key namespace (one stable segment) so a
+   * switch invalidates this cache. An empty set collapses to the brand bucket.
+   */
+  avatarIds?: string[];
+  /**
+   * Single focus avatar (back-compat shim). Folded into the set as `[avatarId]`
+   * when `avatarIds` is not supplied.
    */
   avatarId?: string;
 }
@@ -37,11 +42,20 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     conversationType,
     fieldId,
     fieldLabel,
+    avatarIds,
     avatarId,
   } = options;
   const { chatService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Normalize to the active SET. A bare `avatarId` is the one-member set; an
+  // explicit `avatarIds` wins. The focus (single-target ops) is the first member.
+  const contextAvatarIds = avatarIds ?? (avatarId ? [avatarId] : []);
+  const focusAvatarId = contextAvatarIds[0];
+  // Stable set identity for effect deps (sorted join) so reordering does not
+  // retrigger the session reset.
+  const contextAvatarKey = [...new Set(contextAvatarIds)].sort().join(',');
 
   // Local state for current session
   const [currentSessionId, setCurrentSessionIdState] = useState<string | undefined>(undefined);
@@ -51,35 +65,36 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     chatService.setChatbotType(chatbotType);
   }, [chatService, chatbotType]);
 
-  // Scope the service to the current avatar so getSessions/createSession filter
-  // and stamp by it (session-follows-avatar, design §4.1).
+  // Scope the service to the current FOCUS avatar so getSessions/createSession
+  // filter and stamp by it (session-follows-context, design §4.1). The full set
+  // anchors the thread underneath (ChatSessionService.ensureSessionForContext).
   useEffect(() => {
-    chatService.setCurrentAvatar(avatarId);
-  }, [chatService, avatarId]);
+    chatService.setCurrentAvatar(focusAvatarId);
+  }, [chatService, focusAvatarId]);
 
-  // Reset the selected session when the avatar changes (design §4.1). Without
-  // this, the previous avatar's session id survives the switch and both
-  // auto-select effects below stay gated on `!currentSessionId`, so `useChat`
-  // would keep loading avatar A's messages into avatar B's view (cross-avatar
-  // bleed §2.1/§2.2). Clearing it lets the auto-select effects re-pick the new
-  // avatar's most-recent thread — which is the one `ensureSessionForAvatar`
-  // resolved during the switch, so hook + service agree on one session id.
-  // Skip the initial mount (avatarId may arrive after first render) by only
-  // clearing on an actual change of a defined avatar.
-  const prevAvatarIdRef = useRef<string | undefined>(avatarId);
+  // Reset the selected session when the avatar SET changes (design §4.1). Without
+  // this, the previous set's session id survives the switch and both auto-select
+  // effects below stay gated on `!currentSessionId`, so `useChat` would keep
+  // loading the prior set's messages into the new set's view (cross-avatar bleed
+  // §2.1/§2.2). Clearing it lets the auto-select effects re-pick the new set's
+  // most-recent thread — the one `ensureSessionForContext` resolved during the
+  // switch, so hook + service agree on one session id. Skip the initial mount
+  // (the set may arrive after first render) by only clearing on an actual change.
+  const prevAvatarKeyRef = useRef<string>(contextAvatarKey);
   useEffect(() => {
-    if (prevAvatarIdRef.current !== avatarId) {
-      prevAvatarIdRef.current = avatarId;
+    if (prevAvatarKeyRef.current !== contextAvatarKey) {
+      prevAvatarKeyRef.current = contextAvatarKey;
       setCurrentSessionIdState(undefined);
       chatService.setCurrentSession(undefined);
     }
-  }, [avatarId, chatService]);
+  }, [contextAvatarKey, chatService]);
 
   // Build query key under the avatar-scoped namespace (bleed firewall, §2.2/§4.1)
   // so a switch (predicate q.queryKey[0] === 'avatar') invalidates this cache.
+  // The SET collapses to one stable segment.
   const queryKey = conversationType === 'field' && fieldId
-    ? avatarChatSessionsKey(avatarId, chatbotType, 'field', fieldId)
-    : avatarChatSessionsKey(avatarId, chatbotType);
+    ? avatarChatSessionsKey(contextAvatarIds, chatbotType, 'field', fieldId)
+    : avatarChatSessionsKey(contextAvatarIds, chatbotType);
 
   // Query: Get all sessions (with optional filtering)
   const {

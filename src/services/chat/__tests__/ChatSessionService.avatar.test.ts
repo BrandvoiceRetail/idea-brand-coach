@@ -147,24 +147,48 @@ describe('ChatSessionService — avatar scoping', () => {
     });
   });
 
-  describe('ensureSessionForAvatar', () => {
-    it('reuses the most-recent general thread for the avatar', async () => {
-      const existing = sessionRow({ id: 'existing-thread' });
-      const order = vi.fn().mockResolvedValue({ data: [existing], error: null });
-      vi.mocked(supabase.from).mockReturnValue({
+  describe('ensureSessionForContext', () => {
+    // Builds the chat_sessions read chain ensureSessionForContext uses:
+    //   .select('*').eq(user).eq(chatbot).eq(avatar).eq(conversation_type).order()
+    function chatSessionsRead(rows: Record<string, unknown>[]) {
+      const order = vi.fn().mockResolvedValue({ data: rows, error: null });
+      return {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ order }) }),
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ order }) }),
+            }),
           }),
         }),
-      } as never);
+      };
+    }
 
-      const { data } = await service.ensureSessionForAvatar(USER, 'idea-framework-consultant', AVATAR);
+    function avatarsRead() {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: { brand_id: BRAND }, error: null }),
+            }),
+          }),
+        }),
+      };
+    }
 
-      expect(data?.id).toBe('existing-thread');
+    it('reuses a thread whose context set EQUALS the requested set (order-insensitive)', async () => {
+      const existing = sessionRow({ id: 'set-thread', context_avatar_ids: ['avatar-2', AVATAR] });
+      vi.mocked(supabase.from).mockReturnValue(chatSessionsRead([existing]) as never);
+
+      // Requested set is the same members in a different order → reuse.
+      const { data } = await service.ensureSessionForContext(USER, 'idea-framework-consultant', [
+        AVATAR,
+        'avatar-2',
+      ]);
+
+      expect(data?.id).toBe('set-thread');
     });
 
-    it('creates a new thread when the avatar has no general thread', async () => {
+    it('does NOT reuse a thread whose set differs; creates a fresh one stamping the set', async () => {
       const insertSpy = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({ data: sessionRow({ id: 'fresh' }), error: null }),
@@ -172,41 +196,64 @@ describe('ChatSessionService — avatar scoping', () => {
       });
 
       vi.mocked(supabase.from).mockImplementation((table: string) => {
-        if (table === 'avatars') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({ data: { brand_id: BRAND }, error: null }),
-                }),
-              }),
-            }),
-          } as never;
-        }
-        // chat_sessions: getSessions returns only a field thread (no general).
+        if (table === 'avatars') return avatarsRead() as never;
+        // Existing thread is a DIFFERENT set ([AVATAR] only) — must not match [AVATAR, avatar-2].
         return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  order: vi.fn().mockResolvedValue({
-                    data: [sessionRow({ id: 'field-thread', conversation_type: 'field' })],
-                    error: null,
-                  }),
-                }),
-              }),
-            }),
-          }),
+          ...chatSessionsRead([sessionRow({ id: 'single-thread', context_avatar_ids: [AVATAR] })]),
           insert: insertSpy,
         } as never;
       });
 
-      const { data } = await service.ensureSessionForAvatar(USER, 'idea-framework-consultant', AVATAR);
+      const { data } = await service.ensureSessionForContext(USER, 'idea-framework-consultant', [
+        AVATAR,
+        'avatar-2',
+      ]);
 
       expect(data?.id).toBe('fresh');
+      // Focus = ids[0]; brand resolved from focus; the SET is stamped.
       expect(insertSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ avatar_id: AVATAR, brand_id: BRAND })
+        expect.objectContaining({
+          avatar_id: AVATAR,
+          brand_id: BRAND,
+          context_avatar_ids: [AVATAR, 'avatar-2'],
+        })
       );
+    });
+
+    it('matches a legacy row with no context_avatar_ids against the single-avatar set', async () => {
+      // Legacy row predates the set column → falls back to [avatar_id] = [AVATAR].
+      const legacy = sessionRow({ id: 'legacy', context_avatar_ids: null });
+      vi.mocked(supabase.from).mockReturnValue(chatSessionsRead([legacy]) as never);
+
+      const { data } = await service.ensureSessionForContext(USER, 'idea-framework-consultant', [AVATAR]);
+
+      expect(data?.id).toBe('legacy');
+    });
+
+    it('errors on an empty set', async () => {
+      const { data, error } = await service.ensureSessionForContext(USER, 'idea-framework-consultant', []);
+      expect(data).toBeNull();
+      expect(error?.message).toBe('empty_avatar_set');
+    });
+  });
+
+  describe('ensureSessionForAvatar (single-id shim)', () => {
+    it('delegates to ensureSessionForContext([avatarId]) and reuses a matching thread', async () => {
+      const existing = sessionRow({ id: 'existing-thread', context_avatar_ids: [AVATAR] });
+      const order = vi.fn().mockResolvedValue({ data: [existing], error: null });
+      vi.mocked(supabase.from).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ order }) }),
+            }),
+          }),
+        }),
+      } as never);
+
+      const { data } = await service.ensureSessionForAvatar(USER, 'idea-framework-consultant', AVATAR);
+
+      expect(data?.id).toBe('existing-thread');
     });
   });
 });
