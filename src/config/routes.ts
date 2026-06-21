@@ -27,6 +27,9 @@ export const ROUTES = {
   /** Coach Evals — internal admin dashboard (MCP evals: config comparison + value KPIs) */
   COACH_EVALS_ADMIN: '/admin/coach-evals',
 
+  /** Focus Surface — the single-focus "what needs you" workspace for the brand owner */
+  FOCUS_SURFACE: '/v2/focus',
+
   /** Settings hub (Account, Integrations, …) */
   SETTINGS: '/settings',
 

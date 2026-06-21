@@ -55,6 +55,7 @@ import { VersionGate } from "@/components/VersionGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
 import CoachEvalsAdmin from "./pages/admin/CoachEvalsAdmin";
 import { AdminGate } from "@/components/AdminGate";
+import FocusSurface from "./pages/FocusSurface";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
 import SettingsPage from "./pages/SettingsPage";
 import FigmaCallback from "./pages/FigmaCallback";
@@ -187,6 +188,12 @@ const App = () => {
                       <CoachEvalsAdmin />
                     </Layout>
                   </AdminGate>
+                } />
+
+                <Route path={ROUTES.FOCUS_SURFACE} element={
+                  <Layout>
+                    <FocusSurface />
+                  </Layout>
                 } />
 
                 <Route path={ROUTES.SETTINGS} element={
