@@ -1,5 +1,35 @@
 # Multi-Avatar — Deploy & Ops Runbook
 
+> ## ⚠️ 2026-06-18 UPDATE — MULTI-SELECT CONTEXT SET + DEPLOY RECONCILIATION (read first)
+>
+> The switch UX was reframed (operator stop-hook): **one surface switches via a CHECKLIST that toggles
+> context across MULTIPLE avatars** (chat planning surface) + a matching compare checklist on the funnel
+> surface; underlying data respects the selection. Operator chose **multi-select BLEND** (coach reasons over
+> the UNION of checked avatars). This is built as **6 commits on `feat/brand-avatar-scope`** (c2a8f11 db ·
+> 0610b91 consultant · f1dedae mcp · d503195 AvatarContext/services · f9bf3a2 chat checklist · fd14288 funnel
+> compare). Model = **thread-anchored context set** (`chat_sessions.context_avatar_ids`), union retrieval,
+> `set_context_avatars(uuid[])` RPC, `match_document_chunks(...,match_avatar_ids uuid[])` overload.
+>
+> **VERIFIED on the branch:** app `tsc -p tsconfig.app.json` net-new errors = 0 (138→134); `tsc:mcp` clean;
+> **1004 tests pass** (contexts/services/hooks/lib 506, UI 193, MCP 290, consultant 15); bleed-firewall guard
+> extended for set-keyed query keys; lint = pre-existing debt only. Migration **applied live** (additive +
+> idempotent; ledger `avatar_context_set`) — safe alongside main's current code, which simply ignores the new
+> columns.
+>
+> **🛑 DEPLOY IS BLOCKED on a human-gated reconciliation — do NOT deploy this branch directly.**
+> `feat/brand-avatar-scope` is **58 commits behind `origin/main`** (6 ahead). Since this branch was cut, `main`
+> absorbed: single-active multi-avatar (`0306a48`), decision-trigger, canva, competitor, figma, funnel nav,
+> native asset ledger, 13 coach tools, **and CI auto-deploy to Lightsail on merge** (`b66d007` MCP, `0b66cdf`
+> frontend). Live MCP advertises **43 tools** (main's lineage), not this branch's ~40. **Deploying this branch's
+> frontend/MCP would roll back ~58 commits of live features.**
+>
+> **Recommended path (operator):** main already shipped *single-active* multi-avatar, so this is the multi-select
+> EVOLUTION on top. Re-apply the 6 commits onto current `main` (fresh branch; expect conflicts in
+> `AvatarContext.tsx` / `context.ts` / `ChatSessionService.ts` vs main's own multi-avatar merge), re-verify,
+> PR → merge → **CI auto-deploys** frontend + MCP. Then deploy the consultant edge-fn (Supabase CLI here is
+> 401 — needs a valid token, or use the CI/edge path). Migration is already live; no schema step needed.
+> SSH to Lightsail **works from here** if a manual deploy is preferred over CI.
+
 **Feature:** "Build a customer-avatar profile, then switch the whole app to it" — brand → many avatars, two-tier (brand-shared vs avatar-scoped) knowledge, funnel stays brand-level, agent + UI avatar lifecycle, forensic avatar builder, per-avatar diagnostic overlay.
 
 **Design:** `docs/v2/architecture/MULTI_AVATAR_DESIGN.md` · **P1 SQL detail:** `docs/v2/architecture/MULTI_AVATAR_P1.md`
