@@ -70,3 +70,4 @@ auto-claude-backup-keys.txt
 tests/e2e/.auth/
 .playwright-mcp/
 dist-mcp/
+src/mcp/evals/harvest/out/

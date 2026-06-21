@@ -9,6 +9,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { groundingPreamble } from '../skills/skillLoader.js';
+import { appGroundingPreamble } from '../skills/appSkills.js';
 import { buildTrustGap } from '../../lib/trustGap.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
@@ -35,7 +36,7 @@ export function registerRunTrustGapTool(server: McpServer): void {
     {
       title: 'Run Trust Gap™ scorecard',
       description:
-        'Diagnostic (convenience): compute the Trust Gap™ 4-dimension scorecard from IDEA dimension scores (0-100 each) using the exact same deterministic engine as the app (Calculation Parity). Returns per-dimension /25 rescaling, bands, primary gap, and routing. Only call AFTER the user has explicitly worked through all four IDEA dimensions with you. Never infer, default, or invent the four values; if you lack a real answer for any dimension, ask — do not score.' + groundingPreamble('run_trust_gap'),
+        'Diagnostic (convenience): compute the Trust Gap™ 4-dimension scorecard from IDEA dimension scores (0-100 each) using the exact same deterministic engine as the app (Calculation Parity). Returns per-dimension /25 rescaling, bands, primary gap, and routing. Only call AFTER the user has explicitly worked through all four IDEA dimensions with you. Never infer, default, or invent the four values; if you lack a real answer for any dimension, ask — do not score.' + groundingPreamble('run_trust_gap') + appGroundingPreamble('run_trust_gap'),
       inputSchema,
     },
     async ({ insight, distinctive, empathetic, authentic, overall, avatar_id }) => {

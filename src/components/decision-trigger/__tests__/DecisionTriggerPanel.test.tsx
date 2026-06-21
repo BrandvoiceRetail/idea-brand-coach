@@ -43,9 +43,9 @@ describe('DecisionTriggerPanel', () => {
       trigger: {
         id: 'dt-1',
         dominantType: 'Recognition',
-        brandAnchor: 'like Lego, your customer buys the feeling of being understood',
+        brandAnchor: 'like Dove, your customer buys the feeling of being understood',
         evidencePhrases: ['my favorite top loader binder', 'as the collection grows'],
-        placementInstruction: 'Open bullet 1 with their own words (Contextual).',
+        placementInstruction: 'Open bullet 1 with their own words.',
         whyThisTrigger: 'Your reviews describe the product in personal collector language.',
       },
       isLoading: false,
@@ -54,7 +54,7 @@ describe('DecisionTriggerPanel', () => {
     });
     renderPanel();
     expect(screen.getByText('Recognition')).toBeInTheDocument();
-    expect(screen.getByText(/like Lego/i)).toBeInTheDocument();
+    expect(screen.getByText(/like Dove/i)).toBeInTheDocument();
     expect(screen.getByText(/my favorite top loader binder/i)).toBeInTheDocument();
     expect(screen.getByText(/Open bullet 1/i)).toBeInTheDocument();
   });
@@ -64,9 +64,9 @@ describe('DecisionTriggerPanel', () => {
       trigger: {
         id: 'dt-1',
         dominantType: 'Recognition',
-        brandAnchor: 'like Lego, ...',
+        brandAnchor: 'like Dove, ...',
         evidencePhrases: ['my favorite top loader binder'],
-        placementInstruction: 'Lead with Contextual.',
+        placementInstruction: 'Lead with their own words.',
         whyThisTrigger: 'Plain language reason.',
       },
       isLoading: false,

@@ -22,6 +22,7 @@
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { appGroundingPreamble } from '../skills/appSkills.js';
 import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
 import {
   exportBriefContract,
@@ -250,7 +251,7 @@ export function registerGenerateBriefTool(server: McpServer, deps?: Partial<Gene
     {
       title: 'Generate the Export Brief',
       description:
-        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas + Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). Requires an authenticated Supabase JWT.',
+        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas + Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'),
       inputSchema,
     },
     async ({ avatar_id }) => {

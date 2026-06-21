@@ -53,6 +53,8 @@ import { FunnelTracker } from "./components/v2/funnel/FunnelTracker";
 import FeatureGate from "@/components/FeatureGate";
 import { VersionGate } from "@/components/VersionGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
+import CoachEvalsAdmin from "./pages/admin/CoachEvalsAdmin";
+import { AdminGate } from "@/components/AdminGate";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
 import SettingsPage from "./pages/SettingsPage";
 import FigmaCallback from "./pages/FigmaCallback";
@@ -177,6 +179,14 @@ const App = () => {
                   <Layout>
                     <FeatureFlagAdmin />
                   </Layout>
+                } />
+
+                <Route path={ROUTES.COACH_EVALS_ADMIN} element={
+                  <AdminGate>
+                    <Layout>
+                      <CoachEvalsAdmin />
+                    </Layout>
+                  </AdminGate>
                 } />
 
                 <Route path={ROUTES.SETTINGS} element={
