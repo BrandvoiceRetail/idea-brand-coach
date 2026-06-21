@@ -22,15 +22,34 @@ interface UseChatOptions {
   sessionId?: string;
   chapterId?: ChapterId;
   chapterMetadata?: ChapterMetadata;
-  /** Current avatar — scopes the outgoing message body per-thread (design §2.1). */
+  /**
+   * Active context avatar SET — the per-thread retrieval anchor (design §2.1,
+   * set model). Scopes the cache namespace AND rides along in the outgoing
+   * message body as `avatar_ids` (the edge-fn union read, M2). `avatarIds[0]` is
+   * the focus, also sent as legacy `avatar_id` for back-compat.
+   */
+  avatarIds?: string[];
+  /**
+   * Single focus avatar (back-compat shim). Folded into the set as `[avatarId]`
+   * when `avatarIds` is not supplied.
+   */
   avatarId?: string;
 }
 
 export const useChat = (options: UseChatOptions = {}) => {
-  const { chatbotType = 'idea-framework-consultant', sessionId, chapterId, chapterMetadata, avatarId } = options;
+  const { chatbotType = 'idea-framework-consultant', sessionId, chapterId, chapterMetadata, avatarIds, avatarId } = options;
   const { chatService } = useServices();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Normalize to the active SET (the firewall anchor). A bare `avatarId` is the
+  // one-member set; an explicit `avatarIds` wins. The focus (`avatar_id`) is the
+  // first member.
+  const contextAvatarIds = avatarIds ?? (avatarId ? [avatarId] : []);
+  const focusAvatarId = contextAvatarIds[0];
+  // Stable identity for effect deps (sorted join) so reordering the same set
+  // does not retrigger resets.
+  const contextAvatarKey = [...new Set(contextAvatarIds)].sort().join(',');
 
   // Streaming state
   const [streamingContent, setStreamingContent] = useState('');
@@ -60,17 +79,20 @@ export const useChat = (options: UseChatOptions = {}) => {
     chatService.setCurrentSession(sessionId);
   }, [chatService, sessionId]);
 
-  // Scope outgoing messages to the current avatar (design §2.1).
+  // Scope outgoing messages to the current FOCUS avatar (design §2.1). The
+  // orchestrator takes a single id today; the full set rides in the message body
+  // metadata (see sendMessage/sendMessageStreaming below).
   useEffect(() => {
-    chatService.setCurrentAvatar(avatarId);
-  }, [chatService, avatarId]);
+    chatService.setCurrentAvatar(focusAvatarId);
+  }, [chatService, focusAvatarId]);
 
-  // Avatar-scoped cache keys (bleed firewall §2.2): both the per-session message
-  // list AND the session list live under the ['avatar', …] namespace so the
-  // switch-invalidation predicate (q.queryKey[0] === 'avatar') nukes them. Brand-
-  // level surfaces (no avatarId) collapse to the 'brand' segment.
-  const messagesKey = avatarChatMessagesKey(avatarId, chatbotType, sessionId);
-  const sessionsKey = avatarChatSessionsKey(avatarId, chatbotType);
+  // Avatar-scoped cache keys (bleed firewall §2.2, set model): both the
+  // per-session message list AND the session list live under the ['avatar', …]
+  // namespace so the switch-invalidation predicate (q.queryKey[0] === 'avatar')
+  // nukes them. The SET collapses to one stable segment (sorted) so reordering
+  // shares a bucket; an empty set collapses to the 'brand' segment.
+  const messagesKey = avatarChatMessagesKey(contextAvatarIds, chatbotType, sessionId);
+  const sessionsKey = avatarChatSessionsKey(contextAvatarIds, chatbotType);
 
   // Query: Get chat history (keyed by avatar + chatbot type + session ID)
   const {
@@ -84,11 +106,30 @@ export const useChat = (options: UseChatOptions = {}) => {
     enabled: !!sessionId, // Only fetch if we have a session
   });
 
+  // Stamp the active avatar SET onto the outgoing message metadata (wires M2):
+  // the consultant edge fn reads `metadata.avatar_ids` for the union retrieval
+  // scope, and `metadata.avatar_id` (the focus) for the legacy single-avatar
+  // fallback. The orchestrator spreads `metadata` into the request body, so this
+  // is the in-service path to the edge-fn body.
+  const withAvatarScope = useCallback((message: ChatMessageCreate): ChatMessageCreate => {
+    if (contextAvatarIds.length === 0) return message;
+    return {
+      ...message,
+      metadata: {
+        ...message.metadata,
+        avatar_ids: contextAvatarIds,
+        avatar_id: focusAvatarId,
+      },
+    };
+    // contextAvatarKey encodes the set; focusAvatarId is its first member.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contextAvatarKey]);
+
   // Mutation: Send message (non-streaming fallback, keyed by session)
   const sendMessageMutation = useMutation({
     mutationKey: ['chat', 'sendMessage', chatbotType, sessionId],
     mutationFn: (message: ChatMessageCreate) => chatService.sendMessage({
-      ...message,
+      ...withAvatarScope(message),
       chatbot_type: chatbotType,
       ...(chapterId && { chapter_id: chapterId }),
       ...(chapterMetadata && { chapter_metadata: chapterMetadata }),
@@ -121,7 +162,7 @@ export const useChat = (options: UseChatOptions = {}) => {
     try {
       await chatService.sendMessageStreaming(
         {
-          ...message,
+          ...withAvatarScope(message),
           chatbot_type: chatbotType,
           ...(chapterId && { chapter_id: chapterId }),
           ...(chapterMetadata && { chapter_metadata: chapterMetadata }),
@@ -177,7 +218,7 @@ export const useChat = (options: UseChatOptions = {}) => {
     }
     // sessionId is encoded inside messagesKey/sessionsKey, so it is not a
     // separate dependency here.
-  }, [chatService, chatbotType, chapterId, chapterMetadata, queryClient, toast, messagesKey, sessionsKey]);
+  }, [chatService, chatbotType, chapterId, chapterMetadata, queryClient, toast, messagesKey, sessionsKey, withAvatarScope]);
 
   // Mutation: Clear chat history (keyed by session to reset state on session switch)
   const clearChatMutation = useMutation({

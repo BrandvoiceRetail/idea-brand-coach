@@ -32,19 +32,44 @@ export type AvatarScopedDomain =
   | 'diagnostic';
 
 /**
+ * The avatar scope a key is bound to: a single id (single-target ops) or the
+ * active SET (multi-avatar context). A set is collapsed to ONE deterministic
+ * segment so two callers passing the same ids in different order share a cache
+ * bucket (and the switch invalidation still nukes them — the segment still sits
+ * at queryKey[1] under the 'avatar' prefix).
+ */
+export type AvatarScope = string | readonly string[];
+
+/**
+ * Collapse an avatar scope to a single STABLE key segment.
+ *
+ * - A plain id passes through unchanged (back-compat with single-target keys).
+ * - A set is sorted then joined so order does not fork the cache; the result is
+ *   prefixed with `set:` so it can never collide with a real (single) avatar id.
+ *   An empty set collapses to the brand fallback.
+ */
+export function avatarScopeSegment(scope: AvatarScope): string {
+  if (typeof scope === 'string') return scope;
+  if (scope.length === 0) return 'brand';
+  if (scope.length === 1) return scope[0];
+  return `set:${[...scope].sort().join(',')}`;
+}
+
+/**
  * Build an avatar-scoped react-query key.
  *
- * @param domain   the avatar-scoped data family (e.g. 'chat-sessions')
- * @param avatarId the current avatar id (callers that have a brand fallback
- *                 should pass `avatarId ?? 'brand'` — see avatarChatSessionsKey)
- * @param rest     any further key segments (filters, ids)
+ * @param domain the avatar-scoped data family (e.g. 'chat-sessions')
+ * @param scope  the current avatar id OR the active set (callers that have a
+ *               brand fallback should pass `scope ?? 'brand'` — see
+ *               avatarChatSessionsKey)
+ * @param rest   any further key segments (filters, ids)
  */
 export function avatarScopedKey(
   domain: AvatarScopedDomain,
-  avatarId: string,
+  scope: AvatarScope,
   ...rest: readonly (string | number)[]
 ): readonly (string | number)[] {
-  return [AVATAR_KEY_PREFIX, avatarId, domain, ...rest];
+  return [AVATAR_KEY_PREFIX, avatarScopeSegment(scope), domain, ...rest];
 }
 
 /**
@@ -53,11 +78,11 @@ export function avatarScopedKey(
  * are still namespaced (so a switch invalidates them too).
  */
 export function avatarChatSessionsKey(
-  avatarId: string | undefined,
+  avatarScope: AvatarScope | undefined,
   chatbotType: string,
   ...rest: readonly (string | number)[]
 ): readonly (string | number)[] {
-  return avatarScopedKey('chat-sessions', avatarId ?? 'brand', chatbotType, ...rest);
+  return avatarScopedKey('chat-sessions', avatarScope ?? 'brand', chatbotType, ...rest);
 }
 
 /**
@@ -70,11 +95,11 @@ export function avatarChatSessionsKey(
  * selected (matches react-query's `enabled: !!sessionId` gate downstream).
  */
 export function avatarChatMessagesKey(
-  avatarId: string | undefined,
+  avatarScope: AvatarScope | undefined,
   chatbotType: string,
   sessionId: string | undefined,
 ): readonly (string | number)[] {
-  return avatarScopedKey('chat-messages', avatarId ?? 'brand', chatbotType, sessionId ?? '');
+  return avatarScopedKey('chat-messages', avatarScope ?? 'brand', chatbotType, sessionId ?? '');
 }
 
 /** Avatar profile/field-values key (design §2.2 AVATAR-scoped). */

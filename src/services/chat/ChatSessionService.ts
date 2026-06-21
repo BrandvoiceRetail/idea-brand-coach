@@ -15,6 +15,7 @@ import {
   ConversationType,
 } from '@/types/chat';
 import type { ChapterId, ChapterMetadata } from '@/types/chapter';
+import type { TablesInsert } from '@/integrations/supabase/types';
 
 /**
  * Result type for session operations
@@ -44,9 +45,12 @@ export class ChatSessionService {
     userId: string,
     chatbotType: ChatbotType,
     sessionData?: ChatSessionCreate,
-    avatarId?: string
+    avatarId?: string,
+    contextAvatarIds?: string[]
   ): Promise<SessionResult<ChatSession>> {
-    // Resolve the avatar's brand so the thread carries both scope columns.
+    // Resolve the avatar's brand so the thread carries both scope columns. The
+    // focus avatar (avatar_id) seeds brand resolution + back-compat; the set
+    // (context_avatar_ids) is the per-thread retrieval anchor (set model).
     let brandId: string | null = null;
     if (avatarId) {
       const resolved = await this.resolveBrandId(avatarId, userId);
@@ -56,21 +60,31 @@ export class ChatSessionService {
       brandId = resolved.brandId;
     }
 
+    // Build the row loosely (sidesteps per-field jsonb/Json friction on
+    // chapter_metadata) then assert the generated insert type at the call site.
+    // `context_avatar_ids` is now present in the regenerated `types.ts`.
+    const insertRow: Record<string, unknown> = {
+      user_id: userId,
+      avatar_id: avatarId ?? null,
+      brand_id: brandId,
+      chatbot_type: sessionData?.chatbot_type || chatbotType,
+      title: sessionData?.title || 'New Chat',
+      conversation_type: sessionData?.conversation_type || 'general',
+      field_id: sessionData?.field_id,
+      field_label: sessionData?.field_label,
+      page_context: sessionData?.page_context,
+      chapter_id: sessionData?.chapter_id,
+      chapter_metadata: sessionData?.chapter_metadata,
+    };
+    // Stamp the set when given; the DB backfill default is ARRAY[avatar_id], so
+    // single-avatar callers that omit it still land a sane anchor.
+    if (contextAvatarIds && contextAvatarIds.length > 0) {
+      insertRow.context_avatar_ids = contextAvatarIds;
+    }
+
     const { data, error } = await supabase
       .from('chat_sessions')
-      .insert({
-        user_id: userId,
-        avatar_id: avatarId ?? null,
-        brand_id: brandId,
-        chatbot_type: sessionData?.chatbot_type || chatbotType,
-        title: sessionData?.title || 'New Chat',
-        conversation_type: sessionData?.conversation_type || 'general',
-        field_id: sessionData?.field_id,
-        field_label: sessionData?.field_label,
-        page_context: sessionData?.page_context,
-        chapter_id: sessionData?.chapter_id,
-        chapter_metadata: sessionData?.chapter_metadata,
-      })
+      .insert(insertRow as TablesInsert<'chat_sessions'>)
       .select()
       .single();
 
@@ -85,10 +99,9 @@ export class ChatSessionService {
   }
 
   /**
-   * Ensure an open thread exists for the given avatar and return it.
-   * Picks the most-recently-updated existing session for the avatar, or creates
-   * a fresh one. This is the session-follows-avatar contract (design §4.1):
-   * switching to an avatar lands the user on that avatar's conversation.
+   * Ensure an open thread exists for the given avatar and return it. Thin
+   * single-id shim over {@link ensureSessionForContext} (set model): a single
+   * avatar is just the one-member context set, with itself as the focus.
    *
    * @param userId - ID of the user
    * @param chatbotType - Type of chatbot
@@ -100,23 +113,58 @@ export class ChatSessionService {
     chatbotType: ChatbotType,
     avatarId: string
   ): Promise<SessionResult<ChatSession>> {
-    const { data: existing, error: listError } = await this.getSessions(
-      userId,
-      chatbotType,
-      avatarId
-    );
+    return this.ensureSessionForContext(userId, chatbotType, [avatarId]);
+  }
+
+  /**
+   * Ensure an open thread exists for the active context SET and return it (set
+   * model). Finds the most-recent general thread whose `context_avatar_ids`
+   * EQUALS the set (order-insensitive); else creates one stamping
+   * `context_avatar_ids = avatarIds`, `avatar_id = avatarIds[0]` (the focus, for
+   * back-compat + brand resolution). This is the session-follows-context anchor:
+   * switching the set lands the user on that set's conversation.
+   *
+   * @param userId - ID of the user
+   * @param chatbotType - Type of chatbot
+   * @param avatarIds - the active context set (non-empty; ids[0] is the focus)
+   * @returns Promise resolving to SessionResult with the existing-or-new session
+   */
+  async ensureSessionForContext(
+    userId: string,
+    chatbotType: ChatbotType,
+    avatarIds: string[]
+  ): Promise<SessionResult<ChatSession>> {
+    if (avatarIds.length === 0) {
+      return { data: null, error: new Error('empty_avatar_set') };
+    }
+    const focusAvatarId = avatarIds[0];
+    const wantKey = sortedSetKey(avatarIds);
+
+    // Candidate general threads for the focus avatar (newest-first), reading the
+    // untyped `context_avatar_ids` column so the set can be matched
+    // order-insensitively. `context_avatar_ids` is live but not yet in the
+    // generated types, so the rows are read untyped and narrowed via a guard.
+    const { data: rows, error: listError } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('chatbot_type', chatbotType)
+      .eq('avatar_id', focusAvatarId)
+      .eq('conversation_type', 'general')
+      .order('updated_at', { ascending: false });
+
     if (listError) {
-      return { data: null, error: listError };
+      return { data: null, error: listError as Error };
     }
 
-    // Prefer the most recent general thread for this avatar (getSessions is
-    // already ordered newest-first); skip field-scoped threads.
-    const openThread = existing?.find((s) => s.conversation_type === 'general');
-    if (openThread) {
-      return { data: openThread, error: null };
+    const match = (rows ?? []).find(
+      (row) => sortedSetKey(readContextAvatarIds(row, focusAvatarId)) === wantKey
+    );
+    if (match) {
+      return { data: this.mapSessionFromDb(match), error: null };
     }
 
-    return this.createSession(userId, chatbotType, undefined, avatarId);
+    return this.createSession(userId, chatbotType, undefined, focusAvatarId, avatarIds);
   }
 
   /**
@@ -305,4 +353,27 @@ export class ChatSessionService {
       updated_at: item.updated_at as string,
     };
   }
+}
+
+/**
+ * Order-insensitive identity key for an avatar set: dedupe → sort → join. Two
+ * sets with the same members in any order collapse to the same key.
+ */
+function sortedSetKey(ids: readonly string[]): string {
+  return [...new Set(ids)].sort().join(',');
+}
+
+/**
+ * Read a row's `context_avatar_ids` (live but not yet in the generated types),
+ * narrowing the untyped value to a `string[]`. Falls back to the row's single
+ * `avatar_id` (the DB backfill default ARRAY[avatar_id]) when the column is
+ * absent/empty, so legacy single-avatar rows compare correctly.
+ */
+function readContextAvatarIds(row: Record<string, unknown>, fallbackAvatarId: string): string[] {
+  const raw = row.context_avatar_ids;
+  if (Array.isArray(raw)) {
+    const ids = raw.filter((v): v is string => typeof v === 'string');
+    if (ids.length > 0) return ids;
+  }
+  return [fallbackAvatarId];
 }

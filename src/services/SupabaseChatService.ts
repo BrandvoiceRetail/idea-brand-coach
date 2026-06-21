@@ -274,6 +274,20 @@ export class SupabaseChatService implements IChatService {
     return session;
   }
 
+  /**
+   * Ensure an open thread exists for the active context SET (set model) and
+   * return it. Mirrors {@link ensureSessionForAvatar} but anchors the thread on
+   * the full set (`context_avatar_ids`) so switching to {A,B} lands on the
+   * {A,B} conversation, not the focus-only thread. Sets the result as current.
+   */
+  async ensureSessionForContext(avatarIds: string[]): Promise<ChatSession> {
+    const session = await this.withUserId((userId) =>
+      this.sessionService.ensureSessionForContext(userId, this.chatbotType, avatarIds)
+    );
+    this.currentSessionId = session.id;
+    return session;
+  }
+
   async getSession(sessionId: string): Promise<ChatSession | null> {
     return this.withUserId((userId) =>
       this.sessionService.getSession(sessionId, userId)
