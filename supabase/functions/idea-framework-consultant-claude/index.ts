@@ -56,11 +56,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Injection guard: any body-supplied avatar_id must be a well-formed UUID
+// Injection guard: any body-supplied avatar id must be a well-formed UUID
 // before it touches a query (multi-avatar Phase 3, design §2.3 / H1).
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const asUuidOrNull = (v: unknown): string | null =>
   typeof v === 'string' && UUID_RE.test(v) ? v : null;
+
+// Validate + de-duplicate a candidate avatar SET (multi-avatar M2). Drops any
+// member that is not a well-formed UUID; the resulting set is the retrieval
+// anchor. An empty result means brand-only (no bleed).
+const toValidatedAvatarSet = (v: unknown): string[] => {
+  const raw = Array.isArray(v) ? v : v == null ? [] : [v];
+  const seen = new Set<string>();
+  for (const candidate of raw) {
+    const valid = asUuidOrNull(candidate);
+    if (valid) seen.add(valid);
+  }
+  return [...seen];
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -114,6 +127,7 @@ serve(async (req) => {
       stream: streamRequested,
       tool_loop,
       avatar_id,
+      avatar_ids,
     } = await req.json();
 
     const messageImages = metadata?.images || [];
@@ -154,36 +168,51 @@ serve(async (req) => {
     let memorySnapshot = '';
 
     if (userId && supabaseClient) {
-      // ── Avatar resolution (avatar-aware retrieval, Phase 3) ─────────────
-      // Only runs for an authenticated caller — a body-supplied avatar_id is
+      // ── Avatar resolution (avatar-aware retrieval, M2 SET anchor) ───────
+      // Only runs for an authenticated caller — a body-supplied avatar set is
       // never used to query without a verified session (security C2).
-      // Effective avatar = validated body avatar_id ELSE profiles
-      // .current_avatar_id (so retrieval re-scopes correctly even before the
-      // SPA wires avatar_id into the chat body in Phase 4).
+      // The avatar anchor is now a SET. Resolution order:
+      //   1. validated body `avatar_ids` (array) — the per-request/thread set;
+      //      legacy `avatar_id` (string) is folded in for back-compat.
+      //   2. ELSE profiles.context_avatar_ids (the profile default set).
+      //   3. ELSE [profiles.current_avatar_id] (single-target seed).
+      //   4. ELSE empty set → brand-only (no bleed by construction).
       // brand_id is intentionally NOT resolved here: KB is user_id-keyed (one
       // brand per user) and brand rows are already bounded by user_id +
       // scope='brand', so brand_id is not needed in the retrieval WHERE on this
       // base (design MAP §4.1). Avoiding the lookup removes a serial round-trip
       // on the hot path of every authenticated chat turn.
-      let avatarId: string | null = asUuidOrNull(avatar_id ?? metadata?.avatar_id);
+      let avatarIds: string[] = toValidatedAvatarSet([
+        ...(Array.isArray(avatar_ids) ? avatar_ids : []),
+        ...(Array.isArray(metadata?.avatar_ids) ? metadata.avatar_ids : []),
+        avatar_id,
+        metadata?.avatar_id,
+      ]);
       try {
         const { data: profile } = await supabaseClient
           .from('profiles')
-          .select('current_avatar_id')
+          .select('context_avatar_ids, current_avatar_id')
           .eq('id', userId)
           .maybeSingle();
-        if (!avatarId) avatarId = asUuidOrNull(profile?.current_avatar_id);
+        if (avatarIds.length === 0) {
+          avatarIds = toValidatedAvatarSet(profile?.context_avatar_ids);
+        }
+        if (avatarIds.length === 0) {
+          avatarIds = toValidatedAvatarSet(profile?.current_avatar_id);
+        }
       } catch (e) {
-        // Non-fatal: fall back to brand-only retrieval (avatarId stays as-is).
+        // Non-fatal: fall back to brand-only retrieval (avatarIds stays as-is).
         console.error('[Context] Avatar resolution failed:', e);
       }
-      console.log('[Context] Effective scope', { avatar: avatarId ?? 'none' });
+      console.log('[Context] Effective scope', {
+        avatars: avatarIds.length > 0 ? avatarIds.join(',') : 'none',
+      });
 
       const [ctxResult, snapshot] = await Promise.all([
         retrieveAllContext(supabaseClient, userId, message, {
           needsFullContext,
           hasUploadedDocuments,
-          avatarId,
+          avatarIds,
         }),
         memoryEnabled ? buildMemorySnapshot(supabaseClient, userId) : Promise.resolve(''),
       ]);

@@ -16,6 +16,15 @@
  * The `scope` column is authoritative — we do NOT re-derive scope from the
  * category at retrieval time (the backfill already stamped it). See
  * docs/v2/architecture/MULTI_AVATAR_DESIGN.md §2.2/§2.3.
+ *
+ * 2026-06-18 (multi-avatar M2): the avatar anchor is now a SET, not a single
+ * id. The avatar tier returns rows for ANY avatar in the explicit set
+ * (scope='avatar' AND avatar_id = ANY(set)) via a `.in('avatar_id', set)`
+ * filter. retrieveUserContext accepts string[] | string | null — the array is
+ * the canonical shape; the single-string/null forms are a thin shim for legacy
+ * callers and are normalized to a set internally. The bleed firewall is
+ * unchanged: retrieval anchors on the explicit set passed by the caller, never
+ * a global mutable pointer, so an empty/invalid set yields brand-only rows.
  */
 
 import { getFieldLabel } from './fields.ts';
@@ -57,6 +66,7 @@ interface KbQueryBuilder extends PromiseLike<KbQueryResult> {
   select(columns: string): KbQueryBuilder;
   eq(column: string, value: unknown): KbQueryBuilder;
   is(column: string, value: unknown): KbQueryBuilder;
+  in(column: string, values: readonly unknown[]): KbQueryBuilder;
   not(column: string, op: string, value: unknown): KbQueryBuilder;
   gt(column: string, value: unknown): KbQueryBuilder;
   order(column: string, opts?: { ascending?: boolean }): KbQueryBuilder;
@@ -72,6 +82,28 @@ function asUuidOrNull(value: unknown): string | null {
   return typeof value === 'string' && UUID_RE.test(value) ? value : null;
 }
 
+/**
+ * Normalize the avatar anchor into a validated, de-duplicated UUID set.
+ *
+ * Accepts the canonical array shape or the thin single-string/null shim.
+ * Invalid members are dropped (no bleed); an empty result means brand-only.
+ */
+function toValidatedAvatarSet(
+  avatarIds: string[] | string | null | undefined
+): string[] {
+  const raw = Array.isArray(avatarIds)
+    ? avatarIds
+    : avatarIds == null
+      ? []
+      : [avatarIds];
+  const seen = new Set<string>();
+  for (const candidate of raw) {
+    const valid = asUuidOrNull(candidate);
+    if (valid) seen.add(valid);
+  }
+  return [...seen];
+}
+
 /** Merge two row sets by recency (updated_at desc), most-recent first. */
 function mergeByRecency(a: KbRow[], b: KbRow[]): KbRow[] {
   return [...a, ...b].sort((x, y) => {
@@ -85,23 +117,27 @@ function mergeByRecency(a: KbRow[], b: KbRow[]): KbRow[] {
  * Retrieve user's structured knowledge base context from Supabase.
  *
  * Scope-authoritative two-tier read: brand rows (scope='brand') are always
- * returned; avatar rows (scope='avatar' AND avatar_id = avatarId) are returned
- * only when a valid avatarId is supplied. Other avatars' rows are excluded.
+ * returned; avatar rows (scope='avatar' AND avatar_id = ANY(set)) are returned
+ * for every avatar in the explicit set. Other avatars' rows are excluded.
+ *
+ * The avatar anchor is a SET (string[]). A single string or null is accepted
+ * as a thin shim for legacy callers and normalized to a set internally; an
+ * empty/invalid set yields brand-only rows (no bleed).
  */
 export async function retrieveUserContext(
   supabaseClient: SupabaseLike,
   userId: string,
-  avatarId: string | null,
+  avatarIds: string[] | string | null,
   _query: string,
   minimal: boolean = false
 ): Promise<string> {
   try {
-    const av = asUuidOrNull(avatarId);
+    const avSet = toValidatedAvatarSet(avatarIds);
     console.log(
       `[Context] Fetching knowledge for user (${minimal ? 'minimal' : 'full'}):`,
       userId,
-      `avatar:`,
-      av ?? 'none'
+      `avatars:`,
+      avSet.length > 0 ? avSet.join(',') : 'none'
     );
 
     // updated_at is always selected so the two tiers can be merged by recency.
@@ -133,10 +169,11 @@ export async function retrieveUserContext(
     // BRAND tier — always visible (scope='brand', avatar_id IS NULL).
     const brandQuery = base().eq('scope', 'brand').is('avatar_id', null);
 
-    // AVATAR tier — only the current avatar's rows; skipped entirely when no
-    // valid avatar is resolved (null-avatar → brand-only, no bleed).
-    const avatarQuery = av
-      ? base().eq('scope', 'avatar').eq('avatar_id', av)
+    // AVATAR tier — rows for ANY avatar in the explicit set
+    // (scope='avatar' AND avatar_id = ANY(set)); skipped entirely when the set
+    // is empty (empty/invalid set → brand-only, no bleed).
+    const avatarQuery = avSet.length > 0
+      ? base().eq('scope', 'avatar').in('avatar_id', avSet)
       : null;
 
     const [brandRes, avatarRes] = await Promise.all<KbQueryResult>([
@@ -202,8 +239,10 @@ export async function retrieveUserContext(
 /**
  * Retrieve all relevant context for the current message.
  *
- * Threads the resolved avatarId into the two-tier KB read so retrieval is
- * scoped to the brand + the current avatar only.
+ * Threads the resolved avatar SET into the two-tier KB read so retrieval is
+ * scoped to the brand + the explicit avatar set only. `avatarIds` is the
+ * canonical shape; `avatarId` is a thin shim kept for legacy callers and is
+ * merged into the set.
  */
 export async function retrieveAllContext(
   supabaseClient: SupabaseLike,
@@ -212,16 +251,21 @@ export async function retrieveAllContext(
   options: {
     needsFullContext: boolean;
     hasUploadedDocuments: boolean;
+    avatarIds?: string[] | null;
     avatarId?: string | null;
   }
 ): Promise<{
   userKnowledgeContext: string;
 }> {
   const startTime = Date.now();
+  const avatarAnchor: string[] = [
+    ...(options.avatarIds ?? []),
+    ...(options.avatarId ? [options.avatarId] : []),
+  ];
   const knowledge = await retrieveUserContext(
     supabaseClient,
     userId,
-    options.avatarId ?? null,
+    avatarAnchor,
     message,
     !options.needsFullContext
   );
