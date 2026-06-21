@@ -5,6 +5,7 @@ only what's specific here. Two capabilities live side by side on this page:
 
 1. **Trust Gap™ scorecard → journey bridge → /v2/coach Signature** hand-off (F-059).
 2. The **product-import CTA** that grounds the scorecard's interpretation in a seller's real Amazon listing.
+3. The **forensic analysis panel** — the SIGNED-IN, review-grounded deep read (post-signup value).
 
 For the shared QA account and browser-QA setup, see `docs/TEST_ACCOUNT.md` (pointed to from the
 top-level `CLAUDE.md`).
@@ -21,6 +22,31 @@ Signature that closes that gap. Scorecard geometry is deterministic; only the in
 copy and ~8 embedded reviews are turned into `TrustGapEvidence` and fed back into the interpretation
 so the read cites the seller's real customers instead of generic advice. When evidence is present, a
 small **"Grounded in your listing"** badge shows near the four-pillar grid.
+
+## Forensic analysis panel (signed-in, post-signup value)
+
+`ForensicAnalysisPanel` is the authed counterpart to the anon `DiagnosticLeadCapture` — the
+"long-running free analysis" a user gets after signup. It is an inline card (NOT a modal), gated on
+`user` in `DiagnosticResults`, sitting after the scorecard as the deeper-analysis step. Given one ASIN
+(`parseAsinInput`, F1 = first ASIN), it calls the `run-forensic-analysis` edge function with
+`{ asin, self_report_scores }` (the page's self-report `fallbackScores`). That single server call is
+synchronous (~30-60s) and returns `forensic_scores` (0-25 pillars / 0-100 overall, DERIVED from the
+review corpus, **not** the self-report), `interpretation` (per-dimension evidence reads from
+`diagnostic-interpretation-evidence`), `decision_trigger`, `reviews_analyzed`, and `thin_corpus`.
+
+| Concern | How |
+|---------|-----|
+| Progress | A stepped 6-stage checklist (mirrors the server tools) advances on an 8s timer during the single await — a perceived-progress animation, honestly labelled "Analysing… this takes about a minute." NOT a real per-step stream. |
+| Forensic scores | Rendered by a **compact pillar grid in the panel**, NOT `TrustGapScorecard` — so the forensic read (already in the response) is authoritative and the interpretation model is not re-billed. Pillars convert /25 → 0-100 (`×4`) before `buildTrustGap` so its `rescaleDimension` shows them back as /25. |
+| Decision trigger | Reuses `DecisionTriggerPanel` via its additive `result` prop: when `result` is passed, the panel renders it directly and skips its own `identify-decision-trigger` call. `mapDecisionTrigger` maps the response's **snake_case** `decision_trigger` (`dominant_type`, `brand_anchor`, `evidence_phrases`, `placement_instruction`, `why_this_trigger`) → the camelCase `DecisionTriggerResult` (tolerates camelCase too); unusable shapes are omitted, never rendered as junk. No confidence leaks (the type carries none). |
+| Grounded badge | "Grounded in your N real reviews" using `reviews_analyzed`. |
+| Thin corpus | `thin_corpus` (reviews < 5, normal at the ~8-review /dp cap) shows an amber caveat: "Based on N reviews — a thin sample; treat as directional." |
+| Errors | 422 (`ok:false`) and any failure → `sonner` toast + an inline retry (back to the input form). |
+| Analytics | `forensic_analysis_started` ({has_asin}) on run start; `forensic_analysis_completed` ({ok, reviews_analyzed, thin_corpus, primary_gap, overall_score, has_decision_trigger}) on finish. Scores/booleans/IDs only — never the ASIN value, review text, or PII. |
+
+Tests: `__tests__/ForensicAnalysisPanel.test.tsx` (run → grounded report + exact payload, thin-corpus
+caveat, 422 toast + error state, disabled-until-valid-ASIN). The `run-forensic-analysis` edge function
+itself is built separately (Task A) — this panel is the surface to its shared contract.
 
 ## Diagnostic BOTH — brand baseline vs per-avatar overlay (locked #5)
 

@@ -101,7 +101,12 @@ export type AlphaEventName =
   | 'funnel_defense_alerts_viewed'
   | 'funnel_defense_alert_read'
   // Avatar compare on the funnel (diagnostic overlay vs brand baseline).
-  | 'scorecard_compared';
+  | 'scorecard_compared'
+  // Signed-in forensic analysis (run-forensic-analysis): the long-running
+  // post-signup value delivery. Run start + completion. Scores / asin-presence /
+  // result shape only — never review text, listing copy, or PII.
+  | 'forensic_analysis_started'
+  | 'forensic_analysis_completed';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

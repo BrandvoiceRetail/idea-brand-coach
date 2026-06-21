@@ -113,6 +113,13 @@ verify_jwt = false
 [functions.submit-diagnostic-lead]
 verify_jwt = false
 
+# Forensic Trust Gap engine — the PAID, signed-in-only deep analysis. verify_jwt
+# stays true: the user is derived from the verified JWT, the listing is imported
+# and read back scoped to that user, and the forensic IDEA scores are derived
+# from the listing's own evidence (not self-report).
+[functions.run-forensic-analysis]
+verify_jwt = true
+
 # Canva Connect integration. The callback is hit by Canva's browser redirect
 # (no app JWT) and is secured by the opaque OAuth state; every other function
 # derives the user from the verified JWT.
