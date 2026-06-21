@@ -24,77 +24,56 @@ interface Question {
   }>;
 }
 
+// One inspection question per pillar. The shopper LOOKS at their live listing and
+// scores what they actually see (1 = not visible, 5 = unmistakable), so the result
+// reflects the listing, not their intentions.
 const diagnosticQuestions: Question[] = [
   {
-    id: 'customer-understanding',
-    question: 'How well do you understand your customers\' emotional triggers?',
+    id: 'hero-headline',
+    question: 'Look at your hero image headline and first bullet. Do they describe what the product does — or why the customer needs it right now?',
     category: 'insight',
     options: [
-      { value: '1', label: 'I have basic demographic data', score: 1 },
-      { value: '2', label: 'I know their pain points', score: 2 },
-      { value: '3', label: 'I understand their motivations', score: 3 },
-      { value: '4', label: 'I know their emotional triggers', score: 4 },
-      { value: '5', label: 'I have deep behavioral insights', score: 5 }
+      { value: '1', label: 'Only what it does', score: 1 },
+      { value: '2', label: 'Mostly what it does', score: 2 },
+      { value: '3', label: 'A bit of both', score: 3 },
+      { value: '4', label: 'Mostly why they need it', score: 4 },
+      { value: '5', label: 'Clearly why they need it now', score: 5 }
     ]
   },
   {
-    id: 'market-position',
-    question: 'How distinctive is your brand in the marketplace?',
+    id: 'name-removed',
+    question: 'Remove your brand name from your listing. Could it belong to any of your top three competitors?',
     category: 'distinctive',
     options: [
-      { value: '1', label: 'We blend in with competitors', score: 1 },
-      { value: '2', label: 'We have some unique features', score: 2 },
-      { value: '3', label: 'We stand out in key areas', score: 3 },
-      { value: '4', label: 'We have a unique position', score: 4 },
-      { value: '5', label: 'We own our category space', score: 5 }
+      { value: '1', label: 'Yes, it could be any of them', score: 1 },
+      { value: '2', label: 'Probably, with small tweaks', score: 2 },
+      { value: '3', label: 'Hard to say', score: 3 },
+      { value: '4', label: 'Mostly no, it feels like ours', score: 4 },
+      { value: '5', label: 'No, it is unmistakably ours', score: 5 }
     ]
   },
   {
-    id: 'emotional-connection',
-    question: 'How emotionally connected are your customers to your brand?',
+    id: 'bullets-aloud',
+    question: 'Read your bullet points aloud. Do they describe what the product does — or how the customer feels when they need it?',
     category: 'empathetic',
     options: [
-      { value: '1', label: 'They see us as transactional', score: 1 },
-      { value: '2', label: 'They appreciate our service', score: 2 },
-      { value: '3', label: 'They prefer us to competitors', score: 3 },
-      { value: '4', label: 'They feel understood by us', score: 4 },
-      { value: '5', label: 'They are emotionally invested', score: 5 }
+      { value: '1', label: 'Only what it does', score: 1 },
+      { value: '2', label: 'Mostly what it does', score: 2 },
+      { value: '3', label: 'A bit of both', score: 3 },
+      { value: '4', label: 'Mostly how they feel', score: 4 },
+      { value: '5', label: 'Clearly how they feel when they need it', score: 5 }
     ]
   },
   {
-    id: 'brand-authenticity',
-    question: 'How authentic and transparent is your brand communication?',
+    id: 'trust-signals',
+    question: 'Count the trust signals a first-time visitor sees in your hero image before scrolling or reading a review. How many?',
     category: 'authentic',
     options: [
-      { value: '1', label: 'We focus on selling features', score: 1 },
-      { value: '2', label: 'We share some company values', score: 2 },
-      { value: '3', label: 'We show our personality', score: 3 },
-      { value: '4', label: 'We are transparent about our process', score: 4 },
-      { value: '5', label: 'We authentically share our story', score: 5 }
-    ]
-  },
-  {
-    id: 'messaging-clarity',
-    question: 'How clear and compelling is your brand messaging?',
-    category: 'insight',
-    options: [
-      { value: '1', label: 'We struggle to explain what we do', score: 1 },
-      { value: '2', label: 'We can describe our features', score: 2 },
-      { value: '3', label: 'We communicate our benefits', score: 3 },
-      { value: '4', label: 'We articulate our value clearly', score: 4 },
-      { value: '5', label: 'Our message is compelling and memorable', score: 5 }
-    ]
-  },
-  {
-    id: 'visual-identity',
-    question: 'How distinctive and memorable is your visual brand identity?',
-    category: 'distinctive',
-    options: [
-      { value: '1', label: 'We look like everyone else', score: 1 },
-      { value: '2', label: 'We have basic branding', score: 2 },
-      { value: '3', label: 'We have some unique elements', score: 3 },
-      { value: '4', label: 'Our brand is recognizable', score: 4 },
-      { value: '5', label: 'Our brand is iconic', score: 5 }
+      { value: '1', label: 'None', score: 1 },
+      { value: '2', label: 'One', score: 2 },
+      { value: '3', label: 'Two', score: 3 },
+      { value: '4', label: 'Three', score: 4 },
+      { value: '5', label: 'Four or more', score: 5 }
     ]
   }
 ];
@@ -148,41 +127,22 @@ export default function FreeDiagnostic() {
 
   const completeDiagnostic = () => {
     setIsCompleting(true);
-    
-    // Calculate scores by category
-    const scores = {
-      insight: 0,
-      distinctive: 0,
-      empathetic: 0,
-      authentic: 0
+
+    // One question per pillar, so each pillar % is just (answer / 5) * 100.
+    const pillarScore = (category: Question['category']): number => {
+      const question = diagnosticQuestions.find(q => q.category === category);
+      const option = question?.options.find(opt => opt.value === answers[question.id]);
+      return option ? Math.round((option.score / 5) * 100) : 0;
     };
 
-    const categoryCount = {
-      insight: 0,
-      distinctive: 0,
-      empathetic: 0,
-      authentic: 0
-    };
-
-    diagnosticQuestions.forEach(question => {
-      const answer = answers[question.id];
-      if (answer) {
-        const option = question.options.find(opt => opt.value === answer);
-        if (option) {
-          scores[question.category] += option.score;
-          categoryCount[question.category]++;
-        }
-      }
-    });
-
-    // Calculate averages
     const averageScores = {
-      insight: Math.round((scores.insight / categoryCount.insight) * 20), // Convert to percentage
-      distinctive: Math.round((scores.distinctive / categoryCount.distinctive) * 20),
-      empathetic: Math.round((scores.empathetic / categoryCount.empathetic) * 20),
-      authentic: Math.round((scores.authentic / categoryCount.authentic) * 20)
+      insight: pillarScore('insight'),
+      distinctive: pillarScore('distinctive'),
+      empathetic: pillarScore('empathetic'),
+      authentic: pillarScore('authentic')
     };
 
+    // Overall is the mean of the four pillar percentages.
     const overallScore = Math.round(
       (averageScores.insight + averageScores.distinctive + averageScores.empathetic + averageScores.authentic) / 4
     );
@@ -234,9 +194,9 @@ export default function FreeDiagnostic() {
               </Button>
               <div className="flex-1" />
             </div>
-            <h1 className="text-3xl font-bold mb-4">Free Brand Diagnostic</h1>
+            <h1 className="text-3xl font-bold mb-4">Free Trust Gap Diagnostic</h1>
             <p className="text-muted-foreground mb-6">
-              Discover your brand's strengths and opportunities with our IDEA Framework™ assessment
+              Look at your listing as a first-time shopper would. Score what you actually see — not what you intended to show. 1 = not visible · 5 = unmistakable.
             </p>
             <Progress value={progress} className="mb-4" />
             <p className="text-sm text-muted-foreground">
@@ -249,7 +209,7 @@ export default function FreeDiagnostic() {
             <CardHeader>
               <CardTitle className="text-xl">{currentQ.question}</CardTitle>
               <CardDescription>
-                Select the option that best describes your current situation
+                Score what you actually see on your listing right now
               </CardDescription>
             </CardHeader>
             <CardContent>

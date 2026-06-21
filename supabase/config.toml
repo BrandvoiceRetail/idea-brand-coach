@@ -107,6 +107,12 @@ verify_jwt = true
 [functions.identify-decision-trigger]
 verify_jwt = false
 
+# Lead-magnet capture — anonymous visitors submit their free Trust Gap diagnostic
+# results, so verify_jwt=false; the function validates its own inputs (email,
+# consent, scores), inserts via the service role, and emails the report.
+[functions.submit-diagnostic-lead]
+verify_jwt = false
+
 # Canva Connect integration. The callback is hit by Canva's browser redirect
 # (no app JWT) and is secured by the opaque OAuth state; every other function
 # derives the user from the verified JWT.

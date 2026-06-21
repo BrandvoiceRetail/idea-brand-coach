@@ -76,10 +76,10 @@ describe('FreeDiagnostic', () => {
 
   it('should render the first question', () => {
     render(<FreeDiagnostic />, { wrapper });
-    
-    expect(screen.getByText('Free Brand Diagnostic')).toBeInTheDocument();
-    expect(screen.getByText(/How well do you understand your customers' emotional triggers?/i)).toBeInTheDocument();
-    expect(screen.getByText('Question 1 of 6')).toBeInTheDocument();
+
+    expect(screen.getByText('Free Trust Gap Diagnostic')).toBeInTheDocument();
+    expect(screen.getByText(/Look at your hero image headline and first bullet/i)).toBeInTheDocument();
+    expect(screen.getByText('Question 1 of 4')).toBeInTheDocument();
   });
 
   it('should not allow proceeding without selecting an answer', async () => {
@@ -102,19 +102,19 @@ describe('FreeDiagnostic', () => {
     fireEvent.click(nextButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Question 2 of 6')).toBeInTheDocument();
+      expect(screen.getByText('Question 2 of 4')).toBeInTheDocument();
     });
   });
 
   it('should allow going back to previous question', async () => {
     render(<FreeDiagnostic />, { wrapper });
-    
+
     // Answer first question and go to second
     fireEvent.click(screen.getAllByRole('radio')[0]);
     fireEvent.click(screen.getByRole('button', { name: /Next/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Question 2 of 6')).toBeInTheDocument();
+      expect(screen.getByText('Question 2 of 4')).toBeInTheDocument();
     });
 
     // Go back
@@ -122,23 +122,23 @@ describe('FreeDiagnostic', () => {
     fireEvent.click(previousButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Question 1 of 6')).toBeInTheDocument();
+      expect(screen.getByText('Question 1 of 4')).toBeInTheDocument();
     });
   });
 
   it('should complete diagnostic and navigate to results page', async () => {
     render(<FreeDiagnostic />, { wrapper });
 
-    // Answer all 6 questions
-    for (let i = 0; i < 6; i++) {
+    // Answer all 4 questions
+    for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getAllByRole('radio')[2]); // Select middle option
 
-      if (i < 5) {
+      if (i < 3) {
         const nextBtn = screen.getByRole('button', { name: /Next/i });
         await waitFor(() => expect(nextBtn).toBeEnabled());
         fireEvent.click(nextBtn);
         await waitFor(() => {
-          expect(screen.getByText(`Question ${i + 2} of 6`)).toBeInTheDocument();
+          expect(screen.getByText(`Question ${i + 2} of 4`)).toBeInTheDocument();
         });
       } else {
         const completeBtn = screen.getByRole('button', { name: /Complete Assessment/i });
@@ -156,15 +156,15 @@ describe('FreeDiagnostic', () => {
     render(<FreeDiagnostic />, { wrapper });
 
     // Complete all questions
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getAllByRole('radio')[2]);
 
-      if (i < 5) {
+      if (i < 3) {
         const nextBtn = screen.getByRole('button', { name: /Next/i });
         await waitFor(() => expect(nextBtn).toBeEnabled());
         fireEvent.click(nextBtn);
         await waitFor(() => {
-          expect(screen.getByText(`Question ${i + 2} of 6`)).toBeInTheDocument();
+          expect(screen.getByText(`Question ${i + 2} of 4`)).toBeInTheDocument();
         });
       } else {
         const completeBtn = screen.getByRole('button', { name: /Complete Assessment/i });
@@ -200,14 +200,14 @@ describe('FreeDiagnostic', () => {
     render(<FreeDiagnostic />, { wrapper });
 
     // Complete diagnostic
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getAllByRole('radio')[2]);
-      if (i < 5) {
+      if (i < 3) {
         const nextBtn = screen.getByRole('button', { name: /Next/i });
         await waitFor(() => expect(nextBtn).toBeEnabled());
         fireEvent.click(nextBtn);
         await waitFor(() => {
-          expect(screen.getByText(`Question ${i + 2} of 6`)).toBeInTheDocument();
+          expect(screen.getByText(`Question ${i + 2} of 4`)).toBeInTheDocument();
         });
       } else {
         const completeBtn = screen.getByRole('button', { name: /Complete Assessment/i });
@@ -230,14 +230,14 @@ describe('FreeDiagnostic', () => {
     render(<FreeDiagnostic />, { wrapper });
 
     // Answer all questions with score 3
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getAllByRole('radio')[2]); // Score 3
-      if (i < 5) {
+      if (i < 3) {
         const nextBtn = screen.getByRole('button', { name: /Next/i });
         await waitFor(() => expect(nextBtn).toBeEnabled());
         fireEvent.click(nextBtn);
         await waitFor(() => {
-          expect(screen.getByText(`Question ${i + 2} of 6`)).toBeInTheDocument();
+          expect(screen.getByText(`Question ${i + 2} of 4`)).toBeInTheDocument();
         });
       } else {
         const completeBtn = screen.getByRole('button', { name: /Complete Assessment/i });
