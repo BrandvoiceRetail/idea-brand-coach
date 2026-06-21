@@ -62,6 +62,21 @@ interface TrustGapScorecardProps {
   baselineScores?: TrustGapInputScores;
   /** Display name of the avatar whose overlay is shown — labels the compare banner. */
   avatarName?: string;
+  /**
+   * Multi-avatar compare (Feature Map Loop 09 B2). When two or more overlays are
+   * supplied AND a baseline is present, the scorecard renders a read-only per-pillar
+   * comparison grid (brand baseline + one column per avatar, each with its delta)
+   * instead of the single-avatar delta view. A single avatar is better expressed via
+   * {@link baselineScores} + {@link avatarName}. Read-only comparison — no blended coaching.
+   */
+  overlays?: AvatarOverlay[];
+}
+
+/** One avatar's overlay scores for the multi-avatar comparison grid. */
+export interface AvatarOverlay {
+  avatarId: string;
+  avatarName: string;
+  scores: TrustGapInputScores;
 }
 
 /** Rounded overlay − baseline delta on the displayed /25 (or /100 overall) scale. */
@@ -209,13 +224,115 @@ function DimensionCard({
   );
 }
 
+/**
+ * Read-only per-pillar comparison grid for two or more avatar overlays against the
+ * brand baseline (Feature Map Loop 09 B2). Each pillar row shows the baseline /25
+ * and, per avatar, the overlay /25 with its overlay − baseline delta. The first
+ * row is the overall /100. No interpretation is fetched here — this is a pure,
+ * deterministic side-by-side, NOT blended coaching.
+ */
+function MultiOverlayCompareGrid({
+  baselineScores,
+  overlays,
+}: {
+  baselineScores: TrustGapInputScores;
+  overlays: AvatarOverlay[];
+}): JSX.Element {
+  const baseline = buildTrustGap(baselineScores);
+  const baselineByKey = Object.fromEntries(baseline.dimensions.map((d) => [d.key, d.score]));
+  const columns = overlays.map((overlay) => ({
+    avatarId: overlay.avatarId,
+    avatarName: overlay.avatarName,
+    model: buildTrustGap(overlay.scores),
+  }));
+
+  return (
+    <Card className="border-border/50" data-testid="trustgap-compare-grid">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <GitCompare className="w-4 h-4" />
+          Avatars vs brand baseline
+        </div>
+      </CardHeader>
+      <CardContent className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-border/60">
+              <th className="text-left font-medium py-2 pr-4">Dimension</th>
+              <th className="text-right font-medium py-2 px-3 whitespace-nowrap">Baseline</th>
+              {columns.map((column) => (
+                <th
+                  key={column.avatarId}
+                  className="text-right font-medium py-2 px-3 whitespace-nowrap"
+                >
+                  {column.avatarName}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {/* Overall /100 */}
+            <tr className="border-b border-border/40 font-semibold">
+              <td className="text-left py-2 pr-4">Overall</td>
+              <td className="text-right py-2 px-3 tabular-nums">{baseline.overall}/100</td>
+              {columns.map((column) => (
+                <td key={column.avatarId} className="text-right py-2 px-3 tabular-nums">
+                  <div className="flex items-center justify-end gap-2">
+                    <span>{column.model.overall}/100</span>
+                    <DeltaBadge
+                      delta={column.model.overall - baseline.overall}
+                      srLabel={`${column.avatarName} overall score`}
+                    />
+                  </div>
+                </td>
+              ))}
+            </tr>
+            {/* Four pillars, each /25 */}
+            {baseline.dimensions.map((dimension) => (
+              <tr key={dimension.key} className="border-b border-border/30 last:border-0">
+                <td className="text-left py-2 pr-4">{dimension.label}</td>
+                <td className="text-right py-2 px-3 tabular-nums">
+                  {baselineByKey[dimension.key]}/{TRUST_GAP_MAX_PER_DIMENSION}
+                </td>
+                {columns.map((column) => {
+                  const overlayScore =
+                    column.model.dimensions.find((d) => d.key === dimension.key)?.score ?? 0;
+                  return (
+                    <td key={column.avatarId} className="text-right py-2 px-3 tabular-nums">
+                      <div className="flex items-center justify-end gap-2">
+                        <span>
+                          {overlayScore}/{TRUST_GAP_MAX_PER_DIMENSION}
+                        </span>
+                        <DeltaBadge
+                          delta={overlayScore - baselineByKey[dimension.key]}
+                          srLabel={`${column.avatarName} ${dimension.label} score`}
+                        />
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function TrustGapScorecard({
   scores,
   evidence,
   evidenceKey,
   baselineScores,
   avatarName,
+  overlays,
 }: TrustGapScorecardProps): JSX.Element {
+  // Multi-avatar compare (Loop 09 B2): two or more overlays + a baseline render the
+  // read-only side-by-side grid. One avatar falls through to the single-avatar delta
+  // view below (baselineScores + avatarName), preserving the P4b behaviour.
+  const multiCompare = !!baselineScores && !!overlays && overlays.length >= 2;
+
   const navigate = useNavigate();
   const model = buildTrustGap(scores);
   const { interpretation, isLoading, error, retry } = useTrustGapInterpretation(scores, evidence, evidenceKey);
@@ -268,6 +385,12 @@ export function TrustGapScorecard({
     interpretationShownRef.current = true;
     captureAlphaEvent('scorecard_interpretation_shown', { interpretation_source: 'llm' });
   }, [interpretation]);
+
+  // Multi-avatar compare grid (Loop 09 B2): render the read-only side-by-side and
+  // skip the single-scorecard render. All hooks above still run unconditionally.
+  if (multiCompare && baselineScores && overlays) {
+    return <MultiOverlayCompareGrid baselineScores={baselineScores} overlays={overlays} />;
+  }
 
   return (
     <div className="space-y-6">
