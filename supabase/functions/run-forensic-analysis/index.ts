@@ -62,6 +62,19 @@ const DIM_LABELS: Record<Dim, string> = {
   authentic: "Authenticity",
 };
 
+// ── Forensic report email (best-effort; sends only when RESEND_API_KEY is set) ──
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const FORENSIC_FROM_EMAIL = Deno.env.get("LEAD_FROM_EMAIL") ?? "Trevor <noreply@app.ideabrandconsultancy.com>";
+const FORENSIC_CTA_URL = Deno.env.get("LEAD_CTA_URL") ?? "https://ideabrandcoach.icodemybusiness.com";
+const NAVY = "#1A3557";
+const GOLD = "#C9A84C";
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 interface SelfReportScores {
   insight: number;
   distinctive: number;
@@ -340,6 +353,92 @@ function flattenForInterpretation(evidence: TrustGapEvidence): { listing_copy: s
   return { listing_copy, reviews };
 }
 
+interface ForensicEmailInput {
+  email: string;
+  pillars: Record<Dim, number>; // 0-25
+  overall: number;              // 0-100
+  primaryGap: Dim;
+  reviewCount: number;
+  thinCorpus: boolean;
+  listingTitle?: string;
+  trigger: { dominantType?: string; brandAnchor?: string; whyThisTrigger?: string } | null;
+}
+
+/** Build the forensic Trust Gap report email (deterministic from the run result). */
+function buildForensicEmailHtml(r: ForensicEmailInput): string {
+  const band = r.overall <= 39 ? "Weak" : r.overall <= 69 ? "Mixed" : "Strong";
+  const rows = DIMS.map((d) => {
+    const pct = Math.round((r.pillars[d] / 25) * 100);
+    return `<tr>
+      <td style="padding:9px 0;font-family:Arial,Helvetica,sans-serif;color:${NAVY};width:150px;vertical-align:top;"><strong>${DIM_LABELS[d]}</strong><br/><span style="font-size:12px;color:#6b7280;">${r.pillars[d]} / 25</span></td>
+      <td style="padding:9px 0;vertical-align:middle;"><div style="background:#e9edf2;border-radius:6px;height:14px;width:100%;"><div style="background:${GOLD};border-radius:6px;height:14px;width:${pct}%;"></div></div></td>
+    </tr>`;
+  }).join("");
+  const triggerBlock = r.trigger?.dominantType
+    ? `<div style="margin:24px 0 0;padding:18px;border-left:4px solid ${GOLD};background:#fbf8ef;">
+         <p style="margin:0 0 6px;font-size:11px;font-weight:bold;letter-spacing:.05em;text-transform:uppercase;color:#9a7b1f;">Your Decision Trigger&#8482;</p>
+         <p style="margin:0 0 8px;font-size:17px;font-weight:bold;color:${NAVY};">${escapeHtml(r.trigger.dominantType)}</p>
+         ${r.trigger.brandAnchor ? `<p style="margin:0 0 8px;font-size:14px;color:${NAVY};">${escapeHtml(r.trigger.brandAnchor)}</p>` : ""}
+         ${r.trigger.whyThisTrigger ? `<p style="margin:0;font-size:14px;line-height:1.5;color:${NAVY};">${escapeHtml(r.trigger.whyThisTrigger)}</p>` : ""}
+       </div>`
+    : "";
+  const thinNote = r.thinCorpus
+    ? `<p style="margin:14px 0 0;font-size:13px;color:#9a3412;background:#fff7ed;border-radius:8px;padding:10px 12px;">Based on ${r.reviewCount} review${r.reviewCount === 1 ? "" : "s"} — a thin sample, so treat this read as directional.</p>`
+    : "";
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f6f9;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:24px 0;"><tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+        <tr><td style="background:${NAVY};padding:28px 32px;">
+          <h1 style="margin:0;color:#fff;font-family:Arial,Helvetica,sans-serif;font-size:22px;">Your Forensic Trust Gap&#8482; Report</h1>
+          <p style="margin:8px 0 0;color:${GOLD};font-family:Arial,Helvetica,sans-serif;font-size:13px;">Read from your listing's real reviews — not a self-assessment</p>
+        </td></tr>
+        <tr><td style="padding:28px 32px;font-family:Arial,Helvetica,sans-serif;color:${NAVY};">
+          ${r.listingTitle ? `<p style="margin:0 0 16px;font-size:13px;color:#6b7280;">${escapeHtml(r.listingTitle)}</p>` : ""}
+          <div style="text-align:center;margin:0 0 22px;padding:18px;background:#f4f6f9;border-radius:10px;">
+            <div style="font-size:40px;font-weight:bold;color:${NAVY};">${r.overall}<span style="font-size:18px;color:#6b7280;">/100</span></div>
+            <div style="font-size:13px;color:#6b7280;">Forensic trust score — ${band} · grounded in ${r.reviewCount} real review${r.reviewCount === 1 ? "" : "s"}</div>
+          </div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+          <div style="margin:22px 0 0;padding:18px;border-left:4px solid ${GOLD};background:#fbf8ef;">
+            <p style="margin:0 0 6px;font-size:14px;color:${NAVY};"><strong>Your biggest opportunity: ${DIM_LABELS[r.primaryGap]}</strong></p>
+            <p style="margin:0;font-size:14px;line-height:1.5;color:${NAVY};">${DIM_LABELS[r.primaryGap]} is where your listing leaks the most trust right now — the fastest place to win it back. Close this first and the whole brand lifts.</p>
+          </div>
+          ${triggerBlock}
+          ${thinNote}
+          <div style="text-align:center;margin:28px 0 8px;">
+            <a href="${escapeHtml(FORENSIC_CTA_URL)}/v2/coach" style="display:inline-block;background:${GOLD};color:${NAVY};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:bold;font-size:15px;padding:13px 28px;border-radius:8px;">Fix your ${DIM_LABELS[r.primaryGap]} gap with the coach</a>
+          </div>
+          <p style="margin:24px 0 0;font-size:13px;color:#6b7280;line-height:1.5;">You ran a forensic analysis in IDEA Brand Coach. Reply any time and the team will help you read your results.</p>
+        </td></tr>
+      </table>
+    </td></tr></table></body></html>`;
+}
+
+/** Send the forensic report via Resend. Best-effort: returns true on a confirmed send. */
+async function sendForensicEmail(input: ForensicEmailInput): Promise<boolean> {
+  if (!RESEND_API_KEY) return false;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+      body: JSON.stringify({
+        from: FORENSIC_FROM_EMAIL,
+        to: [input.email],
+        subject: "Your forensic Trust Gap report",
+        html: buildForensicEmailHtml(input),
+      }),
+    });
+    if (!res.ok) {
+      console.error(`[run-forensic-analysis] resend failed status=${res.status}`);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("[run-forensic-analysis] resend error:", err instanceof Error ? err.message : "unknown");
+    return false;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -361,6 +460,7 @@ serve(async (req) => {
   const { data: { user } } = await userClient.auth.getUser(token);
   if (!user) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   const userId = user.id;
+  const userEmail = typeof user.email === "string" ? user.email : null;
 
   // Per-user throttle on this expensive endpoint (cost/abuse guard).
   if (forensicLimiter.isRateLimited(`user:${userId}`)) {
@@ -485,8 +585,34 @@ serve(async (req) => {
       console.error("[run-forensic-analysis] decision trigger error:", err);
     }
 
+    // ── Step 6: email the forensic report (best-effort; never fails the run). ──
+    let emailed = false;
+    if (userEmail) {
+      const dt = (decisionTrigger && typeof decisionTrigger === "object")
+        ? decisionTrigger as Record<string, unknown>
+        : null;
+      const triggerForEmail = dt
+        ? {
+            dominantType: typeof dt.dominantType === "string" ? dt.dominantType : undefined,
+            brandAnchor: typeof dt.brandAnchor === "string" ? dt.brandAnchor : undefined,
+            whyThisTrigger: typeof dt.whyThisTrigger === "string" ? dt.whyThisTrigger : undefined,
+          }
+        : null;
+      emailed = await sendForensicEmail({
+        email: userEmail,
+        pillars: pillars!,
+        overall,
+        primaryGap,
+        reviewCount,
+        thinCorpus,
+        listingTitle: evidence.listings[0]?.title,
+        trigger: triggerForEmail,
+      });
+      if (!emailed) notes.push("We couldn't email your report just now — it's saved in the app above.");
+    }
+
     console.log(
-      `[run-forensic-analysis] ok asin=${asin} reviews=${reviewCount} thin=${thinCorpus} gap=${primaryGap} notes=${notes.length}`,
+      `[run-forensic-analysis] ok asin=${asin} reviews=${reviewCount} thin=${thinCorpus} gap=${primaryGap} emailed=${emailed} notes=${notes.length}`,
     );
 
     return jsonResponse({
@@ -498,6 +624,7 @@ serve(async (req) => {
       primary_gap: primaryGap,
       interpretation,
       decision_trigger: decisionTrigger,
+      emailed,
       listing: {
         title: evidence.listings[0]?.title,
         bullets: evidence.listings[0]?.bullets ?? [],

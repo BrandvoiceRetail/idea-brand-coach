@@ -32,6 +32,7 @@ import {
   Heart,
   Shield,
   RotateCcw,
+  Mail,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,6 +86,7 @@ interface ForensicResponse {
   primary_gap: TrustGapDimension;
   interpretation: ForensicInterpretation;
   decision_trigger: unknown;
+  emailed?: boolean;
   listing: { title?: string; bullets?: string[] };
 }
 
@@ -444,6 +446,12 @@ export function ForensicAnalysisPanel({
 
         {status === 'done' && report && (
           <div className="space-y-6">
+            {report.emailed && (
+              <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
+                <Mail className="w-4 h-4 shrink-0" />
+                <span>We've emailed this report to you, so you can come back to it any time.</span>
+              </div>
+            )}
             <ForensicScorecard
               scores={report.forensic_scores}
               reviewsAnalyzed={report.reviews_analyzed}
