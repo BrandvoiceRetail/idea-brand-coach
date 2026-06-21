@@ -19,8 +19,9 @@
  */
 
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Mail, User, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Mail, User, Loader2, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { getPostHogDistinctId } from '@/lib/posthogClient';
 import { buildTrustGap, type TrustGapInputScores } from '@/lib/trustGap';
+
+/** Title-case a pillar key for friendly copy (e.g. "empathetic" → "Empathetic"). */
+function gapLabel(gap: string): string {
+  return gap ? gap.charAt(0).toUpperCase() + gap.slice(1) : 'brand';
+}
 
 interface DiagnosticLeadCaptureProps {
   /** Raw stored scores (each dimension 0-100 + overall) for the on-screen scorecard. */
@@ -68,6 +74,7 @@ function isLeadResponse(data: unknown): data is LeadResponse {
 }
 
 export function DiagnosticLeadCapture({ scores, answers }: DiagnosticLeadCaptureProps): JSX.Element {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [consent, setConsent] = useState(false);
@@ -132,6 +139,7 @@ export function DiagnosticLeadCapture({ scores, answers }: DiagnosticLeadCapture
   };
 
   if (status === 'done') {
+    const gap = gapLabel(primaryGap);
     return (
       <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardContent className="pt-6">
@@ -147,6 +155,25 @@ export function DiagnosticLeadCapture({ scores, answers }: DiagnosticLeadCapture
                   : "Saved — we'll email your report shortly."}
               </p>
             </div>
+          </div>
+
+          {/* Next step: turn the read into action. Create a free account → free
+              credits to close the primary gap; the coach does in weeks what
+              normally takes months. */}
+          <div className="mt-5 rounded-lg border border-primary/20 bg-background/60 p-4">
+            <div className="flex items-start gap-2 mb-2">
+              <Sparkles className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
+              <p className="text-sm font-medium">Your next step: close your {gap} gap</p>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Create your free account to put this report to work. You'll get free credits to fix your{' '}
+              {gap} gap with the coach and tackle the problems that surface next — branding done in
+              weeks, not months.
+            </p>
+            <Button onClick={() => navigate('/auth?redirect=/v2/coach')} className="w-full">
+              Create my free account
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
           </div>
         </CardContent>
       </Card>
