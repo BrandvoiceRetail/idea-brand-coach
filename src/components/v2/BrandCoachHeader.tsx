@@ -22,6 +22,8 @@ import type { BrandMarkdownExportRef } from '@/components/export/BrandMarkdownEx
 import { VersionSwitcher } from '@/components/VersionSwitcher';
 import { AvatarHeaderDropdown } from '@/components/v2/AvatarHeaderDropdown';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
+import { ContextAvatarChecklist } from '@/components/v2/ContextAvatarChecklist';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import { CHAPTER_FIELDS_MAP } from '@/config/chapterFields';
 import type { ChapterProgress } from '@/types/chapter';
 import type { MilestoneData } from '@/hooks/v2/useMilestone';
@@ -99,6 +101,9 @@ export function BrandCoachHeader({
 }: BrandCoachHeaderProps): JSX.Element {
   const { isMobile } = useDeviceType();
   const { signOut } = useAuth();
+  // The active coaching SET + the multi-toggle switch path (Multi-Avatar §2.2).
+  // The checklist owns set switching; the dropdown below stays single-target CRUD.
+  const { contextAvatarIds, toggleAvatarInContext } = useAvatarContext();
 
   // Calculate overall completion percentage
   const totalFields = Object.values(CHAPTER_FIELDS_MAP).reduce(
@@ -112,16 +117,24 @@ export function BrandCoachHeader({
     ? Math.round((filledFields / totalFields) * 100)
     : 0;
 
-  const coachingAvatarName = avatarContext.currentAvatar?.name;
+  // Banner reflects the active SET (focus-first names), not a single avatar.
+  // Fall back to the focus avatar's name when the set hasn't resolved yet.
+  const coachingNames = contextAvatarIds
+    .map((id) => avatarContext.avatars.find((a) => a.id === id)?.name)
+    .filter((name): name is string => Boolean(name));
+  const coachingLabel =
+    coachingNames.length > 0
+      ? coachingNames.join(', ')
+      : avatarContext.currentAvatar?.name ?? null;
 
   return (
     <header className="flex-shrink-0 border-b px-4 py-3 flex flex-wrap items-center justify-between gap-y-2">
-      {coachingAvatarName && (
+      {coachingLabel && (
         <div
           className="w-full text-xs text-muted-foreground -mt-1 mb-1"
           data-testid="coaching-context-banner"
         >
-          Coaching: <span className="font-medium text-foreground">{coachingAvatarName}</span>
+          Coaching across: <span className="font-medium text-foreground">{coachingLabel}</span>
           {brandName && (
             <>
               {' '}&middot; Brand: <span className="font-medium text-foreground">{brandName}</span>
@@ -169,6 +182,13 @@ export function BrandCoachHeader({
           <VersionSwitcher />
         </div>
         <div className="flex items-center gap-2">
+          {/* "One surface switches" — the coaching SET multi-toggle. The dropdown
+              beside it stays single-target CRUD (rename/duplicate/delete/etc). */}
+          <ContextAvatarChecklist
+            avatars={avatarContext.avatars}
+            selectedIds={contextAvatarIds}
+            onToggle={(id) => { void toggleAvatarInContext(id); }}
+          />
           <AvatarHeaderDropdown
             currentAvatar={avatarContext.currentAvatar}
             avatars={avatarContext.avatars}
