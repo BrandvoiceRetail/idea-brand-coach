@@ -431,6 +431,63 @@ export type Database = {
           },
         ]
       }
+      brand_asset_competitive_insights: {
+        Row: {
+          analyzed_at: string | null
+          asset_id: string | null
+          avatar_id: string
+          competitors: Json
+          created_at: string
+          id: string
+          modality: string
+          status: string
+          strategic_angle: string | null
+          updated_at: string
+          voc_signals: Json | null
+        }
+        Insert: {
+          analyzed_at?: string | null
+          asset_id?: string | null
+          avatar_id: string
+          competitors?: Json
+          created_at?: string
+          id?: string
+          modality: string
+          status?: string
+          strategic_angle?: string | null
+          updated_at?: string
+          voc_signals?: Json | null
+        }
+        Update: {
+          analyzed_at?: string | null
+          asset_id?: string | null
+          avatar_id?: string
+          competitors?: Json
+          created_at?: string
+          id?: string
+          modality?: string
+          status?: string
+          strategic_angle?: string | null
+          updated_at?: string
+          voc_signals?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_asset_competitive_insights_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_asset_competitive_insights_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_assets: {
         Row: {
           audit_result: Json | null
@@ -510,10 +567,67 @@ export type Database = {
           },
         ]
       }
+      brand_defense_alerts: {
+        Row: {
+          avatar_id: string
+          category: string
+          created_at: string
+          drafted_response: Json | null
+          id: string
+          interpretation: string | null
+          ledger_request_id: string | null
+          read_at: string | null
+          severity: string
+          source_payload: Json
+          threatened_dimension: string | null
+          title: string
+        }
+        Insert: {
+          avatar_id: string
+          category: string
+          created_at?: string
+          drafted_response?: Json | null
+          id?: string
+          interpretation?: string | null
+          ledger_request_id?: string | null
+          read_at?: string | null
+          severity?: string
+          source_payload?: Json
+          threatened_dimension?: string | null
+          title: string
+        }
+        Update: {
+          avatar_id?: string
+          category?: string
+          created_at?: string
+          drafted_response?: Json | null
+          id?: string
+          interpretation?: string | null
+          ledger_request_id?: string | null
+          read_at?: string | null
+          severity?: string
+          source_payload?: Json
+          threatened_dimension?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_defense_alerts_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_tests: {
         Row: {
-          asset_id: string
+          asset_id: string | null
+          avatar_id: string | null
           baseline_value: number | null
+          channel: string | null
+          competitive_insight_id: string | null
+          competitor_insight_applied: boolean
           created_at: string
           deployed_at: string | null
           hypothesis: string | null
@@ -522,14 +636,22 @@ export type Database = {
           messaging_version_after: string | null
           messaging_version_before: string | null
           metric_type: string | null
+          name: string | null
+          primary_metric: string | null
           result_value: number | null
           source: string
           status: string
+          touchpoint_id: string | null
           updated_at: string
+          variants: Json
         }
         Insert: {
-          asset_id: string
+          asset_id?: string | null
+          avatar_id?: string | null
           baseline_value?: number | null
+          channel?: string | null
+          competitive_insight_id?: string | null
+          competitor_insight_applied?: boolean
           created_at?: string
           deployed_at?: string | null
           hypothesis?: string | null
@@ -538,14 +660,22 @@ export type Database = {
           messaging_version_after?: string | null
           messaging_version_before?: string | null
           metric_type?: string | null
+          name?: string | null
+          primary_metric?: string | null
           result_value?: number | null
           source?: string
           status?: string
+          touchpoint_id?: string | null
           updated_at?: string
+          variants?: Json
         }
         Update: {
-          asset_id?: string
+          asset_id?: string | null
+          avatar_id?: string | null
           baseline_value?: number | null
+          channel?: string | null
+          competitive_insight_id?: string | null
+          competitor_insight_applied?: boolean
           created_at?: string
           deployed_at?: string | null
           hypothesis?: string | null
@@ -554,10 +684,14 @@ export type Database = {
           messaging_version_after?: string | null
           messaging_version_before?: string | null
           metric_type?: string | null
+          name?: string | null
+          primary_metric?: string | null
           result_value?: number | null
           source?: string
           status?: string
+          touchpoint_id?: string | null
           updated_at?: string
+          variants?: Json
         }
         Relationships: [
           {
@@ -565,6 +699,20 @@ export type Database = {
             columns: ["asset_id"]
             isOneToOne: false
             referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_tests_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_tests_competitive_insight_id_fkey"
+            columns: ["competitive_insight_id"]
+            isOneToOne: false
+            referencedRelation: "brand_asset_competitive_insights"
             referencedColumns: ["id"]
           },
         ]
@@ -649,6 +797,105 @@ export type Database = {
         }
         Relationships: []
       }
+      canva_connections: {
+        Row: {
+          access_token: string
+          canva_team_id: string | null
+          canva_user_id: string | null
+          connected_at: string
+          display_name: string | null
+          refresh_token: string
+          scopes: string | null
+          token_expires_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          canva_team_id?: string | null
+          canva_user_id?: string | null
+          connected_at?: string
+          display_name?: string | null
+          refresh_token: string
+          scopes?: string | null
+          token_expires_at: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          canva_team_id?: string | null
+          canva_user_id?: string | null
+          connected_at?: string
+          display_name?: string | null
+          refresh_token?: string
+          scopes?: string | null
+          token_expires_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      canva_imported_designs: {
+        Row: {
+          canva_design_id: string
+          edit_url: string | null
+          id: string
+          imported_at: string
+          thumbnail_url: string | null
+          title: string | null
+          user_id: string
+          view_url: string | null
+        }
+        Insert: {
+          canva_design_id: string
+          edit_url?: string | null
+          id?: string
+          imported_at?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          user_id: string
+          view_url?: string | null
+        }
+        Update: {
+          canva_design_id?: string
+          edit_url?: string | null
+          id?: string
+          imported_at?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          user_id?: string
+          view_url?: string | null
+        }
+        Relationships: []
+      }
+      canva_oauth_states: {
+        Row: {
+          code_verifier: string
+          created_at: string
+          expires_at: string
+          return_url: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          code_verifier: string
+          created_at?: string
+          expires_at: string
+          return_url: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          code_verifier?: string
+          created_at?: string
+          expires_at?: string
+          return_url?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           chatbot_type: string
@@ -700,6 +947,7 @@ export type Database = {
           chapter_id: string | null
           chapter_metadata: Json | null
           chatbot_type: string
+          context_avatar_ids: string[] | null
           conversation_type: string
           created_at: string
           field_id: string | null
@@ -717,6 +965,7 @@ export type Database = {
           chapter_id?: string | null
           chapter_metadata?: Json | null
           chatbot_type?: string
+          context_avatar_ids?: string[] | null
           conversation_type?: string
           created_at?: string
           field_id?: string | null
@@ -734,6 +983,7 @@ export type Database = {
           chapter_id?: string | null
           chapter_metadata?: Json | null
           chatbot_type?: string
+          context_avatar_ids?: string[] | null
           conversation_type?: string
           created_at?: string
           field_id?: string | null
@@ -758,6 +1008,80 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_asin_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          data_kind: string
+          expires_at: string
+          fetched_at: string
+          id: string
+          marketplace: string
+          payload: Json
+          source: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          data_kind: string
+          expires_at: string
+          fetched_at?: string
+          id?: string
+          marketplace?: string
+          payload: Json
+          source: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          data_kind?: string
+          expires_at?: string
+          fetched_at?: string
+          id?: string
+          marketplace?: string
+          payload?: Json
+          source?: string
+        }
+        Relationships: []
+      }
+      competitor_assets: {
+        Row: {
+          avatar_id: string
+          content_text: string | null
+          created_at: string
+          id: string
+          source_url: string | null
+          storage_path: string | null
+          touchpoint_id: string
+        }
+        Insert: {
+          avatar_id: string
+          content_text?: string | null
+          created_at?: string
+          id?: string
+          source_url?: string | null
+          storage_path?: string | null
+          touchpoint_id: string
+        }
+        Update: {
+          avatar_id?: string
+          content_text?: string | null
+          created_at?: string
+          id?: string
+          source_url?: string | null
+          storage_path?: string | null
+          touchpoint_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_assets_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
             referencedColumns: ["id"]
           },
         ]
@@ -1175,6 +1499,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          context_avatar_ids: string[] | null
           created_at: string
           current_avatar_id: string | null
           diagnostic_completed_at: string | null
@@ -1187,6 +1512,7 @@ export type Database = {
           version_preference: string | null
         }
         Insert: {
+          context_avatar_ids?: string[] | null
           created_at?: string
           current_avatar_id?: string | null
           diagnostic_completed_at?: string | null
@@ -1199,6 +1525,7 @@ export type Database = {
           version_preference?: string | null
         }
         Update: {
+          context_avatar_ids?: string[] | null
           created_at?: string
           current_avatar_id?: string | null
           diagnostic_completed_at?: string | null
@@ -1276,6 +1603,47 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trust_gap_snapshots: {
+        Row: {
+          avatar_drift: Json
+          avatar_id: string
+          captured_at: string
+          competitive_pressure: Json
+          composite_score: number
+          created_at: string
+          decision_trigger_health: Json
+          id: string
+        }
+        Insert: {
+          avatar_drift?: Json
+          avatar_id: string
+          captured_at?: string
+          competitive_pressure?: Json
+          composite_score?: number
+          created_at?: string
+          decision_trigger_health?: Json
+          id?: string
+        }
+        Update: {
+          avatar_drift?: Json
+          avatar_id?: string
+          captured_at?: string
+          competitive_pressure?: Json
+          composite_score?: number
+          created_at?: string
+          decision_trigger_health?: Json
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trust_gap_snapshots_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
             referencedColumns: ["id"]
           },
         ]
@@ -1814,6 +2182,27 @@ export type Database = {
               source_type: string
             }[]
           }
+        | {
+            Args: {
+              filter_categories: string[]
+              match_avatar_ids: string[]
+              match_brand_id: string
+              match_count: number
+              match_threshold: number
+              match_user_id: string
+              query_embedding: string
+            }
+            Returns: {
+              category: string
+              chunk_index: number
+              content: string
+              field_identifier: string
+              id: string
+              metadata: Json
+              similarity: number
+              source_type: string
+            }[]
+          }
       match_user_documents: {
         Args: {
           filter?: Json
@@ -1939,6 +2328,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_context_avatars: {
+        Args: { p_avatar_ids: string[] }
+        Returns: undefined
       }
       set_current_avatar: { Args: { p_avatar_id: string }; Returns: undefined }
       set_primary_avatar: { Args: { p_avatar_id: string }; Returns: undefined }
