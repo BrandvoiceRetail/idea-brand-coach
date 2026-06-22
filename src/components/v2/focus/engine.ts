@@ -157,7 +157,7 @@ export function composeDeliverable(input: ComposeInput): Deliverable {
   const { focus, snapshot, mode, idea } = input;
   const product = snapshot.product ?? snapshot.brand;
   const anchor = focus.anchor ?? 'the right cultural reference';
-  const objection = snapshot.avatar?.topObjection ?? 'their main hesitation';
+  const objection = snapshot.avatar?.topObjection || 'their main hesitation';
 
   if (mode === 'designer-brief') {
     const body = [

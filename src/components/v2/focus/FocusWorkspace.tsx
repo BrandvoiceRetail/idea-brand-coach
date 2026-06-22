@@ -67,6 +67,7 @@ export function FocusWorkspace({ snapshot }: { snapshot: BrandSnapshot }) {
     else setDeliverable(null);
   };
 
+  const allDone = queue.length > 0 && queue.every((f) => doneIds.has(f.id));
   const activePos = queue.filter((f) => !doneIds.has(f.id)).findIndex((f) => f.id === active?.id) + 1;
   const remaining = queue.length - doneIds.size;
   const tg = snapshot.trustGap;
@@ -75,7 +76,7 @@ export function FocusWorkspace({ snapshot }: { snapshot: BrandSnapshot }) {
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       {/* Main column — the single focus */}
       <div className="space-y-5">
-        {active ? (
+        {active && !allDone ? (
           <>
             <FocusCard focus={active} position={activePos} total={remaining} />
             <IdeationPanel value={idea} onChange={setIdea} onProduce={produce} producing={producing} />
@@ -123,8 +124,8 @@ export function FocusWorkspace({ snapshot }: { snapshot: BrandSnapshot }) {
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
               <Brain className="h-3.5 w-3.5" /> Your customer
             </div>
-            <p className="mt-2 text-xs text-slate-600"><span className="font-semibold text-slate-800">Why now:</span> {snapshot.avatar.whyBuyingToday}</p>
-            <p className="mt-1.5 text-xs text-slate-600"><span className="font-semibold text-slate-800">What stops them:</span> {snapshot.avatar.topObjection}</p>
+            {snapshot.avatar.whyBuyingToday && <p className="mt-2 text-xs text-slate-600"><span className="font-semibold text-slate-800">Why now:</span> {snapshot.avatar.whyBuyingToday}</p>}
+            {snapshot.avatar.topObjection && <p className="mt-1.5 text-xs text-slate-600"><span className="font-semibold text-slate-800">What stops them:</span> {snapshot.avatar.topObjection}</p>}
           </div>
         )}
 

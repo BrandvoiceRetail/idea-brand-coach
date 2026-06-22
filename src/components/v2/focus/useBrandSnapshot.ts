@@ -26,14 +26,11 @@ function avatarFields(a: Avatar | null): BrandSnapshot['avatar'] | undefined {
   const whyBuyingToday = list(psy.desires) || a.buying_behavior?.intent || a.description?.trim() || '';
   const trustSignals = list(psy.triggers);
   const topObjection = list(psy.fears);
-  // Only surface the panel if we actually have something real to show.
+  // Only surface the panel if we actually have something real to show. Empty fields stay '' (not
+  // placeholder prose) so they never get fed to the live copy generator as fake targeting/objection
+  // text — downstream fallbacks (composeDeliverable/generate) handle the empties.
   if (!howTheyTalk && !whyBuyingToday && !trustSignals && !topObjection) return undefined;
-  return {
-    howTheyTalk: howTheyTalk || '(build your avatar to capture how your customer talks)',
-    whyBuyingToday: whyBuyingToday || '(run the diagnostic to capture why they buy)',
-    trustSignals: trustSignals || '(what builds trust — from your reviews)',
-    topObjection: topObjection || '(what stops them — from your reviews)',
-  };
+  return { howTheyTalk, whyBuyingToday, trustSignals, topObjection };
 }
 
 export interface BrandSnapshotState {
@@ -74,7 +71,12 @@ export function useBrandSnapshot(): BrandSnapshotState {
   return useMemo<BrandSnapshotState>(() => {
     const company = brandData.userInfo.company?.trim();
     const avatar = avatarFields(currentAvatar);
-    const hasDiagnostic = Boolean(latestDiagnostic?.scores);
+    // Trust ONLY a complete score object — a partial/legacy row missing a dimension would make
+    // buildTrustGap read it as 0 and point the owner at the wrong primary gap (a silent misfire).
+    const s = latestDiagnostic?.scores;
+    const hasDiagnostic = Boolean(
+      s && (['insight', 'distinctive', 'empathetic', 'authentic'] as Pillar[]).every((k) => Number.isFinite(s[k])),
+    );
 
     // No real signal yet → seeded example so the surface is never dead (clearly flagged).
     if (!hasDiagnostic && !avatar && !company) {
@@ -82,8 +84,8 @@ export function useBrandSnapshot(): BrandSnapshotState {
     }
 
     let trustGap: BrandSnapshot['trustGap'];
-    if (latestDiagnostic?.scores) {
-      const tg = buildTrustGap(latestDiagnostic.scores);
+    if (hasDiagnostic && s) {
+      const tg = buildTrustGap(s);
       const pillars = {} as Record<Pillar, number>;
       for (const d of tg.dimensions) pillars[d.key] = d.score;
       trustGap = { overall: tg.overall, pillars, primaryGap: tg.primaryGap };

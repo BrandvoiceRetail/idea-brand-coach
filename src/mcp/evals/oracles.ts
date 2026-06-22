@@ -37,10 +37,23 @@ export const FIXED_ANCHOR: Record<TriggerName, string> = {
   'Fear-of-Loss': 'FOMO',
 };
 
+/**
+ * Canonical pillar order — MUST match buildTrustGap's tie-break (src/lib/trustGap.ts) so the
+ * oracle and the live snapshot agree on the primary gap when two pillars tie for lowest.
+ * Iterating in this order and keeping the strict minimum picks the first canonical pillar on a tie.
+ */
+const PILLAR_ORDER: Pillar[] = ['insight', 'distinctive', 'empathetic', 'authentic'];
+
+/** Lowest pillar with the same tie-break as buildTrustGap (first in canonical order wins ties). */
+export function lowestPillar(pillars: Record<Pillar, number>): Pillar {
+  let lo: Pillar = PILLAR_ORDER[0];
+  for (const p of PILLAR_ORDER) if (pillars[p] < pillars[lo]) lo = p;
+  return lo;
+}
+
 /** The primary Decision Trigger expected for a set of Trust Gap pillar scores (lowest pillar wins). */
 export function expectedTrigger(pillars: Record<Pillar, number>): TriggerName {
-  const lowest = (Object.keys(pillars) as Pillar[]).sort((a, b) => pillars[a] - pillars[b])[0];
-  return PILLAR_TRIGGER[lowest];
+  return PILLAR_TRIGGER[lowestPillar(pillars)];
 }
 
 /** The fixed brand anchor for a trigger. */
@@ -79,13 +92,35 @@ export interface AnchorAccuracy {
   mismatches: { caseId: string; trigger: string; expectedAnchor: string }[];
 }
 
-/** Anchor-correctness: every diagnosed case's trigger maps to its fixed anchor (Recognition→Dove). */
+/**
+ * The anchor "law" — an INDEPENDENT copy of the correct anchors (per IDEA-APP-FIXES-001). Comparing
+ * FIXED_ANCHOR against this catches a regression (e.g. Recognition reverted to 'Lego'); a metric that
+ * only read FIXED_ANCHOR would be vacuous because it has no ground truth to disagree with.
+ */
+const CANONICAL_ANCHOR: Record<TriggerName, string> = {
+  Permission: 'Harvard Medical School',
+  Recognition: 'Dove',
+  Identity: 'Apple',
+  Belonging: 'Patagonia',
+  Momentum: "Amazon's Choice",
+  'Fear-of-Loss': 'FOMO',
+};
+
+/**
+ * Anchor-correctness: every case's trigger resolves to the CANONICAL anchor (Recognition→Dove,
+ * never Lego). Checks the live FIXED_ANCHOR table against the independent law, so a Dove→Lego
+ * revert (or any wrong anchor) drops the score — not a vacuous pass.
+ */
 export function anchorAccuracy(cases: EvalCase[] = EVAL_CASES): AnchorAccuracy {
   const withTrigger = cases.filter((c) => c.expected.primaryTrigger);
   const mismatches: AnchorAccuracy['mismatches'] = [];
   for (const c of withTrigger) {
     const t = c.expected.primaryTrigger as TriggerName;
-    if (!(t in FIXED_ANCHOR)) mismatches.push({ caseId: c.id, trigger: t, expectedAnchor: '(unknown trigger)' });
+    const live = FIXED_ANCHOR[t];
+    const canonical = CANONICAL_ANCHOR[t];
+    if (!canonical || live !== canonical) {
+      mismatches.push({ caseId: c.id, trigger: t, expectedAnchor: canonical ?? '(unknown trigger)' });
+    }
   }
   const total = withTrigger.length;
   return { value: total ? (total - mismatches.length) / total : 1, matched: total - mismatches.length, total, mismatches };
@@ -123,8 +158,7 @@ export function trustGapAccuracy(cases: EvalCase[] = EVAL_CASES): TrustGapAccura
   );
   const mismatches: TrustGapAccuracy['mismatches'] = [];
   for (const c of diagnosed) {
-    const pillars = c.diagnostic!.pillars;
-    const lowest = (Object.keys(pillars) as Pillar[]).sort((a, b) => pillars[a] - pillars[b])[0];
+    const lowest = lowestPillar(c.diagnostic!.pillars);
     const impliedGap = PILLAR_FOR_TRIGGER[c.expected.primaryTrigger as TriggerName];
     if (impliedGap !== lowest) mismatches.push({ caseId: c.id, lowestPillar: lowest, impliedGap });
   }

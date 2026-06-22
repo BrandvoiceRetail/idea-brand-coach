@@ -16,7 +16,7 @@ Legend: ✅ closed · ◑ partial · ⬜ open (infra/credential-gated or coverag
 |---|---|---|---|
 | P0 | Edge fn taught **Lego** as Recognition anchor | ✅ | Deployed v5 (Dove); repo reconciled |
 | P0 | No **trigger-accuracy** KPI | ✅ | `oracles.triggerAccuracy` + report KPI |
-| P0 | No **Trust Gap score accuracy** KPI | ◑ | trigger-accuracy lands the decision-table half; expected-pillar-score oracle still open |
+| P0 | No **Trust Gap score accuracy** KPI | ✅ | `oracles.trustGapAccuracy` (declared primary gap == lowest pillar) + `trust-gap-accuracy` KPI |
 | P0 | No **loop completeness** metric (all fixtures single-session) | ✅ | `loop-readiness` KPI + `infinityvault-remeasure-loop` bench case (more golden loop fixtures optional) |
 | P0 | `artifact` oracle filtered out of the judge | ✅ | A2 `JUDGEABLE_DIMENSIONS` now includes `artifact` |
 | P0 | No **recommendation-correctness** judge dim | ✅ | A2 `recommendation-alignment` dim |
@@ -28,9 +28,9 @@ Legend: ✅ closed · ◑ partial · ⬜ open (infra/credential-gated or coverag
 | P1 | **Forensic Analyse** phase unmeasured | ⬜ | temporal-order / reference-to-output checks |
 | P1 | **Persona-adapt** count-only | ◑ | A2 scores it behaviourally; not yet on all bench cases |
 | P1 | **Amazon-element specificity** unmeasured | ⬜ | `amazon-element-specificity` metric |
-| P1 | **P2 SOP-building** no bench case | ⬜ | promote J3 P2 fixtures |
+| P1 | **P2 SOP-building** no bench case | ✅ | bench case `va-listing-sop` (reusable SOP/checklist) |
 | P1 | No **Re-measure/Defend** bench case | ✅ | `infinityvault-remeasure-loop` |
-| P1 | No **vertical health-claim** bench case | ◑ | sleep-supplement exercises `publish_filter_check`; dedicated block case open |
+| P1 | No **vertical health-claim** bench case | ✅ | bench case `supplements-health-claim-block` (disease/regulatory claims blocked) |
 | P1 | **Criteria Studio UI** absent | ✅ | `CriteriaStudio.tsx` + localStorage + export |
 | P1 | Criteria never reach **deployed coach** | ⬜ | server `createServer()` steering — deploy-gated |
 | P1 | Criteria not **persisted** (Supabase) | ⬜ | `criteria_sets` table + edge fns |
