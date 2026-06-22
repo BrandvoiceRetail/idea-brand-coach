@@ -31,7 +31,7 @@ describe('focus engine', () => {
 });
 
 describe('FocusWorkspace (single-focus workspace)', () => {
-  it('shows exactly one focus, the Trust Gap rail, and produces a deliverable on demand', () => {
+  it('shows exactly one focus, the Trust Gap rail, and produces a deliverable on demand', async () => {
     render(<FocusWorkspace snapshot={SEED_SNAPSHOT} />);
     expect(screen.getByText('What needs you now')).toBeInTheDocument();
     expect(screen.getAllByText(/Empathetic gap/i).length).toBeGreaterThan(0); // primary fix (card + queue)
@@ -41,6 +41,7 @@ describe('FocusWorkspace (single-focus workspace)', () => {
     expect(screen.getByText(/turns this focus into something you can use today/i)).toBeInTheDocument();
     expect(screen.queryByText(/edit, don.t rewrite/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Produce the deliverable/i }));
-    expect(screen.getByText(/edit, don.t rewrite/i)).toBeInTheDocument(); // the produced deliverable title
+    // produce() is async (tries live AI, falls back to the deterministic template).
+    expect(await screen.findByText(/edit, don.t rewrite/i)).toBeInTheDocument();
   });
 });

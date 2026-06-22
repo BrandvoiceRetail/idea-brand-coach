@@ -145,7 +145,7 @@ const ev = (f: FocusItem) => (f.evidence.length ? f.evidence.map((e) => `“${e}
 const ideaLine = (idea?: string) => (idea?.trim() ? `\n\nYour steer: ${idea.trim()}` : '');
 
 /** Detect claims that need owner confirmation before publishing (compliance gate). */
-function claimFlags(text: string): string[] {
+export function detectClaimFlags(text: string): string[] {
   const flags: string[] = [];
   if (/\b(lifetime|guarantee|warranty)\b/i.test(text)) flags.push('Guarantee/warranty claim — confirm you offer it before publishing.');
   if (/\b(clinically|doctor|dermatologist|FDA|cure|treat)\b/i.test(text)) flags.push('Health/authority claim — confirm it is substantiated + in your safe-claims set.');
@@ -171,7 +171,7 @@ export function composeDeliverable(input: ComposeInput): Deliverable {
       title: `Design brief — ${focus.trigger ?? 'fix'} (${anchor})`,
       body,
       pasteablePrompt: `Hero product image for ${product}: a customer feeling understood and reassured — ${anchor}-style honest emotional mirroring (the moment of relief, warm natural light), the product present but secondary, the key trust signal clearly visible. Leave clear space top-left for a headline. Photoreal, premium, uncluttered.`,
-      claimFlags: claimFlags(`${focus.why} ${idea ?? ''}`),
+      claimFlags: detectClaimFlags(`${focus.why} ${idea ?? ''}`),
     };
   }
 
@@ -184,7 +184,7 @@ export function composeDeliverable(input: ComposeInput): Deliverable {
       `WHAT EARNS TRUST: ${snapshot.avatar?.trustSignals ?? '(from your reviews)'}`,
       `THE ONE LEVER: ${focus.trigger ? `${focus.trigger} (${anchor})` : 'run the diagnostic to find it'} — ${focus.why}`,
     ].join('\n') + ideaLine(idea);
-    return { mode, title: 'Brand canvas (working)', body, claimFlags: claimFlags(idea ?? '') };
+    return { mode, title: 'Brand canvas (working)', body, claimFlags: detectClaimFlags(idea ?? '') };
   }
 
   if (mode === 'competitor') {
@@ -193,7 +193,7 @@ export function composeDeliverable(input: ComposeInput): Deliverable {
       `YOUR RESPONSE: do not copy them — out-execute on the dimension your reviews say your customer cares about most (${ev(focus)}). `,
       `THE MOVE: update your hero + opening bullet to make your strongest trust signal unmissable, and answer ${objection} more directly than they do.`,
     ].join('\n\n') + ideaLine(idea);
-    return { mode, title: 'Competitor response brief', body, claimFlags: claimFlags(idea ?? '') };
+    return { mode, title: 'Competitor response brief', body, claimFlags: detectClaimFlags(idea ?? '') };
   }
 
   // diy-listing (default — what delights the DIY owner most)
@@ -204,7 +204,7 @@ export function composeDeliverable(input: ComposeInput): Deliverable {
     `BULLET 3 (proof): your strongest trust signal, stated specifically.`,
     `CTA: mirror their relief at finally solving it — not a description of the product.`,
   ].join('\n') + ideaLine(idea);
-  return { mode, title: 'Listing copy (edit, don’t rewrite)', body, claimFlags: claimFlags(`${body} ${idea ?? ''}`) };
+  return { mode, title: 'Listing copy (edit, don’t rewrite)', body, claimFlags: detectClaimFlags(`${body} ${idea ?? ''}`) };
 }
 
 /** Seed snapshot — InfinityVault (the demo brand): Empathetic gap → Recognition (Dove). */

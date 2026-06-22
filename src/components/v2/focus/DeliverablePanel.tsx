@@ -4,7 +4,7 @@
  * artifact, with a compliance gate on risky claims. Copy buttons make it paste-ready.
  */
 import { useState } from 'react';
-import { Copy, Check, ShieldAlert, FileText } from 'lucide-react';
+import { Copy, Check, ShieldAlert, FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Deliverable, DeliverableMode } from './types';
@@ -36,11 +36,15 @@ export function DeliverablePanel({
   mode,
   modes,
   onModeChange,
+  aiGenerated = false,
+  producing = false,
 }: {
   deliverable: Deliverable | null;
   mode: DeliverableMode;
   modes: DeliverableMode[];
   onModeChange: (m: DeliverableMode) => void;
+  aiGenerated?: boolean;
+  producing?: boolean;
 }) {
   return (
     <section className="rounded-2xl border" style={{ borderColor: '#E4E7EC' }} aria-label="Deliverable">
@@ -60,14 +64,28 @@ export function DeliverablePanel({
       </div>
 
       <div className="p-5">
-        {!deliverable ? (
+        {producing ? (
+          <div className="flex flex-col items-center gap-2 py-10 text-center text-sm text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" style={{ color: BRAND_GOLD }} />
+            The coach is writing this for your brand…
+          </div>
+        ) : !deliverable ? (
           <div className="flex flex-col items-center gap-2 py-10 text-center text-sm text-muted-foreground">
             <FileText className="h-7 w-7" style={{ color: BRAND_GOLD }} />
             Add your steer (optional) and hit <strong>Produce the deliverable</strong> — the coach turns this focus into something you can use today.
           </div>
         ) : (
           <div className="space-y-4">
-            <h3 className="text-base font-bold" style={{ color: BRAND_BLUE }}>{deliverable.title}</h3>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-bold" style={{ color: BRAND_BLUE }}>{deliverable.title}</h3>
+              <span
+                className="rounded-full border px-2 py-0.5 text-[10px] font-semibold"
+                style={aiGenerated ? { borderColor: BRAND_GOLD, color: BRAND_BLUE, background: '#FDF8EE' } : { borderColor: '#E4E7EC', color: '#64748B' }}
+                title={aiGenerated ? 'Written by the coach for your brand' : 'A structured starting template — add your steer and produce again for an AI draft'}
+              >
+                {aiGenerated ? '✨ AI-written for your brand' : 'Template'}
+              </span>
+            </div>
 
             {deliverable.claimFlags && deliverable.claimFlags.length > 0 && (
               <Alert style={{ borderColor: BRAND_GOLD, background: '#FDF8EE' }}>

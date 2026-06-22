@@ -8,7 +8,8 @@ import { Check, CircleDot, Brain } from 'lucide-react';
 import { FocusCard } from './FocusCard';
 import { IdeationPanel } from './IdeationPanel';
 import { DeliverablePanel } from './DeliverablePanel';
-import { buildFocusQueue, composeDeliverable } from './engine';
+import { buildFocusQueue } from './engine';
+import { generateDeliverable } from './generate';
 import type { BrandSnapshot, Deliverable, DeliverableMode, FocusItem, Pillar } from './types';
 import { Button } from '@/components/ui/button';
 
@@ -30,20 +31,32 @@ export function FocusWorkspace({ snapshot }: { snapshot: BrandSnapshot }) {
   const [mode, setMode] = useState<DeliverableMode>(defaultMode(active, snapshot.ownerMode));
   const [idea, setIdea] = useState('');
   const [deliverable, setDeliverable] = useState<Deliverable | null>(null);
+  const [producing, setProducing] = useState(false);
+  const [aiGenerated, setAiGenerated] = useState(false);
 
   const selectFocus = (f: FocusItem) => {
     setActiveId(f.id);
     setMode(defaultMode(f, snapshot.ownerMode));
     setIdea('');
     setDeliverable(null);
+    setAiGenerated(false);
   };
-  // Deterministic composer over the owner's LIVE snapshot (specific, instant, free). Seam: swap to
-  // the credit-metered LLM edge fns (generate-brief / brand-canvas / brand-copy-generator) for the
-  // paid tier — composeDeliverable documents the `generate` hook.
-  const produce = () => setDeliverable(composeDeliverable({ focus: active, snapshot, mode, idea }));
+  // Real AI generation via the deployed brand-copy-generator (grounded in the owner's brand context),
+  // with the deterministic composer as a graceful fallback — generateDeliverable never throws.
+  const runProduce = async (forMode: DeliverableMode) => {
+    setProducing(true);
+    try {
+      const { deliverable: d, live } = await generateDeliverable({ focus: active, snapshot, mode: forMode, idea });
+      setDeliverable(d);
+      setAiGenerated(live);
+    } finally {
+      setProducing(false);
+    }
+  };
+  const produce = () => void runProduce(mode);
   const changeMode = (m: DeliverableMode) => {
     setMode(m);
-    setDeliverable((d) => (d ? composeDeliverable({ focus: active, snapshot, mode: m, idea }) : null));
+    if (deliverable) void runProduce(m);
   };
   const markDone = () => {
     const next = new Set(doneIds);
@@ -65,8 +78,8 @@ export function FocusWorkspace({ snapshot }: { snapshot: BrandSnapshot }) {
         {active ? (
           <>
             <FocusCard focus={active} position={activePos} total={remaining} />
-            <IdeationPanel value={idea} onChange={setIdea} onProduce={produce} producing={false} />
-            <DeliverablePanel deliverable={deliverable} mode={mode} modes={active.modes} onModeChange={changeMode} />
+            <IdeationPanel value={idea} onChange={setIdea} onProduce={produce} producing={producing} />
+            <DeliverablePanel deliverable={deliverable} mode={mode} modes={active.modes} onModeChange={changeMode} aiGenerated={aiGenerated} producing={producing} />
             <div className="flex justify-end">
               <Button variant="outline" onClick={markDone}>
                 <Check className="mr-1 h-4 w-4" /> Mark done · next focus
