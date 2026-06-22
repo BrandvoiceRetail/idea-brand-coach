@@ -6,6 +6,7 @@ import {
   triggerAccuracy,
   anchorAccuracy,
   loopReadiness,
+  trustGapAccuracy,
   FIXED_ANCHOR,
 } from '../evals/oracles.js';
 import { EVAL_CASES } from '../evals/cases/catalog.js';
@@ -27,6 +28,13 @@ describe('deterministic eval oracles', () => {
   it('trigger-accuracy: every diagnosed case’s declared trigger matches the decision table (no regression)', () => {
     const acc = triggerAccuracy();
     expect(acc.total).toBeGreaterThanOrEqual(4); // the diagnosed fix + loop cases
+    expect(acc.mismatches, JSON.stringify(acc.mismatches)).toHaveLength(0);
+    expect(acc.value).toBe(1);
+  });
+
+  it('trust-gap-accuracy: the scored primary gap (lowest pillar) agrees with the recommended fix', () => {
+    const acc = trustGapAccuracy();
+    expect(acc.total).toBeGreaterThanOrEqual(4);
     expect(acc.mismatches, JSON.stringify(acc.mismatches)).toHaveLength(0);
     expect(acc.value).toBe(1);
   });

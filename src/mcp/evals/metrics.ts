@@ -22,7 +22,7 @@ import {
   injectsGuardrails,
 } from './configs.js';
 import { corpusSkillPaths, corpusToolLabels, type CorpusFixture } from './corpus.js';
-import { triggerAccuracy, anchorAccuracy, loopReadiness } from './oracles.js';
+import { triggerAccuracy, anchorAccuracy, loopReadiness, trustGapAccuracy } from './oracles.js';
 import type {
   ConfigScore,
   CoachValueKpi,
@@ -210,7 +210,17 @@ export function buildCorrectnessKpis(): CoachValueKpi[] {
   const trig = triggerAccuracy();
   const anchor = anchorAccuracy();
   const loop = loopReadiness();
+  const tgAcc = trustGapAccuracy();
   return [
+    {
+      id: 'trust-gap-accuracy',
+      label: 'Trust Gap score accuracy',
+      description: 'Diagnosed cases where the scored primary gap is the lowest pillar — the lead magnet points at the right dimension.',
+      value: clamp01(tgAcc.value),
+      display: `${tgAcc.matched} / ${tgAcc.total}`,
+      category: 'grounding',
+      detail: tgAcc.mismatches.length ? `Score↔fix disagreement: ${tgAcc.mismatches.map((m) => `${m.caseId}`).join(', ')}` : 'The scored primary gap and the recommended fix agree on every diagnosed case.',
+    },
     {
       id: 'trigger-accuracy',
       label: 'Decision Trigger accuracy',

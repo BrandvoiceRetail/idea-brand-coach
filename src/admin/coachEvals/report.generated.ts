@@ -276,6 +276,15 @@ export const EVAL_REPORT: EvalReport = {
       "detail": "Remaining labels are planned/aliased tools not yet grounded."
     },
     {
+      "id": "trust-gap-accuracy",
+      "label": "Trust Gap score accuracy",
+      "description": "Diagnosed cases where the scored primary gap is the lowest pillar — the lead magnet points at the right dimension.",
+      "value": 1,
+      "display": "4 / 4",
+      "category": "grounding",
+      "detail": "The scored primary gap and the recommended fix agree on every diagnosed case."
+    },
+    {
       "id": "trigger-accuracy",
       "label": "Decision Trigger accuracy",
       "description": "Curated cases whose declared primary trigger matches the decision table derived from their Trust Gap pillars.",
@@ -302,7 +311,7 @@ export const EVAL_REPORT: EvalReport = {
       "detail": "A return-visit case verifies the coach re-scores on remembered context."
     }
   ],
-  "coachValueScore": 0.9440336624160154,
+  "coachValueScore": 0.9480312579577286,
   "guardrails": [
     {
       "id": "gr-buyer-state-rule",

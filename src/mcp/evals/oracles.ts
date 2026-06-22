@@ -96,3 +96,38 @@ export function loopReadiness(cases: EvalCase[] = EVAL_CASES): { value: number; 
   const loopCases = cases.filter((c) => c.kind === 'loop').length;
   return { value: cases.length ? loopCases / cases.length : 0, loopCases, total: cases.length };
 }
+
+const PILLAR_FOR_TRIGGER: Partial<Record<TriggerName, Pillar>> = {
+  Permission: 'insight',
+  Identity: 'distinctive',
+  Recognition: 'empathetic',
+  Belonging: 'authentic',
+};
+
+export interface TrustGapAccuracy {
+  value: number; // 0..1 — share of diagnosed cases whose declared primary gap IS the lowest pillar
+  matched: number;
+  total: number;
+  mismatches: { caseId: string; lowestPillar: Pillar; impliedGap?: Pillar }[];
+}
+
+/**
+ * Trust Gap SCORE accuracy (the lead-magnet metric) — the score side of the chain, distinct from
+ * triggerAccuracy (the decision-table side). For each diagnosed pillar-mappable case: the gap the
+ * declared trigger implies must be the actual LOWEST pillar. A mismatch means the scored primary gap
+ * and the recommended fix disagree — the lead magnet would point the owner at the wrong dimension.
+ */
+export function trustGapAccuracy(cases: EvalCase[] = EVAL_CASES): TrustGapAccuracy {
+  const diagnosed = cases.filter(
+    (c) => c.diagnostic?.pillars && c.expected.primaryTrigger && PILLAR_FOR_TRIGGER[c.expected.primaryTrigger as TriggerName],
+  );
+  const mismatches: TrustGapAccuracy['mismatches'] = [];
+  for (const c of diagnosed) {
+    const pillars = c.diagnostic!.pillars;
+    const lowest = (Object.keys(pillars) as Pillar[]).sort((a, b) => pillars[a] - pillars[b])[0];
+    const impliedGap = PILLAR_FOR_TRIGGER[c.expected.primaryTrigger as TriggerName];
+    if (impliedGap !== lowest) mismatches.push({ caseId: c.id, lowestPillar: lowest, impliedGap });
+  }
+  const total = diagnosed.length;
+  return { value: total ? (total - mismatches.length) / total : 1, matched: total - mismatches.length, total, mismatches };
+}
