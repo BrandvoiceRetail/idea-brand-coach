@@ -45,7 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // so we don't need a separate getSession() call
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session);
+        // Log only the event + user id — never the session object (it carries the
+        // access_token + refresh_token, which must not land in the browser console).
+        console.log('Auth state changed:', event, session?.user?.id ?? null);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
