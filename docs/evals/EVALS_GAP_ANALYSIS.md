@@ -47,7 +47,7 @@ Legend: ✅ closed · ◑ partial · ⬜ open (infra/credential-gated or coverag
 | P2 | Harvest **weekly cron** | ⬜ | scheduled sweep + archive |
 | P2 | Harvest **promotion UI** | ⬜ | harvest-bench approve/export |
 
-**Closed: 8/8 P0 · ~9 P1 (full) + 4 P1 partial · the rest are live-infra/coverage extensions.**
+**Closed: 8/8 P0 · ~12 P1 (full) + 2 P1 partial · the rest are live-infra-gated (criteria→deployed-coach, harvest→Supabase, cron/UI) — each needs a prod deploy or new infrastructure.** A high-effort `/code-review` pass (2 finder angles over the full diff incl. the edge-fn reconstruction) was run; its findings (oracle tie-break, vacuous anchor metric, partial-score guard, placeholder-prose-to-generator, all-done UX) are fixed.
 
 ---
 
