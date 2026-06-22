@@ -9,7 +9,7 @@
  * Responsive: stacks controls vertically on mobile, condenses chapter info.
  */
 
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -202,6 +202,19 @@ export function BrandCoachHeader({
             onSetPrimaryAvatar={onSetPrimaryAvatar}
             onForensicBuild={onForensicBuild}
           />
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            title="Focus — the one thing that needs you"
+            aria-label="Focus"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Link to={ROUTES.FOCUS_SURFACE}>
+              <Target className="h-4 w-4" />
+              {!isMobile && <span className="ml-1.5">Focus</span>}
+            </Link>
+          </Button>
           {figmaEnabled && (
             <Button
               asChild

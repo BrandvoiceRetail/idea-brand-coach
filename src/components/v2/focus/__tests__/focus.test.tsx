@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen, fireEvent } from '@testing-library/dom';
 import { buildFocusQueue, composeDeliverable, SEED_SNAPSHOT, TRIGGER_ANCHOR } from '../engine';
-import FocusSurface from '@/pages/FocusSurface';
+import { FocusWorkspace } from '../FocusWorkspace';
 
 describe('focus engine', () => {
   it('prioritises the lowest pillar as the primary fix with the right trigger + Dove anchor', () => {
@@ -30,9 +30,9 @@ describe('focus engine', () => {
   });
 });
 
-describe('FocusSurface (single-focus workspace)', () => {
+describe('FocusWorkspace (single-focus workspace)', () => {
   it('shows exactly one focus, the Trust Gap rail, and produces a deliverable on demand', () => {
-    render(<FocusSurface />);
+    render(<FocusWorkspace snapshot={SEED_SNAPSHOT} />);
     expect(screen.getByText('What needs you now')).toBeInTheDocument();
     expect(screen.getAllByText(/Empathetic gap/i).length).toBeGreaterThan(0); // primary fix (card + queue)
     expect(screen.getByText('Trust Gap™')).toBeInTheDocument();
