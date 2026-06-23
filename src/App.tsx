@@ -137,6 +137,11 @@ const App = () => {
 
                 <Route path="/v2/funnel" element={<FunnelTracker />} />
 
+                {/* Parallel candidate path for the reframed "Fix the Trust Gap"
+                    lead-magnet diagnostic. Renders the same FreeDiagnostic as
+                    /v1/diagnostic; kept side-by-side pending Trevor's promotion brief. */}
+                <Route path="/v2/diagnostic" element={<FreeDiagnostic />} />
+
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
                 <Route path="/idea/insight" element={<Navigate to="/v1/idea/insight" replace />} />
