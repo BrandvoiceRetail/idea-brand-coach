@@ -106,7 +106,12 @@ export type AlphaEventName =
   // post-signup value delivery. Run start + completion. Scores / asin-presence /
   // result shape only — never review text, listing copy, or PII.
   | 'forensic_analysis_started'
-  | 'forensic_analysis_completed';
+  | 'forensic_analysis_completed'
+  // Problem-Solver /v2/diagnostic 8-screen flow — step advance through the
+  // Diagnose → Unlock → Upload → Analyse → Customer → Fix → Stay-ahead → In-Claude
+  // funnel. Step index + name + self-report score only — never PII or the ASIN value.
+  | 'problem_solver_step_viewed'
+  | 'problem_solver_unlock_gated';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

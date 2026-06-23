@@ -11,11 +11,13 @@
  *      user + asin) and build the shared TrustGapEvidence shape
  *      ({listings[], topReviews:["★{rating} — {body}"]}, cap 12, body ≤300) —
  *      mirroring SupabaseProductDataService.buildTrustGapEvidence server-side.
- *   3. DERIVE the four IDEA pillar scores (0-25 each) from the corpus via ONE
- *      Sonnet call: how well does the LISTING deliver each pillar, grounded in
- *      observable copy + review language. overall = sum (0-100), primary_gap =
- *      lowest pillar. On a thin corpus we MAY blend toward supplied self-report,
- *      labelled inference.
+ *   3. DERIVE the four IDEA pillar scores (0-25 each) AND the four-field customer
+ *      profile from the corpus via ONE Sonnet call: how well does the LISTING
+ *      deliver each pillar, grounded in observable copy + review language, plus a
+ *      short read on the real customer (how_they_talk / why_buying_now /
+ *      what_builds_trust / what_stops_them). overall = sum (0-100), primary_gap =
+ *      lowest pillar. On a thin corpus we MAY blend the scores toward supplied
+ *      self-report (labelled inference) and the profile fields stay brief.
  *   4. diagnostic-interpretation-evidence → per-dimension interpretation.
  *   5. identify-decision-trigger → the dominant decision trigger.
  *
@@ -81,6 +83,14 @@ interface SelfReportScores {
   empathetic: number;
   authentic: number;
   overall: number;
+}
+
+/** The customer profile read off the review corpus (demo S5 four fields). */
+interface CustomerProfile {
+  how_they_talk: string;
+  why_buying_now: string;
+  what_builds_trust: string;
+  what_stops_them: string;
 }
 
 interface ForensicRequest {
@@ -240,9 +250,18 @@ You are the forensic scoring engine behind the IDEA Brand Coach Trust Gap diagno
 - Reviews are the strongest signal: if reviews praise something the copy never claims, that is an Insight/Empathy gap, not a strength.
 </scoring-discipline>
 
+<customer-profile>
+Alongside the scores, sketch a short profile of the real customer behind these reviews. Each field is 1-2 sentences, grounded ONLY in the listing copy and reviews — no invention:
+- how_they_talk: how this customer actually speaks about the product. Use their VERBATIM language and phrasing from the reviews where possible.
+- why_buying_now: the situation or need that brings them to buy at this moment, drawn from what the reviews reveal about their context.
+- what_builds_trust: what makes this customer believe and buy — the specifics, proof, or reassurance that reviews show they respond to.
+- what_stops_them: the hesitation, doubt, or friction that holds this customer back, drawn from negative reviews, complaints, or unaddressed concerns.
+On a thin corpus, keep these brief and clearly inferred from what little is present; do not pad with invention.
+</customer-profile>
+
 <output-format>
-Respond with ONLY one JSON object, no code fences, no commentary, exactly these keys and integer values 0-25:
-{"insight":<0-25>,"distinctive":<0-25>,"empathetic":<0-25>,"authentic":<0-25>}
+Respond with ONLY one JSON object, no code fences, no commentary, exactly these keys. The four pillar values are integers 0-25; the four customer_profile values are short strings (1-2 sentences each):
+{"insight":<0-25>,"distinctive":<0-25>,"empathetic":<0-25>,"authentic":<0-25>,"customer_profile":{"how_they_talk":"<1-2 sentences>","why_buying_now":"<1-2 sentences>","what_builds_trust":"<1-2 sentences>","what_stops_them":"<1-2 sentences>"}}
 </output-format>`;
 
 /** Build the user message handed to the forensic scoring call. */
@@ -265,7 +284,7 @@ ${listingXml}
 ${reviewsXml}
 </reviews>
 ${corpusNote}
-Score the four IDEA pillars now as the JSON object, grounded only in the listing copy and reviews above.`;
+Score the four IDEA pillars AND sketch the customer profile now as the JSON object, grounded only in the listing copy and reviews above.`;
 }
 
 /** One Anthropic Sonnet call. Returns the text + status; never throws. */
@@ -324,6 +343,49 @@ function parseForensicScores(text: string): Record<Dim, number> | null {
     }
   }
   return null;
+}
+
+/** Coerce one customer-profile field to a trimmed string; "" when absent/non-string. */
+function asProfileField(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+/**
+ * Parse the customer_profile block from the SAME scoring-call text. Never throws:
+ * a missing/unparseable block (or any missing field) degrades to empty strings,
+ * which the UI renders honestly. Reuses the balanced-object extraction so a model
+ * that wraps the JSON in prose still yields the profile.
+ */
+function parseCustomerProfile(text: string): CustomerProfile {
+  const empty: CustomerProfile = {
+    how_they_talk: "",
+    why_buying_now: "",
+    what_builds_trust: "",
+    what_stops_them: "",
+  };
+  const candidates = [text.trim(), extractFirstObject(text)].filter((c): c is string => !!c);
+  for (const candidate of candidates) {
+    try {
+      const o = JSON.parse(candidate) as Record<string, unknown>;
+      const cp = (o.customer_profile && typeof o.customer_profile === "object")
+        ? (o.customer_profile as Record<string, unknown>)
+        : null;
+      if (!cp) continue;
+      const out: CustomerProfile = {
+        how_they_talk: asProfileField(cp.how_they_talk),
+        why_buying_now: asProfileField(cp.why_buying_now),
+        what_builds_trust: asProfileField(cp.what_builds_trust),
+        what_stops_them: asProfileField(cp.what_stops_them),
+      };
+      // Accept the first candidate that yields at least one populated field.
+      if (out.how_they_talk || out.why_buying_now || out.what_builds_trust || out.what_stops_them) {
+        return out;
+      }
+    } catch {
+      // try the next candidate
+    }
+  }
+  return empty;
 }
 
 /**
@@ -511,13 +573,16 @@ serve(async (req) => {
     }
     const thinCorpus = reviewCount < THIN_CORPUS_THRESHOLD;
 
-    // ── Step 3: DERIVE forensic IDEA scores from the corpus (one Sonnet call). ──
-    const scoring = await callSonnet(SCORING_SYSTEM_PROMPT, buildScoringMessage(evidence, thinCorpus), 400);
+    // ── Step 3: DERIVE forensic IDEA scores + customer profile from the corpus
+    //    (ONE Sonnet call — both come back in the same structured JSON). ──
+    const scoring = await callSonnet(SCORING_SYSTEM_PROMPT, buildScoringMessage(evidence, thinCorpus), 700);
     let pillars = parseForensicScores(scoring.text);
     if (!pillars) {
       console.error("[run-forensic-analysis] forensic scoring unparseable | upstream=", scoring.status, "| raw=", scoring.text.slice(0, 300));
       return jsonResponse({ ok: false, error: "Could not score this listing right now. Please try again." }, 502);
     }
+    // Customer profile from the SAME call; never throws (empty-string fallback per field).
+    const customerProfile = parseCustomerProfile(scoring.text);
     // Thin corpus + self-report supplied: blend toward self-report (labelled inference via thin_corpus).
     if (thinCorpus && selfReport) {
       pillars = blendThin(pillars, selfReport);
@@ -624,6 +689,7 @@ serve(async (req) => {
       primary_gap: primaryGap,
       interpretation,
       decision_trigger: decisionTrigger,
+      customer_profile: customerProfile,
       emailed,
       listing: {
         title: evidence.listings[0]?.title,

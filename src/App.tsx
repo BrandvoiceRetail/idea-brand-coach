@@ -26,6 +26,7 @@ import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import BrandDiagnostic from "./pages/BrandDiagnostic";
 import FreeDiagnostic from "./pages/FreeDiagnostic";
+import ProblemSolverDiagnostic from "./pages/v2/ProblemSolverDiagnostic";
 import DiagnosticResults from "./pages/DiagnosticResults";
 import JourneyBridge from "./components/diagnostic/JourneyBridge";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
@@ -137,10 +138,11 @@ const App = () => {
 
                 <Route path="/v2/funnel" element={<FunnelTracker />} />
 
-                {/* Parallel candidate path for the reframed "Fix the Trust Gap"
-                    lead-magnet diagnostic. Renders the same FreeDiagnostic as
-                    /v1/diagnostic; kept side-by-side pending Trevor's promotion brief. */}
-                <Route path="/v2/diagnostic" element={<FreeDiagnostic />} />
+                {/* Reframed "Fix the Trust Gap" 8-screen Problem-Solver flow (Demo v2).
+                    Ports idea-brandcoach-DEMO-v2-trevor-spec.html: free diagnostic →
+                    auth-gated forensic run → customer profile + Decision Trigger fix.
+                    /v1/diagnostic still serves the original guest FreeDiagnostic. */}
+                <Route path="/v2/diagnostic" element={<ProblemSolverDiagnostic />} />
 
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 

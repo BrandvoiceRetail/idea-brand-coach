@@ -1,0 +1,172 @@
+/**
+ * ProblemSolverDiagnostic — the /v2/diagnostic 8-screen "fix the Trust Gap" flow.
+ *
+ * The React port of _bmad-output/mockups/idea-brandcoach-DEMO-v2-trevor-spec.html.
+ * A thin wiring shell (per src/pages/AGENTS.md): it owns the screen state machine,
+ * the shared flow state (self-report scores, ASIN, forensic report), the top
+ * stepper, and the auth gate; all screen UI + engine calls live in the focused
+ * sub-components under src/components/v2/problem-solver/.
+ *
+ * Screen → engine wiring:
+ *   S1 Diagnose      LIVE  — FreeDiagnostic's 4 questions + scoring math (self-report).
+ *   S2 Unlock        GATE  — founding-member framing; auth gate (billing stubbed).
+ *   S3 Upload        LIVE  — ASIN/URL via parseAsinInput (screenshot = future).
+ *   S4 Analyse       LIVE  — run-forensic-analysis edge fn + 6-step progress.
+ *   S5 Customer      LIVE  — forensic_scores + customer_profile (the new field).
+ *   S6 Your fix      LIVE  — decision_trigger (DecisionTriggerPanel) + brief framing.
+ *   S7 Stay ahead    STATIC — Beta Brand-Defense showcase (illustrative).
+ *   S8 In Claude     STATIC — Claude Connector showcase (illustrative).
+ *
+ * Auth gate: the forensic run (S4) is signed-in only, so S2's CTA gates the jump
+ * to S3 — signed-in users continue; signed-out users go to /auth?redirect=/v2/diagnostic.
+ */
+
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { captureAlphaEvent } from '@/lib/posthogClient';
+import type { TrustGapInputScores } from '@/lib/trustGap';
+import { Stepper } from '@/components/v2/problem-solver/Stepper';
+import { BrandBar } from '@/components/v2/problem-solver/primitives';
+import { PS_COLORS, PS_STEP_NAME, type ProblemSolverStep } from '@/components/v2/problem-solver/theme';
+import type { ForensicResponse, ProblemSolverFlowState } from '@/components/v2/problem-solver/types';
+import { DiagnoseScreen } from '@/components/v2/problem-solver/DiagnoseScreen';
+import { UnlockScreen } from '@/components/v2/problem-solver/UnlockScreen';
+import { UploadScreen } from '@/components/v2/problem-solver/UploadScreen';
+import { AnalyseScreen } from '@/components/v2/problem-solver/AnalyseScreen';
+import { CustomerScreen } from '@/components/v2/problem-solver/CustomerScreen';
+import { FixScreen } from '@/components/v2/problem-solver/FixScreen';
+import { StayAheadScreen } from '@/components/v2/problem-solver/StayAheadScreen';
+import { InClaudeScreen } from '@/components/v2/problem-solver/InClaudeScreen';
+
+const NAV_NOTE: Record<ProblemSolverStep, string> = {
+  1: 'Free Trust Gap Diagnostic',
+  2: 'Your fix — founding offer',
+  3: 'Upload · context remembered',
+  4: 'Analysing…',
+  5: 'Your customer profile',
+  6: 'Your Decision Trigger',
+  7: 'Brand Defense · Beta',
+  8: 'Inside Claude · Connector',
+};
+
+const AUTH_REDIRECT = '/auth?redirect=/v2/diagnostic';
+
+export default function ProblemSolverDiagnostic(): JSX.Element {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [step, setStep] = useState<ProblemSolverStep>(1);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [flow, setFlow] = useState<ProblemSolverFlowState>({ selfReport: null, asin: null, report: null });
+
+  // Step-advance funnel event (step index + name + overall self-report only — no PII).
+  useEffect(() => {
+    captureAlphaEvent('problem_solver_step_viewed', {
+      step,
+      step_name: PS_STEP_NAME[step],
+      overall_score: flow.selfReport?.overall ?? null,
+    });
+    window.scrollTo(0, 0);
+    // selfReport intentionally excluded — we report the score at the time of the step view.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  const goTo = useCallback((next: ProblemSolverStep): void => setStep(next), []);
+
+  /**
+   * Guard step jumps from the stepper: never let the user skip past the auth gate
+   * (S3+) when signed out, and never jump to a screen whose data isn't ready yet
+   * (Upload needs a self-report; Analyse+ needs an ASIN; Customer/Fix need a report).
+   */
+  const handleJump = useCallback(
+    (target: ProblemSolverStep): void => {
+      if (target >= 3 && !user) {
+        captureAlphaEvent('problem_solver_unlock_gated', { step: target });
+        navigate(AUTH_REDIRECT);
+        return;
+      }
+      if (target >= 2 && !flow.selfReport) return; // must diagnose first
+      if (target >= 4 && !flow.asin) return; // must supply an ASIN first
+      if ((target === 5 || target === 6) && !flow.report) return; // need a completed run
+      setStep(target);
+    },
+    [user, flow.selfReport, flow.asin, flow.report, navigate],
+  );
+
+  const handleReveal = useCallback((scores: TrustGapInputScores): void => {
+    setFlow((f) => ({ ...f, selfReport: scores }));
+  }, []);
+
+  // S2 CTA: auth gate. Signed-in → S3; signed-out → /auth?redirect=/v2/diagnostic.
+  const handleUnlock = useCallback((): void => {
+    if (!user) {
+      captureAlphaEvent('problem_solver_unlock_gated', { step: 2 });
+      navigate(AUTH_REDIRECT);
+      return;
+    }
+    setStep(3);
+  }, [user, navigate]);
+
+  const handleAnalyse = useCallback((asin: string): void => {
+    setFlow((f) => ({ ...f, asin, report: null }));
+    setStep(4);
+  }, []);
+
+  const handleReportComplete = useCallback((report: ForensicResponse): void => {
+    setFlow((f) => ({ ...f, report }));
+  }, []);
+
+  const handleRestart = useCallback((): void => {
+    setAnswers({});
+    setFlow({ selfReport: null, asin: null, report: null });
+    setStep(1);
+  }, []);
+
+  return (
+    <div className="min-h-screen" style={{ background: PS_COLORS.g100 }}>
+      <div className="mx-auto max-w-[880px] px-2 py-4 sm:px-4 sm:py-6">
+        <div
+          className="overflow-hidden rounded-2xl border"
+          style={{ background: PS_COLORS.warm, borderColor: PS_COLORS.line, boxShadow: '0 4px 10px rgba(16,24,40,.10)' }}
+        >
+          <Stepper current={step} onJump={handleJump} />
+          <BrandBar note={NAV_NOTE[step]} />
+
+          <div className="px-4 py-6 sm:px-6 sm:py-7">
+            {step === 1 && (
+              <DiagnoseScreen
+                answers={answers}
+                onAnswer={(id, value) => setAnswers((a) => ({ ...a, [id]: value }))}
+                onReveal={handleReveal}
+                onContinue={() => goTo(2)}
+              />
+            )}
+            {step === 2 && (
+              <UnlockScreen isAuthenticated={!!user} onUnlock={handleUnlock} onBack={() => goTo(1)} />
+            )}
+            {step === 3 && (
+              <UploadScreen defaultValue={flow.asin ?? undefined} onAnalyse={handleAnalyse} onBack={() => goTo(2)} />
+            )}
+            {step === 4 && flow.asin && flow.selfReport && (
+              <AnalyseScreen
+                asin={flow.asin}
+                selfReport={flow.selfReport}
+                existingReport={flow.report}
+                onComplete={handleReportComplete}
+                onContinue={() => goTo(5)}
+              />
+            )}
+            {step === 5 && flow.report && (
+              <CustomerScreen report={flow.report} onBack={() => goTo(4)} onContinue={() => goTo(6)} />
+            )}
+            {step === 6 && flow.report && (
+              <FixScreen report={flow.report} onBack={() => goTo(5)} onContinue={() => goTo(7)} />
+            )}
+            {step === 7 && <StayAheadScreen onBack={() => goTo(6)} onContinue={() => goTo(8)} />}
+            {step === 8 && <InClaudeScreen onBack={() => goTo(7)} onRestart={handleRestart} />}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
