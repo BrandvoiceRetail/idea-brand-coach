@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getServiceClient, getAuthedUserId } from "../_shared/edge-auth.ts";
+import { meterAndDebit } from "../_shared/meter.ts";
 
 /**
  * avatar-objections  (Avatar 2.0 — Stage 4: Hesitations & Objections)
@@ -298,6 +300,9 @@ serve(async (req) => {
 
     const data = await response.json();
     const rawText = data?.content?.[0]?.text ?? '';
+    // Meter the real token usage for this paid op (records always; debits; never throws).
+    const meterUserId = await getAuthedUserId(req);
+    if (meterUserId) await meterAndDebit(getServiceClient(), { userId: meterUserId, op: 'avatar_objections', model: SONNET_MODEL, usage: data.usage });
     const objections = parseObjections(rawText);
 
     // Post-parse grounding enforcement: verbatim_signal must be a real substring.

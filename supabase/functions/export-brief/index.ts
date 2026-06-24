@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getServiceClient, getAuthedUserId } from "../_shared/edge-auth.ts";
+import { meterAndDebit } from "../_shared/meter.ts";
 
 /**
  * export-brief  (gold Workbook A, sheet 6 "Export Brief")
@@ -214,6 +216,7 @@ serve(async (req) => {
   }
 
   try {
+    const userId = await getAuthedUserId(req);
     const authHeader = req.headers.get('authorization');
     if (authHeader) {
       try {
@@ -296,6 +299,9 @@ serve(async (req) => {
       console.error('[export-brief] No brief parsed from model output.');
       throw new Error('Could not parse the Export Brief from model output.');
     }
+
+    // Meter the real token usage for this paid op (records always; debits credits; never throws).
+    if (userId) await meterAndDebit(getServiceClient(), { userId, op: 'export_brief', model: SONNET_MODEL, usage: data.usage });
 
     const tf = (parsed.title_formula ?? {}) as Record<string, unknown>;
     const titleFormula = {

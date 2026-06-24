@@ -590,6 +590,13 @@ export function isCompetitorAgentsEnabled(): boolean {
   return (import.meta.env.VITE_COMPETITOR_AGENTS as string | undefined) === 'true';
 }
 
+// Credit-metered paywall (docs/PAYWALL_CREDIT_METERING_DESIGN.md). OFF by default in every
+// environment — gates only the <RequirePaid> UI. The server-side block is a separate env flag
+// (PAYWALL_ENFORCED on the edge fns); BOTH stay off through the tester window.
+export function isPaywallEnabled(): boolean {
+  return (import.meta.env.VITE_PAYWALL_ENABLED as string | undefined) === 'true';
+}
+
 // Development helper
 if (import.meta.env.DEV) {
   const currentPhase = getCurrentPhase();

@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Sparkles, Zap, Crown, ArrowRight, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/config/routes';
+import { toast } from 'sonner';
+import { startCheckout, toCheckoutTier } from '@/services/checkout';
 
 interface PricingTier {
   id: 'starter' | 'professional' | 'premium';
@@ -91,18 +93,15 @@ export default function PricingPaywall(): JSX.Element {
   const currentSubscription = null; // Will be fetched from user_subscriptions table
 
   const handleSelectTier = (tierId: string) => {
-    // Store selected tier in localStorage
-    localStorage.setItem('selectedTier', tierId);
-
-    // TODO: Phase 2 - When Stripe is integrated, this will create checkout session
-    // For now, just navigate to dashboard if authenticated, otherwise to auth
-    if (user) {
-      // User is authenticated - proceed to app (stripe checkout will be added in Phase 2)
-      navigate(ROUTES.HOME_PAGE);
-    } else {
-      // User not authenticated - need to sign up/sign in first
-      navigate(`/auth?plan=${tierId}&redirect=/subscribe`);
+    if (!user) {
+      // Not signed in — sign up/in first, then return here to complete checkout.
+      navigate(`/auth?plan=${tierId}&redirect=/v1/subscribe`);
+      return;
     }
+    startCheckout(toCheckoutTier(tierId)).catch((e) => {
+      console.error('checkout failed', e);
+      toast.error('Could not start checkout. Please try again.');
+    });
   };
 
   return (

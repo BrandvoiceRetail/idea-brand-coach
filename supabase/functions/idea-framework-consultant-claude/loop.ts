@@ -67,6 +67,9 @@ export interface LoopConfig {
   model?: string;
   /** Best-effort ISO country for latency telemetry; null/undefined when absent. */
   country?: string | null;
+  /** Credit metering: called ONCE at turn completion with the summed token usage. Injected by
+   *  index.ts (keeps this module free of the esm.sh/service-client import). Never throws. */
+  meter?: (usage: { input_tokens: number; output_tokens: number }) => Promise<unknown> | void;
 }
 
 /**
@@ -310,6 +313,7 @@ export function runAgenticLoop(config: LoopConfig): ReadableStream {
       const ttft = makeTtftRecorder(config.startTime);
       state.onFirstText = ttft.mark;
       let callCount = 0; // Anthropic calls made — handler-latency iteration_count
+      let inTok = 0, outTok = 0; // summed Anthropic token usage across the loop (for metering)
       let ok = true;
       try {
         let previousToolResults: Array<Record<string, unknown>> | null = null;
@@ -339,6 +343,8 @@ export function runAgenticLoop(config: LoopConfig): ReadableStream {
             state
           );
           lastResult = result;
+          inTok += result.inputTokens ?? 0;
+          outTok += result.outputTokens ?? 0;
 
           if (!shouldContinue(result, iteration, config)) {
             break;
@@ -379,7 +385,9 @@ export function runAgenticLoop(config: LoopConfig): ReadableStream {
           callCount++;
           const finalResponse = await callClaude(config, true, { tool_choice: { type: 'none' } }, callCount, ttft.value);
           if (finalResponse.ok) {
-            await translateOneStream(finalResponse, controller, state);
+            const fr = await translateOneStream(finalResponse, controller, state);
+            inTok += fr.inputTokens ?? 0;
+            outTok += fr.outputTokens ?? 0;
           } else {
             ok = false;
             const errorBody = await finalResponse.text();
@@ -408,6 +416,8 @@ export function runAgenticLoop(config: LoopConfig): ReadableStream {
           model: config.model ?? DEFAULT_MODEL,
           country: config.country ?? null,
         });
+        // Meter the turn's summed token usage once (records always; never throws).
+        if (inTok || outTok) await config.meter?.({ input_tokens: inTok, output_tokens: outTok });
         controller.close();
       }
     },
@@ -425,6 +435,7 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
   let extractedFields: unknown[] = [];
   let previousToolResults: Array<Record<string, unknown>> | null = null;
   let callCount = 0; // Anthropic calls made — handler-latency iteration_count
+  let inTok = 0, outTok = 0; // summed Anthropic token usage across the loop (for metering)
   let ok = true;
   let lastPending: {
     assistantContent: Array<Record<string, unknown>>;
@@ -447,6 +458,8 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
     }
 
     const data = await claudeResponse.json();
+    inTok += (data.usage?.input_tokens || 0) + (data.usage?.cache_read_input_tokens || 0) + (data.usage?.cache_creation_input_tokens || 0);
+    outTok += data.usage?.output_tokens || 0;
 
     const memoryToolUses: Array<{ id: string; input: Record<string, unknown> }> = [];
     const extractionToolUses: Array<{ id: string }> = [];
@@ -514,6 +527,8 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
     const finalResponse = await callClaude(config, false, { tool_choice: { type: 'none' } }, callCount);
     if (finalResponse.ok) {
       const data = await finalResponse.json();
+      inTok += (data.usage?.input_tokens || 0) + (data.usage?.cache_read_input_tokens || 0) + (data.usage?.cache_creation_input_tokens || 0);
+      outTok += data.usage?.output_tokens || 0;
       for (const block of data.content || []) {
         if (block.type === 'text') responseText += block.text;
       }
@@ -538,5 +553,7 @@ export async function runNonStreamingLoop(config: LoopConfig): Promise<NonStream
       model: config.model ?? DEFAULT_MODEL,
       country: config.country ?? null,
     });
+    // Meter the turn's summed token usage once (records always; never throws).
+    if (inTok || outTok) await config.meter?.({ input_tokens: inTok, output_tokens: outTok });
   }
 }

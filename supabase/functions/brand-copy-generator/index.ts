@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getServiceClient, getAuthedUserId } from "../_shared/edge-auth.ts";
+import { meterAndDebit } from "../_shared/meter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -420,6 +422,9 @@ serve(async (req) => {
 
     const claudeData = await claudeResponse.json();
     const generatedCopy = claudeData.content[0].text;
+    // Meter the real token usage for this paid op (records always; debits; never throws).
+    const meterUserId = await getAuthedUserId(req);
+    if (meterUserId) await meterAndDebit(getServiceClient(), { userId: meterUserId, op: 'brand_copy', model: HAIKU_MODEL, usage: claudeData.usage });
 
     console.log("Successfully generated copy");
 

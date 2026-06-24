@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getServiceClient } from "../_shared/edge-auth.ts";
+import { assertCredits, meterAndDebit } from "../_shared/meter.ts";
 
 // Decision Trigger™ derivation (Alpha — dominant trigger only).
 //
@@ -177,7 +179,7 @@ function parseDerived(text: string): DerivedTrigger | null {
   }
 }
 
-async function callSonnet(userMessage: string): Promise<{ text: string; status: number | string }> {
+async function callSonnet(userMessage: string): Promise<{ text: string; status: number | string; usage?: { input_tokens?: number; output_tokens?: number } }> {
   const headers = { 'x-api-key': anthropicApiKey!, 'anthropic-version': '2023-06-01', 'anthropic-beta': 'prompt-caching-2024-07-31', 'Content-Type': 'application/json' };
   const body = JSON.stringify({
     model: SONNET_MODEL,
@@ -196,7 +198,7 @@ async function callSonnet(userMessage: string): Promise<{ text: string; status: 
     }
     if (res?.ok) {
       const data = await res.json();
-      return { text: data?.content?.[0]?.text ?? '', status: res.status };
+      return { text: data?.content?.[0]?.text ?? '', status: res.status, usage: data?.usage };
     }
     const status = res?.status ?? 'network-error';
     const retryable = !res || res.status === 429 || res.status >= 500;
@@ -223,6 +225,11 @@ serve(async (req) => {
   const { data: { user } } = await supabaseClient.auth.getUser(token);
   if (!user) return jsonResponse({ error: 'Unauthorized' }, 401);
 
+  // Paid op: credit gate (no-op unless PAYWALL_ENFORCED) + metering after success (below).
+  const credits = getServiceClient();
+  const gate = await assertCredits(credits, user.id, 'decision_trigger');
+  if (!gate.ok) return jsonResponse({ error: 'needs_upgrade', needs_upgrade: true, balance: gate.balance }, 402);
+
   try {
     const body = (await req.json()) as DecisionTriggerRequest;
 
@@ -248,19 +255,28 @@ serve(async (req) => {
     const prior = derivePrior(scores);
     const userMessage = buildUserMessage(scores, prior, evidence);
 
-    let { text, status } = await callSonnet(userMessage);
+    const first = await callSonnet(userMessage);
+    let text = first.text;
+    let status = first.status;
+    let inTok = first.usage?.input_tokens ?? 0;
+    let outTok = first.usage?.output_tokens ?? 0;
     let derived = parseDerived(text);
     if (!derived && text) {
       // One reroll: unescaped quotes inside evidence citations are the known JSON-breakage (the
       // diagnostic-interpretation 500 class). Re-ask with the single-quote rule restated.
       const reroll = await callSonnet(userMessage + '\n\nYour previous reply was not valid JSON. Reply with ONLY the JSON object and use single quotes for any quotation inside string values.');
       text = reroll.text; status = reroll.status;
+      inTok += reroll.usage?.input_tokens ?? 0;
+      outTok += reroll.usage?.output_tokens ?? 0;
       derived = parseDerived(text);
     }
     if (!derived) {
       console.error('[identify-decision-trigger] underivable | upstream=', status, '| raw=', text.slice(0, 400));
       return jsonResponse({ error: 'Unable to derive your Decision Trigger right now. Please try again.', detail: typeof status === 'number' ? `upstream ${status}` : String(status) }, 500);
     }
+
+    // Meter the real token usage for this paid op (sums both model calls; never throws).
+    await meterAndDebit(credits, { userId: user.id, op: 'decision_trigger', model: SONNET_MODEL, usage: { input_tokens: inTok, output_tokens: outTok } });
 
     // Persist (RLS: auth.uid() = user_id). Supporting trigger is Beta -> left null.
     const { data: row, error: dbError } = await supabaseClient

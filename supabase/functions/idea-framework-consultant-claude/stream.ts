@@ -60,6 +60,9 @@ export interface IterationResult {
   extractionToolUses: ToolUseBlock[];
   /** MCP-backed 'continue' tool uses (Phase 2), dispatched by name via the registry. */
   mcpToolUses: ToolUseBlock[];
+  /** Anthropic token usage for THIS upstream call (for credit metering; cache-inclusive input). */
+  inputTokens?: number;
+  outputTokens?: number;
 }
 
 /** Per-block accumulator while a content block is streaming. */
@@ -91,6 +94,8 @@ export async function translateOneStream(
     memoryToolUses: [],
     extractionToolUses: [],
     mcpToolUses: [],
+    inputTokens: 0,
+    outputTokens: 0,
   };
 
   const blocks = new Map<number, BlockAccumulator>();
@@ -196,6 +201,7 @@ export async function translateOneStream(
             result.stopReason = event.delta.stop_reason;
           }
           if (event.usage) {
+            result.outputTokens = event.usage.output_tokens ?? result.outputTokens;
             console.log(`[Usage] Output tokens: ${event.usage.output_tokens}`);
           }
           break;
@@ -204,6 +210,7 @@ export async function translateOneStream(
         case 'message_start': {
           if (event.message?.usage) {
             const u = event.message.usage;
+            result.inputTokens = (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
             console.log(`[Usage] Input: ${u.input_tokens} (cache_read: ${u.cache_read_input_tokens || 0}, cache_creation: ${u.cache_creation_input_tokens || 0})`);
           }
           break;

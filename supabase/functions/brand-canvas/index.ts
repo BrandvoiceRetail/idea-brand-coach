@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getServiceClient, getAuthedUserId } from "../_shared/edge-auth.ts";
+import { meterAndDebit } from "../_shared/meter.ts";
 
 /**
  * brand-canvas  (gold Workbook A, sheet 5 "Brand Canvas")
@@ -297,6 +299,9 @@ serve(async (req) => {
 
     const data = await response.json();
     const rawText = data?.content?.[0]?.text ?? '';
+    // Meter the real token usage for this paid op (records always; debits; never throws).
+    const meterUserId = await getAuthedUserId(req);
+    if (meterUserId) await meterAndDebit(getServiceClient(), { userId: meterUserId, op: 'brand_canvas', model: SONNET_MODEL, usage: data.usage });
     const parsed = parseCanvas(rawText);
 
     if (!parsed) {

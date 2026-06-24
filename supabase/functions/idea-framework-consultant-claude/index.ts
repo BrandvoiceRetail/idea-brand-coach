@@ -25,6 +25,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getServiceClient } from "../_shared/edge-auth.ts";
+import { meterAndDebit } from "../_shared/meter.ts";
 
 import { generateSystemPrompt, buildSessionContext } from './prompt.ts';
 import { buildAgentTools } from './tools.ts';
@@ -341,6 +343,10 @@ serve(async (req) => {
       model: CLAUDE_MODEL,
       // Best-effort caller geo for per-country latency slicing (telemetry only).
       country: resolveCountry(req),
+      // Meter the whole turn's token usage once at completion (records always; debits; never throws).
+      meter: (usage: { input_tokens: number; output_tokens: number }) => {
+        if (userId) return meterAndDebit(getServiceClient(), { userId, op: 'coach_turn', model: CLAUDE_MODEL, usage });
+      },
     };
 
     // ── Streaming path ───────────────────────────────────────────────────

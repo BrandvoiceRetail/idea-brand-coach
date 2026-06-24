@@ -48,8 +48,10 @@ import NotFound from "./pages/NotFound";
 import { TestOfflineSync } from "./pages/TestOfflineSync";
 import { StartHere } from "./pages/StartHere";
 import PricingPaywall from "./pages/PricingPaywall";
+import SubscribeSuccess from "./pages/SubscribeSuccess";
 import { BrandCoachV2 } from "./pages/v2/BrandCoachV2";
 import { FunnelTracker } from "./components/v2/funnel/FunnelTracker";
+import { RequirePaid } from "./components/paywall/RequirePaid";
 import FeatureGate from "@/components/FeatureGate";
 import { VersionGate } from "@/components/VersionGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
@@ -135,7 +137,7 @@ const App = () => {
                   </FeatureGate>
                 } />
 
-                <Route path="/v2/funnel" element={<FunnelTracker />} />
+                <Route path="/v2/funnel" element={<RequirePaid><FunnelTracker /></RequirePaid>} />
 
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
@@ -215,6 +217,7 @@ const App = () => {
                 <Route path="/v1/diagnostic" element={<FreeDiagnostic />} />
 
                 <Route path="/v1/subscribe" element={<PricingPaywall />} />
+                <Route path="/v1/subscribe/success" element={<SubscribeSuccess />} />
 
                 <Route path="/v1/diagnostic/results" element={<DiagnosticResults />} />
 

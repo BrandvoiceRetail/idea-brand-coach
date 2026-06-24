@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Zap, Crown, Star } from "lucide-react";
+import { toast } from "sonner";
+import { startCheckout, toCheckoutTier } from "@/services/checkout";
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -78,10 +80,12 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   ];
 
   const handleUpgrade = (planId: string) => {
-    // This would integrate with your payment processor
-    console.log(`Upgrading to ${planId} plan`);
-    // For now, just close the modal
-    onClose();
+    // Redirect to Stripe Checkout for the mapped credit tier. On success the browser navigates away;
+    // on failure we keep the modal open and surface a toast. (Dark until Stripe is configured.)
+    startCheckout(toCheckoutTier(planId)).catch((e) => {
+      console.error("checkout failed", e);
+      toast.error("Could not start checkout. Please try again.");
+    });
   };
 
   return (

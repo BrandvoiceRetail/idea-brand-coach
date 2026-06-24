@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
+import { getServiceClient } from "../_shared/edge-auth.ts";
+import { assertCredits, meterAndDebit } from "../_shared/meter.ts";
 
 /**
  * audit-asset — Brand Funnel Tracker keystone.
@@ -105,6 +107,12 @@ serve(async (req: Request) => {
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
     if (userErr || !user) return json({ ok: false, error: "unauthorized" }, 401);
     if (rateLimited(user.id)) return json({ ok: false, error: "rate_limited" }, 429);
+
+    // Paid op: credit gate (no-op unless PAYWALL_ENFORCED) + metering after success (below).
+    // Uses a service-role client because the credit RPCs are service_role-only.
+    const credits = getServiceClient();
+    const gate = await assertCredits(credits, user.id, "audit_asset");
+    if (!gate.ok) return json({ ok: false, error: "needs_upgrade", needs_upgrade: true, balance: gate.balance }, 402);
 
     const { assetId, touchpointLabel, brandTask, auditAgainst } = await req.json();
     if (!assetId) throw new Error("assetId is required");
@@ -236,6 +244,9 @@ ${signatureText}`;
       signature_version: asset.signature_version ?? currentSignatureVersion,
       updated_at: new Date().toISOString(),
     }).eq("id", assetId);
+
+    // Meter the real token usage for this paid op (always records; debits credits; never throws).
+    await meterAndDebit(credits, { userId: user.id, op: "audit_asset", model: SONNET_MODEL, usage: out.usage });
 
     return json({ ok: true, status, overall_score: overall, previous_score: asset.overall_score ?? null, audit_result: resultWithGrounding, grounding: { fields_used: groundingFields } });
   } catch (err) {
