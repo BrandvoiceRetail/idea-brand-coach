@@ -86,7 +86,7 @@ export function buildPathStub(path: OnboardPath): PathStub {
         '',
         "For each one I'll ask an open question and listen to your actual words. No ratings, no numbers from you. Only once you've genuinely spoken to all four will I reflect back where your **Trust Gap** is — as a mirror of what you shared, never a verdict from nowhere.",
         '',
-        "Let's start with **Insight**: who is your customer, really — and what do they most want that they can't quite get anywhere else?",
+        "Let's begin in the chat — I'll ask you the first question now and we'll take it one step at a time from there.",
         '',
         "_Posture guardrail: I gather all four dimensions in your own words **before any scoring**; I will never invent your answers. (Walking skeleton: the story→score mapping is the next build — for now I hold the line and ask rather than fabricate.)_",
       ].join('\n'),
@@ -101,7 +101,7 @@ export function buildPathStub(path: OnboardPath): PathStub {
       '',
       'Smart move. The Full Contextual Upload lets you bring your listings, reviews, and brand materials so I can coach against your **real business** — not generic advice.',
       '',
-      "_Front door only: the upload pipeline isn't wired up yet. You're seeing the install → invoke → render → choose pipe work end to end._",
+      "Share what you have right here in the chat — paste a product listing, a handful of customer reviews, and any brand notes (your voice, your promise, who it's for). Even one listing and a few reviews is plenty to start. I'll read them and we'll ground every coaching point in your real business.",
     ].join('\n'),
   };
 }
