@@ -56,6 +56,12 @@ export interface IterationResult {
   assistantContent: Array<Record<string, unknown>>;
   memoryToolUses: ToolUseBlock[];
   extractionToolUses: ToolUseBlock[];
+  /**
+   * Phase 2: any tool_use that is neither `memory` nor `extract_brand_fields`
+   * — i.e. an MCP-backed 'continue' tool. The loop dispatches these by name
+   * through the request-scoped MCP registry. Empty when MCP tools are off.
+   */
+  continueToolUses: ToolUseBlock[];
 }
 
 /** Per-block accumulator while a content block is streaming. */
@@ -86,6 +92,7 @@ export async function translateOneStream(
     assistantContent: [],
     memoryToolUses: [],
     extractionToolUses: [],
+    continueToolUses: [],
   };
 
   const blocks = new Map<number, BlockAccumulator>();
@@ -130,6 +137,11 @@ export async function translateOneStream(
       console.log(`[Stream] Memory tool use: ${String(input.command)}`);
       emit(controller, { type: 'memory_activity', action });
       result.memoryToolUses.push({ id: block.id, name: block.name, input });
+    } else {
+      // Phase 2: an MCP-backed 'continue' tool. The loop resolves + executes it
+      // by name through the request-scoped MCP registry. Name only in the log.
+      console.log(`[Stream] MCP tool use: ${block.name}`);
+      result.continueToolUses.push({ id: block.id, name: block.name, input });
     }
   };
 

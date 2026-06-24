@@ -21,7 +21,8 @@ streaming SSE to the browser, two client-visible tools:
 | `prompt.ts` | STATIC system block only (persona, framework-identity, memory + extraction policy); per-session pieces via `buildSessionContext` |
 | `memory-context.ts` | `<memory-snapshot>` builder (deterministic memory injection) |
 | `loop.ts` | agentic loop (streaming + non-streaming), tool_result rules, BP4 movement, per-call + handler latency |
-| `registry.ts` | tool-dispatch registry (ADR Phase 1 extension seam); `continue` vs `terminal` tool kinds |
+| `registry.ts` | tool-dispatch registry (`continue`/`terminal` kinds); Phase-2 per-request MCP tool registry + `registerMcpTools`/`resolveToolEntry` |
+| `mcpClient.ts` | Phase-2 hand-rolled MCP streamable-HTTP JSON-RPC client (handshake/session/SSE, never throws) |
 | `telemetry.ts` | per-call (`consultant_llm_latency`) + handler (`consultant_handler_latency`) latency logs; `resolveCountry` |
 | `stream.ts` | `translateOneStream` — ONE upstream stream per call, caller-owned controller; never emits `done`; `onFirstText` TTFT hook |
 | `context.ts` | `user_knowledge_base` structured reads (NO embeddings — Anthropic-only) |
@@ -52,6 +53,41 @@ The agentic loop already existed (memory tool); Phase 1 added the generic seam.
   `cf-ipcountry` / CloudFront / Vercel headers, null when absent. **Content discipline:
   durations/booleans/counts/model/country ONLY — never prompt or message content.**
 
+## ADR Phase 2 — live MCP capability layer (flag-gated)
+
+Wires the chat to the live brand-coach MCP gateway so the coach can call the same
+tools an external agent would (`list_assets`, `get_asset`, `log_asset`,
+`record_assessment`, …). Builds on the Phase-1 registry seam.
+
+- **Client (`mcpClient.ts`):** minimal hand-rolled streamable-HTTP JSON-RPC client
+  (NO MCP SDK). `initialize` (sends `Accept: application/json, text/event-stream`,
+  captures `Mcp-Session-Id`, fires `notifications/initialized`) → `listTools()` →
+  `callTool(name, args)`. Parses BOTH `application/json` and SSE bodies. Forwards
+  the caller's Supabase JWT as `Authorization: Bearer`. Per-method timeouts; NEVER
+  throws past the loop — every method returns `{ ok, … }`.
+- **Dynamic discovery (`index.ts`):** at request start, when MCP is eligible
+  (`MCP_TOOLS_ENABLED` ON **and** `CONSULTANT_TOOL_LOOP_ENABLED` ON **and** an
+  authenticated caller), `listTools()` runs, each gateway tool is converted to an
+  Anthropic tool def + added to the model's `tools`, and registered as a `continue`
+  entry in a **request-scoped** `McpToolRegistry` (never global — no cross-request
+  bleed). Unreachable/empty gateway ⇒ DEGRADE: log + built-in tools only (chat
+  never fails). Built-in names (`memory`, `extract_brand_fields`) are never shadowed.
+- **Generic dispatch (`loop.ts`):** the registry path now dispatches EVERY
+  `continue` tool by name via `resolveToolEntry(name, mcpRegistry)` (request-scoped
+  MCP entries win, then built-ins). `stream.ts` routes non-built-in tool_use into
+  `continueToolUses`; the non-streaming path parses them too. MCP tools continue the
+  loop only under the flag (OFF path stays byte-identical to Phase 1).
+- **Flags:** `MCP_TOOLS_ENABLED` (default OFF), `MCP_GATEWAY_URL`
+  (default `https://ideabrandcoach.icodemybusiness.com/mcp`). OFF ⇒ no MCP calls,
+  no extra tools, byte-identical to Phase 1.
+- **Telemetry (`telemetry.ts`):** each proxied tools/call emits
+  `mcp_proxy_latency { tool, duration_ms, ok }` (tool NAME only — no args/PII).
+- **NOTE:** the deployed gateway exposes only a SMALL surface today (health, asset
+  ledger reads/writes, assessment, coach-conversation reads, submit_feedback). The
+  high-value tools (avatar pipeline, concept generation, publish-filter, draft/test
+  design) appear automatically once the full 28-tool MCP build is redeployed —
+  discovery is dynamic, nothing here is hardcoded to the small surface.
+
 ## Cache layout (do not break)
 
 Four ephemeral breakpoints, order tools → system → messages:
@@ -79,9 +115,13 @@ Verify after changes: `[Usage] ... cache_read` > 0 on turn 2 in fn logs.
 
 - Unit: `supabase/functions/_shared/__tests__/memory.test.ts` (30 tests — commands, traversal,
   caps, secrets), `__tests__/agentic-loop.test.ts` (15 tests — scripted SSE fixtures,
-  iteration caps, mixed tools, handler failure, upstream 429) and
+  iteration caps, mixed tools, handler failure, upstream 429),
   `__tests__/tool-registry.test.ts` (9 tests — registry kinds, flag ON/OFF parity, country
-  resolution, TTFT recorder, per-call/handler latency emission). Run with `--pool=threads`.
+  resolution, TTFT recorder, per-call/handler latency emission),
+  `__tests__/mcp-client.test.ts` (15 tests — handshake/session/SSE, tools/list→Anthropic
+  conversion, callTool, graceful degrade), and `__tests__/mcp-dispatch.test.ts` (9 tests —
+  registerMcpTools, generic by-name dispatch streaming+non-streaming, mcp_proxy_latency,
+  flag-OFF = no MCP calls, degrade with no registry). Run with `--pool=threads`.
 - Live smoke (QA account per `docs/TEST_ACCOUNT.md`): (1) authed streamed message stating a
   durable fact → expect `memory_activity` events + rows in `user_memories` + `index.md`
   updated; (2) NEW session, "what do you remember?" → recall with ZERO `memory_activity`

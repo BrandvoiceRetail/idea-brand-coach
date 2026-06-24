@@ -75,6 +75,23 @@ export function emitHandlerLatency(record: HandlerLatencyRecord): void {
   );
 }
 
+/** One per-MCP-tool-call latency record (Phase 2). Event: `mcp_proxy_latency`. */
+export interface McpProxyLatencyRecord {
+  /** MCP tool name proxied through the gateway (no args — content discipline). */
+  tool: string;
+  /** Wall-clock ms for the tools/call round-trip. */
+  duration_ms: number;
+  /** Whether the call succeeded (transport ok AND tool not is_error). */
+  ok: boolean;
+}
+
+/** Emit one per-MCP-call latency record as a structured, greppable log line. */
+export function emitMcpProxyLatency(record: McpProxyLatencyRecord): void {
+  console.log(
+    `[Telemetry] mcp_proxy_latency ${JSON.stringify({ event: 'mcp_proxy_latency', ...record })}`,
+  );
+}
+
 /**
  * Helper a streaming loop uses to record TTFT exactly once. Returns a closure;
  * call it on the first text byte. Subsequent calls are no-ops.

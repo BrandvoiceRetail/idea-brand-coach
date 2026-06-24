@@ -125,6 +125,8 @@ describe('tool registry', () => {
     const result = await entry!.execute!(MEMORY_CREATE.input, {
       supabaseClient: {} as LoopConfig['supabaseClient'],
       userId: 'user-1',
+      authToken: null,
+      mcp: null,
     });
     expect(vi.mocked(handleMemoryCommand)).toHaveBeenCalledTimes(1);
     expect(result.isError).toBe(false);
@@ -136,6 +138,8 @@ describe('tool registry', () => {
     const result = await entry!.execute!(MEMORY_CREATE.input, {
       supabaseClient: null,
       userId: null,
+      authToken: null,
+      mcp: null,
     });
     expect(result.isError).toBe(true);
     expect(vi.mocked(handleMemoryCommand)).not.toHaveBeenCalled();

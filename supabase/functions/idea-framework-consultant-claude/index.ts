@@ -33,6 +33,8 @@ import { retrieveAllContext } from './context.ts';
 import { buildMemorySnapshot } from './memory-context.ts';
 import { runAgenticLoop, runNonStreamingLoop } from './loop.ts';
 import { resolveCountry } from './telemetry.ts';
+import { McpClient, DEFAULT_MCP_GATEWAY_URL } from './mcpClient.ts';
+import { registerMcpTools, McpToolRegistry } from './registry.ts';
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 if (!anthropicApiKey) {
@@ -46,6 +48,12 @@ const MEMORY_TOOL_ENABLED = Deno.env.get('MEMORY_TOOL_ENABLED') !== 'false';
 // (registry.ts), the extension seam for future MCP-backed tools. OFF keeps the
 // original hardcoded memory+extraction branches (byte-identical rollback).
 const TOOL_LOOP_ENABLED = Deno.env.get('CONSULTANT_TOOL_LOOP_ENABLED') === 'true';
+// ADR Phase 2 flag — default OFF. ON (AND the tool loop ON, AND an authenticated
+// caller) discovers the live MCP gateway's tools at request start, exposes them
+// to the model, and proxies tools/call through the registry forwarding the
+// caller JWT. OFF ⇒ byte-identical to Phase 1 (no MCP calls, no extra tools).
+const MCP_TOOLS_ENABLED = Deno.env.get('MCP_TOOLS_ENABLED') === 'true';
+const MCP_GATEWAY_URL = Deno.env.get('MCP_GATEWAY_URL') || DEFAULT_MCP_GATEWAY_URL;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,6 +77,7 @@ serve(async (req) => {
     const authHeader = req.headers.get('authorization');
     let userId: string | null = null;
     let supabaseClient = null;
+    let authToken: string | null = null;
 
     if (authHeader) {
       supabaseClient = createClient(
@@ -81,6 +90,8 @@ serve(async (req) => {
       const { data: { user } } = await supabaseClient.auth.getUser(token);
       if (user) {
         userId = user.id;
+        // Phase 2: retain the verified JWT to forward to identity-gated MCP tools.
+        authToken = token;
         console.log('[Auth] User:', userId);
       }
     }
@@ -230,6 +241,34 @@ serve(async (req) => {
       ...buildAgentTools(extractionFields, scopeChapterKey, hasActiveExtraction),
     ];
 
+    // ── MCP capability layer (ADR Phase 2 — flag-gated, graceful) ───────────
+    // Discover the live gateway's tools, add them to the model's tools array,
+    // and build a request-scoped registry the loop dispatches through. Requires
+    // the tool loop ON (the only dispatch path that reaches MCP tools) AND an
+    // authenticated caller (the JWT is forwarded to identity-gated tools). Any
+    // failure (unreachable gateway, empty list) degrades to built-in tools only.
+    let mcpClient: McpClient | null = null;
+    let mcpRegistry: McpToolRegistry | null = null;
+    const mcpEligible = MCP_TOOLS_ENABLED && TOOL_LOOP_ENABLED && !!userId && !!authToken;
+    if (mcpEligible) {
+      try {
+        const client = new McpClient({ baseUrl: MCP_GATEWAY_URL, token: authToken });
+        const listed = await client.listTools();
+        if (listed.ok && listed.tools.length > 0) {
+          const { registry, anthropicTools } = registerMcpTools(listed.tools);
+          tools.push(...anthropicTools);
+          mcpClient = client;
+          mcpRegistry = registry;
+          console.log(`[MCP] Registered ${anthropicTools.length} gateway tool(s) from ${MCP_GATEWAY_URL}`);
+        } else {
+          console.warn(`[MCP] tools/list unavailable (${listed.note ?? 'empty'}) — built-in tools only`);
+        }
+      } catch (err) {
+        // Defensive: McpClient never throws, but a redeploy could regress that.
+        console.warn('[MCP] discovery failed — built-in tools only:', err instanceof Error ? err.message : String(err));
+      }
+    }
+
     // ── Token budget ─────────────────────────────────────────────────────
     // Memory floor: a single `create` writing a ~2KB file consumes ~700
     // output tokens of tool-input JSON — 800 risks max_tokens truncation
@@ -268,7 +307,7 @@ serve(async (req) => {
       requestBody.tool_choice = { type: 'auto' };
     }
 
-    console.log(`[Claude] Starting request. Model: ${CLAUDE_MODEL}, max_tokens: ${maxTokens}, tools: ${tools.length}, memory: ${memoryEnabled}, toolLoop: ${TOOL_LOOP_ENABLED}, stream: ${!!streamRequested}`);
+    console.log(`[Claude] Starting request. Model: ${CLAUDE_MODEL}, max_tokens: ${maxTokens}, tools: ${tools.length}, memory: ${memoryEnabled}, toolLoop: ${TOOL_LOOP_ENABLED}, mcp: ${mcpRegistry !== null}, stream: ${!!streamRequested}`);
 
     const loopConfig = {
       apiKey: anthropicApiKey,
@@ -279,6 +318,9 @@ serve(async (req) => {
       userId,
       startTime,
       toolLoopEnabled: TOOL_LOOP_ENABLED,
+      authToken,
+      mcp: mcpClient,
+      mcpRegistry,
       model: CLAUDE_MODEL,
       // Best-effort caller geo for per-country latency slicing (telemetry only).
       country: resolveCountry(req),

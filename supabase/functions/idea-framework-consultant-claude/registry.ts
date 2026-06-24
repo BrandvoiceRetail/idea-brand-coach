@@ -15,10 +15,13 @@
  *  - `execute`  produces the tool_result string for a `continue` tool
  *
  * <<< PHASE-2 EXTENSION POINT >>>
- * To expose an MCP-backed tool to the chat, add a 'continue' entry whose
- * `execute` POSTs to the MCP `/mcp` endpoint forwarding the caller's JWT
- * (the inverse of src/mcp/edgeFn). Do NOT build that client here — Phase 1 is
- * the registry seam only. See ADR-UNIFIED-COACH-CAPABILITY-LAYER.md §Phase 2.
+ * MCP-backed tools are now wired in. They are NOT global ENTRIES — the deployed
+ * gateway surface is dynamic and per-caller, so they register PER REQUEST into a
+ * `McpToolRegistry` carried on the ToolContext (see registerMcpTools below).
+ * Each MCP tool becomes a 'continue' entry whose `execute` POSTs to the gateway
+ * `/mcp` forwarding the caller's JWT (the inverse of src/mcp/edgeFn). Dispatch
+ * resolves request-scoped MCP entries first, then falls back to the global
+ * built-ins, so concurrent requests never share MCP tool state.
  *
  * Flag: when CONSULTANT_TOOL_LOOP_ENABLED is OFF the loop ignores this registry
  * and keeps its original hardcoded memory+extraction branches — byte-identical
@@ -32,6 +35,8 @@ import {
   MemoryCommandInput,
   SupabaseClientLike,
 } from '../_shared/memory.ts';
+import { McpClient, McpToolDef } from './mcpClient.ts';
+import { emitMcpProxyLatency } from './telemetry.ts';
 
 /** Result of executing one tool call. */
 export interface ToolExecResult {
@@ -41,10 +46,33 @@ export interface ToolExecResult {
   isError: boolean;
 }
 
+/**
+ * Per-request bag of MCP-backed 'continue' entries. Built fresh each request
+ * (registerMcpTools) and carried on the ToolContext so dispatch never mutates
+ * global state across concurrent requests.
+ */
+export class McpToolRegistry {
+  private readonly byName = new Map<string, ToolEntry>();
+
+  set(entry: ToolEntry): void {
+    this.byName.set(entry.name, entry);
+  }
+  get(name: string): ToolEntry | undefined {
+    return this.byName.get(name);
+  }
+  get size(): number {
+    return this.byName.size;
+  }
+}
+
 /** Per-request execution dependencies handed to a tool's execute(). */
 export interface ToolContext {
   supabaseClient: SupabaseClientLike | null;
   userId: string | null;
+  /** Caller's Supabase JWT (Phase 2) — forwarded to identity-gated MCP tools. */
+  authToken: string | null;
+  /** Request-scoped MCP client handle (null when MCP integration is off/down). */
+  mcp: McpClient | null;
 }
 
 export type ToolKind = 'continue' | 'terminal';
@@ -95,7 +123,67 @@ export function getToolEntry(name: string): ToolEntry | undefined {
   return BY_NAME.get(name);
 }
 
+/**
+ * Resolve a tool by name for dispatch: request-scoped MCP tools win over the
+ * global built-ins (so a gateway tool never shadows `memory`/extraction by
+ * accident — built-ins are checked only when no MCP entry matches). Used by the
+ * loop's generic dispatch.
+ */
+export function resolveToolEntry(name: string, mcpRegistry: McpToolRegistry | null): ToolEntry | undefined {
+  return mcpRegistry?.get(name) ?? BY_NAME.get(name);
+}
+
 /** Names of tools that, when emitted alone, should continue the loop. */
 export function isContinueTool(name: string): boolean {
   return BY_NAME.get(name)?.kind === 'continue';
+}
+
+/**
+ * Build a per-request MCP tool registry + Anthropic tool defs from a live
+ * `tools/list`. Each gateway tool becomes a 'continue' entry whose `execute`
+ * proxies tools/call through the request's McpClient (forwarding the caller JWT)
+ * and emits an `mcp_proxy_latency` record. Returns both the registry (for the
+ * loop) and the Anthropic-shaped defs (to add to the model's tools array).
+ *
+ * Built-in tool names (memory, extract_brand_fields) are NEVER overridden: a
+ * gateway that advertised them is ignored for those names so the coach's own
+ * tools always win.
+ */
+export function registerMcpTools(
+  tools: McpToolDef[],
+): {
+  registry: McpToolRegistry;
+  anthropicTools: Array<{ name: string; description: string; input_schema: Record<string, unknown> }>;
+} {
+  const registry = new McpToolRegistry();
+  const anthropicTools: Array<{ name: string; description: string; input_schema: Record<string, unknown> }> = [];
+  const reserved = new Set(BY_NAME.keys());
+
+  for (const tool of tools) {
+    if (reserved.has(tool.name)) continue; // never let a gateway tool shadow a built-in
+    registry.set({
+      name: tool.name,
+      kind: 'continue',
+      async execute(input, ctx): Promise<ToolExecResult> {
+        if (ctx.mcp === null) {
+          return { content: `MCP tool ${tool.name} unavailable.`, isError: true };
+        }
+        const start = Date.now();
+        const result = await ctx.mcp.callTool(tool.name, input);
+        emitMcpProxyLatency({
+          tool: tool.name,
+          duration_ms: Date.now() - start,
+          ok: result.ok && !result.isError,
+        });
+        return { content: result.content, isError: result.isError };
+      },
+    });
+    anthropicTools.push({
+      name: tool.name,
+      description: tool.description,
+      input_schema: tool.inputSchema,
+    });
+  }
+
+  return { registry, anthropicTools };
 }
