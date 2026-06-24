@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>IDEA Brand Coach — Add the Coach to Claude</title>
-<meta name="description" content="Connect the IDEA Brand Coach to Claude once, then chat with it in plain language. Built on Trevor Bradford's book What Captures the Heart Goes in the Cart, it finds your Trust Gap and helps you close it." />
+<title>IDEA Brand Coach — Start Your Onboarding in Claude</title>
+<meta name="description" content="Copy one prompt into a new Claude session and the IDEA Brand Coach — built on Trevor Bradford's book What Captures the Heart Goes in the Cart — guides you from cold start to your Trust Gap in about 10 minutes." />
 <style>
   :root{
     --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -28,56 +28,58 @@
 
   /* LAYOUT */
   .wrap{max-width:920px;margin:0 auto;padding:0 24px}
-  section{padding:56px 0}
+  section{padding:64px 0}
   .eyebrow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--gld);margin-bottom:18px}
 
   /* HERO */
-  .hero{padding-top:72px;padding-bottom:32px;text-align:center}
-  .hero h1{font-size:clamp(32px,5vw,56px);font-weight:900;letter-spacing:-1.6px;line-height:1.03;color:var(--blk);max-width:780px;margin:0 auto 20px}
+  .hero{padding-top:72px;padding-bottom:40px;text-align:center}
+  .hero h1{font-size:clamp(34px,5.5vw,58px);font-weight:900;letter-spacing:-1.6px;line-height:1.02;color:var(--blk);max-width:760px;margin:0 auto 20px}
   .hero h1 .accent{color:var(--gld)}
-  .hero .lede{font-size:clamp(16px,2.2vw,20px);color:var(--mut);max-width:640px;margin:0 auto 16px;font-weight:500}
-  .hero .lede em{color:var(--ink);font-style:italic}
+  .hero .lede{font-size:clamp(16px,2.2vw,20px);color:var(--mut);max-width:620px;margin:0 auto 14px;font-weight:500}
   .hero .timebox{font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--blk)}
 
-  /* CONNECT CARD */
-  .connect{background:var(--blk);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(11,11,11,.22);margin-top:28px}
-  .connect-head{display:flex;align-items:center;gap:10px;padding:16px 22px;border-bottom:1px solid rgba(255,255,255,.1);color:var(--wht);font-size:13px;font-weight:800;letter-spacing:.5px}
-  .dot{width:10px;height:10px;border-radius:50%;background:var(--gld)}
-  .connect-body{padding:22px}
-  .url-row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
-  .url{flex:1;min-width:240px;display:flex;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:0 14px;color:#e9e7e1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;overflow:auto;white-space:nowrap}
-  .copy-btn{background:var(--gld);color:var(--blk);font-family:var(--font);font-size:14px;font-weight:800;padding:12px 22px;border:none;border-radius:6px;cursor:pointer;min-height:46px;white-space:nowrap;transition:background .15s,transform .05s}
-  .copy-btn:hover{background:#e8ac28}
-  .copy-btn:active{transform:translateY(1px)}
-  .copy-btn.copied{background:var(--d);color:var(--wht)}
-  .methods{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
-  .method{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:16px 16px 18px}
-  .method h4{color:var(--wht);font-size:14px;font-weight:800;letter-spacing:-.2px;margin-bottom:8px}
-  .method p{color:rgba(255,255,255,.62);font-size:13px;line-height:1.5}
-  .method ol{color:rgba(255,255,255,.66);font-size:13px;line-height:1.6;padding-left:18px}
-  .cmd{display:flex;gap:8px;align-items:stretch;margin-top:10px}
-  .cmd code{flex:1;min-width:0;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);border-radius:5px;padding:9px 11px;color:#e9e7e1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;overflow:auto;white-space:nowrap}
-  .copy-sm{background:transparent;color:var(--gld);border:1px solid var(--gld);border-radius:5px;font-family:var(--font);font-weight:800;font-size:12px;padding:0 12px;cursor:pointer;white-space:nowrap}
-  .copy-sm:hover{background:var(--gld);color:var(--blk)}
-  .copy-sm.copied{background:var(--d);border-color:var(--d);color:var(--wht)}
-  .connect-foot{padding:13px 22px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);font-size:12px;text-align:center}
-
-  /* SECTION HEADINGS */
-  h2{font-size:clamp(26px,3.6vw,38px);font-weight:900;letter-spacing:-1px;line-height:1.05;margin-bottom:10px;color:var(--blk)}
-  .sec-lede{color:var(--mut);font-size:16px;max-width:620px;margin-bottom:32px}
-
-  /* FIRST SESSION STEPS */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  /* STEPS */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0 8px}
   .step{background:var(--wht);border:1px solid var(--line);border-radius:8px;padding:22px 20px;text-align:left}
   .step .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--blk);color:var(--wht);font-weight:900;font-size:14px;margin-bottom:12px}
   .step h3{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px}
   .step p{font-size:14px;color:var(--mut)}
   .step code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-family:var(--font);font-size:13px}
 
+  /* CONNECT WALKTHROUGH */
+  .updated{display:inline-block;font-size:12px;font-weight:700;color:var(--mut);margin:-22px 0 26px;letter-spacing:.2px}
+  .updated b{color:var(--blk)}
+  .walk{display:flex;flex-direction:column;gap:18px}
+  .wstep{background:var(--wht);border:1px solid var(--line);border-radius:10px;padding:20px 22px}
+  .whead{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+  .whead .num{flex:none;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--blk);color:var(--wht);font-weight:900;font-size:14px}
+  .whead h3{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:3px}
+  .whead p{font-size:14px;color:var(--mut)}
+  .whead code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-family:var(--font);font-size:13px}
+  .shot{display:block;width:100%;border-radius:8px;box-shadow:0 6px 18px rgba(11,11,11,.10)}
+  .then{margin-top:24px;font-size:15px;color:var(--ink)}
+  .then code{background:var(--gld-lt);color:var(--blk);font-weight:800;padding:1px 6px;border-radius:3px;font-size:13px}
+
+  /* PROMPT CARD */
+  .prompt-card{background:var(--blk);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(11,11,11,.22);margin-top:28px}
+  .prompt-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+  .prompt-head .label{display:flex;align-items:center;gap:10px;color:var(--wht);font-size:13px;font-weight:800;letter-spacing:.5px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--gld)}
+  .copy-btn{background:var(--gld);color:var(--blk);font-family:var(--font);font-size:14px;font-weight:800;padding:11px 22px;border:none;border-radius:4px;cursor:pointer;min-height:42px;transition:background .15s,transform .05s}
+  .copy-btn:hover{background:#e8ac28}
+  .copy-btn:active{transform:translateY(1px)}
+  .copy-btn.copied{background:var(--d);color:var(--wht)}
+  pre#prompt{margin:0;padding:22px 22px 26px;max-height:380px;overflow:auto;color:#e9e7e1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.62;white-space:pre-wrap;word-break:break-word;text-align:left}
+  pre#prompt::-webkit-scrollbar{width:10px}
+  pre#prompt::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:6px}
+  .prompt-foot{padding:14px 20px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.55);font-size:12px;text-align:center}
+
   /* DIMENSIONS */
   .dim-band{background:var(--blk);color:var(--wht)}
   .dim-band .eyebrow{color:var(--gld)}
   .dim-band h2{color:var(--wht)}
+  h2{font-size:clamp(26px,3.6vw,38px);font-weight:900;letter-spacing:-1px;line-height:1.05;margin-bottom:10px;color:var(--blk)}
+  .sec-lede{color:var(--mut);font-size:16px;max-width:600px;margin-bottom:34px}
   .dim-band .sec-lede{color:rgba(255,255,255,.62)}
   .dims{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
   .dim{border-radius:8px;padding:20px;background:rgba(255,255,255,.04);border-top:4px solid}
@@ -89,10 +91,12 @@
   .dim.e{border-color:var(--e)} .dim.e .ltr{color:var(--e)}
   .dim.a{border-color:var(--a)} .dim.a .ltr{color:var(--a)}
 
-  /* FALLBACK NOTE */
-  .note{background:var(--wht);border:1px solid var(--line);border-left:4px solid var(--gld);border-radius:8px;padding:18px 20px;font-size:14px;color:var(--mut)}
-  .note strong{color:var(--ink)}
-  .note code{background:var(--gld-lt);color:var(--blk);font-weight:700;padding:1px 6px;border-radius:3px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+  /* STAGES (what to expect) */
+  .stages{display:grid;gap:12px}
+  .stg{display:grid;grid-template-columns:64px 1fr;align-items:start;gap:18px;background:var(--wht);border:1px solid var(--line);border-radius:8px;padding:20px 22px}
+  .stg .badge{font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--gld);padding-top:3px}
+  .stg h4{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+  .stg p{font-size:14px;color:var(--mut)}
 
   /* FOOTER */
   footer{background:var(--blk);color:rgba(255,255,255,.55);padding:34px;text-align:center;font-size:12.5px}
@@ -100,9 +104,10 @@
   footer a{color:var(--gld);text-decoration:none}
 
   @media(max-width:760px){
-    .steps,.dims,.methods{grid-template-columns:1fr}
+    .steps,.dims{grid-template-columns:1fr}
+    .stg{grid-template-columns:1fr;gap:6px}
     nav{padding:0 20px}
-    section{padding:44px 0}
+    section{padding:48px 0}
   }
 </style>
 </head>
@@ -114,72 +119,76 @@
     <div class="logo-rule"></div>
     <div class="logo-sub">Strategic Brand Creation</div>
   </div>
-  <div class="nav-tag">Brand Coach &middot; Connect</div>
+  <div class="nav-tag">Brand Coach &middot; Onboarding</div>
 </nav>
 
 <!-- HERO -->
 <header class="hero wrap">
   <span class="eyebrow">Your coach, inside Claude</span>
-  <h1>Add your IDEA Brand Coach <span class="accent">to Claude</span>.</h1>
-  <p class="lede"><em>What captures the heart goes in the cart.</em> Connect once, then talk to the coach in plain language. Built on Trevor Bradford&rsquo;s book of the same name, it finds your <strong>Trust Gap</strong> &mdash; the distance between how you see your brand and how your customers actually experience it &mdash; and helps you close it.</p>
-  <p class="timebox">One connector &middot; Works in Claude Code, Desktop &amp; claude.ai &middot; No account to start</p>
+  <h1>Your <span class="accent">Trust Gap</span> in about 10 minutes.</h1>
+  <p class="lede"><em>What captures the heart goes in the cart.</em> Add the IDEA Brand Coach to Claude &mdash; built on Trevor Bradford&rsquo;s book of the same name &mdash; and it walks you from cold start to your first real brand insight: the gap between how you see your brand and how your customers actually experience it.</p>
+  <p class="timebox">Runs inside Claude &middot; No account first &middot; ~10 minutes</p>
 </header>
 
-<!-- CONNECT -->
+<!-- CONNECT (PRIMARY) -->
 <section class="wrap" style="padding-top:8px">
-  <div class="connect">
-    <div class="connect-head"><span class="dot"></span> ADD THE CONNECTOR</div>
-    <div class="connect-body">
-      <div class="url-row">
-        <div class="url" id="mcpUrl">https://ideabrandcoach.icodemybusiness.com/mcp</div>
-        <button class="copy-btn" data-copy="https://ideabrandcoach.icodemybusiness.com/mcp">Copy URL</button>
-      </div>
-
-      <div class="methods">
-        <div class="method">
-          <h4>Claude Desktop &amp; claude.ai</h4>
-          <ol>
-            <li>Open <strong>Settings &rarr; Connectors</strong></li>
-            <li>Click <strong>Add custom connector</strong></li>
-            <li>Paste the URL above and save</li>
-          </ol>
-        </div>
-        <div class="method">
-          <h4>Claude Code</h4>
-          <p>Run this in your terminal:</p>
-          <div class="cmd">
-            <code>claude mcp add --transport http brand-coach https://ideabrandcoach.icodemybusiness.com/mcp</code>
-            <button class="copy-sm" data-copy="claude mcp add --transport http brand-coach https://ideabrandcoach.icodemybusiness.com/mcp">Copy</button>
-          </div>
+  <span class="eyebrow">Start here</span>
+  <h2>Add the IDEA Brand Coach to Claude</h2>
+  <p class="sec-lede">Connect the coach once as a Claude connector &mdash; then it&rsquo;s always a click away, with the full book-grounded coaching library behind it. No account needed.</p>
+  <p class="updated">Setup steps verified against Claude &mdash; <b>last updated June 14, 2026</b>. Claude&rsquo;s menus change; if yours looks different, the goal is the same: add a custom connector pointing at the URL below.</p>
+  <div class="walk">
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">1</span>
+        <div>
+          <h3>Open Settings</h3>
+          <p>In Claude (desktop or <code>claude.ai</code>), click your name in the bottom-left and choose <strong>Settings</strong>.</p>
         </div>
       </div>
+      <img class="shot" src="onboard-assets/connector-1-settings.png" alt="Claude account menu open with Settings highlighted" loading="lazy" />
     </div>
-    <div class="connect-foot">Anonymous front door &mdash; you can start without an account.</div>
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">2</span>
+        <div>
+          <h3>Connectors &rarr; Add custom connector</h3>
+          <p>Open <strong>Connectors</strong>, click the <strong>+</strong>, then <strong>Add custom connector</strong>. (In some Claude versions Connectors lives under <strong>Customize</strong>.)</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-2-add.png" alt="Connectors panel with the plus menu showing Add custom connector" loading="lazy" />
+    </div>
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">3</span>
+        <div>
+          <h3>Paste the URL and click Add</h3>
+          <p>Name it <strong>IDEA Brand Coach</strong>, paste the <strong>Remote MCP server URL</strong> below, and click <strong>Add</strong>. No login required.</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-3-modal.png" alt="Add custom connector dialog with the IDEA Brand Coach name and MCP server URL filled in" loading="lazy" />
+    </div>
+    <div class="wstep">
+      <div class="whead">
+        <span class="num">4</span>
+        <div>
+          <h3>You&rsquo;re connected</h3>
+          <p>The <strong>IDEA Brand Coach</strong> now appears in your connectors with its full toolset &mdash; ready to use in any chat.</p>
+        </div>
+      </div>
+      <img class="shot" src="onboard-assets/connector-4-connected.png" alt="IDEA Brand Coach connected in Claude, showing its available tools" loading="lazy" />
+    </div>
   </div>
-</section>
 
-<!-- FIRST SESSION -->
-<section class="wrap" style="padding-top:8px">
-  <span class="eyebrow">Then start coaching</span>
-  <h2>Your first session</h2>
-  <p class="sec-lede">Once the connector is added, everything happens in a normal Claude chat.</p>
-  <div class="steps">
-    <div class="step">
-      <span class="num">1</span>
-      <h3>Open a new chat</h3>
-      <p>Run the <code>onboard</code> prompt &mdash; or just say &ldquo;onboard me with the IDEA Brand Coach.&rdquo;</p>
+  <div class="prompt-card" style="margin-top:24px">
+    <div class="prompt-head">
+      <span class="label"><span class="dot"></span> MCP SERVER URL</span>
+      <button class="copy-btn" id="copyUrlBtn" onclick="copyUrl()">Copy URL</button>
     </div>
-    <div class="step">
-      <span class="num">2</span>
-      <h3>Pick how to start</h3>
-      <p><strong>Simple Diagnostic</strong> &mdash; a guided conversation. Or <strong>Full Contextual Upload</strong> &mdash; bring your listings &amp; reviews.</p>
-    </div>
-    <div class="step">
-      <span class="num">3</span>
-      <h3>See your Trust Gap</h3>
-      <p>The coach reflects back where trust is leaking &mdash; and the first move to close it.</p>
-    </div>
+    <pre id="mcpUrl" style="padding:20px 22px;max-height:none;color:#ffffff;font-size:15px;letter-spacing:.2px">https://ideabrandcoach.icodemybusiness.com/mcp</pre>
+    <div class="prompt-foot">Prefer Claude Code? Run <code style="background:rgba(255,255,255,.08);color:#f6e8bf;padding:1px 6px;border-radius:3px">claude mcp add --transport http idea-brand-coach https://ideabrandcoach.icodemybusiness.com/mcp</code></div>
   </div>
+
+  <p class="then">Then open a new chat, run the <code>onboard</code> prompt, and pick <strong>Simple Diagnostic</strong> or <strong>Full Contextual Upload</strong>.</p>
 </section>
 
 <!-- IDEA DIMENSIONS -->
@@ -187,21 +196,13 @@
   <div class="wrap">
     <span class="eyebrow">The framework behind it</span>
     <h2>IDEA</h2>
-    <p class="sec-lede">The four parts of trust Trevor Bradford has built brands on for 35 years &mdash; the lens the coach works through with you.</p>
+    <p class="sec-lede">The four dimensions at the heart of Trevor Bradford&rsquo;s book <em>What Captures the Heart Goes in the Cart</em> &mdash; the complete framework, now running your session.</p>
     <div class="dims">
-      <div class="dim i"><div class="ltr">I</div><div class="nm">Insight</div><p>Understand what your customer truly wants &mdash; the unmet need beneath the purchase.</p></div>
-      <div class="dim d"><div class="ltr">D</div><div class="nm">Distinctive</div><p>Stand apart in a way only a brand like yours could &mdash; not louder, different.</p></div>
-      <div class="dim e"><div class="ltr">E</div><div class="nm">Empathetic</div><p>Meet customers in their world &mdash; speak to the feeling, not just the feature.</p></div>
-      <div class="dim a"><div class="ltr">A</div><div class="nm">Authentic</div><p>Make promises your brand actually keeps, so trust compounds with every buy.</p></div>
+      <div class="dim i"><div class="ltr">I</div><div class="nm">Insight</div><p>A deep read of <em>why</em> your customers really buy &mdash; the emotional, psychographic drivers under the demographics. Insight comes first.</p></div>
+      <div class="dim d"><div class="ltr">D</div><div class="nm">Distinctive</div><p>Standing out in a crowded market &mdash; clear positioning and the distinctive brand assets that make you memorable, not just different.</p></div>
+      <div class="dim e"><div class="ltr">E</div><div class="nm">Empathetic</div><p>Tuning into what customers actually feel &mdash; security, belonging, validation &mdash; so they feel heard and understood.</p></div>
+      <div class="dim a"><div class="ltr">A</div><div class="nm">Authentic</div><p>Staying true to your values and promises &mdash; in actions, not just words. Transparency and consistency earn trust.</p></div>
     </div>
-  </div>
-</section>
-
-<!-- FALLBACK -->
-<section class="wrap" style="padding-top:8px">
-  <div class="note">
-    <strong>Power-user fallback.</strong> On a stdio-only Claude setup, bridge to the connector with
-    <code>npx mcp-remote https://ideabrandcoach.icodemybusiness.com/mcp</code>.
   </div>
 </section>
 
@@ -211,28 +212,14 @@
 </footer>
 
 <script>
-  // One handler for every [data-copy] button (URL + the Claude Code command).
-  function flash(btn, label){
-    const original = btn.textContent;
-    btn.textContent = label; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 2000);
-  }
-  function copyText(text, btn){
-    const done = () => flash(btn, btn.classList.contains('copy-sm') ? 'Copied' : 'Copied ✓');
+  function copyUrl(){
+    const btn = document.getElementById("copyUrlBtn");
+    const url = document.getElementById("mcpUrl").textContent.trim();
+    const done = () => { btn.textContent = "Copied ✓"; btn.classList.add("copied"); setTimeout(()=>{btn.textContent="Copy URL";btn.classList.remove("copied");},2200); };
     if (navigator.clipboard && window.isSecureContext){
-      navigator.clipboard.writeText(text).then(done).catch(fallback);
-    } else { fallback(); }
-    function fallback(){
-      const ta = document.createElement('textarea');
-      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.focus(); ta.select();
-      try { document.execCommand('copy'); done(); } catch(e) { btn.textContent = 'Press Ctrl+C'; }
-      document.body.removeChild(ta);
-    }
+      navigator.clipboard.writeText(url).then(done).catch(()=>{ btn.textContent="Press Ctrl+C"; });
+    } else { btn.textContent="Press Ctrl+C"; }
   }
-  document.querySelectorAll('[data-copy]').forEach((btn) => {
-    btn.addEventListener('click', () => copyText(btn.getAttribute('data-copy'), btn));
-  });
 </script>
 </body>
 </html>

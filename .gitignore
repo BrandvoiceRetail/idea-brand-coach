@@ -3,6 +3,8 @@
 
 # Playwright test screenshots
 *.png
+# ...but track committed onboarding page assets (real connector-setup screenshots)
+!public/onboard-assets/*.png
 
 # Logs
 logs

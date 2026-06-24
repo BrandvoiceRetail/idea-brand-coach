@@ -1,7 +1,9 @@
 # Brand-Coach MCP gateway — runs on the mango Lightsail box.
 #
-# Bound to LOCALHOST only (127.0.0.1:8787); Caddy terminates TLS and reverse-proxies
-# https://ideabrandcoach.icodemybusiness.com/mcp -> 127.0.0.1:8787 (see README.md).
+# Caddy runs in a container (mango-caddy-1) on the external `mango_default` network
+# and reverse-proxies https://ideabrandcoach.icodemybusiness.com/mcp -> this service
+# by NAME (brand-coach-mcp:8787), so the gateway joins that network. The host publish
+# (127.0.0.1:8787) is kept for local health checks only.
 #
 # Primary path: load the prebuilt image (`docker load`), then `docker compose up -d`.
 # Fallback: uncomment `build:` to build on the box from a rsynced repo checkout.
@@ -16,3 +18,10 @@ services:
     env_file: .env
     ports:
       - "127.0.0.1:8787:8787"
+    networks:
+      - mango_default
+
+networks:
+  # The network Caddy (mango-caddy-1) is on — created by the mango compose project.
+  mango_default:
+    external: true
