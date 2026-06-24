@@ -14,6 +14,29 @@ The navy/gold palette (`#1A3557` / `#C9A84C`) does NOT match the app's CSS-varia
 theme, so these screens use **scoped colour constants** (`theme.ts` → `PS_COLORS`)
 via inline styles rather than overriding global tokens.
 
+## Entry experience — the three movements (IDEA-APP-ENTRY-001 v1.1)
+
+Trevor's Revised Entry Experience Brief rebuilds what precedes the diagnostic into
+three movements: **1 Recognition → 2 Diagnosis → 3 Prescription**. The product's own
+Decision Trigger is Recognition, so the experience must MIRROR the customer before it
+says anything about itself.
+
+- **Movement 1 — Recognition** is BUILT: `RecognitionScreen.tsx`, served on the
+  **`/v3/diagnostic` review route** (`<ProblemSolverDiagnostic showRecognition />`)
+  so the canonical **`/v2/diagnostic` is untouched** while Trevor reviews it. It renders
+  full-screen *before* the 8-step flow, with **no Stepper/BrandBar** — acceptance
+  criterion #1 forbids any product / framework / "Trust Gap" vocabulary here (also #8
+  no CAPTURE names, #9 no buyer-state names; guarded by `__tests__/RecognitionScreen.test.tsx`).
+  The shell gates it via the `showRecognition` prop → `entered` flag; the continue
+  affordance ("Show me why") flips `entered` and enters the diagnostic. Visual brief for
+  the image lives in the component's header JSDoc; drop the asset into `RECOGNITION_IMAGE`.
+  Once Trevor approves, fold it into `/v2` (default `showRecognition` on, or retire `/v3`).
+- **Movements 2 & 3 are NOT built** — Trevor's process gate (AC #7) is "show me
+  Movement 1 before you move to Movement 2." When built, they slot between Recognition
+  and the flow (before `entered` flips). The brief also revises the diagnostic instruction,
+  results-screen sequence (Component 0 first), and adds the governing product descriptor
+  to the nav sub-label / footer / post-CTA — all out of scope until M1 is signed off.
+
 ## Screen → engine wiring
 
 | # | Screen | Component | Wiring |
@@ -49,7 +72,8 @@ completed report).
 
 ## How to test manually
 
-1. Open `/v2/diagnostic` (signed out). Answer the 4 questions → Reveal → real score dial + per-pillar /25 rows.
+0. Open `/v3/diagnostic` (signed out, mobile 375px). Movement 1 (Recognition) shows first — pure customer mirror, no product chrome, fits within ~1 scroll. "Show me why" enters the flow. (Restart on S8 returns here.) `/v2/diagnostic` shows the flow directly with no Recognition (baseline).
+1. Answer the 4 questions → Reveal → real score dial + per-pillar /25 rows.
 2. Continue → S2. Click the CTA while signed out → routed to `/auth?redirect=/v2/diagnostic`.
 3. Sign in (QA account, `docs/TEST_ACCOUNT.md`), return → S2 CTA continues to S3.
 4. Paste a known ASIN (e.g. `B0CJBQ7F5C`) → S4 auto-runs the forensic engine (6-step progress, ~30-60s).

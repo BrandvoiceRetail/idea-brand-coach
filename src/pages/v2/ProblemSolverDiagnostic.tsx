@@ -30,6 +30,7 @@ import { Stepper } from '@/components/v2/problem-solver/Stepper';
 import { BrandBar } from '@/components/v2/problem-solver/primitives';
 import { PS_COLORS, PS_STEP_NAME, type ProblemSolverStep } from '@/components/v2/problem-solver/theme';
 import type { ForensicResponse, ProblemSolverFlowState } from '@/components/v2/problem-solver/types';
+import { RecognitionScreen } from '@/components/v2/problem-solver/RecognitionScreen';
 import { DiagnoseScreen } from '@/components/v2/problem-solver/DiagnoseScreen';
 import { UnlockScreen } from '@/components/v2/problem-solver/UnlockScreen';
 import { UploadScreen } from '@/components/v2/problem-solver/UploadScreen';
@@ -52,15 +53,41 @@ const NAV_NOTE: Record<ProblemSolverStep, string> = {
 
 const AUTH_REDIRECT = '/auth?redirect=/v2/diagnostic';
 
-export default function ProblemSolverDiagnostic(): JSX.Element {
+interface ProblemSolverDiagnosticProps {
+  /**
+   * Prepend Movement 1 (Recognition) — the entry-experience screen from
+   * IDEA-APP-ENTRY-001 v1.1 — before the 8-step flow. Off by default so the
+   * canonical /v2/diagnostic is unchanged; the /v3/diagnostic review route opts in
+   * while Trevor signs off on Movement 1 (his gate: review M1 before M2).
+   */
+  showRecognition?: boolean;
+}
+
+export default function ProblemSolverDiagnostic({
+  showRecognition = false,
+}: ProblemSolverDiagnosticProps = {}): JSX.Element {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState<ProblemSolverStep>(1);
+  // When Recognition is shown, the flow proper begins only after the user enters
+  // it; otherwise (canonical /v2) we start already inside the flow. Movements 2/3
+  // will later slot in before `entered` flips.
+  const [entered, setEntered] = useState(!showRecognition);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [flow, setFlow] = useState<ProblemSolverFlowState>({ selfReport: null, asin: null, report: null });
 
-  // Step-advance funnel event (step index + name + overall self-report only — no PII).
+  // Entry-experience funnel: Movement 1 (Recognition) viewed once on arrival —
+  // only on the route that actually shows it.
   useEffect(() => {
+    if (!showRecognition) return;
+    captureAlphaEvent('entry_movement_viewed', { movement: 1, movement_name: 'recognition' });
+  }, [showRecognition]);
+
+  // Step-advance funnel event (step index + name + overall self-report only — no PII).
+  // Deferred until the user has entered the flow, so Recognition does not emit a
+  // spurious "diagnose viewed" before the diagnostic has actually begun.
+  useEffect(() => {
+    if (!entered) return;
     captureAlphaEvent('problem_solver_step_viewed', {
       step,
       step_name: PS_STEP_NAME[step],
@@ -69,9 +96,15 @@ export default function ProblemSolverDiagnostic(): JSX.Element {
     window.scrollTo(0, 0);
     // selfReport intentionally excluded — we report the score at the time of the step view.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, [step, entered]);
 
   const goTo = useCallback((next: ProblemSolverStep): void => setStep(next), []);
+
+  // Movement 1 → enter the diagnostic flow. (Later: → Movement 2, Diagnosis.)
+  const handleEnterFlow = useCallback((): void => {
+    captureAlphaEvent('entry_movement_advanced', { movement: 1, movement_name: 'recognition' });
+    setEntered(true);
+  }, []);
 
   /**
    * Guard step jumps from the stepper: never let the user skip past the auth gate
@@ -120,7 +153,14 @@ export default function ProblemSolverDiagnostic(): JSX.Element {
     setAnswers({});
     setFlow({ selfReport: null, asin: null, report: null });
     setStep(1);
-  }, []);
+    setEntered(!showRecognition); // back to Recognition when it's the opener
+  }, [showRecognition]);
+
+  // Movement 1 (Recognition) — full-screen, no Stepper/BrandBar chrome: the brief
+  // requires no product or framework vocabulary here (AC #1). It precedes the flow.
+  if (!entered) {
+    return <RecognitionScreen onContinue={handleEnterFlow} />;
+  }
 
   return (
     <div className="min-h-screen" style={{ background: PS_COLORS.g100 }}>

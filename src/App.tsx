@@ -144,6 +144,12 @@ const App = () => {
                     /v1/diagnostic still serves the original guest FreeDiagnostic. */}
                 <Route path="/v2/diagnostic" element={<ProblemSolverDiagnostic />} />
 
+                {/* Review route: the same flow with Movement 1 (Recognition) in front,
+                    per Trevor's Revised Entry Experience Brief (IDEA-APP-ENTRY-001 v1.1).
+                    Kept separate from /v2 so the live baseline is untouched while Trevor
+                    reviews Movement 1 before Movements 2/3 are built. */}
+                <Route path="/v3/diagnostic" element={<ProblemSolverDiagnostic showRecognition />} />
+
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
                 <Route path="/idea/insight" element={<Navigate to="/v1/idea/insight" replace />} />
