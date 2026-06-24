@@ -251,37 +251,26 @@ serve(async (req) => {
 
     console.log('[ai-insight-guidance] Request:', { stepId, userInput: userInput?.substring(0, 100) + '...' });
 
-    // Get authenticated user and retrieve Avatar data
-    const authHeader = req.headers.get('authorization');
-    let avatarData: AvatarData = { demographics: {}, psychology: {}, buyingBehavior: {} };
-
-    if (authHeader) {
-      const supabaseClient = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-        {
-          global: {
-            headers: {
-              Authorization: authHeader
-            }
-          }
-        }
-      );
-
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabaseClient.auth.getUser(token);
-
-      if (user) {
-        console.log('[ai-insight-guidance] Authenticated user:', user.id);
-        avatarData = await retrieveAvatarData(supabaseClient, user.id);
-        console.log('[ai-insight-guidance] Avatar data retrieved:', {
-          hasName: !!avatarData.name,
-          hasDemographics: Object.keys(avatarData.demographics).length > 0,
-          hasPsychology: Object.keys(avatarData.psychology).some(k => avatarData.psychology[k as keyof typeof avatarData.psychology]?.length),
-          hasBuyingBehavior: Object.keys(avatarData.buyingBehavior).length > 0
-        });
-      }
+    // AuthN: require an authenticated user. verify_jwt alone is insufficient (the public
+    // anon key is itself a valid JWT); getUser() rejects the anon token and closes
+    // unauthenticated LLM cost-abuse.
+    const authHeader = req.headers.get('authorization') ?? '';
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user } } = await supabaseClient.auth.getUser(token);
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+
+    let avatarData: AvatarData = { demographics: {}, psychology: {}, buyingBehavior: {} };
+    avatarData = await retrieveAvatarData(supabaseClient, user.id);
 
     // Build prompt components from Avatar data
     const avatarContext = buildAvatarContext(avatarData);
@@ -355,7 +344,7 @@ ${stepFocusPoints}`;
     });
   } catch (error) {
     console.error('[ai-insight-guidance] Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -14,6 +14,8 @@ const cfg: HostConfig = {
   ivosMcpToken: null,
   supabaseUrl: 'https://example.supabase.co',
   supabaseAnonKey: 'anon',
+  slackBotToken: null,
+  slackFeedbackChannelId: 'C0TEST',
 };
 
 const authed: Identity = { userId: 'user-1', token: 'tok', authenticated: true };

@@ -1,0 +1,84 @@
+{
+  "version": "0.1.0",
+  "status": "DRAFT — pending Matthew + Trevor sign-off on the touchpoint list and the strategy-field bindings. Engineering cannot decide what counts as a brand touchpoint.",
+  "scope": "P0 = DTC product brands (Amazon / Shopify / DTC site / email / social). B2B / service-brand pack is an additive config later, not a rebuild.",
+  "notes": {
+    "field_namespace": "audit_against paths reference the POPULATED avatar schema in src/types/avatar.ts. v2 (src/v2/domain/entities/Avatar.ts) maps painPoints <-> psychographics.fears and goals <-> psychographics.desires.",
+    "messaging": "'signature' = the coach's overarching message (Signature reveal engine). Asset copy is audited FOR alignment to the current Signature; the avatar fields say what each touchpoint must ACTIVATE. A messaging_version_id (see SPEC.md) pins which Signature version an asset was deployed under, enabling before/after.",
+    "applicability": "The agent sets applies_when tags per brand during onboarding (Amazon-only sellers have no Shopify PDP, etc.). Only applicable touchpoints appear in the current-vs-desired visual.",
+    "p0": "true = in the first coverage-check + visual. false = recognized touchpoint, deferred past P0."
+  },
+  "applicability_tags": [
+    "amazon", "shopify", "dtc_site", "email", "organic_social", "paid_social",
+    "packaging", "founder", "support", "loyalty"
+  ],
+  "stages": [
+    {
+      "id": "awareness",
+      "label": "Awareness",
+      "emotional_trigger": "curiosity / frustration",
+      "brand_task": "interrupt the pattern, name the problem",
+      "touchpoints": [
+        { "id": "paid_social_creative", "label": "Paid social ad creative + copy (Meta/TikTok/Pinterest)", "applies_when": ["paid_social"], "p0": true, "asset_kind": "image+copy", "personal_brand": false, "audit_against": ["psychographics.fears", "psychographics.triggers", "voice_of_customer"] },
+        { "id": "organic_social_profile", "label": "Organic social profile (bio, handle, pinned)", "applies_when": ["organic_social"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.values", "signature"] },
+        { "id": "influencer_ugc", "label": "Influencer / UGC", "applies_when": ["organic_social", "paid_social"], "p0": false, "asset_kind": "image+copy", "personal_brand": false, "audit_against": ["psychographics.values", "voice_of_customer"] },
+        { "id": "amazon_main_image", "label": "Amazon main image", "applies_when": ["amazon"], "p0": true, "asset_kind": "image", "personal_brand": false, "audit_against": ["psychographics.triggers", "psychographics.desires", "buying_behavior.decision_factors"] },
+        { "id": "seo_content", "label": "SEO / blog content", "applies_when": ["dtc_site"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.fears", "demographics.lifestyle"] },
+        { "id": "founder_social", "label": "Founder social (LinkedIn / TikTok)", "applies_when": ["founder"], "p0": false, "asset_kind": "copy", "personal_brand": true, "audit_against": ["psychographics.values", "signature"] }
+      ]
+    },
+    {
+      "id": "consideration",
+      "label": "Consideration",
+      "emotional_trigger": "hope / anticipation",
+      "brand_task": "demonstrate understanding, build credibility",
+      "touchpoints": [
+        { "id": "amazon_listing_copy", "label": "Amazon listing (title, bullets, A+)", "applies_when": ["amazon"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["buying_behavior.decision_factors", "psychographics.desires", "signature"] },
+        { "id": "amazon_brand_story", "label": "Amazon brand story / A+ brand module", "applies_when": ["amazon"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.values", "signature", "voice_of_customer"] },
+        { "id": "shopify_pdp", "label": "Shopify product page (PDP)", "applies_when": ["shopify", "dtc_site"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["buying_behavior.decision_factors", "psychographics.desires", "signature"] },
+        { "id": "brand_store_about", "label": "Brand store / About page", "applies_when": ["shopify", "dtc_site"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.values", "signature", "voice_of_customer"] },
+        { "id": "displayed_reviews", "label": "Displayed reviews / testimonials", "applies_when": ["amazon", "shopify", "dtc_site"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["voice_of_customer", "buying_behavior.decision_factors"] },
+        { "id": "founder_content", "label": "Founder content (story, POV)", "applies_when": ["founder"], "p0": false, "asset_kind": "copy", "personal_brand": true, "audit_against": ["psychographics.values", "signature"] }
+      ]
+    },
+    {
+      "id": "purchase_decision",
+      "label": "Purchase decision",
+      "emotional_trigger": "trust / relief",
+      "brand_task": "remove risk, provide social proof, reduce friction",
+      "touchpoints": [
+        { "id": "cart_checkout_flow", "label": "Cart / checkout flow", "applies_when": ["shopify", "dtc_site"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["buying_behavior.price_consciousness", "psychographics.fears"] },
+        { "id": "shipping_returns_policy", "label": "Shipping & returns policy", "applies_when": ["amazon", "shopify", "dtc_site"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.fears", "buying_behavior.decision_factors"] },
+        { "id": "trust_badges_social_proof", "label": "Trust badges / social proof", "applies_when": ["shopify", "dtc_site"], "p0": true, "asset_kind": "image+copy", "personal_brand": false, "audit_against": ["psychographics.fears", "voice_of_customer"] },
+        { "id": "urgency_messaging", "label": "Urgency / scarcity messaging", "applies_when": ["amazon", "shopify", "email"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.triggers", "buying_behavior.intent"] }
+      ]
+    },
+    {
+      "id": "retention",
+      "label": "Retention",
+      "emotional_trigger": "satisfaction / validation",
+      "brand_task": "confirm the right choice, deliver on the promise",
+      "touchpoints": [
+        { "id": "order_confirmation_email", "label": "Order confirmation email", "applies_when": ["email"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["signature", "psychographics.desires"] },
+        { "id": "shipping_email", "label": "Shipping / tracking email", "applies_when": ["email"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["signature", "psychographics.fears"] },
+        { "id": "packaging_unboxing", "label": "Packaging / unboxing", "applies_when": ["packaging"], "p0": true, "asset_kind": "image+copy", "personal_brand": false, "audit_against": ["psychographics.values", "psychographics.desires", "signature"] },
+        { "id": "insert_cards", "label": "Insert / thank-you cards", "applies_when": ["packaging"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.values", "signature"] },
+        { "id": "welcome_series", "label": "Email welcome series", "applies_when": ["email"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["signature", "psychographics.values", "psychographics.desires"] },
+        { "id": "winback_replenishment", "label": "Win-back / replenishment flow", "applies_when": ["email"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["buying_behavior.shopping_style", "psychographics.triggers"] },
+        { "id": "support_voice", "label": "Support / service voice", "applies_when": ["support"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["signature", "voice_of_customer"] }
+      ]
+    },
+    {
+      "id": "advocacy",
+      "label": "Advocacy",
+      "emotional_trigger": "pride / belonging",
+      "brand_task": "create shareable moments, build community",
+      "touchpoints": [
+        { "id": "review_request_flow", "label": "Review request flow", "applies_when": ["email", "amazon"], "p0": true, "asset_kind": "copy", "personal_brand": false, "audit_against": ["voice_of_customer", "psychographics.desires"] },
+        { "id": "referral_program", "label": "Referral program", "applies_when": ["email", "dtc_site"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.values", "buying_behavior.decision_factors"] },
+        { "id": "ugc_repost_permissions", "label": "UGC repost / permissions", "applies_when": ["organic_social"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.values"] },
+        { "id": "loyalty_community", "label": "Loyalty / community", "applies_when": ["loyalty"], "p0": false, "asset_kind": "copy", "personal_brand": false, "audit_against": ["psychographics.values", "psychographics.desires"] }
+      ]
+    }
+  ]
+}

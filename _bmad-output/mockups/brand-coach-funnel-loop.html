@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDEA Brand Coach — Funnel (closed loop + asset workspace)</title>
+<style>
+  :root{
+    --ink:#1d2433;--ink-soft:#55607a;--ink-faint:#8a93a8;
+    --bg:#f6f4ef;--surface:#fff;--line:#e7e3da;
+    --primary:#5b4bd6;--primary-soft:#efecfc;--primary-ink:#3a2eaa;
+    --funnel:#0f8f86;--funnel-soft:#e3f4f1;--funnel-ink:#0a6e66;
+    --warn:#c0392b;--warn-soft:#fdecea;--amber:#d99a2b;--amber-soft:#fbf3e1;
+    --good:#1f9d62;--good-soft:#e6f5ed;--shadow:0 1px 2px rgba(20,24,40,.04),0 8px 24px rgba(20,24,40,.06);
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer} .faint{color:var(--ink-faint)} .muted{color:var(--ink-soft)}
+  .toolbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .seg{margin-left:auto;display:inline-flex;background:#eceae3;border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--ink-soft);font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .stage{display:flex;justify-content:center;padding:24px 16px 70px}
+  .device{width:100%;max-width:1090px;transition:max-width .35s ease} .device.mobile{max-width:402px}
+  .device.mobile .frame{border-radius:34px;border:11px solid #11131c;box-shadow:0 30px 60px rgba(20,24,40,.22)}
+  .frame{background:var(--bg);border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+  .app{display:grid;grid-template-columns:218px 1fr;min-height:700px} .device.mobile .app{grid-template-columns:1fr;min-height:740px}
+  .side{background:#13182a;color:#cfd4e4;padding:16px 12px;display:flex;flex-direction:column;gap:5px}
+  .side .logo{display:flex;align-items:center;gap:9px;font-weight:700;color:#fff;margin:4px 6px 14px;font-size:15px}
+  .side .logo .g{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--primary),#8a7bff);display:grid;place-items:center;font-size:13px}
+  .side .lbl{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b748f;margin:6px 8px 4px}
+  .nav-i{display:flex;align-items:center;gap:11px;padding:12px;border-radius:11px;color:#aeb6cd;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer}
+  .nav-i .ic{width:20px;text-align:center;font-size:16px} .nav-i .pill{margin-left:auto;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--warn);color:#fff}
+  .nav-i.on{background:#222a44;color:#fff;border-color:#33406b;box-shadow:inset 3px 0 0 var(--funnel)}
+  .side .spacer{flex:1}
+  .side .acct{display:flex;align-items:center;gap:10px;padding:9px 8px;border-top:1px solid #232a40;margin-top:6px;font-size:13px}
+  .side .acct .av{width:28px;height:28px;border-radius:50%;background:#3a4566;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700}
+  .device.mobile .side{display:none}
+  .botnav{display:none} .device.mobile .botnav{display:flex;position:sticky;bottom:0;background:#13182a;border-top:1px solid #232a40}
+  .device.mobile .botnav button{flex:1;border:0;background:transparent;color:#aeb6cd;padding:10px 0 13px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .device.mobile .botnav button.on{color:#fff} .device.mobile .botnav button .ic{font-size:19px}
+
+  .main{padding:18px 22px 30px;overflow:auto} .device.mobile .main{padding:14px 14px 22px}
+  .vhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .vhead h2{margin:0;font-size:21px;letter-spacing:-.02em}
+  .orgtoggle{margin-left:auto;display:inline-flex;background:#eceae3;border-radius:9px;padding:3px}
+  .orgtoggle button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:700;color:var(--ink-soft)}
+  .orgtoggle button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .vsub{color:var(--ink-soft);font-size:13px;margin:4px 0 14px} .vsub b{color:var(--funnel-ink)}
+
+  .work{display:grid;grid-template-columns:236px 1fr;gap:14px;align-items:start}
+  .device.mobile .work{grid-template-columns:1fr}
+
+  /* library rail */
+  .lib{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:10px}
+  .lib .lh{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);padding:4px 6px 8px}
+  .lib .lh .add{margin-left:auto;border:0;background:var(--funnel-soft);color:var(--funnel-ink);border-radius:7px;padding:3px 8px;font-size:11px;font-weight:700}
+  .tree{font-size:13px}
+  .folder{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer}
+  .folder:hover{background:#fbfaf7} .folder.on{background:var(--funnel-soft);color:var(--funnel-ink);font-weight:700}
+  .folder .ct{margin-left:auto;font-size:11px;color:var(--ink-faint)} .folder.on .ct{color:var(--funnel-ink)}
+  .folder.sub{margin-left:16px;font-size:12.5px}
+  .folder .rn{opacity:0;margin-left:6px;font-size:11px;color:var(--ink-faint)} .folder:hover .rn{opacity:1}
+  .libnote{font-size:10.5px;color:var(--ink-faint);padding:8px 6px 2px;border-top:1px solid var(--line);margin-top:6px}
+  .avatars .folder .avtag{width:18px;height:18px;border-radius:50%;background:var(--primary-soft);color:var(--primary-ink);display:grid;place-items:center;font-size:10px;font-weight:800}
+  #libAvatars{display:none}
+
+  /* workspace */
+  .ws{display:flex;flex-direction:column;gap:14px}
+  .crumb{font-size:11.5px;color:var(--ink-faint)} .crumb b{color:var(--ink-soft)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .ahead{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .ahead .th{width:46px;height:46px;border-radius:11px;background:#f0eef9;display:grid;place-items:center;font-size:22px;flex:none}
+  .ahead .at{flex:1;min-width:0}
+  .ahead .at h3{margin:0;font-size:16px} .ahead .at .meta{font-size:12px;color:var(--ink-faint);margin-top:2px}
+  .ahead .tag{font-size:10px;font-weight:700;color:var(--funnel-ink);background:var(--funnel-soft);border-radius:999px;padding:3px 9px}
+
+  /* loop strip */
+  .loop{padding:14px 16px;border-bottom:1px solid var(--line);background:#fbfbfc}
+  .loop .lt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .steps{display:flex;align-items:stretch;gap:8px} .device.mobile .steps{flex-direction:column}
+  .step{flex:1;border:1px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff;position:relative}
+  .step .sn{font-size:10px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
+  .step .st{font-size:13px;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:6px}
+  .step .sd{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+  .step.done{border-color:#bfe6cf;background:var(--good-soft)} .step.done .st{color:#0f6b41}
+  .step.active{border-color:var(--funnel-ink);box-shadow:0 0 0 2px var(--funnel-soft)}
+  .arrow{display:flex;align-items:center;color:var(--ink-faint);font-size:16px} .device.mobile .arrow{justify-content:center;transform:rotate(90deg)}
+  .scorebig{font-size:13px;font-weight:800} .scorebig.good{color:var(--good)} .scorebig.mid{color:var(--amber)} .scorebig.bad{color:var(--warn)}
+  .iterate{margin-top:11px;display:flex;gap:8px;flex-wrap:wrap}
+  .iterate button{border:0;border-radius:9px;padding:9px 14px;font-size:12.5px;font-weight:700}
+  .iterate .primary{background:var(--funnel-ink);color:#fff} .iterate .ghost{background:#fff;border:1px solid var(--line)!important;color:var(--ink-soft)}
+
+  /* iteration history */
+  .hist{padding:12px 16px}
+  .hist .ht{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:8px}
+  .ver{display:flex;align-items:center;gap:11px;padding:9px;border:1px solid var(--line);border-radius:11px;margin-bottom:7px;background:#fff}
+  .ver.cur{border-color:#bfe6cf;background:var(--good-soft)}
+  .ver .vth{width:38px;height:38px;border-radius:9px;background:#f0eef9;display:grid;place-items:center;font-size:18px;flex:none}
+  .ver .vm{flex:1;min-width:0}
+  .ver .vn{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .ver .vd{font-size:11.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vbadge{font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px}
+  .vbadge.cur{background:var(--good);color:#fff} .vbadge.old{background:var(--manual-soft,#eef0f3);color:#6b7280}
+  .score{font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .score.good{background:var(--good-soft);color:var(--good)} .score.mid{background:var(--amber-soft);color:#92671a} .score.bad{background:var(--warn-soft);color:var(--warn)}
+  .ver .va{display:flex;gap:5px} .ver .va button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 8px;font-size:11px;font-weight:700;color:var(--ink-soft)}
+  .usedin{font-size:11.5px;color:var(--ink-faint);padding:8px 16px 14px} .usedin b{color:var(--funnel-ink)}
+
+  .toolnote{font-size:11px;color:var(--ink-faint);margin-top:14px;border-top:1px solid var(--line);padding-top:11px}
+  .toolnote code{background:#efe9e0;border-radius:5px;padding:1px 5px;font-size:10.5px}
+  .toolnote .nn{color:var(--amber);font-weight:700}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>● Funnel — closed loop &amp; asset workspace</b><span class="faint" style="font-size:12px">mockup · labels pending schema check</span>
+  <div class="seg" id="segDev"><button data-m="desktop" class="on">🖥 Desktop</button><button data-m="mobile">📱 Mobile</button></div>
+</div>
+
+<div class="stage"><div class="device" id="device"><div class="frame"><div class="app">
+  <aside class="side">
+    <div class="logo"><span class="g">◆</span> Brand Coach</div>
+    <div class="lbl">What do you want to work on?</div>
+    <div class="nav-i"><span class="ic">🧭</span> Brand Coach <span class="pill">2</span></div>
+    <div class="nav-i on"><span class="ic">🔻</span> Funnel</div>
+    <div class="spacer"></div>
+    <div class="nav-i"><span class="ic">📄</span> Strategy Document</div>
+    <div class="acct"><span class="av">M</span><div>Matthew<br><span class="faint" style="font-size:11px">Free plan</span></div></div>
+  </aside>
+
+  <main class="main">
+    <div class="vhead"><h2>Funnel</h2>
+      <div class="orgtoggle"><button class="on" onclick="org(this,'folders')">📁 Folders</button><button onclick="org(this,'avatars')">👤 By avatar</button></div>
+    </div>
+    <p class="vsub">Generate → make it in any tool → <b>bring it back</b> → I check it against your brand → <b>iterate</b>. Every version is kept and organized your way.</p>
+
+    <div class="work">
+      <!-- LIBRARY RAIL -->
+      <aside class="lib">
+        <div id="libFolders">
+          <div class="lh">Folders <button class="add">＋ New</button></div>
+          <div class="tree">
+            <div class="folder"><span>📂</span> Launch campaign <span class="ct">3</span><span class="rn">✎</span></div>
+            <div class="folder sub on"><span>📁</span> Awareness <span class="ct">2</span><span class="rn">✎</span></div>
+            <div class="folder sub"><span>📁</span> Email <span class="ct">1</span><span class="rn">✎</span></div>
+            <div class="folder"><span>📁</span> Evergreen ads <span class="ct">4</span><span class="rn">✎</span></div>
+            <div class="folder"><span>📁</span> Product page <span class="ct">2</span><span class="rn">✎</span></div>
+            <div class="folder"><span>🗂️</span> Unsorted <span class="ct">1</span></div>
+          </div>
+          <div class="libnote">Drag assets between folders · rename / nest freely</div>
+        </div>
+        <div id="libAvatars" class="avatars">
+          <div class="lh">Avatars</div>
+          <div class="tree">
+            <div class="folder on"><span class="avtag">A</span> Aria (solo founders) <span class="ct">6</span></div>
+            <div class="folder"><span class="avtag">E</span> Enterprise buyer <span class="ct">3</span></div>
+            <div class="folder"><span class="avtag">+</span> Add avatar</div>
+          </div>
+          <div class="libnote">Same assets, grouped by the avatar they target</div>
+        </div>
+      </aside>
+
+      <!-- WORKSPACE -->
+      <div class="ws">
+        <div class="crumb">Launch campaign › <b>Awareness</b> › Hero image</div>
+        <div class="card">
+          <div class="ahead"><div class="th">🖼️</div><div class="at"><h3>Hero image — “fast clarity”</h3><div class="meta">Avatar: Aria · 3 versions · last touched 2h ago</div></div><span class="tag">Awareness</span></div>
+
+          <!-- LOOP -->
+          <div class="loop">
+            <div class="lt">🔁 The loop</div>
+            <div class="steps">
+              <div class="step done"><div class="sn">1 · Generate</div><div class="st">✓ Prompt</div><div class="sd">From Positioning + Voice</div></div>
+              <div class="arrow">→</div>
+              <div class="step done"><div class="sn">2 · Make it</div><div class="st">✓ Midjourney</div><div class="sd">You made it externally</div></div>
+              <div class="arrow">→</div>
+              <div class="step done"><div class="sn">3 · Bring back</div><div class="st">✓ Uploaded v3</div><div class="sd">Stored in this folder</div></div>
+              <div class="arrow">→</div>
+              <div class="step active"><div class="sn">4 · Check vs brand</div><div class="st"><span class="scorebig good">86%</span> on-brand</div><div class="sd">↑ from 61% on v1</div></div>
+            </div>
+            <div class="iterate">
+              <button class="primary">↻ New iteration</button>
+              <button class="ghost">✦ Tweak the prompt</button>
+              <button class="ghost">📊 Track lift</button>
+            </div>
+          </div>
+
+          <!-- HISTORY -->
+          <div class="hist">
+            <div class="ht">Iteration history</div>
+            <div class="ver cur"><div class="vth">🖼️</div><div class="vm"><div class="vn">v3 <span class="vbadge cur">current</span></div><div class="vd">“Tightened palette + on-voice headline” · 2h ago</div></div><span class="score good">86% on-brand</span><div class="va"><button>View</button></div></div>
+            <div class="ver"><div class="vth">🖼️</div><div class="vm"><div class="vn">v2 <span class="vbadge old">v2</span></div><div class="vd">“Warmer light, less clutter” · yesterday</div></div><span class="score mid">72%</span><div class="va"><button>View</button><button>↺ Branch</button></div></div>
+            <div class="ver"><div class="vth">🖼️</div><div class="vm"><div class="vn">v1 <span class="vbadge old">v1</span></div><div class="vd">“First pass — too corporate, off-voice” · 2 days ago</div></div><span class="score bad">61% ⚠</span><div class="va"><button>View</button><button>↺ Branch</button></div></div>
+          </div>
+          <div class="usedin">🔗 Used in: <b>Product page (Desire)</b> · 📈 Lift vs control: <b>+14% CTR</b> (brand_tests)</div>
+        </div>
+
+        <div class="toolnote">
+          <b>Real today</b> — build on the funnel ledger <code>brand_assets</code>/<code>brand_tests</code> (the existing funnel tracker), which already has <b>by-avatar</b> (avatar_id), funnel <b>stage</b>/touchpoint, the <b>0–100 IDEA audit score</b> + before/after drift (<code>audit_result {i,d,e,a}</code>, <code>previous_score</code>), <b>staleness</b> (signature_version), and real <b>lift</b> records (<code>brand_tests</code>).<br>
+          <span class="nn">Net-new</span>: editable free-form <b>folders</b> (a collections table), <b>kept-version history</b> (wire <code>superseded_by</code> — present but unused), and the external-tool <b>prompt generator</b>. The other ledger <code>coach_assets</code> has none of this structure — the funnel builds on <code>brand_assets</code>.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="botnav">
+    <button><span class="ic">🧭</span>Coach</button><button class="on"><span class="ic">🔻</span>Funnel</button><button><span class="ic">📄</span>Document</button>
+  </nav>
+</div></div></div></div>
+
+<script>
+  document.getElementById('segDev').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#segDev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    document.getElementById('device').classList.toggle('mobile',b.dataset.m==='mobile');});
+  function org(btn,which){btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+    document.getElementById('libFolders').style.display=which==='folders'?'block':'none';
+    document.getElementById('libAvatars').style.display=which==='avatars'?'block':'none';}
+  document.querySelectorAll('.folder').forEach(f=>f.addEventListener('click',()=>{const p=f.closest('.tree');p.querySelectorAll('.folder').forEach(x=>x.classList.remove('on'));f.classList.add('on');}));
+</script>
+</body>
+</html>

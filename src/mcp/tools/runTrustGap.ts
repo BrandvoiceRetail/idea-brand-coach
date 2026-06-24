@@ -11,6 +11,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { buildTrustGap } from '../../lib/trustGap.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
+import { captureMcpEvent } from '../posthog.js';
 
 const dim = z.number().min(0).max(100);
 const inputSchema = {
@@ -39,7 +40,12 @@ export function registerRunTrustGapTool(server: McpServer): void {
         overall: overall ?? (insight + distinctive + empathetic + authentic) / 4,
       };
       const result = buildTrustGap(scores);
-      safeLog({ event: 'tool.run_trust_gap', caller: userTag(getIdentity()) });
+      const identity = getIdentity();
+      safeLog({ event: 'tool.run_trust_gap', caller: userTag(identity) });
+      captureMcpEvent(identity.userId ?? 'anon', 'mcp_trust_gap_run', {
+        primary_gap: result.primaryGap,
+        overall_score: scores.overall,
+      });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         structuredContent: result as unknown as Record<string, unknown>,

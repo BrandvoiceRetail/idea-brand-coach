@@ -100,6 +100,13 @@ export const useChat = (options: UseChatOptions = {}) => {
     setIsStreaming(true);
     abortRef.current = false;
 
+    // User-perceived latency: start → first token (TTFT) and start → complete (total).
+    const startedAt = performance.now();
+    let firstTokenAt: number | null = null;
+    const ttftMs = (): number | null =>
+      firstTokenAt !== null ? Math.round(firstTokenAt - startedAt) : null;
+    const totalMs = (): number => Math.round(performance.now() - startedAt);
+
     try {
       await chatService.sendMessageStreaming(
         {
@@ -111,6 +118,7 @@ export const useChat = (options: UseChatOptions = {}) => {
         {
           onTextDelta: (delta: string) => {
             if (!abortRef.current) {
+              if (firstTokenAt === null) firstTokenAt = performance.now();
               setStreamingContent(prev => prev + delta);
             }
           },
@@ -120,6 +128,13 @@ export const useChat = (options: UseChatOptions = {}) => {
           onComplete: () => {
             setIsStreaming(false);
             setStreamingContent('');
+            captureAlphaEvent('chat_response_latency', {
+              ok: true,
+              chatbot_type: chatbotType,
+              chapter_id: chapterId ?? null,
+              ttft_ms: ttftMs(),
+              total_ms: totalMs(),
+            });
             // Refresh messages from DB (now includes the saved assistant message)
             queryClient.invalidateQueries({ queryKey: ['chat', 'messages', chatbotType, sessionId] });
             // Refresh sidebar for potential title update
@@ -130,6 +145,14 @@ export const useChat = (options: UseChatOptions = {}) => {
             setStreamingContent('');
             // Covers stream-body errors too (HTTP 200 wrapping a failure)
             captureAlphaEvent('llm_call_failed', { which_call: 'conversation', error_type: 'stream_error' });
+            captureAlphaEvent('chat_response_latency', {
+              ok: false,
+              chatbot_type: chatbotType,
+              chapter_id: chapterId ?? null,
+              ttft_ms: ttftMs(),
+              total_ms: totalMs(),
+              error_type: 'stream_error',
+            });
             toast({
               title: 'Streaming Error',
               description: error.message,
@@ -142,6 +165,14 @@ export const useChat = (options: UseChatOptions = {}) => {
       setIsStreaming(false);
       setStreamingContent('');
       captureAlphaEvent('llm_call_failed', { which_call: 'conversation', error_type: 'exception' });
+      captureAlphaEvent('chat_response_latency', {
+        ok: false,
+        chatbot_type: chatbotType,
+        chapter_id: chapterId ?? null,
+        ttft_ms: ttftMs(),
+        total_ms: totalMs(),
+        error_type: 'exception',
+      });
       toast({
         title: 'Error Sending Message',
         description: error instanceof Error ? error.message : 'Unknown error',

@@ -37,7 +37,9 @@ export type AlphaEventName =
   | 'feedback_modal_opened'
   | 'feedback_submitted'
   | 'thank_you_viewed'
-  | 'llm_call_failed';
+  | 'llm_call_failed'
+  // User-perceived chat latency (TTFT + total). PostHog GeoIP gives per-country slicing.
+  | 'chat_response_latency';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

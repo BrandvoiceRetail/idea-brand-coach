@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
 
@@ -213,12 +214,54 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Only allow scraping of public http(s) URLs. Rejects non-http schemes and
+ * private / loopback / link-local / metadata hosts (defense-in-depth against SSRF/abuse).
+ */
+function isPublicHttpUrl(raw: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+  const host = u.hostname.toLowerCase();
+  if (host === 'localhost' || host === '::1' || host.endsWith('.local')) return false;
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const a = parseInt(m[1]);
+    const b = parseInt(m[2]);
+    if (a === 10 || a === 127 || a === 0 || (a === 192 && b === 168) ||
+        (a === 172 && b >= 16 && b <= 31) || (a === 169 && b === 254) ||
+        (a === 100 && b >= 64 && b <= 127)) return false;
+  }
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // AuthN: require an authenticated user. verify_jwt alone is insufficient (the public
+    // anon key is itself a valid JWT); getUser() rejects the anon token and closes
+    // unauthenticated Firecrawl credit-abuse. Both legitimate callers forward a user JWT.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const authClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!firecrawlApiKey) {
       throw new Error('Missing FIRECRAWL_API_KEY environment variable');
     }
@@ -232,8 +275,14 @@ serve(async (req) => {
       );
     }
 
-    // Cap the number of URLs to prevent excessive API usage
-    const cappedUrls = urls.slice(0, 10);
+    // Cap the number of URLs and reject non-public / internal targets (SSRF/abuse guard).
+    const cappedUrls = urls.slice(0, 10).filter((u: unknown) => typeof u === 'string' && isPublicHttpUrl(u));
+    if (cappedUrls.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'No valid public http(s) URLs provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     console.log(`Review scraper request: ${cappedUrls.length} URLs`);
 
     const results: ScrapeResult[] = [];
@@ -292,7 +341,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in review-scraper function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

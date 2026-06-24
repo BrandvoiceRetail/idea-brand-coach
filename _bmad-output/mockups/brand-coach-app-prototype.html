@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDEA Brand Coach — Unified App Prototype</title>
+<style>
+  :root{
+    --ink:#1d2433;--ink-soft:#55607a;--ink-faint:#8a93a8;
+    --bg:#f6f4ef;--surface:#fff;--line:#e7e3da;
+    --primary:#5b4bd6;--primary-soft:#efecfc;--primary-ink:#3a2eaa;
+    --funnel:#0f8f86;--funnel-soft:#e3f4f1;--funnel-ink:#0a6e66;
+    --ai:#0e7c86;--ai-soft:#e0f3f4;--manual:#6b7280;--manual-soft:#eef0f3;
+    --warn:#c0392b;--warn-soft:#fdecea;--amber:#d99a2b;--amber-soft:#fbf3e1;
+    --good:#1f9d62;--good-soft:#e6f5ed;--shadow:0 1px 2px rgba(20,24,40,.04),0 8px 24px rgba(20,24,40,.06);
+    --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;--code:#15123a;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer} .faint{color:var(--ink-faint)} .muted{color:var(--ink-soft)}
+
+  .toolbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .seg{margin-left:auto;display:inline-flex;background:#eceae3;border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--ink-soft);font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .stage{display:flex;justify-content:center;padding:24px 16px 70px}
+  .device{width:100%;max-width:1090px;transition:max-width .35s ease}
+  .device.mobile{max-width:402px}
+  .device.mobile .frame{border-radius:34px;border:11px solid #11131c;box-shadow:0 30px 60px rgba(20,24,40,.22)}
+  .frame{background:var(--bg);border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+  .app{display:grid;grid-template-columns:218px 1fr;min-height:700px}
+  .device.mobile .app{grid-template-columns:1fr;min-height:740px}
+
+  /* sidebar / bottom nav */
+  .side{background:#13182a;color:#cfd4e4;padding:16px 12px;display:flex;flex-direction:column;gap:5px}
+  .side .logo{display:flex;align-items:center;gap:9px;font-weight:700;color:#fff;margin:4px 6px 14px;font-size:15px}
+  .side .logo .g{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--primary),#8a7bff);display:grid;place-items:center;font-size:13px}
+  .side .lbl{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b748f;margin:6px 8px 4px}
+  .nav-i{display:flex;align-items:center;gap:11px;padding:12px;border-radius:11px;color:#aeb6cd;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer}
+  .nav-i .ic{width:20px;text-align:center;font-size:16px}
+  .nav-i .pill{margin-left:auto;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--warn);color:#fff}
+  .nav-i.on{background:#222a44;color:#fff;border-color:#33406b}
+  .nav-i.coach.on{box-shadow:inset 3px 0 0 var(--primary)} .nav-i.funnel.on{box-shadow:inset 3px 0 0 var(--funnel)} .nav-i.doc.on{box-shadow:inset 3px 0 0 #8a7bff}
+  .side .spacer{flex:1}
+  .side .acct{display:flex;align-items:center;gap:10px;padding:9px 8px;border-top:1px solid #232a40;margin-top:6px;font-size:13px}
+  .side .acct .av{width:28px;height:28px;border-radius:50%;background:#3a4566;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700}
+  .device.mobile .side{display:none}
+  .botnav{display:none}
+  .device.mobile .botnav{display:flex;position:sticky;bottom:0;background:#13182a;border-top:1px solid #232a40;z-index:40}
+  .device.mobile .botnav button{flex:1;border:0;background:transparent;color:#aeb6cd;padding:10px 0 13px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
+  .device.mobile .botnav button .ic{font-size:19px} .device.mobile .botnav button.on{color:#fff}
+
+  .main{overflow:auto}
+  .view{display:none} .view.on{display:block}
+  .pad{padding:20px 26px 36px} .device.mobile .pad{padding:16px 14px 24px}
+
+  .vhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:3px}
+  .vhead h2{margin:0;font-size:21px;letter-spacing:-.02em}
+  .needpill{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px}
+  .needpill.warn{background:var(--warn-soft);color:var(--warn)} .needpill.funnel{background:var(--funnel-soft);color:var(--funnel-ink)}
+  .vsub{color:var(--ink-soft);font-size:13.5px;margin:0 0 14px} .vsub .auto{color:var(--ai);font-weight:700} .vsub .autof{color:var(--funnel-ink);font-weight:700}
+
+  /* shared single-focus item */
+  .item{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);margin-bottom:9px;overflow:hidden}
+  .frow{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer}
+  #v-coach .item.open .frow{background:var(--primary-soft);border-bottom:1px solid #ddd6fb}
+  #v-funnel .item.open .frow{background:var(--funnel-soft);border-bottom:1px solid #c7e8e3}
+  .frow .ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:15px;flex:none;background:#f0eef9}
+  #v-funnel .frow .ico{background:var(--funnel-soft)}
+  .frow .meta{flex:1;min-width:0}
+  .frow .meta .t{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .frow .meta .d{font-size:12px;color:var(--ink-soft);margin-top:1px}
+  .chip{font-size:10px;font-weight:700;color:var(--ink-faint);letter-spacing:.04em;text-transform:uppercase}
+  .frow .chev{color:var(--ink-faint)}
+  .panel{display:none} .item.open .panel{display:block}
+  .st{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+  .st.auto{color:var(--ai)} .st.need{color:var(--warn)} .st.todo{color:var(--ink-faint)} .st.ok{color:var(--good)}
+
+  /* alerts */
+  .alerts{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .alert{display:flex;align-items:center;gap:11px;border-radius:12px;padding:11px 13px;cursor:pointer;border:1px solid;font-size:13px}
+  .alert .av{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:13px;flex:none;color:#fff}
+  .alert.warn{background:var(--warn-soft);border-color:#f3cfc9} .alert.warn .av{background:var(--warn)}
+  .alert.info{background:var(--primary-soft);border-color:#ddd6fb} .alert.info .av{background:var(--primary)}
+  .alert .go{margin-left:auto;font-weight:700;white-space:nowrap}
+  .alert.warn .go{color:var(--warn)} .alert.info .go{color:var(--primary-ink)}
+
+  /* chat + fields (coach) */
+  .pgrid{display:grid;grid-template-columns:1.05fr .95fr} .device.mobile .pgrid{grid-template-columns:1fr}
+  .pgrid .chatcol{border-right:1px solid var(--line)} .device.mobile .pgrid .chatcol{border-right:0;border-bottom:1px solid var(--line)}
+  .chat{display:flex;flex-direction:column;background:#fbfbfc;height:100%}
+  .stream{padding:13px 13px 5px;display:flex;flex-direction:column;gap:8px;max-height:180px;overflow:auto}
+  .msg{max-width:90%;padding:8px 11px;border-radius:12px;font-size:12.5px}
+  .msg.ai{background:#fff;border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+  .msg.me{background:var(--primary);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .composer{display:flex;gap:7px;padding:9px 12px;border-top:1px solid var(--line);background:#fff}
+  .composer input{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:12.5px;background:#fbfaf7}
+  .composer button{border:0;background:var(--primary);color:#fff;border-radius:9px;padding:0 13px;font-weight:700}
+  .fcol{background:#fff;padding:11px 13px}
+  .fcol .lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;color:var(--warn)}
+  .fcol .lbl.ai{color:var(--ai)}
+  .field{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px;background:#fbfaf7}
+  .field.flag{border-color:#f3cfc9;background:var(--warn-soft)}
+  .field .fh{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap}
+  .field .fl{font-size:12.5px;font-weight:700}
+  .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
+  .badge.ai{background:var(--ai-soft);color:var(--ai)} .badge.manual{background:var(--manual-soft);color:var(--manual)} .badge.flag{background:#fff;color:var(--warn)} .badge.thin{background:var(--amber-soft);color:#92671a}
+  .field .ts{margin-left:auto;font-size:10.5px;color:var(--ink-faint)}
+  .field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12.5px;font-family:inherit;background:#fff}
+  .field .fa{display:flex;gap:7px;margin-top:7px} .field .fa button{font-size:11.5px;font-weight:700;border-radius:8px;padding:5px 11px;border:0}
+  .fa .keep{background:var(--good);color:#fff} .fa .edit{background:#fff;border:1px solid var(--line)!important;color:var(--ink-soft)}
+  .managed{margin-top:4px;border:1px dashed var(--line);border-radius:10px;background:#fbfbfc}
+  .managed summary{list-style:none;cursor:pointer;padding:9px 12px;font-size:12.5px;font-weight:600;color:var(--ai)} .managed summary::-webkit-details-marker{display:none}
+  .managed .mbody{padding:0 12px 10px}
+  .mrow{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0;border-top:1px solid var(--line)}
+  .mrow .v{color:var(--ink-soft);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .mrow .badge{margin-left:auto}
+  .more{display:flex;align-items:center;justify-content:center;gap:7px;color:var(--ink-soft);font-size:12.5px;background:#fff;border:1px dashed var(--line);border-radius:13px;padding:12px;font-weight:600;margin-top:4px}
+
+  /* funnel gate + generators */
+  .gate{border:1px solid #f0d9b3;background:linear-gradient(180deg,var(--amber-soft),#fff);border-left:4px solid var(--amber);border-radius:13px;padding:13px 15px;margin-bottom:16px}
+  .gate .gh{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px;color:#92671a}
+  .gate p{margin:6px 0 9px;font-size:12.5px;color:var(--ink-soft)}
+  .checklist{list-style:none;padding:0;margin:0 0 10px;display:flex;gap:14px;flex-wrap:wrap}
+  .checklist li{font-size:12px;display:flex;align-items:center;gap:6px}
+  .checklist .ok{color:var(--good)} .checklist .bad{color:var(--warn);font-weight:600} .checklist .todo{color:var(--ink-faint)}
+  .gate .gbtn{border:0;background:var(--primary);color:#fff;font-weight:700;font-size:12.5px;border-radius:9px;padding:8px 13px}
+  .qline{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:7px}
+  .types{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+  .types .ty{font-size:12px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+  .types .ty.on{background:var(--funnel-ink);color:#fff;border-color:var(--funnel-ink)}
+  .tabs{display:inline-flex;background:#eceae3;border-radius:10px;padding:3px;margin-bottom:12px;flex-wrap:wrap}
+  .tabs button{border:0;background:transparent;padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+  .tabs button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .grounded{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-soft);background:#f7f9f8;border:1px solid #e2ece9;border-radius:10px;padding:8px 11px;margin-bottom:12px}
+  .grounded b{color:var(--funnel-ink)} .grounded .g-ok{color:var(--good);font-weight:700} .grounded .g-warn{color:var(--warn);font-weight:700}
+  .tab{display:none} .tab.on{display:block}
+  .promptcard{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .promptcard .ph{display:flex;align-items:center;gap:9px;padding:9px 12px;background:#faf8f3;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;flex-wrap:wrap}
+  .promptcard .ph .send{margin-left:auto;display:flex;align-items:center;gap:7px}
+  .promptcard .ph select{border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px;background:#fff;font-weight:600}
+  .promptcard pre{margin:0;padding:13px;background:var(--code);color:#e7e3ff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.55;white-space:pre-wrap}
+  .promptcard .pf{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:#fff;flex-wrap:wrap}
+  .promptcard .pf button{border:0;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:700}
+  .pf .copy{background:var(--funnel-ink);color:#fff} .pf .reroll{background:#fff;border:1px solid var(--line)!important;color:var(--ink-soft)}
+  .briefhead{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .briefhead .toggle{display:inline-flex;background:#eceae3;border-radius:9px;padding:3px}
+  .briefhead .toggle button{border:0;background:transparent;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;color:var(--ink-soft)}
+  .briefhead .toggle button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .slot{display:flex;gap:11px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin-bottom:8px;background:#fff}
+  .slot .num{width:26px;height:26px;border-radius:8px;background:var(--funnel-soft);color:var(--funnel-ink);display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+  .slot .si{font-size:13px;font-weight:700} .slot .sb{font-size:12.5px;color:var(--ink-soft);margin-top:1px}
+  .briefnote{font-size:11.5px;color:var(--ink-faint);margin:8px 2px 0}
+  .briefactions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .briefactions button{border:0;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:700}
+  .briefactions .exp{background:var(--funnel-ink);color:#fff} .briefactions .copy{background:#fff;border:1px solid var(--line)!important;color:var(--ink-soft)}
+  .drop{border:2px dashed #cfc8b8;border-radius:11px;background:#fffdf8;padding:20px;text-align:center;color:var(--ink-soft);font-size:12.5px}
+  .drop .types2{display:flex;gap:6px;justify-content:center;margin-top:9px;flex-wrap:wrap}
+  .drop .types2 span{font-size:11px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 9px;font-weight:600}
+  .toolnote{font-size:11.5px;color:var(--ink-faint);margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  .toolnote code,.subs code{background:#efe9e0;border-radius:5px;padding:1px 5px;font-size:11px}
+
+  /* doc */
+  .dochead{background:#fff;border-bottom:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:14px}
+  .device.mobile .dochead{padding:12px 14px;flex-wrap:wrap}
+  .ring{--p:64;width:46px;height:46px;border-radius:50%;flex:none;background:conic-gradient(var(--primary) calc(var(--p)*1%),#e7e3da 0);display:grid;place-items:center}
+  .ring i{width:36px;height:36px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:12px;font-weight:800;font-style:normal;color:var(--primary-ink)}
+  .ht{flex:1;min-width:0} .ht h2{margin:0;font-size:16px} .ht .sub{font-size:12px;color:var(--ink-faint)}
+  .acts{display:flex;gap:8px} .device.mobile .acts{width:100%;margin-top:2px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 13px;font-size:13px;font-weight:700;color:var(--ink);display:inline-flex;align-items:center;gap:6px} .device.mobile .btn{flex:1;justify-content:center}
+  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .expwrap{position:relative}
+  .menu{position:absolute;right:0;top:46px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;width:252px;display:none;z-index:30}
+  .menu.open{display:block} .menu .mi{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:13px;cursor:pointer} .menu .mi:hover{background:#f6f4ef}
+  .menu .mi .em{font-size:16px} .menu .mi .sub{font-size:11px;color:var(--ink-faint)} .menu .mi.lock{opacity:.6} .menu .mi .tagp{margin-left:auto;font-size:9.5px;font-weight:800;background:var(--amber-soft);color:#92671a;border-radius:999px;padding:2px 7px} .menu .hr{height:1px;background:var(--line);margin:5px 4px}
+  .doclayout{display:grid;grid-template-columns:226px 1fr} .device.mobile .doclayout{grid-template-columns:1fr}
+  .toc{border-right:1px solid var(--line);padding:16px 12px} .device.mobile .toc{display:none}
+  .toc .tl{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin:0 6px 8px}
+  .toc a{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:12.5px;color:var(--ink-soft);text-decoration:none;font-weight:600;line-height:1.25}
+  .toc a:hover{background:#fbfaf7} .toc a .n{color:var(--ink-faint);width:16px;flex:none} .toc a .dot{width:7px;height:7px;border-radius:50%;flex:none;margin-left:auto}
+  .dot.ok{background:var(--good)} .dot.part{background:var(--amber)} .dot.todo{background:#d8d3c8}
+  .doc{padding:6px 30px 40px;max-width:740px} .device.mobile .doc{padding:6px 16px 26px}
+  .ready{display:flex;align-items:center;gap:11px;border-radius:13px;padding:12px 15px;margin:16px 0 10px;font-size:13.5px;border:1px solid}
+  .ready.ok{background:var(--good-soft);border-color:#bfe6cf;color:#0f6b41} .ready .em{font-size:18px} .ready b{color:var(--ink)}
+  .qwins{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px;font-size:12px} .qwins .q{background:var(--amber-soft);color:#92671a;border:1px solid #f0d9b3;border-radius:999px;padding:4px 10px;font-weight:600}
+  .titleblock{font-family:var(--serif);text-align:center;padding:14px 0 18px;border-bottom:1px solid var(--line);margin-bottom:6px} .titleblock h1{font-size:24px;margin:0 0 6px} .titleblock .tm{font-size:13px;color:var(--ink-soft);font-style:italic}
+  .sigadd{display:flex;align-items:center;gap:12px;border:1px dashed #c9c2f0;background:var(--primary-soft);border-radius:13px;padding:13px 15px;margin:14px 0}
+  .sigadd .q{flex:1;font-family:var(--serif);font-size:14px;color:var(--primary-ink)} .sigadd .add{border:0;background:var(--primary);color:#fff;font-weight:700;border-radius:9px;padding:8px 13px;font-size:12.5px;white-space:nowrap} .sigadd .nt{font-size:11px;color:var(--ink-faint);display:block;margin-top:2px}
+  .sec{padding:15px 0;border-top:1px solid var(--line)} .sec .sh{display:flex;align-items:baseline;gap:9px;margin-bottom:4px}
+  .sec h3{font-family:var(--serif);font-size:18px;margin:0} .sec h3 .num{color:var(--ink-faint);font-weight:600}
+  .sec .status{margin-left:auto;font-size:11px;font-weight:700;white-space:nowrap} .status.ok{color:var(--good)} .status.part{color:var(--amber)} .status.todo{color:var(--ink-faint)}
+  .subs{font-size:11.5px;color:var(--ink-faint);margin:2px 0 8px} .sec p{margin:6px 0;font-size:14px;color:#2b3346}
+  .ideaeval{width:100%;border-collapse:collapse;margin:8px 0;font-size:12.5px} .ideaeval th,.ideaeval td{border:1px solid var(--line);padding:6px 9px;text-align:left} .ideaeval th{background:#faf8f3;font-weight:700} .ideaeval .p{color:var(--good);font-weight:700} .ideaeval .w{color:var(--warn);font-weight:700}
+  .prov{margin-top:9px;font-size:11.5px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;flex-wrap:wrap} .prov .src{color:var(--ink-soft)} .prov .link{color:var(--primary-ink);font-weight:700;text-decoration:none;margin-left:auto}
+  .compact{padding:10px 0;border-top:1px solid var(--line)} .compact .sh{display:flex;align-items:baseline;gap:9px} .compact h3{font-family:var(--serif);font-size:15.5px;margin:0}
+  .ftnote{font-size:11.5px;color:var(--ink-faint);text-align:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-style:italic}
+  /* competitors */
+  .nav-i.comp.on{box-shadow:inset 3px 0 0 var(--warn)}
+  .seclbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin:2px 0 8px}
+  .ctxflag{display:flex;align-items:center;gap:8px;background:#fbeeee;border:1px solid #f3cfc9;border-radius:11px;padding:9px 12px;font-size:12.5px;color:#7a3a33;margin-bottom:14px}
+  .compcfg{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px}
+  .compcard{flex:0 0 auto;width:188px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px;cursor:pointer}
+  .compcard.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft),var(--shadow)}
+  .compcard .ch{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .compcard .lg{width:30px;height:30px;border-radius:8px;background:#f0eef9;color:var(--primary-ink);display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+  .compcard .nm{font-size:13.5px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .compcard .tick{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;color:#cfc8b8;flex:none}
+  .compcard.on .tick{background:var(--primary);border-color:var(--primary);color:#fff}
+  .srcs{display:flex;flex-wrap:wrap;gap:5px}
+  .srcchip{font-size:10.5px;font-weight:600;border-radius:999px;padding:3px 8px;border:1px solid var(--line);color:var(--ink-faint);background:#fbfaf7}
+  .srcchip.on{background:var(--ai-soft);color:var(--ai);border-color:#bfe3e6}
+  .compcard .stt{font-size:10.5px;color:var(--ink-faint);margin-top:8px}
+  .addcomp{flex:0 0 auto;width:188px;border:2px dashed #cfc8b8;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:var(--ink-soft);font-size:13px;font-weight:600;background:#fffdf8;padding:12px;text-align:center}
+  .addcomp .sopts{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+  .addcomp .sopts span{font-size:10px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-weight:600}
+  .matrix{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:6px}
+  .matrix th,.matrix td{border:1px solid var(--line);padding:8px 9px;text-align:center}
+  .matrix th{background:#faf8f3;font-weight:700;font-size:11px}
+  .matrix td.name,.matrix th.name{text-align:left;font-weight:700;white-space:nowrap}
+  .matrix tr.you{background:var(--primary-soft)} .matrix tr.you td.name{color:var(--primary-ink)}
+  .sc{display:inline-block;min-width:34px;border-radius:7px;padding:3px 0;font-weight:800;font-size:12px}
+  .sc.good{background:var(--good-soft);color:var(--good)} .sc.mid{background:var(--amber-soft);color:#92671a} .sc.bad{background:var(--warn-soft);color:var(--warn)}
+  .gapnote{display:flex;align-items:center;gap:9px;background:var(--warn-soft);border:1px solid #f3cfc9;border-radius:11px;padding:10px 13px;font-size:12.5px;color:#7a3a33;margin:10px 0 16px}
+  .gapnote .fx{margin-left:auto;border:0;background:var(--primary);color:#fff;font-weight:700;border-radius:8px;padding:6px 11px;font-size:12px;white-space:nowrap}
+  .applyctx{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:14px 16px}
+  .applyctx .at{font-size:13px;font-weight:700} .applyctx .ad{font-size:12px;color:var(--ink-soft);margin:3px 0 9px}
+  .ctxrow{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid var(--line)}
+  .ctxrow .ci{font-size:17px;width:22px;text-align:center;flex:none}
+  .ctxrow .cm{flex:1} .ctxrow .cm .t{font-size:13px;font-weight:700} .ctxrow .cm .d{font-size:11.5px;color:var(--ink-soft)}
+  .sw{width:40px;height:23px;border-radius:999px;background:#d8d3c8;position:relative;cursor:pointer;flex:none;transition:background .15s}
+  .sw.on{background:var(--good)} .sw i{position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#fff;transition:left .15s} .sw.on i{left:19px}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>● IDEA Brand Coach — unified prototype</b>
+  <span class="faint" style="font-size:12px">click the nav · mockup</span>
+  <div class="seg" id="segDev"><button data-m="desktop" class="on">🖥 Desktop</button><button data-m="mobile">📱 Mobile</button></div>
+</div>
+
+<div class="stage"><div class="device" id="device"><div class="frame"><div class="app">
+  <aside class="side">
+    <div class="logo"><span class="g">◆</span> Brand Coach</div>
+    <div class="lbl">What do you want to work on?</div>
+    <div class="nav-i coach on" data-go="coach"><span class="ic">🧭</span> Brand Coach <span class="pill">2</span></div>
+    <div class="nav-i funnel" data-go="funnel"><span class="ic">🔻</span> Funnel</div>
+    <div class="nav-i comp" data-go="comp"><span class="ic">⚔️</span> Competitors</div>
+    <div class="spacer"></div>
+    <div class="nav-i doc" data-go="doc"><span class="ic">📄</span> Strategy Document</div>
+    <div class="acct"><span class="av">M</span><div>Matthew<br><span class="faint" style="font-size:11px">Free plan</span></div></div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===================== COACH ===================== -->
+    <section class="view on" id="v-coach"><div class="pad">
+      <div class="vhead"><h2>Brand Coach</h2><span class="needpill warn">2 need you</span></div>
+      <p class="vsub">I draft and <span class="auto">manage your brand fields automatically</span> from our chats — you only deal with what matters. I’ll flag anything that needs a decision.</p>
+      <div class="ctxflag">⚔️ Competitor context ON — I’m weighing <b>InfinityVault</b> against <b>Gamegenic + Ultimate Guard</b> as we talk. <span data-go="comp" style="color:var(--primary-ink);font-weight:700;cursor:pointer">Manage ›</span></div>
+      <div class="alerts">
+        <div class="alert warn" onclick="openItem('pos')"><span class="av">◆</span><div><b>Your messaging isn’t clear yet.</b> Your tagline says “vault-grade protection” but your positioning leans “everyday card storage” — premium vs commodity. Let’s reconcile.</div><span class="go">Discuss ›</span></div>
+        <div class="alert info" onclick="openItem('val')"><span class="av">◆</span><div><b>Pick your top 3 brand values.</b> I drafted 6 from our chat — choose the ones that ring true.</div><span class="go">Review ›</span></div>
+      </div>
+
+      <div class="item open" id="it-pos">
+        <div class="frow" onclick="acc(this)"><div class="ico">🎯</div><div class="meta"><div class="t">Brand Positioning <span class="chip">Distinctive</span></div><div class="d"><span class="st need">⚠ Messaging needs you</span></div></div><span class="chev">▾</span></div>
+        <div class="panel"><div class="pgrid">
+          <div class="chatcol"><div class="chat">
+            <div class="stream">
+              <div class="msg ai">Quick flag: your tagline says <i>“vault-grade protection”</i> but your positioning leans <i>“everyday card storage.”</i> Those set very different expectations.</div>
+              <div class="msg ai">Which is truer — <b>premium archival protection</b>, or <b>everyday storage</b>? I’ll align everything else to your pick.</div>
+              <div class="msg me">Premium protection. The vault is the whole point.</div>
+              <div class="msg ai">Done — aligned positioning, tagline & category to “archival-grade protection.” Confirm the core message →</div>
+            </div>
+            <div class="composer"><input placeholder="Reply to the coach…"/><button>Send</button></div>
+          </div></div>
+          <div class="fcol">
+            <div class="lbl">⚠ Needs you (1)</div>
+            <div class="field flag"><div class="fh"><span class="fl">Core message</span><span class="badge flag">⚠ reconcile</span><span class="ts">flagged 1m ago</span></div>
+              <textarea rows="2">Vault-grade, archival protection for collections that matter — for collectors who treat their cards as long-term value, not another disposable deck box.</textarea>
+              <div class="fa"><button class="keep">✓ Confirm</button><button class="edit">Edit</button></div></div>
+            <details class="managed"><summary>✦ I’m managing 5 more fields here ▸</summary><div class="mbody">
+              <div class="mrow"><span class="v">Positioning statement</span><span class="badge ai">🤖 AI · 1m</span></div>
+              <div class="mrow"><span class="v">Category frame</span><span class="badge ai">🤖 AI · 1m</span></div>
+              <div class="mrow"><span class="v">Target customer · Serious collectors</span><span class="badge manual">✏️ You · 5m</span></div>
+              <div class="mrow"><span class="v">Key differentiator</span><span class="badge ai">🤖 AI · 1m</span></div>
+              <div class="mrow"><span class="v">Proof points</span><span class="badge ai">🤖 AI · 3m</span></div>
+            </div></details>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="item" id="it-val">
+        <div class="frow" onclick="acc(this)"><div class="ico">💎</div><div class="meta"><div class="t">Brand Values <span class="chip">Authentic</span></div><div class="d"><span class="st need">● Choose 3 of 6 drafted</span></div></div><span class="chev">▾</span></div>
+        <div class="panel"><div class="pgrid">
+          <div class="chatcol"><div class="chat"><div class="stream"><div class="msg ai">I drafted 6 candidate values. Tap the 3 that feel most like you and I’ll weave them through your voice + funnel checks.</div></div><div class="composer"><input placeholder="Reply…"/><button>Send</button></div></div></div>
+          <div class="fcol"><div class="lbl">⚠ Needs you (1)</div><div class="field"><div class="fh"><span class="fl">Top values</span><span class="badge ai">🤖 6 drafted</span></div><input placeholder="Tap to choose: Protection · Permanence · Craft · Trust · Heritage · Precision"/></div></div>
+        </div></div>
+      </div>
+
+      <div class="item" id="it-av">
+        <div class="frow" onclick="acc(this)"><div class="ico">👤</div><div class="meta"><div class="t">Customer Avatar <span class="chip">Empathetic</span></div><div class="d"><span class="st auto">✦ Auto-managed · nothing needed</span></div></div><span class="chev">▾</span></div>
+        <div class="panel"><div class="pgrid">
+          <div class="chatcol"><div class="chat"><div class="stream"><div class="msg ai">I built your avatar from Positioning — serious collectors who treat cards as long-term value, burned by flimsy accessories. Refine anything?</div></div><div class="composer"><input placeholder="Reply…"/><button>Send</button></div></div></div>
+          <div class="fcol"><div class="lbl ai">✦ Coach is managing this (4 fields)</div><details class="managed" open><summary>✦ View what I filled ▾</summary><div class="mbody">
+            <div class="mrow"><span class="v">Primary pain · “my collection isn’t protected like the investment it is”</span><span class="badge ai">🤖 AI</span></div>
+            <div class="mrow"><span class="v">Goal · preserve value &amp; condition for years</span><span class="badge ai">🤖 AI</span></div>
+            <div class="mrow"><span class="v">Objection · “is this just a pricey deck box?”</span><span class="badge ai">🤖 AI</span></div>
+          </div></details></div>
+        </div></div>
+      </div>
+
+      <div class="more">＋ 8 more chapters — all auto-managed. I’ll surface any that need you.</div>
+    </div></section>
+
+    <!-- ===================== FUNNEL ===================== -->
+    <section class="view" id="v-funnel"><div class="pad">
+      <div class="vhead"><h2>Funnel</h2><span class="needpill funnel">grounded in your brand</span></div>
+      <p class="vsub">Pick a stage and <span class="autof">generate a ready-to-use prompt or design brief</span> — built from your brand, to take to any external tool.</p>
+      <div class="gate">
+        <div class="gh">⚠ Stricter check — your brand powers every output here</div>
+        <p>Prompts &amp; briefs are only as good as your brand definition. Yours has a gap that will weaken outputs:</p>
+        <ul class="checklist"><li class="ok">✓ Positioning</li><li class="bad">⚠ Messaging unclear</li><li class="ok">✓ Voice</li><li class="todo">○ Values (choose 3)</li></ul>
+        <button class="gbtn" data-go="coach">Resolve in Brand Coach →</button>
+      </div>
+
+      <div class="item open" id="st-aware">
+        <div class="frow" onclick="acc(this)"><div class="ico">📣</div><div class="meta"><div class="t">Awareness <span class="chip">top of funnel</span></div><div class="d">Hero product shots, ad sets, unboxing, social — make collectors feel the protection.</div></div><span class="chev">▾</span></div>
+        <div class="panel"><div style="padding:14px">
+          <div class="qline">What do you want to make for Awareness?</div>
+          <div class="types"><span class="ty on">Hero image</span><span class="ty">Ad image set</span><span class="ty">Unboxing reel script</span><span class="ty">IG carousel</span></div>
+          <div class="tabs"><button class="on" onclick="ftab(this,'t-prompt')">✦ Prompt</button><button onclick="ftab(this,'t-brief')">✦ Design brief</button><button onclick="ftab(this,'t-check')">⬆ Check an asset</button></div>
+          <div class="grounded">🔒 Grounded in: <b>Positioning</b> <span class="g-ok">✓</span> · <b>Voice</b> <span class="g-ok">✓</span> · <b>Values</b> <span class="g-ok">✓</span> · <b>Core message</b> <span class="g-warn">⚠ unclear</span> · ⚔️ vs <b>Gamegenic</b> <span class="g-ok">✓</span></div>
+
+          <div class="tab on" id="t-prompt">
+            <div class="promptcard">
+              <div class="ph">✦ Paste-ready prompt<span class="send">Send to <select><option>Midjourney</option><option>DALL·E / GPT-Image</option><option>Ideogram</option><option>Firefly</option></select></span></div>
+              <pre>Premium product hero for InfinityVault — archival-grade card
+vault storage for serious collectors. Subject: an open vault case
+revealing pristine, perfectly-protected graded cards; warm museum
+lighting; a sense of treasure and permanence. Style: editorial
+product photography, deep matte palette (charcoal + brass accents),
+shallow depth of field, negative space top-left for a headline.
+Avoid: cheap plastic, neon/RGB gamer vibe, clutter. 3:2, --style raw</pre>
+              <div class="pf"><button class="copy">⧉ Copy prompt</button><button class="reroll">↻ Regenerate</button></div>
+            </div>
+            <p class="muted" style="font-size:12px;margin:10px 2px 0">Built from your Positioning + Voice + palette. Edit a field in the Coach and regenerate to stay on-brand.</p>
+          </div>
+
+          <div class="tab" id="t-brief">
+            <div class="briefhead">Make a brief for: <span class="toggle"><button onclick="bset(this,false)">Single image</button><button class="on" onclick="bset(this,true)">Image set (7)</button></span></div>
+            <div id="brief-set">
+              <div class="slot"><div class="num">1</div><div><div class="si">Hero</div><div class="sb">Open vault revealing pristine graded cards; museum light. Headline space top-left.</div></div></div>
+              <div class="slot"><div class="num">2</div><div><div class="si">Problem</div><div class="sb">A flimsy sleeve / bent corner on a high-value card — the damage collectors fear.</div></div></div>
+              <div class="slot"><div class="num">3</div><div><div class="si">Process</div><div class="sb">How the vault protects — archival materials, snug fit, UV shielding, close-up.</div></div></div>
+              <div class="slot"><div class="num">4</div><div><div class="si">Proof</div><div class="sb">Graded cards stored safely; archival-material macro or certification detail.</div></div></div>
+              <div class="slot"><div class="num">5</div><div><div class="si">Differentiator</div><div class="sb">Vault vs everyday deck box — side-by-side, premium vs disposable.</div></div></div>
+              <div class="slot"><div class="num">6</div><div><div class="si">Outcome</div><div class="sb">A collection preserved &amp; proudly displayed years later.</div></div></div>
+              <div class="slot"><div class="num">7</div><div><div class="si">CTA</div><div class="sb">Clean closing frame, logo + “Protect what matters.”</div></div></div>
+              <div class="briefnote">Same 7-slot image brief your <code>generate_brief</code> tool already produces.</div>
+            </div>
+            <div class="briefactions"><button class="exp">⬇ Export brief</button><button class="copy">⧉ Copy</button><button class="copy">→ Turn each slot into a prompt</button></div>
+          </div>
+
+          <div class="tab" id="t-check"><div class="drop">⬆️ <b>Drop an asset you already made</b><br><span class="faint">I’ll check it against your brand and flag drift.</span><div class="types2"><span>🖼 Image</span><span>📄 PDF</span><span>✍️ Text</span><span>🔗 URL</span></div></div></div>
+        </div></div>
+      </div>
+
+      <div class="item" id="st-interest"><div class="frow" onclick="acc(this)"><div class="ico">🌱</div><div class="meta"><div class="t">Interest <span class="chip">2 made</span></div><div class="d">Material explainers, vault-vs-deckbox comparison, email.</div></div><span class="chev">▾</span></div><div class="panel"><div style="padding:14px"><div class="qline">Generate for Interest: comparison guide · material explainer · email</div><p class="muted" style="font-size:12.5px">Same generate-or-check flow as Awareness.</p></div></div></div>
+      <div class="item" id="st-desire"><div class="frow" onclick="acc(this)"><div class="ico">🔥</div><div class="meta"><div class="t">Desire <span class="chip">1 made</span></div><div class="d">Product-page hero, vault-vs-deckbox visuals, collector proof.</div></div><span class="chev">▾</span></div><div class="panel"><div style="padding:14px"><div class="qline">Generate for Desire…</div></div></div></div>
+      <div class="item" id="st-action"><div class="frow" onclick="acc(this)"><div class="ico">🎯</div><div class="meta"><div class="t">Action <span class="chip">0 made</span></div><div class="d">Checkout reassurance, guarantee, bundle/pricing visuals.</div></div><span class="chev">▾</span></div><div class="panel"><div style="padding:14px"><div class="qline">Generate for Action…</div></div></div></div>
+      <div class="item" id="st-loyalty"><div class="frow" onclick="acc(this)"><div class="ico">💞</div><div class="meta"><div class="t">Loyalty <span class="chip">0 made</span></div><div class="d">Care guide, restock, collector community / referral.</div></div><span class="chev">▾</span></div><div class="panel"><div style="padding:14px"><div class="qline">Generate for Loyalty…</div></div></div></div>
+
+      <div class="toolnote">Maps to real tools: <b>Design brief</b> → <code>generate_brief</code> (7-slot, exists, MCP-only) · <b>Prompt</b> → thin new layer over brief slots + <code>generate_concepts</code> · <b>Check</b> → <code>audit_asset</code>.</div>
+    </div></section>
+
+    <!-- ===================== STRATEGY DOCUMENT ===================== -->
+    <section class="view" id="v-doc">
+      <div class="dochead">
+        <div class="ring"><i>64%</i></div>
+        <div class="ht"><h2>Your Brand Strategy</h2><div class="sub">13 sections · synthesized from your 35 fields + chats · updated 2m ago</div></div>
+        <div class="acts">
+          <div class="expwrap"><button class="btn" onclick="document.getElementById('m').classList.toggle('open')">⬇ Export ▾</button>
+            <div class="menu" id="m"><div class="mi"><span class="em">📝</span><div>Markdown<div class="sub">.md — the live export</div></div></div><div class="mi"><span class="em">📄</span><div>PDF<div class="sub">Formatted</div></div></div><div class="hr"></div><div class="mi lock"><span class="em">📊</span><div>Gold Workbook<div class="sub">Full system + funnel briefs</div></div><span class="tagp">finish first</span></div></div>
+          </div>
+          <button class="btn primary">🔗 Share</button>
+        </div>
+      </div>
+      <div class="doclayout">
+        <nav class="toc"><div class="tl">13 sections</div>
+          <a href="#"><span class="n">1</span> IDEA Framework Overview <span class="dot ok"></span></a>
+          <a href="#"><span class="n">2</span> Customer Understanding <span class="dot ok"></span></a>
+          <a href="#"><span class="n">3</span> Emotional Triggers <span class="dot part"></span></a>
+          <a href="#"><span class="n">4</span> Customer Journey <span class="dot part"></span></a>
+          <a href="#"><span class="n">5</span> Purpose &amp; Vision <span class="dot ok"></span></a>
+          <a href="#"><span class="n">6</span> Mission &amp; Values <span class="dot part"></span></a>
+          <a href="#"><span class="n">7</span> Positioning &amp; Value Prop <span class="dot part"></span></a>
+          <a href="#"><span class="n">8</span> Personality &amp; Voice <span class="dot ok"></span></a>
+          <a href="#"><span class="n">9</span> Essence &amp; DNA <span class="dot part"></span></a>
+          <a href="#"><span class="n">10</span> Story &amp; Narrative <span class="dot todo"></span></a>
+          <a href="#"><span class="n">11</span> Messaging Framework <span class="dot part"></span></a>
+          <a href="#"><span class="n">12</span> Agentic Commerce <span class="dot todo"></span></a>
+          <a href="#"><span class="n">13</span> Implementation Roadmap <span class="dot todo"></span></a>
+        </nav>
+        <div class="doc">
+          <div class="ready ok"><span class="em">✓</span><div><b>Ready to export</b> — 64%, above the 60% bar, no critical gaps. (Advisory; export is always available.) <b>Story</b> &amp; <b>Implementation</b> still thin.</div></div>
+          <div class="qwins"><span class="q">Quick win: Brand Story (origin)</span><span class="q">Quick win: Experience Pillars</span><span class="q">Quick win: Success Metrics</span></div>
+          <div class="titleblock"><h1>InfinityVault — Brand Strategy Document</h1><div class="tm">Generated using the IDEA Strategic Brand Framework™ · 19 June 2026</div></div>
+          <div class="sigadd"><div class="q">“For collectors who treat their cards as treasure, InfinityVault is vault-grade protection that preserves value for a lifetime.”<span class="nt">✦ Your Signature is saved but isn’t in the exported doc yet.</span></div><button class="add">+ Add to document</button></div>
+
+          <section class="sec"><div class="sh"><h3><span class="num">1.</span> IDEA Framework Overview</h3><span class="status ok">✓ complete</span></div><div class="subs">Executive Summary · About · IDEA Applied · Scope</div><p><b>Executive summary.</b> Wins on <i>archival-grade protection</i> for serious collectors who treat cards as long-term value. Insight-driven, strongly Distinctive (the “vault” wedge vs disposable deck boxes), Authentic (real materials); developing on Empathetic (community connection trails Gamegenic).</p><div class="prov"><span class="badge ai">🤖 AI-synthesized</span> <span class="src">from all 35 fields + chats</span><a class="link" href="#">Regenerate ›</a></div></section>
+          <section class="sec"><div class="sh"><h3><span class="num">2.</span> Customer Understanding (Avatar 2.0)</h3><span class="status ok">✓ complete</span></div><div class="subs">Buyer Intent · Motivations · Emotional Triggers · Shopper Type · Demographics</div><p>A serious TCG / board-game collector who invests in graded cards, searching “how to store valuable cards,” frustrated that mainstream accessories are disposable.</p><div class="prov"><span class="badge ai">🤖 AI</span> <span class="src">from Demographics, Psychographics, Pains, Goals, Buyer-Intent</span><a class="link" href="#">Edit inputs ›</a></div></section>
+          <section class="sec"><div class="sh"><h3><span class="num">7.</span> Brand Positioning &amp; Value Proposition</h3><span class="status part">◑ messaging conflict</span></div><div class="subs">Positioning · IDEA Eval · Difference vs Distinctiveness · Value Prop · White Space · Psycho-Logic</div><p><b>Positioning:</b> For serious collectors who treat their cards as long-term value, InfinityVault is archival-grade protection that preserves a collection for a lifetime — not another disposable deck box.</p>
+            <table class="ideaeval"><tr><th>IDEA test</th><th>Verdict</th></tr><tr><td>Insight-Driven</td><td><span class="p">Pass</span> — rooted in real collector intent</td></tr><tr><td>Distinctive</td><td><span class="p">Pass</span> — the “vault” wedge vs deck boxes</td></tr><tr><td>Empathetic</td><td><span class="w">Weak</span> — community connection trails Gamegenic</td></tr><tr><td>Authentic</td><td><span class="p">Pass</span> — real archival materials</td></tr></table>
+            <div class="prov"><span class="badge ai">🤖 AI</span> · core message <span class="badge thin">⚠ reconcile</span><a class="link" href="#" data-go="coach">Resolve in Coach ›</a></div></section>
+
+          <section class="compact"><div class="sh"><h3><span class="num">3.</span> Emotional Triggers &amp; Decision Science</h3><span class="status part">◑ thin</span></div><div class="subs">Why customers buy · Primary triggers · Shopper’s High · Metaphors · Heuristics</div></section>
+          <section class="compact"><div class="sh"><h3><span class="num">4.</span> Customer Journey &amp; Signposts</h3><span class="status part">◑ thin</span></div><div class="subs">5-stage emotional map — what the <b>Funnel</b> generates against.</div></section>
+          <section class="compact"><div class="sh"><h3><span class="num">5.</span> Brand Purpose &amp; Vision</h3><span class="status ok">✓ complete</span></div><div class="subs">Purpose · IDEA Eval · Vision · IDEA Eval · Purpose vs Vision</div></section>
+          <section class="compact"><div class="sh"><h3><span class="num">6.</span> Brand Mission &amp; Values</h3><span class="status part">◑ choose 3</span></div><div class="subs">Mission · Core Values · Values Audit · Brand Promise</div></section>
+          <section class="compact"><div class="sh"><h3><span class="num">8.</span> Brand Personality &amp; Voice</h3><span class="status ok">✓ complete</span></div><div class="subs">Personality · Voice: Four Components · Tone by Channel · Archetype</div></section>
+          <section class="compact"><div class="sh"><h3><span class="num">9.</span> Brand Essence &amp; DNA</h3><span class="status part">◑ thin</span></div><div class="subs">DNA Four-Circles → Essence · Essence Test</div></section>
+          <section class="compact"><div class="sh"><h3><span class="num">10.</span> Brand Story &amp; Narrative</h3><span class="status todo">○ not started</span></div><div class="subs">Heritage · 30s/2min/Full versions · Story Elements</div></section>
+          <section class="compact"><div class="sh"><h3><span class="num">11.</span> Messaging Framework</h3><span class="status part">◑ thin</span></div><div class="subs">Hierarchy · Cialdini’s Six · Audience messaging — blocked by positioning conflict</div></section>
+          <section class="compact"><div class="sh"><h3><span class="num">12.</span> Agentic Commerce &amp; AI Visibility</h3><span class="status todo">○ not started</span></div><div class="subs">Agentic shift · AI citation strategy · 4-phase roadmap</div></section>
+          <section class="compact"><div class="sh"><h3><span class="num">13.</span> Implementation Roadmap</h3><span class="status todo">○ not started</span></div><div class="subs">30/30-90/90-180-day · Research agenda · Success metrics</div></section>
+          <div class="ftnote">Generated using the IDEA Strategic Brand Framework™ · assembled from 11 chapters / 35 fields + recent chats</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== COMPETITORS ===================== -->
+    <section class="view" id="v-comp"><div class="pad">
+      <div class="vhead"><h2>Brand vs Competition</h2><span class="needpill warn">1 gap to close</span></div>
+      <p class="vsub">I score rivals on the <span class="auto">same 4 IDEA pillars</span> as InfinityVault’s own Trust Gap. Choose who to compare, then feed it to your Coach &amp; Funnel.</p>
+
+      <div class="seclbl">Competitors — tap a card to include / exclude from the comparison</div>
+      <div class="compcfg">
+        <div class="compcard on" onclick="this.classList.toggle('on')">
+          <div class="ch"><span class="lg">G</span><span class="nm">Gamegenic</span><span class="tick">✓</span></div>
+          <div class="srcs"><span class="srcchip on">🛒 Listing</span><span class="srcchip on">🌐 Site</span><span class="srcchip on">🏬 Storefront</span></div>
+          <div class="stt">Analyzed 2d ago</div>
+        </div>
+        <div class="compcard on" onclick="this.classList.toggle('on')">
+          <div class="ch"><span class="lg">U</span><span class="nm">Ultimate Guard</span><span class="tick">✓</span></div>
+          <div class="srcs"><span class="srcchip on">🛒 Listing</span><span class="srcchip on">🌐 Site</span><span class="srcchip">🏬 Storefront</span></div>
+          <div class="stt">Analyzed 2d ago</div>
+        </div>
+        <div class="compcard" onclick="this.classList.toggle('on')">
+          <div class="ch"><span class="lg">D</span><span class="nm">Dragon Shield</span><span class="tick">✓</span></div>
+          <div class="srcs"><span class="srcchip on">🛒 Listing</span><span class="srcchip on">✍️ Text</span></div>
+          <div class="stt">Excluded · analyzed 5d ago</div>
+        </div>
+        <div class="addcomp">
+          <div style="font-size:22px">＋</div><div>Add competitor</div>
+          <div class="sopts"><span>🛒 Amazon listing</span><span>🌐 Website</span><span>🏬 Storefront</span><span>✍️ Text</span></div>
+        </div>
+      </div>
+
+      <div class="seclbl">Trust Gap — InfinityVault vs the 2 selected rivals, across the 4 IDEA pillars</div>
+      <table class="matrix">
+        <tr><th class="name">Brand</th><th>Insight-Driven</th><th>Distinctive</th><th>Empathetic</th><th>Authentic</th><th>Overall</th></tr>
+        <tr class="you"><td class="name">InfinityVault <span class="faint" style="font-weight:600">(you)</span></td><td><span class="sc good">78</span></td><td><span class="sc good">86</span></td><td><span class="sc bad">60</span></td><td><span class="sc good">82</span></td><td><span class="sc mid">77</span></td></tr>
+        <tr><td class="name">Gamegenic</td><td><span class="sc good">80</span></td><td><span class="sc mid">72</span></td><td><span class="sc good">84</span></td><td><span class="sc mid">75</span></td><td><span class="sc mid">78</span></td></tr>
+        <tr><td class="name">Ultimate Guard</td><td><span class="sc mid">74</span></td><td><span class="sc mid">78</span></td><td><span class="sc good">80</span></td><td><span class="sc mid">72</span></td><td><span class="sc mid">76</span></td></tr>
+      </table>
+      <div class="gapnote">⚔️ Your real gap: <b>Empathetic (60)</b> — Gamegenic owns the player-community connection (84). Your archival “vault” wedge wins on <b>Distinctive (86)</b>, but customers don’t yet <i>feel</i> it.<button class="fx" data-go="coach">Close it in Coach →</button></div>
+
+      <div class="applyctx">
+        <div class="at">Apply competitor context to…</div>
+        <div class="ad">Your 2 included rivals (Gamegenic, Ultimate Guard) feed these surfaces. Toggle off any you don’t want.</div>
+        <div class="ctxrow"><span class="ci">🧭</span><div class="cm"><div class="t">Brand Coach chat</div><div class="d">The coach weighs your answers against rivals mid-conversation.</div></div><div class="sw on" onclick="this.classList.toggle('on')"><i></i></div></div>
+        <div class="ctxrow"><span class="ci">🔻</span><div class="cm"><div class="t">Funnel analysis</div><div class="d">Asset audits + generated prompts factor in how rivals position.</div></div><div class="sw on" onclick="this.classList.toggle('on')"><i></i></div></div>
+        <div class="ctxrow"><span class="ci">🩺</span><div class="cm"><div class="t">Trust Gap diagnostic</div><div class="d">Adds a longitudinal “competitive pressure” signal.</div></div><div class="sw" onclick="this.classList.toggle('on')"><i></i></div></div>
+      </div>
+
+      <div class="toolnote">Real today: the engine exists (<code>competitor-analysis-asset</code>, IDEA-scored → <code>brand_asset_competitive_insights</code>) — but <b>per-touchpoint</b> (rivals for one funnel asset). <span style="color:var(--amber);font-weight:700">Net-new</span>: this <b>brand-level</b> 4-pillar comparison, the connect-sources config (listing / site / storefront / text), and the two pull-seams — the coach reading the <code>trust_gap_snapshots</code> “competitive pressure” feed (designed, unwired) and the funnel referencing this tab. Surface re-architecture + 2 seams, not a relabel.</div>
+    </div></section>
+
+  </main>
+
+  <nav class="botnav">
+    <button class="on" data-go="coach"><span class="ic">🧭</span>Coach<span class="pill">2</span></button>
+    <button data-go="funnel"><span class="ic">🔻</span>Funnel</button>
+    <button data-go="comp"><span class="ic">⚔️</span>Rivals</button>
+    <button data-go="doc"><span class="ic">📄</span>Doc</button>
+  </nav>
+</div></div></div></div>
+
+<script>
+  document.getElementById('segDev').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#segDev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    document.getElementById('device').classList.toggle('mobile',b.dataset.m==='mobile');});
+  function go(v){document.querySelectorAll('.view').forEach(s=>s.classList.remove('on'));document.getElementById('v-'+v).classList.add('on');
+    document.querySelectorAll('.nav-i,.botnav button').forEach(n=>n.classList.toggle('on',n.dataset.go===v));
+    document.querySelector('.main').scrollTop=0;}
+  document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t){e.preventDefault();go(t.dataset.go);}
+    if(!e.target.closest('.expwrap')){const m=document.getElementById('m');if(m)m.classList.remove('open');}});
+  function acc(frow){const view=frow.closest('.view');const it=frow.closest('.item');const open=it.classList.contains('open');
+    view.querySelectorAll('.item').forEach(i=>i.classList.remove('open'));if(!open)it.classList.add('open');}
+  function openItem(id){go('coach');document.querySelectorAll('#v-coach .item').forEach(i=>i.classList.remove('open'));
+    const el=document.getElementById('it-'+id);if(el){el.classList.add('open');el.scrollIntoView({behavior:'smooth',block:'center'});}}
+  function ftab(btn,id){btn.closest('.panel').querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+    btn.closest('.panel').querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.getElementById(id).classList.add('on');}
+  function bset(btn,isSet){btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('brief-set').style.display=isSet?'block':'none';}
+  document.querySelectorAll('.types .ty').forEach(t=>t.addEventListener('click',()=>{t.parentElement.querySelectorAll('.ty').forEach(x=>x.classList.remove('on'));t.classList.add('on');}));
+  go('coach');
+</script>
+</body>
+</html>

@@ -9,6 +9,7 @@
  * Responsive: stacks controls vertically on mobile, condenses chapter info.
  */
 
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useDeviceType } from '@/hooks/useDeviceType';
@@ -17,6 +18,7 @@ import type { BrandMarkdownExportRef } from '@/components/export/BrandMarkdownEx
 import { VersionSwitcher } from '@/components/VersionSwitcher';
 import { AvatarHeaderDropdown } from '@/components/v2/AvatarHeaderDropdown';
 import type { AvatarData } from '@/components/v2/AvatarHeaderDropdown';
+import { CreateAvatarDialog } from '@/components/v2/CreateAvatarDialog';
 import { CHAPTER_FIELDS_MAP } from '@/config/chapterFields';
 import type { ChapterProgress } from '@/types/chapter';
 import type { MilestoneData } from '@/hooks/v2/useMilestone';
@@ -43,7 +45,8 @@ interface BrandCoachHeaderProps {
   onAvatarChange: (avatar: Avatar) => void;
   savedFieldCount: number;
   fieldValues: Record<string, string | string[]>;
-  onCreateAvatar: () => void;
+  /** Create an avatar with the given name; resolves true on success. */
+  onCreateAvatar: (name: string) => Promise<boolean>;
   /** Currently active milestone for visual effects (pulse/gold) */
   activeMilestone?: MilestoneData | null;
   /** Whether all 35 fields have been captured (persistent gold badge) */
@@ -79,6 +82,7 @@ export function BrandCoachHeader({
   exportRef,
 }: BrandCoachHeaderProps): JSX.Element {
   const { isMobile } = useDeviceType();
+  const [isCreateAvatarOpen, setIsCreateAvatarOpen] = useState(false);
 
   // Calculate overall completion percentage
   const totalFields = Object.values(CHAPTER_FIELDS_MAP).reduce(
@@ -93,6 +97,7 @@ export function BrandCoachHeader({
     : 0;
 
   return (
+    <>
     <header className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between">
       <div className={isMobile ? 'flex flex-col gap-1' : 'flex items-center gap-3'}>
         <h1 className="font-semibold text-sm lg:text-base">IDEA Brand Coach</h1>
@@ -137,9 +142,17 @@ export function BrandCoachHeader({
           currentAvatar={avatarContext.currentAvatar}
           avatars={avatarContext.avatars}
           onAvatarSelect={(avatarId: string) => onAvatarChange({ id: avatarId })}
-          onCreateAvatar={onCreateAvatar}
+          onCreateAvatar={() => setIsCreateAvatarOpen(true)}
         />
       </div>
     </header>
+
+    <CreateAvatarDialog
+      open={isCreateAvatarOpen}
+      onOpenChange={setIsCreateAvatarOpen}
+      existingNames={avatarContext.avatars.map(avatar => avatar.name)}
+      onCreate={onCreateAvatar}
+    />
+    </>
   );
 }

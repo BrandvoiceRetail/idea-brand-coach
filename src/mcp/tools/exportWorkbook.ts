@@ -45,6 +45,7 @@ import type { ArtifactKind } from '../contracts/index.js';
 import { gateWrite } from './writeAuth.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
+import { captureMcpEvent, captureMcpException } from '../posthog.js';
 
 /** The artifact kinds Workbook A can render (the union over its five sheets). */
 const WORKBOOK_A_KINDS: readonly ArtifactKind[] = [
@@ -292,6 +293,12 @@ export function registerExportWorkbookTool(server: McpServer, deps?: Partial<Exp
       });
 
       if (result.status === 'exported') {
+        captureMcpEvent(identity.userId as string, 'mcp_workbook_exported', {
+          which,
+          sheet_count: result.sheets.length,
+          missing_count: result.missing.length,
+          uploaded: result.uploaded?.ok ?? false,
+        });
         return {
           content: [
             {
@@ -310,6 +317,10 @@ export function registerExportWorkbookTool(server: McpServer, deps?: Partial<Exp
       }
 
       if (result.status === 'needs_input') {
+        captureMcpEvent(identity.userId as string, 'mcp_workbook_needs_input', {
+          which: result.which,
+          missing_count: result.missing.length,
+        });
         return {
           content: [
             {
@@ -321,6 +332,7 @@ export function registerExportWorkbookTool(server: McpServer, deps?: Partial<Exp
         };
       }
 
+      captureMcpException(new Error(result.note), identity.userId as string, { tool: 'export_workbook', which });
       return {
         content: [{ type: 'text' as const, text: `export_workbook failed: ${result.note}` }],
         structuredContent: { ok: false, note: result.note },

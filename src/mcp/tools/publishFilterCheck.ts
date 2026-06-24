@@ -16,6 +16,7 @@ import { actorTag } from './writeAuth.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 import type { RecordedNote } from './draftAsset.js';
+import { captureMcpEvent } from '../posthog.js';
 
 const VERDICT_MAP: Record<FilterVerdict, 'pass' | 'needs_work' | 'fail'> = {
   pass: 'pass',
@@ -69,12 +70,18 @@ export function registerPublishFilterCheckTool(server: McpServer, ivos: IvosLedg
         recorded = { ok: false, note: 'opt-out (record:false) — assessment not recorded' };
       }
 
+      const identity = getIdentity();
       safeLog({
         event: 'tool.publish_filter_check',
-        caller: userTag(getIdentity()),
+        caller: userTag(identity),
         verdict: report.verdict,
         violations: report.violations.length,
         recorded: recorded?.ok ?? null,
+      });
+      captureMcpEvent(identity.userId ?? 'anon', 'mcp_publish_filter_checked', {
+        verdict: report.verdict,
+        violation_count: report.violations.length,
+        channel: channel ?? null,
       });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(report, null, 2) }],

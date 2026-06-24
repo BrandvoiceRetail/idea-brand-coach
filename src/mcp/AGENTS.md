@@ -15,6 +15,13 @@ IV-OS asset/test ledger + knowledge reads. Today the host exposes:
 - `list_assets`, `get_asset` — the two **STABLE** IV-OS ledger reads, consumed via the
   IV-OS MCP client adapter (`ivos/client.ts`). These never throw: they return
   `available:false` when IV-OS is unconfigured/unreachable.
+- `submit_feedback` — the easy user→team feedback path. Posts a short message to the
+  team's #idea-brand-coach Slack channel via `chat.postMessage`, authenticated with the
+  `SLACK_BOT_TOKEN` bot token (`chat:write`; the bot must be invited to the channel)
+  (`slack/feedbackNotifier.ts`). NOT identity-gated (anon may submit so feedback is never
+  lost); the feedback text is the only user content sent and is never logged (MF-5).
+  Degrades gracefully to a clear error when the token is unconfigured/unreachable. NOTE:
+  Slack returns HTTP 200 even on logical errors — the notifier checks the body `ok` field.
 
 - `list_coach_conversations` / `get_coach_conversation` — **READ, per avatar.** Surface the
   authenticated caller's own Brand-Coach chat threads (`chat_sessions` + `chat_messages`,
@@ -44,6 +51,8 @@ never bleeds across concurrent requests.
 ```bash
 npm run mcp:dev      # tsx watch, boots on MCP_PORT (default 8787), POST /mcp, GET /healthz
 # env: MCP_PORT, IVOS_MCP_URL, IVOS_MCP_TOKEN, SUPABASE_URL, SUPABASE_ANON_KEY
+#      SLACK_BOT_TOKEN (optional — enables submit_feedback delivery; unset = graceful no-op)
+#      SLACK_FEEDBACK_CHANNEL_ID (optional — defaults to #idea-brand-coach)
 ```
 
 ## Acceptance bar (Done-when)

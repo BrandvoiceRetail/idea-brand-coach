@@ -19,6 +19,7 @@ import type { IvosLedgerClient } from '../ivos/client.js';
 import { actorTag } from './writeAuth.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
+import { captureMcpEvent } from '../posthog.js';
 
 interface CopyResponse {
   copy: string;
@@ -86,11 +87,17 @@ export function registerDraftAssetTool(server: McpServer, edgeFn: EdgeFnClient, 
             : { ok: false, note: write.note ?? 'IV-OS ledger write degraded' };
       }
 
+      const identity = getIdentity();
       safeLog({
         event: 'tool.draft_asset',
-        caller: userTag(getIdentity()),
+        caller: userTag(identity),
         format: res.data.format,
         hasUserContext: res.data.hasUserContext,
+        recorded: recorded.ok,
+      });
+      captureMcpEvent(identity.userId ?? 'anon', 'mcp_asset_drafted', {
+        format: res.data.format,
+        has_user_context: res.data.hasUserContext,
         recorded: recorded.ok,
       });
       return {

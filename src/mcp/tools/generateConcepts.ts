@@ -12,6 +12,7 @@ import type { EdgeFnClient } from '../edgeFn/client.js';
 import { buildConceptPrompt, parseConcepts } from '../service/concepts.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
+import { captureMcpEvent } from '../posthog.js';
 
 interface ConsultantResponse {
   response: string;
@@ -48,7 +49,12 @@ export function registerGenerateConceptsTool(server: McpServer, edgeFn: EdgeFnCl
         };
       }
       const concepts = parseConcepts(res.data.response, count);
-      safeLog({ event: 'tool.generate_concepts', caller: userTag(getIdentity()), count: concepts.length });
+      const identity = getIdentity();
+      safeLog({ event: 'tool.generate_concepts', caller: userTag(identity), count: concepts.length });
+      captureMcpEvent(identity.userId ?? 'anon', 'mcp_concepts_generated', {
+        count: concepts.length,
+        channel: channel ?? null,
+      });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(concepts, null, 2) }],
         structuredContent: {

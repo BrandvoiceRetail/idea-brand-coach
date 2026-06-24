@@ -92,4 +92,18 @@ export interface IAvatarService {
    * @throws Error if templates cannot be retrieved
    */
   getTemplates(): Promise<Avatar[]>;
+
+  /**
+   * Return the user's default avatar, creating it only if the user has none.
+   *
+   * Idempotent: if the user already has any avatar, the existing one is returned
+   * (a name match is preferred) and nothing is created. A concurrent create that
+   * trips the (user_id, name) unique index is treated as "already exists" — the
+   * winning row is fetched and returned instead of surfacing an error.
+   *
+   * @param name - Name for the default avatar (defaults to 'Default Avatar')
+   * @returns Promise resolving to the existing or newly-created default avatar
+   * @throws Error only on non-conflict failures (network, auth, etc.)
+   */
+  getOrCreateDefaultAvatar(name?: string): Promise<Avatar>;
 }

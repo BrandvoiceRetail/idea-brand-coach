@@ -41,6 +41,7 @@ import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
 import { gateWrite } from './writeAuth.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
+import { captureMcpEvent } from '../posthog.js';
 
 /** The edge fn that synthesises the map (cloned from the reveal-signature skeleton). */
 const AUDIT_IDEA_EDGE_FN = 'audit-idea-map';
@@ -213,6 +214,10 @@ export function registerGenerateAuditIdeaMapTool(server: McpServer, deps?: Parti
       });
 
       if (result.status === 'persisted') {
+        captureMcpEvent(identity.userId as string, 'mcp_audit_idea_map_generated', {
+          grounding: result.grounding,
+          row_count: result.row_count,
+        });
         return {
           content: [
             {

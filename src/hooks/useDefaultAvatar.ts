@@ -1,79 +1,74 @@
 import { useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { SupabaseBrandService } from '@/services/SupabaseBrandService';
+import { SupabaseAvatarService } from '@/services/SupabaseAvatarService';
 
 interface UseDefaultAvatarProps {
   user: User | null;
-  avatars: any[];
+  /** Current avatar list (only `.length` is read). */
+  avatars: unknown[];
   isLoadingAvatars: boolean;
-  createAvatar: (avatar: any) => Promise<any>;
+  /** Re-fetch the avatar list after a default is created, to sync in-memory state. */
+  refreshAvatars: () => Promise<void>;
 }
 
 /**
- * Custom hook to handle default avatar creation
- * Follows Single Responsibility Principle - only handles avatar creation logic
+ * Ensures the user has at least one avatar, creating a single "Default Avatar" when they
+ * have none.
+ *
+ * Why the gating matters: the avatar list loads asynchronously and starts empty, so acting
+ * on the initial `avatars.length === 0` race-created duplicate "Default Avatar" rows on every
+ * mount. This hook only acts once a load has actually completed (an observed loading
+ * true -> false transition), so it sees the *confirmed* list, and it delegates to the
+ * idempotent `getOrCreateDefaultAvatar` (which also tolerates the residual multi-tab race via
+ * the (user_id, name) unique index). Creation is therefore at-most-once per user.
  */
 export function useDefaultAvatar({
   user,
   avatars,
   isLoadingAvatars,
-  createAvatar,
+  refreshAvatars,
 }: UseDefaultAvatarProps): void {
-  const hasAttemptedCreation = useRef(false);
+  const hasLoadedOnce = useRef(false);
+  const prevLoading = useRef(isLoadingAvatars);
   const isCreating = useRef(false);
 
+  // Record that at least one avatar load has completed (loading true -> false).
   useEffect(() => {
-    // Early returns for defensive programming
-    if (!user) return;
+    if (prevLoading.current && !isLoadingAvatars) {
+      hasLoadedOnce.current = true;
+    }
+    prevLoading.current = isLoadingAvatars;
+  }, [isLoadingAvatars]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    if (!hasLoadedOnce.current) return; // only act on a confirmed-empty list, never the initial empty state
     if (isLoadingAvatars) return;
     if (avatars.length > 0) return;
-    if (hasAttemptedCreation.current) return;
     if (isCreating.current) return;
 
-    const createDefaultAvatar = async () => {
-      // Set flags immediately to prevent race conditions
-      hasAttemptedCreation.current = true;
+    let cancelled = false;
+
+    const ensureDefaultAvatar = async () => {
       isCreating.current = true;
-
       try {
-        const brandService = new SupabaseBrandService(supabase);
-        const { data: brand, error: brandError } = await brandService.getOrCreateDefaultBrand();
-
-        if (brandError) {
-          console.error('Error getting/creating brand:', brandError);
-          return;
+        const avatarService = new SupabaseAvatarService(supabase);
+        await avatarService.getOrCreateDefaultAvatar();
+        if (!cancelled) {
+          await refreshAvatars();
         }
-
-        if (!brand) {
-          console.error('No brand returned from getOrCreateDefaultBrand');
-          return;
-        }
-
-        await createAvatar({
-          name: 'Default Avatar',
-          brand_id: brand.id,
-          demographics: {},
-          psychographics: {},
-          behavioral_traits: {},
-          status: 'active',
-        });
-
-        console.log('Default avatar created successfully');
       } catch (error) {
-        console.error('Error creating default avatar:', error);
-        // Reset attempt flag on error to allow retry
-        hasAttemptedCreation.current = false;
+        console.error('Error ensuring default avatar:', error);
       } finally {
         isCreating.current = false;
       }
     };
 
-    // Use setTimeout to defer execution and avoid render cycle issues
-    const timeoutId = setTimeout(createDefaultAvatar, 100);
+    ensureDefaultAvatar();
 
     return () => {
-      clearTimeout(timeoutId);
+      cancelled = true;
     };
-  }, [user?.id, isLoadingAvatars, avatars.length]); // Use stable dependencies
+  }, [user?.id, isLoadingAvatars, avatars.length, refreshAvatars]);
 }

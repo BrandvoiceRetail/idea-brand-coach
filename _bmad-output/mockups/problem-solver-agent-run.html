@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDEA Brand Coach — Agentic Run → Deliverable</title>
+<style>
+  :root{
+    --ink:#1d2433;--ink-soft:#55607a;--ink-faint:#8a93a8;--bg:#f6f4ef;--surface:#fff;--line:#e7e3da;
+    --primary:#5b4bd6;--primary-soft:#efecfc;--primary-ink:#3a2eaa;
+    --good:#1f9d62;--good-soft:#e6f5ed;--warn:#c0392b;--warn-soft:#fdecea;--amber:#d99a2b;--amber-soft:#fbf3e1;
+    --teal:#0f8f86;--teal-soft:#e3f4f1;--teal-ink:#0a6e66;--shadow:0 1px 2px rgba(20,24,40,.04),0 8px 24px rgba(20,24,40,.06);--mono:ui-monospace,SFMono-Regular,Menlo,monospace;--serif:"Iowan Old Style",Georgia,serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer} .faint{color:var(--ink-faint)} .muted{color:var(--ink-soft)}
+  .toolbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .replay{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 12px;font-size:12.5px;font-weight:700;color:var(--ink)}
+  .seg{margin-left:auto;display:inline-flex;background:#eceae3;border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--ink-soft);font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .stage{display:flex;justify-content:center;padding:24px 16px 70px}
+  .device{width:100%;max-width:760px;transition:max-width .35s ease} .device.mobile{max-width:402px}
+  .device.mobile .frame{border-radius:34px;border:11px solid #11131c;box-shadow:0 30px 60px rgba(20,24,40,.22)}
+  .frame{background:var(--bg);border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+
+  .head{padding:16px 20px;background:#13182a;color:#fff}
+  .head .t{font-size:15px;font-weight:700;display:flex;align-items:center;gap:9px}
+  .head .t .dot{width:9px;height:9px;border-radius:50%;background:var(--amber);animation:blink 1s infinite} .head .t.done .dot{background:var(--good);animation:none}
+  @keyframes blink{50%{opacity:.3}}
+  .head .s{font-size:12px;color:#aeb6cd;margin-top:3px}
+  .bar{height:6px;border-radius:99px;background:#2a3252;overflow:hidden;margin-top:11px}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary),#8a7bff);transition:width .5s ease}
+
+  .run{padding:16px 18px 4px} .device.mobile .run{padding:14px 14px 4px}
+  .runlbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .step{display:flex;gap:11px;padding-bottom:14px;position:relative}
+  .step::before{content:"";position:absolute;left:13px;top:26px;bottom:-2px;width:2px;background:var(--line)}
+  .step:last-child::before{display:none}
+  .step .ic{width:28px;height:28px;border-radius:8px;flex:none;display:grid;place-items:center;font-size:13px;background:#f0eee8;color:var(--ink-faint);z-index:1}
+  .step.run .ic{background:var(--primary-soft);color:var(--primary-ink)}
+  .step.done .ic{background:var(--good-soft);color:var(--good)}
+  .step .c{flex:1;min-width:0;opacity:.45;transition:opacity .3s} .step.run .c,.step.done .c{opacity:1}
+  .step .tool{font-family:var(--mono);font-size:11.5px;color:var(--primary-ink);font-weight:700}
+  .step .tool .paren{color:var(--ink-faint)}
+  .step .lab{font-size:13px;font-weight:600;margin-top:1px}
+  .step .sub{font-size:12px;color:var(--ink-soft);margin-top:3px;min-height:0}
+  .step .sub .cursor{display:none}
+  .step.run .sub .cursor{display:inline-block;width:7px;height:13px;background:var(--primary);vertical-align:-2px;margin-left:1px;animation:blink .8s infinite}
+  .step .res{display:none;margin-top:6px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:12px}
+  .step.done .res{display:block}
+  .step .res .rk{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);margin-bottom:3px}
+  .step .res .rv{color:var(--ink)}
+  .step .res .rv b{color:var(--teal-ink)}
+  .step .spin{display:none;width:13px;height:13px;border:2px solid var(--primary-soft);border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite;margin-left:auto;flex:none}
+  .step.run .spin{display:block}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .step .chk{display:none;margin-left:auto;color:var(--good);font-weight:800} .step.done .chk{display:block}
+  .step .toprow{display:flex;align-items:center;gap:8px}
+
+  /* deliverable */
+  .deliv{margin:6px 18px 18px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:var(--shadow);overflow:hidden;display:none}
+  .deliv.show{display:block;animation:rise .5s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .deliv .dh{background:linear-gradient(135deg,#15123a,#3a2eaa);color:#fff;padding:14px 16px}
+  .deliv .dh .dt{font-family:var(--serif);font-size:17px} .deliv .dh .ds{font-size:11.5px;color:#cfc9ff;margin-top:2px}
+  .deliv .dbody{padding:14px 16px}
+  .fnd{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)} .fnd:first-child{border-top:0}
+  .fnd .n{width:20px;height:20px;border-radius:50%;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;font-weight:800;font-size:10.5px;flex:none}
+  .fnd .fw{font-size:13px;font-weight:700} .fnd .fy{font-size:11.5px;color:var(--ink-soft)}
+  .fnd .ev{font-size:10.5px;color:var(--teal-ink);background:var(--teal-soft);border-radius:999px;padding:2px 8px;margin-top:4px;display:inline-block}
+  .fnd .imp{font-size:10px;font-weight:800;border-radius:999px;padding:2px 7px;white-space:nowrap;align-self:center} .imp.hi{background:var(--good-soft);color:var(--good)} .imp.md{background:var(--amber-soft);color:#92671a}
+  .deliv .cta{display:flex;gap:9px;padding:12px 16px;border-top:1px solid var(--line);background:#fbfaf7;flex-wrap:wrap;align-items:center}
+  .deliv .cta .est{font-size:12px} .deliv .cta .est b{color:var(--good)}
+  .deliv .cta button{margin-left:auto;border:0;background:var(--teal);color:#fff;border-radius:9px;padding:9px 14px;font-weight:700;font-size:12.5px}
+
+  .principle{font-size:11.5px;color:var(--ink-faint);padding:0 18px 18px;display:flex;gap:8px;align-items:flex-start}
+  .principle b{color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>● Agentic run → deliverable</b><span class="faint" style="font-size:12px">mockup · you see the work</span>
+  <button class="replay" id="replay">▶ Replay</button>
+  <div class="seg" id="segDev"><button data-m="desktop" class="on">🖥 Desktop</button><button data-m="mobile">📱 Mobile</button></div>
+</div>
+
+<div class="stage"><div class="device" id="device"><div class="frame">
+  <div class="head" id="head">
+    <div class="t" id="htitle"><span class="dot"></span> Analyzing your InfinityVault listing…</div>
+    <div class="s" id="hsub">You’ll see exactly what the app is doing — every finding is backed by what it reads.</div>
+    <div class="bar"><i id="prog"></i></div>
+  </div>
+
+  <div class="run">
+    <div class="runlbl">🧠 The app is working <span class="faint" id="counter">· step 1 of 6</span></div>
+    <div id="steps">
+      <div class="step" data-dur="1500" data-sub="opening your screenshot…">
+        <div class="ic">📷</div>
+        <div class="c"><div class="toprow"><span class="tool">read_listing<span class="paren">(screenshot)</span></span><span class="spin"></span><span class="chk">✓</span></div>
+          <div class="lab">Reading your listing screenshot</div><div class="sub"></div>
+          <div class="res"><div class="rk">found</div><div class="rv">Hero = <b>product-on-white</b> · 3 feature bullets · generic A+ · <b>no warranty signal</b></div></div></div>
+      </div>
+      <div class="step" data-dur="1700" data-sub="fetching reviews for ASIN B0CXXing…">
+        <div class="ic">⭐</div>
+        <div class="c"><div class="toprow"><span class="tool">fetch_reviews<span class="paren">(asin)</span></span><span class="spin"></span><span class="chk">✓</span></div>
+          <div class="lab">Pulling your live customer reviews</div><div class="sub"></div>
+          <div class="res"><div class="rk">47 reviews · recurring words</div><div class="rv"><b>“flimsy” ×9</b> · “bent cards” ×6 · “feels cheap” ×4 · “worth it” ×4</div></div></div>
+      </div>
+      <div class="step" data-dur="1400" data-sub="scoring the 4 IDEA pillars…">
+        <div class="ic">📊</div>
+        <div class="c"><div class="toprow"><span class="tool">score_trust_gaps<span class="paren">()</span></span><span class="spin"></span><span class="chk">✓</span></div>
+          <div class="lab">Scoring trust across the 4 IDEA pillars</div><div class="sub"></div>
+          <div class="res"><div class="rk">weakest</div><div class="rv">Authentic <b>48</b> · Distinctive <b>52</b> → <b>build-quality gap</b></div></div></div>
+      </div>
+      <div class="step" data-dur="1300" data-sub="matching to the buyer’s mindset…">
+        <div class="ic">🧠</div>
+        <div class="c"><div class="toprow"><span class="tool">read_buyer_mindset<span class="paren">()</span></span><span class="spin"></span><span class="chk">✓</span></div>
+          <div class="lab">Matching to your buyer’s mindset</div><div class="sub"></div>
+          <div class="res"><div class="rk">dominant</div><div class="rv"><b>Safety-led</b> — protecting valuable cards. Listing is all logic, no reassurance.</div></div></div>
+      </div>
+      <div class="step" data-dur="1500" data-sub="deriving the fixes that close the gap…">
+        <div class="ic">🎯</div>
+        <div class="c"><div class="toprow"><span class="tool">derive_triggers<span class="paren">(gap, mindset)</span></span><span class="spin"></span><span class="chk">✓</span></div>
+          <div class="lab">Deriving your decision triggers</div><div class="sub"></div>
+          <div class="res"><div class="rk">3 triggers · ranked</div><div class="rv">#1 <b>Reassurance → Lifetime Warranty</b> · #2 build-proof hero · #3 benefit bullets</div></div></div>
+      </div>
+      <div class="step" data-dur="1600" data-sub="writing your briefs + copy…">
+        <div class="ic">✦</div>
+        <div class="c"><div class="toprow"><span class="tool">generate_brief<span class="paren">(triggers)</span></span><span class="spin"></span><span class="chk">✓</span></div>
+          <div class="lab">Generating your design briefs + copy</div><div class="sub"></div>
+          <div class="res"><div class="rk">ready</div><div class="rv">7-slot image brief + bullet rewrite · <b>warranty claim flagged to confirm</b></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="deliv" id="deliv">
+    <div class="dh"><div class="dt">✓ Your Forensic Report — InfinityVault 216-card binder</div><div class="ds">3 trust gaps · ranked by impact · every finding backed by what we read</div></div>
+    <div class="dbody">
+      <div class="fnd"><span class="n">1</span><div class="fw">Build quality is invisible &amp; unguaranteed<div class="fy">Hero is product-on-white; no warranty — for a Safety-led buyer protecting cards.</div><span class="ev">backed by: your hero image + “flimsy” ×9 in reviews</span></div><span class="imp hi">High</span></div>
+      <div class="fnd"><span class="n">2</span><div class="fw">Bullets are features, not reassurance<div class="fy">Lead bullet 1 with a Lifetime Warranty — the strongest Safety trigger.</div><span class="ev">backed by: your 3 feature bullets</span></div><span class="imp hi">High</span></div>
+      <div class="fnd"><span class="n">3</span><div class="fw">A+ has no lifestyle context<div class="fy">Add game-night &amp; tournament modules vs Gamegenic’s commodity feel.</div><span class="ev">backed by: your A+ section</span></div><span class="imp md">Medium</span></div>
+    </div>
+    <div class="cta"><div class="est">Implement all 3 → <b>est. +1.8–2.4 pts</b> conversion <span class="faint">(range)</span></div><button>Open full report + briefs →</button></div>
+  </div>
+
+  <div class="principle">💡 <span><b>The point:</b> the path to the deliverable is the app’s intelligence, shown — real tool calls, real evidence, never a blank wait. The same pattern powers the Coach (“drafting your positioning…”) and the Funnel (“grounding the brief in your brand…”).</span></div>
+</div></div></div>
+
+<script>
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  $('#segDev').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    $$('#segDev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    $('#device').classList.toggle('mobile',b.dataset.m==='mobile');});
+  let timers=[];
+  function clearT(){timers.forEach(clearTimeout);timers=[];}
+  function type(el,txt,done){el.innerHTML='';let i=0;const cur=document.createElement('span');cur.className='cursor';
+    function tick(){el.textContent=txt.slice(0,i);el.appendChild(cur);i++;if(i<=txt.length){timers.push(setTimeout(tick,18));}else if(done){done();}}tick();}
+  function run(){
+    clearT();
+    const steps=$$('.step');const n=steps.length;
+    steps.forEach(s=>s.classList.remove('run','done'));
+    $('#deliv').classList.remove('show');$('#prog').style.width='0';
+    $('#htitle').classList.remove('done');$('#htitle').innerHTML='<span class="dot"></span> Analyzing your InfinityVault listing…';
+    let acc=200;
+    steps.forEach((s,i)=>{
+      timers.push(setTimeout(()=>{
+        s.classList.add('run');
+        $('#counter').textContent='· step '+(i+1)+' of '+n;
+        type(s.querySelector('.sub'), s.dataset.sub);
+      },acc));
+      const dur=+s.dataset.dur;
+      timers.push(setTimeout(()=>{
+        s.classList.remove('run');s.classList.add('done');
+        $('#prog').style.width=Math.round((i+1)/n*100)+'%';
+      },acc+dur));
+      acc+=dur+250;
+    });
+    timers.push(setTimeout(()=>{
+      $('#htitle').classList.add('done');$('#htitle').innerHTML='<span class="dot"></span> Analysis complete';
+      $('#counter').textContent='· done';$('#hsub').textContent='6 tools run · 47 reviews + your listing read · 3 fixes found';
+      $('#deliv').classList.add('show');
+    },acc+200));
+  }
+  $('#replay').addEventListener('click',run);
+  run();
+</script>
+</body>
+</html>

@@ -177,7 +177,8 @@ export interface BrandCoachV2Actions {
 
   /** Avatar actions */
   handleAvatarSelect: (avatarId: string) => void;
-  handleCreateAvatar: () => Promise<void>;
+  /** Create an avatar with an optional custom name; resolves true on success. */
+  handleCreateAvatar: (name?: string) => Promise<boolean>;
 
   /** Chat actions */
   handleSendMessage: (content: string) => Promise<void>;
@@ -260,7 +261,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   };
 
   // ── Avatar management ─────────────────────────────────────────────────
-  const { avatars, currentAvatar, isLoading: isLoadingAvatars, createAvatar, selectAvatarById } = useAvatarService();
+  const { avatars, currentAvatar, isLoading: isLoadingAvatars, createAvatar, selectAvatarById, refreshAvatars } = useAvatarService();
 
   const avatarData: AvatarData[] = avatars.map(a => ({ id: a.id, name: a.name, image_url: a.image_url }));
 
@@ -394,7 +395,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
     if (!isLoadingChapter && !progress && currentSessionId && !isInitializing) initializeProgress();
   }, [isLoadingChapter, progress, currentSessionId, isInitializing, initializeProgress]);
 
-  useDefaultAvatar({ user, avatars, isLoadingAvatars, createAvatar });
+  useDefaultAvatar({ user, avatars, isLoadingAvatars, refreshAvatars });
 
   useEffect(() => {
     if (chatContainerRef.current) chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -423,16 +424,16 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
 
   const handleAvatarSelect = (avatarId: string): void => selectAvatarById(avatarId);
 
-  const handleCreateAvatar = async (): Promise<void> => {
+  const handleCreateAvatar = async (name?: string): Promise<boolean> => {
     try {
       const brandService = new SupabaseBrandService(supabase);
       const { data: brand, error: brandError } = await brandService.getOrCreateDefaultBrand();
       if (brandError || !brand) {
         toast({ title: 'Error', description: 'Failed to create avatar: Could not get brand', variant: 'destructive' });
-        return;
+        return false;
       }
       const newAvatar = await createAvatar({
-        name: `Avatar ${avatars.length + 1}`,
+        name: name?.trim() || `Avatar ${avatars.length + 1}`,
         brand_id: brand.id,
         demographics: {},
         psychographics: {},
@@ -442,10 +443,13 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
       if (newAvatar) {
         selectAvatarById(newAvatar.id);
         toast({ title: 'Avatar Created', description: 'Your new avatar has been created' });
+        return true;
       }
+      return false;
     } catch (error) {
       console.error('Error creating avatar:', error);
       toast({ title: 'Error', description: 'Failed to create avatar', variant: 'destructive' });
+      return false;
     }
   };
 

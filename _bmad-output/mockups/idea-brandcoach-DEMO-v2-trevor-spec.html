@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<!-- CHANGELOG 2026-06-21: applied Trevor's Demo v2 Fix List + Terminology Policy v1.0 —
+     Fix1 evidence-based diagnostic Qs + instruction/extreme labels (labels condensed for fit) · Fix2 Recognition Lego→Dove ·
+     Fix3 stripped the CAPTURE-element leak from the placement line · Fix4 dev pricing note removed ·
+     Fix5 S1 engine teaser + S2 improvement loop (additive). Screens 4/5/7 untouched.
+     Matthew tweak: S8 user-facing "MCP"/"MCP APP" labels → "Claude Connector" (MCP is jargon).
+     v2.1 polish 2026-06-21: tightened the S8 Connector sentence · Restart now resets the score card · diagnostic shows a "sample result" caption.
+     v2.2 2026-06-21: restored Trevor's verbatim extreme labels (now a caption row BELOW the options, fits mobile) + verbatim Insight/Authentic question wording · congruence bridge on the S1 lede · sample-answers caption shown before reveal · removed three live terminology leaks per the Policy — the on-screen "(S1-S4)" stage label and the CAPTURE word "reassurance" in the S4 run, and the rendered NOTE-TO-TREVOR block (now an HTML comment) · fuller Restart reset · mobile tap-target + Connector-meta polish. Screens 4/5/7 forensic content untouched (only the two S4 terminology-leak strings changed). -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDEA Brand Coach — Demo v2 (Trevor spec)</title>
+<style>
+  :root{
+    --blue:#1A3557; --blue-mid:#2A4E78; --blue-lt:#EBF0F6; --gold:#C9A84C; --gold-lt:#FDF8EE;
+    --g100:#F2F4F7; --g200:#D0D5DD; --g500:#667085; --g900:#101828; --wht:#fff; --wrm:#F3F2EE;
+    --red:#B42318; --red-lt:#FEF3F2; --green:#027A48; --green-lt:#ECFDF3; --warn:#B54708; --warn-lt:#FFFAEB;
+    --i:#D89B0D; --d:#54B657; --e:#3BA0D1; --a:#F08A00;
+    --line:#E4E7EC; --shadow:0 1px 3px rgba(16,24,40,.10),0 1px 2px rgba(16,24,40,.06); --shadow-md:0 4px 10px rgba(16,24,40,.10);
+    --r:10px; --rlg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;background:var(--g100);color:var(--g900);line-height:1.55;font-size:15px}
+  button{font-family:inherit;cursor:pointer}
+  .mut{color:var(--g500)}
+  .toolbar{position:sticky;top:0;z-index:80;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .toolbar b{color:var(--blue)}
+  .seg{margin-left:auto;display:inline-flex;background:var(--g100);border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 13px;border-radius:999px;font-size:13px;color:var(--g500);font-weight:700}
+  .seg button.on{background:#fff;color:var(--blue);box-shadow:var(--shadow)}
+  .stage{display:flex;justify-content:center;padding:22px 16px 70px}
+  .device{width:100%;max-width:880px;transition:max-width .35s ease} .device.mobile{max-width:404px}
+  .device.mobile .frame{border-radius:34px;border:11px solid #11131c;box-shadow:0 30px 60px rgba(16,24,40,.22)}
+  .frame{background:var(--wrm);border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow-md)}
+
+  .stepper{display:flex;align-items:center;gap:4px;padding:11px 14px;background:var(--blue);overflow-x:auto}
+  .sc{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;color:rgba(255,255,255,.62);font-weight:700;font-size:11.5px}
+  .sc .n{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:10px}
+  .sc.on{background:var(--blue-mid);color:#fff} .sc.on .n{background:var(--gold);color:var(--blue)} .sc.done .n{background:var(--gold);color:var(--blue)}
+  .sc .tg{font-size:8.5px;font-weight:800;border-radius:999px;padding:1px 5px}
+  .tg.free{background:var(--green);color:#fff} .tg.paid{background:var(--gold);color:var(--blue)} .tg.beta{background:rgba(255,255,255,.16);color:#fff}
+  .arr{color:rgba(255,255,255,.3);font-size:11px}
+  .device.mobile .sc .lt{display:none} .device.mobile .sc.on .lt{display:inline}
+
+  nav.brand{background:var(--blue);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+  nav.brand .lg{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:14px}
+  nav.brand .lg .mk{width:26px;height:26px;border-radius:6px;background:var(--gold);display:grid;place-items:center;color:var(--blue);font-weight:900;font-size:12px}
+  nav.brand .lg span{color:var(--gold)}
+  nav.brand .nc{font-size:12px;color:rgba(255,255,255,.6);font-weight:700;letter-spacing:.04em}
+
+  .scr{display:none;padding:24px 26px 30px} .scr.on{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .device.mobile .scr{padding:18px 15px 24px}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:7px}
+  h1{font-size:27px;font-weight:800;letter-spacing:-.6px;line-height:1.1;color:var(--blue);margin-bottom:8px} .device.mobile h1{font-size:22px}
+  h1 .acc{color:var(--gold)}
+  .lede{font-size:15px;color:var(--g500);margin-bottom:18px;max-width:560px}
+  .btn{border:0;border-radius:var(--r);padding:13px 22px;font-weight:800;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+  .btn.gold{background:var(--gold);color:var(--blue)} .btn.blue{background:var(--blue);color:#fff} .btn.ghost{background:#fff;border:1px solid var(--g200);color:var(--blue)}
+  .navrow{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--rlg);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+  .ct{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);margin-bottom:13px}
+
+  /* diagnostic */
+  .q{margin-bottom:14px}
+  .q .qh{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .q .ico{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:15px;flex:none}
+  .q .ico.i{background:#FDF4E0} .q .ico.d{background:#EAF7EB} .q .ico.e{background:#E7F4FA} .q .ico.a{background:#FFF1E0}
+  .q .ql{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+  .q .qt{font-size:14px;font-weight:700;color:var(--blue);line-height:1.3}
+  .opts{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+  .opt{background:var(--g100);border:1.5px solid var(--g200);border-radius:8px;padding:10px 4px;text-align:center;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--blue);background:var(--blue-lt)}
+  .opt.sel{background:var(--blue);border-color:var(--blue);color:#fff}
+  .opt .on{font-size:16px;font-weight:800;color:var(--blue);display:block} .opt.sel .on{color:#fff}
+  .opt .ol{font-size:9px;color:var(--g500);display:block;margin-top:2px} .opt.sel .ol{color:rgba(255,255,255,.8)}
+  .oscale{display:flex;justify-content:space-between;gap:12px;margin-top:8px;font-size:11px;color:var(--g500);line-height:1.3} .oscale span{flex:1} .oscale span:last-child{text-align:right}
+  .device.mobile .opt{padding-top:13px;padding-bottom:13px}
+  .device.mobile .cbar .cc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%}
+
+  /* trust gap result */
+  .result{display:none} .result.show{display:block;animation:fade .4s ease}
+  .dial{text-align:center;padding:6px 0 4px}
+  .dial .num{font-size:60px;font-weight:800;color:var(--blue);line-height:1} .dial .num small{font-size:24px;color:var(--g200)}
+  .dial .lbl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);margin:2px 0 14px}
+  .gbar{height:10px;background:var(--g100);border-radius:5px;overflow:hidden;margin-bottom:6px}
+  .gbar i{display:block;height:100%;background:linear-gradient(90deg,#B42318,#B54708 35%,#C9A84C 60%,#027A48 100%)}
+  .gbadge{display:inline-flex;gap:6px;align-items:center;background:var(--red-lt);color:var(--red);border:1px solid #FDA29B;border-radius:20px;padding:5px 13px;font-size:12px;font-weight:700;margin-top:8px}
+  .prow{display:flex;align-items:center;gap:11px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r);margin-bottom:9px;background:#fff}
+  .prow .pl{width:26px;height:26px;border-radius:6px;background:var(--blue-lt);color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+  .prow.gap .pl{background:var(--red-lt);color:var(--red)}
+  .prow .pn{flex:1;font-size:13.5px;font-weight:700;color:var(--blue)}
+  .prow .pbar{flex:1.4;height:6px;background:var(--g100);border-radius:3px;overflow:hidden} .prow .pbar i{display:block;height:100%;background:var(--blue)} .prow.gap .pbar i{background:var(--red)}
+  .prow .ps{width:46px;text-align:right;font-weight:800;font-size:14px;color:var(--blue)} .prow.gap .ps{color:var(--red)}
+  .prow .pgap{font-size:9.5px;font-weight:800;color:var(--red);background:var(--red-lt);border:1px solid #FDA29B;border-radius:9px;padding:2px 7px}
+
+  /* paygate */
+  .pay{background:var(--blue);color:#fff;border-radius:var(--rlg);padding:24px;position:relative;overflow:hidden}
+  .pay .found{display:inline-block;background:rgba(201,168,76,.16);border:1px solid rgba(201,168,76,.4);border-radius:6px;padding:8px 13px;font-size:12px;color:var(--gold);font-weight:700;margin-bottom:16px}
+  .pay h2{font-size:21px;font-weight:800;margin-bottom:9px}
+  .pay ul{list-style:none;margin:0 0 18px} .pay li{font-size:14px;color:rgba(255,255,255,.86);padding:5px 0;display:flex;gap:9px} .pay li::before{content:"✓";color:var(--gold);font-weight:900}
+  .pay .price{display:flex;align-items:baseline;gap:7px;margin-bottom:14px} .pay .price .n{font-size:34px;font-weight:800} .pay .price .sub{font-size:13px;color:rgba(255,255,255,.6)}
+  .pay .alt{font-size:12px;color:rgba(255,255,255,.6);margin-top:11px;border-top:1px solid rgba(255,255,255,.14);padding-top:11px}
+
+  /* upload */
+  .drop{border:2px dashed var(--g200);border-radius:var(--rlg);background:#fff;padding:26px;text-align:center;color:var(--g500);font-weight:600;margin-bottom:14px}
+  .drop .em{font-size:30px;display:block;margin-bottom:7px;color:var(--gold)}
+  .thumb{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px}
+  .thumb .ti{width:54px;height:54px;border-radius:9px;background:var(--blue-lt);display:grid;place-items:center;font-size:24px;flex:none}
+  .thumb .ok{margin-left:auto;color:var(--green);font-weight:800;font-size:12px}
+
+  /* agentic run */
+  .runh{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:800;color:var(--blue);margin-bottom:3px}
+  .runh .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);animation:bl 1s infinite} .runh.done .dot{background:var(--green);animation:none}
+  @keyframes bl{50%{opacity:.3}}
+  .runs{font-size:12.5px;color:var(--g500);margin-bottom:6px}
+  .replay{border:1px solid var(--g200);background:#fff;border-radius:8px;padding:5px 11px;font-size:11.5px;font-weight:700;color:var(--blue);margin-bottom:11px}
+  .pbarw{height:6px;background:#fff;border:1px solid var(--line);border-radius:99px;overflow:hidden;margin-bottom:14px} .pbarw i{display:block;height:100%;width:0;background:var(--gold);transition:width .5s}
+  .step{display:flex;gap:11px;padding-bottom:13px;position:relative}
+  .step::before{content:"";position:absolute;left:13px;top:26px;bottom:-2px;width:2px;background:var(--line)} .step:last-child::before{display:none}
+  .step .si{width:28px;height:28px;border-radius:8px;flex:none;display:grid;place-items:center;font-size:13px;background:#fff;border:1px solid var(--line);color:var(--g500);z-index:1}
+  .step.run .si{background:var(--gold-lt);border-color:var(--gold);color:var(--warn)} .step.done .si{background:var(--green-lt);border-color:#a6e0bf;color:var(--green)}
+  .step .c{flex:1;min-width:0;opacity:.4;transition:.3s} .step.run .c,.step.done .c{opacity:1}
+  .step .tool{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--blue);font-weight:700} .step .tool .p{color:var(--g500)}
+  .step .lab{font-size:13px;font-weight:600;color:var(--blue);margin-top:1px} .step .sub{font-size:12px;color:var(--g500);margin-top:3px}
+  .step .sub .cur{display:none} .step.run .sub .cur{display:inline-block;width:6px;height:12px;background:var(--gold);vertical-align:-1px;margin-left:1px;animation:bl .8s infinite}
+  .step .res{display:none;margin-top:6px;background:var(--g100);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px} .step.done .res{display:block}
+  .step .res b{color:var(--blue)}
+  .step .spin{display:none;width:13px;height:13px;border:2px solid var(--gold-lt);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite;margin-left:auto;flex:none} .step.run .spin{display:block}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .step .chk{display:none;margin-left:auto;color:var(--green);font-weight:900} .step.done .chk{display:block}
+  .step .tr{display:flex;align-items:center;gap:8px}
+  .donec{display:none;margin-top:6px} .donec.show{display:block;animation:fade .4s}
+
+  /* avatar profile (4 fields) */
+  .af{display:grid;grid-template-columns:1fr 1fr;gap:11px} .device.mobile .af{grid-template-columns:1fr}
+  .afcard{border:1px solid var(--line);border-radius:var(--r);padding:13px;background:#fff}
+  .afcard .afl{font-size:11px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+  .afcard .aft{font-size:13px;color:var(--g900);line-height:1.45}
+
+  /* decision trigger panel */
+  .dt{border:1px solid var(--line);border-radius:var(--rlg);overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+  .dt .c0{background:var(--gold-lt);border-bottom:1px solid #efe0bf;padding:15px 17px}
+  .dt .c0 .k{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--warn);margin-bottom:5px}
+  .dt .c0 .t{font-size:15px;color:var(--blue);line-height:1.45;font-weight:600}
+  .dt .c1{padding:15px 17px;border-bottom:1px solid var(--line)}
+  .dt .c1 .k{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);margin-bottom:5px}
+  .dt .c1 .trig{font-size:22px;font-weight:800;color:var(--blue);letter-spacing:-.4px} .dt .c1 .anchor{font-size:13px;color:var(--g500);margin-top:3px}
+  .dt .c2{padding:14px 17px;border-bottom:1px solid var(--line)} .dt .c2 .k{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);margin-bottom:7px}
+  .dt .ev{display:inline-block;background:var(--blue-lt);color:var(--blue);border-radius:7px;padding:5px 10px;font-size:12.5px;font-weight:600;margin:0 6px 6px 0;font-style:italic}
+  .dt .c3{padding:14px 17px} .dt .c3 .k{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);margin-bottom:5px} .dt .c3 .t{font-size:13.5px;color:var(--g900)} .dt .c3 .cap{font-weight:700;color:var(--gold)}
+
+  /* design brief */
+  .brief{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:14px}
+  .brief .bh{background:var(--g100);padding:9px 13px;font-size:12px;font-weight:800;color:var(--blue);display:flex;align-items:center;gap:8px}
+  .brief .freeb{margin-left:auto;font-size:9px;font-weight:800;background:var(--green);color:#fff;border-radius:999px;padding:2px 7px}
+  .brief pre{margin:0;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.55;white-space:pre-wrap;background:var(--blue);color:#e9edf5}
+  .brief .ba{display:flex;gap:7px;padding:9px 11px;border-top:1px solid var(--line);background:#fff;flex-wrap:wrap} .brief .ba button{border:0;border-radius:7px;padding:7px 11px;font-size:11.5px;font-weight:800} .ba .gold{background:var(--gold);color:var(--blue)} .ba .gh{background:#fff;border:1px solid var(--g200);color:var(--blue)}
+  .claim{font-size:11px;background:var(--warn-lt);color:var(--warn);border:1px solid #f5d28a;border-radius:8px;padding:7px 10px;margin-top:8px;display:flex;gap:6px;align-items:center} .claim button{margin-left:auto;border:0;background:var(--gold);color:var(--blue);border-radius:6px;padding:3px 9px;font-weight:800;font-size:10.5px}
+
+  /* re-scan */
+  .rescard{border:1px solid var(--line);border-radius:var(--rlg);background:#fff;box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+  .rescard .rh{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800;color:var(--blue);flex-wrap:wrap}
+  .rescard .rh button{margin-left:auto;border:1px solid var(--g200);background:#fff;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:800;color:var(--blue)} .rescard .rh button:disabled{opacity:.6}
+  .rb{display:none;margin-top:12px} .rb.show{display:block;animation:fade .4s}
+  .delta{background:var(--green-lt);border:1px solid #a6e0bf;border-radius:var(--r);padding:12px 14px;margin-bottom:9px}
+  .delta .d{font-size:22px;font-weight:800;color:var(--blue)} .delta .d .up{color:var(--green)} .delta .dl{font-size:12px;color:var(--g500);margin-top:3px}
+  .rival{background:var(--red-lt);border:1px solid #FDA29B;border-radius:var(--r);padding:11px 13px;font-size:12.5px;color:var(--red)}
+  .beta-note{font-size:11px;color:var(--g500);background:var(--g100);border-radius:8px;padding:8px 11px;margin-top:10px}
+
+  /* MCP / claude frame */
+  .surflbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--g500);margin:2px 0 9px}
+  .cframe{border:1px solid var(--line);border-radius:var(--rlg);overflow:hidden;background:#fff;box-shadow:var(--shadow);margin-bottom:16px}
+  .cbar{display:flex;align-items:center;gap:9px;padding:8px 13px;background:var(--g100);border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:var(--g500)}
+  .cdots{display:flex;gap:5px} .cdots i{width:9px;height:9px;border-radius:50%;display:block} .cdots .r{background:#ff5f57}.cdots .y{background:#febc2e}.cdots .g{background:#28c840}
+  .cbar .cc{margin-left:auto;font-size:11px;color:var(--g500)}
+  .cbody{padding:13px;background:#fbfbfa}
+  .cu{background:var(--blue);color:#fff;border-radius:12px;border-bottom-right-radius:4px;padding:8px 12px;font-size:12.5px;max-width:82%;margin-left:auto;margin-bottom:10px}
+  .ca{font-size:12.5px;color:var(--g500);margin-bottom:7px}
+  .mcp{border:1px solid #d9d4c4;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  .mcp .mh{background:var(--blue);color:#fff;padding:10px 13px;display:flex;align-items:center;gap:9px}
+  .mcp .mh .lm{width:24px;height:24px;border-radius:6px;background:var(--gold);display:grid;place-items:center;color:var(--blue);font-weight:900;font-size:11px}
+  .mcp .mh .mt{font-weight:800;font-size:13px} .mcp .mh .pb{margin-left:auto;font-size:9px;font-weight:800;background:var(--gold);color:var(--blue);border-radius:999px;padding:2px 8px}
+  .mcp .mb{padding:13px}
+  .mcp .mtop{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+  .mcp .mtop .ms{font-size:28px;font-weight:800;color:var(--blue)} .mcp .mtop .ms small{font-size:14px;color:#aab2c0}
+  .mcp .mtop .gl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--g500)}
+  .mcp .mtop .gp{font-size:11px;font-weight:700;color:var(--red);background:var(--red-lt);border:1px solid #FDA29B;border-radius:999px;padding:2px 8px;display:inline-block;margin-top:3px}
+  .mdims{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:11px}
+  .mdim{text-align:center} .mdim .dl{font-size:11px;font-weight:800} .mdim .db{height:5px;border-radius:99px;background:#eee;margin-top:4px;overflow:hidden} .mdim .db i{display:block;height:100%}
+  .mcpbtn{background:var(--gold);color:var(--blue);border:0;border-radius:8px;padding:10px;font-weight:800;font-size:12.5px;width:100%}
+  .memnote{display:flex;gap:9px;align-items:flex-start;background:var(--gold-lt);border:1px solid #efe0bf;border-radius:var(--r);padding:12px 14px;font-size:12.5px;color:var(--blue)}
+
+  .toolnote{font-size:11px;color:var(--g500);margin-top:14px;border-top:1px solid var(--line);padding-top:11px} .toolnote code{background:var(--g100);border-radius:4px;padding:1px 5px;font-size:10.5px} .toolnote b{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>● IDEA Brand Coach — Demo v2</b><span class="mut" style="font-size:12px">built to Trevor's spec · InfinityVault</span>
+  <div class="seg" id="segDev"><button data-m="desktop" class="on">🖥 Desktop</button><button data-m="mobile">📱 Mobile</button></div>
+</div>
+
+<div class="stage"><div class="device" id="device"><div class="frame">
+  <div class="stepper" id="stepper">
+    <div class="sc on" data-s="1"><span class="n">1</span><span class="lt">Diagnose</span><span class="tg free">FREE</span></div><span class="arr">›</span>
+    <div class="sc" data-s="2"><span class="n">2</span><span class="lt">Unlock</span><span class="tg paid">£97</span></div><span class="arr">›</span>
+    <div class="sc" data-s="3"><span class="n">3</span><span class="lt">Upload</span></div><span class="arr">›</span>
+    <div class="sc" data-s="4"><span class="n">4</span><span class="lt">Analyse</span></div><span class="arr">›</span>
+    <div class="sc" data-s="5"><span class="n">5</span><span class="lt">Customer</span></div><span class="arr">›</span>
+    <div class="sc" data-s="6"><span class="n">6</span><span class="lt">Your fix</span></div><span class="arr">›</span>
+    <div class="sc" data-s="7"><span class="n">7</span><span class="lt">Stay ahead</span><span class="tg beta">BETA</span></div><span class="arr">·</span>
+    <div class="sc" data-s="8"><span class="n">✦</span><span class="lt">In Claude</span></div>
+  </div>
+
+  <nav class="brand"><div class="lg"><span class="mk">IB</span>IDEA <span>Brand Coach</span></div><div class="nc" id="navnote">Free Trust Gap Diagnostic</div></nav>
+
+  <!-- S1 DIAGNOSE -->
+  <div class="scr on" id="s1">
+    <div class="eyebrow">Free Trust Gap Diagnostic™</div>
+    <h1>You already know something<br>isn't <span class="acc">working.</span></h1>
+    <p class="lede">Your numbers are off and you don't know what to fix first. Four quick questions give you a fast read on where customers lose confidence — then the full analysis confirms it against your own listing and reviews.</p>
+    <div class="card">
+      <div class="ct">Look at your listing as a first-time shopper would. Score what you actually see — not what you intended to show. 1 = not visible · 5 = unmistakable</div>
+      <div style="font-size:10.5px;color:var(--g500);margin:-6px 0 13px">Demo — sample answers shown; the live app builds your score from your own.</div>
+      <div class="q"><div class="qh"><div class="ico i">💡</div><div><div class="ql">I — Insight</div><div class="qt">Look at your hero image headline and your first bullet point. Do they describe what the product does — or why the customer needs it right now?</div></div></div>
+        <div class="opts" data-p="i"><div class="opt" data-v="1"><span class="on">1</span></div><div class="opt" data-v="2"><span class="on">2</span></div><div class="opt" data-v="3"><span class="on">3</span></div><div class="opt sel" data-v="4"><span class="on">4</span></div><div class="opt" data-v="5"><span class="on">5</span></div></div><div class="oscale"><span>1 — All specs and claims</span><span>5 — Speaks to the emotional moment</span></div></div>
+      <div class="q"><div class="qh"><div class="ico d">⚡</div><div><div class="ql">D — Distinctive</div><div class="qt">Remove your brand name from your listing. Could it belong to any of your top three competitors?</div></div></div>
+        <div class="opts" data-p="d"><div class="opt" data-v="1"><span class="on">1</span></div><div class="opt" data-v="2"><span class="on">2</span></div><div class="opt sel" data-v="3"><span class="on">3</span></div><div class="opt" data-v="4"><span class="on">4</span></div><div class="opt" data-v="5"><span class="on">5</span></div></div><div class="oscale"><span>1 — Could be anyone in the category</span><span>5 — Impossible to confuse with anyone else</span></div></div>
+      <div class="q"><div class="qh"><div class="ico e">❤️</div><div><div class="ql">E — Empathetic</div><div class="qt">Read your bullet points aloud. Do they describe what the product does — or how the customer feels when they need it?</div></div></div>
+        <div class="opts" data-p="e"><div class="opt sel" data-v="1"><span class="on">1</span></div><div class="opt" data-v="2"><span class="on">2</span></div><div class="opt" data-v="3"><span class="on">3</span></div><div class="opt" data-v="4"><span class="on">4</span></div><div class="opt" data-v="5"><span class="on">5</span></div></div><div class="oscale"><span>1 — Pure feature list</span><span>5 — Customer sees themselves in every line</span></div></div>
+      <div class="q"><div class="qh"><div class="ico a">🔒</div><div><div class="ql">A — Authentic</div><div class="qt">Count the trust signals a first-time visitor can see in your hero image before they scroll or read a single review. How many are there?</div></div></div>
+        <div class="opts" data-p="a"><div class="opt" data-v="1"><span class="on">1</span></div><div class="opt" data-v="2"><span class="on">2</span></div><div class="opt sel" data-v="3"><span class="on">3</span></div><div class="opt" data-v="4"><span class="on">4</span></div><div class="opt" data-v="5"><span class="on">5</span></div></div><div class="oscale"><span>1 — No credibility signals visible</span><span>5 — Three or more strong trust anchors</span></div></div>
+      <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+        <div class="ct" style="margin-bottom:11px">What the engine does with your listing</div>
+        <div class="step"><div class="si">📷</div><div class="c" style="opacity:1"><div class="lab">Reads your listing</div><div class="sub">Hero image, bullets, and trust signals — analysed as a first-time shopper would read them.</div></div></div>
+        <div class="step"><div class="si">⭐</div><div class="c" style="opacity:1"><div class="lab">Pulls your reviews</div><div class="sub">Your actual customers' words — the vocabulary, the fears, the signals that built or broke trust.</div></div></div>
+        <div class="step"><div class="si">🔒</div><div class="c" style="opacity:.55"><div class="lab">Finds your fix <span style="font-size:11px;color:var(--g500);font-weight:600">[unlock to see]</span></div><div class="sub">The one change with the most direct impact on conversion. Unlocked when you upload your listing.</div></div></div>
+      </div>
+      <button class="btn blue" style="width:100%;justify-content:center;margin-top:6px" onclick="reveal()">Reveal my Trust Gap Score →</button>
+    </div>
+
+    <div class="card result" id="res">
+      <div class="dial"><div class="num">58<small>/100</small></div><div class="lbl">Trust Gap Score™</div>
+        <div class="gbar"><i style="width:58%"></i></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--g500)"><span>Wide gap</span><span>Moderate</span><span>Strong</span></div>
+        <div class="gbadge">⚠ Primary gap: Empathetic</div>
+        <div style="font-size:10.5px;color:var(--g500);margin-top:9px">↳ Sample result — in the live app this is calculated from your answers.</div>
+      </div>
+      <div class="ct" style="margin-top:18px">Score by dimension</div>
+      <div class="prow"><div class="pl">I</div><div class="pn">Insight</div><div class="pbar"><i style="width:76%"></i></div><div class="ps">19/25</div></div>
+      <div class="prow"><div class="pl">D</div><div class="pn">Distinctive</div><div class="pbar"><i style="width:60%"></i></div><div class="ps">15/25</div></div>
+      <div class="prow gap"><div class="pl">E</div><div class="pn">Empathetic</div><div class="pbar"><i style="width:36%"></i></div><div class="ps">9/25</div><div class="pgap">Primary gap</div></div>
+      <div class="prow"><div class="pl">A</div><div class="pn">Authentic</div><div class="pbar"><i style="width:60%"></i></div><div class="ps">15/25</div></div>
+      <div style="background:var(--gold-lt);border:1px solid #efe0bf;border-radius:var(--r);padding:14px;margin-top:14px;font-size:13.5px;color:var(--blue);line-height:1.55"><b style="color:var(--warn);font-size:11px;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">What this means</b>Your customer has almost certainly been let down by flimsy storage before. Before they'll trust your specs, they need to feel that you understand how much their collection means to them.</div>
+      <div class="navrow"><span></span><button class="btn gold" data-go="2">Find out exactly what to fix →</button></div>
+    </div>
+  </div>
+
+  <!-- S2 UNLOCK -->
+  <div class="scr" id="s2">
+    <div class="eyebrow">Next step</div>
+    <h1>Find out exactly <span class="acc">what to fix.</span></h1>
+    <p class="lede">The free score shows <b>where</b> the problem is. The full analysis tells you <b>what</b> it is — reads your listing against your own customers' reviews, and hands you a brief to act on today.</p>
+    <div class="card" style="margin-bottom:16px">
+      <div class="ct" style="margin-bottom:11px">Your Trust Gap Score is the start of the loop, not the end of it</div>
+      <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap;font-size:12.5px;font-weight:700;color:var(--g500);margin-bottom:10px"><span style="background:var(--g100);border:1px solid var(--line);border-radius:999px;padding:6px 12px"><b style="color:var(--blue)">Diagnose</b></span><span style="color:var(--gold)">→</span><span style="background:var(--g100);border:1px solid var(--line);border-radius:999px;padding:6px 12px">Analyse</span><span style="color:var(--gold)">→</span><span style="background:var(--g100);border:1px solid var(--line);border-radius:999px;padding:6px 12px">Fix</span><span style="color:var(--gold)">→</span><span style="background:var(--g100);border:1px solid var(--line);border-radius:999px;padding:6px 12px">Re-measure</span><span style="color:var(--gold)">→</span><span style="background:var(--g100);border:1px solid var(--line);border-radius:999px;padding:6px 12px">Defend</span></div>
+      <p class="mut" style="font-size:12.5px;text-align:center;margin:0">The app re-measures automatically. When competitors move, you know first.</p>
+    </div>
+    <div class="pay">
+      <div class="found">★ Founding member offer — limited availability</div>
+      <h2>Upload your listing. Get your fix brief in 15 minutes.</h2>
+      <ul>
+        <li>Your customer profile, built from your actual reviews</li>
+        <li>Your primary conversion problem — in plain language</li>
+        <li>Your Decision Trigger™ — the one lever to pull first</li>
+        <li>A design brief ready to hand to your designer or VA</li>
+        <li>All future Beta features as they ship, at no extra cost</li>
+      </ul>
+      <div class="price"><span style="font-size:18px;color:rgba(255,255,255,.5);text-decoration:line-through;font-weight:700">£297</span><span class="n">£97</span><span class="sub">founding member · save £200</span></div>
+      <button class="btn gold" style="width:100%;justify-content:center" data-go="3">Claim my founding price →</button>
+      <div class="alt">★ Founding members lock the lowest price we'll ever offer. This offer is for a limited time only.</div>
+    </div>
+    <div class="navrow"><button class="btn ghost" data-go="1">← Back to score</button><span></span></div>
+  </div>
+
+  <!-- S3 UPLOAD -->
+  <div class="scr" id="s3">
+    <div class="eyebrow">Your account · context remembered</div>
+    <h1>Upload your listing</h1>
+    <p class="lede">Screenshots, text, or both — we read it the way a shopper does, and pull your live reviews automatically. Upload once; every future session builds on it.</p>
+    <div class="drop"><span class="em">⬆️</span>Drag in your Amazon listing<br><span class="mut" style="font-size:12px">PNG / JPG / text · or paste your product URL</span></div>
+    <div class="thumb"><div class="ti">🗄️</div><div><div style="font-weight:700;font-size:13px;color:var(--blue)">infinityvault-216-binder.png</div><div class="mut" style="font-size:11.5px">+ 47 reviews found for ASIN</div></div><span class="ok">✓ ready</span></div>
+    <div class="navrow"><button class="btn ghost" data-go="2">← Back</button><button class="btn gold" data-go="4">Analyse my listing →</button></div>
+  </div>
+
+  <!-- S4 ANALYSE -->
+  <div class="scr" id="s4">
+    <div class="runh" id="rhead"><span class="dot"></span> Analysing your InfinityVault listing…</div>
+    <div class="runs" id="rsub">You see what the app is doing — every finding is backed by what it reads.</div>
+    <button class="replay" onclick="runAnalysis()">↻ Replay</button>
+    <span style="font-size:10.5px;color:var(--g500);margin-left:8px">⌁ Illustrative run — a faithful mock of the Avatar 2.0 pipeline</span>
+    <div class="pbarw"><i id="prog"></i></div>
+    <div id="steps">
+      <div class="step" data-dur="1300" data-sub="reading your screenshot…"><div class="si">📷</div><div class="c"><div class="tr"><span class="tool">read_listing<span class="p">(screenshot)</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Reading your listing</div><div class="sub"></div><div class="res">Hero = product-on-white · specs-led bullets · <b>no visible trust cue</b></div></div></div>
+      <div class="step" data-dur="1500" data-sub="pulling your 47 reviews…"><div class="si">⭐</div><div class="c"><div class="tr"><span class="tool">fetch_reviews<span class="p">(asin)</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Pulling your customer reviews</div><div class="sub"></div><div class="res">47 reviews · <b>"flimsy" ×9</b> · "bent my cards" ×6 · "finally one I trust" ×4</div></div></div>
+      <div class="step" data-dur="1600" data-sub="reading what your customers actually say…"><div class="si">🔎</div><div class="c"><div class="tr"><span class="tool">analyse_reviews<span class="p">()</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Reading what your customers really mean</div><div class="sub"></div><div class="res">They've been <b>let down by flimsy storage before</b> · their collection matters more than the binder</div></div></div>
+      <div class="step" data-dur="1300" data-sub="scoring the four trust signals…"><div class="si">📊</div><div class="c"><div class="tr"><span class="tool">score_trust_gaps<span class="p">()</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Scoring the four trust signals</div><div class="sub"></div><div class="res"><b>Empathetic 9/25</b> — your primary gap</div></div></div>
+      <div class="step" data-dur="1400" data-sub="matching the fix to your customer…"><div class="si">🎯</div><div class="c"><div class="tr"><span class="tool">match_fix_to_customer<span class="p">()</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Matching the fix to your customer</div><div class="sub"></div><div class="res">They need to feel <b>understood</b> before they'll trust your proof → trigger: <b>Recognition</b></div></div></div>
+      <div class="step" data-dur="1500" data-sub="writing your brief + copy…"><div class="si">✦</div><div class="c"><div class="tr"><span class="tool">generate_brief<span class="p">()</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Generating your design brief + copy</div><div class="sub"></div><div class="res">Recognition-led hero brief + bullet rewrite · <b>warranty claim flagged to confirm</b></div></div></div>
+    </div>
+    <div class="donec" id="donec"><div class="navrow"><span></span><button class="btn gold" data-go="5">See your customer profile →</button></div></div>
+  </div>
+
+  <!-- S5 CUSTOMER PROFILE (Avatar 2.0 Layer 1) -->
+  <div class="scr" id="s5">
+    <div class="eyebrow">Your customer profile</div>
+    <h1>What your reviews are <span class="acc">really telling you.</span></h1>
+    <p class="lede">Not demographics. The forensic portrait of the person you're actually selling to — built from your own reviews.</p>
+    <div class="af">
+      <div class="afcard"><div class="afl">How your customer talks</div><div class="aft">"chase cards", "flimsy", "bent my cards", "don't trust cheap binders with my collection"</div></div>
+      <div class="afcard"><div class="afl">Why they're buying today</div><div class="aft">They just pulled a card worth more than the binder — and realised their current storage won't protect it.</div></div>
+      <div class="afcard"><div class="afl">What builds trust for them</div><div class="aft">Visible proof it physically protects — real materials, a guarantee, and other collectors' relief.</div></div>
+      <div class="afcard"><div class="afl">What stops them buying</div><div class="aft">They've been burned by a flimsy binder before, and assume yours is the same until you show them otherwise.</div></div>
+    </div>
+    <div class="navrow"><button class="btn ghost" data-go="4">← The analysis</button><button class="btn gold" data-go="6">See your fix →</button></div>
+  </div>
+
+  <!-- S6 YOUR FIX (Decision Trigger panel) -->
+  <div class="scr" id="s6">
+    <div class="eyebrow">Your primary conversion problem &amp; the fix</div>
+    <h1>One problem. <span class="acc">One lever.</span></h1>
+    <div class="dt">
+      <div class="c0"><div class="k">Your primary conversion problem</div><div class="t">Your customer has almost certainly been let down by flimsy storage before. Before they'll trust your specs, they need to feel that you understand how much their collection means to them.</div></div>
+      <div class="c1"><div class="k">Decision Trigger™</div><div class="trig">Recognition</div><div class="anchor">Like Dove — your customer needs to feel that the brand truly <i>understands their situation</i> before they'll engage with anything else you have to say.</div></div>
+      <div class="c2"><div class="k">The evidence — your customers' own words</div><span class="ev">"flimsy — I don't trust it"</span><span class="ev">"bent my chase cards"</span><span class="ev">"finally one I actually trust"</span></div>
+      <div class="c3"><div class="k">Where to use it</div><div class="t">Lead with recognition in your hero image headline and your opening bullet point. Your CTA should mirror the collector's relief at finally protecting their cards — not describe the product's specs.</div></div>
+    </div>
+
+    <div class="brief">
+      <div class="bh">✦ Your design brief — recognition-led hero <span class="freeb">INCLUDED</span></div>
+      <pre>Hero image: a collector's hands sliding a graded chase card into a
+snug, protective pocket — visible relief, "my cards are finally safe."
+Real materials: stitched edge, metal zip. Warm museum light.
+Headline space top-left. Overlay a small "Lifetime Warranty" badge.</pre>
+      <div class="ba"><button class="gold">⬇ Open full brief</button><button class="gh">⧉ Copy prompt</button><button class="gh">✦ Bullet rewrite</button></div>
+      <div style="padding:0 11px 11px"><div class="claim">⚠ "Lifetime warranty" is a guarantee claim — confirm you offer it before we put it on your listing.<button>I confirm</button></div></div>
+    </div>
+    <div class="navrow"><button class="btn ghost" data-go="5">← Customer profile</button><button class="btn gold" data-go="7">What keeps it working →</button></div>
+  </div>
+
+  <!-- S7 STAY AHEAD (Beta) -->
+  <div class="scr" id="s7">
+    <div class="eyebrow">Brand Defense · Beta</div>
+    <h1>Keep your <span class="acc">edge.</span></h1>
+    <p class="lede">Fixing your gap is step one. The loop — re-measure, then watch your rivals — is what earns the return visit.</p>
+    <div class="rescard">
+      <div class="rh">📈 Day 14 — automatic re-scan <button id="rescanBtn" onclick="runRescan()">↻ Run re-scan</button></div>
+      <div class="rb" id="rb">
+        <div class="delta"><div class="d">58 → <span class="up">71</span> <span style="font-size:13px;color:var(--green);font-weight:700">▲ Trust Gap +13</span></div><div class="dl">since you shipped the recognition-led hero + warranty</div></div>
+        <div class="rival">⚔️ <b>Heads up:</b> Gamegenic just added a lifetime-warranty badge — they're closing your gap. <span class="mut">2 new fixes ready.</span></div>
+      </div>
+      <div class="beta-note">Brand Defense / Market Watch is a <b>Beta</b> feature — weekly cadence, not always-on. Competitor Trust Gap comparison ships alongside it.</div>
+    </div>
+    <div class="card"><div class="ct">Your loop</div><div style="text-align:center;font-size:12.5px;font-weight:700;color:var(--g500);display:flex;gap:7px;justify-content:center;flex-wrap:wrap"><span style="background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px">Diagnose</span><span style="color:var(--gold)">→</span><span style="background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px">Analyse</span><span style="color:var(--gold)">→</span><span style="background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px"><b style="color:var(--blue)">Fix</b></span><span style="color:var(--gold)">→</span><span style="background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px">Re-measure</span><span style="color:var(--gold)">→</span><span style="background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px">Defend</span></div></div>
+    <div class="navrow"><button class="btn ghost" data-go="6">← Your fix</button><button class="btn gold" data-go="8">Inside Claude →</button></div>
+  </div>
+
+  <!-- S8 INSIDE CLAUDE (MCP) -->
+  <div class="scr" id="s8">
+    <div class="eyebrow">Every surface · same engine</div>
+    <h1>It runs <span class="acc">inside Claude</span> too.</h1>
+    <p class="lede">Through the Claude Connector, IDEA Brand Coach renders as a native panel with working buttons — and remembers your brand between sessions.</p>
+    <p class="lede">Your competitors are asking plain Claude about their branding. You've got the actual engine — your brand, your reviews, your Trust Gap — wired into every thread.</p>
+    <div class="surflbl">⌘ IDEA Brand Coach — Claude Connector</div>
+    <div class="cframe">
+      <div class="cbar"><div class="cdots"><i class="r"></i><i class="y"></i><i class="g"></i></div><span>Claude</span><span class="cc">IDEA Brand Coach · Claude Connector</span></div>
+      <div class="cbody">
+        <div class="cu">Run my Trust Gap diagnostic in IDEA Brand Coach</div>
+        <div class="ca">Done — here's your Trust Gap, as a panel you can act on:</div>
+        <div class="mcp">
+          <div class="mh"><span class="lm">IB</span><span class="mt">IDEA Brand Coach</span><span class="pb">Claude Connector</span></div>
+          <div class="mb">
+            <div class="mtop"><div class="ms">58<small>/100</small></div><div><div class="gl">Trust Gap Score™</div><span class="gp">⚠ Primary gap: Empathetic</span></div></div>
+            <div class="mdims">
+              <div class="mdim"><div class="dl" style="color:var(--i)">I</div><div class="db"><i style="width:76%;background:var(--i)"></i></div></div>
+              <div class="mdim"><div class="dl" style="color:var(--d)">D</div><div class="db"><i style="width:60%;background:var(--d)"></i></div></div>
+              <div class="mdim"><div class="dl" style="color:var(--e)">E</div><div class="db"><i style="width:36%;background:var(--e)"></i></div></div>
+              <div class="mdim"><div class="dl" style="color:var(--a)">A</div><div class="db"><i style="width:60%;background:var(--a)"></i></div></div>
+            </div>
+            <button class="mcpbtn">Upload your listing for the fix →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="memnote">🧠 <span><b>The app remembers.</b> Upload your brand + listing once; every future session — web or in Claude — builds on it. You're never asked to re-enter what you've already given.</span></div>
+    <!-- NOTE TO TREVOR (kept out of the rendered page so engine internals never show on a screen-share or tester walk): Built to your authoritative spec (20-skill architecture, Avatar 2.0, the invisible buyer-state classifier, the Decision Trigger components, science behind the curtain, brand tokens #1A3557/#C9A84C, £97 paygate). Already on origin/main: free diagnostic, Decision-Trigger engine, generate_brief + claimGate, image-upload seam. Net-new: the screenshot->forensic contract + the credit/annual question (open - Slack). InfinityVault mapped on-spec: Empathetic gap -> Recognition. -->
+    <div class="navrow"><button class="btn ghost" data-go="1">↺ Restart</button><span></span></div>
+  </div>
+
+</div></div></div>
+
+<script>
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  $('#segDev').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#segDev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#device').classList.toggle('mobile',b.dataset.m==='mobile');});
+  let timers=[];const clearT=()=>{timers.forEach(clearTimeout);timers=[]};
+  const notes={1:'Free Trust Gap Diagnostic',2:'Your fix — founding offer',3:'Upload · context remembered',4:'Analysing…',5:'Your customer profile',6:'Your Decision Trigger',7:'Brand Defense · Beta',8:'Inside Claude · Connector'};
+  function show(n){$$('.scr').forEach(s=>s.classList.remove('on'));$('#s'+n).classList.add('on');
+    $$('.sc').forEach(s=>{const sn=+s.dataset.s;s.classList.toggle('on',sn===n);s.classList.toggle('done',sn<n);});
+    if(n===1){$('#res').classList.remove('show');const rb=$('#rb');if(rb)rb.classList.remove('show');const rsb=$('#rescanBtn');if(rsb){rsb.textContent='↻ Run re-scan';rsb.disabled=false;}}
+    $('#navnote').textContent=notes[n]||'';window.scrollTo(0,0);if(n===4)runAnalysis();else clearT();}
+  $('#stepper').addEventListener('click',e=>{const s=e.target.closest('.sc');if(s)show(+s.dataset.s);});
+  document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t){e.preventDefault();show(+t.dataset.go);}
+    const o=e.target.closest('.opt');if(o){o.parentElement.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));o.classList.add('sel');}
+    const cp=e.target.closest('.ba button, .mcpbtn');if(cp&&/copy/i.test(cp.textContent)){const v=cp.textContent;cp.textContent='✓ Copied';setTimeout(()=>cp.textContent=v,1400);}
+    const cf=e.target.closest('.claim button');if(cf){const c=cf.closest('.claim');c.style.cssText='font-size:11px;background:var(--green-lt);color:var(--green);border:1px solid #a6e0bf;border-radius:8px;padding:7px 10px;margin-top:8px;font-weight:600';c.textContent='✓ Lifetime warranty confirmed — added to your fixes.';}});
+  function reveal(){$('#res').classList.add('show');$('#res').scrollIntoView({behavior:'smooth',block:'start'});}
+  function type(el,txt){el.innerHTML='';let i=0;const c=document.createElement('span');c.className='cur';(function t(){el.textContent=txt.slice(0,i);el.appendChild(c);i++;if(i<=txt.length)timers.push(setTimeout(t,15));})();}
+  function runAnalysis(){clearT();const steps=$$('#s4 .step'),n=steps.length;steps.forEach(s=>s.classList.remove('run','done'));$('#donec').classList.remove('show');$('#prog').style.width='0';
+    $('#rhead').classList.remove('done');$('#rhead').innerHTML='<span class="dot"></span> Analysing your InfinityVault listing…';$('#rsub').textContent='You see what the app is doing — every finding is backed by what it reads.';
+    let acc=200;steps.forEach((s,i)=>{timers.push(setTimeout(()=>{s.classList.add('run');type(s.querySelector('.sub'),s.dataset.sub);},acc));const d=+s.dataset.dur;timers.push(setTimeout(()=>{s.classList.remove('run');s.classList.add('done');$('#prog').style.width=Math.round((i+1)/n*100)+'%';},acc+d));acc+=d+220;});
+    timers.push(setTimeout(()=>{$('#rhead').classList.add('done');$('#rhead').innerHTML='<span class="dot"></span> Analysis complete';$('#rsub').textContent='6 tools run · your listing + 47 reviews read · 1 fix found';$('#donec').classList.add('show');},acc+150));}
+  function runRescan(){const b=$('#rescanBtn'),body=$('#rb');b.textContent='⌁ re-scanning you + rivals…';b.disabled=true;setTimeout(()=>{body.classList.add('show');b.textContent='✓ re-scanned';b.disabled=false;},1100);}
+</script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDEA Brand Coach — Strategy Document (real 13 sections)</title>
+<style>
+  :root{
+    --ink:#1d2433;--ink-soft:#55607a;--ink-faint:#8a93a8;
+    --bg:#f6f4ef;--surface:#fff;--line:#e7e3da;
+    --primary:#5b4bd6;--primary-soft:#efecfc;--primary-ink:#3a2eaa;
+    --ai:#0e7c86;--ai-soft:#e0f3f4;--manual:#6b7280;--manual-soft:#eef0f3;
+    --warn:#c0392b;--warn-soft:#fdecea;--amber:#d99a2b;--amber-soft:#fbf3e1;
+    --good:#1f9d62;--good-soft:#e6f5ed;--shadow:0 1px 2px rgba(20,24,40,.04),0 8px 24px rgba(20,24,40,.06);
+    --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer} .faint{color:var(--ink-faint)} .muted{color:var(--ink-soft)}
+  .toolbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .seg{margin-left:auto;display:inline-flex;background:#eceae3;border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--ink-soft);font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .stage{display:flex;justify-content:center;padding:24px 16px 70px}
+  .device{width:100%;max-width:1080px;transition:max-width .35s ease}
+  .device.mobile{max-width:402px}
+  .device.mobile .frame{border-radius:34px;border:11px solid #11131c;box-shadow:0 30px 60px rgba(20,24,40,.22)}
+  .frame{background:var(--bg);border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+  .app{display:grid;grid-template-columns:218px 1fr;min-height:680px}
+  .device.mobile .app{grid-template-columns:1fr;min-height:720px}
+  .side{background:#13182a;color:#cfd4e4;padding:16px 12px;display:flex;flex-direction:column;gap:5px}
+  .side .logo{display:flex;align-items:center;gap:9px;font-weight:700;color:#fff;margin:4px 6px 14px;font-size:15px}
+  .side .logo .g{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--primary),#8a7bff);display:grid;place-items:center;font-size:13px}
+  .side .lbl{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b748f;margin:6px 8px 4px}
+  .nav-i{display:flex;align-items:center;gap:11px;padding:12px;border-radius:11px;color:#aeb6cd;font-weight:600;font-size:14px;border:1px solid transparent}
+  .nav-i .ic{width:20px;text-align:center;font-size:16px}
+  .nav-i .pill{margin-left:auto;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--warn);color:#fff}
+  .nav-i.on{background:#222a44;color:#fff;border-color:#33406b;box-shadow:inset 3px 0 0 var(--primary)}
+  .side .spacer{flex:1}
+  .side .acct{display:flex;align-items:center;gap:10px;padding:9px 8px;border-top:1px solid #232a40;margin-top:6px;font-size:13px}
+  .side .acct .av{width:28px;height:28px;border-radius:50%;background:#3a4566;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700}
+  .device.mobile .side{display:none}
+  .botnav{display:none}
+  .device.mobile .botnav{display:flex;position:sticky;bottom:0;background:#13182a;border-top:1px solid #232a40}
+  .device.mobile .botnav button{flex:1;border:0;background:transparent;color:#aeb6cd;padding:10px 0 13px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .device.mobile .botnav button.on{color:#fff} .device.mobile .botnav button .ic{font-size:19px}
+
+  .dochead{position:sticky;top:0;z-index:20;background:rgba(246,244,239,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:14px}
+  .device.mobile .dochead{padding:12px 14px;flex-wrap:wrap}
+  .ring{--p:64;width:46px;height:46px;border-radius:50%;flex:none;background:conic-gradient(var(--primary) calc(var(--p)*1%),#e7e3da 0);display:grid;place-items:center}
+  .ring i{width:36px;height:36px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:12px;font-weight:800;font-style:normal;color:var(--primary-ink)}
+  .ht{flex:1;min-width:0} .ht h2{margin:0;font-size:16px;letter-spacing:-.01em} .ht .sub{font-size:12px;color:var(--ink-faint)}
+  .acts{display:flex;gap:8px} .device.mobile .acts{width:100%;margin-top:2px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 13px;font-size:13px;font-weight:700;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .device.mobile .btn{flex:1;justify-content:center}
+  .expwrap{position:relative}
+  .menu{position:absolute;right:0;top:46px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;width:252px;display:none;z-index:30}
+  .menu.open{display:block}
+  .menu .mi{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:13px;cursor:pointer}
+  .menu .mi:hover{background:#f6f4ef} .menu .mi .em{font-size:16px} .menu .mi .sub{font-size:11px;color:var(--ink-faint)}
+  .menu .mi.lock{opacity:.6} .menu .mi .tagp{margin-left:auto;font-size:9.5px;font-weight:800;background:var(--amber-soft);color:#92671a;border-radius:999px;padding:2px 7px}
+  .menu .hr{height:1px;background:var(--line);margin:5px 4px}
+
+  .layout{display:grid;grid-template-columns:226px 1fr}
+  .device.mobile .layout{grid-template-columns:1fr}
+  .toc{border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:0;align-self:start;max-height:640px;overflow:auto}
+  .device.mobile .toc{display:none}
+  .toc .tl{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin:0 6px 8px}
+  .toc a{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:12.5px;color:var(--ink-soft);text-decoration:none;font-weight:600;line-height:1.25}
+  .toc a:hover{background:#fff}
+  .toc a .n{color:var(--ink-faint);font-variant-numeric:tabular-nums;width:16px;flex:none}
+  .toc a .dot{width:7px;height:7px;border-radius:50%;flex:none;margin-left:auto}
+  .dot.ok{background:var(--good)} .dot.part{background:var(--amber)} .dot.todo{background:#d8d3c8}
+
+  .doc{padding:6px 30px 40px;max-width:740px}
+  .device.mobile .doc{padding:6px 16px 26px}
+  .ready{display:flex;align-items:center;gap:11px;border-radius:13px;padding:12px 15px;margin:16px 0 10px;font-size:13.5px;border:1px solid}
+  .ready.ok{background:var(--good-soft);border-color:#bfe6cf;color:#0f6b41}
+  .ready .em{font-size:18px} .ready b{color:var(--ink)} .ready .fix{margin-left:auto;border:0;background:var(--primary);color:#fff;font-weight:700;border-radius:9px;padding:7px 12px;font-size:12.5px;white-space:nowrap}
+  .qwins{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px;font-size:12px}
+  .qwins .q{background:var(--amber-soft);color:#92671a;border:1px solid #f0d9b3;border-radius:999px;padding:4px 10px;font-weight:600}
+
+  .titleblock{font-family:var(--serif);text-align:center;padding:14px 0 18px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .titleblock h1{font-size:25px;margin:0 0 6px;letter-spacing:-.01em}
+  .titleblock .tm{font-size:13px;color:var(--ink-soft);font-style:italic}
+
+  /* signature add-in (honest: not in export today) */
+  .sigadd{display:flex;align-items:center;gap:12px;border:1px dashed #c9c2f0;background:var(--primary-soft);border-radius:13px;padding:13px 15px;margin:14px 0}
+  .sigadd .q{flex:1;font-family:var(--serif);font-size:14.5px;color:var(--primary-ink)}
+  .sigadd .add{border:0;background:var(--primary);color:#fff;font-weight:700;border-radius:9px;padding:8px 13px;font-size:12.5px;white-space:nowrap}
+  .sigadd .nt{font-size:11px;color:var(--ink-faint);display:block;margin-top:2px}
+
+  .sec{padding:16px 0;border-top:1px solid var(--line)}
+  .sec .sh{display:flex;align-items:baseline;gap:9px;margin-bottom:4px}
+  .sec h3{font-family:var(--serif);font-size:19px;margin:0;letter-spacing:-.01em}
+  .sec h3 .num{color:var(--ink-faint);font-weight:600}
+  .sec .status{margin-left:auto;font-size:11px;font-weight:700;white-space:nowrap}
+  .status.ok{color:var(--good)} .status.part{color:var(--amber)} .status.todo{color:var(--ink-faint)}
+  .subs{font-size:11.5px;color:var(--ink-faint);margin:2px 0 8px}
+  .sec p{margin:6px 0;font-size:14px;color:#2b3346}
+  .ideaeval{width:100%;border-collapse:collapse;margin:8px 0;font-size:12.5px}
+  .ideaeval th,.ideaeval td{border:1px solid var(--line);padding:6px 9px;text-align:left}
+  .ideaeval th{background:#faf8f3;font-weight:700}
+  .ideaeval td .p{color:var(--good);font-weight:700} .ideaeval td .w{color:var(--warn);font-weight:700}
+  .prov{margin-top:9px;font-size:11.5px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
+  .badge.ai{background:var(--ai-soft);color:var(--ai)} .badge.manual{background:var(--manual-soft);color:var(--manual)} .badge.thin{background:var(--amber-soft);color:#92671a}
+  .prov .src{color:var(--ink-soft)} .prov .link{color:var(--primary-ink);font-weight:700;text-decoration:none;margin-left:auto}
+  .compact{padding:11px 0;border-top:1px solid var(--line)}
+  .compact .sh{display:flex;align-items:baseline;gap:9px}
+  .compact h3{font-family:var(--serif);font-size:16px;margin:0}
+  .compact .subs{margin:3px 0 0}
+  .ftnote{font-size:11.5px;color:var(--ink-faint);text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid var(--line);font-style:italic}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>● Strategy Document — real 13-section export</b>
+  <span class="faint" style="font-size:12px">mockup · matches MarkdownExportService</span>
+  <div class="seg" id="segDev"><button data-m="desktop" class="on">🖥 Desktop</button><button data-m="mobile">📱 Mobile</button></div>
+</div>
+
+<div class="stage"><div class="device" id="device"><div class="frame"><div class="app">
+  <aside class="side">
+    <div class="logo"><span class="g">◆</span> Brand Coach</div>
+    <div class="lbl">What do you want to work on?</div>
+    <div class="nav-i"><span class="ic">🧭</span> Brand Coach <span class="pill">2</span></div>
+    <div class="nav-i"><span class="ic">🔻</span> Funnel <span class="pill">2</span></div>
+    <div class="spacer"></div>
+    <div class="nav-i on"><span class="ic">📄</span> Strategy Document</div>
+    <div class="acct"><span class="av">M</span><div>Matthew<br><span class="faint" style="font-size:11px">Free plan</span></div></div>
+  </aside>
+
+  <main>
+    <div class="dochead">
+      <div class="ring"><i>64%</i></div>
+      <div class="ht"><h2>Your Brand Strategy</h2><div class="sub">13 sections · synthesized from your 35 brand fields + chats · updated 2m ago</div></div>
+      <div class="acts">
+        <div class="expwrap">
+          <button class="btn" onclick="document.getElementById('m').classList.toggle('open')">⬇ Export ▾</button>
+          <div class="menu" id="m">
+            <div class="mi"><span class="em">📝</span><div>Markdown<div class="sub">.md — the live export, ready now</div></div></div>
+            <div class="mi"><span class="em">📄</span><div>PDF<div class="sub">Formatted — ready now</div></div></div>
+            <div class="hr"></div>
+            <div class="mi lock"><span class="em">📊</span><div>Gold Workbook<div class="sub">Full system + funnel briefs</div></div><span class="tagp">finish first</span></div>
+          </div>
+        </div>
+        <button class="btn primary">🔗 Share</button>
+      </div>
+    </div>
+
+    <div style="overflow:auto"><div class="layout">
+      <nav class="toc">
+        <div class="tl">13 sections</div>
+        <a href="#"><span class="n">1</span> IDEA Framework Overview <span class="dot ok"></span></a>
+        <a href="#"><span class="n">2</span> Customer Understanding (Avatar 2.0) <span class="dot ok"></span></a>
+        <a href="#"><span class="n">3</span> Emotional Triggers &amp; Decision Science <span class="dot part"></span></a>
+        <a href="#"><span class="n">4</span> Customer Journey &amp; Signposts <span class="dot part"></span></a>
+        <a href="#"><span class="n">5</span> Brand Purpose &amp; Vision <span class="dot ok"></span></a>
+        <a href="#"><span class="n">6</span> Brand Mission &amp; Values <span class="dot part"></span></a>
+        <a href="#"><span class="n">7</span> Brand Positioning &amp; Value Prop <span class="dot part"></span></a>
+        <a href="#"><span class="n">8</span> Brand Personality &amp; Voice <span class="dot ok"></span></a>
+        <a href="#"><span class="n">9</span> Brand Essence &amp; DNA <span class="dot part"></span></a>
+        <a href="#"><span class="n">10</span> Brand Story &amp; Narrative <span class="dot todo"></span></a>
+        <a href="#"><span class="n">11</span> Messaging Framework <span class="dot part"></span></a>
+        <a href="#"><span class="n">12</span> Agentic Commerce &amp; AI Visibility <span class="dot todo"></span></a>
+        <a href="#"><span class="n">13</span> Implementation Roadmap <span class="dot todo"></span></a>
+      </nav>
+
+      <div class="doc">
+        <div class="ready ok">
+          <span class="em">✓</span>
+          <div><b>Ready to export</b> — 64% complete, above the 60% bar, no critical gaps. (Export is always available; this is advisory.) <b>Brand Story</b> &amp; <b>Implementation</b> are still thin.</div>
+        </div>
+        <div class="qwins">
+          <span class="q">Quick win: Brand Story (origin)</span>
+          <span class="q">Quick win: Experience Pillars</span>
+          <span class="q">Quick win: Success Metrics</span>
+        </div>
+
+        <div class="titleblock">
+          <h1>Your Brand — Brand Strategy Document</h1>
+          <div class="tm">Generated using the IDEA Strategic Brand Framework™ · 19 June 2026</div>
+        </div>
+
+        <div class="sigadd">
+          <div class="q">“For solo founders who can’t justify an agency, we deliver agency-grade clarity — in an afternoon.”
+            <span class="nt">✦ Your Signature is saved (signatures table) but isn’t in the exported doc yet.</span></div>
+          <button class="add">+ Add to document</button>
+        </div>
+
+        <!-- 1 -->
+        <section class="sec">
+          <div class="sh"><h3><span class="num">1.</span> IDEA Framework Overview</h3><span class="status ok">✓ complete</span></div>
+          <div class="subs">Executive Summary · About This Document · The IDEA Framework Applied · Document Scope</div>
+          <p><b>Executive summary.</b> This brand wins on <i>fast clarity</i> for solo founders priced out of agencies. Across the IDEA lenses it is Insight-driven (clear buyer intent), Distinctive (afternoon-to-clarity wedge), Empathetic (speaks to launch anxiety), and developing on Authentic (proof still light).</p>
+          <div class="prov"><span class="badge ai">🤖 AI-synthesized</span> <span class="src">from all 35 fields + recent chats</span> · 2m ago <a class="link" href="#">Regenerate ›</a></div>
+        </section>
+
+        <!-- 2 -->
+        <section class="sec">
+          <div class="sh"><h3><span class="num">2.</span> Customer Understanding (Avatar 2.0)</h3><span class="status ok">✓ complete</span></div>
+          <div class="subs">5 Fields: Buyer Intent · Motivations · Emotional Triggers · Shopper Type · Demographics · How they feed the Canvas</div>
+          <p>A time-poor solo founder mid-launch, searching “how to position my brand,” motivated to launch with confidence, triggered by fear of sounding generic.</p>
+          <div class="prov"><span class="badge ai">🤖 AI-synthesized</span> <span class="src">from: Demographics, Psychographics, Pain Points, Goals, Buyer-Intent fields</span> · 4m ago <a class="link" href="#">Edit inputs ›</a></div>
+        </section>
+
+        <!-- 3 -->
+        <section class="sec">
+          <div class="sh"><h3><span class="num">3.</span> Emotional Triggers &amp; Decision Science</h3><span class="status part">◑ thin inputs</span></div>
+          <div class="subs">Why Customers Buy · Primary Triggers · The Shopper’s High · Deep Metaphors · Heuristics &amp; Biases</div>
+          <p>Primary trigger: relief from <i>uncertainty</i>. Leverage authority + social proof (Cialdini) once proof points are added.</p>
+          <div class="prov"><span class="badge ai">🤖 AI-synthesized</span> <span class="badge thin">⚠ needs Emotional Triggers + Proof</span> · 4m ago <a class="link" href="#">Fix in Coach ›</a></div>
+        </section>
+
+        <!-- 4 -->
+        <section class="sec">
+          <div class="sh"><h3><span class="num">4.</span> Customer Journey &amp; Signposts</h3><span class="status part">◑ thin inputs</span></div>
+          <div class="subs">Journey as Emotional Process · Stage-by-Stage Map (Awareness→Advocacy) · Voice Across the Journey · Pre-Suasion</div>
+          <p>Maps the 5 funnel stages to emotional states. <span class="muted">This is what the <b>Funnel</b> tab generates prompts &amp; briefs against.</span></p>
+          <div class="prov"><span class="badge ai">🤖 AI-synthesized</span> <span class="src">from: Customer Journey, Preferred Channels, Brand Voice</span> · 6m ago <a class="link" href="#">Edit inputs ›</a></div>
+        </section>
+
+        <!-- 5 -->
+        <section class="sec">
+          <div class="sh"><h3><span class="num">5.</span> Brand Purpose &amp; Vision</h3><span class="status ok">✓ complete</span></div>
+          <div class="subs">Brand Purpose · IDEA Evaluation · Brand Vision · IDEA Evaluation · Purpose vs Vision</div>
+          <p><b>Purpose:</b> make professional brand clarity reachable for founders without agency budgets. <b>Vision:</b> every solo founder launches with a brand they’re proud of.</p>
+          <div class="prov"><span class="badge ai">🤖 AI-synthesized</span> <span class="src">from: Brand Purpose, Brand Vision</span> · 7m ago <a class="link" href="#">Edit inputs ›</a></div>
+        </section>
+
+        <!-- 6 -->
+        <section class="sec">
+          <div class="sh"><h3><span class="num">6.</span> Brand Mission &amp; Values</h3><span class="status part">◑ choose 3 values</span></div>
+          <div class="subs">Mission · IDEA Eval · Core Values · IDEA Eval · Values Audit · Brand Promise</div>
+          <p><b>Promise:</b> clarity in an afternoon. <b>Values (draft):</b> Candor · Craft · Speed — <span class="muted">awaiting your top-3 confirmation.</span></p>
+          <div class="prov"><span class="badge ai">🤖 6 values drafted</span> <span class="badge thin">⚠ confirm 3</span> · 5m ago <a class="link" href="#">Choose in Coach ›</a></div>
+        </section>
+
+        <!-- 7 (full IDEA eval table) -->
+        <section class="sec">
+          <div class="sh"><h3><span class="num">7.</span> Brand Positioning &amp; Value Proposition</h3><span class="status part">◑ messaging conflict</span></div>
+          <div class="subs">Positioning Statement · IDEA Eval · Difference vs Distinctiveness · Value Prop · Value Equation · White Space · Psycho-Logic Test</div>
+          <p><b>Positioning:</b> For solo founders who can’t justify an agency, [Brand] is the guided coach that produces agency-grade clarity in an afternoon.</p>
+          <table class="ideaeval"><tr><th>IDEA test</th><th>Verdict</th></tr>
+            <tr><td>Insight-Driven</td><td><span class="p">Pass</span> — rooted in real buyer intent</td></tr>
+            <tr><td>Distinctive</td><td><span class="p">Pass</span> — “afternoon” wedge vs agencies/DIY</td></tr>
+            <tr><td>Empathetic</td><td><span class="p">Pass</span> — speaks to launch anxiety</td></tr>
+            <tr><td>Authentic</td><td><span class="w">Weak</span> — tagline vs. statement conflict; proof light</td></tr>
+          </table>
+          <div class="prov"><span class="badge ai">🤖 AI</span> · core message <span class="badge thin">⚠ reconcile</span> · 1m ago <a class="link" href="#">Resolve in Coach ›</a></div>
+        </section>
+
+        <!-- 8 -->
+        <section class="sec">
+          <div class="sh"><h3><span class="num">8.</span> Brand Personality &amp; Voice</h3><span class="status ok">✓ complete</span></div>
+          <div class="subs">Personality · IDEA Eval · Personality/Trigger Alignment · Voice: Four Components · Voice Tone by Channel · In/Out of Tone · Archetype</div>
+          <p><b>Voice:</b> direct, warm, no-fluff — the Sage archetype with a maker’s edge. Tone-by-channel table included.</p>
+          <div class="prov"><span class="badge ai">🤖 AI</span> <span class="badge manual">✏️ you confirmed</span> <span class="src">from: Brand Personality, Brand Voice, Archetype</span> · 8m ago <a class="link" href="#">Edit ›</a></div>
+        </section>
+
+        <!-- 9-13 compact -->
+        <section class="compact"><div class="sh"><h3><span class="num">9.</span> Brand Essence &amp; DNA</h3><span class="status part">◑ thin</span></div><div class="subs">DNA Four-Circles model → Essence intersection · Essence Test. Drafts from your attributes + personality.</div></section>
+        <section class="compact"><div class="sh"><h3><span class="num">10.</span> Brand Story &amp; Narrative</h3><span class="status todo">○ not started</span></div><div class="subs">Heritage · 30-sec / 2-min / Full versions · Story Elements. Needs your origin story.</div></section>
+        <section class="compact"><div class="sh"><h3><span class="num">11.</span> Messaging Framework</h3><span class="status part">◑ thin</span></div><div class="subs">Hierarchy (Promise → Core Messages → Proof Points) · Cialdini’s Six · Audience messaging. Blocked by the positioning conflict above.</div></section>
+        <section class="compact"><div class="sh"><h3><span class="num">12.</span> Agentic Commerce &amp; AI Visibility</h3><span class="status todo">○ not started</span></div><div class="subs">Agentic-commerce shift · AI citation strategy · 4-phase visibility roadmap · Quick wins.</div></section>
+        <section class="compact"><div class="sh"><h3><span class="num">13.</span> Implementation Roadmap</h3><span class="status todo">○ not started</span></div><div class="subs">30 / 30-90 / 90-180-day priorities · Research agenda · Success metrics · Ongoing brand health.</div></section>
+
+        <div class="ftnote">Generated using the IDEA Strategic Brand Framework™ · assembled from 11 chapters / 35 fields + up to 10 recent chats</div>
+      </div>
+    </div></div>
+  </main>
+
+  <nav class="botnav">
+    <button><span class="ic">🧭</span>Brand Coach</button>
+    <button><span class="ic">🔻</span>Funnel</button>
+    <button class="on"><span class="ic">📄</span>Document</button>
+  </nav>
+</div></div></div></div>
+
+<script>
+  document.getElementById('segDev').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#segDev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    document.getElementById('device').classList.toggle('mobile',b.dataset.m==='mobile');});
+  document.addEventListener('click',e=>{if(!e.target.closest('.expwrap'))document.getElementById('m').classList.remove('open');});
+</script>
+</body>
+</html>

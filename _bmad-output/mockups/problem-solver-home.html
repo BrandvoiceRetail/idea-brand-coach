@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDEA Brand Coach — Problem-Solver Home (option B)</title>
+<style>
+  :root{
+    --ink:#1d2433;--ink-soft:#55607a;--ink-faint:#8a93a8;
+    --bg:#f6f4ef;--surface:#fff;--line:#e7e3da;
+    --primary:#5b4bd6;--primary-soft:#efecfc;--primary-ink:#3a2eaa;
+    --good:#1f9d62;--good-soft:#e6f5ed;--warn:#c0392b;--warn-soft:#fdecea;--amber:#d99a2b;--amber-soft:#fbf3e1;
+    --teal:#0f8f86;--teal-soft:#e3f4f1;--teal-ink:#0a6e66;--shadow:0 1px 2px rgba(20,24,40,.04),0 8px 24px rgba(20,24,40,.06);
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer} .faint{color:var(--ink-faint)} .muted{color:var(--ink-soft)}
+  .toolbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .seg{margin-left:auto;display:inline-flex;background:#eceae3;border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--ink-soft);font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .stage{display:flex;justify-content:center;padding:24px 16px 70px}
+  .device{width:100%;max-width:940px;transition:max-width .35s ease} .device.mobile{max-width:402px}
+  .device.mobile .frame{border-radius:34px;border:11px solid #11131c;box-shadow:0 30px 60px rgba(20,24,40,.22)}
+  .frame{background:var(--bg);border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+
+  .hdr{display:flex;align-items:center;gap:13px;padding:16px 20px;background:#13182a;color:#fff;flex-wrap:wrap}
+  .hdr .lg{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--primary),#8a7bff);display:grid;place-items:center;font-size:14px}
+  .hdr .bn{font-weight:700} .hdr .bs{font-size:11.5px;color:#aeb6cd}
+  .hdr .conv{margin-left:auto;text-align:right} .device.mobile .hdr .conv{margin-left:0;text-align:left;width:100%}
+  .hdr .conv .big{font-size:26px;font-weight:800;color:#ff8a7a;font-variant-numeric:tabular-nums;line-height:1}
+  .hdr .conv .lbl{font-size:11px;color:#aeb6cd}
+  .buyer{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;background:#222a44;color:#cfd4e4;border-radius:999px;padding:4px 10px;margin:0 20px}
+
+  .body{padding:18px 20px 26px} .device.mobile .body{padding:14px 14px 22px}
+  .grid{display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start} .device.mobile .grid{grid-template-columns:1fr}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:15px}
+  .card .ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:11px;display:flex;align-items:center;gap:7px}
+  .pillar{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .pillar .pl{width:96px;font-size:12px;font-weight:700;flex:none}
+  .track{flex:1;height:9px;border-radius:99px;background:#efeae0;overflow:hidden} .track i{display:block;height:100%;border-radius:99px}
+  .track i.good{background:var(--good)} .track i.mid{background:var(--amber)} .track i.bad{background:var(--warn)}
+  .pillar .pv{width:28px;text-align:right;font-weight:800;font-size:12px}
+  .gapcall{font-size:12px;background:var(--warn-soft);border:1px solid #f3cfc9;border-radius:11px;padding:10px 12px;margin-top:6px;color:#7a3a33}
+  .gapcall b{color:var(--warn)}
+
+  .fixhead{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .fixhead h3{margin:0;font-size:15px} .fixhead .badge{font-size:10.5px;font-weight:800;background:var(--teal-soft);color:var(--teal-ink);border-radius:999px;padding:2px 8px}
+  .fixsub{font-size:12px;color:var(--ink-soft);margin:0 0 12px}
+  .fix{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;background:#fff}
+  .fix .chk{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none}
+  .fix.done .chk{background:var(--good);border-color:var(--good);color:#fff} .fix.locked{opacity:.85}
+  .fix .fm{flex:1;min-width:0} .fix .ft{font-size:13px;font-weight:700} .fix .fd{font-size:11.5px;color:var(--ink-soft)}
+  .fix .persona{font-size:9.5px;font-weight:700;color:var(--primary-ink);background:var(--primary-soft);border-radius:999px;padding:2px 7px;white-space:nowrap}
+  .fix .act{border:0;border-radius:8px;padding:7px 11px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .act.gen{background:var(--teal);color:#fff} .act.lock{background:#f0eee8;color:var(--ink-soft)} .act.view{background:#fff;border:1px solid var(--line)!important;color:var(--ink-soft)}
+
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px} .device.mobile .tiles{grid-template-columns:1fr 1fr}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:13px;cursor:pointer}
+  .tile .em{font-size:20px} .tile .tt{font-size:12.5px;font-weight:700;margin-top:6px} .tile .td{font-size:11px;color:var(--ink-faint);margin-top:1px}
+  .tile .pin{font-size:9px;font-weight:800;border-radius:999px;padding:1px 6px;float:right}
+  .pin.free{background:var(--good-soft);color:var(--good)} .pin.paid{background:var(--amber-soft);color:#92671a} .pin.soon{background:#f0eee8;color:var(--ink-faint)}
+
+  .toolnote{font-size:11px;color:var(--ink-faint);margin-top:16px;border-top:1px solid var(--line);padding-top:11px}
+  .toolnote code{background:#efe9e0;border-radius:5px;padding:1px 5px;font-size:10.5px} .toolnote .nn{color:var(--amber);font-weight:700}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>● Problem-Solver Home — option B</b><span class="faint" style="font-size:12px">mockup · InfinityVault</span>
+  <div class="seg" id="segDev"><button data-m="desktop" class="on">🖥 Desktop</button><button data-m="mobile">📱 Mobile</button></div>
+</div>
+
+<div class="stage"><div class="device" id="device"><div class="frame">
+  <div class="hdr">
+    <span class="lg">◆</span><div><div class="bn">InfinityVault</div><div class="bs">216-card binder · ~$3k/mo</div></div>
+    <div class="conv"><div class="big">4.8%</div><div class="lbl">conversion · category avg 10%</div></div>
+  </div>
+  <div class="buyer">🧠 Your buyer right now: <b style="color:#fff">Safety-dominant</b> — protecting valuable cards</div>
+
+  <div class="body">
+    <div class="grid">
+      <div class="card"><div class="ct">🩺 Trust-Gap scorecard</div>
+        <div class="pillar"><span class="pl">Insight-Driven</span><span class="track"><i class="good" style="width:78%"></i></span><span class="pv">78</span></div>
+        <div class="pillar"><span class="pl">Distinctive</span><span class="track"><i class="bad" style="width:52%"></i></span><span class="pv">52</span></div>
+        <div class="pillar"><span class="pl">Empathetic</span><span class="track"><i class="mid" style="width:61%"></i></span><span class="pv">61</span></div>
+        <div class="pillar"><span class="pl">Authentic</span><span class="track"><i class="bad" style="width:48%"></i></span><span class="pv">48</span></div>
+        <div class="gapcall"><b>Build quality</b> is your costliest gap — shoppers can’t tell your vault beats a $9 deck box. <span class="muted">Updated from your last listing analysis · 2d ago</span></div>
+      </div>
+
+      <div>
+        <div class="fixhead"><h3>Your fix list</h3><span class="badge">4 fixes · est. +2.1pts conversion</span></div>
+        <p class="fixsub">Ranked by impact. Each closes a trust gap and hands you a ready brief or prompt.</p>
+        <div class="fix done"><span class="chk">✓</span><div class="fm"><div class="ft">Lifetime-warranty badge + bullet</div><div class="fd">Generated · added to listing</div></div><span class="persona">Safety</span><button class="act view">View</button></div>
+        <div class="fix"><span class="chk"></span><div class="fm"><div class="ft">New hero — show the build quality</div><div class="fd">7-slot design brief ready to generate</div></div><span class="persona">Rational</span><button class="act gen">✦ Generate</button></div>
+        <div class="fix"><span class="chk"></span><div class="fm"><div class="ft">Rewrite bullets feature → benefit</div><div class="fd">Content prompt ready</div></div><span class="persona">Caring</span><button class="act gen">✦ Generate</button></div>
+        <div class="fix locked"><span class="chk">🔒</span><div class="fm"><div class="ft">A+ lifestyle modules (game night, tournament)</div><div class="fd">Unlock with a listing analysis</div></div><span class="persona">Belonging</span><button class="act lock">Unlock</button></div>
+      </div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><span class="pin free">FREE</span><div class="em">🩺</div><div class="tt">Re-run diagnostic</div><div class="td">Refresh your trust gaps</div></div>
+      <div class="tile"><span class="pin paid">PAID</span><div class="em">⬆️</div><div class="tt">Analyze a listing</div><div class="td">Upload screenshot → forensic fixes</div></div>
+      <div class="tile"><div class="em">✦</div><div class="tt">Generate briefs</div><div class="td">Briefs + prompts for each fix</div></div>
+      <div class="tile"><span class="pin soon">SOON</span><div class="em">🛡️</div><div class="tt">Brand Defense</div><div class="td">Watch Gamegenic + Ultimate Guard</div></div>
+    </div>
+
+    <div class="toolnote">Same building blocks as option A, framed as a <b>command center</b>: the problem (conversion) is the headline, the prioritized <b>fix list</b> is the home, the diagnostic/analysis/briefs are actions. Real: <code>/v1/diagnostic</code> · <code>generate_brief</code>. <span class="nn">Net-new</span>: screenshot analysis · decision-trigger ranking + “est. +pts” impact model · paywall · the forensic-avatar “buyer” chip.</div>
+  </div>
+</div></div></div>
+
+<script>
+  document.getElementById('segDev').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#segDev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    document.getElementById('device').classList.toggle('mobile',b.dataset.m==='mobile');});
+</script>
+</body>
+</html>

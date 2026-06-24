@@ -14,6 +14,7 @@ import {
   loadConfig,
   type HostConfig,
 } from './config.js';
+import { instrumentToolLatency } from './instrument.js';
 import { IvosLedgerClient } from './ivos/client.js';
 import { registerHealthTool } from './tools/health.js';
 import { registerListAssetsTool } from './tools/listAssets.js';
@@ -42,6 +43,8 @@ import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
 import { registerListCoachConversationsTool } from './tools/listCoachConversations.js';
 import { registerGetCoachConversationTool } from './tools/getCoachConversation.js';
+import { registerSubmitFeedbackTool } from './tools/submitFeedback.js';
+import { FeedbackNotifier } from './slack/feedbackNotifier.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -58,6 +61,10 @@ export function createServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
     { instructions: assertServerInstructions(SERVER_INSTRUCTIONS) },
   );
+
+  // Time every tool uniformly (emits mcp_tool_latency per call). Must run before the
+  // register*Tool() calls below so their handlers are wrapped.
+  instrumentToolLatency(server);
 
   const ivos = ivosClient ?? new IvosLedgerClient(config);
   const edge = edgeFn ?? new EdgeFnClient(config);
@@ -145,6 +152,13 @@ export function createServer(
   // read-only. The avatar scope comes from chat_sessions.avatar_id (nullable FK → avatars).
   registerListCoachConversationsTool(server);
   registerGetCoachConversationTool(server);
+
+  // User → team feedback channel: submit_feedback delivers a short message to the team's
+  // #idea-brand-coach Slack channel via the SLACK_WEBHOOK_URL Incoming Webhook. NOT
+  // identity-gated (anonymous callers may submit so feedback is never lost); the feedback
+  // text is the only user content sent and is never logged (MF-5). Degrades gracefully to
+  // a clear error when the webhook is unconfigured/unreachable — never throws.
+  registerSubmitFeedbackTool(server, new FeedbackNotifier(config));
 
   return { server, ivos, edgeFn: edge };
 }

@@ -63,9 +63,6 @@ verify_jwt = true
 [functions.send-framework-email]
 verify_jwt = false
 
-[functions.sync-diagnostic-to-embeddings]
-verify_jwt = false
-
 [functions.brand-coach-gpt]
 verify_jwt = false
 
@@ -80,3 +77,43 @@ verify_jwt = false
 
 [functions.diagnostic-interpretation]
 verify_jwt = false
+
+# The 11 Sonnet fns below were previously undeclared here; flags pinned to match
+# the DEPLOYED reality (read via list_edge_functions 2026-06-09) so redeploys
+# can't silently flip auth behavior.
+
+# Matches deployed verify_jwt=false (app-level optional auth; flagged for
+# hardening — it proceeds with userId=null). Do not flip to true in the same
+# change as a model swap: guest chat goes through this fn.
+[functions.idea-framework-consultant-claude]
+verify_jwt = false
+
+[functions.reveal-signature]
+verify_jwt = true
+
+[functions.diagnostic-interpretation-evidence]
+verify_jwt = true
+
+[functions.avatar-vocabulary]
+verify_jwt = true
+
+[functions.avatar-jobmap]
+verify_jwt = true
+
+[functions.avatar-triggers]
+verify_jwt = true
+
+[functions.avatar-objections]
+verify_jwt = true
+
+[functions.brand-canvas]
+verify_jwt = true
+
+[functions.export-brief]
+verify_jwt = true
+
+[functions.audit-idea-map]
+verify_jwt = true
+
+[functions.marketing-audit]
+verify_jwt = true

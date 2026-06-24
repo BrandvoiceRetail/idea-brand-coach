@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -15,9 +16,24 @@ serve(async (req) => {
   }
 
   try {
-    const { searchTerms, industry } = await req.json();
+    // AuthN: require an authenticated user. verify_jwt alone is insufficient (the public
+    // anon key is itself a valid JWT); getUser() rejects the anon token and closes
+    // unauthenticated LLM cost-abuse.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const authClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    console.log('Buyer Intent Analysis request:', { searchTerms, industry });
+    const { searchTerms, industry } = await req.json();
 
     const systemPrompt = `You are an expert brand strategist specializing in the IDEA Brand Framework. Analyze buyer intent and search behavior to provide detailed, actionable strategic insights.
 
@@ -116,7 +132,7 @@ Return ONLY valid JSON in this exact format:
     });
   } catch (error) {
     console.error('Error in buyer-intent-analyzer function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

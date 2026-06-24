@@ -40,7 +40,6 @@ functions. `_shared/` holds reused modules (`cors.ts`, `chunking.ts`,
 | save-beta-tester | Registers beta tester (email send disabled in P0) |
 | save-feedback-event | Alpha Moment-1 feedback → feedback_events; requires posthogDistinctId join key |
 | send-framework-email | Sends framework email via Resend |
-| sync-diagnostic-to-embeddings | Syncs diagnostic into pgvector embeddings |
 
 ## Deploy
 

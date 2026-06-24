@@ -6,6 +6,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { designAbTest } from '../service/testDesign.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
+import { captureMcpEvent } from '../posthog.js';
 
 const inputSchema = {
   name: z.string().min(1),
@@ -29,11 +30,17 @@ export function registerDesignTestTool(server: McpServer): void {
     },
     async (args) => {
       const spec = designAbTest(args);
+      const identity = getIdentity();
       safeLog({
         event: 'tool.design_test',
-        caller: userTag(getIdentity()),
+        caller: userTag(identity),
         variants: spec.variants.length,
         metric: spec.primary_metric,
+      });
+      captureMcpEvent(identity.userId ?? 'anon', 'mcp_design_test_created', {
+        variant_count: spec.variants.length,
+        primary_metric: spec.primary_metric ?? null,
+        channel: args.channel ?? null,
       });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(spec, null, 2) }],

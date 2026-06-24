@@ -95,7 +95,8 @@ ALPHA→BETA GATE: when all 3 Alpha items verify, mark this section ALPHA-VERIFI
 PHASE 2 — BETA ITEMS (in order):
 1. Deeper review pull — push past the ~8-review ceiling, handle product variants incl. variant-ASIN dedupe, widen bullet extraction (Should, B1 — resolve the ceilings testers actually hit first if Alpha feedback exists).
 2. Multiple products — import + work across several products per brand (Should, B2).
-3. Competitor import — pull a competitor listing for side-by-side contrast (Could, B2).
+3. Import all brand products — a button next to "Add or re-import" on the diagnostic page: one click discovers as many of the brand's ASINs as possible and imports them all (Should, B2; added to the Feature Map 2026-06-12; depends on item 2). Discovery channels: visit the brand storefront page and collect its product links; run Amazon searches on the brand name + the brand's keywords and harvest ORGANIC results only — never click/collect Sponsored/ad placements; dedupe discovered ASINs against parent/variant relationships before importing (the variant-dedupe from item 1 applies). Reuse the proven /dp/ parser per the note below. Each ASIN page costs ~1 Firecrawl credit — show the user the discovered list with a count and get an in-UI confirm before bulk-importing, and cap the batch at a sane default.
+4. Competitor import — pull a competitor listing for side-by-side contrast (Could, B2).
 Note: /product-reviews/ pages are login-walled (dead); the /dp/ product page is the proven scrape path (modern hooks, reviewText not review-body) — see the proven parser in infinityvault core-os before re-deriving.
 
 GUARDRAILS: feature branches only; commit+push allowed (banking is action zero); NEVER merge to main — log merge-ready branches as HALTs. No secrets in code; no `any`; Supabase schema via migrations only; Zod-validate input; lint + tsc + tests green before "verified". Update AGENTS.md docs as you go.

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDEA Brand Coach — Problem-Solver Flow (Trevor pivot)</title>
+<style>
+  :root{
+    --ink:#1d2433;--ink-soft:#55607a;--ink-faint:#8a93a8;
+    --bg:#f6f4ef;--surface:#fff;--line:#e7e3da;
+    --primary:#5b4bd6;--primary-soft:#efecfc;--primary-ink:#3a2eaa;
+    --good:#1f9d62;--good-soft:#e6f5ed;--warn:#c0392b;--warn-soft:#fdecea;--amber:#d99a2b;--amber-soft:#fbf3e1;
+    --teal:#0f8f86;--teal-soft:#e3f4f1;--shadow:0 1px 2px rgba(20,24,40,.04),0 8px 24px rgba(20,24,40,.06);
+    --serif:"Iowan Old Style",Georgia,serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer} .faint{color:var(--ink-faint)} .muted{color:var(--ink-soft)}
+  .toolbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .seg{margin-left:auto;display:inline-flex;background:#eceae3;border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--ink-soft);font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .stage{display:flex;justify-content:center;padding:24px 16px 70px}
+  .device{width:100%;max-width:920px;transition:max-width .35s ease} .device.mobile{max-width:402px}
+  .device.mobile .frame{border-radius:34px;border:11px solid #11131c;box-shadow:0 30px 60px rgba(20,24,40,.22)}
+  .frame{background:var(--bg);border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+
+  /* stepper */
+  .stepper{display:flex;align-items:center;gap:6px;padding:14px 18px;background:#13182a;overflow-x:auto}
+  .step{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:10px;cursor:pointer;white-space:nowrap;color:#aeb6cd;font-weight:700;font-size:12.5px}
+  .step .n{width:20px;height:20px;border-radius:50%;background:#2a3252;display:grid;place-items:center;font-size:11px;color:#cfd4e4}
+  .step.on{background:#222a44;color:#fff} .step.on .n{background:var(--primary);color:#fff}
+  .step .free{font-size:9.5px;font-weight:800;background:var(--good);color:#fff;border-radius:999px;padding:1px 6px}
+  .step .paid{font-size:9.5px;font-weight:800;background:var(--amber);color:#fff;border-radius:999px;padding:1px 6px}
+  .step .arr{color:#56607e}
+  .device.mobile .step .lbltxt{display:none}
+
+  .scr{display:none;padding:22px 26px 30px} .scr.on{display:block}
+  .device.mobile .scr{padding:16px 15px 24px}
+  h2.h{font-size:22px;letter-spacing:-.02em;margin:0 0 4px} .device.mobile h2.h{font-size:19px}
+  .sub{color:var(--ink-soft);font-size:14px;margin:0 0 16px}
+  .cta{border:0;border-radius:11px;padding:12px 18px;font-weight:700;font-size:14px;display:inline-flex;gap:8px;align-items:center}
+  .cta.p{background:var(--primary);color:#fff} .cta.t{background:var(--teal);color:#fff} .cta.g{background:#fff;border:1.5px solid var(--line)!important;color:var(--ink)}
+
+  /* problem banner */
+  .prob{display:flex;gap:13px;align-items:center;background:#fff;border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:13px;padding:14px 16px;margin-bottom:16px}
+  .prob .big{font-size:30px;font-weight:800;color:var(--warn);font-variant-numeric:tabular-nums} .device.mobile .prob .big{font-size:24px}
+  .prob .vs{font-size:12px;color:var(--ink-faint)} .prob b{color:var(--ink)}
+
+  /* diagnostic q */
+  .q{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:9px}
+  .q .qt{font-size:13.5px;font-weight:700;margin-bottom:9px}
+  .opts{display:flex;gap:7px;flex-wrap:wrap}
+  .opt{font-size:12.5px;border:1px solid var(--line);background:#fbfaf7;border-radius:9px;padding:7px 12px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+  .opt.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+  /* trust gap scorecard */
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+  .card .ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:12px}
+  .pillar{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+  .pillar .pl{width:108px;font-size:12.5px;font-weight:700;flex:none} .device.mobile .pillar .pl{width:84px;font-size:11.5px}
+  .track{flex:1;height:10px;border-radius:99px;background:#efeae0;overflow:hidden}
+  .track i{display:block;height:100%;border-radius:99px}
+  .track i.good{background:var(--good)} .track i.mid{background:var(--amber)} .track i.bad{background:var(--warn)}
+  .pillar .pv{width:34px;text-align:right;font-weight:800;font-size:12.5px;font-variant-numeric:tabular-nums}
+  .gapcall{display:flex;gap:11px;align-items:flex-start;background:var(--warn-soft);border:1px solid #f3cfc9;border-radius:12px;padding:12px 14px;margin-top:6px}
+  .gapcall .em{font-size:20px} .gapcall b{color:var(--warn)}
+
+  .paywall{background:linear-gradient(135deg,#15123a,#3a2eaa);color:#fff;border-radius:14px;padding:18px;margin-top:6px}
+  .paywall .pw{font-family:var(--serif);font-size:18px;margin:0 0 4px} .paywall p{font-size:13px;color:#cfc9ff;margin:0 0 13px}
+  .paywall .price{font-size:12px;color:#bfb8ff;margin-top:9px}
+
+  /* upload + annotated listing */
+  .drop{border:2px dashed #b9b1ff;border-radius:13px;background:#f6f4ff;padding:22px;text-align:center;color:var(--primary-ink);font-weight:600;font-size:13.5px;margin-bottom:14px}
+  .drop .em{font-size:30px;display:block;margin-bottom:6px}
+  .listing{display:grid;grid-template-columns:150px 1fr;gap:14px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px;position:relative}
+  .device.mobile .listing{grid-template-columns:1fr}
+  .listing .img{background:#f0eef9;border-radius:10px;aspect-ratio:1;display:grid;place-items:center;font-size:40px;position:relative}
+  .listing .ti{font-size:14px;font-weight:700;margin-bottom:6px}
+  .listing ul{margin:0;padding-left:18px;font-size:12.5px;color:var(--ink-soft)} .listing li{margin:3px 0}
+  .pin{position:absolute;background:var(--warn);color:#fff;font-size:10px;font-weight:800;border-radius:999px;padding:2px 7px;box-shadow:0 2px 6px rgba(0,0,0,.2);white-space:nowrap}
+  .gaprow{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;padding:8px 0;border-top:1px solid var(--line)}
+  .gaprow .x{color:var(--warn);font-weight:800;flex:none}
+
+  /* decision triggers */
+  .trig{border:1px solid var(--line);border-radius:13px;background:#fff;margin-bottom:10px;overflow:hidden}
+  .trig .th{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer}
+  .trig.open .th{background:var(--teal-soft);border-bottom:1px solid #c7e8e3}
+  .trig .rank{width:24px;height:24px;border-radius:7px;background:var(--teal-soft);color:var(--teal-ink,#0a6e66);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+  .trig .tm{flex:1;min-width:0} .trig .tt{font-size:13.5px;font-weight:700} .trig .td{font-size:11.5px;color:var(--ink-soft)}
+  .trig .imp{font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 8px;white-space:nowrap}
+  .imp.hi{background:var(--good-soft);color:var(--good)} .imp.md{background:var(--amber-soft);color:#92671a}
+  .persona{font-size:10px;font-weight:700;color:var(--primary-ink);background:var(--primary-soft);border-radius:999px;padding:2px 7px}
+  .trig .body{display:none;padding:13px 14px} .trig.open .body{display:block}
+  .out{border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-top:4px}
+  .out .oh{font-size:11px;font-weight:700;padding:8px 11px;background:#faf8f3;border-bottom:1px solid var(--line);display:flex;gap:7px;align-items:center}
+  .out pre{margin:0;padding:11px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.5;white-space:pre-wrap;background:#15123a;color:#e7e3ff}
+  .out .slots{padding:9px 11px;font-size:12px;color:var(--ink-soft)} .out .slots div{padding:3px 0}
+  .outacts{display:flex;gap:7px;padding:9px 11px;border-top:1px solid var(--line)}
+  .outacts button{border:0;border-radius:8px;padding:7px 11px;font-size:11.5px;font-weight:700} .outacts .c{background:var(--teal);color:#fff} .outacts .g{background:#fff;border:1px solid var(--line)!important;color:var(--ink-soft)}
+
+  .future{background:#fbfaf7;border:1px dashed var(--line);border-radius:13px;padding:16px;text-align:center}
+  .future .em{font-size:26px} .future h3{margin:6px 0 4px;font-size:16px} .future p{font-size:13px;color:var(--ink-soft);margin:0 0 10px}
+  .soon{font-size:10px;font-weight:800;background:var(--amber-soft);color:#92671a;border-radius:999px;padding:3px 9px}
+
+  .toolnote{font-size:11px;color:var(--ink-faint);margin-top:16px;border-top:1px solid var(--line);padding-top:11px}
+  .toolnote code{background:#efe9e0;border-radius:5px;padding:1px 5px;font-size:10.5px} .toolnote .nn{color:var(--amber);font-weight:700}
+  .navrow{display:flex;justify-content:space-between;margin-top:16px;gap:10px}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>● Problem-Solver Flow — for Trevor</b><span class="faint" style="font-size:12px">mockup · InfinityVault</span>
+  <div class="seg" id="segDev"><button data-m="desktop" class="on">🖥 Desktop</button><button data-m="mobile">📱 Mobile</button></div>
+</div>
+
+<div class="stage"><div class="device" id="device"><div class="frame">
+  <div class="stepper" id="stepper">
+    <div class="step on" data-s="1"><span class="n">1</span><span class="lbltxt">Diagnose</span> <span class="free">FREE</span></div>
+    <span class="arr">›</span>
+    <div class="step" data-s="2"><span class="n">2</span><span class="lbltxt">Analyze listing</span> <span class="paid">PAID</span></div>
+    <span class="arr">›</span>
+    <div class="step" data-s="3"><span class="n">3</span><span class="lbltxt">Fix</span></div>
+    <span class="arr">›</span>
+    <div class="step" data-s="4"><span class="n">4</span><span class="lbltxt">Defend</span></div>
+  </div>
+
+  <!-- STEP 1: DIAGNOSE (free) -->
+  <div class="scr on" id="s1">
+    <h2 class="h">Why aren’t people buying?</h2>
+    <p class="sub">Answer a few questions and we’ll find the <b>trust gaps</b> stopping shoppers from clicking “Add to Cart.” Free, 2 minutes.</p>
+    <div class="prob"><div class="big">4.8%</div><div><div class="vs">your conversion vs <b>10% category average</b></div><div style="font-size:13px;margin-top:2px">InfinityVault · card-storage binders · ~$3k/mo</div></div></div>
+
+    <div class="q"><div class="qt">When shoppers land on your listing, what do they doubt most?</div><div class="opts"><span class="opt on">Will it actually protect my cards?</span><span class="opt">Is it worth the price?</span><span class="opt">Is this brand legit?</span></div></div>
+    <div class="q"><div class="qt">What’s your hero image showing?</div><div class="opts"><span class="opt on">Just the product on white</span><span class="opt">Product in use</span><span class="opt">Lifestyle / people</span></div></div>
+    <div class="q"><div class="qt">Do you signal any guarantee or warranty?</div><div class="opts"><span class="opt on">No</span><span class="opt">Mentioned in text</span><span class="opt">Badge + bullet</span></div></div>
+
+    <div class="card"><div class="ct">Your Trust-Gap scorecard (the 4 IDEA pillars)</div>
+      <div class="pillar"><span class="pl">Insight-Driven</span><span class="track"><i class="good" style="width:78%"></i></span><span class="pv">78</span></div>
+      <div class="pillar"><span class="pl">Distinctive</span><span class="track"><i class="bad" style="width:52%"></i></span><span class="pv">52</span></div>
+      <div class="pillar"><span class="pl">Empathetic</span><span class="track"><i class="mid" style="width:61%"></i></span><span class="pv">61</span></div>
+      <div class="pillar"><span class="pl">Authentic</span><span class="track"><i class="bad" style="width:48%"></i></span><span class="pv">48</span></div>
+      <div class="gapcall"><span class="em">⚠</span><div><b>Biggest trust gap: build quality (Authentic + Distinctive).</b> Shoppers can’t tell your vault is sturdier than a $9 deck box — and you give them no proof. This is what’s capping you at 4.8%.</div></div>
+    </div>
+
+    <div class="navrow"><span></span><button class="cta p" data-go="2">See exactly where you’re losing the sale →</button></div>
+  </div>
+
+  <!-- STEP 2: ANALYZE (paid) -->
+  <div class="scr" id="s2">
+    <h2 class="h">Upload your live listing</h2>
+    <p class="sub">Our AI reads your actual listing the way a shopper’s brain does — and pinpoints where trust breaks.</p>
+    <div class="paywall"><div class="pw">Forensic Listing Analysis</div><p>Find every trust gap on your live listing + the exact fixes. For InfinityVault’s “Build a Vault” 216-card binder.</p><button class="cta g" style="background:#fff;color:var(--primary-ink)">⬆ Upload listing screenshot</button><div class="price">Unlocked · $39 one-off (or in your plan)</div></div>
+
+    <div class="card" style="margin-top:14px"><div class="ct">Forensic report — InfinityVault 216-card binder</div>
+      <div class="listing">
+        <div class="img">🗄️<span class="pin" style="top:8px;left:8px">gap ①</span></div>
+        <div>
+          <div class="ti">InfinityVault 216-Card Binder — Trading Card Storage <span class="pin" style="position:static;display:inline-block;margin-left:4px">gap ②</span></div>
+          <ul><li>Holds 216 cards in 9-pocket pages</li><li>Zip-up cover keeps cards in place</li><li>Durable PU leather exterior</li></ul>
+          <div style="font-size:11px;color:var(--ink-faint);margin-top:6px">A+ content: generic specs table <span class="pin" style="position:static;display:inline-block;margin-left:4px">gap ③</span></div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="gaprow"><span class="x">①</span><div><b>Hero image:</b> product-on-white with no scale, no quality cue. A shopper can’t feel the build quality — the #1 doubt. <span class="muted">→ trigger #1</span></div></div>
+        <div class="gaprow"><span class="x">②</span><div><b>Bullets are feature-led</b> (“216 cards,” “PU leather”) — no risk-reversal, no emotional payoff. <span class="muted">→ triggers #2, #3</span></div></div>
+        <div class="gaprow"><span class="x">③</span><div><b>A+ content is generic</b> — no lifestyle context (game night / tournament), so it reads as a commodity vs Gamegenic. <span class="muted">→ trigger #4</span></div></div>
+      </div>
+    </div>
+    <div class="navrow"><button class="cta g" data-go="1">← Back</button><button class="cta t" data-go="3">Show me the fixes →</button></div>
+  </div>
+
+  <!-- STEP 3: FIX (decision triggers + briefs) -->
+  <div class="scr" id="s3">
+    <h2 class="h">Your fix — 4 decision triggers, ranked by impact</h2>
+    <p class="sub">Each trigger closes a specific trust gap. Tap one for a ready-to-use <b>design brief</b> or <b>content prompt</b> — built for your buyer’s mindset.</p>
+
+    <div class="trig open"><div class="th" onclick="this.closest('.trig').classList.toggle('open')"><span class="rank">1</span><div class="tm"><div class="tt">Add a “Lifetime Warranty” badge + bullet</div><div class="td">Closes the build-quality doubt with risk-reversal</div></div><span class="persona">Safety brain</span><span class="imp hi">High impact</span></div>
+      <div class="body">
+        <p style="font-size:12.5px;margin:0 0 10px" class="muted">Your buyer is <b>Safety-dominant</b> for this purchase (protecting valuable cards). Risk-reversal beats more specs. Low real claim rate, huge trust signal.</p>
+        <div class="out"><div class="oh">✦ Content prompt — bullet + badge copy</div>
+          <pre>Write Amazon bullet 1 + an image-badge line for InfinityVault's
+216-card binder. Lead with a LIFETIME WARRANTY (risk-reversal for a
+Safety-dominant buyer protecting valuable cards). Voice: confident,
+collector-to-collector. Bullet: "BACKED FOR LIFE — if your vault ever
+fails, we replace it, no questions." Badge: "Lifetime Warranty".</pre>
+          <div class="outacts"><button class="c">⧉ Copy prompt</button><button class="g">↻ Regenerate</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trig"><div class="th" onclick="this.closest('.trig').classList.toggle('open')"><span class="rank">2</span><div class="tm"><div class="tt">New hero image — show the build quality</div><div class="td">Replaces product-on-white with a quality-proof hero</div></div><span class="persona">Rational + Safety</span><span class="imp hi">High impact</span></div>
+      <div class="body"><div class="out"><div class="oh">✦ Design brief — hero image (1 of a 7-slot set)</div>
+        <div class="slots"><div><b>Hero:</b> macro on the stitched edge + metal zip + a card sliding into a snug pocket; brass+charcoal; “vault-grade” feel. Headline space top-left.</div><div class="muted" style="font-size:11px">Full 7-slot set: Hero · Build-quality macro · Capacity · Lifetime-warranty badge · Game-night context · Tournament context · CTA.</div></div>
+        <div class="outacts"><button class="c">⬇ Open 7-slot brief</button><button class="g">⧉ Copy image prompt</button></div></div>
+      </div>
+    </div>
+
+    <div class="trig"><div class="th" onclick="this.closest('.trig').classList.toggle('open')"><span class="rank">3</span><div class="tm"><div class="tt">Rewrite bullets feature → benefit</div><div class="td">“Protect cards worth $1,000s,” not “PU leather”</div></div><span class="persona">Caring</span><span class="imp md">Medium</span></div>
+      <div class="body"><div class="out"><div class="oh">✦ Content prompt — bullet rewrite</div><pre>Rewrite 5 bullets benefit-first for a collector who fears damaging
+expensive cards (Caring/protective mindset). Each: outcome → feature
+proof. e.g. "Never bend another chase card — rigid 9-pocket pages +
+zip-shut cover hold 216 cards dead still."</pre><div class="outacts"><button class="c">⧉ Copy prompt</button></div></div></div>
+    </div>
+
+    <div class="trig"><div class="th" onclick="this.closest('.trig').classList.toggle('open')"><span class="rank">4</span><div class="tm"><div class="tt">A+ content — add lifestyle context</div><div class="td">Solo organizing · game night · tournament</div></div><span class="persona">Caring + belonging</span><span class="imp md">Medium</span></div>
+      <div class="body"><div class="out"><div class="oh">✦ Design brief — A+ module set</div><div class="slots"><div>3 lifestyle modules: (1) solo collector organizing at a desk, (2) small-group game night, (3) tournament prep — “be the one who’s always prepared.”</div></div><div class="outacts"><button class="c">⬇ Open A+ brief</button></div></div></div>
+    </div>
+
+    <div class="navrow"><button class="cta g" data-go="2">← Back</button><button class="cta t" data-go="4">What’s next →</button></div>
+  </div>
+
+  <!-- STEP 4: DEFEND (future) -->
+  <div class="scr" id="s4">
+    <h2 class="h">Keep your edge</h2>
+    <p class="sub">Fixing your gaps is step one. Staying ahead of Gamegenic &amp; Ultimate Guard is the loop.</p>
+    <div class="future"><div class="em">🛡️</div><h3>Brand Defense — Market Watch <span class="soon">soon</span></h3><p>Every week we re-scan Gamegenic &amp; Ultimate Guard’s listings and flag new trust signals they add (a warranty, a lifestyle refresh) — so you’re never out-trusted.</p><button class="cta g">Notify me when it’s live</button></div>
+    <div class="card" style="margin-top:14px"><div class="ct">Your loop</div>
+      <p style="font-size:13px;margin:0">Diagnose → Analyze → <b>Fix</b> → re-measure conversion → Defend. Each asset you generate is graded against your brand and tracked for lift — so you compound, not just ship once.</p>
+    </div>
+    <div class="navrow"><button class="cta g" data-go="1">↺ Run it again</button><span></span></div>
+
+    <div class="toolnote">Maps to real: the free <b>Trust-Gap diagnostic</b> exists today (<code>/v1/diagnostic</code>, 4 IDEA pillars) · design briefs ≈ <code>generate_brief</code> 7-slot · Brand Defense ≈ the competitor engine (<code>brand_asset_competitive_insights</code>). <span class="nn">Net-new</span>: the <b>screenshot-upload AI listing analysis</b>, the <b>decision-trigger</b> engine (spec exists), and the <b>paywall</b>. Forensic avatar (Rational/Safety/Compulsive/Caring) drives which trigger leads — shown as a small “brain” tag, complexity hidden.</div>
+  </div>
+</div></div></div>
+
+<script>
+  document.getElementById('segDev').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#segDev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    document.getElementById('device').classList.toggle('mobile',b.dataset.m==='mobile');});
+  function show(n){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById('s'+n).classList.add('on');
+    document.querySelectorAll('.step').forEach(s=>s.classList.toggle('on',s.dataset.s===String(n)));window.scrollTo(0,0);}
+  document.getElementById('stepper').addEventListener('click',e=>{const s=e.target.closest('.step');if(s)show(s.dataset.s);});
+  document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t)show(t.dataset.go);
+    const o=e.target.closest('.opt');if(o){o.parentElement.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');}});
+</script>
+</body>
+</html>

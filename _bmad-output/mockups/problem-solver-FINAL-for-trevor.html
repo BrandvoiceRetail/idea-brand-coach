@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDEA Brand Coach — Problem-Solver Demo (for Trevor)</title>
+<style>
+  :root{
+    --ink:#1d2433;--ink-soft:#55607a;--ink-faint:#8a93a8;--bg:#f6f4ef;--surface:#fff;--line:#e7e3da;
+    --primary:#5b4bd6;--primary-soft:#efecfc;--primary-ink:#3a2eaa;
+    --good:#1f9d62;--good-soft:#e6f5ed;--warn:#c0392b;--warn-soft:#fdecea;--amber:#d99a2b;--amber-soft:#fbf3e1;
+    --teal:#0f8f86;--teal-soft:#e3f4f1;--teal-ink:#0a6e66;--shadow:0 1px 2px rgba(20,24,40,.04),0 8px 24px rgba(20,24,40,.06);
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;--serif:"Iowan Old Style",Georgia,serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer} .faint{color:var(--ink-faint)} .muted{color:var(--ink-soft)}
+  .toolbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .seg{margin-left:auto;display:inline-flex;background:#eceae3;border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 13px;border-radius:999px;font-size:13px;color:var(--ink-soft);font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .stage{display:flex;justify-content:center;padding:22px 16px 70px}
+  .device{width:100%;max-width:860px;transition:max-width .35s ease} .device.mobile{max-width:402px}
+  .device.mobile .frame{border-radius:34px;border:11px solid #11131c;box-shadow:0 30px 60px rgba(20,24,40,.22)}
+  .frame{background:var(--bg);border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+
+  /* stepper */
+  .stepper{display:flex;align-items:center;gap:5px;padding:12px 16px;background:#13182a;overflow-x:auto}
+  .sc{display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:10px;cursor:pointer;white-space:nowrap;color:#aeb6cd;font-weight:700;font-size:12px}
+  .sc .n{width:19px;height:19px;border-radius:50%;background:#2a3252;display:grid;place-items:center;font-size:10.5px;color:#cfd4e4}
+  .sc.on{background:#222a44;color:#fff} .sc.on .n{background:var(--primary);color:#fff} .sc.done .n{background:var(--good);color:#fff}
+  .sc .tg{font-size:9px;font-weight:800;border-radius:999px;padding:1px 6px}
+  .tg.free{background:var(--good);color:#fff} .tg.paid{background:var(--amber);color:#fff}
+  .arr{color:#46506e;font-size:12px}
+  .device.mobile .sc .lbltxt{display:none} .device.mobile .sc.on .lbltxt{display:inline}
+
+  .scr{display:none;padding:22px 26px 28px} .scr.on{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .device.mobile .scr{padding:16px 15px 24px}
+  h2.h{font-size:21px;letter-spacing:-.02em;margin:0 0 4px} .device.mobile h2.h{font-size:18px}
+  .sub{color:var(--ink-soft);font-size:13.5px;margin:0 0 16px}
+  .cta{border:0;border-radius:11px;padding:12px 18px;font-weight:700;font-size:14px;display:inline-flex;gap:8px;align-items:center}
+  .cta.p{background:var(--primary);color:#fff} .cta.t{background:var(--teal);color:#fff} .cta.g{background:#fff;border:1.5px solid var(--line)!important;color:var(--ink)}
+  .navrow{display:flex;justify-content:space-between;margin-top:16px;gap:10px}
+
+  /* S1 diagnose */
+  .prob{display:flex;gap:13px;align-items:center;background:#fff;border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:13px;padding:14px 16px;margin-bottom:14px}
+  .prob .big{font-size:30px;font-weight:800;color:var(--warn);font-variant-numeric:tabular-nums} .device.mobile .prob .big{font-size:24px}
+  .prob .vs{font-size:12px;color:var(--ink-faint)} .prob b{color:var(--ink)}
+  .q{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+  .q .qt{font-size:13px;font-weight:700;margin-bottom:8px}
+  .opts{display:flex;gap:7px;flex-wrap:wrap}
+  .opt{font-size:12px;border:1px solid var(--line);background:#fbfaf7;border-radius:9px;padding:6px 11px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+  .opt.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:15px;margin-bottom:14px}
+  .card .ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:11px;display:flex;align-items:center;gap:7px}
+  .pillar{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .pillar .pl{width:100px;font-size:12px;font-weight:700;flex:none} .device.mobile .pillar .pl{width:80px;font-size:11px}
+  .track{flex:1;height:9px;border-radius:99px;background:#efeae0;overflow:hidden} .track i{display:block;height:100%;border-radius:99px}
+  .track i.good{background:var(--good)} .track i.mid{background:var(--amber)} .track i.bad{background:var(--warn)}
+  .pillar .pv{width:26px;text-align:right;font-weight:800;font-size:12px}
+  .gapcall{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);border:1px solid #f3cfc9;border-radius:11px;padding:11px 13px;margin-top:4px;font-size:12.5px;color:#7a3a33} .gapcall b{color:var(--warn)}
+
+  /* S2 paywall */
+  .paywall{background:linear-gradient(135deg,#15123a,#3a2eaa);color:#fff;border-radius:15px;padding:20px}
+  .paywall .pw{font-family:var(--serif);font-size:20px;margin:0 0 5px} .paywall p{font-size:13px;color:#cfc9ff;margin:0 0 14px}
+  .paywall .field{display:flex;gap:8px;flex-wrap:wrap} .paywall input{flex:1;min-width:160px;border:0;border-radius:10px;padding:11px 13px;font-size:13px}
+  .paywall .note{font-size:11.5px;color:#bfb8ff;margin-top:11px}
+  .pwlist{margin:12px 0 0;padding:0;list-style:none;font-size:12.5px;color:#ded9ff} .pwlist li{padding:3px 0;display:flex;gap:8px}
+
+  /* S3 upload */
+  .drop{border:2px dashed #b9b1ff;border-radius:14px;background:#f6f4ff;padding:26px;text-align:center;color:var(--primary-ink);font-weight:600;font-size:14px;margin-bottom:14px}
+  .drop .em{font-size:32px;display:block;margin-bottom:8px}
+  .thumb{display:flex;gap:13px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+  .thumb .ti{width:60px;height:60px;border-radius:9px;background:#f0eef9;display:grid;place-items:center;font-size:28px;flex:none}
+  .thumb .tn{font-size:13px;font-weight:700} .thumb .td{font-size:11.5px;color:var(--ink-faint)} .thumb .ok{margin-left:auto;color:var(--good);font-weight:700;font-size:12px}
+
+  /* agentic run (S4 + everywhere) */
+  .runhead{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;margin-bottom:3px}
+  .runhead .dot{width:9px;height:9px;border-radius:50%;background:var(--amber);animation:blink 1s infinite} .runhead.done .dot{background:var(--good);animation:none}
+  @keyframes blink{50%{opacity:.3}}
+  .runsub{font-size:12px;color:var(--ink-soft);margin-bottom:11px}
+  .bar{height:6px;border-radius:99px;background:#eee9df;overflow:hidden;margin-bottom:14px} .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary),#8a7bff);transition:width .5s ease}
+  .step{display:flex;gap:11px;padding-bottom:13px;position:relative}
+  .step::before{content:"";position:absolute;left:13px;top:26px;bottom:-2px;width:2px;background:var(--line)} .step:last-child::before{display:none}
+  .step .ic{width:28px;height:28px;border-radius:8px;flex:none;display:grid;place-items:center;font-size:13px;background:#f0eee8;color:var(--ink-faint);z-index:1}
+  .step.run .ic{background:var(--primary-soft);color:var(--primary-ink)} .step.done .ic{background:var(--good-soft);color:var(--good)}
+  .step .c{flex:1;min-width:0;opacity:.42;transition:opacity .3s} .step.run .c,.step.done .c{opacity:1}
+  .step .toprow{display:flex;align-items:center;gap:8px}
+  .step .tool{font-family:var(--mono);font-size:11.5px;color:var(--primary-ink);font-weight:700} .step .tool .paren{color:var(--ink-faint)}
+  .step .lab{font-size:13px;font-weight:600;margin-top:1px} .step .sub2{font-size:12px;color:var(--ink-soft);margin-top:3px}
+  .step .sub2 .cursor{display:none} .step.run .sub2 .cursor{display:inline-block;width:7px;height:13px;background:var(--primary);vertical-align:-2px;margin-left:1px;animation:blink .8s infinite}
+  .step .res{display:none;margin-top:6px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:12px} .step.done .res{display:block}
+  .step .res .rk{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);margin-bottom:3px} .step .res .rv b{color:var(--teal-ink)}
+  .step .spin{display:none;width:13px;height:13px;border:2px solid var(--primary-soft);border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite;margin-left:auto;flex:none} .step.run .spin{display:block}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .step .chk{display:none;margin-left:auto;color:var(--good);font-weight:800} .step.done .chk{display:block}
+  .donecta{display:none;margin-top:6px} .donecta.show{display:block;animation:fade .4s ease}
+
+  /* S5 report-card */
+  .kpis{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+  .kpi{background:#13182a;color:#fff;border-radius:11px;padding:9px 13px} .kpi .v{font-size:17px;font-weight:800} .kpi .v.bad{color:#ff8a7a} .kpi .l{font-size:10.5px;color:#aeb6cd} .kpi.buyer .v{font-size:13px;color:#cfd4e4}
+  .listing{background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px;position:relative;margin-bottom:14px}
+  .lgrid{display:grid;grid-template-columns:130px 1fr;gap:13px} .device.mobile .lgrid{grid-template-columns:1fr}
+  .limg{background:#f0eef9;border-radius:10px;aspect-ratio:1;display:grid;place-items:center;font-size:40px;position:relative}
+  .lti{font-size:13.5px;font-weight:700;margin-bottom:6px}
+  .listing ul{margin:0;padding-left:17px;font-size:12px;color:var(--ink-soft)} .listing li{margin:3px 0}
+  .aplus{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;font-size:11px;color:var(--ink-faint)}
+  .pin{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--warn);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;box-shadow:0 2px 8px rgba(192,57,43,.4);cursor:pointer;border:2px solid #fff}
+  .pin.on{background:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
+  .pininline{position:static;display:inline-grid;vertical-align:middle;margin-left:5px;width:19px;height:19px;font-size:10.5px}
+  .find{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:9px;overflow:hidden}
+  .find.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+  .find .fr{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;cursor:pointer}
+  .find .num{width:21px;height:21px;border-radius:50%;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;font-weight:800;font-size:11px;flex:none}
+  .find .fw{font-size:13px;font-weight:700} .find .fy{font-size:11.5px;color:var(--ink-soft);margin-top:1px}
+  .find .ev{font-size:10.5px;color:var(--teal-ink);background:var(--teal-soft);border-radius:999px;padding:2px 8px;margin-top:4px;display:inline-block}
+  .find .imp{font-size:10px;font-weight:800;border-radius:999px;padding:2px 7px;white-space:nowrap;align-self:center} .imp.hi{background:var(--good-soft);color:var(--good)} .imp.md{background:var(--amber-soft);color:#92671a}
+  .find .fix{display:none;padding:0 12px 12px} .find.open .fix{display:block}
+  .out{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:4px}
+  .out .oh{font-size:10.5px;font-weight:700;padding:7px 10px;background:#faf8f3;border-bottom:1px solid var(--line)}
+  .out pre{margin:0;padding:10px;font-family:var(--mono);font-size:11px;line-height:1.5;white-space:pre-wrap;background:#15123a;color:#e7e3ff}
+  .out .acts{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--line)} .out .acts button{border:0;border-radius:7px;padding:6px 10px;font-size:11px;font-weight:700} .acts .c{background:var(--teal);color:#fff} .acts .g{background:#fff;border:1px solid var(--line)!important;color:var(--ink-soft)}
+  .claimchip{font-size:10.5px;background:var(--amber-soft);color:#92671a;border:1px solid #f0d9b3;border-radius:8px;padding:6px 9px;margin-top:7px;display:flex;gap:6px;align-items:center}
+  .claimchip button{border:0;background:var(--teal);color:#fff;border-radius:6px;padding:3px 9px;font-weight:700;font-size:10.5px;margin-left:auto}
+  .estbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:#fbfaf7;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-top:4px}
+  .estbar .est{font-size:12.5px} .estbar .est b{color:var(--good)} .estbar .rescan{margin-left:auto;font-size:11.5px;color:var(--ink-soft)}
+
+  /* S6 defend */
+  .future{background:#fbfaf7;border:1px dashed var(--line);border-radius:13px;padding:18px;text-align:center;margin-bottom:14px}
+  .future .em{font-size:28px} .future h3{margin:6px 0 4px;font-size:16px} .future p{font-size:13px;color:var(--ink-soft);margin:0 0 10px}
+  .soon{font-size:10px;font-weight:800;background:var(--amber-soft);color:#92671a;border-radius:999px;padding:3px 9px}
+  .loop{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--ink-soft)}
+  .loop span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px} .loop .a{color:var(--teal)}
+
+  /* S7 everywhere */
+  .every{display:grid;grid-template-columns:1fr 1fr;gap:12px} .device.mobile .every{grid-template-columns:1fr}
+  .mini{background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:14px}
+  .mini .mh{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .mini .step{padding-bottom:11px} .mini .step::before{top:24px}
+  .mini .ic{width:24px;height:24px;font-size:11px} .mini .step::before{left:11px}
+  .mini .lab{font-size:12px} .mini .res{font-size:11px;padding:6px 8px}
+
+  .toolnote{font-size:11px;color:var(--ink-faint);margin-top:16px;border-top:1px solid var(--line);padding-top:11px} .toolnote code{background:#efe9e0;border-radius:5px;padding:1px 5px;font-size:10.5px} .toolnote .nn{color:var(--amber);font-weight:700}
+  .tiers{display:flex;gap:9px;margin-top:13px;flex-wrap:wrap}
+  .tier{flex:1;min-width:118px;border:1px solid var(--line);border-radius:11px;background:#fff;padding:11px 12px}
+  .tier.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+  .tier .tn{font-size:13px;font-weight:800} .tier.on .tn{color:var(--primary-ink)} .tier .tn .pricetag{font-weight:700;color:var(--ink-faint);font-size:11px}
+  .tier .tc{font-size:11px;color:var(--ink-soft);margin-top:3px}
+  .freeb{font-size:9px;font-weight:800;background:var(--good);color:#fff;border-radius:999px;padding:1px 6px;margin-left:5px;vertical-align:middle}
+  .brfnote{font-size:11.5px;color:var(--ink-soft);background:var(--good-soft);border:1px solid #bfe6cf;border-radius:9px;padding:8px 10px;margin-top:7px} .brfnote b{color:#0f6b41}
+  .acts .rev{background:#fff;border:1px solid var(--line)!important;color:var(--primary-ink)}
+  .credit{font-size:9px;font-weight:800;background:var(--amber-soft);color:#92671a;border-radius:999px;padding:1px 6px;margin-left:5px;vertical-align:middle}
+  .rescard{border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:var(--shadow);padding:14px 16px;margin-bottom:14px}
+  .rescard .rh{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;flex-wrap:wrap}
+  .rescard .rh button{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;color:var(--primary-ink)}
+  .rescard .rh button:disabled{opacity:.7;cursor:default}
+  .rbody{display:none;margin-top:12px} .rbody.show{display:block;animation:fade .4s ease}
+  .delta{background:var(--good-soft);border:1px solid #bfe6cf;border-radius:11px;padding:12px 14px;margin-bottom:9px}
+  .delta .dnum{font-size:22px;font-weight:800} .delta .up{color:var(--good)} .delta .arrowup{color:var(--ink-faint)}
+  .delta .dl{font-size:12px;color:var(--ink-soft);margin-top:3px}
+  .rivalert{background:var(--warn-soft);border:1px solid #f3cfc9;border-radius:11px;padding:11px 13px;font-size:12.5px;color:#7a3a33}
+  .surflbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin:2px 0 9px}
+  .claudeframe{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:var(--shadow);margin-bottom:16px}
+  .cf-bar{display:flex;align-items:center;gap:9px;padding:8px 13px;background:#f4f3f0;border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-soft);font-weight:700}
+  .cf-dots{display:flex;gap:5px} .cf-dots i{width:9px;height:9px;border-radius:50%;display:block} .cf-dots .r{background:#ff5f57} .cf-dots .y{background:#febc2e} .cf-dots .g{background:#28c840}
+  .cf-claude{margin-left:auto;font-size:11px;color:var(--ink-faint);font-weight:600}
+  .cf-body{padding:13px;background:#fbfbfa}
+  .cf-u{background:var(--primary);color:#fff;border-radius:12px;border-bottom-right-radius:4px;padding:8px 12px;font-size:12.5px;max-width:82%;margin-left:auto;margin-bottom:10px}
+  .cf-a{font-size:12.5px;color:var(--ink-soft);margin-bottom:7px}
+  .mcppanel{border:1px solid #d9d4c4;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  .mcppanel .mh{background:#1A3557;color:#fff;padding:10px 13px;display:flex;align-items:center;gap:9px}
+  .mcppanel .mh .lm{width:24px;height:24px;border-radius:6px;background:#C9A84C;display:grid;place-items:center;color:#1A3557;font-weight:800;font-size:11px}
+  .mcppanel .mh .mt{font-weight:700;font-size:13px} .mcppanel .mh .pbadge{margin-left:auto;font-size:9px;font-weight:800;background:#C9A84C;color:#1A3557;border-radius:999px;padding:2px 8px;letter-spacing:.04em}
+  .mcppanel .mb{padding:13px;background:#fff}
+  .mcptop{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+  .mcptop .sc{font-size:30px;font-weight:800;color:#1A3557;line-height:1} .mcptop .sc small{font-size:15px;color:#aab2c0;font-weight:600}
+  .mcptop .gl{font-size:10px;font-weight:700;color:#5f5d57;text-transform:uppercase;letter-spacing:.05em}
+  .mcptop .gap{font-size:11px;font-weight:700;color:#B42318;background:#FEF3F2;border:1px solid #FDA29B;border-radius:999px;padding:3px 9px;display:inline-block;margin-top:3px}
+  .mcpdims{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:11px}
+  .mcpdim{text-align:center} .mcpdim .dl{font-size:11px;font-weight:800} .mcpdim .db{height:5px;border-radius:99px;background:#eee;margin-top:4px;overflow:hidden} .mcpdim .db i{display:block;height:100%}
+  .mcpbtn{background:#C9A84C;color:#1A3557;border:0;border-radius:8px;padding:10px 14px;font-weight:800;font-size:12.5px;width:100%}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>● Problem-Solver Demo — InfinityVault</b><span class="faint" style="font-size:12px">for Trevor · click the steps</span>
+  <div class="seg" id="segDev"><button data-m="desktop" class="on">🖥 Desktop</button><button data-m="mobile">📱 Mobile</button></div>
+</div>
+
+<div class="stage"><div class="device" id="device"><div class="frame">
+  <div class="stepper" id="stepper">
+    <div class="sc on" data-s="1"><span class="n">1</span><span class="lbltxt">Diagnose</span><span class="tg free">FREE</span></div><span class="arr">›</span>
+    <div class="sc" data-s="2"><span class="n">2</span><span class="lbltxt">It’s free</span><span class="tg free">FREE</span></div><span class="arr">›</span>
+    <div class="sc" data-s="3"><span class="n">3</span><span class="lbltxt">Upload</span></div><span class="arr">›</span>
+    <div class="sc" data-s="4"><span class="n">4</span><span class="lbltxt">Analyze</span></div><span class="arr">›</span>
+    <div class="sc" data-s="5"><span class="n">5</span><span class="lbltxt">Fix</span></div><span class="arr">›</span>
+    <div class="sc" data-s="6"><span class="n">6</span><span class="lbltxt">Defend</span></div><span class="arr">·</span>
+    <div class="sc" data-s="7"><span class="n">✦</span><span class="lbltxt">Everywhere</span></div>
+  </div>
+
+  <!-- S1 DIAGNOSE -->
+  <div class="scr on" id="s1">
+    <h2 class="h">Why aren’t people buying?</h2>
+    <p class="sub">Answer a few questions and we’ll find the <b>trust gaps</b> stopping shoppers from buying. Free · 60 seconds · no login.</p>
+    <div class="prob"><div class="big">4.8%</div><div><div class="vs">your conversion · <b>down from 6.1%</b> over 60 days <span class="faint">· strong listings here run ~8–12%</span></div><div style="font-size:13px;margin-top:2px">InfinityVault · 216-card binder · ~$3k/mo</div></div></div>
+    <div class="q"><div class="qt">When shoppers land on your listing, what do they doubt most?</div><div class="opts"><span class="opt on">Will it actually protect my cards?</span><span class="opt">Worth the price?</span><span class="opt">Is the brand legit?</span></div></div>
+    <div class="q"><div class="qt">What’s your hero image?</div><div class="opts"><span class="opt on">Product on white</span><span class="opt">In use</span><span class="opt">Lifestyle / people</span></div></div>
+    <div class="q"><div class="qt">Do you signal a guarantee or warranty?</div><div class="opts"><span class="opt on">No</span><span class="opt">In text</span><span class="opt">Badge + bullet</span></div></div>
+    <div class="card"><div class="ct">Your Trust-Gap scorecard</div>
+      <div class="pillar"><span class="pl">Clear what it is</span><span class="track"><i class="good" style="width:78%"></i></span><span class="pv">78</span></div>
+      <div class="pillar"><span class="pl">Stands out vs rivals</span><span class="track"><i class="bad" style="width:52%"></i></span><span class="pv">52</span></div>
+      <div class="pillar"><span class="pl">Speaks to the buyer</span><span class="track"><i class="mid" style="width:61%"></i></span><span class="pv">61</span></div>
+      <div class="pillar"><span class="pl">Build quality &amp; trust</span><span class="track"><i class="bad" style="width:48%"></i></span><span class="pv">48</span></div>
+      <div class="gapcall"><b>Biggest gap: build quality.</b> Shoppers can’t tell your vault beats a $9 deck box — and you give them no proof. <span class="muted">Likely the biggest thing holding your conversion down.</span></div>
+    </div>
+    <div class="navrow"><span></span><button class="cta p" data-go="2">See the exact fixes on your listing →</button></div>
+  </div>
+
+  <!-- S2 UNLOCK -->
+  <div class="scr" id="s2">
+    <h2 class="h">It’s all free to start</h2>
+    <p class="sub">No paywall on the help. Diagnose, analyze your listing, and get your first design brief — and <b>revise it until it’s right</b>. You only pay when you want <b>more</b>.</p>
+    <div class="paywall"><div class="pw">Your free workspace</div><p>Everything you need to fix one listing — on us.</p>
+      <ul class="pwlist"><li>✓ Full Trust-Gap diagnosis + forensic listing analysis</li><li>✓ <b>1 design brief, free</b> — revise it up to <b>10×</b> until it’s right</li><li>✓ Ready-to-paste copy + image briefs</li></ul>
+      <div class="field" style="margin-top:13px"><input placeholder="you@brand.com"/><button class="cta g" style="background:#fff;color:var(--primary-ink)" data-go="3">Start free →</button></div>
+      <div class="note">Free · no card needed · we’ll save your report here</div>
+    </div>
+    <div class="tiers">
+      <div class="tier on"><div class="tn">Free <span class="pricetag">$0</span></div><div class="tc">1 listing · 1 design brief · 10 revisions</div></div>
+      <div class="tier"><div class="tn">Starter <span class="pricetag">~$29/mo</span></div><div class="tc">~30 credits · more briefs &amp; listings</div></div>
+      <div class="tier"><div class="tn">Pro <span class="pricetag">~$79/mo</span></div><div class="tc">~120 credits + Brand-Defense watch</div></div>
+    </div>
+    <p class="muted" style="font-size:11.5px;margin:9px 2px 0"><b>1 credit = 1 design brief, or 1 extra listing analyzed.</b> Plans top up your monthly credits. <span class="faint">(prices illustrative — to react to)</span></p>
+    <div class="navrow"><button class="cta g" data-go="1">← Back</button><button class="cta p" data-go="3">Upload my listing →</button></div>
+  </div>
+
+  <!-- S3 UPLOAD -->
+  <div class="scr" id="s3">
+    <h2 class="h">Upload your listing</h2>
+    <p class="sub">A screenshot is enough — we read it the way a shopper’s brain does. Works from your phone.</p>
+    <div class="drop"><span class="em">⬆️</span>Drag in a screenshot of your live Amazon listing<br><span class="faint" style="font-size:12px">PNG / JPG · or paste a product URL</span></div>
+    <div class="thumb"><div class="ti">🗄️</div><div><div class="tn">infinityvault-216-listing.png</div><div class="td">1284 × 2778 · we saw this</div></div><span class="ok">✓ ready</span></div>
+    <div class="navrow"><button class="cta g" data-go="2">← Back</button><button class="cta t" data-go="4">Analyze my listing →</button></div>
+  </div>
+
+  <!-- S4 ANALYZE (agentic run) -->
+  <div class="scr" id="s4">
+    <div class="runhead" id="rhead"><span class="dot"></span> Analyzing your InfinityVault listing…</div>
+    <div class="runsub" id="rsub">You see exactly what the app is doing — every finding is backed by what it reads.</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap"><button onclick="runAnalysis()" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 11px;font-size:11.5px;font-weight:700">↻ Replay</button><span style="font-size:10.5px;color:var(--ink-faint)">⌁ Illustrative run — the forensic engine is the week-1 build, shown as a faithful mock.</span></div>
+    <div class="bar"><i id="prog"></i></div>
+    <div id="steps">
+      <div class="step" data-dur="1400" data-sub="opening your screenshot…"><div class="ic">📷</div><div class="c"><div class="toprow"><span class="tool">read_listing<span class="paren">(screenshot)</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Reading your listing screenshot</div><div class="sub2"></div><div class="res"><div class="rk">found</div><div class="rv">Hero = <b>product-on-white</b> · 3 feature bullets · generic A+ · <b>no warranty signal</b></div></div></div></div>
+      <div class="step" data-dur="1600" data-sub="fetching reviews for your ASIN…"><div class="ic">⭐</div><div class="c"><div class="toprow"><span class="tool">fetch_reviews<span class="paren">(asin)</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Pulling your live customer reviews</div><div class="sub2"></div><div class="res"><div class="rk">47 reviews · recurring words</div><div class="rv"><b>“flimsy” ×9</b> · “bent cards” ×6 · “feels cheap” ×4</div></div></div></div>
+      <div class="step" data-dur="1300" data-sub="scoring the buyer’s trust signals…"><div class="ic">📊</div><div class="c"><div class="toprow"><span class="tool">score_trust_gaps<span class="paren">()</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Scoring the buyer’s trust signals</div><div class="sub2"></div><div class="res"><div class="rk">weakest</div><div class="rv">Build quality &amp; trust <b>48</b> · Stands-out <b>52</b> → <b>build-quality gap</b></div></div></div></div>
+      <div class="step" data-dur="1200" data-sub="matching to what the buyer cares about…"><div class="ic">🧠</div><div class="c"><div class="toprow"><span class="tool">read_buyer_mindset<span class="paren">()</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Matching to what your buyer cares about</div><div class="sub2"></div><div class="res"><div class="rk">their top concern</div><div class="rv">Buyers here are <b>protecting valuable cards</b> — they need reassurance; your listing is all logic.</div></div></div></div>
+      <div class="step" data-dur="1500" data-sub="deriving the fixes that close the gap…"><div class="ic">🎯</div><div class="c"><div class="toprow"><span class="tool">derive_triggers<span class="paren">(gap, mindset)</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Deriving your decision triggers</div><div class="sub2"></div><div class="res"><div class="rk">3 triggers · ranked</div><div class="rv">#1 <b>Reassurance → Lifetime Warranty</b> · #2 build-proof hero · #3 benefit bullets</div></div></div></div>
+      <div class="step" data-dur="1500" data-sub="writing your briefs + copy…"><div class="ic">✦</div><div class="c"><div class="toprow"><span class="tool">generate_brief<span class="paren">(triggers)</span></span><span class="spin"></span><span class="chk">✓</span></div><div class="lab">Generating your design briefs + copy</div><div class="sub2"></div><div class="res"><div class="rk">ready</div><div class="rv">7-slot image brief + bullet rewrite · <b>warranty claim flagged to confirm</b></div></div></div></div>
+    </div>
+    <div class="donecta" id="donecta"><div class="navrow"><span></span><button class="cta t" data-go="5">See your report →</button></div></div>
+  </div>
+
+  <!-- S5 FIX (deliverable) -->
+  <div class="scr" id="s5">
+    <h2 class="h">Your Forensic Report</h2>
+    <p class="sub">3 trust gaps, ranked by impact. Every finding is backed by what we read — tap a pin or a fix.</p>
+    <div class="kpis"><div class="kpi"><div class="v bad">4.8%</div><div class="l">your conversion</div></div><div class="kpi"><div class="v">3</div><div class="l">trust gaps</div></div><div class="kpi buyer"><div class="v">🛡️ Top doubt</div><div class="l">will it protect my cards?</div></div></div>
+    <div class="listing">
+      <div class="lgrid"><div class="limg">🗄️<span class="pin" data-f="1" style="top:8px;left:8px">1</span></div>
+        <div><div class="lti">InfinityVault 216-Card Binder — Trading Card Storage <span class="pin pininline" data-f="2">2</span></div>
+          <ul><li>Holds 216 cards in 9-pocket pages</li><li>Zip-up cover keeps cards in place</li><li>Durable PU leather exterior</li></ul></div></div>
+      <div class="aplus">A+ content: generic specs table — no lifestyle context <span class="pin pininline" data-f="3">3</span></div>
+    </div>
+    <div class="find on open" data-find="1"><div class="fr" onclick="toggleF(this)"><span class="num">1</span><div style="flex:1"><div class="fw">Build quality is invisible &amp; unguaranteed</div><div class="fy">Hero is product-on-white; no warranty — for a buyer worried about protecting valuable cards.</div><span class="ev">backed by: your hero image + “flimsy” ×9 in reviews</span></div><span class="imp hi">High</span></div>
+      <div class="fix"><div class="out"><div class="oh">Design brief — new hero (1 of a 7-slot set) <span class="freeb">FREE</span></div><pre>Macro hero: stitched edge + metal zip + a card sliding into a snug
+pocket. Brass + charcoal, "vault-grade" feel. Small "Lifetime
+Warranty" badge. Headline space top-left.</pre><div class="acts"><button class="c">⬇ Open 7-slot brief</button><button class="g">⧉ Copy prompt</button><button class="g rev" id="revbtn" onclick="revise()">↻ Revise (0/10 free)</button></div></div>
+        <div class="brfnote">✓ This is your <b>1 free design brief</b> — revise it up to <b>10×</b> until it’s right. Briefs for the other fixes use credits.</div></div>
+    </div>
+    <div class="find" data-find="2"><div class="fr" onclick="toggleF(this)"><span class="num">2</span><div style="flex:1"><div class="fw">Bullets are features, not reassurance</div><div class="fy">Lead bullet 1 with a Lifetime Warranty — the strongest Safety trigger.</div><span class="ev">backed by: your 3 feature bullets</span></div><span class="imp hi">High</span></div>
+      <div class="fix"><div class="out"><div class="oh">Content prompt — bullet + badge <span class="freeb">FREE</span></div><pre>Rewrite bullet 1 to lead with a LIFETIME WARRANTY. Voice: confident,
+collector-to-collector. "BACKED FOR LIFE — if your vault ever fails,
+we replace it, free."</pre><div class="acts"><button class="c">⧉ Copy prompt</button></div></div>
+        <div class="claimchip">⚠ “Lifetime warranty” is a guarantee claim — confirm you offer it before we put it on your listing.<button>I confirm</button></div></div>
+    </div>
+    <div class="find" data-find="3"><div class="fr" onclick="toggleF(this)"><span class="num">3</span><div style="flex:1"><div class="fw">A+ has no lifestyle context</div><div class="fy">Add game-night &amp; tournament modules vs Gamegenic’s commodity feel.</div><span class="ev">backed by: your A+ section</span></div><span class="imp md">Medium</span></div>
+      <div class="fix"><div class="out"><div class="oh">Design brief — A+ module set <span class="credit">1 CREDIT</span></div><div class="acts" style="border-top:0"><button class="c">✦ Generate (1 credit)</button><button class="g" data-go="2">Get credits →</button></div></div></div>
+    </div>
+    <div class="estbar"><div class="est">Close these 3 gaps → <b>meaningful CVR lift expected</b> <span class="faint">· not a guarantee</span></div><span class="rescan">↻ we re-measure your actual change in 14 days</span></div>
+    <div class="navrow"><button class="cta g" data-go="4">← The analysis</button><button class="cta p" data-go="6">What keeps it working →</button></div>
+  </div>
+
+  <!-- S6 DEFEND -->
+  <div class="scr" id="s6">
+    <h2 class="h">Keep your edge</h2>
+    <p class="sub">Fixing your gaps is step one. The loop — re-measure, then watch your rivals — is what earns the return visit (and the subscription).</p>
+    <div class="rescard">
+      <div class="rh">📈 Day 14 — automatic re-scan <button id="rescanBtn" onclick="runRescan()">↻ Run re-scan</button></div>
+      <div class="rbody" id="rbody">
+        <div class="delta"><div class="dnum">4.8% <span class="arrowup">→</span> <span class="up">6.1%</span></div><div class="dl">your conversion · <b class="up">▲ +1.3 pts</b> since you shipped the hero + warranty fixes</div></div>
+        <div class="rivalert">⚔️ <b>Heads up:</b> Gamegenic just added a <b>Lifetime Warranty badge</b> — they’re closing your “stands out” gap. <span class="muted">2 new fixes ready for you.</span></div>
+      </div>
+    </div>
+    <div class="future"><div class="em">🛡️</div><h3>Brand Defense — Market Watch <span class="soon">soon</span></h3><p>Every week we re-scan your listing and your rivals’ — and flag new trust signals they add (a warranty, a lifestyle refresh) before they out-trust you.</p><button class="cta g">Notify me when it’s live</button></div>
+    <div class="card"><div class="ct">Your loop</div>
+      <div class="loop"><span>Diagnose</span><span class="a">→</span><span>Analyze</span><span class="a">→</span><span><b>Fix</b></span><span class="a">→</span><span>Re-measure</span><span class="a">→</span><span>Defend</span></div>
+      <p style="font-size:12.5px;margin:11px 0 0;text-align:center" class="muted">A problem you solve once is a tool. A number you keep watching is a product.</p>
+    </div>
+    <div class="navrow"><button class="cta g" data-go="5">← Report</button><button class="cta p" data-go="7">See the intelligence everywhere →</button></div>
+  </div>
+
+  <!-- S7 EVERYWHERE -->
+  <div class="scr" id="s7">
+    <h2 class="h">The same intelligence — every surface</h2>
+    <p class="sub">Wherever the app works for you, it shows the work — and it runs <b>right inside Claude</b> as a native MCP app, not just on the web.</p>
+
+    <div class="surflbl">⌘ Inside Claude — the IDEA Brand Coach MCP custom UI</div>
+    <div class="claudeframe">
+      <div class="cf-bar"><div class="cf-dots"><i class="r"></i><i class="y"></i><i class="g"></i></div><span>Claude</span><span class="cf-claude">IDEA Brand Coach · connected via MCP</span></div>
+      <div class="cf-body">
+        <div class="cf-u">Run my Trust Gap diagnostic in IDEA Brand Coach</div>
+        <div class="cf-a">Done — here's your Trust Gap, rendered as a panel you can act on:</div>
+        <div class="mcppanel">
+          <div class="mh"><span class="lm">◆</span><span class="mt">IDEA Brand Coach</span><span class="pbadge">MCP APP</span></div>
+          <div class="mb">
+            <div class="mcptop"><div class="sc">62<small>/100</small></div><div><div class="gl">Trust Gap Score™</div><span class="gap">⚠ Primary gap: Empathetic</span></div></div>
+            <div class="mcpdims">
+              <div class="mcpdim"><div class="dl" style="color:#D89B0D">I</div><div class="db"><i style="width:80%;background:#D89B0D"></i></div></div>
+              <div class="mcpdim"><div class="dl" style="color:#54B657">D</div><div class="db"><i style="width:60%;background:#54B657"></i></div></div>
+              <div class="mcpdim"><div class="dl" style="color:#3BA0D1">E</div><div class="db"><i style="width:32%;background:#3BA0D1"></i></div></div>
+              <div class="mcpdim"><div class="dl" style="color:#F08A00">A</div><div class="db"><i style="width:80%;background:#F08A00"></i></div></div>
+            </div>
+            <button class="mcpbtn">Upload your listing for the fix →</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--ink-faint);margin-top:9px">↑ A real branded panel with working buttons — not a wall of text. Your brand + diagnostic are remembered between sessions (the edge over asking Claude raw).</div>
+      </div>
+    </div>
+
+    <div class="surflbl">…and on the web, every surface shows the work</div>
+    <div class="every">
+      <div class="mini"><div class="mh">🧭 Brand Coach <span class="faint" style="font-weight:600;font-size:11px">· drafting your brand</span></div>
+        <div class="step done"><div class="ic">⭐</div><div class="c"><div class="toprow"><span class="tool">read_reviews<span class="paren">()</span></span><span class="chk">✓</span></div><div class="lab">Reading your reviews</div><div class="res"><div class="rv">found your buyer’s words</div></div></div></div>
+        <div class="step done"><div class="ic">✦</div><div class="c"><div class="toprow"><span class="tool">draft_positioning<span class="paren">()</span></span><span class="chk">✓</span></div><div class="lab">Drafting your positioning</div><div class="res"><div class="rv">5 fields drafted</div></div></div></div>
+        <div class="step done"><div class="ic">⚠</div><div class="c"><div class="toprow"><span class="tool">flag_needs_you<span class="paren">()</span></span><span class="chk">✓</span></div><div class="lab">Flagging what needs you</div><div class="res"><div class="rv"><b>1 decision</b> for you · rest auto-managed</div></div></div></div>
+      </div>
+      <div class="mini"><div class="mh">🔻 Funnel <span class="faint" style="font-weight:600;font-size:11px">· grounding a brief</span></div>
+        <div class="step done"><div class="ic">🔒</div><div class="c"><div class="toprow"><span class="tool">load_brand<span class="paren">()</span></span><span class="chk">✓</span></div><div class="lab">Loading your brand definition</div><div class="res"><div class="rv">positioning + voice + values</div></div></div></div>
+        <div class="step done"><div class="ic">⚔️</div><div class="c"><div class="toprow"><span class="tool">check_vs_rivals<span class="paren">()</span></span><span class="chk">✓</span></div><div class="lab">Checking vs Gamegenic</div><div class="res"><div class="rv">where you can win Distinctive</div></div></div></div>
+        <div class="step done"><div class="ic">✦</div><div class="c"><div class="toprow"><span class="tool">generate_brief<span class="paren">()</span></span><span class="chk">✓</span></div><div class="lab">Generating the 7-slot brief</div><div class="res"><div class="rv"><b>brief grounded in your brand</b></div></div></div></div>
+      </div>
+    </div>
+    <div class="toolnote"><b style="color:var(--ink-soft)">NOTE TO TREVOR (not a product screen):</b> This demo is InfinityVault end-to-end (real low-conversion brand: build-quality gap → lifetime-warranty fix; rivals Gamegenic + Ultimate Guard). Already on <code>origin/main</code>: the free diagnostic, the Decision-Trigger engine, <code>generate_brief</code> + <code>claimGate</code>, and the image-upload seam. <span class="nn">Net-new</span> (week-1 focus): the screenshot→trust-gap forensic contract, the 4-brain→trigger map, and the <b>credit model</b> (free core + the brief-revision loop; a tiered subscription tops up credits for more) — build on a fresh branch off main, prove the forensic against real listings first. Free-to-try also removes the “charging for a wrong answer” risk.</div>
+    <div class="navrow"><button class="cta g" data-go="1">↺ Restart demo</button><span></span></div>
+  </div>
+
+</div></div></div>
+
+<script>
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  $('#segDev').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    $$('#segDev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    $('#device').classList.toggle('mobile',b.dataset.m==='mobile');});
+  let timers=[];
+  function clearT(){timers.forEach(clearTimeout);timers=[];}
+  function show(n){
+    $$('.scr').forEach(s=>s.classList.remove('on'));$('#s'+n).classList.add('on');
+    $$('.sc').forEach(s=>{const sn=+s.dataset.s;s.classList.toggle('on',sn===n);s.classList.toggle('done',sn<n&&n!==1);});
+    window.scrollTo(0,0);
+    if(n===4) runAnalysis(); else clearT();
+  }
+  $('#stepper').addEventListener('click',e=>{const s=e.target.closest('.sc');if(s)show(+s.dataset.s);});
+  document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t){e.preventDefault();show(+t.dataset.go);}
+    const o=e.target.closest('.opt');if(o){o.parentElement.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');}
+    const cpy=e.target.closest('.acts button');if(cpy&&/copy/i.test(cpy.textContent)){const ov=cpy.textContent;cpy.textContent='✓ Copied';setTimeout(()=>cpy.textContent=ov,1400);}
+    const cf=e.target.closest('.claimchip button');if(cf){const cc=cf.closest('.claimchip');cc.style.cssText='font-size:11px;background:var(--good-soft);color:#0f6b41;border:1px solid #bfe6cf;border-radius:8px;padding:7px 10px;margin-top:7px;font-weight:600';cc.innerHTML='✓ Lifetime warranty confirmed — added to your fixes.';}});
+  function type(el,txt){el.innerHTML='';let i=0;const cur=document.createElement('span');cur.className='cursor';
+    (function tick(){el.textContent=txt.slice(0,i);el.appendChild(cur);i++;if(i<=txt.length)timers.push(setTimeout(tick,16));})();}
+  function runAnalysis(){
+    clearT();
+    const steps=$$('#s4 .step');const n=steps.length;
+    steps.forEach(s=>s.classList.remove('run','done'));
+    $('#donecta').classList.remove('show');$('#prog').style.width='0';
+    $('#rhead').classList.remove('done');$('#rhead').innerHTML='<span class="dot"></span> Analyzing your InfinityVault listing…';
+    $('#rsub').textContent='You see exactly what the app is doing — every finding is backed by what it reads.';
+    let acc=200;
+    steps.forEach((s,i)=>{
+      timers.push(setTimeout(()=>{s.classList.add('run');type(s.querySelector('.sub2'),s.dataset.sub);},acc));
+      const dur=+s.dataset.dur;
+      timers.push(setTimeout(()=>{s.classList.remove('run');s.classList.add('done');$('#prog').style.width=Math.round((i+1)/n*100)+'%';},acc+dur));
+      acc+=dur+220;
+    });
+    timers.push(setTimeout(()=>{
+      $('#rhead').classList.add('done');$('#rhead').innerHTML='<span class="dot"></span> Analysis complete';
+      $('#rsub').textContent='6 tools run · your listing + 47 reviews read · 3 fixes found';
+      $('#donecta').classList.add('show');
+    },acc+150));
+  }
+  let revN=0;
+  function revise(){const b=document.getElementById('revbtn');if(!b)return;if(revN<10){revN++;b.textContent=revN<10?('↻ Revise ('+revN+'/10 free)'):'✓ 10/10 revisions used';}}
+  function runRescan(){const b=document.getElementById('rescanBtn'),body=document.getElementById('rbody');if(!b)return;b.textContent='⌁ scanning your listing + rivals…';b.disabled=true;setTimeout(()=>{body.classList.add('show');b.textContent='✓ re-scanned';b.disabled=false;},1100);}
+  function toggleF(fr){const f=fr.closest('.find');const was=f.classList.contains('open');
+    $$('#s5 .find').forEach(x=>x.classList.remove('open','on'));$$('#s5 .pin').forEach(p=>p.classList.remove('on'));
+    if(!was){f.classList.add('open','on');const pin=document.querySelector('#s5 .pin[data-f="'+f.dataset.find+'"]');if(pin)pin.classList.add('on');}}
+  $$('#s5 .pin').forEach(p=>p.addEventListener('click',()=>{const f=document.querySelector('#s5 .find[data-find="'+p.dataset.f+'"]');if(f){toggleF(f.querySelector('.fr'));f.scrollIntoView({behavior:'smooth',block:'center'});}}));
+</script>
+</body>
+</html>

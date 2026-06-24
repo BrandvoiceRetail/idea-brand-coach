@@ -1,34 +1,38 @@
 <wizard-report>
 # PostHog post-wizard report
 
-The wizard has completed server-side PostHog integration for the brand-coach MCP server using `posthog-node`. A new singleton client module (`src/mcp/posthog.ts`) was created, and 7 MCP tool files were instrumented with `capture` and `captureException` calls. The existing client-side `posthog-js` integration (in `src/lib/posthogClient.ts`) was left untouched. User correlation works automatically: the MCP server uses the Supabase JWT `userId` as the PostHog `distinctId`, which matches the `userId` already passed to `posthog.identify()` on the frontend.
+The wizard completed a targeted server-side instrumentation pass on the brand-coach MCP server. Eight new `captureMcpEvent` calls were added across seven previously uninstrumented tool handlers, covering the full owned asset chain (concepts → draft → publish-filter → design-test), the output engine terminal (workbook export + audit-idea map), and the Trust Gap diagnostic. Exception tracking via `captureMcpException` was added to the `export_workbook` failure path. All edits used the existing `src/mcp/posthog.ts` singleton — no new infrastructure was introduced. Environment variables (`POSTHOG_API_KEY`, `POSTHOG_HOST`) were confirmed present and values written to `.env`.
 
 | Event | Description | File |
-|---|---|---|
-| `mcp_signature_generated` | MCP `generate_signature` returned Signature options; properties: `options_count`, `grounding`, `used_reviews`, `used_context_bundle` | `src/mcp/tools/generateSignature.ts` |
-| `mcp_signature_persisted` | User's chosen Signature was written to DB; properties: `chosen_option`, `grounding` | `src/mcp/tools/persistSignature.ts` |
-| `mcp_signature_persist_failed` | `persist_signature` error path; also captures exception via `captureException`; property: `error_class` | `src/mcp/tools/persistSignature.ts` |
-| `mcp_evidence_ingested` | Evidence snapshot written (reviews/listing); properties: `reviews_parsed`, `listing_captured` | `src/mcp/tools/ingestEvidence.ts` |
-| `mcp_context_provided` | Context-slot answers persisted; properties: `answers`, `persisted`, `failed` | `src/mcp/tools/provideContext.ts` |
-| `mcp_avatar_stage_completed` | Single forensic stage (s1–s4) persisted; property: `stage` | `src/mcp/tools/buildAvatarStage.ts` |
-| `mcp_avatar_pipeline_completed` | Full S1→S5 pipeline completed; properties: `stages_count`, `signature_gated` | `src/mcp/tools/buildAvatarStage.ts` |
-| `mcp_http_error` | Unhandled error in the MCP HTTP layer; also captures exception; property: `error_name` | `src/mcp/http.ts` |
+|-------|-------------|------|
+| `mcp_concepts_generated` | Successful concept generation — first step in the owned asset chain. Properties: `count`, `channel`. | `src/mcp/tools/generateConcepts.ts` |
+| `mcp_publish_filter_checked` | Publish-filter compliance gate run. Properties: `verdict` (pass/warn/fail), `violation_count`, `channel`. | `src/mcp/tools/publishFilterCheck.ts` |
+| `mcp_asset_drafted` | Brand copy drafted successfully. Properties: `format`, `has_user_context`, `recorded`. | `src/mcp/tools/draftAsset.ts` |
+| `mcp_design_test_created` | A/B test spec created — final asset-chain step. Properties: `variant_count`, `primary_metric`, `channel`. | `src/mcp/tools/designTest.ts` |
+| `mcp_trust_gap_run` | Trust Gap™ scorecard computed. Properties: `primary_gap`, `overall_score`. | `src/mcp/tools/runTrustGap.ts` |
+| `mcp_workbook_exported` | Gold workbook exported successfully. Properties: `which` (A/B), `sheet_count`, `missing_count`, `uploaded`. | `src/mcp/tools/exportWorkbook.ts` |
+| `mcp_workbook_needs_input` | Workbook export attempted but artifact chain incomplete. Properties: `which`, `missing_count`. | `src/mcp/tools/exportWorkbook.ts` |
+| `mcp_audit_idea_map_generated` | Audit × IDEA map persisted. Properties: `grounding`, `row_count`. | `src/mcp/tools/generateAuditIdeaMap.ts` |
 
 ## Next steps
 
-We've built some insights and a dashboard for you to keep an eye on user behavior, based on the events we just instrumented:
+We've built a dashboard and five insights to track MCP tool usage:
 
-- **Dashboard — Analytics basics (wizard):** [https://eu.posthog.com/project/195536/dashboard/730156](https://eu.posthog.com/project/195536/dashboard/730156)
-- **Signature Creation Funnel:** [https://eu.posthog.com/project/195536/insights/NJkmzvD3](https://eu.posthog.com/project/195536/insights/NJkmzvD3)
-- **Signatures Persisted Over Time:** [https://eu.posthog.com/project/195536/insights/Y2DAjawI](https://eu.posthog.com/project/195536/insights/Y2DAjawI)
-- **MCP Tool Activity:** [https://eu.posthog.com/project/195536/insights/RScPMQwt](https://eu.posthog.com/project/195536/insights/RScPMQwt)
-- **MCP Error Monitoring:** [https://eu.posthog.com/project/195536/insights/OWpYascK](https://eu.posthog.com/project/195536/insights/OWpYascK)
-- **Avatar Pipeline Completions:** [https://eu.posthog.com/project/195536/insights/MdgK5yo8](https://eu.posthog.com/project/195536/insights/MdgK5yo8)
+- [Analytics basics (wizard) — Dashboard](https://eu.posthog.com/project/203641/dashboard/753499)
+- [MCP Asset Chain Activity (wizard)](https://eu.posthog.com/project/203641/insights/zTGIES0Z)
+- [Output Engine Activity (wizard)](https://eu.posthog.com/project/203641/insights/SBKQDmwt)
+- [Publish Filter Verdict Breakdown (wizard)](https://eu.posthog.com/project/203641/insights/F0yLR0er)
+- [Workbook Export vs Needs Input (wizard)](https://eu.posthog.com/project/203641/insights/DfyPG16k)
+- [Diagnostics & Feedback (wizard)](https://eu.posthog.com/project/203641/insights/P9bZbYq6)
 
-Before the MCP server starts firing events, make sure `.env` contains both `POSTHOG_API_KEY` and `POSTHOG_HOST` (set by this wizard). The MCP server must be restarted (`npm run mcp:start`) to pick up the new env vars and the `posthog-node` dependency.
+## Verify before merging
+
+- [ ] Run a full production build (`npm run build` / `npm run typecheck:mcp`) and fix any lint or type errors introduced by the generated code.
+- [ ] Run the test suite (`npm test`) — instrumented call sites may need updated mocks or fixtures.
+- [ ] Add `POSTHOG_API_KEY` and `POSTHOG_HOST` to `.env.example` (and any bootstrap/onboarding scripts) so collaborators know what to set.
 
 ### Agent skill
 
-We've left an agent skill folder in your project. You can use this context for further agent development when using Claude Code. This will help ensure the model provides the most up-to-date approaches for integrating PostHog.
+We've left an agent skill folder in your project at `.claude/skills/integration-javascript_node/`. You can use this context for further agent development when using Claude Code. This will help ensure the model provides the most up-to-date approaches for integrating PostHog.
 
 </wizard-report>

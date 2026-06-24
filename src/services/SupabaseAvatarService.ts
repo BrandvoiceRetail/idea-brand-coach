@@ -211,4 +211,40 @@ export class SupabaseAvatarService implements IAvatarService {
 
     return data.map(item => this.mapAvatarFromDb(item));
   }
+
+  /**
+   * Return the user's default avatar, creating it only if the user has none.
+   * Idempotent and race-safe — see IAvatarService.getOrCreateDefaultAvatar.
+   */
+  async getOrCreateDefaultAvatar(name: string = 'Default Avatar'): Promise<Avatar> {
+    // If the user already has any avatar, never create another.
+    const existing = await this.getAll();
+    if (existing.length > 0) {
+      return existing.find(avatar => avatar.name === name) ?? existing[0];
+    }
+
+    try {
+      return await this.create({ name });
+    } catch (error) {
+      // A concurrent create (e.g. a second tab) trips the (user_id, name) unique
+      // index. Treat that as "already exists" and return whichever row won.
+      if (this.isUniqueViolation(error)) {
+        const afterRace = await this.getAll();
+        const match = afterRace.find(avatar => avatar.name === name) ?? afterRace[0];
+        if (match) return match;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Detect a Postgres unique-violation (SQLSTATE 23505) surfaced by Supabase.
+   */
+  private isUniqueViolation(error: unknown): boolean {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      (error as { code?: string }).code === '23505'
+    );
+  }
 }

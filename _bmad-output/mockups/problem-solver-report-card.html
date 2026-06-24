@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDEA Brand Coach — Forensic Report-Card (option C)</title>
+<style>
+  :root{
+    --ink:#1d2433;--ink-soft:#55607a;--ink-faint:#8a93a8;--bg:#f6f4ef;--surface:#fff;--line:#e7e3da;
+    --primary:#5b4bd6;--primary-soft:#efecfc;--primary-ink:#3a2eaa;
+    --good:#1f9d62;--good-soft:#e6f5ed;--warn:#c0392b;--warn-soft:#fdecea;--amber:#d99a2b;--amber-soft:#fbf3e1;
+    --teal:#0f8f86;--teal-soft:#e3f4f1;--teal-ink:#0a6e66;--shadow:0 1px 2px rgba(20,24,40,.04),0 8px 24px rgba(20,24,40,.06);--serif:"Iowan Old Style",Georgia,serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer} .faint{color:var(--ink-faint)} .muted{color:var(--ink-soft)}
+  .toolbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .seg{margin-left:auto;display:inline-flex;background:#eceae3;border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--ink-soft);font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .stage{display:flex;justify-content:center;padding:24px 16px 70px}
+  .device{width:100%;max-width:960px;transition:max-width .35s ease} .device.mobile{max-width:402px}
+  .device.mobile .frame{border-radius:34px;border:11px solid #11131c;box-shadow:0 30px 60px rgba(20,24,40,.22)}
+  .frame{background:var(--bg);border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+
+  .rhead{padding:16px 20px;background:#13182a;color:#fff}
+  .rhead .t{font-family:var(--serif);font-size:18px} .rhead .s{font-size:12px;color:#aeb6cd;margin-top:2px}
+  .rhead .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:11px}
+  .kpi{background:#1c2238;border:1px solid #2a3252;border-radius:10px;padding:8px 12px}
+  .kpi .v{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums} .kpi .v.bad{color:#ff8a7a} .kpi .l{font-size:10.5px;color:#aeb6cd}
+  .kpi.buyer .v{font-size:13px;color:#cfd4e4}
+
+  .body{display:grid;grid-template-columns:1fr 360px;gap:0} .device.mobile .body{grid-template-columns:1fr}
+  .listingwrap{padding:18px 16px;border-right:1px solid var(--line)} .device.mobile .listingwrap{border-right:0;border-bottom:1px solid var(--line)}
+  .listing{background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px;position:relative}
+  .lgrid{display:grid;grid-template-columns:140px 1fr;gap:13px} .device.mobile .lgrid{grid-template-columns:1fr}
+  .limg{background:#f0eef9;border-radius:10px;aspect-ratio:1;display:grid;place-items:center;font-size:44px;position:relative}
+  .lti{font-size:14px;font-weight:700;margin-bottom:7px}
+  .listing ul{margin:0;padding-left:17px;font-size:12.5px;color:var(--ink-soft)} .listing li{margin:3px 0}
+  .aplus{margin-top:11px;border-top:1px dashed var(--line);padding-top:9px;font-size:11.5px;color:var(--ink-faint)}
+  .pin{position:absolute;width:24px;height:24px;border-radius:50%;background:var(--warn);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;box-shadow:0 2px 8px rgba(192,57,43,.4);cursor:pointer;border:2px solid #fff}
+  .pin.on{background:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
+  .pininline{display:inline-grid;position:static;vertical-align:middle;margin-left:5px;width:20px;height:20px;font-size:11px}
+
+  .findings{padding:16px;overflow:auto}
+  .findings .fh{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:10px}
+  .find{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:9px;overflow:hidden}
+  .find.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+  .find .fr{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;cursor:pointer}
+  .find .num{width:22px;height:22px;border-radius:50%;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;font-weight:800;font-size:11px;flex:none}
+  .find .fm{flex:1;min-width:0}
+  .find .wrong{font-size:13px;font-weight:700} .find .why{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+  .find .imp{font-size:10px;font-weight:800;border-radius:999px;padding:2px 7px;white-space:nowrap} .imp.hi{background:var(--good-soft);color:var(--good)} .imp.md{background:var(--amber-soft);color:#92671a}
+  .find .fix{display:none;padding:0 12px 12px} .find.open .fix{display:block}
+  .fixlead{font-size:12.5px;background:var(--teal-soft);border:1px solid #c7e8e3;border-radius:10px;padding:9px 11px;margin-bottom:8px}
+  .fixlead b{color:var(--teal-ink)}
+  .out{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .out .oh{font-size:10.5px;font-weight:700;padding:7px 10px;background:#faf8f3;border-bottom:1px solid var(--line)}
+  .out pre{margin:0;padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:11px;line-height:1.5;white-space:pre-wrap;background:#15123a;color:#e7e3ff}
+  .out .acts{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--line)} .out .acts button{border:0;border-radius:7px;padding:6px 10px;font-size:11px;font-weight:700} .acts .c{background:var(--teal);color:#fff} .acts .g{background:#fff;border:1px solid var(--line)!important;color:var(--ink-soft)}
+  .claimchip{font-size:10.5px;background:var(--amber-soft);color:#92671a;border:1px solid #f0d9b3;border-radius:8px;padding:5px 9px;margin-top:7px;display:flex;gap:6px;align-items:center}
+
+  .foot{padding:13px 16px;border-top:1px solid var(--line);background:#fbfaf7;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .foot .est{font-size:12.5px} .foot .est b{color:var(--good)}
+  .rescan{margin-left:auto;font-size:11.5px;color:var(--ink-soft);background:#fff;border:1px dashed var(--line);border-radius:999px;padding:6px 12px;font-weight:600}
+  .toolnote{font-size:11px;color:var(--ink-faint);padding:11px 16px} .toolnote code{background:#efe9e0;border-radius:5px;padding:1px 5px;font-size:10.5px} .toolnote .nn{color:var(--amber);font-weight:700}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <b>● Forensic Report-Card — option C</b><span class="faint" style="font-size:12px">mockup · the paid deliverable</span>
+  <div class="seg" id="segDev"><button data-m="desktop" class="on">🖥 Desktop</button><button data-m="mobile">📱 Mobile</button></div>
+</div>
+
+<div class="stage"><div class="device" id="device"><div class="frame">
+  <div class="rhead">
+    <div class="t">Forensic Listing Report</div>
+    <div class="s">InfinityVault · 216-Card Binder · analyzed from your screenshot</div>
+    <div class="row">
+      <div class="kpi"><div class="v bad">4.8%</div><div class="l">your conversion</div></div>
+      <div class="kpi"><div class="v">3</div><div class="l">trust gaps found</div></div>
+      <div class="kpi buyer"><div class="v">🧠 Safety-led buyer</div><div class="l">protecting valuable cards</div></div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="listingwrap">
+      <div class="fh" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:9px">Your listing — tap a pin</div>
+      <div class="listing">
+        <div class="lgrid">
+          <div class="limg">🗄️<span class="pin" data-f="1" style="top:8px;left:8px">1</span></div>
+          <div>
+            <div class="lti">InfinityVault 216-Card Binder — Trading Card Storage <span class="pin pininline" data-f="2">2</span></div>
+            <ul><li>Holds 216 cards in 9-pocket pages</li><li>Zip-up cover keeps cards in place</li><li>Durable PU leather exterior</li></ul>
+          </div>
+        </div>
+        <div class="aplus">A+ content: generic specs table — no lifestyle context <span class="pin pininline" data-f="3">3</span></div>
+      </div>
+      <p class="muted" style="font-size:11.5px;margin:10px 2px 0">Every finding cites something visible in your listing — no guesswork.</p>
+    </div>
+
+    <div class="findings">
+      <div class="fh">What's costing you the sale</div>
+
+      <div class="find on open" data-find="1"><div class="fr" onclick="toggleF(this)"><span class="num">1</span><div class="fm"><div class="wrong">Hero is product-on-white</div><div class="why">Build quality is the #1 doubt — and a flat studio shot gives the buyer’s Safety brain zero reassurance.</div></div><span class="imp hi">High</span></div>
+        <div class="fix">
+          <div class="fixlead">✦ Fix: <b>show the build + add a reassurance signal.</b> Safety-led buyers need to SEE it’s sturdy, then be told the risk is covered.</div>
+          <div class="out"><div class="oh">Design brief — new hero (1 of a 7-slot set)</div><pre>Macro hero: stitched edge + metal zip + a card sliding into a snug
+pocket. Brass + charcoal, "vault-grade" feel. Overlay a small
+"Lifetime Warranty" badge. Headline space top-left.</pre><div class="acts"><button class="c">⬇ Open 7-slot brief</button><button class="g">⧉ Copy prompt</button></div></div>
+        </div>
+      </div>
+
+      <div class="find" data-find="2"><div class="fr" onclick="toggleF(this)"><span class="num">2</span><div class="fm"><div class="wrong">Bullets are feature-led, no warranty</div><div class="why">“216 cards / PU leather” is logic for an emotional, protective purchase. No risk-reversal anywhere.</div></div><span class="imp hi">High</span></div>
+        <div class="fix">
+          <div class="fixlead">✦ Fix: <b>lead bullet 1 with a Lifetime Warranty</b> (the strongest Safety trigger — low claim rate, huge trust).</div>
+          <div class="out"><div class="oh">Content prompt — bullet + badge</div><pre>Rewrite bullet 1 to lead with a LIFETIME WARRANTY for InfinityVault's
+216-card binder. Voice: confident, collector-to-collector.
+"BACKED FOR LIFE — if your vault ever fails, we replace it, free."</pre><div class="acts"><button class="c">⧉ Copy prompt</button></div>
+          <div class="claimchip">⚠ “Lifetime warranty” is a guarantee claim — <b>confirm you offer it</b> before we put it on your listing. <button style="margin-left:6px;border:0;background:var(--teal);color:#fff;border-radius:6px;padding:3px 9px;font-weight:700;font-size:10.5px">I confirm</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="find" data-find="3"><div class="fr" onclick="toggleF(this)"><span class="num">3</span><div class="fm"><div class="wrong">A+ content has no lifestyle context</div><div class="why">No game-night or tournament imagery, so it reads as a commodity next to Gamegenic.</div></div><span class="imp md">Medium</span></div>
+        <div class="fix"><div class="fixlead">✦ Fix: <b>3 lifestyle A+ modules</b> — solo organizing · small-group game night · tournament prep (“be the one who’s always prepared”).</div>
+          <div class="out"><div class="oh">Design brief — A+ module set</div><div class="acts"><button class="c">⬇ Open A+ brief</button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="est">Implement all 3 → <b>est. +1.8–2.4 pts</b> conversion <span class="faint">(range, not a guarantee)</span></div>
+    <span class="rescan">↻ We’ll re-scan in 14 days &amp; show what moved</span>
+  </div>
+  <div class="toolnote">“Sell the deliverable by showing it.” Real: <code>decisionTrigger</code> engine (SHIPPED, origin/main 3e97dfe) derives the triggers; <code>generate_brief</code> makes the 7-slot brief; <code>claimGate</code> drives the warranty confirm; <code>ImageUpload</code> + consultant image path ingest the screenshot. <span class="nn">Net-new</span>: the screenshot→trust-gap-keyed forensic CONTRACT (+ pull the ASIN’s reviews so the paid read beats the free one), the 4-brain→trigger map, and the paywall.</div>
+</div></div></div>
+
+<script>
+  document.getElementById('segDev').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#segDev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    document.getElementById('device').classList.toggle('mobile',b.dataset.m==='mobile');});
+  function toggleF(fr){const f=fr.closest('.find');const wasOpen=f.classList.contains('open');
+    document.querySelectorAll('.find').forEach(x=>x.classList.remove('open','on'));
+    document.querySelectorAll('.pin').forEach(p=>p.classList.remove('on'));
+    if(!wasOpen){f.classList.add('open','on');const id=f.dataset.find;const pin=document.querySelector('.pin[data-f="'+id+'"]');if(pin)pin.classList.add('on');}}
+  document.querySelectorAll('.pin').forEach(p=>p.addEventListener('click',()=>{const id=p.dataset.f;const f=document.querySelector('.find[data-find="'+id+'"]');if(f){const fr=f.querySelector('.fr');toggleF(fr);f.scrollIntoView({behavior:'smooth',block:'center'});}}));
+</script>
+</body>
+</html>

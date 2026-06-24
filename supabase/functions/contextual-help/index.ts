@@ -1,6 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,12 +15,26 @@ serve(async (req) => {
   }
 
   try {
+    // AuthN: require an authenticated user. verify_jwt alone is insufficient (the public
+    // anon key is itself a valid JWT); getUser() rejects the anon token and closes
+    // unauthenticated LLM cost-abuse.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const authClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { question, category, context } = await req.json();
 
     const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-    console.log('API key exists:', !!anthropicApiKey);
-    console.log('API key length:', anthropicApiKey?.length || 0);
-    
     if (!anthropicApiKey) {
       throw new Error('Anthropic API key not configured');
     }
@@ -80,7 +95,6 @@ Provide specific, actionable guidance that helps the user answer this question e
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${anthropicApiKey}`,
         'Content-Type': 'application/json',
         'anthropic-version': '2023-06-01',
         'x-api-key': anthropicApiKey,
@@ -117,7 +131,7 @@ Provide specific, actionable guidance that helps the user answer this question e
     });
   } catch (error) {
     console.error('Error in contextual-help function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
