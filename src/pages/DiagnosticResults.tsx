@@ -25,6 +25,8 @@ import { TrustGapScorecard, type AvatarOverlay } from '@/components/diagnostic/T
 import { DecisionTriggerPanel } from '@/components/decision-trigger/DecisionTriggerPanel';
 import { AvatarCompareSelectorCard } from '@/components/diagnostic/AvatarCompareSelectorCard';
 import { ProductImportCta } from '@/components/diagnostic/ProductImportCta';
+import { DiagnosticLeadCapture } from '@/components/diagnostic/DiagnosticLeadCapture';
+import { ForensicAnalysisPanel } from '@/components/diagnostic/ForensicAnalysisPanel';
 import { useServices } from '@/services/ServiceProvider';
 import type {
   ImportedProduct,
@@ -331,6 +333,27 @@ export default function DiagnosticResults() {
               isAuthenticated={!!user}
             />
           </div>
+
+          {/* Email-capture lead magnet for anonymous visitors — sends the Trust Gap
+              report by email. Authed users skip it (they already have an account);
+              the signup/booking CTAs below coexist as an upsell. */}
+          {!user && (
+            <div className="mb-8">
+              <DiagnosticLeadCapture scores={fallbackScores} answers={diagnosticData.answers} />
+            </div>
+          )}
+
+          {/* Signed-in deeper-analysis step: the forensic, review-grounded read that
+              follows the self-report scorecard — the post-signup value. Seeds the
+              ASIN from the most-recently imported listing when one exists. */}
+          {user && (
+            <div className="mb-8">
+              <ForensicAnalysisPanel
+                selfReportScores={fallbackScores}
+                defaultAsin={importedProducts[0]?.asin}
+              />
+            </div>
+          )}
 
           {/* Compare avatars side by side against the brand baseline (Loop 09 B2) */}
           {user && comparableAvatars.length > 0 && (

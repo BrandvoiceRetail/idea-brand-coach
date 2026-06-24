@@ -63,7 +63,7 @@ export function ContextAvatarChecklist({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className={cn('flex items-center gap-2 min-w-[180px] justify-between', className)}
+          className={cn('flex items-center gap-2 min-w-0 sm:min-w-[180px] justify-between', className)}
           aria-label="Choose coaching avatars"
         >
           <span className="flex items-center gap-1.5 truncate">

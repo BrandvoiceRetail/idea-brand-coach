@@ -28,11 +28,22 @@ export default function Auth() {
   const [emailErrors, setEmailErrors] = useState('');
   const [passwordErrors, setPasswordErrors] = useState('');
   const [nameErrors, setNameErrors] = useState('');
-  const { signIn, signUp, signOut, resetPassword, user, loading, signInWithGoogle } = useAuth();
+  // Set after a sign-up that returns no session (email confirmation required) so
+  // we show a persistent "check your email" panel instead of routing into the app.
+  const [pendingConfirmEmail, setPendingConfirmEmail] = useState<string | null>(null);
+  // Password-recovery (set-new-password) form state.
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [confirmPasswordErrors, setConfirmPasswordErrors] = useState('');
+  const { signIn, signUp, signOut, resetPassword, updatePassword, user, loading, isRecovering, signInWithGoogle } = useAuth();
   const { syncFromLocalStorage } = useDiagnostic();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // The password-reset email links to /auth?mode=reset; isRecovering is set when
+  // the recovery session arrives. Either signal puts us in set-new-password mode.
+  const isPasswordReset = searchParams.get('mode') === 'reset' || isRecovering;
 
   // Get redirect URL from query params
   // If no redirect specified, check if user completed diagnostic (should go to subscribe)
@@ -131,10 +142,17 @@ export default function Auth() {
     if (!isNameValid || !isEmailValid || !isPasswordValid) return;
 
     setIsLoading(true);
-    const { error } = await signUp(email, password, fullName);
+    const { error, needsConfirmation } = await signUp(email, password, fullName);
 
     if (!error) {
       setIsLoading(false);
+
+      // Email confirmation required: do NOT navigate into a sessionless app.
+      // Surface a persistent panel telling the user to confirm their email.
+      if (needsConfirmation) {
+        setPendingConfirmEmail(email);
+        return;
+      }
 
       // Navigate first
       navigate(redirectUrl);
@@ -196,12 +214,127 @@ export default function Auth() {
       setResetEmail('');
     }
   };
-  
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validatePassword(newPassword)) return;
+    if (newPassword !== confirmNewPassword) {
+      setConfirmPasswordErrors('Passwords do not match');
+      return;
+    }
+    setConfirmPasswordErrors('');
+
+    setIsLoading(true);
+    const { error } = await updatePassword(newPassword);
+    setIsLoading(false);
+
+    if (error) {
+      const message = error instanceof Error ? error.message : 'Could not update your password. Please try again.';
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Password updated",
+        description: "You're all set — taking you into Brand Coach.",
+      });
+      // Resolve through VersionGate (defaults to V2) — never /v1.
+      navigate(ROUTES.APP_ROOT);
+    }
+  };
+
   // Show loading state while checking auth
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Password-recovery: a reset link established a recovery session. Show a
+  // set-new-password form BEFORE the "already signed in" branch so the recovery
+  // session never dead-ends on the account-management card (which routed to /v1).
+  if (isPasswordReset) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Set a new password</CardTitle>
+            <CardDescription>
+              Choose a new password for your account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    validatePassword(e.target.value);
+                  }}
+                  placeholder="Choose a secure password (min. 6 characters)"
+                  required
+                />
+                {passwordErrors && <p className="text-sm text-destructive">{passwordErrors}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-new-password">Confirm new password</Label>
+                <Input
+                  id="confirm-new-password"
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => {
+                    setConfirmNewPassword(e.target.value);
+                    setConfirmPasswordErrors('');
+                  }}
+                  placeholder="Re-enter your new password"
+                  required
+                />
+                {confirmPasswordErrors && <p className="text-sm text-destructive">{confirmPasswordErrors}</p>}
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update password"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+        <BetaNavigationWidget />
+      </div>
+    );
+  }
+
+  // Sign-up succeeded but no session (email confirmation required). Show a
+  // persistent panel rather than dropping the user into a sessionless app.
+  if (pendingConfirmEmail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Check your email</CardTitle>
+            <CardDescription>
+              We've sent a confirmation link to <span className="font-medium text-foreground">{pendingConfirmEmail}</span>.
+              Click it to activate your account, then come back and sign in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setPendingConfirmEmail(null)}
+            >
+              Back to sign in
+            </Button>
+          </CardContent>
+        </Card>
+        <BetaNavigationWidget />
       </div>
     );
   }
@@ -216,8 +349,8 @@ export default function Auth() {
             <CardDescription>You are already signed in as {user.email}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button 
-              onClick={() => navigate(ROUTES.HOME_PAGE)} 
+            <Button
+              onClick={() => navigate(ROUTES.APP_ROOT)}
               className="w-full"
             >
               Go to Dashboard
@@ -242,7 +375,7 @@ export default function Auth() {
         <div className="flex justify-between items-center mb-4">
           <Button
             variant="ghost"
-            onClick={() => navigate(ROUTES.HOME_PAGE)}
+            onClick={() => navigate(ROUTES.APP_ROOT)}
             className="flex items-center gap-2"
           >
             <Home className="w-4 h-4" />

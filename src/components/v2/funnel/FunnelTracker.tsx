@@ -152,7 +152,10 @@ export function FunnelTracker(): JSX.Element {
   const { coverage, assets, tests, avatarFieldCount, loading, refresh, auditAsset, reauditAll, brandTags, setBrandTags, service } = useFunnelTracker(selectedAvatarId);
   const competitorEnabled = isCompetitorAgentsEnabled();
 
-  if (!selectedAvatarId) {
+  // Gate on the user too, not just the avatar: a signed-out visitor can carry a
+  // stale selectedAvatarId in localStorage, which would otherwise render the full
+  // dashboard and fire authed queries instead of the sign-in CTA.
+  if (!user || !selectedAvatarId) {
     return (
       <div className="mx-auto max-w-3xl p-10 text-center">
         <p className="text-muted-foreground">Map your funnel against a customer avatar — upload your touchpoints and the coach audits each against your avatar + Signature.</p>

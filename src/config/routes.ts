@@ -9,6 +9,14 @@ export const ROUTES = {
   /** The main landing page for authenticated users */
   HOME_PAGE: '/v1/start-here',
 
+  /**
+   * App root. Resolves through VersionGate to the user's chosen version
+   * (defaults to V2). Use this for "home"/"dashboard" navigations so V2 users
+   * are not dumped into the legacy /v1 shell. HOME_PAGE is retained for legacy
+   * deep links that explicitly want the Classic start page.
+   */
+  APP_ROOT: '/',
+
   /** Authentication page */
   AUTH: '/auth',
 

@@ -26,6 +26,7 @@ import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import BrandDiagnostic from "./pages/BrandDiagnostic";
 import FreeDiagnostic from "./pages/FreeDiagnostic";
+import ProblemSolverDiagnostic from "./pages/v2/ProblemSolverDiagnostic";
 import DiagnosticResults from "./pages/DiagnosticResults";
 import JourneyBridge from "./components/diagnostic/JourneyBridge";
 import IdeaDiagnostic from "./pages/IdeaDiagnostic";
@@ -139,6 +140,18 @@ const App = () => {
                 } />
 
                 <Route path="/v2/funnel" element={<FunnelTracker />} />
+
+                {/* Reframed "Fix the Trust Gap" 8-screen Problem-Solver flow (Demo v2).
+                    Ports idea-brandcoach-DEMO-v2-trevor-spec.html: free diagnostic →
+                    auth-gated forensic run → customer profile + Decision Trigger fix.
+                    /v1/diagnostic still serves the original guest FreeDiagnostic. */}
+                <Route path="/v2/diagnostic" element={<ProblemSolverDiagnostic />} />
+
+                {/* Review route: the same flow with Movement 1 (Recognition) in front,
+                    per Trevor's Revised Entry Experience Brief (IDEA-APP-ENTRY-001 v1.1).
+                    Kept separate from /v2 so the live baseline is untouched while Trevor
+                    reviews Movement 1 before Movements 2/3 are built. */}
+                <Route path="/v3/diagnostic" element={<ProblemSolverDiagnostic showRecognition />} />
 
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
