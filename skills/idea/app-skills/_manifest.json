@@ -1,0 +1,93 @@
+{
+  "doc_ref": "IDEA-APP-SKILLS-001 v1.0",
+  "date": "2026-06-20",
+  "author": "Trevor Bradford, IDEA Brand Consultancy (Brandvoice Retail Ltd)",
+  "supersedes": "All previous skill lists and skill architecture documents. This is the authoritative version.",
+  "governing_principle": "Every skill exists to help a brand owner understand why their customer is not buying and what to fix first. We fix a measurable commercial problem (conversion), not sell brand strategy. The science is the engine, not the pitch.",
+  "source_documents": [
+    "IDEA_Skill_Architecture_v1.0.docx (IDEA-APP-SKILLS-001 v1.0) — master architecture",
+    "IDEA_Skill_Documents_01_02_04_06_09.docx — full content for skills 01, 02, 04, 06, 09",
+    "IDEA_Skill_Documents_03_05_07_08_10.docx — full content for skills 03, 05, 07, 08, 10",
+    "IDEA_Skill_04_Avatar_Forensic_Portrait_v1.1.docx — supersedes Skill 04 (demographics rationale)",
+    "IDEA_Avatar2_Dev_Brief_v1.0.docx (IDEA-AV2-DEV-001 v1.0) — three-layer Avatar 2.0 + Four Buyer States"
+  ],
+  "tiers": [
+    {
+      "tier": 1,
+      "name": "Foundation",
+      "skills": ["01", "02", "03"],
+      "function": "Powers everything. In context on every session. The lens through which all other skills are applied.",
+      "always_in_context": true
+    },
+    {
+      "tier": 2,
+      "name": "Diagnostic pipeline",
+      "skills": ["04", "05", "06", "07", "08"],
+      "function": "The analytical engine. Runs in sequence; each skill feeds the next. Produces the Avatar profile, buyer state classification, and Trust Gap Score.",
+      "sequential": true,
+      "sequence_rule": "07 runs first (corpus). 04 then 05 then 06; 05 (internal) must classify the dominant buyer state before 06 and 09 run. 08 enriches the S2 stage within 04."
+    },
+    {
+      "tier": 3,
+      "name": "Output and action",
+      "skills": ["09", "10", "11", "12", "13", "14"],
+      "function": "Translates diagnostic findings into things the user can act on immediately: Decision Trigger, design brief, CAPTURE copy, listing analysis."
+    },
+    {
+      "tier": 4,
+      "name": "Science engine",
+      "skills": ["15", "16", "17", "18", "19", "20"],
+      "function": "The behavioural science and neuroscience foundation. Informs precision of all outputs. Never visible to the user.",
+      "internal_only": true
+    }
+  ],
+  "skills": [
+    { "number": "01", "name": "IDEA Framework Core", "tier": 1, "scope": "Alpha", "user_facing": true, "internal_only": false, "always_in_context": true, "status_vs_previous": "updated", "depends_on": [], "file": "tier-1-foundation/01-idea-framework-core.md", "content_fidelity": "full" },
+    { "number": "02", "name": "Trevor's Voice and Coaching Philosophy", "tier": 1, "scope": "Alpha", "user_facing": true, "internal_only": false, "always_in_context": true, "status_vs_previous": "carried", "depends_on": ["01"], "file": "tier-1-foundation/02-trevors-voice-and-coaching-philosophy.md", "content_fidelity": "full" },
+    { "number": "03", "name": "Commercial Problem Frame", "tier": 1, "scope": "Alpha", "user_facing": true, "internal_only": false, "always_in_context": true, "status_vs_previous": "new", "depends_on": ["01"], "file": "tier-1-foundation/03-commercial-problem-frame.md", "content_fidelity": "full" },
+    { "number": "04", "name": "Avatar 2.0: Forensic Portrait", "tier": 2, "scope": "Alpha", "user_facing": true, "internal_only": false, "always_in_context": false, "status_vs_previous": "rebuilt", "version": "v1.1", "depends_on": ["07"], "file": "tier-2-diagnostic-pipeline/04-avatar-2.0-forensic-portrait.md", "content_fidelity": "full" },
+    { "number": "05", "name": "The Four Buyer States Engine", "tier": 2, "scope": "Alpha", "user_facing": false, "internal_only": true, "always_in_context": false, "status_vs_previous": "new", "depends_on": ["04", "07", "06"], "file": "tier-2-diagnostic-pipeline/05-four-buyer-states-engine.md", "content_fidelity": "full" },
+    { "number": "06", "name": "The Trust Gap Score", "tier": 2, "scope": "Alpha", "user_facing": true, "internal_only": false, "always_in_context": false, "status_vs_previous": "updated", "depends_on": ["07", "05"], "file": "tier-2-diagnostic-pipeline/06-trust-gap-score.md", "content_fidelity": "full" },
+    { "number": "07", "name": "Review Corpus Analysis", "tier": 2, "scope": "Alpha", "user_facing": false, "internal_only": false, "always_in_context": false, "status_vs_previous": "new", "depends_on": [], "file": "tier-2-diagnostic-pipeline/07-review-corpus-analysis.md", "content_fidelity": "full" },
+    { "number": "08", "name": "Purchase Motivation", "tier": 2, "scope": "Alpha", "user_facing": true, "internal_only": false, "always_in_context": false, "status_vs_previous": "new", "depends_on": ["07"], "file": "tier-2-diagnostic-pipeline/08-purchase-motivation.md", "content_fidelity": "full" },
+    { "number": "09", "name": "The Decision Trigger", "tier": 3, "scope": "Alpha", "user_facing": true, "internal_only": false, "always_in_context": false, "status_vs_previous": "rebuilt", "depends_on": ["05", "06", "07"], "file": "tier-3-output-and-action/09-decision-trigger.md", "content_fidelity": "full" },
+    { "number": "10", "name": "The Design Brief Generator", "tier": 3, "scope": "Alpha", "user_facing": true, "internal_only": false, "always_in_context": false, "status_vs_previous": "new", "depends_on": ["09", "05", "04"], "file": "tier-3-output-and-action/10-design-brief-generator.md", "content_fidelity": "full" },
+    { "number": "11", "name": "CAPTURE Framework", "tier": 3, "scope": "Beta", "user_facing": true, "internal_only": false, "always_in_context": false, "status_vs_previous": "carried", "depends_on": ["09", "04"], "file": "tier-3-output-and-action/11-capture-framework.md", "content_fidelity": "summary", "detailed_doc_pending": true },
+    { "number": "12", "name": "Listing Analysis", "tier": 3, "scope": "Alpha", "user_facing": true, "internal_only": false, "always_in_context": false, "status_vs_previous": "carried", "depends_on": ["07", "06"], "file": "tier-3-output-and-action/12-listing-analysis.md", "content_fidelity": "summary", "detailed_doc_pending": true },
+    { "number": "13", "name": "Brand Canvas Outputs", "tier": 3, "scope": "Beta", "user_facing": true, "internal_only": false, "always_in_context": false, "status_vs_previous": "carried", "depends_on": ["04", "06"], "file": "tier-3-output-and-action/13-brand-canvas-outputs.md", "content_fidelity": "summary", "detailed_doc_pending": true },
+    { "number": "14", "name": "Competitor Trust Gap Analysis", "tier": 3, "scope": "Beta", "user_facing": true, "internal_only": false, "always_in_context": false, "status_vs_previous": "carried", "depends_on": ["06", "07"], "file": "tier-3-output-and-action/14-competitor-trust-gap-analysis.md", "content_fidelity": "summary", "detailed_doc_pending": true },
+    { "number": "15", "name": "Bolte Taylor: Four Buyer States Foundation", "tier": 4, "scope": "Alpha", "user_facing": false, "internal_only": true, "always_in_context": false, "status_vs_previous": "new", "depends_on": [], "file": "tier-4-science-engine/15-bolte-taylor-four-buyer-states.md", "content_fidelity": "summary", "detailed_doc_pending": true },
+    { "number": "16", "name": "Zaltman: The Subconscious Purchase Decision", "tier": 4, "scope": "Alpha", "user_facing": false, "internal_only": true, "always_in_context": false, "status_vs_previous": "carried", "depends_on": [], "file": "tier-4-science-engine/16-zaltman-subconscious-purchase.md", "content_fidelity": "summary", "detailed_doc_pending": true },
+    { "number": "17", "name": "Kahneman: System 1 and System 2", "tier": 4, "scope": "Alpha", "user_facing": false, "internal_only": true, "always_in_context": false, "status_vs_previous": "carried", "depends_on": [], "file": "tier-4-science-engine/17-kahneman-system-1-and-2.md", "content_fidelity": "summary", "detailed_doc_pending": true },
+    { "number": "18", "name": "Cialdini: The Six Principles of Influence", "tier": 4, "scope": "Alpha", "user_facing": false, "internal_only": true, "always_in_context": false, "status_vs_previous": "carried", "depends_on": [], "file": "tier-4-science-engine/18-cialdini-influence.md", "content_fidelity": "summary", "detailed_doc_pending": true },
+    { "number": "19", "name": "Shotton: Behavioural Economics in Practice", "tier": 4, "scope": "Alpha", "user_facing": false, "internal_only": true, "always_in_context": false, "status_vs_previous": "new", "depends_on": [], "file": "tier-4-science-engine/19-shotton-behavioural-economics.md", "content_fidelity": "summary", "detailed_doc_pending": true },
+    { "number": "20", "name": "Lindstrom and Sutherland: Sensory and Irrational Value", "tier": 4, "scope": "Alpha", "user_facing": false, "internal_only": true, "always_in_context": false, "status_vs_previous": "carried", "depends_on": [], "file": "tier-4-science-engine/20-lindstrom-sutherland-sensory-irrational.md", "content_fidelity": "summary", "detailed_doc_pending": true }
+  ],
+  "totals": { "skills": 20, "tiers": 4 },
+  "scope_counts_by_skill_table": { "alpha": 17, "beta": 3 },
+  "scope_note": "The master-architecture header states '14 Alpha skills · 6 Beta skills' but the per-skill scope table yields 17 Alpha / 3 Beta (Beta = 11, 13, 14). This manifest follows the granular per-skill table. DISCREPANCY to confirm with Trevor.",
+  "terminology_policy": "IDEA-POLICY-TERM-001 v1.0 (2026-06-21) — three tiers. Tier A (Trust Gap™, Decision Trigger™, CAPTURE Framework™, Avatar 2.0™, the four pillar names) appears EVERYWHERE incl. app UI — it is the product's commercial distinctiveness; do not strip it. Tier B (The Assessor/Protector/Expresser/Connector, CAPTURE element names) appears on website/book and in app UI ONLY in opt-in expansion panels — never in primary output panels (Component 0, Avatar fields, placement instruction). Tier C (neuroanatomy, S1-S4 labels, field names, academic citations) NEVER appears in any user-facing surface. Supersedes the old blanket 'no framework terminology' rule.",
+  "hard_rules": [
+    "Tier C engine internals — neuroanatomical framing, S1-S4 stage labels, field names (dominant_buyer_state, copy_calibration_direction), academic citations (Bolte Taylor, Zaltman, Kahneman, Cialdini, Shotton, Lindstrom, Sutherland) — must NEVER appear in any user-facing output. The science disappears; the precision remains.",
+    "Tier B buyer-state names (Assessor, Protector, Expresser, Connector) and CAPTURE element names must NOT appear in primary output panels (Component 0, Avatar profile fields, placement instruction); they may appear only in optional opt-in expansion panels.",
+    "Tier A proprietary commercial terms (Trust Gap™, Decision Trigger™, CAPTURE Framework™, Avatar 2.0™, the four pillar names) MUST appear consistently across all surfaces incl. the app UI — their absence breaks continuity with the website/marketing and fails the Distinctive pillar.",
+    "No confidence score / percentage / numeric certainty indicator on any output.",
+    "No trigger-selection dropdown — one trigger, one panel, one action. If the user picks their own trigger, the tool becomes a label maker.",
+    "Jobs-to-be-done / JTBD / 'struggling moment' is retired. Use 'Purchase motivation'.",
+    "Component 0 (primary conversion problem) contains no buyer-state names and no Tier C engine internals — plain commercial language only (Tier A terms are fine).",
+    "Demographics are not a field in the Avatar 2.0 forensic portrait — they live in the Brand Context profile.",
+    "Brand anchors for the six triggers are fixed: Permission=Harvard Medical School, Recognition=Dove, Identity=Apple, Belonging=Patagonia, Momentum=Amazon's Choice, Fear-of-Loss=FOMO signal. (Recognition corrected Lego→Dove per IDEA-APP-FIXES-001; Lego is the Identity anchor.)",
+    "The free Trust Gap diagnostic questions must be EVIDENCE-BASED (answerable by observing the listing/hero/bullets/reviews), not brand self-assessment — forensic entry point, not a confidence score (IDEA-APP-FIXES-001 Fix 1).",
+    "Use the trademark symbol on first use per surface: Decision Trigger™, Trust Gap™, CAPTURE Framework™, Avatar 2.0™.",
+    "Brand tokens: BRAND_BLUE #1A3557, ACCENT_GOLD #C9A84C, font Arial throughout."
+  ],
+  "decision_triggers": {
+    "Permission": { "pillar": "I — Insight", "buyer_state": "The Assessor", "anchor": "Harvard Medical School" },
+    "Recognition": { "pillar": "E — Empathetic", "buyer_state": "The Protector", "anchor": "Dove" },
+    "Identity": { "pillar": "D — Distinctive", "buyer_state": "The Expresser", "anchor": "Apple" },
+    "Belonging": { "pillar": "A — Authentic", "buyer_state": "The Connector", "anchor": "Patagonia" },
+    "Momentum": { "pillar": "All pillars elevated", "buyer_state": "cross-state", "anchor": "Amazon's Choice" },
+    "Fear-of-Loss": { "pillar": "All pillars elevated", "buyer_state": "cross-state", "anchor": "FOMO signal" }
+  },
+  "reference_case": "Guyology Labs — Trust Gap 62/100, primary gap Empathetic (8/25), dominant buyer state The Protector (internal), primary Decision Trigger Recognition."
+}

@@ -18,6 +18,10 @@
     "mcp:dev": "tsx watch src/mcp/index.ts",
     "mcp:start": "tsx src/mcp/index.ts",
     "typecheck:mcp": "tsc -p tsconfig.mcp.json --noEmit",
+    "evals": "tsx src/mcp/evals/run.ts",
+    "evals:live": "tsx src/mcp/evals/runLive.ts",
+    "evals:mcpjam": "tsx src/mcp/evals/mcpjam/generate.ts",
+    "evals:harvest": "tsx src/mcp/evals/runHarvest.ts",
     "build:panel": "node scripts/build-onboard-panel.mjs",
     "mcp:bundle": "node scripts/build-mcp.mjs",
     "mcp:build:docker": "npm run mcp:bundle && docker build -f deploy/mcp/Dockerfile -t brand-coach-mcp:latest ."

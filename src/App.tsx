@@ -54,6 +54,9 @@ import { FunnelTracker } from "./components/v2/funnel/FunnelTracker";
 import FeatureGate from "@/components/FeatureGate";
 import { VersionGate } from "@/components/VersionGate";
 import FeatureFlagAdmin from "./pages/admin/FeatureFlagAdmin";
+import CoachEvalsAdmin from "./pages/admin/CoachEvalsAdmin";
+import { AdminGate } from "@/components/AdminGate";
+import FocusSurface from "./pages/FocusSurface";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
 import SettingsPage from "./pages/SettingsPage";
 import FigmaCallback from "./pages/FigmaCallback";
@@ -189,6 +192,20 @@ const App = () => {
                 <Route path={ROUTES.FEATURE_FLAG_ADMIN} element={
                   <Layout>
                     <FeatureFlagAdmin />
+                  </Layout>
+                } />
+
+                <Route path={ROUTES.COACH_EVALS_ADMIN} element={
+                  <AdminGate>
+                    <Layout>
+                      <CoachEvalsAdmin />
+                    </Layout>
+                  </AdminGate>
+                } />
+
+                <Route path={ROUTES.FOCUS_SURFACE} element={
+                  <Layout>
+                    <FocusSurface />
                   </Layout>
                 } />
 

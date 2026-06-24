@@ -106,6 +106,8 @@ asserts the advertised tool set + handler behavior end-to-end.
 |------|-------|
 | `contracts/` | Output-engine artifact contracts (single source of truth) — local AGENTS.md |
 | `service/workbook/` | Workbook assemblers + gold-workbook export engine — local AGENTS.md |
+| `evals/` | MCP evals suite — compares skill/tool configurations + scores coach value (`npm run evals`); feeds the `/admin/coach-evals` dashboard — see `evals/README.md` |
+| `skills/` | Skill grounding: `skillLoader` (book corpus) + `appSkills` (App Skill Architecture, IDEA-APP-SKILLS-001) |
 
 ## Guardrails
 
