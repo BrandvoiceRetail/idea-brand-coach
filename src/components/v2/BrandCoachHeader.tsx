@@ -9,7 +9,7 @@
  * Responsive: stacks controls vertically on mobile, condenses chapter info.
  */
 
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -173,7 +173,7 @@ export function BrandCoachHeader({
       </div>
 
       <div className={isMobile ? 'flex flex-col items-end gap-1' : 'flex items-center gap-2'}>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <BrandMarkdownExport
             ref={exportRef}
             variant="outline"
@@ -181,9 +181,24 @@ export function BrandCoachHeader({
             fieldValues={fieldValues}
             onBeforeExport={onBeforeExport}
           />
+          {/* Cross-destination nav: the coach and the Funnel Mapper are the two
+              top-level surfaces; make the Funnel discoverable from here. */}
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            title="Funnel Mapper"
+            aria-label="Funnel Mapper"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Link to="/v2/funnel">
+              <TrendingUp className="h-4 w-4" />
+              {!isMobile && <span className="ml-1.5">Funnel</span>}
+            </Link>
+          </Button>
           <VersionSwitcher />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {/* "One surface switches" — the coaching SET multi-toggle. The dropdown
               beside it stays single-target CRUD (rename/duplicate/delete/etc). */}
           <ContextAvatarChecklist

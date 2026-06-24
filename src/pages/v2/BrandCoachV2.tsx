@@ -249,7 +249,7 @@ const BrandCoachV2 = (): JSX.Element => {
         rightPanel={
           <div className="flex flex-col h-full">
             {/* Chat sub-header with sidebar + actions */}
-            <div className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between">
+            <div className="flex-shrink-0 border-b px-4 py-3 flex flex-wrap items-center justify-between gap-y-2">
               <div className="flex items-center gap-2">
                 <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
                   <SheetTrigger asChild>
@@ -362,6 +362,7 @@ const BrandCoachV2 = (): JSX.Element => {
               onFieldAccept={handleFieldAcceptFromBadge}
               onReopenReview={handleReopenReview}
               messagesEndRef={chatContainerRef}
+              onQuickStart={showGapOpener ? undefined : handleSendMessage}
             />
 
             {showDocumentUpload && (

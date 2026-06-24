@@ -61,7 +61,7 @@ export function VersionGate(): JSX.Element | null {
           transition={{ delay: 0.2, duration: 0.4 }}
           className="space-y-3"
         >
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl break-words">
             {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
           </h1>
           <p className="text-muted-foreground text-lg">

@@ -42,6 +42,8 @@ describe('useOnboardingTour', () => {
       signInWithGoogle: vi.fn(),
       signOut: vi.fn(),
       resetPassword: vi.fn(),
+      updatePassword: vi.fn(),
+      isRecovering: false,
       loading: false,
     });
   });
@@ -224,6 +226,8 @@ describe('useOnboardingTour', () => {
         signInWithGoogle: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        updatePassword: vi.fn(),
+        isRecovering: false,
         loading: false,
       });
 
@@ -252,6 +256,8 @@ describe('useOnboardingTour', () => {
         signInWithGoogle: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        updatePassword: vi.fn(),
+        isRecovering: false,
         loading: false,
       });
 
@@ -280,6 +286,8 @@ describe('useOnboardingTour', () => {
         signInWithGoogle: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        updatePassword: vi.fn(),
+        isRecovering: false,
         loading: false,
       });
 
@@ -307,6 +315,8 @@ describe('useOnboardingTour', () => {
         signInWithGoogle: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        updatePassword: vi.fn(),
+        isRecovering: false,
         loading: false,
       });
 
@@ -335,6 +345,8 @@ describe('useOnboardingTour', () => {
         signInWithGoogle: vi.fn(),
         signOut: vi.fn(),
         resetPassword: vi.fn(),
+        updatePassword: vi.fn(),
+        isRecovering: false,
         loading: false,
       });
 
