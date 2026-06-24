@@ -42,11 +42,16 @@ import { ArrowRight } from 'lucide-react';
 import { PS_COLORS } from './theme';
 
 /**
- * The recognition image. Left null until Matthew supplies the asset (see the
- * visual brief above). When set, it replaces the placeholder slot with no other
- * change required.
+ * The recognition image. Interim free-license placeholder (Pexels photo by
+ * Mikael Blomkvist — free for commercial use, cropped to 16:10) chosen against
+ * the visual brief above: quiet weariness, muted warm palette, no product /
+ * screen / text. To swap (e.g. for a Nano Banana generated version once approved),
+ * replace public/recognition-mvmt1.jpg or repoint src.
  */
-const RECOGNITION_IMAGE: { src: string; alt: string } | null = null;
+const RECOGNITION_IMAGE: { src: string; alt: string } | null = {
+  src: '/recognition-mvmt1.jpg',
+  alt: 'A brand owner sitting quietly with eyes closed and a hand to their forehead, worn down from trying to fix what is not working.',
+};
 
 interface RecognitionScreenProps {
   /** Enter the diagnostic flow. (Later: advance to Movement 2 — Diagnosis.) */
