@@ -1,0 +1,65 @@
+{
+  "_note": "Project meetings from Fathom. duration_h for unlogged meetings is estimated from the deepest summary citation timestamp (a floor on true length). in_clockify=true means the meeting time is already counted in clockify_export.csv and must NOT add 'meeting' hours to avoid double counting. duration_h for in_clockify meetings is the Clockify-logged value, shown for reference only.",
+  "meetings": [
+    {
+      "date": "2026-05-06",
+      "title": "Impromptu Zoom — Gen 3 mockup review",
+      "recording_id": 144128256,
+      "url": "https://fathom.video/calls/664335828",
+      "duration_h": 1.35,
+      "in_clockify": true,
+      "objective_id": "O7",
+      "note": "Logged in Clockify as 'Meet with Trevor' (1:20:54)"
+    },
+    {
+      "date": "2026-04-23",
+      "title": "4/23 IDEA Brand Coach Part 2",
+      "recording_id": 140691318,
+      "url": "https://fathom.video/calls/649154125",
+      "duration_h": 1.1,
+      "in_clockify": true,
+      "objective_id": "O7",
+      "note": "Covered by Clockify 'review Trevor's docs & meet with him' (2:11:21, both parts + doc review)"
+    },
+    {
+      "date": "2026-04-23",
+      "title": "4/23 IDEA Brand Coach Part 1",
+      "recording_id": 140678453,
+      "url": "https://fathom.video/calls/649118151",
+      "duration_h": 1.0,
+      "in_clockify": true,
+      "objective_id": "O7",
+      "note": "Covered by Clockify 'review Trevor's docs & meet with him' (2:11:21, both parts + doc review)"
+    },
+    {
+      "date": "2026-03-18",
+      "title": "IDEA Brand Coach Sync Up",
+      "recording_id": 130896361,
+      "url": "https://fathom.video/calls/605088052",
+      "duration_h": 1.4,
+      "in_clockify": false,
+      "objective_id": "O7",
+      "note": "Unlogged. Skill-based model pivot, beta plan, cost analysis. Est. from max summary ts ~4939s."
+    },
+    {
+      "date": "2026-03-05",
+      "title": "Impromptu Google Meet — pivot to conversational AI coach",
+      "recording_id": 127607831,
+      "url": "https://fathom.video/calls/590988739",
+      "duration_h": 0.6,
+      "in_clockify": false,
+      "objective_id": "O7",
+      "note": "Unlogged. Pivot decision + $500 acceleration. Est. from max summary ts ~2188s."
+    },
+    {
+      "date": "2026-03-05",
+      "title": "Impromptu Zoom — refine value prop & IDEA workflow",
+      "recording_id": 127583497,
+      "url": "https://fathom.video/calls/590934937",
+      "duration_h": 0.7,
+      "in_clockify": false,
+      "objective_id": "O7",
+      "note": "Unlogged. IDEA framework workflow, chat-first canvas. Est. from max summary ts ~2336s."
+    }
+  ]
+}
