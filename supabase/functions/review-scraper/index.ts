@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCached, upsertCached, CACHE_TTL } from "../_shared/asinCache.ts";
 
 const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
 
@@ -331,6 +332,15 @@ function isAmazonHost(raw: string): boolean {
   }
 }
 
+/** Hostname of a URL (cache-row marketplace column; the URL itself is the cache key). */
+function hostOf(raw: string): string {
+  try {
+    return new URL(raw).hostname.toLowerCase();
+  } catch {
+    return 'unknown';
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -380,28 +390,48 @@ serve(async (req) => {
     console.log(`Review scraper request: ${cappedUrls.length} URLs`);
 
     const results: ScrapeResult[] = [];
+    // Only rate-limit BETWEEN real Firecrawl fetches — cache hits cost nothing, so they
+    // never trigger the 2s delay (key to draining bursts of overlapping catalogs fast).
+    let pendingDelay = false;
 
     for (let i = 0; i < cappedUrls.length; i++) {
       const url = cappedUrls[i];
-      console.log(`Scraping (${i + 1}/${cappedUrls.length}): ${url}`);
+      const cacheKey = { source: 'firecrawl', dataKind: 'reviews', cacheKey: url, marketplace: hostOf(url) };
 
       try {
-        // scrapeUrl throws (never returns null) on failure → caught below per-URL.
-        const scraped = await scrapeUrl(url);
+        // Cross-tenant cache: review data is PUBLIC (not tenant-private), so a prior scrape
+        // of this URL within CACHE_TTL.reviews (7d) serves EVERY tenant — no Firecrawl call,
+        // no credit spend. This is the burst/cost lever for overlapping catalogs + re-runs.
+        let reviews = await getCached<ScrapedReview[]>(cacheKey);
 
-        // PRIMARY: clean reviews from Firecrawl's structured json extraction.
-        let reviews: ScrapedReview[] = reviewsFromJson(scraped.jsonReviews, url);
-        // FALLBACK (json empty): the regex parsers. Use the Amazon HTML parser for any
-        // Amazon marketplace host (.com/.co.uk/.de/…), markdown elsewhere.
-        if (reviews.length === 0) {
-          reviews = isAmazonHost(url)
-            ? parseAmazonReviews(scraped.markdown, scraped.html, url)
-            : parseReviewsFromMarkdown(scraped.markdown, url);
+        if (reviews) {
+          console.log(`  Cache HIT (${reviews.length}) for ${url}`);
+        } else {
+          if (pendingDelay) {
+            await delay(RATE_LIMIT_MS);
+            pendingDelay = false;
+          }
+          console.log(`Scraping (${i + 1}/${cappedUrls.length}): ${url}`);
+          // scrapeUrl throws (never returns null) on failure → caught below per-URL.
+          const scraped = await scrapeUrl(url);
+
+          // PRIMARY: clean reviews from Firecrawl's structured json extraction.
+          reviews = reviewsFromJson(scraped.jsonReviews, url);
+          // FALLBACK (json empty): the regex parsers. Use the Amazon HTML parser for any
+          // Amazon marketplace host (.com/.co.uk/.de/…), markdown elsewhere.
+          if (reviews.length === 0) {
+            reviews = isAmazonHost(url)
+              ? parseAmazonReviews(scraped.markdown, scraped.html, url)
+              : parseReviewsFromMarkdown(scraped.markdown, url);
+          }
+          // Cache only non-empty results — never poison the cache with a transient
+          // 0-review/blocked scrape for 7 days.
+          if (reviews.length > 0) await upsertCached(cacheKey, reviews, CACHE_TTL.reviews);
+          pendingDelay = true; // a real fetch happened → space the NEXT fetch
+          console.log(`  Found ${reviews.length} reviews from ${url}`);
         }
 
-        const kept = reviews.slice(0, maxReviewsPerUrl);
-        results.push({ url, reviews: kept });
-        console.log(`  Found ${kept.length} reviews from ${url}`);
+        results.push({ url, reviews: reviews.slice(0, maxReviewsPerUrl) });
       } catch (scrapeError) {
         console.error(`Error scraping ${url}:`, scrapeError);
         results.push({
@@ -409,11 +439,6 @@ serve(async (req) => {
           reviews: [],
           error: scrapeError instanceof Error ? scrapeError.message : String(scrapeError),
         });
-      }
-
-      // Rate limit: 2-second delay between requests
-      if (i < cappedUrls.length - 1) {
-        await delay(RATE_LIMIT_MS);
       }
     }
 
