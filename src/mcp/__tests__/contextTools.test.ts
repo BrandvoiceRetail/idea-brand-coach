@@ -497,6 +497,23 @@ describe('ingest_evidence tool', () => {
     expect(sc.notes.join(' ')).toMatch(/0 reviews/);
   });
 
+  it('asin: surfaces a per-URL scrape error (e.g. rate limit) instead of a generic 0-reviews note', async () => {
+    install();
+    const edge = stubEdge({
+      ok: true,
+      data: { results: [{ url: 'x', reviews: [], error: 'rate limit: global daily scrape budget reached' }] },
+    });
+    const res = await runWithIdentity(authed, () =>
+      connect(ingestWith(edge)).then((c) =>
+        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B000000001' } }),
+      ),
+    );
+    const sc = res.structuredContent as { ok: boolean; notes: string[] };
+    expect(sc.ok).toBe(false);
+    expect(sc.notes.join(' ')).toMatch(/unavailable/i);
+    expect(sc.notes.join(' ')).toMatch(/global daily scrape budget/i);
+  });
+
   it('asin: a full amazon.* URL is passed through verbatim (marketplace ignored)', async () => {
     const stub = install();
     stub.on('evidence_snapshots', 'insert', { data: { id: 'snap-url' }, error: null });

@@ -218,12 +218,17 @@ export function registerIngestEvidenceTool(server: McpServer, edge: EdgeFnClient
           if (!scraped.ok) {
             notes.push(`asin-scrape failed (${scraped.note ?? 'unavailable'}) — paste reviews via reviews_text instead.`);
           } else {
-            const scrapedReviews = (scraped.data?.results?.[0]?.reviews ?? [])
+            const result0 = scraped.data?.results?.[0];
+            const scrapedReviews = (result0?.reviews ?? [])
               .map(toParsedReview)
               .filter((r) => r.body.length > 0);
             if (scrapedReviews.length === 0) {
+              // Surface a per-URL error (rate limit / disabled / block) over the generic
+              // "0 reviews" note so the caller learns the real reason.
               notes.push(
-                `asin-scrape returned 0 reviews from ${built.url} — the page may show few/none; paste them via reviews_text.`,
+                result0?.error
+                  ? `asin-scrape unavailable: ${result0.error}. Try again later or paste reviews via reviews_text.`
+                  : `asin-scrape returned 0 reviews from ${built.url} — the page may show few/none; paste them via reviews_text.`,
               );
             } else {
               parsed.push(...scrapedReviews);

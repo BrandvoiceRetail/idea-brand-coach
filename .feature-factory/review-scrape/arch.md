@@ -117,8 +117,13 @@ The cache + async-bounded-ingest is the same shape the competitor-agents cost mo
 - **P0 (before any catalog-scale burst):** (1) **✅ DONE 2026-06-25** — wired `review-scraper` →
   `asinCache` (`source:'firecrawl'`, `dataKind:'reviews'`, key=URL, TTL 7d; cache hits skip Firecrawl
   AND the 2s inter-fetch delay; only non-empty results cached). Live-verified: cold miss 15.3s vs warm
-  hit 1.05s (~15×), 0 credits on hit, 7d cache row confirmed. (2) per-user + global rate limit /
-  Firecrawl concurrency ceiling + budget kill-switch (TICKET-1); (3) Supabase Pro (kills auto-pause);
-  (4) confirm + size the Firecrawl plan.
+  hit 1.05s (~15×), 0 credits on hit, 7d cache row confirmed. (2) **✅ DONE 2026-06-25** — per-user +
+  global rate limit / burst ceiling / budget kill-switch (TICKET-1): atomic `consume_scrape_quota` RPC
+  + `scrape_rate_usage` table (migration 20260625000000); `review-scraper` gates each cache-MISS fetch
+  (hits uncounted) via `_shared/scrapeRateLimit.ts`; env-tunable caps (`SCRAPE_USER_DAILY_MAX` 250 /
+  `SCRAPE_GLOBAL_DAILY_MAX` 2000 / `SCRAPE_GLOBAL_WINDOW_MAX` 30 per 60s) + hard env kill-switch
+  `REVIEW_SCRAPE_ENABLED`; fail-open if the limiter errors. Live-verified: cold fetch counts (user=1),
+  cache hit doesn't; RPC denies at cap. **Tune `SCRAPE_GLOBAL_DAILY_MAX` once the Firecrawl plan
+  (item 4) is confirmed.** (3) Supabase Pro (kills auto-pause); (4) confirm + size the Firecrawl plan.
 - **P1 (for true 100-user bursts + bulk upload):** async queue + worker; `bulk_ingest_evidence`
   (async by design); the "populating" UX contract + observability.

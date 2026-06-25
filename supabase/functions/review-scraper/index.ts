@@ -2,8 +2,22 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCached, upsertCached, CACHE_TTL } from "../_shared/asinCache.ts";
+import { consumeScrapeQuota } from "../_shared/scrapeRateLimit.ts";
 
 const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+
+// Fetch guardrails (env-tunable without redeploy via `supabase secrets set`). These gate
+// only cache MISSES (real Firecrawl fetches); cache hits are always served, uncounted.
+//  - REVIEW_SCRAPE_ENABLED=false   → hard kill-switch (DB-independent), serves cache only.
+//  - SCRAPE_USER_DAILY_MAX         → per-user/day fetch cap (catalog-sized + retry headroom).
+//  - SCRAPE_GLOBAL_DAILY_MAX       → global/day budget ceiling (× ~5 Firecrawl credits/fetch).
+//  - SCRAPE_GLOBAL_WINDOW_MAX      → global fetches per 60s (burst / concurrency ceiling).
+const SCRAPE_ENABLED = (Deno.env.get('REVIEW_SCRAPE_ENABLED') ?? 'true').toLowerCase() !== 'false';
+const QUOTA_CAPS = {
+  userDailyMax: Number(Deno.env.get('SCRAPE_USER_DAILY_MAX')) || 250,
+  globalDailyMax: Number(Deno.env.get('SCRAPE_GLOBAL_DAILY_MAX')) || 2000,
+  globalWindowMax: Number(Deno.env.get('SCRAPE_GLOBAL_WINDOW_MAX')) || 30,
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -407,6 +421,18 @@ serve(async (req) => {
         if (reviews) {
           console.log(`  Cache HIT (${reviews.length}) for ${url}`);
         } else {
+          // Gate the FETCH only (cache hits above are free + always served). Hard env
+          // kill-switch first, then the DB-backed per-user + global budget / burst limiter.
+          if (!SCRAPE_ENABLED) {
+            results.push({ url, reviews: [], error: 'review scraping is temporarily disabled' });
+            continue;
+          }
+          const quota = await consumeScrapeQuota(user.id, QUOTA_CAPS);
+          if (!quota.allowed) {
+            console.log(`  Rate limited (${quota.reason}) for ${url}`);
+            results.push({ url, reviews: [], error: `rate limit: ${quota.reason ?? 'scrape quota reached'}` });
+            continue;
+          }
           if (pendingDelay) {
             await delay(RATE_LIMIT_MS);
             pendingDelay = false;
