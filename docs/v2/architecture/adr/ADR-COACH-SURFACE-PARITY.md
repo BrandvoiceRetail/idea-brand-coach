@@ -1,6 +1,6 @@
 # ADR: Coach Surface Parity — the MCP/Claude-connector coach and the in-app coach chat
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-06-25)
 - **Date:** 2026-06-25
 - **Deciders:** Matthew Kerns (eng)
 - **Relates to:** `ADR-UNIFIED-COACH-CAPABILITY-LAYER.md` (Proposed — extends it from *capability* parity to *full-surface* parity), `ADR-CLAUDE-AGENT-SDK-MIGRATION.md`, `ADR-CONVERSATION-MEMORY.md`. Companion runbook: `docs/integrations/MCP_OAUTH.md` (the connector is now an authenticated, first-class surface).
