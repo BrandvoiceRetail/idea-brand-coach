@@ -18,6 +18,7 @@ import type { LedgerClient } from './ivos/capabilities.js';
 import { NativeLedgerClient } from './service/nativeLedger.js';
 import { registerOnboard } from './tools/onboard.js';
 import { instrumentToolLatency } from './instrument.js';
+import { registerStructuredFallback } from './structuredFallback.js';
 import { registerHealthTool } from './tools/health.js';
 import { registerListAssetsTool } from './tools/listAssets.js';
 import { registerGetAssetTool } from './tools/getAsset.js';
@@ -81,6 +82,12 @@ export function createServer(
   // Time every tool uniformly (emits mcp_tool_latency per call). Must run before the
   // register*Tool() calls below so their handlers are wrapped.
   instrumentToolLatency(server);
+
+  // Mirror each tool's structuredContent into a text block so connectors that drop
+  // structuredContent (e.g. the claude.ai remote connector) still receive the payload —
+  // ids, records, transcripts — and aren't left with only a summary line. Same seam;
+  // must also run before the register*Tool() calls.
+  registerStructuredFallback(server);
 
   const ivos = ledgerClient ?? new NativeLedgerClient();
   const edge = edgeFn ?? new EdgeFnClient(config);
