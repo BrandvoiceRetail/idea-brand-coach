@@ -5,9 +5,10 @@ import { getSupabaseAccessToken } from '@/integrations/supabase/sessionToken';
 
 // Mock Clerk so we can drive the bridge from fixed state. ClerkProvider is a
 // passthrough; useAuth/useUser return our fixtures.
-const { useClerkAuthMock, useUserMock } = vi.hoisted(() => ({
+const { useClerkAuthMock, useUserMock, upsertMock } = vi.hoisted(() => ({
   useClerkAuthMock: vi.fn(),
   useUserMock: vi.fn(),
+  upsertMock: vi.fn().mockResolvedValue({ error: null }),
 }));
 vi.mock('@clerk/clerk-react', () => ({
   ClerkProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -16,8 +17,12 @@ vi.mock('@clerk/clerk-react', () => ({
 }));
 // Keep the real sessionToken module, but mock the supabase client it pulls in so
 // no real client is constructed (the Clerk getter overrides the default anyway).
+// `from().upsert()` backs the create-on-first-load profile provisioning effect.
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { auth: { getSession: vi.fn() } },
+  supabase: {
+    auth: { getSession: vi.fn() },
+    from: vi.fn(() => ({ upsert: upsertMock })),
+  },
 }));
 vi.mock('@/lib/posthogClient', () => ({
   identifyUser: vi.fn(),

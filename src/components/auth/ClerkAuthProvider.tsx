@@ -21,6 +21,7 @@ import { AuthContext, type AuthContextType } from '@/hooks/useAuth';
 import { getClerkPublishableKey } from '@/config/clerkConfig';
 import { setSupabaseAccessTokenGetter } from '@/integrations/supabase/sessionToken';
 import { captureAlphaEvent, identifyUser, resetIdentity } from '@/lib/posthogClient';
+import { ensureClerkProfile } from './ensureClerkProfile';
 
 // Imperative auth methods are disabled in Clerk mode (the Clerk UI owns sign-in).
 const CLERK_UI_OWNS_AUTH = new Error(
@@ -51,6 +52,8 @@ function ClerkAuthBridge({ children }: { children: ReactNode }): JSX.Element {
   const { isLoaded, isSignedIn, getToken, signOut: clerkSignOut } = useClerkAuth();
   const { user: clerkUser } = useUser();
   const authCompletedRef = useRef(false);
+  // Provision the profiles row at most once per Clerk user id per page load.
+  const provisionedForRef = useRef<string | null>(null);
 
   // Feed the live Clerk session token to the Supabase client + edge-fn callers.
   useEffect(() => {
@@ -108,6 +111,20 @@ function ClerkAuthBridge({ children }: { children: ReactNode }): JSX.Element {
       }
     }
   }, [isSignedIn, user]);
+
+  // Create-on-first-load profile provisioning: Clerk users have no auth.users row,
+  // so the handle_new_user trigger never creates their profiles row. Ensure it
+  // exists once per user id (insert-only; never clobbers existing data).
+  useEffect(() => {
+    if (!isSignedIn || !clerkUser) return;
+    if (provisionedForRef.current === clerkUser.id) return;
+    provisionedForRef.current = clerkUser.id;
+    void ensureClerkProfile({
+      id: clerkUser.id,
+      email: clerkUser.primaryEmailAddress?.emailAddress,
+      fullName: clerkUser.fullName ?? clerkUser.firstName,
+    });
+  }, [isSignedIn, clerkUser]);
 
   const signOut = useCallback(async () => {
     try {
