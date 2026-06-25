@@ -13,6 +13,12 @@ export const SERVER_VERSION = '0.1.0';
  * always-on. The asset-chain tools (concept → publish-filter → draft → test-design)
  * and the diagnostic wrappers are NOT part of this host yet — they are the next
  * initiatives. This host is the gateway + the consumed IV-OS asset-tracking surface.
+ *
+ * PARITY: this is the connector's only steering lever (the host Claude model owns the
+ * system prompt + voice). Its posture/persona/framework text is governed by
+ * ADR-COACH-SURFACE-PARITY — keep it derived from the shared Coach Charter, in sync with
+ * the in-app coach's `idea-framework-consultant-claude/prompt.ts`; do not edit one in
+ * isolation.
  */
 export const SERVER_INSTRUCTIONS = [
   // POSTURE — leads everything: this gateway coaches, it does not auto-evaluate.
