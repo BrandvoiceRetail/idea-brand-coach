@@ -67,6 +67,27 @@ export interface HostConfig {
   slackBotToken: string | null;
   /** Slack channel id `submit_feedback` posts to. Defaults to #idea-brand-coach; the bot must be a member. */
   slackFeedbackChannelId: string;
+  /**
+   * Canonical public URL of this MCP resource (RFC 8707 / RFC 9728 `resource`).
+   * Must match exactly what users enter when adding the connector. Advertised in the
+   * protected-resource metadata so OAuth clients bind tokens to this audience.
+   */
+  mcpPublicUrl: string;
+  /**
+   * When true, an unauthenticated `/mcp` request is answered with `401` +
+   * `WWW-Authenticate` (RFC 9728) — the trigger that starts an OAuth client's flow.
+   * Flag-gated so prod can enable/disable enforcement instantly (kill switch) without
+   * a redeploy. The protected-resource metadata is served regardless of this flag.
+   */
+  oauthRequireAuth: boolean;
+  /**
+   * OAuth scope advertised to clients (WWW-Authenticate `scope` + metadata
+   * `scopes_supported`). Steers clients (Claude) toward a scope the Supabase AS can
+   * actually issue. Defaults to `email`: `openid` triggers OIDC ID-token generation,
+   * which fails on projects without an asymmetric JWT signing key. Optional — tunable
+   * via `MCP_OAUTH_SCOPE` without a redeploy.
+   */
+  oauthScope?: string;
 }
 
 function env(name: string): string | null {
@@ -87,5 +108,8 @@ export function loadConfig(): HostConfig {
     slackBotToken: env('SLACK_BOT_TOKEN'),
     // Fallback is the known #idea-brand-coach channel id (private; bot must be invited).
     slackFeedbackChannelId: env('SLACK_FEEDBACK_CHANNEL_ID') ?? 'C0B9YT9TQ6T',
+    mcpPublicUrl: env('MCP_PUBLIC_URL') ?? 'https://ideabrandcoach.icodemybusiness.com/mcp',
+    oauthRequireAuth: (env('MCP_OAUTH_REQUIRE_AUTH') ?? 'false').toLowerCase() === 'true',
+    oauthScope: env('MCP_OAUTH_SCOPE') ?? 'email',
   };
 }

@@ -17,6 +17,8 @@ export const STUB_CONFIG: HostConfig = {
   supabaseAnonKey: 'anon',
   slackBotToken: null,
   slackFeedbackChannelId: 'C0EVALS',
+  mcpPublicUrl: 'https://app.example.com/mcp',
+  oauthRequireAuth: false,
 };
 
 async function withClient<T>(fn: (client: Client) => Promise<T>): Promise<T> {

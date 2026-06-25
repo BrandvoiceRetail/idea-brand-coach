@@ -19,6 +19,8 @@ const cfg: HostConfig = {
   supabaseAnonKey: 'anon',
   slackBotToken: null,
   slackFeedbackChannelId: 'C0TEST',
+  mcpPublicUrl: 'https://app.example.com/mcp',
+  oauthRequireAuth: false,
 };
 
 /** Stub EdgeFnClient returning canned per-function responses. */

@@ -15,6 +15,8 @@ const cfg: HostConfig = {
   supabaseAnonKey: 'anon',
   slackBotToken: null,
   slackFeedbackChannelId: 'C0B9YT9TQ6T',
+  mcpPublicUrl: 'https://app.example.com/mcp',
+  oauthRequireAuth: false,
 };
 
 /** Connect a client WITHOUT wrapping in runWithIdentity → caller is anonymous. */

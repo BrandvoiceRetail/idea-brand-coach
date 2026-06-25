@@ -42,6 +42,7 @@ import BrandCopyGenerator from "./pages/BrandCopyGenerator";
 import ConversationHistory from "./pages/ConversationHistory";
 import Integrations from "./pages/Integrations";
 import Auth from "./pages/Auth";
+import OAuthConsent from "./pages/OAuthConsent";
 import BetaWelcome from "./pages/BetaWelcome";
 import BetaJourney from "./pages/BetaJourney";
 import BetaFeedback from "./pages/BetaFeedback";
@@ -108,6 +109,11 @@ const App = () => {
                 <Route path="/welcome" element={<Landing />} />
 
                 <Route path="/auth" element={<Auth />} />
+
+                {/* OAuth 2.1 consent screen — Supabase OAuth server delegates the
+                    user-facing approve/deny step here (project authorization_url_path).
+                    Public route: it manages its own session + bounces to /auth if needed. */}
+                <Route path="/oauth/consent" element={<OAuthConsent />} />
 
                 <Route path="/start-here" element={<Navigate to="/v1/start-here" replace />} />
 

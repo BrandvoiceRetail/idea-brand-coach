@@ -16,6 +16,11 @@ import { safeLog } from './logging/redact.js';
 import { captureMcpEvent, captureMcpException } from './posthog.js';
 import { emitLog } from './instrumentation.js';
 import { SeverityNumber } from '@opentelemetry/api-logs';
+import {
+  protectedResourceMetadata,
+  protectedResourceMetadataPaths,
+  wwwAuthenticateChallenge,
+} from './oauth.js';
 
 const MCP_PATH = '/mcp';
 
@@ -65,7 +70,36 @@ function readBody(req: http.IncomingMessage): Promise<unknown> {
   });
 }
 
-async function handleMcp(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+/** Bare path of a request URL (drops query string). */
+function pathOf(url: string | undefined): string {
+  return (url ?? '').split('?', 1)[0];
+}
+
+/**
+ * Serve the RFC 9728 protected-resource metadata. Public, credential-free discovery
+ * doc — wildcard CORS so a browser-based MCP client can fetch it too.
+ */
+function serveProtectedResourceMetadata(config: HostConfig, res: http.ServerResponse): void {
+  res.writeHead(200, {
+    'content-type': 'application/json',
+    'access-control-allow-origin': '*',
+    'cache-control': 'public, max-age=3600',
+  });
+  res.end(JSON.stringify(protectedResourceMetadata(config)));
+}
+
+/** RFC 9728 §5.1 401 challenge — the signal that starts an OAuth client's flow. */
+function sendUnauthorized(config: HostConfig, res: http.ServerResponse): void {
+  res.setHeader('WWW-Authenticate', wwwAuthenticateChallenge(config, 'invalid_token'));
+  res.writeHead(401, { 'content-type': 'application/json' });
+  res.end(JSON.stringify({ error: 'unauthorized', error_description: 'authentication required' }));
+}
+
+async function handleMcp(
+  config: HostConfig,
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+): Promise<void> {
   let body: unknown;
   try {
     body = await readBody(req);
@@ -76,6 +110,15 @@ async function handleMcp(req: http.IncomingMessage, res: http.ServerResponse): P
   }
 
   const identity = await resolveIdentity(req.headers['authorization'] as string | undefined);
+
+  // OAuth enforcement (flag-gated kill switch): an unauthenticated/invalid-token request
+  // gets the RFC 9728 challenge so the client kicks off the Supabase OAuth flow.
+  if (config.oauthRequireAuth && !identity.authenticated) {
+    safeLog({ event: 'http.mcp_unauthorized' });
+    sendUnauthorized(config, res);
+    return;
+  }
+
   const meta = resolveRequestMeta(req.headers);
 
   await runWithIdentity(identity, () => runWithRequestMeta(meta, async () => {
@@ -91,12 +134,18 @@ async function handleMcp(req: http.IncomingMessage, res: http.ServerResponse): P
 }
 
 export function createHttpServer(config: HostConfig = loadConfig()): http.Server {
+  const wellKnownPaths = new Set(protectedResourceMetadataPaths(config));
   return http.createServer((req, res) => {
     // CORS preflight for the MCP endpoint — answer before any routing/body read.
     if (req.method === 'OPTIONS' && isMcpUrl(req.url)) {
       applyCors(req, res);
       res.writeHead(204);
       res.end();
+      return;
+    }
+    // RFC 9728 protected-resource metadata — public OAuth discovery (any method-safe GET).
+    if ((req.method === 'GET' || req.method === 'HEAD') && wellKnownPaths.has(pathOf(req.url))) {
+      serveProtectedResourceMetadata(config, res);
       return;
     }
     if (req.method === 'GET' && req.url === '/healthz') {
@@ -106,7 +155,7 @@ export function createHttpServer(config: HostConfig = loadConfig()): http.Server
     }
     if (req.method === 'POST' && isMcpUrl(req.url)) {
       applyCors(req, res); // set before the transport writes headers so they survive
-      handleMcp(req, res).catch((err) => {
+      handleMcp(config, req, res).catch((err) => {
         safeLog({ level: 'error', event: 'http.mcp_error', reason: err instanceof Error ? err.name : 'unknown' });
         captureMcpException(err, undefined, { layer: 'http' });
         captureMcpEvent('server', 'mcp_http_error', { error_name: err instanceof Error ? err.name : 'unknown' });

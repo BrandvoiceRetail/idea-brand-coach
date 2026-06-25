@@ -17,6 +17,8 @@ const cfg: HostConfig = {
   supabaseAnonKey: 'anon',
   slackBotToken: null,
   slackFeedbackChannelId: 'C0TEST',
+  mcpPublicUrl: 'https://app.example.com/mcp',
+  oauthRequireAuth: false,
 };
 
 const authed = { userId: 'user-1', token: 'tok', authenticated: true };
