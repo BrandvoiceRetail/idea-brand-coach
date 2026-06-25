@@ -133,5 +133,11 @@ The cache + async-bounded-ingest is the same shape the competitor-agents cost mo
   MCP tools `bulk_ingest_evidence(asins[],marketplace?,product_id?,avatar_id?)` (validates/dedups,
   enqueues, kicks, returns job_id immediately) + `get_ingest_job(job_id)` (progress + nudge).
   Live-verified: 2-URL job drained to done (5+6 reviews frozen) via cache hits. No service-role key
-  on the box (work stays inside Supabase). DEFERRED follow-up (P1.5): a pg_cron safety-net to
-  recover a stalled drain when no user is nudging (today: self-trigger + submit/poll nudges drive it).
+  on the box (work stays inside Supabase).
+- **P1.5 (cron safety-net) ✅ DONE 2026-06-25** — `pg_cron` + `pg_net` + `kick_scrape_drain()`
+  (migration 20260625000300) runs every 3 min and POSTs the worker ONLY when items are pending,
+  using a drain-only secret from Vault (`drain_cron_secret`; the worker's `DRAIN_CRON_SECRET` env).
+  process-scrape-jobs is `verify_jwt=false` (config.toml) so the hex secret reaches the fn's own auth
+  gate (service-role | drain-secret | valid user) instead of the platform's JWT check. Recovers a drain
+  stalled by rate-limit backoff with no user nudging. Live-verified: a seeded pending item drained to
+  done (5 reviews) via the cron path (kick → pg_net → worker 202 → drain).

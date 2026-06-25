@@ -21,6 +21,9 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+// Drain-only shared secret for the pg_cron safety-net (least privilege: can only trigger
+// a drain, which is itself rate-limited). Separate from the service-role key.
+const DRAIN_SECRET = Deno.env.get('DRAIN_CRON_SECRET') ?? '';
 
 const BATCH = 5;          // items claimed per round
 const MAX_ITEMS = 200;    // hard ceiling per invocation
@@ -163,10 +166,12 @@ async function drain(): Promise<{ processed: number; remaining: number; backoff:
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  // Gate who may KICK the drain: service-role (self-trigger) or any authenticated user.
+  // Gate who may KICK the drain: service-role (self-trigger), the drain-only cron secret
+  // (pg_cron safety-net), or any authenticated user. The WORK always uses service-role.
   const authHeader = req.headers.get('Authorization') ?? '';
   const bearer = authHeader.replace(/^Bearer\s+/i, '');
-  if (!(SERVICE_KEY && bearer === SERVICE_KEY)) {
+  const trustedKick = (SERVICE_KEY && bearer === SERVICE_KEY) || (DRAIN_SECRET && bearer === DRAIN_SECRET);
+  if (!trustedKick) {
     const u = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: authHeader } } });
     const { data: { user } } = await u.auth.getUser();
     if (!user) {

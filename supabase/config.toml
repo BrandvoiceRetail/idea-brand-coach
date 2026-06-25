@@ -163,3 +163,11 @@ verify_jwt = false
 # UNVERIFIED per Trevor); a real Titan adapter is a separate, human-gated build.
 [functions.brand-defense-monitor]
 verify_jwt = false
+
+# process-scrape-jobs (bulk review-scrape drainer): verify_jwt=false because the
+# pg_cron safety-net kicks it with a drain-only secret (not a JWT, so the platform's
+# verify_jwt would 401 it). The fn does its OWN auth — service-role bearer |
+# DRAIN_CRON_SECRET | getUser(valid user) — and rejects everyone else (401). The drain
+# work runs service-role INTERNALLY, and a kick only ever triggers a rate-limited drain.
+[functions.process-scrape-jobs]
+verify_jwt = false
