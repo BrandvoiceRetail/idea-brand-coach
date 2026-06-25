@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import { Sparkles, Loader2, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { isClerkAuthEnabled } from '@/config/clerkConfig';
+import { ClerkAuthSurface } from '@/components/auth/ClerkAuthSurface';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -28,9 +30,18 @@ export function DiagnosticAuthModal({ isOpen, onComplete, diagnosticScore }: Dia
   const [emailErrors, setEmailErrors] = useState('');
   const [passwordErrors, setPasswordErrors] = useState('');
   const [nameErrors, setNameErrors] = useState('');
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Clerk mode: the Clerk surface (below) handles auth itself, so close the modal
+  // as soon as a session arrives — mirrors the onComplete() the form handlers call.
+  const clerkEnabled = isClerkAuthEnabled();
+  useEffect(() => {
+    if (clerkEnabled && isOpen && user) {
+      onComplete();
+    }
+  }, [clerkEnabled, isOpen, user, onComplete]);
 
   const validateEmail = (value: string) => {
     try {
@@ -123,6 +134,42 @@ export function DiagnosticAuthModal({ isOpen, onComplete, diagnosticScore }: Dia
     });
     onComplete();
   };
+
+  // Clerk mode: render Clerk's sign-in/up inside the same dialog, keeping the
+  // score header and the "Skip for now" escape hatch. The effect above closes the
+  // modal once Clerk establishes a session.
+  if (clerkEnabled) {
+    return (
+      <Dialog open={isOpen} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Sparkles className="w-6 h-6 text-primary" />
+              Your Brand Score: {diagnosticScore}%
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Create a free account to save your results and unlock your AI Brand Coach
+            </DialogDescription>
+          </DialogHeader>
+
+          <ClerkAuthSurface defaultTab="signup" />
+
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="ghost"
+              onClick={handleSkip}
+              className="w-full text-sm"
+            >
+              Skip for now - View Results
+            </Button>
+            <p className="text-xs text-center text-muted-foreground">
+              You can create an account later to save your progress
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>

@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { getSupabaseAccessToken } from '@/integrations/supabase/sessionToken';
 import { Session } from '@supabase/supabase-js';
 
 /** Constants used across chat edge function operations */
@@ -60,10 +61,16 @@ export class ChatEdgeFunctionService {
    */
   async getAuthSession(): Promise<Session> {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    if (session) {
+      return session;
+    }
+    // Clerk mode: there is no local Supabase session — synthesize one carrying the
+    // bearer (downstream only reads `.access_token` to call the consultant fn).
+    const token = await getSupabaseAccessToken();
+    if (!token) {
       throw new Error('No active session found');
     }
-    return session;
+    return { access_token: token } as unknown as Session;
   }
 
   /**

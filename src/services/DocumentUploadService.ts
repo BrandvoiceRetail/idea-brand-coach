@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { getSupabaseAccessToken } from '@/integrations/supabase/sessionToken';
 import { captureAlphaEvent } from '@/lib/posthogClient';
 import { generateStoragePath, isValidUuid } from '@/utils/documentValidation';
 import type {
@@ -52,13 +53,16 @@ export class DocumentUploadService implements IDocumentUploadService {
         return { success: false, error: docError.message };
       }
 
-      // Trigger vector store indexing via edge function
-      if (session?.access_token) {
+      // Trigger vector store indexing via edge function. Prefer the passed-in
+      // Supabase session token; fall back to the shared accessor (Clerk mode, or
+      // when no session was threaded through).
+      const authToken = session?.access_token || (await getSupabaseAccessToken());
+      if (authToken) {
         const { error: vectorError } = await supabase.functions.invoke(
           'upload-document-to-vector-store',
           {
             body: { documentId: docData.id },
-            headers: { Authorization: `Bearer ${session.access_token}` },
+            headers: { Authorization: `Bearer ${authToken}` },
           }
         );
 

@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { getSupabaseAccessToken } from '@/integrations/supabase/sessionToken';
 import { ChatMessage } from '@/types/chat';
 
 /**
@@ -125,12 +126,10 @@ export class ChatTitleService {
         return { data: null, error: null };
       }
 
-      // Get auth session for edge function call
-      const {
-        data: { session: authSession },
-      } = await supabase.auth.getSession();
+      // Get auth token for edge function call (Supabase-Auth + Clerk modes)
+      const authToken = await getSupabaseAccessToken();
 
-      if (!authSession) {
+      if (!authToken) {
         console.warn('[generateSessionTitle] No auth session found');
         return { data: null, error: new Error('No auth session found') };
       }
@@ -138,7 +137,7 @@ export class ChatTitleService {
       // Call edge function to generate title
       const { data, error } = await supabase.functions.invoke('generate-session-title', {
         headers: {
-          Authorization: `Bearer ${authSession.access_token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: {
           user_message: userMessage,
@@ -211,12 +210,10 @@ export class ChatTitleService {
         .map((m) => `${m.role}: ${(m.content as string).substring(0, 200)}`)
         .join('\n');
 
-      // Get auth session for edge function call
-      const {
-        data: { session: authSession },
-      } = await supabase.auth.getSession();
+      // Get auth token for edge function call (Supabase-Auth + Clerk modes)
+      const authToken = await getSupabaseAccessToken();
 
-      if (!authSession) {
+      if (!authToken) {
         console.warn('[regenerateSessionTitle] No auth session found');
         return { data: null, error: new Error('No auth session found') };
       }
@@ -224,7 +221,7 @@ export class ChatTitleService {
       // Call edge function to generate title
       const { data, error } = await supabase.functions.invoke('generate-session-title', {
         headers: {
-          Authorization: `Bearer ${authSession.access_token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: {
           user_message: conversationSummary,

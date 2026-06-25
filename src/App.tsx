@@ -8,6 +8,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { migrateDiagnosticData } from "@/utils/diagnosticDataMigration";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ClerkAuthProvider } from "@/components/auth/ClerkAuthProvider";
+import { isClerkConfigured } from "@/config/clerkConfig";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { AvatarProvider } from "@/contexts/AvatarContext";
 import { VersionProvider } from "@/contexts/VersionContext";
@@ -76,6 +78,11 @@ const queryClient = new QueryClient({
     },
   },
 });
+// Flag-gated auth provider: Clerk (native Supabase third-party auth) when
+// configured, else the existing Supabase-Auth provider. Both supply the same
+// AuthContext, so the rest of the tree is identical in either mode.
+const AppAuthProvider = isClerkConfigured() ? ClerkAuthProvider : AuthProvider;
+
 const App = () => {
   // Run data migration on app load
   useEffect(() => {
@@ -86,7 +93,7 @@ const App = () => {
     <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <ServiceProvider>
-        <AuthProvider>
+        <AppAuthProvider>
           <AuthGate>
             <VersionProvider>
               <AvatarProvider>
@@ -350,7 +357,7 @@ const App = () => {
               </AvatarProvider>
             </VersionProvider>
           </AuthGate>
-        </AuthProvider>
+        </AppAuthProvider>
       </ServiceProvider>
     </QueryClientProvider>
     </ErrorBoundary>

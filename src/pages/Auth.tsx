@@ -13,6 +13,8 @@ import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { ROUTES } from '@/config/routes';
+import { isClerkAuthEnabled } from '@/config/clerkConfig';
+import { ClerkAuthSurface } from '@/components/auth/ClerkAuthSurface';
 
 const emailSchema = z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password must be less than 100 characters');
@@ -251,6 +253,44 @@ export default function Auth() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Clerk mode: replace the custom email/password forms with Clerk's
+  // <SignIn/>/<SignUp/> (Clerk owns password reset + email confirmation in its own
+  // flow, so those Supabase-specific branches below are skipped). Signed-in users
+  // still fall through to the account-management card.
+  if (isClerkAuthEnabled() && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(ROUTES.APP_ROOT)}
+              className="flex items-center gap-2"
+            >
+              <Home className="w-4 h-4" />
+              Back to Home
+            </Button>
+          </div>
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>Welcome to IDEA Brand Coach</CardTitle>
+              <CardDescription>
+                Sign in to your account or create a new one to get started.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ClerkAuthSurface
+                redirectUrl={redirectUrl}
+                defaultTab={searchParams.get('mode') === 'signup' ? 'signup' : 'signin'}
+              />
+            </CardContent>
+          </Card>
+        </div>
+        <BetaNavigationWidget />
       </div>
     );
   }

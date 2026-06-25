@@ -13,6 +13,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { getSupabaseAccessToken } from '@/integrations/supabase/sessionToken';
 import { captureAlphaEvent } from '@/lib/posthogClient';
 import { ICompetitiveAnalysisService } from './interfaces/ICompetitiveAnalysisService';
 import {
@@ -40,9 +41,11 @@ export class CompetitiveAnalysisService implements ICompetitiveAnalysisService {
    * @throws Error if no active session
    */
   private async getAuthSession(): Promise<string> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No active session found');
-    return session.access_token;
+    // Bearer for edge-fn calls — resolves the Supabase session token or, in Clerk
+    // mode, the live Clerk session token.
+    const token = await getSupabaseAccessToken();
+    if (!token) throw new Error('No active session found');
+    return token;
   }
 
   async startAnalysis(data: CompetitiveAnalysisCreate): Promise<CompetitiveAnalysis> {

@@ -27,6 +27,7 @@
     "mcp:build:docker": "npm run mcp:bundle && docker build -f deploy/mcp/Dockerfile -t brand-coach-mcp:latest ."
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.8",
     "@hookform/resolvers": "^3.9.0",
     "@huggingface/transformers": "^3.7.1",
     "@modelcontextprotocol/ext-apps": "^1.7.4",

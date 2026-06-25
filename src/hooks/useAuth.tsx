@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useServices } from '@/services/ServiceProvider';
 import { captureAlphaEvent, identifyUser, resetIdentity } from '@/lib/posthogClient';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   session: Session | null;
   // True between a PASSWORD_RECOVERY event and a successful password update —
@@ -24,7 +24,10 @@ interface AuthContextType {
   loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Exported so the flag-gated Clerk provider (ClerkAuthProvider) can supply this
+// exact context shape — every useAuth() consumer then works unchanged in either
+// auth mode.
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
