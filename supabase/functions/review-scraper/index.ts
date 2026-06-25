@@ -96,13 +96,20 @@ function reviewsFromJson(jsonReviews: JsonReview[], sourceUrl: string): ScrapedR
     }));
 }
 
+/** Strip the Firecrawl key and any bearer tokens from text before it is logged/returned. */
+function redactSecret(text: string): string {
+  let out = text.replace(/Bearer\s+[\w.-]+/gi, 'Bearer [redacted]');
+  if (firecrawlApiKey) out = out.split(firecrawlApiKey).join('[redacted]');
+  return out;
+}
+
 /**
- * Scrape a single URL using the Firecrawl API.
- * Adapted from firecrawl-amazon.ts patterns.
+ * Scrape a single URL using the Firecrawl API. Throws (never returns null) on any
+ * failure; the per-URL caller catches and records the error for that URL.
  */
 async function scrapeUrl(
   url: string,
-): Promise<{ markdown: string; html: string; jsonReviews: JsonReview[] } | null> {
+): Promise<{ markdown: string; html: string; jsonReviews: JsonReview[] }> {
   try {
     const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
       method: "POST",
@@ -128,17 +135,18 @@ async function scrapeUrl(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorText = redactSecret(await response.text()).slice(0, 300);
       console.error(`Firecrawl API error (${response.status}):`, errorText);
       // Surface the cause to the per-URL result instead of a generic "Failed to scrape".
-      throw new Error(`Firecrawl ${response.status}: ${errorText.slice(0, 300)}`);
+      throw new Error(`Firecrawl ${response.status}: ${errorText}`);
     }
 
     const data: FirecrawlResponse = await response.json();
     const responseData = data.data;
 
     if (!responseData?.markdown) {
-      console.error("Missing markdown in Firecrawl response for:", url, JSON.stringify(data).slice(0, 400));
+      // Log only the response keys — never the raw body (may carry content/metadata).
+      console.error("Missing markdown in Firecrawl response for:", url, "keys:", Object.keys(responseData ?? {}));
       throw new Error('Firecrawl returned no page content (possible block/captcha).');
     }
 
@@ -296,8 +304,13 @@ function isPublicHttpUrl(raw: string): boolean {
     return false;
   }
   if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
-  const host = u.hostname.toLowerCase();
-  if (host === 'localhost' || host === '::1' || host.endsWith('.local')) return false;
+  // URL.hostname brackets IPv6 literals ([::1]); strip them before matching.
+  const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (host === 'localhost' || host.endsWith('.local')) return false;
+  // Reject ALL IPv6 literals — no legitimate scrape target is a bare IPv6 address. Covers
+  // ::1, ::, fe80::/10 (link-local), fc00::/7 (ULA), and ::ffff:<ipv4> metadata-mapped
+  // forms (e.g. ::ffff:169.254.169.254), closing the IPv4-mapped SSRF bypass.
+  if (host.includes(':')) return false;
   const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
   if (m) {
     const a = parseInt(m[1]);
@@ -307,6 +320,15 @@ function isPublicHttpUrl(raw: string): boolean {
         (a === 100 && b >= 64 && b <= 127)) return false;
   }
   return true;
+}
+
+/** True only when the URL's HOST is an amazon.* marketplace (not any URL containing "amazon."). */
+function isAmazonHost(raw: string): boolean {
+  try {
+    return /^(?:www\.)?amazon\.[a-z.]+$/i.test(new URL(raw).hostname);
+  } catch {
+    return false;
+  }
 }
 
 serve(async (req) => {
@@ -336,7 +358,9 @@ serve(async (req) => {
       throw new Error('Missing FIRECRAWL_API_KEY environment variable');
     }
 
-    const { urls, maxReviewsPerUrl = 20 } = await req.json();
+    const { urls, maxReviewsPerUrl: maxReviewsRaw = 20 } = await req.json();
+    // Cap reviews-per-URL to bound response size (caller-controlled; Firecrawl bills per URL).
+    const maxReviewsPerUrl = Math.min(Math.max(1, Number(maxReviewsRaw) || 20), 50);
 
     if (!urls || !Array.isArray(urls) || urls.length === 0) {
       return new Response(
@@ -362,28 +386,22 @@ serve(async (req) => {
       console.log(`Scraping (${i + 1}/${cappedUrls.length}): ${url}`);
 
       try {
+        // scrapeUrl throws (never returns null) on failure → caught below per-URL.
         const scraped = await scrapeUrl(url);
 
-        if (!scraped) {
-          results.push({ url, reviews: [], error: 'Failed to scrape URL' });
-        } else {
-          // PRIMARY: clean reviews from Firecrawl's structured json extraction.
-          let reviews: ScrapedReview[] = reviewsFromJson(scraped.jsonReviews, url);
-          // FALLBACK (json empty): the regex parsers. Use the Amazon HTML parser for
-          // any Amazon marketplace (.com/.co.uk/.de/…), markdown elsewhere.
-          if (reviews.length === 0) {
-            reviews = /amazon\.[a-z.]+\//i.test(url)
-              ? parseAmazonReviews(scraped.markdown, scraped.html, url)
-              : parseReviewsFromMarkdown(scraped.markdown, url);
-          }
-
-          results.push({
-            url,
-            reviews: reviews.slice(0, maxReviewsPerUrl),
-          });
-
-          console.log(`  Found ${reviews.length} reviews from ${url}`);
+        // PRIMARY: clean reviews from Firecrawl's structured json extraction.
+        let reviews: ScrapedReview[] = reviewsFromJson(scraped.jsonReviews, url);
+        // FALLBACK (json empty): the regex parsers. Use the Amazon HTML parser for any
+        // Amazon marketplace host (.com/.co.uk/.de/…), markdown elsewhere.
+        if (reviews.length === 0) {
+          reviews = isAmazonHost(url)
+            ? parseAmazonReviews(scraped.markdown, scraped.html, url)
+            : parseReviewsFromMarkdown(scraped.markdown, url);
         }
+
+        const kept = reviews.slice(0, maxReviewsPerUrl);
+        results.push({ url, reviews: kept });
+        console.log(`  Found ${kept.length} reviews from ${url}`);
       } catch (scrapeError) {
         console.error(`Error scraping ${url}:`, scrapeError);
         results.push({

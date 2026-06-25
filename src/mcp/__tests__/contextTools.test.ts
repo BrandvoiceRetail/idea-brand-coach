@@ -475,7 +475,7 @@ describe('ingest_evidence tool', () => {
     const edge = stubEdge({ ok: false, data: null, note: 'edge function review-scraper failed (HTTP 500)' });
     const res = await runWithIdentity(authed, () =>
       connect(ingestWith(edge)).then((c) =>
-        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B0XYZ' } }),
+        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B000000001' } }),
       ),
     );
     const sc = res.structuredContent as { ok: boolean; snapshot_id: string | null; notes: string[] };
@@ -489,11 +489,81 @@ describe('ingest_evidence tool', () => {
     const edge = stubEdge({ ok: true, data: { results: [{ url: 'x', reviews: [] }] } });
     const res = await runWithIdentity(authed, () =>
       connect(ingestWith(edge)).then((c) =>
-        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B0XYZ', marketplace: 'com' } }),
+        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B000000001', marketplace: 'com' } }),
       ),
     );
     const sc = res.structuredContent as { ok: boolean; notes: string[] };
     expect(sc.ok).toBe(false);
     expect(sc.notes.join(' ')).toMatch(/0 reviews/);
+  });
+
+  it('asin: a full amazon.* URL is passed through verbatim (marketplace ignored)', async () => {
+    const stub = install();
+    stub.on('evidence_snapshots', 'insert', { data: { id: 'snap-url' }, error: null });
+    const calls: Array<{ body: { urls?: string[] } }> = [];
+    const edge = stubEdge(
+      { ok: true, data: { results: [{ url: 'x', reviews: [{ body: 'solid binder' }] }] } },
+      (_n, body) => calls.push({ body: body as { urls?: string[] } }),
+    );
+    const res = await runWithIdentity(authed, () =>
+      connect(ingestWith(edge)).then((c) =>
+        c.callTool({
+          name: 'ingest_evidence',
+          arguments: { asin: 'https://www.amazon.de/dp/B000000002', marketplace: 'com' },
+        }),
+      ),
+    );
+    const sc = res.structuredContent as { ok: boolean; reviews_parsed: number };
+    expect(sc.ok).toBe(true);
+    expect(sc.reviews_parsed).toBe(1);
+    expect(calls[0]?.body.urls?.[0]).toBe('https://www.amazon.de/dp/B000000002'); // verbatim, .com ignored
+  });
+
+  it('asin: rejects a non-ASIN / non-amazon input without calling the scraper (no fabrication)', async () => {
+    install();
+    const calls: string[] = [];
+    const edge = stubEdge({ ok: true, data: { results: [] } }, (n) => calls.push(n));
+    const bad = async (args: Record<string, unknown>) =>
+      runWithIdentity(authed, () =>
+        connect(ingestWith(edge)).then((c) => c.callTool({ name: 'ingest_evidence', arguments: args })),
+      );
+
+    const short = (await bad({ asin: 'B0XYZ' })).structuredContent as { ok: boolean; notes: string[] };
+    expect(short.ok).toBe(false);
+    expect(short.notes.join(' ')).toMatch(/not a valid 10-character ASIN/i);
+
+    const traversal = (await bad({ asin: 'B0CJBN849W/../../s?k=x' })).structuredContent as { notes: string[] };
+    expect(traversal.notes.join(' ')).toMatch(/not a valid 10-character ASIN/i);
+
+    const evilMkt = (await bad({ asin: 'B000000001', marketplace: 'evil.com/x?=' })).structuredContent as { notes: string[] };
+    expect(evilMkt.notes.join(' ')).toMatch(/unknown marketplace/i);
+
+    const evilUrl = (await bad({ asin: 'https://evil.com/dp/B000000001' })).structuredContent as { notes: string[] };
+    expect(evilUrl.notes.join(' ')).toMatch(/amazon\.\* product page/i);
+
+    expect(calls).toHaveLength(0); // the scraper was never invoked for any invalid input
+  });
+
+  it('asin + product_id: scraped reviews are also written to user_product_reviews', async () => {
+    const stub = install();
+    stub.on('evidence_snapshots', 'insert', { data: { id: 'snap-pid' }, error: null });
+    stub.on('user_product_reviews', 'insert', { data: [{ id: 'r1' }, { id: 'r2' }], error: null });
+    const edge = stubEdge({
+      ok: true,
+      data: {
+        results: [
+          { url: 'x', reviews: [{ reviewerName: 'Kit', rating: 5, body: 'a' }, { reviewerName: 'Anne', rating: 4, body: 'b' }] },
+        ],
+      },
+    });
+    const res = await runWithIdentity(authed, () =>
+      connect(ingestWith(edge)).then((c) =>
+        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B000000001', product_id: 'prod-9' } }),
+      ),
+    );
+    const sc = res.structuredContent as { reviews_rows: number };
+    expect(sc.reviews_rows).toBe(2);
+    const ins = stub.ops.find((o) => o.table === 'user_product_reviews' && o.verb === 'insert');
+    expect((ins?.payload as Array<{ product_id: string }>)[0]).toMatchObject({ product_id: 'prod-9' });
   });
 });

@@ -9,9 +9,10 @@
  *     `product_id` is supplied (own product), each parsed review is ALSO written as a
  *     `user_product_reviews` row (the richer own-evidence store the resolver reads first).
  *   - `listing_text` → frozen as the same/that snapshot's `listing` jsonb (slot #3).
- *   - `asin` → NOT yet wired: returns a clearly-marked stub note. The `/dp/` scrape is a
- *     follow-up (review-scraper learnings: `/dp/` yields the listing + ~8 reviews;
- *     `/product-reviews/` is login-walled/dead). We never fabricate scraped content.
+ *   - `asin` (validated 10-char ASIN) + optional `marketplace` (allowlisted), OR a full
+ *     amazon.* product URL → scraped for real reviews via the `review-scraper` edge fn and
+ *     frozen exactly like pasted reviews. Inputs that aren't a valid ASIN/Amazon URL are
+ *     refused with a note (no arbitrary-host scrape). We never fabricate scraped content.
  *
  * Identity-gated (gateWrite); all writes run on the JWT-bound RLS client scoped to the
  * caller (guardrail #5). Returns the counts written so the caller can confirm intake.
@@ -47,7 +48,12 @@ interface ReviewScrapeResponse {
   totalReviews?: number;
 }
 
-/** Map a scraped review row onto the ParsedReview shape (title folded into body). */
+/**
+ * Map a scraped review row onto the ParsedReview shape (title folded into body).
+ * Contract with the edge fn's review encoders (reviewsFromJson / the regex parsers):
+ * `'Anonymous'` and rating `0` are their "unknown" sentinels, so we drop them rather
+ * than store them as real values. If the edge fn ever changes those defaults, update here.
+ */
 export function toParsedReview(r: ScrapedReviewRow): ParsedReview {
   const body = [r.title?.trim(), r.body?.trim()].filter(Boolean).join(' — ');
   const review: ParsedReview = { body };
@@ -56,29 +62,72 @@ export function toParsedReview(r: ScrapedReviewRow): ParsedReview {
   return review;
 }
 
+/** Amazon ASIN: exactly 10 letters/digits (Amazon's fixed format). */
+const ASIN_RE = /^[A-Z0-9]{10}$/i;
+
+/** Amazon marketplace TLD suffixes we allow `asin` to be scoped to (default `com`). */
+const AMAZON_MARKETPLACES = new Set([
+  'com', 'co.uk', 'de', 'fr', 'co.jp', 'ca', 'com.au', 'in', 'com.br', 'com.mx',
+  'nl', 'es', 'it', 'se', 'pl', 'com.tr', 'ae', 'sg', 'sa',
+]);
+
+/**
+ * Build the Amazon /dp/ scrape URL from a validated ASIN + allowlisted marketplace, or
+ * accept a full URL only when its host is `amazon.*`. Refuses anything else so a crafted
+ * `asin`/`marketplace` can never steer the scraper at an arbitrary host (or inject a path).
+ */
+export function buildScrapeUrl(asin: string, marketplace?: string): { url: string } | { error: string } {
+  const raw = asin.trim();
+  if (/^https?:\/\//i.test(raw)) {
+    let host: string;
+    try {
+      host = new URL(raw).hostname.toLowerCase();
+    } catch {
+      return { error: 'asin looks like a URL but is not parseable' };
+    }
+    if (!/^(?:www\.)?amazon\.[a-z.]+$/i.test(host)) {
+      return { error: 'a URL asin must point at an amazon.* product page' };
+    }
+    return { url: raw };
+  }
+  if (!ASIN_RE.test(raw)) {
+    return { error: `"${raw}" is not a valid 10-character ASIN or amazon.* URL` };
+  }
+  const mkt = (marketplace ?? 'com').trim().replace(/^\.+/, '').toLowerCase();
+  if (!AMAZON_MARKETPLACES.has(mkt)) {
+    return { error: `unknown marketplace "${mkt}" (use one of: ${[...AMAZON_MARKETPLACES].join(', ')})` };
+  }
+  return { url: `https://www.amazon.${mkt}/dp/${raw}` };
+}
+
 const inputSchema = {
   reviews_text: z
     .string()
+    .max(100_000)
     .optional()
     .describe('Pasted reviews verbatim (blank-line- or line-separated). Chunked into review objects.'),
   listing_text: z
     .string()
+    .max(100_000)
     .optional()
     .describe('Pasted listing copy (title/bullets/A+/description). Frozen as the snapshot listing.'),
   asin: z
     .string()
+    .max(2_048)
     .optional()
     .describe(
-      'Amazon ASIN (or a full Amazon product URL) to scrape for real reviews via the ' +
-        'review-scraper edge fn. Scraped reviews are frozen as evidence just like pasted ones; ' +
-        'on failure or zero results the tool degrades to a note (never fabricates).',
+      'Amazon ASIN (10 letters/digits) or a full amazon.* product URL to scrape for real ' +
+        'reviews via the review-scraper edge fn. Scraped reviews are frozen as evidence just ' +
+        'like pasted ones; invalid input or zero results degrades to a note (never fabricates).',
     ),
   marketplace: z
     .string()
+    .max(12)
     .optional()
     .describe("Amazon marketplace for the asin scrape, e.g. 'com' (default) or 'co.uk'. Ignored when asin is a full URL."),
   source_label: z
     .string()
+    .max(500)
     .optional()
     .describe('Human label for provenance (e.g. "InfinityVault /dp/ paste 2026-06"). Stored on the snapshot source.'),
   product_id: z
@@ -158,26 +207,28 @@ export function registerIngestEvidenceTool(server: McpServer, edge: EdgeFnClient
       // them into `parsed` so they freeze + write through the same path as pasted reviews.
       // Never fabricate — any failure / empty result becomes a note, not invented content.
       if (asin) {
-        const url = /^https?:\/\//i.test(asin)
-          ? asin
-          : `https://www.amazon.${marketplace ?? 'com'}/dp/${asin}`;
-        const scraped = await edge.invoke<ReviewScrapeResponse>('review-scraper', {
-          urls: [url],
-          maxReviewsPerUrl: 20,
-        });
-        if (!scraped.ok) {
-          notes.push(`asin-scrape failed (${scraped.note ?? 'unavailable'}) — paste reviews via reviews_text instead.`);
+        const built = buildScrapeUrl(asin, marketplace);
+        if ('error' in built) {
+          notes.push(`asin-scrape skipped: ${built.error}. Paste reviews via reviews_text instead.`);
         } else {
-          const scrapedReviews = (scraped.data?.results?.[0]?.reviews ?? [])
-            .map(toParsedReview)
-            .filter((r) => r.body.length > 0);
-          if (scrapedReviews.length === 0) {
-            notes.push(
-              `asin-scrape returned 0 reviews for ${asin} — the /dp/ page may show few/none; paste them via reviews_text.`,
-            );
+          const scraped = await edge.invoke<ReviewScrapeResponse>('review-scraper', {
+            urls: [built.url],
+            maxReviewsPerUrl: 20,
+          });
+          if (!scraped.ok) {
+            notes.push(`asin-scrape failed (${scraped.note ?? 'unavailable'}) — paste reviews via reviews_text instead.`);
           } else {
-            parsed.push(...scrapedReviews);
-            notes.push(`Scraped ${scrapedReviews.length} review(s) from ${url}.`);
+            const scrapedReviews = (scraped.data?.results?.[0]?.reviews ?? [])
+              .map(toParsedReview)
+              .filter((r) => r.body.length > 0);
+            if (scrapedReviews.length === 0) {
+              notes.push(
+                `asin-scrape returned 0 reviews from ${built.url} — the page may show few/none; paste them via reviews_text.`,
+              );
+            } else {
+              parsed.push(...scrapedReviews);
+              notes.push(`Scraped ${scrapedReviews.length} review(s) from ${built.url}.`);
+            }
           }
         }
       }
