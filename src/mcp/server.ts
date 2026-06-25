@@ -19,6 +19,7 @@ import { NativeLedgerClient } from './service/nativeLedger.js';
 import { registerOnboard } from './tools/onboard.js';
 import { instrumentToolLatency } from './instrument.js';
 import { registerStructuredFallback } from './structuredFallback.js';
+import { registerTerminologyGuard } from './terminologyGuard.js';
 import { registerHealthTool } from './tools/health.js';
 import { registerListAssetsTool } from './tools/listAssets.js';
 import { registerGetAssetTool } from './tools/getAsset.js';
@@ -40,6 +41,7 @@ import { registerIngestEvidenceTool } from './tools/ingestEvidence.js';
 import { registerBulkIngestEvidenceTool, registerGetIngestJobTool } from './tools/bulkIngest.js';
 import { registerBuildAvatarStageTool } from './tools/buildAvatarStage.js';
 import { registerRunDiagnosticEvidenceTool } from './tools/runDiagnosticEvidence.js';
+import { registerIdentifyDecisionTriggerTool } from './tools/identifyDecisionTrigger.js';
 import { registerGenerateCanvasTool } from './tools/generateCanvas.js';
 import { registerGenerateBriefTool } from './tools/generateBrief.js';
 import { registerGenerateAuditIdeaMapTool } from './tools/generateAuditIdeaMap.js';
@@ -89,6 +91,11 @@ export function createServer(
   // ids, records, transcripts — and aren't left with only a summary line. Same seam;
   // must also run before the register*Tool() calls.
   registerStructuredFallback(server);
+
+  // Terminology policy (IDEA-POLICY-TERM-001): detect + log any Tier-B/C engine internal
+  // (S1–S4 labels, buyer-state names, neuroanatomy) that leaks into a tool's user-facing
+  // output. Detection only — a leak is fixed at the source, never silently stripped here.
+  registerTerminologyGuard(server);
 
   const ivos = ledgerClient ?? new NativeLedgerClient();
   const edge = edgeFn ?? new EdgeFnClient(config);
@@ -154,6 +161,9 @@ export function createServer(
   // the Audit×IDEA cross-map (generate_audit_idea_map). Each validates against its
   // Phase-0 contract, carries grounding evidence|inference, and is gateWrite-gated.
   registerRunDiagnosticEvidenceTool(server);
+  // The named Decision Trigger™ (the hero output) — bound from the identify-decision-trigger
+  // engine so the connector can hand the seller the one lever to fix, not just diagnostics.
+  registerIdentifyDecisionTriggerTool(server);
   registerGenerateCanvasTool(server);
   registerGenerateBriefTool(server);
   registerGenerateAuditIdeaMapTool(server);

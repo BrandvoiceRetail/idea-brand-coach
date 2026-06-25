@@ -69,6 +69,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'get_funnel_coverage',
       'get_ingest_job',
       'health',
+      'identify_decision_trigger',
       'ingest_evidence',
       'list_assets',
       'list_avatars',
