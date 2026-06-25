@@ -95,6 +95,35 @@ function sendUnauthorized(config: HostConfig, res: http.ServerResponse): void {
   res.end(JSON.stringify({ error: 'unauthorized', error_description: 'authentication required' }));
 }
 
+/** Was a Bearer token present (regardless of validity)? Distinguishes an expired/invalid
+ *  token (client will refresh) from no token at all (first connect) on a 401. */
+function hadBearer(authHeader: string | undefined): boolean {
+  return /^Bearer\s+\S/i.test((authHeader ?? '').trim());
+}
+
+/** Extract the MCP handshake signal from a request body: whether it's an `initialize`
+ *  call and, if so, the client's self-reported name/version. Used for the
+ *  authenticated-session telemetry signal. Tolerant of any body shape. */
+export function initializeInfo(body: unknown): {
+  isInitialize: boolean;
+  clientName: string | null;
+  clientVersion: string | null;
+} {
+  const miss = { isInitialize: false, clientName: null, clientVersion: null };
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return miss;
+  const b = body as { method?: unknown; params?: unknown };
+  if (b.method !== 'initialize') return miss;
+  const params = b.params && typeof b.params === 'object' ? (b.params as { clientInfo?: unknown }) : {};
+  const ci = params.clientInfo && typeof params.clientInfo === 'object'
+    ? (params.clientInfo as { name?: unknown; version?: unknown })
+    : {};
+  return {
+    isInitialize: true,
+    clientName: typeof ci.name === 'string' ? ci.name : null,
+    clientVersion: typeof ci.version === 'string' ? ci.version : null,
+  };
+}
+
 async function handleMcp(
   config: HostConfig,
   req: http.IncomingMessage,
@@ -110,16 +139,33 @@ async function handleMcp(
   }
 
   const identity = await resolveIdentity(req.headers['authorization'] as string | undefined);
+  const meta = resolveRequestMeta(req.headers);
 
   // OAuth enforcement (flag-gated kill switch): an unauthenticated/invalid-token request
   // gets the RFC 9728 challenge so the client kicks off the Supabase OAuth flow.
   if (config.oauthRequireAuth && !identity.authenticated) {
-    safeLog({ event: 'http.mcp_unauthorized' });
+    const hadToken = hadBearer(req.headers['authorization'] as string | undefined);
+    safeLog({ event: 'http.mcp_unauthorized', had_token: hadToken });
+    // Telemetry: the OAuth-funnel entry point. had_token=true => expired/invalid token
+    // (client should refresh); false => first/anonymous connect.
+    captureMcpEvent('anon', 'mcp_auth_challenge', { had_token: hadToken, country: meta.country });
     sendUnauthorized(config, res);
     return;
   }
 
-  const meta = resolveRequestMeta(req.headers);
+  // Telemetry: an authenticated client completed the MCP handshake — a per-connection
+  // "session authenticated" signal (the successful end of the OAuth funnel), broken down
+  // by client. Fires only on `initialize`, not on every tool call.
+  if (identity.authenticated) {
+    const init = initializeInfo(body);
+    if (init.isInitialize) {
+      captureMcpEvent(identity.userId ?? 'anon', 'mcp_session_authenticated', {
+        client_name: init.clientName,
+        client_version: init.clientVersion,
+        country: meta.country,
+      });
+    }
+  }
 
   await runWithIdentity(identity, () => runWithRequestMeta(meta, async () => {
     const { server } = createServer();

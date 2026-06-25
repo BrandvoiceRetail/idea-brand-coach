@@ -1,8 +1,12 @@
 // @vitest-environment node
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
-import { createHttpServer } from '../http.js';
+
+vi.mock('../posthog.js', () => ({ captureMcpEvent: vi.fn(), captureMcpException: vi.fn() }));
+
+import { createHttpServer, initializeInfo } from '../http.js';
+import { captureMcpEvent } from '../posthog.js';
 import type { HostConfig } from '../config.js';
 import {
   protectedResourceMetadata,
@@ -63,8 +67,25 @@ describe('oauth resource-server metadata (RFC 9728 / 8707)', () => {
   });
 });
 
+describe('oauth telemetry', () => {
+  it('initializeInfo detects the handshake + client info and tolerates junk', () => {
+    expect(
+      initializeInfo({ method: 'initialize', params: { clientInfo: { name: 'claude', version: '1.2' } } }),
+    ).toEqual({ isInitialize: true, clientName: 'claude', clientVersion: '1.2' });
+    expect(initializeInfo({ method: 'initialize' })).toEqual({
+      isInitialize: true,
+      clientName: null,
+      clientVersion: null,
+    });
+    expect(initializeInfo({ method: 'tools/list' }).isInitialize).toBe(false);
+    expect(initializeInfo(null).isInitialize).toBe(false);
+    expect(initializeInfo([{ method: 'initialize' }]).isInitialize).toBe(false);
+  });
+});
+
 describe('oauth http surface', () => {
   let server: Server | undefined;
+  beforeEach(() => vi.clearAllMocks());
   afterEach(() => new Promise<void>((r) => (server ? server.close(() => r()) : r())));
 
   const listen = (cfg: HostConfig): Promise<string> =>
@@ -95,6 +116,12 @@ describe('oauth http surface', () => {
     });
     expect(res.status).toBe(401);
     expect(res.headers.get('www-authenticate')).toContain('resource_metadata=');
+    // telemetry: the OAuth-funnel entry event fired (no token present => had_token:false)
+    expect(captureMcpEvent).toHaveBeenCalledWith(
+      'anon',
+      'mcp_auth_challenge',
+      expect.objectContaining({ had_token: false }),
+    );
   });
 
   it('does NOT challenge when enforcement is off (flag kill switch)', async () => {
