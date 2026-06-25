@@ -49,6 +49,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
     expect(names).toEqual([
       'audit_asset',
       'build_avatar_stage',
+      'bulk_ingest_evidence',
       'create_avatar',
       'design_test',
       'draft_asset',
@@ -66,6 +67,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'get_funnel_assets',
       'get_funnel_audit',
       'get_funnel_coverage',
+      'get_ingest_job',
       'health',
       'ingest_evidence',
       'list_assets',

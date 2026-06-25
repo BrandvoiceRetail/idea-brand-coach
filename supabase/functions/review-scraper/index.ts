@@ -361,28 +361,39 @@ serve(async (req) => {
   }
 
   try {
-    // AuthN: require an authenticated user. verify_jwt alone is insufficient (the public
-    // anon key is itself a valid JWT); getUser() rejects the anon token and closes
-    // unauthenticated Firecrawl credit-abuse. Both legitimate callers forward a user JWT.
     const authHeader = req.headers.get('Authorization') ?? '';
-    const authClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const bearer = authHeader.replace(/^Bearer\s+/i, '');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const body = await req.json().catch(() => ({}));
+
+    // AuthN, two modes. (a) Service-role passthrough (the bulk worker): the bearer is the
+    // service-role key, so the caller is trusted infra — take user_id from the body for
+    // rate-limit attribution. (b) User mode: verify_jwt alone is insufficient (the anon key
+    // is a valid JWT), so getUser() rejects anon and closes unauthenticated credit-abuse.
+    let effectiveUserId: string | null;
+    if (serviceKey && bearer === serviceKey) {
+      effectiveUserId = typeof body?.user_id === 'string' ? body.user_id : null;
+    } else {
+      const authClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data: { user }, error: authError } = await authClient.auth.getUser();
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      effectiveUserId = user.id;
     }
 
     if (!firecrawlApiKey) {
       throw new Error('Missing FIRECRAWL_API_KEY environment variable');
     }
 
-    const { urls, maxReviewsPerUrl: maxReviewsRaw = 20 } = await req.json();
+    const { urls, maxReviewsPerUrl: maxReviewsRaw = 20 } = body;
     // Cap reviews-per-URL to bound response size (caller-controlled; Firecrawl bills per URL).
     const maxReviewsPerUrl = Math.min(Math.max(1, Number(maxReviewsRaw) || 20), 50);
 
@@ -427,7 +438,7 @@ serve(async (req) => {
             results.push({ url, reviews: [], error: 'review scraping is temporarily disabled' });
             continue;
           }
-          const quota = await consumeScrapeQuota(user.id, QUOTA_CAPS);
+          const quota = await consumeScrapeQuota(effectiveUserId, QUOTA_CAPS);
           if (!quota.allowed) {
             console.log(`  Rate limited (${quota.reason}) for ${url}`);
             results.push({ url, reviews: [], error: `rate limit: ${quota.reason ?? 'scrape quota reached'}` });

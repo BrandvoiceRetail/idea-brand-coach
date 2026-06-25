@@ -125,5 +125,13 @@ The cache + async-bounded-ingest is the same shape the competitor-agents cost mo
   `REVIEW_SCRAPE_ENABLED`; fail-open if the limiter errors. Live-verified: cold fetch counts (user=1),
   cache hit doesn't; RPC denies at cap. **Tune `SCRAPE_GLOBAL_DAILY_MAX` once the Firecrawl plan
   (item 4) is confirmed.** (3) Supabase Pro (kills auto-pause); (4) confirm + size the Firecrawl plan.
-- **P1 (for true 100-user bursts + bulk upload):** async queue + worker; `bulk_ingest_evidence`
-  (async by design); the "populating" UX contract + observability.
+- **P1 (for true 100-user bursts + bulk upload):** **✅ DONE 2026-06-25** — durable async queue
+  (`scrape_jobs` + `scrape_job_items`, migrations 20260625000100/000200) + worker edge fn
+  `process-scrape-jobs` (claims via SKIP-LOCKED `claim_scrape_items` RPC; scrapes through
+  `review-scraper`'s new SERVICE-ROLE mode so cache + rate-limit are reused; freezes evidence via
+  service-role + explicit user_id; self-re-triggers via `waitUntil`, backs off on rate-limit).
+  MCP tools `bulk_ingest_evidence(asins[],marketplace?,product_id?,avatar_id?)` (validates/dedups,
+  enqueues, kicks, returns job_id immediately) + `get_ingest_job(job_id)` (progress + nudge).
+  Live-verified: 2-URL job drained to done (5+6 reviews frozen) via cache hits. No service-role key
+  on the box (work stays inside Supabase). DEFERRED follow-up (P1.5): a pg_cron safety-net to
+  recover a stalled drain when no user is nudging (today: self-trigger + submit/poll nudges drive it).

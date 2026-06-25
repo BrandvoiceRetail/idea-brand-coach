@@ -37,6 +37,7 @@ import { registerPersistSignatureTool } from './tools/persistSignature.js';
 import { registerGetContextStatusTool } from './tools/getContextStatus.js';
 import { registerProvideContextTool } from './tools/provideContext.js';
 import { registerIngestEvidenceTool } from './tools/ingestEvidence.js';
+import { registerBulkIngestEvidenceTool, registerGetIngestJobTool } from './tools/bulkIngest.js';
 import { registerBuildAvatarStageTool } from './tools/buildAvatarStage.js';
 import { registerRunDiagnosticEvidenceTool } from './tools/runDiagnosticEvidence.js';
 import { registerGenerateCanvasTool } from './tools/generateCanvas.js';
@@ -135,6 +136,8 @@ export function createServer(
   registerGetContextStatusTool(server);
   registerProvideContextTool(server);
   registerIngestEvidenceTool(server, edge);
+  registerBulkIngestEvidenceTool(server, edge);
+  registerGetIngestJobTool(server, edge);
 
   // Avatar 2.0 forensic engine: build_avatar_stage runs one forensic stage (s1
   // vocabulary -> s2 job map -> s3 triggers -> s4 objections) or the full S1->S5
