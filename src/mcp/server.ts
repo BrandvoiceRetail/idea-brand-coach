@@ -20,13 +20,14 @@ import { registerOnboard } from './tools/onboard.js';
 import { instrumentToolLatency } from './instrument.js';
 import { registerStructuredFallback } from './structuredFallback.js';
 import { registerTerminologyGuard } from './terminologyGuard.js';
+import { registerForensicGuard } from './forensicGuard.js';
 import { registerHealthTool } from './tools/health.js';
 import { registerListAssetsTool } from './tools/listAssets.js';
 import { registerGetAssetTool } from './tools/getAsset.js';
 import { EdgeFnClient } from './edgeFn/client.js';
 import { registerGenerateConceptsTool } from './tools/generateConcepts.js';
 import { registerPublishFilterCheckTool } from './tools/publishFilterCheck.js';
-import { registerDraftAssetTool } from './tools/draftAsset.js';
+// import { registerDraftAssetTool } from './tools/draftAsset.js'; // OFF Alpha surface (Trevor 2026-06-25); re-enable in Beta
 import { registerDesignTestTool } from './tools/designTest.js';
 import { registerRunTrustGapTool } from './tools/runTrustGap.js';
 import { registerGetAssetHistoryTool } from './tools/getAssetHistory.js';
@@ -42,6 +43,7 @@ import { registerBulkIngestEvidenceTool, registerGetIngestJobTool } from './tool
 import { registerBuildAvatarStageTool } from './tools/buildAvatarStage.js';
 import { registerRunDiagnosticEvidenceTool } from './tools/runDiagnosticEvidence.js';
 import { registerIdentifyDecisionTriggerTool } from './tools/identifyDecisionTrigger.js';
+import { registerComputeTrustGapLiftTool } from './tools/computeTrustGapLift.js';
 import { registerGenerateCanvasTool } from './tools/generateCanvas.js';
 import { registerGenerateBriefTool } from './tools/generateBrief.js';
 import { registerGenerateAuditIdeaMapTool } from './tools/generateAuditIdeaMap.js';
@@ -97,6 +99,11 @@ export function createServer(
   // output. Detection only — a leak is fixed at the source, never silently stripped here.
   registerTerminologyGuard(server);
 
+  // Cost guardrail (Trevor 2026-06-25): cap how many heavy LLM forensic/generation calls one
+  // caller can make in a rolling window (~8 Sonnet calls each, no monetization gate yet).
+  // Refuses politely past the cap; env-tunable. Cheap deterministic tools pass through.
+  registerForensicGuard(server);
+
   const ivos = ledgerClient ?? new NativeLedgerClient();
   const edge = edgeFn ?? new EdgeFnClient(config);
 
@@ -122,7 +129,11 @@ export function createServer(
   // via record:false; never-fail on degraded writes).
   registerGenerateConceptsTool(server, edge);
   registerPublishFilterCheckTool(server, ivos);
-  registerDraftAssetTool(server, edge, ivos);
+  // draft_asset is OFF the Alpha surface (Trevor 2026-06-25): it generates generic copy not
+  // keyed to the user's own review evidence or their named Decision Trigger — the "good
+  // enough" output the product exists to replace. Re-enable in Beta once it is
+  // trigger-/evidence-grounded. The tool module (tools/draftAsset.ts) is retained.
+  // registerDraftAssetTool(server, edge, ivos);
   registerDesignTestTool(server);
 
   // OWNED diagnostics (convenience): only the pure, gate-free wrap for now —
@@ -164,6 +175,9 @@ export function createServer(
   // The named Decision Trigger™ (the hero output) — bound from the identify-decision-trigger
   // engine so the connector can hand the seller the one lever to fix, not just diagnostics.
   registerIdentifyDecisionTriggerTool(server);
+  // Re-measure: deterministic Trust Gap delta between two real diagnostic runs (the
+  // "watch the gap close" proof). Pure arithmetic — never fabricates a lift number.
+  registerComputeTrustGapLiftTool(server);
   registerGenerateCanvasTool(server);
   registerGenerateBriefTool(server);
   registerGenerateAuditIdeaMapTool(server);

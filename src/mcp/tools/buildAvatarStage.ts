@@ -51,7 +51,7 @@ export function registerBuildAvatarStageTool(server: McpServer): void {
     {
       title: 'Build an Avatar 2.0 forensic stage',
       description:
-        'Write tool: run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 triggers, s4 objections) or the full S1→S5 pipeline. Each stage grounds in resolved reviews (slot #1) + prior artifacts, invokes its edge fn verbatim, validates against its contract, and persists an artifact (RLS-scoped). Returns needs_input when reviews are unresolved (never runs ungrounded). Requires an authenticated Supabase JWT. The S5 signature auto-feed is D2/R-015 gated behind allow_signature.' + groundingPreamble('build_avatar_stage') + appGroundingPreamble('build_avatar_stage'),
+        'Write tool: run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 search-intent [trigger moment + what-they-search + labeled volume bands — the Workbook/PPC feed, NOT the hero Decision Trigger; the single named Decision Trigger™ lever is the identify_decision_trigger tool], s4 objections) or the full S1→S5 pipeline. Each stage grounds in resolved reviews (slot #1) + prior artifacts, invokes its edge fn verbatim, validates against its contract, and persists an artifact (RLS-scoped). Returns needs_input when reviews are unresolved (never runs ungrounded). Requires an authenticated Supabase JWT. The S5 signature auto-feed is D2/R-015 gated behind allow_signature.' + groundingPreamble('build_avatar_stage') + appGroundingPreamble('build_avatar_stage'),
       inputSchema,
     },
     async ({ stage, avatar_id, allow_signature }) => {

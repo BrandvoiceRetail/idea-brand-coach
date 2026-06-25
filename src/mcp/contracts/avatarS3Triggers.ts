@@ -1,6 +1,15 @@
 /**
  * Contract — `avatar_s3_triggers` (gold Workbook A, sheet 4, Stage 3 "The Decision Trigger™").
  *
+ * RECONCILIATION (Trevor 2026-06-25 — the "two Decision Triggers" decision): this S3 artifact is
+ * the WORKBOOK / SEARCH-INTENT feed — trigger moment + what-they-search + labeled volume bands
+ * (gold sheet 4, for PPC + the export). It is NOT the product's primary, user-facing Decision
+ * Trigger. THE single canonical Decision Trigger™ — the named six-type lever (dominant type,
+ * brand anchor, verbatim evidence, placement) — is the `identify_decision_trigger` tool (the
+ * identify-decision-trigger engine). Keep them distinct: this stays the search/keyword feed; that
+ * is the hero lever. (Demoting these bands to a pure Workbook export column is the deeper
+ * follow-up; this declaration removes the naming conflict now.)
+ *
  * §2 sheet 4 S3: SYNTHESIS + ESTIMATE. The "Estimated volume" column is a LABELED
  * band, never a fabricated number (§6 row: "S3 search-volume estimates ... Always
  * labeled bands"). The schema therefore models volume as free-text band labels
