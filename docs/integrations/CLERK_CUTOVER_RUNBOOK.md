@@ -35,6 +35,17 @@ saved with the Clerk domain).
      Under Clerk `auth.uid()` is NULL and the caller id is text — update each to
      read `(auth.jwt()->>'sub')` and accept text ids, or the RAG/knowledge/avatar
      paths break. NOT auto-rewritten.
+
+2. **Profile provisioning under Clerk (architecture decision — REQUIRED).**
+   Today `public.profiles` is auto-created by the `handle_new_user` trigger on
+   `auth.users` (`on_auth_user_created`), and `link_beta_tester_to_user` runs on the
+   same event. **Clerk users never hit `auth.users`, so these triggers never fire →
+   no profile row, no beta linking.** Replace with one of:
+   - a **Clerk webhook** (`user.created`) → edge function that inserts the profile
+     (keyed by the Clerk id), or
+   - **create-on-first-authenticated-load** (upsert the profile client/edge-side when
+     a Clerk user first appears).
+   Decide this BEFORE cutover; it pairs with the `profiles.id` → text decision in [H1].
 2. **Accept the data reality:** existing rows keyed to Supabase UUID `user_id`s will
    NOT match any Clerk `sub`. This is acceptable only because there are no real
    customers yet (internal/QA data). If that changes, a data-remap step is required
