@@ -2,6 +2,11 @@
  * Trevor system prompt for Claude — restructured with XML tags.
  * Claude performs better with XML-tagged instructions vs CAPITALIZED SECTIONS.
  *
+ * PARITY: this is the persona-faithful coach surface (full system-prompt control). The
+ * persona / posture / framework text here is governed by ADR-COACH-SURFACE-PARITY — keep
+ * it derived from the shared Coach Charter, in sync with the connector's steering
+ * (`src/mcp/config.ts` SERVER_INSTRUCTIONS); do not edit one in isolation.
+ *
  * Cache layout contract: everything generateSystemPrompt returns is the
  * STATIC system block (first cache breakpoint), shared across users per
  * (mode, extraction, documents, memory) variant. Anything per-user or

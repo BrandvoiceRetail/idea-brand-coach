@@ -23,6 +23,13 @@ Complete inventory of all OpenAI API calls, per-message cost breakdown, scale pr
 ### 📦 [Edge Function Versioning](./EDGE-FUNCTION-VERSIONING.md)
 Audit and refactoring plan for the four `generate-brand-strategy-*` edge functions. Identifies active v1/v2 paths, dead code, and proposed renames.
 
+### 🧩 Architecture Decision Records (ADRs)
+- [Coach Surface Parity](./adr/ADR-COACH-SURFACE-PARITY.md) — keeps the MCP/Claude-connector coach and the in-app coach chat at parity (capability, calculation, posture, framework, persona); defines the tiered ENFORCED/STEERED contract + the shared **Coach Charter** mechanism. Extends ↓.
+- [Unified Coach Capability Layer](./adr/ADR-UNIFIED-COACH-CAPABILITY-LAYER.md) — MCP gateway is the single capability layer; the in-app chat becomes an MCP client (tool loop, JWT forwarded).
+- [Conversation Memory — Semantic Retrieval](./adr/ADR-CONVERSATION-MEMORY.md) — pgvector semantic + recency memory window for Trevor.
+- [Claude Agent SDK Migration](./adr/ADR-CLAUDE-AGENT-SDK-MIGRATION.md) — chat inference OpenAI → Anthropic Claude.
+- [Embeddings Strategy](./adr/ADR-EMBEDDINGS-STRATEGY.md) — embeddings layer post-Claude migration.
+
 ### 🏗️ Domain Model (Coming Soon)
 Brand → Avatars hierarchy and business logic architecture.
 

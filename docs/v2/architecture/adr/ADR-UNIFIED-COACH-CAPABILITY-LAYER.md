@@ -4,6 +4,7 @@
 - **Date:** 2026-06-15
 - **Deciders:** Matthew Kerns (eng)
 - **Relates to:** `ADR-CLAUDE-AGENT-SDK-MIGRATION.md` (Proposed — partially implemented), `ADR-CONVERSATION-MEMORY.md` (Accepted), `ADR-EMBEDDINGS-STRATEGY.md` (Proposed), companion plan `docs/v2/architecture/CLAUDE-AGENT-SDK-MIGRATION.md`
+- **Extended by:** `ADR-COACH-SURFACE-PARITY.md` — carries this *capability* parity forward to *full-surface* parity (posture, framework definition, persona/voice) across the two coach surfaces.
 
 ## Context
 
