@@ -100,14 +100,14 @@ const inputSchema = {
   avatar_id: z.string().optional().describe('Avatar scope; omit for the brand-level chain.'),
 };
 
-/** needs_input demand for a missing Brand Canvas (the brief root). */
+/** needs_input demand when NEITHER a Signature nor a Brand Canvas exists (the brief root). */
 function canvasNeedsInput(): NeedsInputItem[] {
   return [
     {
       slot: 1,
       question:
-        'Compile the Brand Canvas first (generate_canvas). The Export Brief is written against the canvas positioning and voice.',
-      why: 'The title formula, bullets, image brief, and PPC tiers all derive from the Brand Canvas.',
+        'Create a Signature first (generate_signature) — or, for the fuller back-end articulation, a Brand Canvas (generate_canvas). The Export Brief is written against your positioning and voice.',
+      why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Signature, or the Brand Canvas when one exists.',
     },
   ];
 }
@@ -176,9 +176,14 @@ export type GenerateBriefResult =
  * persist. Exported so the test can drive it with stubs without the MCP transport.
  */
 export async function runGenerateBrief(avatarId: string | null, deps: GenerateBriefDeps): Promise<GenerateBriefResult> {
-  // 1. The canvas is the brief root — without it, ask.
-  const canvasRow = await deps.getCurrentArtifact('brand_canvas', avatarId);
-  if (!canvasRow) {
+  // 1. The brief root: a Brand Canvas, OR — degrade — a chosen Signature, so the owner gets
+  //    a shippable brief today instead of canvas homework (the #1 P1 conversion-fix failure).
+  //    Only ask when NEITHER positioning source exists.
+  const [canvasRow, signatureRow] = await Promise.all([
+    deps.getCurrentArtifact('brand_canvas', avatarId),
+    deps.getCurrentArtifact('signature', avatarId),
+  ]);
+  if (!canvasRow && !signatureRow) {
     return { status: 'needs_input', needs_input: canvasNeedsInput(), reason: 'no_canvas' };
   }
 
@@ -199,7 +204,8 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
   // 4. Invoke the engine verbatim, passing the confirmed-claims allowlist (bounded retry
   //    on transient transport failure; needs_input / claim-gate blocks are not retried).
   const res = await invokeWithRetry(deps, 'export-brief', {
-    canvas: canvasRow.content,
+    canvas: canvasRow?.content ?? null,
+    signature: signatureRow?.content ?? null,
     s1: s1?.content ?? null,
     s3: s3?.content ?? null,
     s4: s4?.content ?? null,
@@ -221,7 +227,7 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
   const grounding: Grounding = (res.data.grounding === 'inference' ? 'inference' : 'evidence') as Grounding;
   const evidenceRefs: EvidenceRef[] = Array.isArray(res.data.evidence_refs)
     ? (res.data.evidence_refs as EvidenceRef[])
-    : [{ kind: 'artifact', ref: 'brand_canvas' }];
+    : [{ kind: 'artifact', ref: canvasRow ? 'brand_canvas' : 'signature' }];
   const candidate = { ...res.data, grounding, evidence_refs: evidenceRefs };
   const parsed = exportBriefContract.outputSchema.safeParse(candidate);
   if (!parsed.success) {
@@ -251,7 +257,7 @@ export function registerGenerateBriefTool(server: McpServer, deps?: Partial<Gene
     {
       title: 'Generate the Export Brief',
       description:
-        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas + Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'),
+        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas — or, when no canvas exists yet, your chosen Signature (so the owner gets a shippable brief today, not canvas homework) — plus Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'),
       inputSchema,
     },
     async ({ avatar_id }) => {
