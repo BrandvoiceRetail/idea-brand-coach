@@ -24,12 +24,36 @@ import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
 import { captureMcpEvent } from '../posthog.js';
+import type { EdgeFnClient } from '../edgeFn/client.js';
 
 /** A best-effort parsed review object. `body` is always present; the rest are optional. */
 export interface ParsedReview {
   reviewer?: string;
   rating?: number;
   body: string;
+}
+
+/** One review row as returned by the `review-scraper` edge fn (ScrapedReview shape). */
+interface ScrapedReviewRow {
+  reviewerName?: string;
+  rating?: number;
+  title?: string;
+  body?: string;
+}
+
+/** `review-scraper` response: one result per requested URL. */
+interface ReviewScrapeResponse {
+  results?: Array<{ url: string; reviews?: ScrapedReviewRow[]; error?: string }>;
+  totalReviews?: number;
+}
+
+/** Map a scraped review row onto the ParsedReview shape (title folded into body). */
+export function toParsedReview(r: ScrapedReviewRow): ParsedReview {
+  const body = [r.title?.trim(), r.body?.trim()].filter(Boolean).join(' — ');
+  const review: ParsedReview = { body };
+  if (r.reviewerName && r.reviewerName !== 'Anonymous') review.reviewer = r.reviewerName;
+  if (typeof r.rating === 'number' && r.rating > 0) review.rating = r.rating;
+  return review;
 }
 
 const inputSchema = {
@@ -44,7 +68,15 @@ const inputSchema = {
   asin: z
     .string()
     .optional()
-    .describe('Amazon ASIN to scrape. NOT YET WIRED — returns a stub note (no fabrication).'),
+    .describe(
+      'Amazon ASIN (or a full Amazon product URL) to scrape for real reviews via the ' +
+        'review-scraper edge fn. Scraped reviews are frozen as evidence just like pasted ones; ' +
+        'on failure or zero results the tool degrades to a note (never fabricates).',
+    ),
+  marketplace: z
+    .string()
+    .optional()
+    .describe("Amazon marketplace for the asin scrape, e.g. 'com' (default) or 'co.uk'. Ignored when asin is a full URL."),
   source_label: z
     .string()
     .optional()
@@ -100,16 +132,16 @@ interface IngestResult {
   listing_captured: boolean;
 }
 
-export function registerIngestEvidenceTool(server: McpServer): void {
+export function registerIngestEvidenceTool(server: McpServer, edge: EdgeFnClient): void {
   server.registerTool(
     'ingest_evidence',
     {
       title: 'Ingest evidence (reviews / listing)',
       description:
-        'Write tool: ingest real EVIDENCE so the engine can quote it verbatim. Pasted reviews are chunked into review objects and frozen as an evidence_snapshots row (and, with product_id, written to user_product_reviews); pasted listing copy is frozen as the snapshot listing. asin-scrape is NOT yet wired (returns a stub note — no fabrication). Requires an authenticated Supabase JWT; RLS-scoped to the caller.',
+        'Write tool: ingest real EVIDENCE so the engine can quote it verbatim. Pass an asin (or Amazon URL) to AUTO-SCRAPE reviews via Firecrawl, and/or paste reviews_text/listing_text. Reviews are chunked into review objects and frozen as an evidence_snapshots row (and, with product_id, written to user_product_reviews); listing copy is frozen as the snapshot listing. Scrape failures degrade to a note — never fabricated content. Requires an authenticated Supabase JWT; RLS-scoped to the caller.',
       inputSchema,
     },
-    async ({ reviews_text, listing_text, asin, source_label, product_id, avatar_id }) => {
+    async ({ reviews_text, listing_text, asin, marketplace, source_label, product_id, avatar_id }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
 
@@ -120,15 +152,35 @@ export function registerIngestEvidenceTool(server: McpServer): void {
       const supabase = getUserSupabase();
       const notes: string[] = [];
 
-      // ASIN scrape is a follow-up — surface a clearly-marked stub, never fake content.
-      if (asin) {
-        notes.push(
-          `asin-scrape not yet wired (TODO): paste the /dp/ listing + reviews for ${asin} via reviews_text/listing_text. ` +
-            'The /dp/ scrape (listing + ~8 reviews) is a planned follow-up; /product-reviews/ is login-walled/dead.',
-        );
-      }
-
       const parsed = reviews_text ? parseReviews(reviews_text) : [];
+
+      // ASIN scrape: pull real reviews via the review-scraper edge fn (Firecrawl) and merge
+      // them into `parsed` so they freeze + write through the same path as pasted reviews.
+      // Never fabricate — any failure / empty result becomes a note, not invented content.
+      if (asin) {
+        const url = /^https?:\/\//i.test(asin)
+          ? asin
+          : `https://www.amazon.${marketplace ?? 'com'}/dp/${asin}`;
+        const scraped = await edge.invoke<ReviewScrapeResponse>('review-scraper', {
+          urls: [url],
+          maxReviewsPerUrl: 20,
+        });
+        if (!scraped.ok) {
+          notes.push(`asin-scrape failed (${scraped.note ?? 'unavailable'}) — paste reviews via reviews_text instead.`);
+        } else {
+          const scrapedReviews = (scraped.data?.results?.[0]?.reviews ?? [])
+            .map(toParsedReview)
+            .filter((r) => r.body.length > 0);
+          if (scrapedReviews.length === 0) {
+            notes.push(
+              `asin-scrape returned 0 reviews for ${asin} — the /dp/ page may show few/none; paste them via reviews_text.`,
+            );
+          } else {
+            parsed.push(...scrapedReviews);
+            notes.push(`Scraped ${scrapedReviews.length} review(s) from ${url}.`);
+          }
+        }
+      }
       const hasListing = typeof listing_text === 'string' && listing_text.trim().length > 0;
 
       const result: IngestResult = {
@@ -191,7 +243,7 @@ export function registerIngestEvidenceTool(server: McpServer): void {
         reviews_parsed: result.reviews_parsed,
         reviews_rows: result.reviews_rows,
         listing: result.listing_captured,
-        asin_stub: Boolean(asin),
+        asin_scraped: Boolean(asin),
       });
       if (!ingestedNothing) {
         captureMcpEvent(userId, 'mcp_evidence_ingested', {
@@ -202,7 +254,7 @@ export function registerIngestEvidenceTool(server: McpServer): void {
 
       const summary = ingestedNothing
         ? asin
-          ? 'No pasted content ingested; asin-scrape is not yet wired (see notes).'
+          ? 'No reviews ingested for that asin (see notes — scrape failed or returned none).'
           : 'Nothing to ingest — supply reviews_text, listing_text, or an asin.'
         : `Ingested ${result.reviews_parsed} review(s)` +
           (result.reviews_rows ? ` (${result.reviews_rows} product-review rows)` : '') +

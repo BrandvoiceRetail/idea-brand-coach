@@ -134,7 +134,7 @@ export function createServer(
   // All three are identity-gated (gateWrite) and never fabricate PRODUCT-TRUTH.
   registerGetContextStatusTool(server);
   registerProvideContextTool(server);
-  registerIngestEvidenceTool(server);
+  registerIngestEvidenceTool(server, edge);
 
   // Avatar 2.0 forensic engine: build_avatar_stage runs one forensic stage (s1
   // vocabulary -> s2 job map -> s3 triggers -> s4 objections) or the full S1->S5
