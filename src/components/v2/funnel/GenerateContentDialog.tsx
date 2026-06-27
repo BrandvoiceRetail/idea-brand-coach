@@ -12,6 +12,7 @@
  */
 import { useMemo, useState, type JSX } from 'react';
 import { toast } from 'sonner';
+import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
@@ -23,6 +24,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { getTouchpoint } from '@/config/touchpointTaxonomy';
+import { isVideoGenerationEnabled } from '@/config/features';
 import { capabilitiesFor } from '@/services/contentGeneration/capabilityRegistry';
 import { useContentGeneration } from '@/hooks/useContentGeneration';
 import type { PalmierAspect, PieceCapability, GenerationJob } from '@/services/contentGeneration/types';
@@ -50,6 +52,9 @@ export function GenerateContentDialog({
   const label = getTouchpoint(touchpointId)?.label ?? touchpointId;
   const gen = useContentGeneration();
   const [saving, setSaving] = useState(false);
+  // Video generation is flag-gated separately from the content-gen surface: the
+  // video tabs still show, but until the flag is on a Generate press opens this modal.
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
   // Pixii inputs
   const [asin, setAsin] = useState('');
@@ -68,6 +73,7 @@ export function GenerateContentDialog({
   if (caps.length === 0) return null;
 
   const capability: PieceCapability = caps.find((c) => `${c.provider}:${c.capability}` === capKey) ?? caps[0];
+  const videoGated = capability.outputKind === 'video' && !isVideoGenerationEnabled();
 
   const onOpenChange = (next: boolean): void => {
     setOpen(next);
@@ -91,6 +97,7 @@ export function GenerateContentDialog({
         userPrompt: prompt.trim() || undefined,
       });
     } else if (capability.provider === 'palmier' || capability.provider === 'fal') {
+      if (videoGated) { setComingSoonOpen(true); return; }
       if (!prompt.trim()) { toast.error('Describe the video you want to generate.'); return; }
       await gen.start({
         capability, avatarId, touchpointId,
@@ -122,6 +129,7 @@ export function GenerateContentDialog({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant={triggerVariant} size={triggerSize}>{triggerLabel}</Button>
@@ -176,6 +184,12 @@ export function GenerateContentDialog({
             />
           )}
 
+          {videoGated && (
+            <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Sparkles className="h-3 w-3" /> AI video generation is coming soon.
+            </p>
+          )}
+
           <Button variant="coach" className="w-full" onClick={() => void submit()} disabled={gen.generating}>
             {gen.generating
               ? (capability.provider === 'pixii' ? 'Generating images… (~2 min)' : (capability.provider === 'palmier' || capability.provider === 'fal') ? 'Generating video…' : 'Writing…')
@@ -192,6 +206,24 @@ export function GenerateContentDialog({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Video generation is flag-gated — a Generate press surfaces this instead of calling the engine. */}
+    <Dialog open={comingSoonOpen} onOpenChange={setComingSoonOpen}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader className="items-center text-center">
+          <div className="mx-auto mb-1 w-fit rounded-full bg-primary/10 p-4">
+            <Sparkles className="h-7 w-7 text-primary" />
+          </div>
+          <DialogTitle>Video generation — coming soon</DialogTitle>
+          <DialogDescription>
+            We’re putting the finishing touches on AI video generation. It’ll be available right here
+            shortly — check back soon.
+          </DialogDescription>
+        </DialogHeader>
+        <Button variant="coach" className="w-full" onClick={() => setComingSoonOpen(false)}>Got it</Button>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
