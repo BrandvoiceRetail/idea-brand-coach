@@ -56,7 +56,9 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.LIGHTSAIL_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${FRONTEND_DEPLOY_HOST:-54.243.53.44}" >> ~/.ssh/known_hosts 2>/dev/null
+          # Non-fatal: rsync uses StrictHostKeyChecking=accept-new, so a keyscan
+          # miss (or a slow/blocked host) must not fail the job here under `bash -e`.
+          ssh-keyscan -H "${FRONTEND_DEPLOY_HOST:-54.243.53.44}" >> ~/.ssh/known_hosts 2>/dev/null || true
         env:
           FRONTEND_DEPLOY_HOST: ${{ vars.FRONTEND_DEPLOY_HOST }}
 
@@ -70,7 +72,7 @@ jobs:
           # this SPA build, so --delete must not wipe it.
           rsync -az --delete \
             --exclude='onboard.html' --exclude='onboard-assets/' --exclude='onboard.html.bak.prev' \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20" \
             dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
 
       - name: Verify live bundle matches the build
