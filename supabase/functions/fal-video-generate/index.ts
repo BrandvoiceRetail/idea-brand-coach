@@ -10,6 +10,7 @@ import {
   isFalCdnUrl,
   type FalVideoInput,
 } from '../_shared/fal.ts';
+import { createRateLimiter } from '../_shared/rateLimit.ts';
 
 /**
  * fal-video-generate — the CLOUD video provider behind the Brand Funnel Tracker's
@@ -31,19 +32,11 @@ import {
 const BUCKET = 'brand-assets';
 const SIGNED_URL_TTL_SECONDS = 3600;
 
-const CREATE_RL = new Map<string, number[]>();
-const POLL_RL = new Map<string, number[]>();
-function rateLimited(map: Map<string, number[]>, uid: string, maxPerMin: number): boolean {
-  const now = Date.now();
-  const arr = (map.get(uid) ?? []).filter((t) => now - t < 60_000);
-  if (arr.length >= maxPerMin) {
-    map.set(uid, arr);
-    return true;
-  }
-  arr.push(now);
-  map.set(uid, arr);
-  return false;
-}
+// Per-isolate sliding-window limiters (shared helper with opportunistic cleanup so
+// the hit map can't grow unbounded). Create is stricter (spends fal credits); poll
+// is lenient (the UI polls every ~5s).
+const createLimiter = createRateLimiter(15, 60_000);
+const pollLimiter = createRateLimiter(240, 60_000);
 
 interface CreateBody {
   avatarId: string;
@@ -71,11 +64,11 @@ serve(async (req: Request): Promise<Response> => {
     const svc = getServiceClient();
 
     if (body?.poll) {
-      if (rateLimited(POLL_RL, userId, 240)) return jsonResponse({ ok: false, error: 'rate_limited' }, 429);
+      if (pollLimiter.isRateLimited(userId)) return jsonResponse({ ok: false, error: 'rate_limited' }, 429);
       return await handlePoll(svc, userId, String(body.poll));
     }
 
-    if (rateLimited(CREATE_RL, userId, 15)) return jsonResponse({ ok: false, error: 'rate_limited' }, 429);
+    if (createLimiter.isRateLimited(userId)) return jsonResponse({ ok: false, error: 'rate_limited' }, 429);
     return await handleCreate(svc, userId, body as CreateBody);
   } catch (err) {
     console.error('fal-video-generate error:', err instanceof Error ? err.message : err);
