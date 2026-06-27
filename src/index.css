@@ -8,48 +8,56 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 220 13% 9%;
+    /* Trevor v23 palette — SSOT. blk #111111 · wrm #F5F4F0 · gld #D4960A · gld-lt #FEF5DC */
+    --background: 48 20% 95%;
+    --foreground: 0 0% 7%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 13% 9%;
+    --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 9%;
+    --popover-foreground: 0 0% 7%;
 
-    --primary: 220 13% 9%;
+    --primary: 0 0% 7%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 47 96% 53%;
-    --secondary-foreground: 220 13% 9%;
+    --secondary: 38 92% 44%;
+    --secondary-foreground: 0 0% 7%;
 
     --muted: 210 40% 96%;
     --muted-foreground: 215 13% 40%;
 
-    --accent: 47 96% 53%;
-    --accent-foreground: 220 13% 9%;
+    --accent: 38 92% 44%;
+    --accent-foreground: 0 0% 7%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 47 96% 53%;
+    --ring: 38 92% 44%;
+
+    /* IDEA-dimension tokens (Insight / Distinctive / Empathy / Authentic) */
+    --idea-i: 41 86% 54%;  /* #F0B429 Insight */
+    --idea-d: 124 39% 49%; /* #4CAE53 Distinctive */
+    --idea-e: 200 67% 50%; /* #2B9FD4 Empathy */
+    --idea-a: 33 89% 47%;  /* #E8850A Authentic */
+    --gld-lt: 46 95% 93%;  /* #FEF5DC light gold fill */
 
     /* Brand gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(220 13% 9%) 0%, hsl(220 15% 15%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(47 96% 53%) 0%, hsl(45 93% 47%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(220 13% 9%) 0%, hsl(220 15% 15%) 50%, hsl(47 96% 53%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 7%) 0%, hsl(0 0% 13%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(38 92% 44%) 0%, hsl(33 89% 47%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 7%) 0%, hsl(0 0% 13%) 50%, hsl(38 92% 44%) 100%);
     --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(210 40% 85%) 100%);
-    
+
     /* Milestone palette */
     --heart-red: 0 84% 50%;
-    --gold-warm: 43 96% 56%;
+    --gold-warm: 38 92% 44%;
 
     /* Brand shadows */
-    --shadow-brand: 0 15px 50px -15px hsl(47 96% 53% / 0.4);
-    --shadow-card: 0 4px 20px -4px hsl(220 13% 9% / 0.15);
-    --shadow-glow: 0 0 30px hsl(47 96% 53% / 0.4);
+    --shadow-brand: 0 15px 50px -15px hsl(38 92% 44% / 0.4);
+    --shadow-card: 0 4px 20px -4px hsl(0 0% 7% / 0.15);
+    --shadow-glow: 0 0 30px hsl(38 92% 44% / 0.4);
 
     --radius: 0.5rem;
 
@@ -97,7 +105,14 @@ All colors MUST be HSL.
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 38 92% 44%;
+
+    /* IDEA-dimension tokens (shared with light; dark v23 out of scope) */
+    --idea-i: 41 86% 54%;
+    --idea-d: 124 39% 49%;
+    --idea-e: 200 67% 50%;
+    --idea-a: 33 89% 47%;
+    --gld-lt: 46 95% 93%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -109,7 +124,7 @@ All colors MUST be HSL.
 
     /* Milestone palette (dark) */
     --heart-red: 0 84% 50%;
-    --gold-warm: 43 96% 56%;
+    --gold-warm: 38 92% 44%;
   }
 }
 

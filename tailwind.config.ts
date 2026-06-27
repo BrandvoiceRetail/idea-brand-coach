@@ -54,6 +54,13 @@ export default {
 				},
 				'heart-red': 'hsl(var(--heart-red))',
 				'gold-warm': 'hsl(var(--gold-warm))',
+				'gold-light': 'hsl(var(--gld-lt))',
+				idea: {
+					i: 'hsl(var(--idea-i))',
+					d: 'hsl(var(--idea-d))',
+					e: 'hsl(var(--idea-e))',
+					a: 'hsl(var(--idea-a))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -76,6 +83,9 @@ export default {
 				'brand': 'var(--shadow-brand)',
 				'card': 'var(--shadow-card)',
 				'glow': 'var(--shadow-glow)'
+			},
+			fontFamily: {
+				sans: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

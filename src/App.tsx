@@ -60,6 +60,16 @@ import FocusSurface from "./pages/FocusSurface";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
 import SettingsPage from "./pages/SettingsPage";
 import FigmaCallback from "./pages/FigmaCallback";
+import { V4ContextProvider } from "@/contexts/V4ContextStore";
+import { V4Layout } from "@/components/v4/V4Layout";
+import V4Onboarding from "./pages/v4/V4Onboarding";
+import V4Stage from "./pages/v4/V4Stage";
+import V4Analyse from "./pages/v4/V4Analyse";
+import V4Fix from "./pages/v4/V4Fix";
+import V4Remeasure from "./pages/v4/V4Remeasure";
+import V4Defend from "./pages/v4/V4Defend";
+import V4Tools from "./pages/v4/V4Tools";
+import { V4_ROUTES } from "@/config/v4";
 // Initialise analytics before the React tree mounts so the auth listener can
 // identify the user as soon as a session arrives. No-op when no key is set.
 initPostHog();
@@ -89,6 +99,7 @@ const App = () => {
         <AuthProvider>
           <AuthGate>
             <VersionProvider>
+              <V4ContextProvider>
               <AvatarProvider>
               <BrandProvider>
                 <SystemKBProvider>
@@ -152,6 +163,23 @@ const App = () => {
                     Kept separate from /v2 so the live baseline is untouched while Trevor
                     reviews Movement 1 before Movements 2/3 are built. */}
                 <Route path="/v3/diagnostic" element={<ProblemSolverDiagnostic showRecognition />} />
+
+                {/* /v4 — the new "one and only" surface (app shell + spine + Loop 1).
+                    Old routes stay mounted; VersionGate gates the entry behind
+                    VITE_FORCE_V4 (default on in this worktree). Nested under V4Layout
+                    so the sidebar + sticky spine stepper + mobile bottom-nav persist. */}
+                <Route path={V4_ROUTES.ROOT} element={<V4Layout />}>
+                  <Route index element={<V4Onboarding />} />
+                  <Route path="diagnose" element={<V4Stage />} />
+                  <Route path="analyse" element={<V4Analyse />} />
+                  <Route path="fix" element={<V4Fix />} />
+                  <Route path="remeasure" element={<V4Remeasure />} />
+                  <Route path="defend" element={<V4Defend />} />
+                </Route>
+
+                {/* /v4/tools — standalone trust-signals tool registry (own dark theme,
+                    intentionally outside V4Layout so it reads as a public trust page). */}
+                <Route path="/v4/tools" element={<V4Tools />} />
 
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
@@ -348,6 +376,7 @@ const App = () => {
                 </SystemKBProvider>
               </BrandProvider>
               </AvatarProvider>
+              </V4ContextProvider>
             </VersionProvider>
           </AuthGate>
         </AuthProvider>

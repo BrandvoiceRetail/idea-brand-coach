@@ -111,7 +111,96 @@ export type AlphaEventName =
   // Diagnose → Unlock → Upload → Analyse → Customer → Fix → Stay-ahead → In-Claude
   // funnel. Step index + name + self-report score only — never PII or the ASIN value.
   | 'problem_solver_step_viewed'
-  | 'problem_solver_unlock_gated';
+  | 'problem_solver_unlock_gated'
+  // /v4 surface — the Diagnose → Analyse → Fix → Re-measure → Defend spine.
+  // Page-level (stage viewed / gate blocked / advanced) + per-screen funnel
+  // events. Registered here so the compiler guards every emitted name (no casts).
+  | 'v4_onboarding_stage_viewed'
+  | 'v4_onboarding_read_back_started'
+  | 'v4_onboarding_findings_confirmed'
+  | 'v4_onboarding_findings_edited'
+  | 'v4_onboarding_advanced_to_diagnose'
+  | 'v4_diagnose_run_diagnostic_clicked'
+  | 'v4_analyse_stage_viewed'
+  | 'v4_analyse_gate_blocked'
+  | 'v4_analyse_advanced_to_fix'
+  | 'v4_analyse_run_started'
+  | 'v4_analyse_run_completed'
+  | 'v4_analyse_run_failed'
+  | 'v4_analyse_step_completed'
+  | 'v4_avatar_profile_field_edited'
+  | 'v4_avatar_profile_confirmed'
+  | 'v4_decision_trigger_viewed'
+  | 'v4_decision_board_moves_shown'
+  | 'v4_decision_board_move_selected'
+  | 'v4_brief_claim_gate_viewed'
+  | 'v4_brief_claim_confirmed'
+  | 'v4_brief_exported'
+  | 'v4_fix_stage_viewed'
+  | 'v4_fix_gate_blocked'
+  | 'v4_fix_advanced_to_remeasure'
+  // Loop-3 Fix sub-view navigation (funnel map ↔ piece detail ↔ fix & test ↔
+  // testing & lift). The `view` slug only — no copy/PII.
+  | 'v4_fix_view_changed'
+  | 'v4_fix_drift_banner_shown'
+  | 'v4_fix_test_viewed'
+  | 'v4_fix_rewrite_requested'
+  | 'v4_fix_variant_claim_confirmed'
+  | 'v4_fix_test_opened'
+  | 'v4_fix_coach_opened'
+  // Add-a-piece dialog (Upload screen ①) — open the dialog, submit, and the
+  // grounded add+audit outcome. Counts/IDs/booleans only (touchpoint, stage,
+  // channel, content_mode) — never the pasted copy or the job line.
+  | 'v4_add_piece_opened'
+  | 'v4_add_piece_submitted'
+  | 'v4_add_piece_succeeded'
+  | 'v4_add_piece_failed'
+  | 'v4_funnel_map_viewed'
+  | 'v4_funnel_map_retry'
+  | 'v4_funnel_asset_opened'
+  // Funnel-by-Job map toolbar actions — add a piece and channel-chip filtering.
+  // Counts / channel slug / on-off flag only.
+  | 'v4_funnel_add_piece_clicked'
+  | 'v4_funnel_channel_filtered'
+  // Funnel-by-Job map toolbar scoping controls — avatar / marketplace / range.
+  // ids + slugs only (never names or metric values).
+  | 'v4_funnel_avatar_changed'
+  | 'v4_funnel_marketplace_changed'
+  | 'v4_funnel_range_changed'
+  | 'v4_what_needs_work_viewed'
+  | 'v4_testing_lift_viewed'
+  | 'v4_testing_lift_filtered'
+  | 'v4_testing_lift_exported'
+  // Experiment-lifecycle milestone stamps on a test row (ASSET_CREATED / ASSET_LIVE).
+  // `milestone` slug only — never the test name or any copy.
+  | 'v4_test_lifecycle_advanced'
+  | 'v4_asset_detail_tab_viewed'
+  | 'v4_asset_check_run'
+  | 'v4_asset_verdict_recorded'
+  // Funnel-by-Job piece detail ("did this piece do its job?") — open + the
+  // metric→fix actions. Counts / ids / verdict only, never stored copy or PII.
+  | 'v4_funnel_piece_viewed'
+  | 'v4_funnel_piece_update_stored_clicked'
+  | 'v4_funnel_piece_brief_clicked'
+  | 'v4_funnel_piece_test_clicked'
+  | 'v4_funnel_piece_check_clicked'
+  | 'v4_remeasure_stage_viewed'
+  | 'v4_remeasure_gate_blocked'
+  | 'v4_remeasure_advanced_to_defend'
+  | 'v4_trust_gap_lift_viewed'
+  | 'v4_business_metrics_viewed'
+  // Re-measure experiment before/after lift card — list view + the won/no-lift
+  // verdict stamp. `status`/`stage`/`verdict` slugs + counts only, never copy.
+  | 'v4_experiment_lift_viewed'
+  | 'v4_experiment_result_marked'
+  | 'v4_defend_stage_viewed'
+  | 'v4_defend_gate_blocked'
+  | 'v4_defend_workbook_requested'
+  | 'v4_defend_workbook_result'
+  | 'v4_defend_loop_restarted'
+  | 'v4_defend_drift_watch_viewed'
+  | 'v4_defend_checklist_viewed'
+  | 'v4_defend_competitor_teaser_viewed';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;
