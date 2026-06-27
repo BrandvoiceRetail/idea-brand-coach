@@ -40,6 +40,23 @@ enabled = true
 [functions.ai-insight-guidance]
 verify_jwt = false
 
+# Auth is enforced in-function via getAuthedUserId (the PIXII_API_KEY secret
+# never reaches the browser); verify_jwt stays off so the function owns the gate.
+[functions.pixii-generate]
+verify_jwt = false
+
+# Auth is enforced in-function via getAuthedUserId. Palmier is the LOCAL video app;
+# the PALMIER_MCP_URL / PALMIER_ORIGIN secrets (tunnel endpoint + localhost Origin)
+# stay server-side. verify_jwt stays off so the function owns the gate.
+[functions.palmier-generate]
+verify_jwt = false
+
+# Auth is enforced in-function via getAuthedUserId. fal.ai is the CLOUD video
+# provider; the FAL_KEY (+ optional FAL_VIDEO_MODEL) secret stays server-side.
+# verify_jwt stays off so the function owns the gate.
+[functions.fal-video-generate]
+verify_jwt = false
+
 [functions.buyer-intent-analyzer]
 verify_jwt = false
 

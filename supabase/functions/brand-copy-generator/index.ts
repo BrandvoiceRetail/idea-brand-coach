@@ -244,6 +244,14 @@ IMPORTANT: Use this brand context to create copy that:
 
 function buildCopyPrompt(request: CopyRequest): string {
   const formatInstructions: Record<string, string> = {
+    "email": `Create a complete marketing email that:
+- Opens with a Subject line and Preview text
+- Has a warm, on-brand opening that names the customer's moment
+- Delivers ONE clear message tied to the avatar's core desire or fear
+- Includes a single, specific call-to-action
+- Signs off in the brand's voice
+Label the sections clearly: Subject, Preview, Body, CTA.`,
+
     "amazon-bullet": `Create 5 Amazon-style bullet points that:
 - Start with CAPS benefit statement
 - Include emotional triggers
