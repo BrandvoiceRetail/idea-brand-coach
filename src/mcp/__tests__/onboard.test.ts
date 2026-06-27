@@ -6,6 +6,7 @@ import { createServer } from '../server.js';
 import type { HostConfig } from '../config.js';
 import { buildOnboardSurface, buildPathStub, buildOnboardPanelHtml, ONBOARD_UI_URI } from '../service/onboard.js';
 import { SERVER_INSTRUCTIONS } from '../config.js';
+import { findTierViolations } from '../terminologyGuard.js';
 
 const cfg: HostConfig = {
   port: 0,
@@ -187,5 +188,40 @@ describe('onboarding posture guardrails (no invented inputs)', () => {
     const tg = tools.find((t) => t.name === 'run_trust_gap');
     expect(tg?.description).toMatch(/Only call AFTER the user has explicitly worked through all four/);
     expect(tg?.description).toMatch(/Never infer, default, or invent the four values/);
+  });
+});
+
+describe('SERVER_INSTRUCTIONS — funnel-metrics (Windsor) workflow', () => {
+  it('instructs the host to orchestrate the Windsor → funnel ingest workflow', () => {
+    // The host (not this server) reads Windsor; the instructions must say so.
+    expect(SERVER_INSTRUCTIONS).toMatch(/FUNNEL METRICS \(Windsor\)/);
+    expect(SERVER_INSTRUCTIONS).toMatch(/this server cannot read Windsor/i);
+    // 1: ensure pieces exist; 2: read Windsor get_data; 3: ingest; 4: confirm; 5: experiment loop.
+    for (const tool of [
+      'list_funnel_inventory',
+      'upsert_funnel_touchpoint',
+      'ingest_campaign_analytics',
+      'ingest_funnel_analytics',
+      'get_funnel_piece_metrics',
+      'design_test',
+      'update_test_milestone',
+    ]) {
+      expect(SERVER_INSTRUCTIONS).toContain(tool);
+    }
+    expect(SERVER_INSTRUCTIONS).toMatch(/source="windsor"/);
+    expect(SERVER_INSTRUCTIONS).toMatch(/journey_stage/);
+    expect(SERVER_INSTRUCTIONS).toMatch(/fractions 0–1/);
+    // Honesty bar: never fabricate a metric.
+    expect(SERVER_INSTRUCTIONS).toMatch(/NEVER fabricate a metric/);
+  });
+
+  it('leaks zero Tier-B/C internals in the funnel-metrics section', () => {
+    // Scope to the added section: the NARRATION guidance elsewhere legitimately names
+    // (to forbid) "neuroanatomical framing" etc., which the guard flags as a token.
+    const start = SERVER_INSTRUCTIONS.indexOf('FUNNEL METRICS (Windsor)');
+    const end = SERVER_INSTRUCTIONS.indexOf('Any user can send product feedback');
+    const section = SERVER_INSTRUCTIONS.slice(start, end);
+    expect(start).toBeGreaterThan(-1);
+    expect(findTierViolations(section)).toEqual([]);
   });
 });
