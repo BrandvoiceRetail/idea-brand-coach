@@ -51,6 +51,12 @@ verify_jwt = false
 [functions.palmier-generate]
 verify_jwt = false
 
+# Auth is enforced in-function via getAuthedUserId. fal.ai is the CLOUD video
+# provider; the FAL_KEY (+ optional FAL_VIDEO_MODEL) secret stays server-side.
+# verify_jwt stays off so the function owns the gate.
+[functions.fal-video-generate]
+verify_jwt = false
+
 [functions.buyer-intent-analyzer]
 verify_jwt = false
 

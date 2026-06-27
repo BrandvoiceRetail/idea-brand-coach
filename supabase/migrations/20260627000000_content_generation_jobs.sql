@@ -9,6 +9,8 @@
 --                            brand-copy-generator edge function.
 --   * provider = 'palmier' → async short-form video via the LOCAL Palmier MCP app
 --                            (palmier-generate); parks a ready brief when unreachable.
+--   * provider = 'fal'     → async short-form video via the fal.ai cloud queue
+--                            (fal-video-generate); persists the MP4 to brand-assets.
 --
 -- Pixii is async (~2 min) and its output URLs expire after 7 days, so the
 -- pixii-generate edge function downloads completed images into the existing
@@ -23,10 +25,11 @@ create table if not exists public.content_generation_jobs (
   brand_id        uuid references public.brands(id) on delete cascade,
   avatar_id       uuid references public.avatars(id) on delete cascade,
   touchpoint_id   text not null,
-  provider        text not null check (provider in ('pixii', 'claude', 'palmier')),
+  provider        text not null check (provider in ('pixii', 'claude', 'palmier', 'fal')),
   -- The specific capability used, e.g. listing_images / a_plus / main_image /
   -- scale (pixii), email_copy / generic_copy (claude), or social_video /
-  -- ugc_video (palmier). Free-text so the registry can evolve without a schema change.
+  -- ugc_video (fal cloud video + palmier local video). Free-text so the registry
+  -- can evolve without a schema change.
   capability      text not null,
   output_kind     text not null check (output_kind in ('image', 'copy', 'video')),
   -- Pixii's job_id; null for synchronous copy generations.

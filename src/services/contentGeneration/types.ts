@@ -9,13 +9,16 @@
  *   - provider 'palmier' → async short-form VIDEO via the local Palmier MCP app
  *                          (127.0.0.1:19789). Reachable only where Palmier runs;
  *                          when it isn't, the job parks as a ready-to-run brief.
+ *   - provider 'fal'     → async short-form VIDEO via the fal.ai cloud queue API.
+ *                          Returns a downloadable MP4 persisted to brand-assets, so
+ *                          it works in prod for every user (no local app needed).
  *
  * The frontend talks only to edge functions (pixii-generate / brand-copy-generator
- * / palmier-generate), so these types are independent of the Deno `_shared/*.ts`
- * modules and of the not-yet-regenerated `content_generation_jobs` row type.
+ * / palmier-generate / fal-video-generate), so these types are independent of the
+ * Deno `_shared/*.ts` modules and of the not-yet-regenerated job row type.
  */
 
-export type ContentProvider = 'pixii' | 'claude' | 'palmier';
+export type ContentProvider = 'pixii' | 'claude' | 'palmier' | 'fal';
 export type OutputKind = 'image' | 'copy' | 'video';
 export type GenerationStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -40,11 +43,13 @@ export interface PieceCapability {
   /** Pixii defaults baked into the touchpoint mapping. */
   pixiiListingType?: PixiiListingType;
   pixiiTypes?: string[];
-  /** Palmier (video) defaults baked into the touchpoint mapping. */
-  palmierAspect?: PalmierAspect;
-  palmierDurationS?: number;
+  /** Video (Palmier / fal) defaults baked into the touchpoint mapping. */
+  videoAspect?: PalmierAspect;
+  videoDurationS?: number;
   /** Optional default Palmier model id; omitted ⇒ Palmier picks its first available model. */
   palmierModel?: string;
+  /** Optional default fal.ai model id; omitted ⇒ the FAL_VIDEO_MODEL edge default applies. */
+  falModel?: string;
 }
 
 export interface GeneratedImage {
@@ -54,23 +59,27 @@ export interface GeneratedImage {
 }
 
 /**
- * A Palmier-generated video. Unlike Pixii images, Palmier produces a LOCAL asset
- * inside the user's Palmier project (no downloadable CDN URL over MCP), so the
- * funnel records a REFERENCE — the placeholder asset id + the brief that made it —
- * rather than a stored file. `storage_path` stays null unless a file is exported in.
+ * A generated video. Two shapes by provider:
+ *  - fal     → a real file: persisted to the brand-assets bucket, so `storage_path`
+ *              + `signed_url` (and `source_url`, the fal CDN origin) are set.
+ *  - palmier → a LOCAL asset inside the user's Palmier project (no downloadable URL
+ *              over MCP), so the funnel records a REFERENCE — `palmier_asset_id` —
+ *              and `storage_path` stays null.
  */
 export interface GeneratedVideo {
-  /** Palmier placeholder/asset id the clip lives under in the user's project. */
-  palmier_asset_id: string;
-  /** The resolved Palmier generation status, if known. */
+  /** Durable storage path in the brand-assets bucket (fal persists the MP4; null for Palmier). */
+  storage_path?: string | null;
+  signed_url?: string | null;
+  /** Provider CDN url the binary was fetched from (fal). */
+  source_url?: string | null;
+  /** Palmier-only: the local asset id the clip lives under in the user's project. */
+  palmier_asset_id?: string | null;
+  /** The resolved generation status, if known. */
   generation_status?: 'generating' | 'downloading' | 'failed' | 'ready';
   prompt: string;
   model?: string | null;
   duration_s?: number | null;
   aspect?: string | null;
-  /** Set only if a binary was exported into durable storage (not produced by MCP generate). */
-  storage_path?: string | null;
-  signed_url?: string | null;
 }
 
 export interface GenerationOutput {

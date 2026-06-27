@@ -7,16 +7,18 @@
  * Routing rules (honest about what each engine can actually do):
  *  - PIXII generates product IMAGES only, for the specific Amazon/Shopify visual
  *    touchpoints it cleanly maps to (listing gallery, main image, A+ modules).
- *  - PALMIER generates short-form VIDEO for the native-video touchpoints (paid
- *    social ad creative, influencer/UGC). It runs as a LOCAL app, so the video
- *    capability is offered everywhere but only fulfils where Palmier is reachable;
- *    otherwise the funnel hands back a ready-to-run brief.
+ *  - FAL generates short-form VIDEO via the fal.ai cloud queue for the native-video
+ *    touchpoints (paid social ad creative, influencer/UGC). This is the DEFAULT
+ *    video path — it returns a real MP4 and works in prod for every user.
+ *  - PALMIER generates the same VIDEO via the LOCAL Palmier desktop app, offered as
+ *    a second option for hands-on editing; it fulfils only where Palmier is
+ *    reachable, otherwise the funnel hands back a ready-to-run brief.
  *  - CLAUDE generates on-brand COPY for any touchpoint whose assetKind includes
  *    copy. Email touchpoints get the email-copy capability; everything else gets
- *    generic on-brand copy. (Pixii/Palmier have no copy capability.)
+ *    generic on-brand copy. (Pixii/fal/Palmier have no copy capability.)
  *
  * A touchpoint can therefore expose more than one capability — e.g. paid-social
- * ad creative offers a Palmier video AND Claude ad copy.
+ * ad creative offers a fal video, a Palmier video AND Claude ad copy.
  */
 import { getTouchpoint } from '@/config/touchpointTaxonomy';
 import type { PalmierAspect, PieceCapability, PixiiListingType } from './types';
@@ -52,8 +54,8 @@ const PIXII_TOUCHPOINTS: Record<
   },
 };
 
-/** Touchpoints with a native-video (Palmier) mapping. */
-const PALMIER_TOUCHPOINTS: Record<
+/** Touchpoints with a native-video mapping (offered via fal cloud + local Palmier). */
+const VIDEO_TOUCHPOINTS: Record<
   string,
   { capability: string; label: string; hint: string; aspect: PalmierAspect; durationS: number }
 > = {
@@ -101,16 +103,27 @@ export function capabilitiesFor(touchpointId: string): PieceCapability[] {
     });
   }
 
-  const pa = PALMIER_TOUCHPOINTS[touchpointId];
-  if (pa) {
+  const vt = VIDEO_TOUCHPOINTS[touchpointId];
+  if (vt) {
+    // fal (cloud) first — the default video path that works for every user in prod.
+    caps.push({
+      provider: 'fal',
+      capability: vt.capability,
+      outputKind: 'video',
+      label: vt.label,
+      hint: `${vt.hint} — generated in the cloud`,
+      videoAspect: vt.aspect,
+      videoDurationS: vt.durationS,
+    });
+    // Palmier (local) second — hands-on editing in the desktop app.
     caps.push({
       provider: 'palmier',
-      capability: pa.capability,
+      capability: vt.capability,
       outputKind: 'video',
-      label: pa.label,
-      hint: pa.hint,
-      palmierAspect: pa.aspect,
-      palmierDurationS: pa.durationS,
+      label: `${vt.label} (Palmier)`,
+      hint: `${vt.hint} — in your local Palmier`,
+      videoAspect: vt.aspect,
+      videoDurationS: vt.durationS,
     });
   }
 

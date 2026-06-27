@@ -60,10 +60,10 @@ export function GenerateContentDialog({
   const [productName, setProductName] = useState('');
   const [tone, setTone] = useState('');
   const [prompt, setPrompt] = useState('');
-  // Palmier (video) inputs — default to the first palmier capability's hints.
-  const firstPalmier = caps.find((c) => c.provider === 'palmier');
-  const [videoAspect, setVideoAspect] = useState<string>(firstPalmier?.palmierAspect ?? '9:16');
-  const [videoDuration, setVideoDuration] = useState<string>(String(firstPalmier?.palmierDurationS ?? 8));
+  // Video (fal / Palmier) inputs — default to the first video capability's hints.
+  const firstVideo = caps.find((c) => c.outputKind === 'video');
+  const [videoAspect, setVideoAspect] = useState<string>(firstVideo?.videoAspect ?? '9:16');
+  const [videoDuration, setVideoDuration] = useState<string>(String(firstVideo?.videoDurationS ?? 8));
 
   if (caps.length === 0) return null;
 
@@ -90,13 +90,14 @@ export function GenerateContentDialog({
         mainImageUrl: mainImageUrl.trim() || undefined,
         userPrompt: prompt.trim() || undefined,
       });
-    } else if (capability.provider === 'palmier') {
+    } else if (capability.provider === 'palmier' || capability.provider === 'fal') {
       if (!prompt.trim()) { toast.error('Describe the video you want to generate.'); return; }
       await gen.start({
         capability, avatarId, touchpointId,
         videoPrompt: prompt.trim(),
+        model: capability.falModel ?? capability.palmierModel,
         aspect: videoAspect as PalmierAspect,
-        durationS: Number(videoDuration) || capability.palmierDurationS,
+        durationS: Number(videoDuration) || capability.videoDurationS,
       });
     } else {
       await gen.start({
@@ -160,7 +161,7 @@ export function GenerateContentDialog({
               isAPlus={capability.capability === 'a_plus'}
               aplusType={aplusType} setAplusType={setAplusType}
             />
-          ) : capability.provider === 'palmier' ? (
+          ) : (capability.provider === 'palmier' || capability.provider === 'fal') ? (
             <VideoForm
               prompt={prompt} setPrompt={setPrompt}
               aspect={videoAspect} setAspect={setVideoAspect}
@@ -177,7 +178,7 @@ export function GenerateContentDialog({
 
           <Button variant="coach" className="w-full" onClick={() => void submit()} disabled={gen.generating}>
             {gen.generating
-              ? (capability.provider === 'pixii' ? 'Generating images… (~2 min)' : capability.provider === 'palmier' ? 'Generating video…' : 'Writing…')
+              ? (capability.provider === 'pixii' ? 'Generating images… (~2 min)' : (capability.provider === 'palmier' || capability.provider === 'fal') ? 'Generating video…' : 'Writing…')
               : `Generate ${capability.label.toLowerCase()}`}
           </Button>
 
@@ -318,13 +319,20 @@ function GenerationResult({ job, onSave, saving }: { job: GenerationJob; onSave:
           ))}
         </div>
       )}
-      {out.videos && out.videos.length > 0 && out.videos.map((v) => (
-        <div key={v.palmier_asset_id} className="rounded border bg-background/60 p-2 text-xs">
-          <p className="font-medium">🎬 Video generated in Palmier</p>
-          <p className="text-muted-foreground">
-            Asset {v.palmier_asset_id}{v.duration_s ? ` · ${v.duration_s}s` : ''}{v.aspect ? ` · ${v.aspect}` : ''}
-          </p>
-          <p className="mt-1">{v.prompt}</p>
+      {out.videos && out.videos.length > 0 && out.videos.map((v, i) => (
+        <div key={v.storage_path ?? v.palmier_asset_id ?? i} className="rounded border bg-background/60 p-2 text-xs space-y-1">
+          {v.signed_url ? (
+            <>
+              <video src={v.signed_url} controls className="w-full rounded" />
+              <p className="text-muted-foreground">{v.model ?? 'cloud'}{v.duration_s ? ` · ${v.duration_s}s` : ''}{v.aspect ? ` · ${v.aspect}` : ''}</p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium">🎬 Video generated in Palmier</p>
+              <p className="text-muted-foreground">Asset {v.palmier_asset_id}{v.duration_s ? ` · ${v.duration_s}s` : ''}{v.aspect ? ` · ${v.aspect}` : ''}</p>
+              <p>{v.prompt}</p>
+            </>
+          )}
         </div>
       ))}
       {out.brief && (

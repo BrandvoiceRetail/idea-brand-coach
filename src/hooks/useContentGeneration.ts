@@ -70,10 +70,10 @@ export function useContentGeneration(): UseContentGeneration {
     }
     setJob(data);
     const terminal = data.status === 'completed' || data.status === 'failed';
-    // Pixii polls while non-terminal; Palmier polls only an in-flight ('processing')
-    // job — a Palmier brief (status 'pending') is terminal-for-now, nothing to poll.
+    // Pixii + fal poll while non-terminal; Palmier polls only an in-flight
+    // ('processing') job — a Palmier brief (status 'pending') is terminal-for-now.
     const shouldPoll =
-      (data.provider === 'pixii' && !terminal) ||
+      ((data.provider === 'pixii' || data.provider === 'fal') && !terminal) ||
       (data.provider === 'palmier' && data.status === 'processing');
     if (shouldPoll && data.jobId) {
       void pollLoop(data.jobId, data.provider); // poll immediately, then every 5s

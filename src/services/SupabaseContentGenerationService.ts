@@ -33,7 +33,10 @@ function copyFormat(capability: string): string {
 function describeVideo(output: GenerationOutput): string | null {
   const v = output.videos?.[0];
   if (v) {
-    const lines = [`Palmier video — asset ${v.palmier_asset_id}`, `Prompt: ${v.prompt}`];
+    const head = v.palmier_asset_id
+      ? `Palmier video — asset ${v.palmier_asset_id}`
+      : 'Video (generated in the cloud)';
+    const lines = [head, `Prompt: ${v.prompt}`];
     if (v.model) lines.push(`Model: ${v.model}`);
     if (v.duration_s) lines.push(`Duration: ${v.duration_s}s`);
     if (v.aspect) lines.push(`Aspect: ${v.aspect}`);
@@ -63,6 +66,7 @@ export class SupabaseContentGenerationService implements IContentGenerationServi
     try {
       if (input.capability.provider === 'pixii') return await this.startPixii(input);
       if (input.capability.provider === 'palmier') return await this.startPalmier(input);
+      if (input.capability.provider === 'fal') return await this.startFal(input);
       return await this.startClaude(input);
     } catch (error) {
       console.error('content-generation start error:', error);
@@ -78,8 +82,8 @@ export class SupabaseContentGenerationService implements IContentGenerationServi
         capability: input.capability.capability,
         videoPrompt: input.videoPrompt ?? input.prompt,
         model: input.model ?? input.capability.palmierModel,
-        durationS: input.durationS ?? input.capability.palmierDurationS,
-        aspect: input.aspect ?? input.capability.palmierAspect,
+        durationS: input.durationS ?? input.capability.videoDurationS,
+        aspect: input.aspect ?? input.capability.videoAspect,
       },
     });
     if (error) return { data: null, error: new Error(error.message ?? 'Video generation request failed') };
@@ -102,6 +106,30 @@ export class SupabaseContentGenerationService implements IContentGenerationServi
         status: data.status ?? 'pending',
         output: data.output,
       },
+      error: null,
+    };
+  }
+
+  private async startFal(input: GenerationStartInput): Promise<Result<GenerationJob>> {
+    const { data, error } = await supabase.functions.invoke('fal-video-generate', {
+      body: {
+        avatarId: input.avatarId,
+        touchpointId: input.touchpointId,
+        capability: input.capability.capability,
+        videoPrompt: input.videoPrompt ?? input.prompt,
+        model: input.model ?? input.capability.falModel,
+        durationS: input.durationS ?? input.capability.videoDurationS,
+        aspect: input.aspect ?? input.capability.videoAspect,
+      },
+    });
+    if (error) return { data: null, error: new Error(error.message ?? 'Video generation request failed') };
+    if (!data?.ok) {
+      const retry = typeof data?.retryAfter === 'number' ? ` (retry in ${data.retryAfter}s)` : '';
+      return { data: null, error: new Error(`${data?.error ?? 'Video generation failed'}${retry}`) };
+    }
+    captureAlphaEvent('funnel_content_generated', { provider: 'fal', capability: input.capability.capability, touchpoint: input.touchpointId });
+    return {
+      data: { provider: 'fal', jobId: data.jobId, externalJobId: data.externalJobId ?? null, status: data.status ?? 'processing' },
       error: null,
     };
   }
@@ -156,7 +184,7 @@ export class SupabaseContentGenerationService implements IContentGenerationServi
   }
 
   async poll(jobId: string, provider: ContentProvider = 'pixii'): Promise<Result<GenerationJob>> {
-    const fn = provider === 'palmier' ? 'palmier-generate' : 'pixii-generate';
+    const fn = provider === 'palmier' ? 'palmier-generate' : provider === 'fal' ? 'fal-video-generate' : 'pixii-generate';
     try {
       const { data, error } = await supabase.functions.invoke(fn, { body: { poll: jobId } });
       if (error) return { data: null, error: new Error(error.message ?? 'Polling failed') };

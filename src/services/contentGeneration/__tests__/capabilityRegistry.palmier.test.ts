@@ -2,28 +2,41 @@ import { describe, it, expect } from 'vitest';
 import { capabilitiesFor, isGeneratable } from '../capabilityRegistry';
 
 /**
- * Palmier (video) routing — kept in a separate file from capabilityRegistry.test.ts
- * so the pixii/claude cases and the video cases evolve independently.
+ * Video routing (fal cloud + local Palmier) — kept in a separate file from
+ * capabilityRegistry.test.ts so the pixii/claude cases and the video cases evolve
+ * independently.
  */
-describe('capabilitiesFor — Palmier video', () => {
-  it('routes paid social ad creative to Palmier video + Claude copy', () => {
+describe('capabilitiesFor — video (fal + Palmier)', () => {
+  it('routes paid social ad creative to fal video (default) + Palmier video + Claude copy', () => {
     const caps = capabilitiesFor('paid_social_creative');
-    expect(caps.map((c) => `${c.provider}:${c.capability}`)).toEqual(['palmier:social_video', 'claude:generic_copy']);
-    const video = caps[0];
-    expect(video.outputKind).toBe('video');
-    expect(video.palmierAspect).toBe('9:16');
-    expect(video.palmierDurationS).toBe(8);
+    expect(caps.map((c) => `${c.provider}:${c.capability}`)).toEqual([
+      'fal:social_video',
+      'palmier:social_video',
+      'claude:generic_copy',
+    ]);
+    const fal = caps[0];
+    expect(fal.outputKind).toBe('video');
+    expect(fal.videoAspect).toBe('9:16');
+    expect(fal.videoDurationS).toBe(8);
+    expect(caps[1].label).toBe('Video ad (Palmier)');
   });
 
-  it('routes influencer/UGC to Palmier video + Claude copy', () => {
+  it('routes influencer/UGC to fal video + Palmier video + Claude copy', () => {
     const caps = capabilitiesFor('influencer_ugc');
-    expect(caps.map((c) => `${c.provider}:${c.capability}`)).toEqual(['palmier:ugc_video', 'claude:generic_copy']);
+    expect(caps.map((c) => `${c.provider}:${c.capability}`)).toEqual([
+      'fal:ugc_video',
+      'palmier:ugc_video',
+      'claude:generic_copy',
+    ]);
     expect(caps[0].outputKind).toBe('video');
   });
 
   it('does not add a video capability to non-video touchpoints', () => {
-    expect(capabilitiesFor('amazon_listing_copy').some((c) => c.provider === 'palmier')).toBe(false);
-    expect(capabilitiesFor('welcome_series').some((c) => c.provider === 'palmier')).toBe(false);
+    for (const tp of ['amazon_listing_copy', 'welcome_series']) {
+      const providers = capabilitiesFor(tp).map((c) => c.provider);
+      expect(providers).not.toContain('fal');
+      expect(providers).not.toContain('palmier');
+    }
   });
 
   it('marks the video touchpoints generatable', () => {
