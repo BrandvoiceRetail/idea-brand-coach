@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getAuthedUserId, getServiceClient, jsonResponse } from '../_shared/edge-auth.ts';
+import { createRateLimiter } from '../_shared/rateLimit.ts';
 import {
   createListingBuilder,
   createAPlus,
@@ -39,21 +40,10 @@ const BUCKET = 'brand-assets';
 const MAX_IMAGES = 12;
 const SIGNED_URL_TTL_SECONDS = 3600;
 
-// In-memory per-user rate limits (best-effort; resets on cold start). Create is
-// stricter because it spends Pixii credits; poll is lenient (UI polls every ~5s).
-const CREATE_RL = new Map<string, number[]>();
-const POLL_RL = new Map<string, number[]>();
-function rateLimited(map: Map<string, number[]>, uid: string, maxPerMin: number): boolean {
-  const now = Date.now();
-  const arr = (map.get(uid) ?? []).filter((t) => now - t < 60_000);
-  if (arr.length >= maxPerMin) {
-    map.set(uid, arr);
-    return true;
-  }
-  arr.push(now);
-  map.set(uid, arr);
-  return false;
-}
+// Per-isolate sliding-window rate limits keyed by userId (shared helper handles
+// eviction). Create is stricter (spends Pixii credits); poll is lenient (~5s UI poll).
+const createLimiter = createRateLimiter(15, 60_000);
+const pollLimiter = createRateLimiter(240, 60_000);
 
 interface CreateBody {
   avatarId: string;
@@ -96,12 +86,12 @@ serve(async (req: Request): Promise<Response> => {
 
     // ── POLL branch ──────────────────────────────────────────────────────────
     if (body?.poll) {
-      if (rateLimited(POLL_RL, userId, 240)) return jsonResponse({ ok: false, error: 'rate_limited' }, 429);
+      if (pollLimiter.isRateLimited(userId)) return jsonResponse({ ok: false, error: 'rate_limited' }, 429);
       return await handlePoll(svc, userId, String(body.poll));
     }
 
     // ── CREATE branch ─────────────────────────────────────────────────────────
-    if (rateLimited(CREATE_RL, userId, 15)) return jsonResponse({ ok: false, error: 'rate_limited' }, 429);
+    if (createLimiter.isRateLimited(userId)) return jsonResponse({ ok: false, error: 'rate_limited' }, 429);
     return await handleCreate(svc, userId, body as CreateBody);
   } catch (err) {
     console.error('pixii-generate error:', err instanceof Error ? err.message : err);
@@ -270,6 +260,17 @@ async function handlePoll(
   const sourceUrls = imageUrlsFromJob(job).slice(0, MAX_IMAGES);
   const images = await persistImages(svc, userId, jobRowId, sourceUrls);
   const adErrors = adErrorsFromJob(job);
+
+  // Pixii reported completion and produced image URLs, but NONE could be persisted
+  // (CDN/storage failure or all URLs rejected by the SSRF guard). Don't mark the job
+  // 'completed' with an empty gallery — that strands spent credits with nothing to
+  // save and no error. Surface it as failed so the UI can retry.
+  if (sourceUrls.length > 0 && images.length === 0) {
+    const error = { code: 'IMAGE_PERSIST_FAILED', message: 'Pixii generated images but none could be saved. Please try again.' };
+    await svc.from('content_generation_jobs').update({ status: 'failed', error }).eq('id', jobRowId);
+    return jsonResponse({ ok: true, status: 'failed', error });
+  }
+
   const output = {
     images,
     ad_errors: adErrors,

@@ -167,7 +167,10 @@ export class SupabaseContentGenerationService implements IContentGenerationServi
         productName: input.productName?.trim() || 'this product',
         category: '',
         features: [],
-        targetAudience: '',
+        // brand-copy-generator hard-rejects an empty targetAudience (and productName).
+        // The real audience comes from the user's KB grounding + the prompt; this just
+        // satisfies the required-field guard so the copy/email path actually runs.
+        targetAudience: 'this brand\'s ideal customer',
         emotionalPayoff: '',
         tone: input.tone?.trim() || 'authentic, warm',
         format: copyFormat(input.capability.capability),

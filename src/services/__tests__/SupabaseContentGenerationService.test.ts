@@ -55,7 +55,12 @@ describe('start() — Claude', () => {
     expect(data).toMatchObject({ provider: 'claude', status: 'completed', output: { copy: 'Subject: Welcome\nBody…' } });
     const [fn, opts] = invoke.mock.calls[0];
     expect(fn).toBe('brand-copy-generator');
-    expect((opts as { body: Record<string, unknown> }).body).toMatchObject({ format: 'email', additionalContext: 'welcome new buyers', tone: 'warm' });
+    const body = (opts as { body: Record<string, unknown> }).body;
+    expect(body).toMatchObject({ format: 'email', additionalContext: 'welcome new buyers', tone: 'warm' });
+    // Regression: brand-copy-generator hard-rejects an empty productName/targetAudience,
+    // so the copy path must always send non-empty values for both (else every copy 500s).
+    expect(String(body.productName).length).toBeGreaterThan(0);
+    expect(String(body.targetAudience).length).toBeGreaterThan(0);
   });
 
   it('errors when the copy engine returns nothing', async () => {
