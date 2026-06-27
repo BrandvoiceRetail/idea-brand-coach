@@ -18,7 +18,8 @@ import { useFunnelTracker } from '@/hooks/useFunnelTracker';
 import { useAuth } from '@/hooks/useAuth';
 import { useBrandDefenseAlerts } from '@/hooks/useBrandDefenseAlerts';
 import { getTouchpoint, type ApplicabilityTag } from '@/config/touchpointTaxonomy';
-import { isCompetitorAgentsEnabled } from '@/config/features';
+import { isCompetitorAgentsEnabled, isContentGenerationEnabled } from '@/config/features';
+import { isGeneratable } from '@/services/contentGeneration/capabilityRegistry';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AssetUploadDialog } from './AssetUploadDialog';
 import { FixDialog } from './FixDialog';
+import { GenerateContentDialog } from './GenerateContentDialog';
 import { TouchpointCompetitorAgentPanel } from './TouchpointCompetitorAgentPanel';
 import { CompetitorGapsAggregate } from './CompetitorGapsAggregate';
 import { TestingLiftTab } from './TestingLiftTab';
@@ -151,6 +153,7 @@ export function FunnelTracker(): JSX.Element {
   const { selectedAvatarId, currentAvatar } = useAvatarContext();
   const { coverage, assets, tests, avatarFieldCount, loading, refresh, auditAsset, reauditAll, brandTags, setBrandTags, service } = useFunnelTracker(selectedAvatarId);
   const competitorEnabled = isCompetitorAgentsEnabled();
+  const contentGenEnabled = isContentGenerationEnabled();
 
   // Gate on the user too, not just the avatar: a signed-out visitor can carry a
   // stale selectedAvatarId in localStorage, which would otherwise render the full
@@ -267,6 +270,18 @@ export function FunnelTracker(): JSX.Element {
                             <StatusBadge status={cell.status} />
                             <span className="text-xs text-muted-foreground tabular-nums">{cell.overallScore ?? '—'}</span>
                           </div>
+                          {contentGenEnabled && isGeneratable(cell.touchpointId) && (
+                            <div className="mt-2">
+                              <GenerateContentDialog
+                                touchpointId={cell.touchpointId}
+                                avatarId={selectedAvatarId}
+                                onSaved={() => void refresh()}
+                                triggerLabel={cell.status === 'missing' ? 'Generate' : 'Regenerate'}
+                                triggerVariant="outline"
+                                triggerSize="sm"
+                              />
+                            </div>
+                          )}
                         </Card>
                       ))}
                     </div>
@@ -309,6 +324,15 @@ export function FunnelTracker(): JSX.Element {
                   <DimensionBars asset={a} />
                   <div className="flex flex-col gap-2">
                     <FixDialog asset={a} onDone={() => void refresh()} />
+                    {contentGenEnabled && isGeneratable(a.touchpoint_id) && (
+                      <GenerateContentDialog
+                        touchpointId={a.touchpoint_id}
+                        avatarId={selectedAvatarId}
+                        onSaved={() => void refresh()}
+                        triggerLabel="Generate new"
+                        triggerVariant="outline"
+                      />
+                    )}
                     <Button variant="outline" size="sm" onClick={() => void auditAsset(a.id)}>Re-run audit</Button>
                   </div>
                 </div>

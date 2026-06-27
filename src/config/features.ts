@@ -590,6 +590,21 @@ export function isCompetitorAgentsEnabled(): boolean {
   return (import.meta.env.VITE_COMPETITOR_AGENTS as string | undefined) === 'true';
 }
 
+/**
+ * CONTENT_GENERATION — the per-funnel-piece generate interface in the Brand
+ * Funnel Tracker: Pixii product images (listing / A+ / main) + in-house Claude
+ * copy (email / listing / generic), routed by the capability registry.
+ *
+ * OFF by default in every environment. Enabled with VITE_CONTENT_GENERATION=true
+ * at build time. The image path additionally needs the PIXII_API_KEY edge-function
+ * secret; without it the pixii-generate function returns a NOT_CONFIGURED notice
+ * (the copy path works regardless). Gates the CLIENT surface only — pixii-generate
+ * carries its own in-function auth + rate limits.
+ */
+export function isContentGenerationEnabled(): boolean {
+  return (import.meta.env.VITE_CONTENT_GENERATION as string | undefined) === 'true';
+}
+
 // Development helper
 if (import.meta.env.DEV) {
   const currentPhase = getCurrentPhase();

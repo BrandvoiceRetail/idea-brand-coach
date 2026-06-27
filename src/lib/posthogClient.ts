@@ -91,6 +91,9 @@ export type AlphaEventName =
   | 'funnel_fix_started'
   | 'funnel_test_recorded'
   | 'funnel_coverage_viewed'
+  // Content generation (Pixii images / Claude copy) per funnel piece.
+  | 'funnel_content_generated'
+  | 'funnel_content_saved'
   // User-perceived chat latency (TTFT + total). PostHog GeoIP gives per-country slicing.
   | 'chat_response_latency'
   // Competitor-Agents — per-touchpoint competitor analysis + Brand Defense.

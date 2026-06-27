@@ -24,8 +24,12 @@ vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'test-user' } 
 
 // COMPETITOR_AGENTS gate. Default ON; the off-state is exercised explicitly.
 let competitorAgentsEnabled = true;
+// CONTENT_GENERATION gate stays OFF here so the generate surface doesn't change
+// this test's competitor-focused assertions (it has its own coverage).
+const contentGenerationEnabled = false;
 vi.mock('@/config/features', () => ({
   isCompetitorAgentsEnabled: () => competitorAgentsEnabled,
+  isContentGenerationEnabled: () => contentGenerationEnabled,
 }));
 
 // Stub the leaf panels so this test focuses on the FunnelTracker wiring (mounting
