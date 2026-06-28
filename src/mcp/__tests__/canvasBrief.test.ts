@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { scanBrief, type ConfirmedClaim } from '../service/claimGate.js';
+import { scanBrief, detectClaims, detectBriefClaims, type ConfirmedClaim } from '../service/claimGate.js';
 import { runGenerateCanvas, registerGenerateCanvasTool, type GenerateCanvasDeps } from '../tools/generateCanvas.js';
 import { runGenerateBrief, registerGenerateBriefTool, type GenerateBriefDeps } from '../tools/generateBrief.js';
 import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
@@ -183,6 +183,41 @@ describe('claimGate.scanBrief', () => {
     const verdict = scanBrief(b, []);
     expect(verdict.ok).toBe(false);
     expect(verdict.violations.map((v) => v.category)).toContain('material');
+  });
+});
+
+// ======================================================================================
+// claimGate.detectClaims — the broad compliance net (connector claim-gate, determination #4).
+// ======================================================================================
+describe('claimGate.detectClaims', () => {
+  it('flags warranty / guarantee / lifetime / money-back language (true positive)', () => {
+    const hits = detectClaims('Backed by a lifetime warranty and a money-back guarantee.').map((h) => h.toLowerCase());
+    expect(hits).toEqual(expect.arrayContaining(['lifetime', 'warranty', 'guarantee', 'money-back']));
+  });
+
+  it('flags health / medical signals (true positive); bare treats/cures do NOT trip', () => {
+    const hits = detectClaims('Clinically proven, dermatologist tested, FDA-cleared formula.').map((h) => h.toLowerCase());
+    expect(hits).toEqual(expect.arrayContaining(['clinically proven', 'fda', 'dermatologist tested']));
+    // Bare product nouns are intentionally NOT flagged (false-positive prone):
+    expect(detectClaims('Tasty dog treats; we cure the leather by hand.')).toEqual([]);
+  });
+
+  it('flags unverifiable superlatives, incl. #1 / no. 1 / number 1 (true positive)', () => {
+    const hits = detectClaims('The #1 best-selling, award-winning, doctor recommended binder.').map((h) => h.toLowerCase());
+    expect(hits).toEqual(expect.arrayContaining(['#1', 'best-selling', 'award-winning', 'doctor recommended']));
+    expect(detectClaims('Rated No. 1; the number 1 choice.').map((h) => h.toLowerCase())).toEqual(expect.arrayContaining(['no. 1', 'number 1']));
+  });
+
+  it('false-positive guard: benign copy and near-miss words do not trip', () => {
+    expect(detectClaims('A warranted concern about treatment plans, proudly organised.')).toEqual([]);
+    expect(detectClaims('Finally, one binder you are proud to flip through.')).toEqual([]);
+  });
+
+  it('detectBriefClaims surfaces compliance phrases, minus already-confirmed claims', () => {
+    const b = briefReply('Backed by a lifetime warranty.', []) as unknown as ExportBriefOutput;
+    expect(detectBriefClaims(b).map((h) => h.toLowerCase())).toEqual(expect.arrayContaining(['lifetime', 'warranty']));
+    // An owner-confirmed claim is not re-surfaced for confirmation:
+    expect(detectBriefClaims(b, [{ claim: 'lifetime warranty', source: 'owner' }])).toEqual([]);
   });
 });
 

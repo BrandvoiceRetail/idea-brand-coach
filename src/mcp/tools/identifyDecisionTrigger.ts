@@ -113,7 +113,7 @@ export function registerIdentifyDecisionTriggerTool(server: McpServer, deps?: Pa
       title: 'Identify the Decision Trigger',
       description:
         "Derive the single Decision Trigger™ — the one psychological lever that makes this seller's customer act now — from their four Trust Gap™ scores (pass the scores from run_trust_gap) + their own listing and reviews. The trigger is DERIVED from the evidence, never chosen: you get the dominant trigger, 2–3 VERBATIM evidence phrases from the reviews, a brand anchor, and one placement instruction (where to put the fix). If no listing/reviews have been imported yet, it returns needs_input — import evidence first (ingest_evidence); it never invents a trigger. Requires an authenticated Supabase JWT." +
-        appGroundingPreamble('run_diagnostic_evidence'),
+        appGroundingPreamble('identify_decision_trigger'),
       inputSchema,
     },
     async ({ scores, avatar_id }) => {

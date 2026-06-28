@@ -69,3 +69,20 @@ Example (Recognition, Guyology Labs): *Lead with recognition in your hero image 
 After Skills 05 + 06, run the selection rules to pick exactly one primary trigger, then render Components 1–3 with verbatim corpus evidence and a single placement instruction. Hand the trigger + placement to Skill 10. Never offer a menu; never expose the engine.
 
 Related: [[06-trust-gap-score]] · [[05-four-buyer-states-engine]] · [[10-design-brief-generator]] · [[01-idea-framework-core]]
+
+## Connector: Skill 09 in conversational mode
+
+In the Connector the brand owner may ask about their trigger, paste a listing, or describe what they are communicating and ask what to change. Skill 09 can operate from partial inputs where the full app pipeline has not run.
+
+| Input available | How the coach responds |
+|----------------|----------------------|
+| Full Trust Gap Score and buyer state from app pipeline | Names the trigger directly. Quotes the verbatim evidence. Gives the placement instruction. Offers to generate the design brief. |
+| Pasted listing copy only | Reads the listing against the four pillars. Identifies the most likely weak pillar. Names the probable trigger with appropriate confidence. Asks for review data to confirm. |
+| Review phrases only | Classifies the emotional register of the language using the Four Buyer States attribute classifiers. Names the probable trigger. States what is missing to confirm it and asks for the Trust Gap Score or listing. |
+| No data, general question about triggers | Explains the trigger concept in plain commercial language. Names the most commonly fired trigger (Recognition) and explains why it is most common. Does not list all six sequentially. |
+
+### Connector output example (Recognition trigger)
+
+> Your primary trigger is Recognition. Your customer arrives at your listing already carrying past disappointment in this category. Before they will engage with your evidence, your specifications, or your guarantee, they need to feel that you understand exactly where they are. Your reviews confirm this: "nearly didn't buy", "tried everything", "finally one that works". Lead with recognition in your hero image headline and your opening bullet point. That is where the change will move the number first.
+
+**Connector rule:** One trigger, named clearly. The evidence quoted verbatim. The placement instruction in one sentence. Then offer the design brief. Never present multiple triggers or ask the brand owner to choose.

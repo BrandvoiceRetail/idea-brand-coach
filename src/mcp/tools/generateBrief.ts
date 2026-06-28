@@ -36,7 +36,7 @@ import {
   getCurrentArtifact as getCurrentArtifactLive,
   saveArtifact as saveArtifactLive,
 } from '../service/artifactStore.js';
-import { scanBrief, type ConfirmedClaim, type ClaimViolation } from '../service/claimGate.js';
+import { scanBrief, detectBriefClaims, type ConfirmedClaim, type ClaimViolation } from '../service/claimGate.js';
 import { gateWrite } from './writeAuth.js';
 import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
@@ -167,7 +167,7 @@ function toConfirmedClaims(value: unknown, source: string): ConfirmedClaim[] {
 
 /** The discriminated result of a brief generation run. */
 export type GenerateBriefResult =
-  | { status: 'persisted'; artifactId: string; grounding: Grounding; content: ExportBriefOutput }
+  | { status: 'persisted'; artifactId: string; grounding: Grounding; content: ExportBriefOutput; needs_confirmation: string[] }
   | { status: 'needs_input'; needs_input: NeedsInputItem[]; reason: 'no_canvas' | 'claims_unconfirmed' | 'claim_violations' }
   | { status: 'failed'; note: string };
 
@@ -244,7 +244,7 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
   // 7. Persist (RLS-scoped, insert-then-supersede).
   try {
     const row = await deps.saveArtifact('export_brief', parsed.data, { grounding, evidenceRefs, avatarId });
-    return { status: 'persisted', artifactId: row.id, grounding, content: parsed.data };
+    return { status: 'persisted', artifactId: row.id, grounding, content: parsed.data, needs_confirmation: detectBriefClaims(parsed.data, confirmedClaims) };
   } catch (err) {
     return { status: 'failed', note: err instanceof Error ? err.message : 'persist failed' };
   }
@@ -257,7 +257,7 @@ export function registerGenerateBriefTool(server: McpServer, deps?: Partial<Gene
     {
       title: 'Generate the Export Brief',
       description:
-        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas — or, when no canvas exists yet, your chosen Signature (so the owner gets a shippable brief today, not canvas homework) — plus Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'),
+        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas — or, when no canvas exists yet, your chosen Signature (so the owner gets a shippable brief today, not canvas homework) — plus Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). CONNECTOR (conversational) mode: address the brief TO THE DESIGNER OR VA so the owner can paste-and-forward it without rewriting (not a note back to the owner); open with "Here is a brief you can send directly to your designer or VA. It does not require any additional explanation from you." — plain commercial language only, no framework terms or buyer-state names. If the owner asks for ONE component (image brief, a headline, a single bullet, or the placement line), produce ONLY that component — one component done precisely beats a full brief done approximately. A compliance net flags warranty/guarantee, health/medical, and unverifiable-superlative phrasing (returned as needs_confirmation in structuredContent) so the owner confirms each claim before forwarding. Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'),
       inputSchema,
     },
     async ({ avatar_id }) => {
@@ -283,7 +283,7 @@ export function registerGenerateBriefTool(server: McpServer, deps?: Partial<Gene
               text: `Export Brief persisted (artifact id ${result.artifactId}, grounding ${result.grounding}).`,
             },
           ],
-          structuredContent: { ok: true, artifact_id: result.artifactId, grounding: result.grounding, brief: result.content },
+          structuredContent: { ok: true, artifact_id: result.artifactId, grounding: result.grounding, brief: result.content, needs_confirmation: result.needs_confirmation },
         };
       }
 

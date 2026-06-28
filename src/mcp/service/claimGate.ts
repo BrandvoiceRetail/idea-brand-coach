@@ -196,3 +196,45 @@ export function scanBrief(brief: ExportBriefOutput, confirmedClaims: ConfirmedCl
 
   return { ok: violations.length === 0, violations };
 }
+
+/**
+ * Broad compliance net (connector claim-gate, determination #4 / Skill 10 "Warranty and
+ * claim gate"). Detects claim LANGUAGE a brand owner must confirm before a brief ships —
+ * warranties / guarantees / lifetime / money-back, health-medical signals (clinically / FDA /
+ * dermatologist), and unverifiable superlatives (#1 / no.1 / best-selling / award-winning / doctor
+ * recommended). Bare "treats"/"cures" are deliberately NOT matched — they false-positive on ordinary
+ * copy (dog treats, curing leather); a real medical claim is still caught via its clinically/FDA/
+ * dermatologist signal. Unlike `scanBrief` (which BLOCKS ungated PRODUCT-TRUTH claims against a
+ * confirmed allowlist), this is allowlist-independent and ADVISORY: it returns the flagged
+ * phrases so `generate_brief` can surface them as a `needs_confirmation` artifact ("confirm
+ * you offer this before I include it") before the owner forwards the brief. It never weakens
+ * the fabrication gate — it adds a compliance prompt on top of it. Deterministic,
+ * side-effect-free, case-insensitive, no LLM.
+ */
+const COMPLIANCE_CLAIM_RE =
+  /#\s?1\b|\bno\.?\s?1\b|\bnumber\s+1\b|\b(?:lifetime|warrant(?:y|ies)|guarantee[ds]?|money[-\s]?back|clinically(?:\s+(?:proven|tested))?|fda|dermatologist[-\s]?(?:tested|recommended)|best[-\s]?sell(?:er|ers|ing)|award[-\s]?winning|doctor[-\s]?recommended)\b/gi;
+
+/** Return the unique compliance-sensitive claim phrases in a copy string (deduped, case-insensitive). */
+export function detectClaims(text: string): string[] {
+  if (!text) return [];
+  return matchAll(text, COMPLIANCE_CLAIM_RE);
+}
+
+/**
+ * Apply `detectClaims` across a produced brief's shippable copy (title formula + every bullet),
+ * EXCLUDING any phrase already covered by the owner-confirmed allowlist — so a claim the owner just
+ * confirmed (e.g. a guarantee that already passed `scanBrief`) is not re-surfaced for confirmation.
+ */
+export function detectBriefClaims(brief: ExportBriefOutput, confirmed: ConfirmedClaim[] = []): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const target of scanTargets(brief)) {
+    for (const frag of detectClaims(target.copy)) {
+      const key = frag.toLowerCase();
+      if (seen.has(key) || isCovered(frag, confirmed)) continue;
+      seen.add(key);
+      out.push(frag);
+    }
+  }
+  return out;
+}
