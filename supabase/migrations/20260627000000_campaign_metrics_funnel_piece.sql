@@ -50,10 +50,14 @@ security definer
 set search_path = public
 as $$
 begin
+  -- brand_assets has NO user_id column; ownership is brand_assets.brand_id -> brands.user_id.
   if new.brand_asset_id is not null
      and not exists (
-       select 1 from public.brand_assets
-       where id = new.brand_asset_id and user_id = new.user_id
+       select 1
+       from public.brand_assets ba
+       join public.brands b on b.id = ba.brand_id
+       where ba.id = new.brand_asset_id
+         and b.user_id = new.user_id
      ) then
     raise exception 'brand_asset_id % is not owned by user %', new.brand_asset_id, new.user_id
       using errcode = 'check_violation';
