@@ -105,6 +105,12 @@ Conventional Commits (`type(scope): subject`). Branches: `main` (production), `f
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
+**`main` is the single source of truth for BOTH the frontend SPA and the brand-coach MCP gateway**
+(unified 2026-06-28; the old `mcp-oauth` branch now just tracks `main` — do not reintroduce the split).
+Commit MCP changes to `main`, deploy both from `main`. Deploys run **manually from a local machine**
+(CI can't reach the Lightsail box) — full runbook + the `npm run typecheck:mcp` gate are in
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
 ## Permission Profiles
 
 Role profiles live in `.claude/settings/` and layer on top of `.claude/settings.json`. The
