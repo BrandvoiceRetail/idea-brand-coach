@@ -23,6 +23,16 @@ import {
 export const V4_ROUTES = {
   /** Loop-1 onboarding entry (megaprompt paste → read-it-back → context card). */
   ROOT: '/v4',
+  /**
+   * Post-signup onboarding CHOICE screen — strongly steers to the connector
+   * (primary) with a quiet "set up in the app" link to ROOT (secondary).
+   */
+  CHOICE: '/v4/start',
+  /**
+   * Connector setup guide (add the Brand Coach connector + Windsor + pasteable
+   * prompts) — the primary, recommended onboarding path from CHOICE.
+   */
+  CONNECTOR: '/v4/connect',
   DIAGNOSE: '/v4/diagnose',
   ANALYSE: '/v4/analyse',
   FIX: '/v4/fix',
@@ -112,4 +122,32 @@ export const V4_SPINE: readonly SpineStage[] = [
 /** Resolve the active spine stage for a pathname (null on the onboarding root). */
 export function activeStageFor(pathname: string): SpineStage | null {
   return V4_SPINE.find((s) => pathname.startsWith(s.path)) ?? null;
+}
+
+/**
+ * localStorage key recording that a user has been shown the post-signup
+ * onboarding CHOICE screen at least once. Decoupled from the v1/v2 version
+ * preference so the connector-onboarding fork has its own first-run signal.
+ */
+const V4_ONBOARDING_SEEN_KEY = 'idea_v4_onboarding_seen';
+
+/** Whether this device has already shown the V4 onboarding CHOICE screen. */
+export function hasSeenV4Onboarding(): boolean {
+  try {
+    return localStorage.getItem(V4_ONBOARDING_SEEN_KEY) === 'true';
+  } catch {
+    // localStorage unavailable — treat as not-seen so the user still gets the
+    // choice rather than being silently dropped past it.
+    return false;
+  }
+}
+
+/** Mark the V4 onboarding CHOICE screen as seen (called once the user picks a path). */
+export function markV4OnboardingSeen(): void {
+  try {
+    localStorage.setItem(V4_ONBOARDING_SEEN_KEY, 'true');
+  } catch {
+    // localStorage full/unavailable — fail silently; worst case the user sees
+    // the choice screen again next session.
+  }
 }

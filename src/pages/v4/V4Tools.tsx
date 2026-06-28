@@ -22,13 +22,13 @@ import {
 function StatusBadge({ status }: { status: RegistryTool['status'] }): JSX.Element {
   if (status === 'Available') {
     return (
-      <span className="inline-block whitespace-nowrap rounded-full bg-[#FEF5DC] px-2.5 py-0.5 text-xs font-semibold text-[#7a5300]">
+      <span className="inline-block whitespace-nowrap rounded-full bg-gold-light px-2.5 py-0.5 text-xs font-semibold text-gold-warm">
         Available
       </span>
     );
   }
   return (
-    <span className="inline-block whitespace-nowrap rounded-full border border-[#2a2a2a] bg-[#232323] px-2.5 py-0.5 text-xs font-semibold text-[#9a9a9a]">
+    <span className="inline-block whitespace-nowrap rounded-full border border-background/15 bg-background/10 px-2.5 py-0.5 text-xs font-semibold text-background/60">
       Roadmap
     </span>
   );
@@ -39,13 +39,13 @@ export default function V4Tools(): JSX.Element {
   const generatedDate = TOOL_REGISTRY_GENERATED_AT.slice(0, 10);
 
   return (
-    <div className="min-h-screen bg-[#111111] font-[Helvetica_Neue,Helvetica,Arial,sans-serif] text-white">
+    <div className="min-h-screen bg-foreground font-[Helvetica_Neue,Helvetica,Arial,sans-serif] text-background">
       <div className="mx-auto max-w-5xl px-5 pb-20 pt-12">
-        <header className="border-b border-[#2a2a2a] pb-6">
+        <header className="border-b border-background/15 pb-6">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            IDEA Brand Coach <span className="text-[#D4960A]">Tool Registry</span>
+            IDEA Brand Coach <span className="text-gold-warm">Tool Registry</span>
           </h1>
-          <p className="mt-2 max-w-[60ch] text-[#9a9a9a]">
+          <p className="mt-2 max-w-[60ch] text-background/60">
             Every tool the coach can run for you — what it does, when it first shipped, and
             whether it's live today. Reviews are shown honestly; nothing is fabricated.
           </p>
@@ -60,19 +60,19 @@ export default function V4Tools(): JSX.Element {
           <section key={g.group} className="mt-10">
             <h2 className="mb-3 flex items-center gap-2.5 text-lg font-semibold">
               {g.group}
-              <span className="rounded-full bg-[#D4960A] px-2.5 py-0.5 text-xs font-semibold text-[#111111]">
+              <span className="rounded-full bg-gold-warm px-2.5 py-0.5 text-xs font-semibold text-foreground">
                 {g.tools.length}
               </span>
             </h2>
-            <div className="overflow-x-auto rounded-xl border border-[#2a2a2a]">
+            <div className="overflow-x-auto rounded-xl border border-background/15">
               <table className="w-full min-w-[720px] border-collapse">
                 <thead>
-                  <tr className="bg-[#161616]">
+                  <tr className="bg-background/5">
                     {['Tool', 'What it does', 'First shipped', 'Version', 'Reviews', 'Status'].map(
                       (h) => (
                         <th
                           key={h}
-                          className="border-b border-[#2a2a2a] px-3.5 py-3 text-left text-[11px] uppercase tracking-wider text-[#9a9a9a]"
+                          className="border-b border-background/15 px-3.5 py-3 text-left text-[11px] uppercase tracking-wider text-background/60"
                         >
                           {h}
                         </th>
@@ -82,25 +82,25 @@ export default function V4Tools(): JSX.Element {
                 </thead>
                 <tbody>
                   {g.tools.map((t) => (
-                    <tr key={t.name} className="hover:bg-[#161616]">
-                      <td className="border-b border-[#2a2a2a] px-3.5 py-3 align-top">
-                        <code className="whitespace-nowrap text-[13px] text-[#D4960A]">
+                    <tr key={t.name} className="hover:bg-background/5">
+                      <td className="border-b border-background/15 px-3.5 py-3 align-top">
+                        <code className="whitespace-nowrap text-[13px] text-gold-warm">
                           {t.name}
                         </code>
                       </td>
-                      <td className="border-b border-[#2a2a2a] px-3.5 py-3 align-top text-sm text-[#d8d8d8]">
+                      <td className="border-b border-background/15 px-3.5 py-3 align-top text-sm text-background/80">
                         {t.description}
                       </td>
-                      <td className="whitespace-nowrap border-b border-[#2a2a2a] px-3.5 py-3 align-top text-sm text-[#cfcfcf]">
+                      <td className="whitespace-nowrap border-b border-background/15 px-3.5 py-3 align-top text-sm text-background/70">
                         {t.firstShipped}
                       </td>
-                      <td className="whitespace-nowrap border-b border-[#2a2a2a] px-3.5 py-3 align-top text-sm text-[#cfcfcf]">
+                      <td className="whitespace-nowrap border-b border-background/15 px-3.5 py-3 align-top text-sm text-background/70">
                         {t.version}
                       </td>
-                      <td className="border-b border-[#2a2a2a] px-3.5 py-3 align-top text-sm text-[#9a9a9a]">
+                      <td className="border-b border-background/15 px-3.5 py-3 align-top text-sm text-background/60">
                         {t.reviews}
                       </td>
-                      <td className="border-b border-[#2a2a2a] px-3.5 py-3 align-top">
+                      <td className="border-b border-background/15 px-3.5 py-3 align-top">
                         <StatusBadge status={t.status} />
                       </td>
                     </tr>
@@ -111,9 +111,9 @@ export default function V4Tools(): JSX.Element {
           </section>
         ))}
 
-        <footer className="mt-12 border-t border-[#2a2a2a] pt-5 text-xs text-[#9a9a9a]">
+        <footer className="mt-12 border-t border-background/15 pt-5 text-xs text-background/60">
           Generated {generatedDate} from the live MCP tool surface + git history. This page is
-          regeneratable — run <code className="text-[#cfcfcf]">npm run build:tool-registry</code>.
+          regeneratable — run <code className="text-background/70">npm run build:tool-registry</code>.
         </footer>
       </div>
     </div>
@@ -122,9 +122,9 @@ export default function V4Tools(): JSX.Element {
 
 function Stat({ n, label }: { n: number; label: string }): JSX.Element {
   return (
-    <div className="rounded-[10px] border border-[#2a2a2a] bg-[#161616] px-4 py-3">
-      <div className="text-[22px] font-bold text-[#D4960A]">{n}</div>
-      <div className="text-xs uppercase tracking-wider text-[#9a9a9a]">{label}</div>
+    <div className="rounded-[10px] border border-background/15 bg-background/5 px-4 py-3">
+      <div className="text-[22px] font-bold text-gold-warm">{n}</div>
+      <div className="text-xs uppercase tracking-wider text-background/60">{label}</div>
     </div>
   );
 }

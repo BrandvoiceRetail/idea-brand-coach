@@ -13,6 +13,7 @@ import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { ROUTES } from '@/config/routes';
+import { isV4Forced } from '@/config/v4';
 
 const emailSchema = z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password must be less than 100 characters');
@@ -45,9 +46,17 @@ export default function Auth() {
   // the recovery session arrives. Either signal puts us in set-new-password mode.
   const isPasswordReset = searchParams.get('mode') === 'reset' || isRecovering;
 
-  // Get redirect URL from query params
-  // If no redirect specified, check if user completed diagnostic (should go to subscribe)
-  const defaultRedirect = localStorage.getItem('diagnosticData') ? '/subscribe' : '/';
+  // Get redirect URL from query params.
+  // When the /v4 surface is forced, post-auth ALWAYS resolves through `/` so
+  // VersionGate can fork first-run users into the onboarding CHOICE screen
+  // (connector vs in-app). We must NOT shortcut diagnostic-completing users to
+  // `/subscribe` here — that bypasses the connector recommendation entirely.
+  // Outside v4, keep the legacy diagnostic → subscribe shortcut.
+  const defaultRedirect = isV4Forced()
+    ? '/'
+    : localStorage.getItem('diagnosticData')
+      ? '/subscribe'
+      : '/';
   const redirectUrl = searchParams.get('redirect') || defaultRedirect;
 
   // Funnel: the signup/login prompt is shown to a guest (auth is itself a

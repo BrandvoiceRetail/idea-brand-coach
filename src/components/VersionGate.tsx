@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useVersionContext } from '@/contexts/VersionContext';
 import { V2_ROUTES } from '@/config/routes';
-import { isV4Forced, V4_ROUTES } from '@/config/v4';
+import { isV4Forced, V4_ROUTES, hasSeenV4Onboarding } from '@/config/v4';
 
 function getUserFirstName(user: { email?: string } | null): string {
   if (!user) return '';
@@ -23,11 +23,18 @@ export function VersionGate(): JSX.Element | null {
   const forceV4 = isV4Forced();
 
   useEffect(() => {
-    // Force-flag: when VITE_FORCE_V4=true (set in this worktree's .env), every
-    // authed + guest user is routed into the new /v4 surface. Old routes stay
-    // mounted and reachable by direct URL — only the front-door is repointed.
+    // Force-flag: when VITE_FORCE_V4=true (set in this worktree's .env), the
+    // front-door repoints to the /v4 surface. Guests go to the public landing
+    // (in-app routes are login-gated by RequireAuth); authed first-run users get
+    // the post-signup onboarding CHOICE, returning users go straight to /v4.
     if (forceV4) {
-      navigate(V4_ROUTES.ROOT, { replace: true });
+      if (!user) {
+        navigate('/welcome', { replace: true });
+      } else {
+        navigate(hasSeenV4Onboarding() ? V4_ROUTES.ROOT : V4_ROUTES.CHOICE, {
+          replace: true,
+        });
+      }
       return;
     }
 
@@ -41,7 +48,7 @@ export function VersionGate(): JSX.Element | null {
     } else {
       setShouldRender(true);
     }
-  }, [forceV4, currentVersion, hasSeenIntroduction, isNewUser, navigate]);
+  }, [forceV4, user, currentVersion, hasSeenIntroduction, isNewUser, navigate]);
 
   if (!shouldRender) return null;
 

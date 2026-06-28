@@ -118,8 +118,22 @@ export type AlphaEventName =
   // /v4 surface — the Diagnose → Analyse → Fix → Re-measure → Defend spine.
   // Page-level (stage viewed / gate blocked / advanced) + per-screen funnel
   // events. Registered here so the compiler guards every emitted name (no casts).
+  // Post-signup onboarding CHOICE screen — which path the user takes from the
+  // fork (connector = primary/recommended, in-app megaprompt = secondary).
+  | 'v4_onboard_choice_viewed'
+  | 'v4_onboard_choice_connector'
+  | 'v4_onboard_choice_in_app'
+  // Connector-setup guide — add the Brand Coach connector in Claude/ChatGPT +
+  // Windsor + the two pasteable prompts. Copy outcomes carry a `target`/`case`
+  // slug only, never the copied text; `done` fires on advance to the funnel.
+  | 'v4_connector_setup_viewed'
+  | 'v4_connector_url_copied'
+  | 'v4_connector_prompt_copied'
+  | 'v4_connector_setup_done'
   | 'v4_onboarding_stage_viewed'
   | 'v4_onboarding_read_back_started'
+  // Loop-1 inline gap-fill — the user answers a genuinely-empty context slot.
+  | 'v4_onboarding_gap_answered'
   | 'v4_onboarding_findings_confirmed'
   | 'v4_onboarding_findings_edited'
   | 'v4_onboarding_advanced_to_diagnose'
