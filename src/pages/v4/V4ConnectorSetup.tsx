@@ -36,11 +36,15 @@ const WINDSOR_HONESTY =
  * into a fresh Claude/ChatGPT chat with the Brand Coach connector enabled.
  */
 const PROMPT_CASE_A = `You have the IDEA Brand Coach connector and my analytics (Windsor.ai or similar).
-Onboard my brand: read what you already know about my products, customers, and
-reviews, then pull my last 30 days of funnel metrics from my analytics and store
-them against each funnel piece. Where a metric isn't connected, mark it "—" rather
-than guessing. When you're done, give me my Trust Gap and tell me which funnel
-piece is weakest.`;
+Onboard my brand: first read what you already know about my products, customers,
+and reviews. Then pull ALL the funnel history my analytics can give — go as far
+back as each source allows, at daily granularity — and store it against each funnel
+piece (create the pieces if they don't exist yet). Pull source by source so nothing
+is dropped or truncated. Also check which of my analytics connectors are registered
+but not yet enabled/connected — and tell me which ones to switch on to fill gaps in
+my funnel data — instead of silently leaving them "—". Where a metric still isn't
+connected, mark it "—" rather than guessing. When you're done, give me my Trust Gap
+and tell me which funnel piece is weakest, and why.`;
 
 const PROMPT_CASE_B = `You have the IDEA Brand Coach connector but no analytics connected yet. Onboard my
 brand from what you know about me and what I paste: my product, who it's for, where
@@ -274,8 +278,8 @@ export default function V4ConnectorSetup(): JSX.Element {
               If your analytics ARE connected (Windsor or otherwise)
             </h3>
             <p className="text-sm text-muted-foreground">
-              The coach pulls your last 30 days, builds the funnel pieces, and
-              marks anything unconnected with "—".
+              The coach pulls all the history your sources allow, builds the funnel
+              pieces, and marks anything unconnected with "—".
             </p>
             <CopyBlock
               label="Prompt · analytics available"
