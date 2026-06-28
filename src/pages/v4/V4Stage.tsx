@@ -12,7 +12,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { activeStageFor } from '@/config/v4';
+import { activeStageFor, V4_ROUTES } from '@/config/v4';
 import {
   captureAlphaEvent,
   type AlphaEventProps,
@@ -72,7 +72,7 @@ export default function V4Stage(): JSX.Element {
           {stage.key === 'diagnose' && (
             <Button asChild variant="brand" className="gap-2">
               <Link
-                to="/v3/diagnostic"
+                to={`/v3/diagnostic?next=${encodeURIComponent(V4_ROUTES.ANALYSE)}&nextLabel=Analyse`}
                 onClick={() => emitPage('v4_diagnose_run_diagnostic_clicked', {})}
               >
                 Run the diagnostic
