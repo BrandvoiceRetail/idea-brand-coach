@@ -535,13 +535,18 @@ async function handleDerive(body: InterpretationRequest): Promise<Response> {
         quote_or_observation: c.quote_or_observation!.trim(),
       }));
     // Grounded only when a citation literally traces to the supplied evidence corpus.
+    // This governs CITATION honesty (we never show a fabricated "where it shows up").
     const grounded = hasEvidence && citations.some((c) => haystack.includes(c.quote_or_observation.toLowerCase().slice(0, 40)));
     const grounding: 'evidence' | 'inference' = grounded ? 'evidence' : 'inference';
-    // Honesty floor: a read that isn't evidence-grounded can be at most low confidence.
+    // CONFIDENCE is separate from citation-grounding: it answers "did I have evidence to
+    // judge this pillar", not "did this exact quote substring-match". Trust the model's
+    // self-report when ANY evidence was supplied (it was told to be honest and prefer low
+    // when thin); only force low when there is NO evidence at all. This stops a paraphrased
+    // citation from collapsing an evidence-based read into a homework ask.
     let confidence: DeriveConfidence = ['high', 'medium', 'low'].includes((rd?.confidence ?? '').toLowerCase())
       ? ((rd!.confidence as string).toLowerCase() as DeriveConfidence)
       : 'low';
-    if (!grounded && confidence !== 'low') confidence = grounding === 'inference' ? 'low' : confidence;
+    if (!hasEvidence) confidence = 'low';
     const score = Math.max(0, Math.min(100, Math.round(typeof rd?.score === 'number' ? rd.score : 0)));
     return {
       dimension: DIMENSION_LABELS[dim],
