@@ -10,9 +10,11 @@ The React port of the Demo v2 mockup
 `src/pages/v2/ProblemSolverDiagnostic.tsx`; one focused component per screen lives
 here. `/v1/diagnostic` still serves the original guest `FreeDiagnostic` — untouched.
 
-The navy/gold palette (`#1A3557` / `#C9A84C`) does NOT match the app's CSS-variable
-theme, so these screens use **scoped colour constants** (`theme.ts` → `PS_COLORS`)
-via inline styles rather than overriding global tokens.
+These screens use **scoped colour constants** (`theme.ts` → `PS_COLORS`) via inline
+styles. As of 2026-06-28 `PS_COLORS` carries the **Trevor v23 black/gold palette**
+(blk `#111111` · wrm `#F5F4F0` · gld `#D4960A` · gld-lt `#FEF5DC`) so the diagnostic
+matches the dark `/v4` surface — the old Demo-v2 navy (`#1A3557`) is gone. The `navy*`
+keys are retained (every screen references them) but now resolve to black/charcoal.
 
 ## Entry experience — the three movements (IDEA-APP-ENTRY-001 v1.1)
 

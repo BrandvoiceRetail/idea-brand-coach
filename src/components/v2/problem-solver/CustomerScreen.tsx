@@ -61,7 +61,7 @@ export function CustomerScreen({ report, onBack, onContinue }: CustomerScreenPro
 
         <div
           className="mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold"
-          style={{ background: PS_COLORS.navyLight, color: PS_COLORS.navy, borderColor: '#cdd9ea' }}
+          style={{ background: PS_COLORS.navyLight, color: PS_COLORS.navy, borderColor: PS_COLORS.line }}
         >
           <Sparkles className="h-3.5 w-3.5" />
           Grounded in your {report.reviews_analyzed} real review{report.reviews_analyzed === 1 ? '' : 's'}

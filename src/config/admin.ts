@@ -13,7 +13,9 @@ const FALLBACK_ADMINS = [
   'matthew@arisegroup.ai',
   'matthew@icodemybusiness.com',
   // Trevor Bradford (BrandVoice) — evaluates the coach via the admin Eval Bench.
+  // Keep both addresses: the brand alias and the account he actually signs in with.
   'trevor.bradford@brandvoice.co.uk',
+  'trevor@brandvoice.co.uk',
 ];
 
 export const ADMIN_EMAILS: string[] = Array.from(

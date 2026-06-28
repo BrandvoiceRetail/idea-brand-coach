@@ -1,24 +1,25 @@
 /**
- * Problem-Solver flow — scoped navy/gold palette + shared flow types.
+ * Problem-Solver flow — scoped v23 black/gold palette + shared flow types.
  *
- * The Demo v2 mockup (idea-brandcoach-DEMO-v2-trevor-spec.html) uses a fixed
- * navy #1A3557 / gold #C9A84C theme that does NOT match the app's CSS variable
- * theme. Rather than override the global tokens, the Problem-Solver screens use
- * these scoped colour constants directly (inline styles / Tailwind arbitrary
- * values), so the flow renders faithfully without touching the rest of the app.
+ * Originally the Demo v2 mockup used a navy #1A3557 / gold #C9A84C theme, but the
+ * app's SSOT is the Trevor v23 black/gold palette (blk #111111 · wrm #F5F4F0 ·
+ * gld #D4960A · gld-lt #FEF5DC) used across the /v4 surface. These scoped constants
+ * now carry the v23 values so the diagnostic matches the dark surface it lives in.
+ * The `navy*` keys are kept (every screen references them) but resolve to black/
+ * charcoal — renaming would touch all eight screens for no behavioural gain.
  */
 
 export const PS_COLORS = {
-  navy: '#1A3557',
-  navyMid: '#2A4E78',
-  navyLight: '#EBF0F6',
-  gold: '#C9A84C',
-  goldLight: '#FDF8EE',
-  warm: '#F3F2EE',
+  navy: '#111111', // v23 black (was Demo-v2 navy #1A3557)
+  navyMid: '#3A3A3A', // charcoal mid (was #2A4E78)
+  navyLight: '#F5F4F0', // warm light panel (was pale blue #EBF0F6)
+  gold: '#D4960A', // v23 gold (was #C9A84C)
+  goldLight: '#FEF5DC', // v23 gold-light (was #FDF8EE)
+  warm: '#F5F4F0', // v23 warm (was #F3F2EE)
   line: '#E4E7EC',
   g100: '#F2F4F7',
   g500: '#667085',
-  g900: '#101828',
+  g900: '#111111', // near-black (was slate #101828, slight blue tint)
   green: '#027A48',
   greenLight: '#ECFDF3',
   red: '#B42318',

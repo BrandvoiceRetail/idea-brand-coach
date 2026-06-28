@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IDEA Brand Coach — Tool Registry</title>
+  <meta name="description" content="Every tool the IDEA Brand Coach exposes — what it does, when it first shipped, and its status." />
+  <style>
+    :root {
+      --blk: #111111; --wht: #FFFFFF; --gld: #D4960A; --gld-lt: #FEF5DC;
+      --line: #2a2a2a; --muted: #9a9a9a; --row: #161616;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--blk); color: var(--wht);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      line-height: 1.5; -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 48px 20px 80px; }
+    header.page { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 8px; }
+    h1 { font-size: 28px; margin: 0 0 8px; letter-spacing: -0.01em; }
+    h1 .accent { color: var(--gld); }
+    .sub { color: var(--muted); margin: 0; max-width: 60ch; }
+    .stats { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+    .stat { background: var(--row); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+    .stat .n { font-size: 22px; font-weight: 700; color: var(--gld); }
+    .stat .l { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .group { margin-top: 40px; }
+    .group h2 { font-size: 18px; margin: 0 0 12px; display: flex; align-items: center; gap: 10px; }
+    .group h2 .count {
+      font-size: 12px; font-weight: 600; color: var(--blk); background: var(--gld);
+      border-radius: 999px; padding: 2px 9px;
+    }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    thead th {
+      text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--row);
+    }
+    tbody td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 14px; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--row); }
+    td.tool code { color: var(--gld); font-size: 13px; white-space: nowrap; }
+    td.desc { color: #d8d8d8; min-width: 280px; }
+    td.muted, .muted { color: var(--muted); }
+    .nowrap { white-space: nowrap; color: #cfcfcf; }
+    .badge { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+    .badge.avail { background: var(--gld-lt); color: #7a5300; }
+    .badge.road { background: #232323; color: var(--muted); border: 1px solid var(--line); }
+    footer { margin-top: 48px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); padding-top: 20px; }
+    @media (max-width: 480px) { h1 { font-size: 23px; } .wrap { padding: 32px 14px 64px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="page">
+      <h1>IDEA Brand Coach <span class="accent">Tool Registry</span></h1>
+      <p class="sub">Every tool the coach can run for you — what it does, when it first shipped, and whether it's live today. Reviews are shown honestly; nothing is fabricated.</p>
+      <div class="stats">
+        <div class="stat"><div class="n">60</div><div class="l">Tools</div></div>
+        <div class="stat"><div class="n">47</div><div class="l">Available now</div></div>
+        <div class="stat"><div class="n">13</div><div class="l">Coming next</div></div>
+      </div>
+    </header>
+    <section class="group">
+      <h2>Diagnose <span class="count">13</span></h2>
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>What it does</th><th>First shipped</th><th>Version</th><th>Reviews</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="tool"><code>audit_asset</code></td>
+          <td class="desc">Re-score one funnel asset against the avatar + Signature on the four IDEA dimensions via the audit-asset engine, and return the persisted verdict (status + scores + a concrete fix). Identity-gated; RLS-scoped to the caller; reuses the live edge function (no re-scoring here).</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>bulk_ingest_evidence</code></td>
+          <td class="desc">Write tool: queue a catalog of ASINs (or amazon.* URLs) for async review scraping. Validates + dedups, enqueues a job, kicks the background drainer, and returns a job_id immediately — reviews are scraped + frozen as evidence over time (cache + rate-limited). Invalid ASINs are returned as `skipped` (never fabricated). Poll get_ingest_job for progress. Requires an authenticated Supabase JWT; RLS-scoped to the caller.</td>
+          <td class="nowrap">2026-06-25</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>compute_trust_gap_lift</code></td>
+          <td class="desc">Re-measure: compute the change in the Trust Gap™ between two real diagnostic runs — BEFORE the fix and AFTER. Returns the overall delta, per-pillar deltas, the biggest mover, the weakest pillar now (the next lever), and a plain-language summary. Purely deterministic arithmetic on the scores you pass — it NEVER invents a number; pass real scores from two run_trust_gap / run_diagnostic_evidence runs. Use it to show the owner the gap closing after they ship — the reason to keep going.</td>
+          <td class="nowrap">2026-06-25</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>generate_audit_idea_map</code></td>
+          <td class="desc">Write tool: produce the Audit × IDEA map (gold sheet 7) — for each marketing-audit move, the without-IDEA baseline, the with-IDEA upgrade, and a LABELED lift multiplier band. Synthesises over the persisted Brand Canvas + Export Brief (+ optional Marketing Audit investment rows), validates against the audit_x_idea contract, and persists an artifact (RLS-scoped). Returns needs_input when the canvas/brief chain is incomplete (never runs ungrounded). Lift multipliers are labeled estimate bands, never precise fabrications. Requires an authenticated Supabase JWT.</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_context_status</code></td>
+          <td class="desc">Read tool: resolve the union of required context slots for a target output (an artifact kind, or &quot;workbook_a&quot; / &quot;workbook_b&quot;) KB-first and return a per-slot fill-map plus a needs_input list of slots to ask the user about (anything not evidence-/owner-stated). The clarification surface for the never-ask-twice loop — generators consult this instead of fabricating. Resolution is RLS-scoped to the caller.</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_ingest_job</code></td>
+          <td class="desc">Read tool: report a bulk_ingest_evidence job by job_id — status (queued/running/done/failed), total/done/failed counts, and pending count — and nudge the drainer along. RLS-scoped to the caller. Returns ok:false/not found when the job is not the caller’s or does not exist.</td>
+          <td class="nowrap">2026-06-25</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>health</code></td>
+          <td class="desc">Liveness + configuration probe for the brand-coach MCP gateway.</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>identify_decision_trigger</code></td>
+          <td class="desc">Derive the single Decision Trigger™ — the one psychological lever that makes this seller's customer act now — from their four Trust Gap™ scores (pass the scores from run_trust_gap) + their own listing and reviews. The trigger is DERIVED from the evidence, never chosen: you get the dominant trigger, 2–3 VERBATIM evidence phrases from the reviews, a brand anchor, and one placement instruction (where to put the fix). If no listing/reviews have been imported yet, it returns needs_input — import evidence first (ingest_evidence); it never invents a trigger. Requires an authenticated Supabase JWT.&quot; + appGroundingPreamble('run_diagnostic_evidence'), inputSchema, }, async ({ scores, avatar_id }) =&gt; { const { identity, denied } = gateWrite(); if (denied) return denied; const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id); if (avatarDenied) return avatarDenied; const out = await runIdentifyDecisionTrigger(scores, avatar_id ?? null, resolved); if (out.status === 'needs_evidence') { safeLog({ event: 'tool.identify_decision_trigger.needs_input</td>
+          <td class="nowrap">2026-06-25</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>ingest_evidence</code></td>
+          <td class="desc">Write tool: ingest real EVIDENCE so the engine can quote it verbatim. Pass an asin (or Amazon URL) to AUTO-SCRAPE reviews via Firecrawl, and/or paste reviews_text/listing_text. Reviews are chunked into review objects and frozen as an evidence_snapshots row (and, with product_id, written to user_product_reviews); listing copy is frozen as the snapshot listing. Scrape failures degrade to a note — never fabricated content. Requires an authenticated Supabase JWT; RLS-scoped to the caller.</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.4</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>provide_context</code></td>
+          <td class="desc">Write tool: persist user answers to context slots (the answers to get_context_status\'s needs_input) into the correct store per trust class, then re-resolve each to confirm the new status. Closes the never-ask-twice loop. Requires an authenticated Supabase JWT; OWNER-INTENT slots require avatar_id. Per-answer never-fail: a single bad answer does not abort the rest.</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>run_diagnostic_evidence</code></td>
+          <td class="desc">Write tool: produce the evidence-grounded Trust Gap diagnostic interpretation. Binds identity first (C1), resolves intake (#15) — needs_input if the diagnostic was never taken — plus listing copy (#3) and reviews (#1) KB-first, invokes the diagnostic-interpretation-evidence engine (every where_it_shows_up cites real evidence; dimensions with no evidence are flagged inference), validates against the diagnostic_interpretation contract, and persists the artifact RLS-scoped to the caller. Requires an authenticated Supabase JWT.' + groundingPreamble('run_diagnostic_evidence') + appGroundingPreamble('run_diagnostic_evidence'), inputSchema, }, async ({ scores, overall, primary_gap, avatar_id }) =&gt; { // C1: bind identity BEFORE any leg (resolve / engine / persist) runs. const { identity, denied } = gateWrite(); if (denied) return denied; const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id); if (avatarDenied) return avatarDenied; const avatarId = avatar_id ?? null; try { // Resolve intake (gate) + evidence slots in one pass. const [intake, reviews, listing] = await d.resolve([INTAKE_SLOT, REVIEWS_SLOT, LISTING_SLOT], { avatarId }); if (!intake || !FILLED.has(intake.status)) { safeLog({ event: 'tool.run_diagnostic_evidence.needs_input</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.3</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>run_marketing_audit</code></td>
+          <td class="desc">Write tool: produce the marketing investment audit (gold Workbook B — tiered Investment Matrix + 90-day rollout). Binds identity first, resolves the BUSINESS-FACT slots (revenue/margins/ad metrics #8 [required], brand-asset states #7, channel states #10, inventory risk #11, cash timing #9, competitor set #16, catalog #5). If revenue is missing/stale it returns needs_input (nothing invented). It then calibrates the matrix DETERMINISTICALLY from the marketing-move library (tiering, cash/effort, 1/3/6/12-mo benefit bands at the user revenue, cumulative-impact grid) and uses the marketing-audit engine ONLY to enrich prose (numbers never leave the host). Persists to marketing_audits plus marketing_audit + rollout_plan artifacts (RLS-scoped). Requires an authenticated Supabase JWT.</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>run_trust_gap</code></td>
+          <td class="desc">Diagnostic (convenience): compute the Trust Gap™ 4-dimension scorecard from IDEA dimension scores (0-100 each) using the exact same deterministic engine as the app (Calculation Parity). Returns per-dimension /25 rescaling, bands, primary gap, and routing. Only call AFTER the user has explicitly worked through all four IDEA dimensions with you. Never infer, default, or invent the four values; if you lack a real answer for any dimension, ask — do not score.' + groundingPreamble('run_trust_gap') + appGroundingPreamble('run_trust_gap'), inputSchema, }, async ({ insight, distinctive, empathetic, authentic, overall, avatar_id }) =&gt; { const scores = { insight, distinctive, empathetic, authentic, overall: overall ?? (insight + distinctive + empathetic + authentic) / 4, }; const result = buildTrustGap(scores); safeLog({ event: 'tool.run_trust_gap</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.4</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+    <section class="group">
+      <h2>Avatar 2.0 <span class="count">8</span></h2>
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>What it does</th><th>First shipped</th><th>Version</th><th>Reviews</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="tool"><code>build_avatar_stage</code></td>
+          <td class="desc">Write tool: run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 search-intent [trigger moment + what-they-search + labeled volume bands — the Workbook/PPC feed, NOT the hero Decision Trigger; the single named Decision Trigger™ lever is the identify_decision_trigger tool], s4 objections) or the full S1→S5 pipeline. Each stage grounds in resolved reviews (slot #1) + prior artifacts, invokes its edge fn verbatim, validates against its contract, and persists an artifact (RLS-scoped). Returns needs_input when reviews are unresolved (never runs ungrounded). Requires an authenticated Supabase JWT. The S5 signature auto-feed is D2/R-015 gated behind allow_signature.' + groundingPreamble('build_avatar_stage') + appGroundingPreamble('build_avatar_stage'), inputSchema, }, async ({ stage, avatar_id, allow_signature }) =&gt; { const { identity, denied } = gateWrite(); if (denied) return denied; const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id); if (avatarDenied) return avatarDenied; const opts = { avatarId: avatar_id ?? null, allowSignature: allow_signature }; if (stage === 'pipeline') { const result = await runPipeline(opts); safeLog({ event: 'tool.build_avatar_stage.pipeline</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.5</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>create_avatar</code></td>
+          <td class="desc">Write tool: create an avatar under the authenticated caller’s brand. brand_id is resolved server-side and stamped (never caller-supplied). Optionally sets it as the coach current-avatar (set_current). Requires an authenticated Supabase JWT; RLS-scoped to the caller.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_avatar</code></td>
+          <td class="desc">Read tool: fetch one avatar by avatar_id (id, brand_id, name, description, is_primary) plus its forensic build_state (stages_done, status). RLS-scoped to the caller; requires a Supabase bearer token. Returns ok:false/not found when the avatar is not the caller’s or does not exist.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>list_avatars</code></td>
+          <td class="desc">Read tool: list the authenticated caller’s avatars (newest-updated first) with id, brand_id, name, description, and is_primary. RLS-scoped to the caller; requires a Supabase bearer token. Use an id here as the avatar_id for scoped generators or funnel audits.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>record_avatar_build</code></td>
+          <td class="desc">Write tool: upsert the per-avatar forensic build state (stages_done + draft/built/approved status; approved stamps approved_at). Requires an authenticated Supabase JWT and ownership of avatar_id (refused otherwise).</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>set_context_avatars</code></td>
+          <td class="desc">Write tool: set the profile-default context avatar set via the set_context_avatars RPC (the write path for profiles.context_avatar_ids — the retrieval anchor two-tier KB reads union with brand-level scope). Pass 1-12 owned avatars sharing one brand. Distinct from set_current_avatar (the single-target coach seed). Requires an authenticated Supabase JWT; refuses any avatar you do not own.</td>
+          <td class="nowrap">2026-06-19</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>set_current_avatar</code></td>
+          <td class="desc">Write tool: point the coach current-avatar at avatar_id via the set_current_avatar RPC (ownership-checked server-side; the sole write path for the pointer the SPA reads). Pass null to clear. The MCP holds no session state. Requires an authenticated Supabase JWT; refuses an avatar you do not own.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>set_primary_avatar</code></td>
+          <td class="desc">Write tool: pin avatar_id as the brand’s primary avatar via the set_primary_avatar RPC (the sole write path for brands.primary_avatar_id — the default the funnel-audit tools use). Distinct from set_current_avatar (the coach session pointer). Requires an authenticated Supabase JWT; refuses an avatar you do not own.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+    <section class="group">
+      <h2>Outputs <span class="count">9</span></h2>
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>What it does</th><th>First shipped</th><th>Version</th><th>Reviews</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="tool"><code>design_test</code></td>
+          <td class="desc">Owned asset-chain tool (final link): compose drafted alternates into an A/B test spec — hypothesis, lettered variants with traffic split, channel-appropriate primary metric, minimum sample and stopping rule. Auto-recording into the IV-OS test ledger is deferred (record_test not yet bound at this gateway); record produced assets via log_asset meanwhile.</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>draft_asset</code></td>
+          <td class="desc">Owned asset-chain tool: draft emotionally resonant brand copy via the existing brand-copy-generator engine, wrapped verbatim (Calculation Parity — identical output to the in-app path, grounded in the caller’s knowledge base server-side). Requires an authenticated Supabase JWT. On success the copy is auto-recorded into the asset ledger (log_asset) unless record:false; a degraded write never fails the draft.</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>export_workbook</code></td>
+          <td class="desc">Terminal output-engine tool: render one of the two Trevor-approved gold .xlsx workbooks from the PERSISTED artifact chain and return a local file path. which:A reads the artifact chain (diagnostic/avatar/signature/canvas/brief/audit-map) and renders the BrandCoach Mockup; which:B reads the current marketing_audits row and renders the Marketing Investment Audit. Assembly reads persisted content only — it never regenerates. If the chain (A) or audit (B) is incomplete it returns needs_input listing the missing artifacts. Requires an authenticated Supabase JWT. Optional upload:true uploads the file to Supabase Storage (never-fail).</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.2</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>generate_brief</code></td>
+          <td class="desc">Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas — or, when no canvas exists yet, your chosen Signature (so the owner gets a shippable brief today, not canvas homework) — plus Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'), inputSchema, }, async ({ avatar_id }) =&gt; { const { identity, denied } = gateWrite(); if (denied) return denied; const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id); if (avatarDenied) return avatarDenied; const result = await runGenerateBrief(avatar_id ?? null, resolved); safeLog({ event: 'tool.generate_brief</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.3</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>generate_canvas</code></td>
+          <td class="desc">Write tool: compile the Brand Canvas (gold sheet 5) from the chosen Signature + the Avatar 2.0 S1-S4 artifacts + owner-intent slots. Invokes the brand-canvas engine verbatim, validates against the brand_canvas contract, and persists an artifact (RLS-scoped). Returns needs_input when no chosen Signature exists (never runs ungrounded). Requires an authenticated Supabase JWT.</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>generate_concepts</code></td>
+          <td class="desc">First owned asset-chain tool: produce N on-brand marketing concept candidates from a brief, composed through the existing brand-coach consultant engine (Calculation Parity). Requires an authenticated Supabase JWT. IV-OS canon grounding + log_asset recording are deferred by capability.' + groundingPreamble('generate_concepts') + appGroundingPreamble('generate_concepts'), inputSchema, }, async ({ brief, channel, count }) =&gt; { const prompt = buildConceptPrompt({ brief, channel, count }); const res = await edgeFn.invoke&lt;ConsultantResponse&gt;('idea-framework-consultant-claude</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.4</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>generate_signature</code></td>
+          <td class="desc">Convenience diagnostic: reveal 3-4 distinct on-brand Signature options (&quot;My customer isn\'t buying X, they\'re buying Y&quot;) via the existing reveal-signature engine, wrapped verbatim (Calculation Parity — the frozen no-parroting prompt is unchanged). Accepts conversation OR fields OR reviews; if all are empty it falls back to the current evidence snapshot for the scope (context-bundle grounding — D2/R-015 reading: customer review vocabulary is not the founder\'s own words; operator must sign off before the avatar pipeline auto-feeds this). Requires an authenticated Supabase JWT. Read-only — persist a chosen option with persist_signature.</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>persist_signature</code></td>
+          <td class="desc">Write tool: persist the user\'s chosen Signature. Writes a signatures row (the dedicated store the app reads) AND a signature artifact (keeping the chain whole), both validated against the Signature contract and RLS-scoped to the caller. Requires an authenticated Supabase JWT. grounding is derived from used_reviews (true ⇒ evidence).</td>
+          <td class="nowrap">2026-06-12</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>publish_filter_check</code></td>
+          <td class="desc">Owned asset-chain gate: grade a drafted asset against deterministic brand-safety rules (claims needing substantiation, medical claims, channel length caps, false urgency, shouting). Verdict pass|warn|fail with per-violation fix hints. Supply the asset’s request_id to auto-record the assessment (record_assessment; requires an authenticated caller). IV-OS safe-claims/canon grading activates by capability when those IV-OS reads ship.</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+    <section class="group">
+      <h2>Funnel <span class="count">6</span></h2>
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>What it does</th><th>First shipped</th><th>Version</th><th>Reviews</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="tool"><code>get_funnel_assets</code></td>
+          <td class="desc">List the brand's tracked funnel assets (brand-coach owned). Each row carries its touchpoint, funnel stage, status (aligned/stale/misaligned/pending/failed), audit score, and how many brand strategy fields the audit used. RLS-scoped to the caller; requires an authenticated Supabase bearer.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_funnel_audit</code></td>
+          <td class="desc">Read tool: read the CURRENT per-avatar funnel audit overlay for the brand. avatar_id defaults to the brand’s primary_avatar_id (never the coach current-avatar); returns needs_input when no avatar can be resolved. RLS-scoped to the caller; requires a Supabase bearer token.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_funnel_coverage</code></td>
+          <td class="desc">Summarise how on-brand the tracked funnel is: counts by status and on-brand coverage (aligned ÷ tracked), with a per-stage breakdown. RLS-scoped to the caller. (Missing/untracked touchpoints are shown in the app, not here.)</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>list_funnel_inventory</code></td>
+          <td class="desc">Read tool: list the brand’s CURRENT funnel touchpoint inventory (brand-level; avatar-agnostic) — touchpoint_id, stage, context, status, overall_score. The brand is resolved server-side. RLS-scoped to the caller; requires a Supabase bearer token. Use get_funnel_audit for per-avatar scoring.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>run_funnel_audit</code></td>
+          <td class="desc">Write tool: score one funnel touchpoint (brand_asset_id) for one avatar, writing a per-avatar overlay via save_asset_audit_atomic. avatar_id defaults to the brand’s primary_avatar_id (never the coach current-avatar); returns needs_input when no avatar can be resolved. Requires an authenticated Supabase JWT and ownership of the avatar.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>upsert_funnel_touchpoint</code></td>
+          <td class="desc">Write tool: create or update one BRAND-LEVEL funnel touchpoint (no avatar — inventory is brand-level). Keyed by (brand, touchpoint_id); brand_id is resolved server-side. Requires an authenticated Supabase JWT. Use run_funnel_audit to score a touchpoint per avatar.</td>
+          <td class="nowrap">2026-06-17</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+    <section class="group">
+      <h2>Ledger <span class="count">6</span></h2>
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>What it does</th><th>First shipped</th><th>Version</th><th>Reviews</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="tool"><code>get_asset</code></td>
+          <td class="desc">Fetch one produced asset by request_id from the asset ledger. Read-only; availability=false when the ledger is unavailable.</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_asset_history</code></td>
+          <td class="desc">Fetch the append-only change log for one asset by request_id: when it was logged, every approval ' + 'transition (old → new, with actor), and recorded assessments. Read-only; ' + 'availability=false when the ledger is unavailable.</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>list_assets</code></td>
+          <td class="desc">List produced marketing assets from the asset ledger. Read-only; returns availability=false when the ledger is unavailable.</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>log_asset</code></td>
+          <td class="desc">Record a produced marketing asset in the brand-coach asset ledger; returns the server-generated request_id. ' + 'Requires an authenticated caller. Pass external_id to make re-logging idempotent (reconciles instead of duplicating).</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>record_assessment</code></td>
+          <td class="desc">Record a brand/quality assessment of a marketing asset (verdict pass|needs_work|fail with optional ' + 'scores/summary/recommendations) in the asset change log. Advisory — does not change the approval ' + 'lifecycle. Asset-ledger write — requires an authenticated caller; availability=false when the ledger is unavailable.</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>update_asset_status</code></td>
+          <td class="desc">Transition an asset through its APPROVAL lifecycle (draft → in_review → approved/rejected) in the ' + 'asset ledger; the transition is recorded in the asset change log. Asset-ledger write — requires an ' + 'authenticated caller; availability=false when the ledger is unavailable.</td>
+          <td class="nowrap">2026-06-04</td>
+          <td class="nowrap">v1.1</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+    <section class="group">
+      <h2>Sessions &amp; Feedback <span class="count">5</span></h2>
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>What it does</th><th>First shipped</th><th>Version</th><th>Reviews</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="tool"><code>get_coach_conversation</code></td>
+          <td class="desc">Read tool: fetch one Brand-Coach chat thread by session_id — its avatar scope (avatar_id + avatar_name; null = brand-level), metadata, and the full transcript (role + content per turn, oldest first). RLS-scoped to the caller; requires a Supabase bearer token. Returns ok:false/not found when the thread is not the caller’s or does not exist.</td>
+          <td class="nowrap">2026-06-16</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>list_coach_conversations</code></td>
+          <td class="desc">Read tool: list the authenticated caller’s Brand-Coach chat threads (newest-active first), each with its avatar (avatar_id + avatar_name; null = brand-level), conversation_type, field context, turn count, and timestamps. Pass avatar_id to scope to one avatar; omit for all threads. RLS-scoped to the caller; requires a Supabase bearer token. Use get_coach_conversation for a thread’s full transcript.</td>
+          <td class="nowrap">2026-06-16</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>onboard_choose</code></td>
+          <td class="desc">Route the front-door choice: 'diagnostic' (a fast Trust Gap read) or 'upload' (bring your brand context). Returns the next-step stub for the chosen path. Anonymous-safe.</td>
+          <td class="nowrap">2026-06-14</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>onboard_panel</code></td>
+          <td class="desc">Render the branded interactive onboarding panel (two clickable choices) on MCP Apps-capable hosts. Anonymous-safe; if the host has no UI support, use the `onboard` prompt instead.</td>
+          <td class="nowrap">2026-06-14</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>submit_feedback</code></td>
+          <td class="desc">Send feedback about the IDEA Brand Coach to the team, delivered to their Slack channel for consideration. Use whenever the user wants to report a bug, suggest an idea, ask the team a question, or share praise. No login required; authenticated callers are attributed by a stable anonymous tag. Only submit what the user actually said — never invent or paraphrase feedback they did not give.</td>
+          <td class="nowrap">2026-06-19</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge avail">Available</span></td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+    <section class="group">
+      <h2>Coming next <span class="count">13</span></h2>
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>What it does</th><th>First shipped</th><th>Version</th><th>Reviews</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="tool"><code>add_email_step</code></td>
+          <td class="desc">Write tool: append a step (subject, body, delay_hours, email_type, trigger_event) to a sequence the caller owns. Sequence ownership is verified server-side. Requires an authenticated Supabase JWT; RLS-scoped to the caller. step_number must be unique within the sequence.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>create_campaign</code></td>
+          <td class="desc">Write tool: create a campaign under the authenticated caller’s brand. brand_id is resolved server-side and stamped (never caller-supplied). Requires an authenticated Supabase JWT; RLS-scoped to the caller.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>create_email_sequence</code></td>
+          <td class="desc">Write tool: create an email sequence under the authenticated caller’s brand. brand_id is resolved server-side and stamped (never caller-supplied); campaign_id is an optional link. Requires an authenticated Supabase JWT; RLS-scoped to the caller. Use get_sequence_template for a prebuilt step skeleton, then add_email_step to populate it.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_campaign</code></td>
+          <td class="desc">Read tool: fetch one campaign by campaign_id (name, channel, status, description, timestamps). RLS-scoped to the caller; requires a Supabase bearer token. Returns ok:false/not found when the campaign is not the caller’s or does not exist.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_campaign_metrics</code></td>
+          <td class="desc">Read tool: fetch a campaign’s numeric metrics over an optional date range, optionally aggregated by_channel or by_date (additive metrics summed; ctr/cvr/aov as means). RLS-scoped to the caller; requires a Supabase bearer token. Returns ok:true with count 0 and a no_data note when there are no metrics — reason over real numbers only, never invent them.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_sequence_performance</code></td>
+          <td class="desc">Read tool: fetch a sequence’s step count plus the email-channel metrics of its linked campaign (opens/clicks/ctr/cvr/revenue). RLS-scoped to the caller; requires a Supabase bearer token. Returns ok:true with empty metrics and a note (no_campaign_linked or no_data) when there is nothing recorded — reason over real numbers only, never invent them.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>get_sequence_template</code></td>
+          <td class="desc">Read tool: return a deterministic prebuilt step skeleton (subject / body / delay_hours / email_type / trigger_event) for an email sequence type — welcome (5), nurture (7), abandoned_cart (3). Generic, claim-free copy to adapt, not send as-is. Returns ok:false/no_template for types without a prebuilt (newsletter, upsell, downsell).</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>ingest_campaign_analytics</code></td>
+          <td class="desc">Write tool: store numeric metric rows ({channel, metric_name, metric_value, measured_date, funnel_stage?}) for a campaign. Append-only facts, upserted on the natural key so re-uploading reconciles instead of duplicating. Rate metrics (ctr/cvr) are fractions 0–1. Requires an authenticated Supabase JWT; RLS-scoped to the caller. Returns ok:false/no_data when nothing parseable was supplied — never fabricates metrics.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>ingest_content_performance</code></td>
+          <td class="desc">Write tool: ingest the content-tracker shape — per-channel performance rows (views / engagement / calls_booked / revenue, dated) — into campaign_metrics. Append-only, upserted on the natural key (re-upload safe). Requires an authenticated Supabase JWT; RLS-scoped to the caller. Returns ok:false/no_data when nothing parseable was supplied — never fabricates metrics.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>ingest_funnel_analytics</code></td>
+          <td class="desc">Write tool: ingest the funnel-tracker shape — per-stage snapshots (anchored to as_of) and/or monthly actuals (impressions/sessions/ctr/cvr/aov/orders/revenue/spend per month) — into campaign_metrics. Append-only, upserted on the natural key (re-upload safe). Channel defaults to amazon; rate metrics are fractions 0–1. Requires an authenticated Supabase JWT; RLS-scoped to the caller. Returns ok:false/no_data when nothing parseable was supplied — never fabricates metrics.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>list_campaigns</code></td>
+          <td class="desc">Read tool: list the authenticated caller’s campaigns (newest-created first) with id, name, channel, status, and description. Optional status filter. RLS-scoped to the caller; requires a Supabase bearer token. Use an id here as the campaign_id for get_campaign or the analytics tools.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>list_sequences</code></td>
+          <td class="desc">Read tool: list the authenticated caller’s email sequences (newest-created first) with id, type, name, status, and campaign link. Optional status / campaign_id filters. RLS-scoped to the caller; requires a Supabase bearer token. Use an id here as the sequence_id for add_email_step or get_sequence_performance.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        <tr>
+          <td class="tool"><code>update_campaign_status</code></td>
+          <td class="desc">Write tool: set a campaign’s lifecycle status (draft | active | paused | completed) by campaign_id. Status is the only mutable field. Requires an authenticated Supabase JWT; RLS-scoped to the caller. Returns ok:false/not found when the campaign is not the caller’s or does not exist.</td>
+          <td class="nowrap">Unreleased</td>
+          <td class="nowrap">v1.0</td>
+          <td class="muted">No reviews yet</td>
+          <td><span class="badge road">Roadmap</span></td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+    <footer>Generated 2026-06-26 from the live MCP tool surface + git history. This page is regeneratable — run <code>npm run build:tool-registry</code>.</footer>
+  </div>
+</body>
+</html>

@@ -11,22 +11,68 @@ The site is served by **Caddy `file_server` on the mango Lightsail box**
 org level** (the old `deploy-pages.yml` failed on every run because
 `configure-pages` can't create a Pages site), so Pages is not the deploy path.
 
-### How a deploy happens (CI/CD)
+## Source of truth: `main` (both the SPA AND the MCP gateway)
 
-`.github/workflows/deploy-frontend.yml` runs on **push to `main`** (or manual
-**workflow_dispatch**). It:
+As of **2026-06-28, `main` is the single source for both deployables** — the Vite
+SPA *and* the brand-coach MCP gateway. (Previously the MCP lived on a separate
+`mcp-oauth` branch; that fork was reconciled and `mcp-oauth` now tracks `main`.
+**Do not reintroduce the split** — commit MCP changes to `main`. A divergent
+`mcp-oauth` is what once shipped a frontend bundle missing the `/oauth/consent`
+page and 404'd the connector.)
 
-1. `npm ci && npm run build` → `dist/`
-2. `cp dist/index.html dist/404.html` — SPA fallback (BrowserRouter deep links).
-3. **rsyncs `dist/` to `ubuntu@54.243.53.44:/opt/ideabrandcoach/`** over SSH, then
-   verifies the live bundle hash matches the build.
+**Whatever is on `main` is what goes live.** Merge intended production code to
+`main` first, then deploy from a checkout of `main`.
 
-One-time setup (Settings → Secrets and variables → Actions):
-- Variable **`FRONTEND_AUTODEPLOY` = `true`** — opt-in switch (no-op until set).
-- Secret **`LIGHTSAIL_SSH_KEY`** — private key for `ubuntu@<box>` (shared with `deploy-mcp.yml`).
+## Deploys run MANUALLY from a local machine (CI can't reach the box)
 
-Manual fallback (what to run if CI is off): `npm run build` then
-`rsync -az --delete -e "ssh -i ~/.ssh/lightsail-mango.pem" dist/ ubuntu@54.243.53.44:/opt/ideabrandcoach/`.
+`.github/workflows/deploy-frontend.yml` and `deploy-mcp.yml` exist, but the
+Lightsail box firewalls SSH (port 22) to a known IP, so **GitHub-hosted runners
+cannot reach it** (`ssh: connect … port 22: Connection timed out`) and the
+autodeploy variables (`FRONTEND_AUTODEPLOY`, `MCP_AUTODEPLOY`) are left `false`.
+Until the box accepts the runner (or a self-hosted runner is added), **deploy from
+a local machine that can SSH the box**, with key `~/.ssh/lightsail-mango.pem`.
+
+### Frontend (SPA) — build + rsync
+From a `main` checkout:
+
+```bash
+npm run build                 # set VITE_FORCE_V4=true to force /v4; VITE_POSTHOG_* etc. as needed
+cp dist/index.html dist/404.html   # SPA fallback for BrowserRouter deep links
+rsync -az --delete \
+  --exclude='onboard.html' --exclude='onboard-assets/' --exclude='index.html.bak.*' \
+  -e "ssh -i ~/.ssh/lightsail-mango.pem" dist/ ubuntu@54.243.53.44:/opt/ideabrandcoach/
+```
+
+Then **verify over HTTP, not just on disk**: `/` serves the static `landing.html`
+(Caddy front-door rewrite), so check an *app* route (e.g. `/welcome`) and confirm
+the served bundle hash matches `dist/assets/index-*.js`. Rollback: an
+`index.html.bak.*` is kept on the box, or rebuild the prior commit + rsync.
+
+> `VITE_FORCE_V4` lives only in the worktree's gitignored `.env`; a clean `main`
+> build WITHOUT it reverts to gate-OFF (`/v4` not forced). Set it in the build env
+> (or a repo var) to keep `/v4` forced across rebuilds.
+
+### MCP gateway — typecheck, build image, ship
+Gate first: **`npm run typecheck:mcp`** (NOT just `tsc --noEmit` — only the MCP
+tsconfig type-checks the MCP test files) + `npm test`. Then, from a `main` checkout:
+
+```bash
+npm run mcp:bundle            # esbuild → dist-mcp/server.mjs
+docker build --platform linux/amd64 -f deploy/mcp/Dockerfile -t brand-coach-mcp:latest .
+docker save brand-coach-mcp:latest | gzip > brand-coach-mcp.tar.gz
+scp -i ~/.ssh/lightsail-mango.pem brand-coach-mcp.tar.gz ubuntu@54.243.53.44:~/brand-coach-mcp/
+ssh -i ~/.ssh/lightsail-mango.pem ubuntu@54.243.53.44 \
+  'cd ~/brand-coach-mcp && docker load -i brand-coach-mcp.tar.gz && docker compose up -d --force-recreate && rm brand-coach-mcp.tar.gz && sleep 4 && curl -fsS http://127.0.0.1:8787/healthz'
+```
+
+Compose project: `/home/ubuntu/brand-coach-mcp`, on docker net `mango_default`
+(Caddy reverse-proxies `…/mcp` → `brand-coach-mcp:8787`). The box keeps
+`brand-coach-mcp.prev.tar.gz` for rollback.
+
+### Supabase migrations
+Apply **additive** migrations to prod via the Supabase MCP `apply_migration` (the
+`SUPABASE_ACCESS_TOKEN` PAT can). Verify the live schema afterwards; regenerate —
+never hand-edit — `src/integrations/supabase/types.ts`.
 
 ## One-time setup (manual, outside this repo)
 

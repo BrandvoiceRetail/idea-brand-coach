@@ -83,6 +83,101 @@ export async function createAvatar(input: CreateAvatarInput): Promise<AvatarRow>
   return data as AvatarRow;
 }
 
+/** Partial-update fields for an existing avatar (only provided keys are written). */
+export interface UpdateAvatarInput {
+  name?: string;
+  description?: string | null;
+  demographics?: unknown;
+  psychographics?: unknown;
+  buyingBehavior?: unknown;
+  voiceOfCustomer?: string | null;
+}
+
+/**
+ * Enrich/edit an existing avatar's content fields. Only the keys present in `patch`
+ * are written (partial update) — so the coach can flesh out a placeholder avatar
+ * instead of creating duplicates. Ownership is verified by `requireOwnedAvatar` at the
+ * tool layer before this runs; RLS re-checks on update. `updated_at` is bumped so the
+ * edited avatar sorts to the top of list_avatars. Throws if nothing to update or the
+ * row isn't the caller's / doesn't exist.
+ */
+export async function updateAvatar(avatarId: string, patch: UpdateAvatarInput): Promise<AvatarRow> {
+  const update: Record<string, unknown> = {};
+  if (patch.name !== undefined) update.name = patch.name;
+  if (patch.description !== undefined) update.description = patch.description;
+  if (patch.demographics !== undefined) update.demographics = patch.demographics;
+  if (patch.psychographics !== undefined) update.psychographics = patch.psychographics;
+  if (patch.buyingBehavior !== undefined) update.buying_behavior = patch.buyingBehavior;
+  if (patch.voiceOfCustomer !== undefined) update.voice_of_customer = patch.voiceOfCustomer;
+  if (Object.keys(update).length === 0) {
+    throw new AvatarLifecycleError('no fields to update');
+  }
+  update.updated_at = new Date().toISOString();
+
+  const supabase = getUserSupabase();
+  const { data, error } = await supabase
+    .from(AVATARS_TABLE)
+    .update(update)
+    .eq('id', avatarId)
+    .select(AVATAR_COLS)
+    .maybeSingle();
+
+  if (error) throw new AvatarLifecycleError(`failed to update avatar: ${error.message}`, error);
+  if (!data) throw new AvatarLifecycleError('avatar not found or not owned');
+  return data as AvatarRow;
+}
+
+/** Count rows in an avatar-scoped table for one avatar (RLS-scoped to the caller). */
+async function countAvatarRefs(table: string, avatarId: string): Promise<number> {
+  const supabase = getUserSupabase();
+  const { count, error } = await supabase
+    .from(table)
+    .select('id', { count: 'exact', head: true })
+    .eq('avatar_id', avatarId);
+  if (error) throw new AvatarLifecycleError(`failed to count ${table}: ${error.message}`, error);
+  return count ?? 0;
+}
+
+export interface DeleteAvatarResult {
+  deleted: boolean;
+  avatarId: string;
+  name: string | null;
+  /** Real work that would be CASCADE-removed with the avatar. */
+  dependents: { brandAssets: number; brandTests: number; diagnostics: number };
+  /** True when the delete was refused because dependents exist and force was not set. */
+  refusedForDependents: boolean;
+}
+
+/**
+ * Delete an avatar (RLS-scoped). Deleting an avatar CASCADE-removes its funnel pieces
+ * (brand_assets), split-tests (brand_tests), diagnostics, KB, audits, etc., and SET-NULLs
+ * the brand primary / coach current pointers. So we refuse when the avatar has real work
+ * (pieces/tests/diagnostics) unless `force` is set — this makes clearing empty placeholder
+ * avatars safe while preventing accidental loss of a worked-on avatar. Ownership is verified
+ * by requireOwnedAvatar at the tool layer; RLS re-checks on delete.
+ */
+export async function deleteAvatar(avatarId: string, force = false): Promise<DeleteAvatarResult> {
+  const existing = await getAvatar(avatarId);
+  if (!existing) throw new AvatarLifecycleError('avatar not found or not owned');
+
+  const [brandAssets, brandTests, diagnostics] = await Promise.all([
+    countAvatarRefs('brand_assets', avatarId),
+    countAvatarRefs('brand_tests', avatarId),
+    countAvatarRefs('diagnostic_submissions', avatarId),
+  ]);
+  const dependents = { brandAssets, brandTests, diagnostics };
+  const hasWork = brandAssets + brandTests + diagnostics > 0;
+
+  if (hasWork && !force) {
+    return { deleted: false, avatarId, name: existing.name, dependents, refusedForDependents: true };
+  }
+
+  const supabase = getUserSupabase();
+  const { error } = await supabase.from(AVATARS_TABLE).delete().eq('id', avatarId);
+  if (error) throw new AvatarLifecycleError(`failed to delete avatar: ${error.message}`, error);
+  return { deleted: true, avatarId, name: existing.name, dependents, refusedForDependents: false };
+}
+
 /** List the caller's avatars under their brand, newest-updated first. */
 export async function listAvatars(): Promise<AvatarRow[]> {
   const supabase = getUserSupabase();

@@ -26,6 +26,7 @@ import { registerListAssetsTool } from './tools/listAssets.js';
 import { registerGetAssetTool } from './tools/getAsset.js';
 import { EdgeFnClient } from './edgeFn/client.js';
 import { registerGenerateConceptsTool } from './tools/generateConcepts.js';
+import { registerGeneratePositioningMovesTool } from './tools/generatePositioningMoves.js';
 import { registerPublishFilterCheckTool } from './tools/publishFilterCheck.js';
 // import { registerDraftAssetTool } from './tools/draftAsset.js'; // OFF Alpha surface (Trevor 2026-06-25); re-enable in Beta
 import { registerDesignTestTool } from './tools/designTest.js';
@@ -58,6 +59,8 @@ import { registerGetFunnelCoverageTool } from './tools/getFunnelCoverage.js';
 import { registerSubmitFeedbackTool } from './tools/submitFeedback.js';
 import { FeedbackNotifier } from './slack/feedbackNotifier.js';
 import { registerCreateAvatarTool } from './tools/createAvatar.js';
+import { registerUpdateAvatarTool } from './tools/updateAvatar.js';
+import { registerDeleteAvatarTool } from './tools/deleteAvatar.js';
 import { registerListAvatarsTool } from './tools/listAvatars.js';
 import { registerGetAvatarTool } from './tools/getAvatar.js';
 import { registerSetCurrentAvatarTool } from './tools/setCurrentAvatar.js';
@@ -68,6 +71,23 @@ import { registerListFunnelInventoryTool } from './tools/listFunnelInventory.js'
 import { registerUpsertFunnelTouchpointTool } from './tools/upsertFunnelTouchpoint.js';
 import { registerRunFunnelAuditTool } from './tools/runFunnelAudit.js';
 import { registerGetFunnelAuditTool } from './tools/getFunnelAudit.js';
+import { registerCreateCampaignTool } from './tools/createCampaign.js';
+import { registerGetCampaignTool } from './tools/getCampaign.js';
+import { registerListCampaignsTool } from './tools/listCampaigns.js';
+import { registerUpdateCampaignStatusTool } from './tools/updateCampaignStatus.js';
+import { registerIngestCampaignAnalyticsTool } from './tools/ingestCampaignAnalytics.js';
+import { registerIngestFunnelAnalyticsTool } from './tools/ingestFunnelAnalytics.js';
+import { registerIngestContentPerformanceTool } from './tools/ingestContentPerformance.js';
+import { registerGetCampaignMetricsTool } from './tools/getCampaignMetrics.js';
+import { registerGetFunnelPieceMetricsTool } from './tools/getFunnelPieceMetrics.js';
+import { registerCreateEmailSequenceTool } from './tools/createEmailSequence.js';
+import { registerAddEmailStepTool } from './tools/addEmailStep.js';
+import { registerGetSequenceTemplateTool } from './tools/getSequenceTemplate.js';
+import { registerListSequencesTool } from './tools/listSequences.js';
+import { registerGetSequencePerformanceTool } from './tools/getSequencePerformance.js';
+import { registerUpdateTestMilestoneTool } from './tools/updateTestMilestone.js';
+import { registerGetExperimentLiftTool } from './tools/getExperimentLift.js';
+import { registerRunOnboardingTool } from './tools/runOnboarding.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -129,6 +149,9 @@ export function createServer(
   // draft_asset and publish_filter_check AUTO-RECORD into the IV-OS ledger (opt-out
   // via record:false; never-fail on degraded writes).
   registerGenerateConceptsTool(server, edge);
+  // Positioning moves: generate 2–3 candidate moves (reusing the generate_concepts engine)
+  // and score each against the live Coach Criteria with a transparent, deterministic composite.
+  registerGeneratePositioningMovesTool(server, edge);
   registerPublishFilterCheckTool(server, ivos);
   // draft_asset is OFF the Alpha surface (Trevor 2026-06-25): it generates generic copy not
   // keyed to the user's own review evidence or their named Decision Trigger — the "good
@@ -230,6 +253,12 @@ export function createServer(
   // multi-select context set; pin primary; record forensic build state. Each mutating tool is
   // identity-gated + ownership-checked (requireOwnedAvatar) and drives the live brand_avatar_scope RPCs.
   registerCreateAvatarTool(server);
+  // update_avatar: enrich/edit an existing avatar in place (partial) so the coach fleshes out
+  // thin/placeholder avatars instead of creating duplicates. gateWrite + requireOwnedAvatar.
+  registerUpdateAvatarTool(server);
+  // delete_avatar: clear out placeholder avatars. GUARDED — refuses (returns dependent counts)
+  // when the avatar has funnel pieces/tests/diagnostics unless force=true. gateWrite + owned.
+  registerDeleteAvatarTool(server);
   registerListAvatarsTool(server);
   registerGetAvatarTool(server);
   registerSetCurrentAvatarTool(server);
@@ -242,6 +271,46 @@ export function createServer(
   registerUpsertFunnelTouchpointTool(server);
   registerRunFunnelAuditTool(server);
   registerGetFunnelAuditTool(server);
+
+  // Campaign CRUD (numeric-analytics model): create/get/list campaigns + flip lifecycle status.
+  // brand_id is resolved server-side (resolveBrandId); writes are gateWrite-gated, reads RLS-scoped.
+  registerCreateCampaignTool(server);
+  registerGetCampaignTool(server);
+  registerListCampaignsTool(server);
+  registerUpdateCampaignStatusTool(server);
+
+  // Numeric-analytics ingestion + read: parse the 3 workbook shapes into campaign_metrics
+  // (append-only, upserted on the natural key) and read them back (date_range + breakdown).
+  // Honest no_data throughout — the coach reasons over real numbers, never fabricates.
+  registerIngestCampaignAnalyticsTool(server);
+  registerIngestFunnelAnalyticsTool(server);
+  registerIngestContentPerformanceTool(server);
+  registerGetCampaignMetricsTool(server);
+  // Per-piece read (decision #1): one funnel piece's (brand_asset's) latest-per-metric values
+  // + derived cvr/aov — "did this piece do its job?". RLS-scoped; honest no_data.
+  registerGetFunnelPieceMetricsTool(server);
+  // Experiment-lifecycle write (Gap B): stamp ASSET_CREATED / ASSET_LIVE milestone dates
+  // on a split-test (brand_tests) — the dates that start the re-measure clock + the case
+  // study. gateWrite-gated, owner-scoped; asset_live also promotes a draft test to running.
+  registerUpdateTestMilestoneTool(server);
+  // Re-measure read (Gap B): the before/after lift for a split-test's metric on its funnel
+  // piece, windowed by its lifecycle dates over campaign_metrics (no snapshot table). Honest
+  // pending when not live / no post-live data; status_suggestion is advice the user confirms.
+  registerGetExperimentLiftTool(server);
+
+  // Onboarding director: the coach calls run_onboarding (instead of a pasted prompt) when the
+  // user hasn't onboarded yet or asks to (re-)onboard. Returns current state + the ordered
+  // playbook (create pieces → pull full Windsor history → ingest → Trust Gap) for the host to run.
+  registerRunOnboardingTool(server);
+
+  // Email sequences: brand-level sequence records + steps, prebuilt templates (welcome=5 /
+  // nurture=7 / abandoned_cart=3), and a deterministic performance read (step count + the linked
+  // campaign's email-channel metrics). Honest no_data — never fabricates opens/clicks.
+  registerCreateEmailSequenceTool(server);
+  registerAddEmailStepTool(server);
+  registerGetSequenceTemplateTool(server);
+  registerListSequencesTool(server);
+  registerGetSequencePerformanceTool(server);
 
   return { server, ivos, edgeFn: edge };
 }

@@ -13,8 +13,8 @@ import { generateDeliverable } from './generate';
 import type { BrandSnapshot, Deliverable, DeliverableMode, FocusItem, Pillar } from './types';
 import { Button } from '@/components/ui/button';
 
-const BRAND_BLUE = '#1A3557';
-const BRAND_GOLD = '#C9A84C';
+const BRAND_BLUE = '#111111';
+const BRAND_GOLD = '#D4960A';
 const PILLARS: Pillar[] = ['insight', 'distinctive', 'empathetic', 'authentic'];
 const PILLAR_SHORT: Record<Pillar, string> = { insight: 'I', distinctive: 'D', empathetic: 'E', authentic: 'A' };
 

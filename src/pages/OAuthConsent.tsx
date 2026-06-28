@@ -10,6 +10,10 @@
  *   3. on approve/deny, call Supabase's consent endpoint and follow the returned
  *      `redirect_url` back to the client with the authorization code.
  * The token exchange itself happens client↔Supabase directly — this page never sees it.
+ *
+ * Mounted as a PUBLIC route (NOT wrapped in RequireAuth): the page self-handles auth,
+ * bouncing to /auth with a return param that preserves the authorization_id. Wrapping it
+ * in RequireAuth would risk dropping the query param on the redirect.
  */
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';

@@ -18,7 +18,8 @@ import { useFunnelTracker } from '@/hooks/useFunnelTracker';
 import { useAuth } from '@/hooks/useAuth';
 import { useBrandDefenseAlerts } from '@/hooks/useBrandDefenseAlerts';
 import { getTouchpoint, type ApplicabilityTag } from '@/config/touchpointTaxonomy';
-import { isCompetitorAgentsEnabled } from '@/config/features';
+import { isCompetitorAgentsEnabled, isContentGenerationEnabled } from '@/config/features';
+import { isGeneratable } from '@/services/contentGeneration/capabilityRegistry';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AssetUploadDialog } from './AssetUploadDialog';
 import { FixDialog } from './FixDialog';
+import { GenerateContentDialog } from './GenerateContentDialog';
 import { TouchpointCompetitorAgentPanel } from './TouchpointCompetitorAgentPanel';
 import { CompetitorGapsAggregate } from './CompetitorGapsAggregate';
 import { TestingLiftTab } from './TestingLiftTab';
@@ -72,6 +74,85 @@ function DimensionBars({ asset }: { asset: BrandAsset }): JSX.Element | null {
         </div>
       ))}
     </div>
+  );
+}
+
+/**
+ * FocusedFixCard — the destination of a funnel-map "Fix" click. Shown at the top of
+ * the What Needs Work tab for one touchpoint: rewrite/test the existing asset, or
+ * (when there's no asset yet) start one from scratch via generate / upload.
+ */
+function FocusedFixCard({ touchpointId, asset, avatarId, contentGenEnabled, onClear, onAudit, onRefresh }: {
+  touchpointId: string;
+  asset?: BrandAsset;
+  avatarId: string;
+  contentGenEnabled: boolean;
+  onClear: () => void;
+  onAudit: (id: string) => void;
+  onRefresh: () => void;
+}): JSX.Element {
+  const tp = getTouchpoint(touchpointId);
+  const label = tp?.label ?? touchpointId;
+  const generatable = isGeneratable(touchpointId);
+  return (
+    <Card className="mb-5 border-2 p-5" style={{ borderColor: STATUS_COLOR.stale }}>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Fixing this piece</div>
+          <div className="text-[15px] font-bold">{label}</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {tp?.stage ?? asset?.stage ?? '—'} · <StatusBadge status={asset?.status ?? 'missing'} />
+          </div>
+        </div>
+        <Button variant="ghost" size="sm" onClick={onClear}>Done</Button>
+      </div>
+
+      {asset ? (
+        <div className="grid gap-4 md:grid-cols-[1.4fr_1.3fr_auto] md:items-center">
+          <div>
+            {asset.audit_result?.fix && <div className="text-xs text-foreground/80">{asset.audit_result.fix}</div>}
+            {asset.audit_result?.rationale && (
+              <div className="mt-1 text-[11px] text-muted-foreground">{asset.audit_result.rationale}</div>
+            )}
+            {!asset.audit_result && (
+              <div className="text-xs text-muted-foreground">Rewrite it on-brand below, or re-run the audit for a concrete fix.</div>
+            )}
+          </div>
+          <DimensionBars asset={asset} />
+          <div className="flex flex-col gap-2">
+            <FixDialog asset={asset} onDone={onRefresh} />
+            {contentGenEnabled && generatable && (
+              <GenerateContentDialog
+                touchpointId={touchpointId}
+                avatarId={avatarId}
+                onSaved={onRefresh}
+                triggerLabel="Generate new"
+                triggerVariant="outline"
+              />
+            )}
+            <Button variant="outline" size="sm" onClick={() => onAudit(asset.id)}>Re-run audit</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            Nothing here yet — start from scratch: generate an on-brand draft, or upload what you already have.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {contentGenEnabled && generatable && (
+              <GenerateContentDialog
+                touchpointId={touchpointId}
+                avatarId={avatarId}
+                onSaved={onRefresh}
+                triggerLabel="Generate draft"
+                triggerVariant="coach"
+              />
+            )}
+            <AssetUploadDialog avatarId={avatarId} onUploaded={onRefresh} />
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -151,6 +232,12 @@ export function FunnelTracker(): JSX.Element {
   const { selectedAvatarId, currentAvatar } = useAvatarContext();
   const { coverage, assets, tests, avatarFieldCount, loading, refresh, auditAsset, reauditAll, brandTags, setBrandTags, service } = useFunnelTracker(selectedAvatarId);
   const competitorEnabled = isCompetitorAgentsEnabled();
+  const contentGenEnabled = isContentGenerationEnabled();
+  // A funnel-map piece's "Fix" button routes here: switch to the What Needs Work
+  // tab focused on that touchpoint (fix the existing asset, or start one from scratch).
+  const [tab, setTab] = useState('map');
+  const [fixTouchpoint, setFixTouchpoint] = useState<string | null>(null);
+  const openFix = (touchpointId: string): void => { setFixTouchpoint(touchpointId); setTab('work'); };
 
   // Gate on the user too, not just the avatar: a signed-out visitor can carry a
   // stale selectedAvatarId in localStorage, which would otherwise render the full
@@ -176,6 +263,7 @@ export function FunnelTracker(): JSX.Element {
   const staleCount = coverage?.counts.stale ?? 0;
   const avatarThin = avatarFieldCount > 0 && avatarFieldCount < 5;
   const labelFor = (a: BrandAsset): string => getTouchpoint(a.touchpoint_id)?.label ?? a.touchpoint_id;
+  const assetForTouchpoint = (tp: string): BrandAsset | undefined => assets.find((a) => a.touchpoint_id === tp);
   // Competitor-Agents: the needs-work assets are the funnel pieces that get their
   // own per-touchpoint competitor agent + the Tab-2 aggregate rollup.
   const competitorPieces: FunnelPiece[] = competitorEnabled ? needsWork.map(pieceFromAsset) : [];
@@ -213,7 +301,7 @@ export function FunnelTracker(): JSX.Element {
       )}
       <div className="mb-4" />
 
-      <Tabs defaultValue="map">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="map">Funnel Map</TabsTrigger>
           <TabsTrigger value="work">What Needs Work ({needsWork.length})</TabsTrigger>
@@ -267,6 +355,11 @@ export function FunnelTracker(): JSX.Element {
                             <StatusBadge status={cell.status} />
                             <span className="text-xs text-muted-foreground tabular-nums">{cell.overallScore ?? '—'}</span>
                           </div>
+                          {contentGenEnabled && isGeneratable(cell.touchpointId) && (
+                            <div className="mt-2">
+                              <Button variant="outline" size="sm" onClick={() => openFix(cell.touchpointId)}>Fix</Button>
+                            </div>
+                          )}
                         </Card>
                       ))}
                     </div>
@@ -279,6 +372,17 @@ export function FunnelTracker(): JSX.Element {
 
         {/* ---- What Needs Work ---- */}
         <TabsContent value="work" className="mt-5">
+          {fixTouchpoint && (
+            <FocusedFixCard
+              touchpointId={fixTouchpoint}
+              asset={assetForTouchpoint(fixTouchpoint)}
+              avatarId={selectedAvatarId}
+              contentGenEnabled={contentGenEnabled}
+              onClear={() => setFixTouchpoint(null)}
+              onAudit={(id) => void auditAsset(id)}
+              onRefresh={() => void refresh()}
+            />
+          )}
           {/* Competitor-Agents: aggregate competitor-gap rollup across the needs-work funnel pieces. */}
           {competitorEnabled && competitorPieces.length > 0 && (
             <div className="mb-5">
@@ -287,7 +391,7 @@ export function FunnelTracker(): JSX.Element {
           )}
           <div className="flex flex-col gap-3">
             {needsWork.length === 0 && <p className="text-sm text-muted-foreground">Nothing flagged. Upload assets or your funnel is on-brand.</p>}
-            {needsWork.map((a) => (
+            {needsWork.filter((a) => a.touchpoint_id !== fixTouchpoint).map((a) => (
               <Card key={a.id} className="p-5 flex flex-col gap-4">
                 <div className="grid gap-4 md:grid-cols-[1.4fr_1.3fr_auto] md:items-center">
                   <div>
@@ -309,6 +413,15 @@ export function FunnelTracker(): JSX.Element {
                   <DimensionBars asset={a} />
                   <div className="flex flex-col gap-2">
                     <FixDialog asset={a} onDone={() => void refresh()} />
+                    {contentGenEnabled && isGeneratable(a.touchpoint_id) && (
+                      <GenerateContentDialog
+                        touchpointId={a.touchpoint_id}
+                        avatarId={selectedAvatarId}
+                        onSaved={() => void refresh()}
+                        triggerLabel="Generate new"
+                        triggerVariant="outline"
+                      />
+                    )}
                     <Button variant="outline" size="sm" onClick={() => void auditAsset(a.id)}>Re-run audit</Button>
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import { Mic, Wand2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 
-const BRAND_BLUE = '#1A3557';
+const BRAND_BLUE = '#111111';
 
 export function IdeationPanel({
   value,
