@@ -61,6 +61,7 @@ import FocusSurface from "./pages/FocusSurface";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
 import SettingsPage from "./pages/SettingsPage";
 import FigmaCallback from "./pages/FigmaCallback";
+import OAuthConsent from "./pages/OAuthConsent";
 import { V4ContextProvider } from "@/contexts/V4ContextStore";
 import { V4Layout } from "@/components/v4/V4Layout";
 import V4Onboarding from "./pages/v4/V4Onboarding";
@@ -122,6 +123,11 @@ const App = () => {
                 <Route path="/welcome" element={<Landing />} />
 
                 <Route path="/auth" element={<Auth />} />
+
+                {/* OAuth 2.1 consent (MCP connector authorization). PUBLIC route — the
+                    page self-handles auth, bouncing to /auth with a return param that
+                    preserves authorization_id; must NOT be wrapped in RequireAuth. */}
+                <Route path="/oauth/consent" element={<OAuthConsent />} />
 
                 <Route path="/start-here" element={<Navigate to="/v1/start-here" replace />} />
 
