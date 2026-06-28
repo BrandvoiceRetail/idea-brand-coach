@@ -605,6 +605,19 @@ export function isContentGenerationEnabled(): boolean {
   return (import.meta.env.VITE_CONTENT_GENERATION as string | undefined) === 'true';
 }
 
+/**
+ * VIDEO_GENERATION — actual AI video generation (fal cloud + local Palmier) inside
+ * the funnel content-generation surface. Gated SEPARATELY from CONTENT_GENERATION
+ * so the video tabs can show while generation is held back: when OFF, pressing a
+ * video Generate button opens a "coming soon" modal instead of calling the engine.
+ *
+ * OFF by default in every environment. Flip on with VITE_VIDEO_GENERATION=true at
+ * build time once the fal account is funded (and/or local Palmier is in play).
+ */
+export function isVideoGenerationEnabled(): boolean {
+  return (import.meta.env.VITE_VIDEO_GENERATION as string | undefined) === 'true';
+}
+
 // Development helper
 if (import.meta.env.DEV) {
   const currentPhase = getCurrentPhase();

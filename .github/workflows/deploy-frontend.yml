@@ -48,6 +48,9 @@ jobs:
           # Funnel content-generation surface (Pixii images / fal + Palmier video /
           # Claude copy). OFF unless the repo variable VITE_CONTENT_GENERATION=true.
           VITE_CONTENT_GENERATION: ${{ vars.VITE_CONTENT_GENERATION }}
+          # Actual AI video generation. OFF ⇒ video "Generate" shows a coming-soon
+          # modal. Flip on with VITE_VIDEO_GENERATION=true once the fal account is funded.
+          VITE_VIDEO_GENERATION: ${{ vars.VITE_VIDEO_GENERATION }}
       # SPA fallback so deep links resolve to the app shell.
       - run: cp dist/index.html dist/404.html
 
