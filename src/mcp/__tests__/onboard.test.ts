@@ -191,37 +191,42 @@ describe('onboarding posture guardrails (no invented inputs)', () => {
   });
 });
 
-describe('SERVER_INSTRUCTIONS — funnel-metrics (Windsor) workflow', () => {
-  it('instructs the host to orchestrate the Windsor → funnel ingest workflow', () => {
+describe('SERVER_INSTRUCTIONS — onboarding + funnel-metrics (Windsor) workflow', () => {
+  it('directs the coach to call run_onboarding instead of pasting a prompt', () => {
+    // The onboarding workflow is owned by the run_onboarding tool's playbook; the server
+    // instructions just tell the coach to call it (when not onboarded / on request).
+    expect(SERVER_INSTRUCTIONS).toMatch(/ONBOARDING:/);
+    expect(SERVER_INSTRUCTIONS).toContain('run_onboarding');
+    expect(SERVER_INSTRUCTIONS).toMatch(/do[\s\S]{0,4}NOT make the user[\s\S]{0,4}paste a prompt/i);
     // The host (not this server) reads Windsor; the instructions must say so.
-    expect(SERVER_INSTRUCTIONS).toMatch(/FUNNEL METRICS \(Windsor\)/);
     expect(SERVER_INSTRUCTIONS).toMatch(/this server cannot read Windsor/i);
-    // 1: ensure pieces exist; 2: read Windsor get_data; 3: ingest; 4: confirm; 5: experiment loop.
+    // The tools the coach is pointed at across onboarding + the experiment loop.
     for (const tool of [
-      'list_funnel_inventory',
       'upsert_funnel_touchpoint',
+      'get_connectors',
       'ingest_campaign_analytics',
       'ingest_funnel_analytics',
       'get_funnel_piece_metrics',
       'design_test',
       'update_test_milestone',
+      'get_experiment_lift',
     ]) {
       expect(SERVER_INSTRUCTIONS).toContain(tool);
     }
     expect(SERVER_INSTRUCTIONS).toMatch(/source="windsor"/);
     expect(SERVER_INSTRUCTIONS).toMatch(/journey_stage/);
     expect(SERVER_INSTRUCTIONS).toMatch(/fractions 0–1/);
-    // Honesty bar: never fabricate a metric.
-    expect(SERVER_INSTRUCTIONS).toMatch(/NEVER fabricate a metric/);
+    // Honesty bar: never fabricate.
+    expect(SERVER_INSTRUCTIONS).toMatch(/never fabricate/i);
   });
 
-  it('leaks zero Tier-B/C internals in the funnel-metrics section', () => {
-    // Scope to the added section: the NARRATION guidance elsewhere legitimately names
+  it('leaks zero Tier-B/C internals in the onboarding section', () => {
+    // Scope to the onboarding section: the NARRATION guidance elsewhere legitimately names
     // (to forbid) "neuroanatomical framing" etc., which the guard flags as a token.
-    const start = SERVER_INSTRUCTIONS.indexOf('FUNNEL METRICS (Windsor)');
+    const start = SERVER_INSTRUCTIONS.indexOf('ONBOARDING:');
     const end = SERVER_INSTRUCTIONS.indexOf('Any user can send product feedback');
-    const section = SERVER_INSTRUCTIONS.slice(start, end);
     expect(start).toBeGreaterThan(-1);
+    const section = SERVER_INSTRUCTIONS.slice(start, end);
     expect(findTierViolations(section)).toEqual([]);
   });
 });

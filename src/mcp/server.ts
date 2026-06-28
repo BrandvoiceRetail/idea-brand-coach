@@ -58,6 +58,8 @@ import { registerGetFunnelCoverageTool } from './tools/getFunnelCoverage.js';
 import { registerSubmitFeedbackTool } from './tools/submitFeedback.js';
 import { FeedbackNotifier } from './slack/feedbackNotifier.js';
 import { registerCreateAvatarTool } from './tools/createAvatar.js';
+import { registerUpdateAvatarTool } from './tools/updateAvatar.js';
+import { registerDeleteAvatarTool } from './tools/deleteAvatar.js';
 import { registerListAvatarsTool } from './tools/listAvatars.js';
 import { registerGetAvatarTool } from './tools/getAvatar.js';
 import { registerSetCurrentAvatarTool } from './tools/setCurrentAvatar.js';
@@ -84,6 +86,7 @@ import { registerListSequencesTool } from './tools/listSequences.js';
 import { registerGetSequencePerformanceTool } from './tools/getSequencePerformance.js';
 import { registerUpdateTestMilestoneTool } from './tools/updateTestMilestone.js';
 import { registerGetExperimentLiftTool } from './tools/getExperimentLift.js';
+import { registerRunOnboardingTool } from './tools/runOnboarding.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -246,6 +249,12 @@ export function createServer(
   // multi-select context set; pin primary; record forensic build state. Each mutating tool is
   // identity-gated + ownership-checked (requireOwnedAvatar) and drives the live brand_avatar_scope RPCs.
   registerCreateAvatarTool(server);
+  // update_avatar: enrich/edit an existing avatar in place (partial) so the coach fleshes out
+  // thin/placeholder avatars instead of creating duplicates. gateWrite + requireOwnedAvatar.
+  registerUpdateAvatarTool(server);
+  // delete_avatar: clear out placeholder avatars. GUARDED — refuses (returns dependent counts)
+  // when the avatar has funnel pieces/tests/diagnostics unless force=true. gateWrite + owned.
+  registerDeleteAvatarTool(server);
   registerListAvatarsTool(server);
   registerGetAvatarTool(server);
   registerSetCurrentAvatarTool(server);
@@ -284,6 +293,11 @@ export function createServer(
   // piece, windowed by its lifecycle dates over campaign_metrics (no snapshot table). Honest
   // pending when not live / no post-live data; status_suggestion is advice the user confirms.
   registerGetExperimentLiftTool(server);
+
+  // Onboarding director: the coach calls run_onboarding (instead of a pasted prompt) when the
+  // user hasn't onboarded yet or asks to (re-)onboard. Returns current state + the ordered
+  // playbook (create pieces → pull full Windsor history → ingest → Trust Gap) for the host to run.
+  registerRunOnboardingTool(server);
 
   // Email sequences: brand-level sequence records + steps, prebuilt templates (welcome=5 /
   // nurture=7 / abandoned_cart=3), and a deterministic performance read (step count + the linked
