@@ -25,9 +25,10 @@ given `onBack` from V4Fix; the inline "Back to piece" in the fix view is gone).
 Rules baked into `V4Fix.tsx`: switching the Funnel tab or clicking the "Funnel"
 crumb resets to `map` AND `clearSelection()` (no stale piece); opening a test
 stashes `lastWorkedPiece` so Testing & Lift shows a "← Back to {piece}" return
-(no dead-end). Mobile: breadcrumb is a sticky header (`top-12`, under the spine
-stepper); zero horizontal overflow at 375px (long piece names truncate, full text
-in `title`). Presentation only — no `useFixRun`/`fixService` changes.
+(no dead-end). Mobile: breadcrumb is a sticky header (`top-24` — below the mobile top bar
+(`V4TopBar`, h-12) + spine stepper (`sticky top-12`), each h-12); zero horizontal
+overflow at 375px (long piece names truncate, full text in `title`). Presentation
+only — no `useFixRun`/`fixService` changes.
 
 ## Integration
 

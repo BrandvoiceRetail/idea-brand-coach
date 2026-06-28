@@ -384,10 +384,11 @@ export default function V4Fix(): JSX.Element {
 
           {/* Funnel drill-down trail — the canonical "up" control for map → piece
               → Fix (replaces the scattered back buttons). Sticky header on mobile
-              (sits below the spine stepper at top-12); inline above content on
-              desktop. Only the Funnel drill-down (detail/fix) has a trail. */}
+              (top-24 = below the mobile top bar + spine stepper, each h-12);
+              inline above content on desktop. Only the Funnel drill-down
+              (detail/fix) has a trail. */}
           {(view === 'detail' || view === 'fix') && (
-            <div className="sticky top-12 z-10 -mx-4 border-b border-border bg-background px-4 py-2 sm:-mx-6 sm:px-6 md:static md:top-auto md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0">
+            <div className="sticky top-24 z-10 -mx-4 border-b border-border bg-background px-4 py-2 sm:-mx-6 sm:px-6 md:static md:top-auto md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0">
               <FixBreadcrumb view={view} pieceLabel={pieceLabel || null} onCrumb={handleCrumb} />
             </div>
           )}
