@@ -74,14 +74,23 @@ interface DeriveResponse {
   error?: string;
 }
 
-const VALID_DIMS = new Set<TrustGapDimension>(['insight', 'distinctive', 'empathetic', 'authentic']);
+/** The engine emits canonical IDEA LABELS; map them (and the short keys) to the dimension key. */
+const LABEL_TO_KEY: Record<string, TrustGapDimension> = {
+  insight: 'insight',
+  distinctiveness: 'distinctive',
+  distinctive: 'distinctive',
+  empathy: 'empathetic',
+  empathetic: 'empathetic',
+  authenticity: 'authentic',
+  authentic: 'authentic',
+};
 
 /** Map the edge fn's derive reply into the service's DerivedDimension[]. */
 function toDerived(reply: DeriveResponse): DerivedDimension[] {
   const out: DerivedDimension[] = [];
   for (const d of reply.dimensions ?? []) {
-    const dim = d.dimension as TrustGapDimension;
-    if (!VALID_DIMS.has(dim)) continue;
+    const dim = LABEL_TO_KEY[(d.dimension ?? '').trim().toLowerCase()];
+    if (!dim) continue;
     const citations = (d.where_it_shows_up ?? [])
       .map((c) => (typeof c === 'string' ? c : c.quote_or_observation ?? ''))
       .filter((s): s is string => !!s);
