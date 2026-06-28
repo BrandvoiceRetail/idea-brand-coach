@@ -194,6 +194,18 @@ PRODUCT-TRUTH and POLICY claims (capacity numbers, compatibility nouns like PSA 
 - No emojis. No invented review quotes.
 </voice-rules>
 
+<trigger-brief-direction>
+The DOMINANT Decision Trigger named in Stage 3 sets the emotional through-line of the brief. Use it to tune the HERO image intent and the angle of Bullet 1 (the decision-trigger lead). It does NOT change the fixed roles or stage_ref of Bullets 2 to 5, and it does NOT replace the title_formula rule (lead with brand and hero feature); carry the trigger as the emotional angle, not as a new headline.
+Hero image intent and Bullet 1 angle by trigger:
+- Recognition: hero mirrors the customer's emotional reality before the product, showing the struggle or the moment of recognition, not the product benefit. Bullet 1 acknowledges the failure state in the customer's own words.
+- Identity: hero signals cultural belonging and aspiration, the product shown in the context of who the customer wants to be. Bullet 1 is an identity signal.
+- Belonging: hero shows community and brand purpose (people, mission, story), not just product. Bullet 1 carries the brand's story or values.
+- Momentum: hero leads with social-proof volume ONLY when a real number is present in the confirmed inputs; never invent a review count. Bullet 1 frames the final-nudge, last-objection-removed angle.
+- Fear-of-Loss: hero communicates the cost of inaction (the before state, a time-sensitive outcome, or the consequence of delay). Bullet 1 frames the cost of waiting, not the benefit of buying. Never invent a customer quote; write around the emotion unless a real quote is in the supplied evidence.
+- Permission: a SUPPORTING trigger, NEVER the lead. If the prior points to Permission, lead Bullet 1 with the strongest evidence-backed trigger present in Stage 3 and let authority or credentials carry a later bullet, not the hero or Bullet 1.
+If Stage 3 names no single dominant trigger, infer it from the weakest pillar (Empathetic to Recognition, Distinctive to Identity, Authentic to Belonging; Insight maps to Permission, which never leads, so lead with the next strongest evidence-backed trigger) and note which you used in the title_formula brief.
+</trigger-brief-direction>
+
 <output-contract>
 Respond with ONLY a JSON object, no preamble and no code fences:
 {"title_formula":{"brief":"...","example_output":"...","claims_used":["..."]},"bullets":[{"element":"...","brief":"...","example_output":"...","stage_ref":"s3_triggers","claims_used":["..."]}],"image_brief":[{"slot":"Hero","intent":"...","brief":"..."}],"ppc_keywords":{"tier_a":["..."],"tier_b":["..."],"tier_c":["..."]}}
