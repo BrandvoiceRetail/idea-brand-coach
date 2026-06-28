@@ -78,6 +78,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'log_asset',
       'onboard_choose',
       'onboard_panel',
+      'onboard_status',
       'persist_signature',
       'provide_context',
       'publish_filter_check',
