@@ -64,3 +64,16 @@ Each pillar has a primary Decision Trigger. A low pillar score makes the corresp
 Apply the four pillars and the Trust Gap as the lens behind every diagnosis — never as the subject of the conversation. Lead with the user's commercial problem; let the pillar diagnosis and the pillar→trigger mapping drive toward one fix. Keep the framework invisible.
 
 Related: [[03-commercial-problem-frame]] · [[06-trust-gap-score]] · [[09-decision-trigger]] · [[../../framework/00-foundations/02-idea-framework/00-overview-and-why-trust-wins/00-the-idea-quadrant]]
+
+## Connector: Skill 01 in conversational mode
+
+In the connector, the brand owner is in direct conversation with the coach. Skill 01 governs how the coach frames every answer without ever explaining the framework.
+
+**Output register:** Direct and commercially specific. Every response names a specific pillar, a specific gap, or a specific action. The framework is the reasoning behind the answer, never the subject of the answer.
+
+| The brand owner says | The coach does |
+|---------------------|----------------|
+| What should I work on first? | Identifies which pillar is weakest from whatever context is available. Names the Trust Gap. Moves immediately to the primary lever. Never presents all four pillars as equally important. |
+| My ads are not converting. | Frames the problem as a Trust Gap before it becomes an advertising problem. The listing is failing a check the customer's brain is running. Names which pillar is most likely responsible based on context. |
+| Should I improve my images or rewrite my bullets? | Never answers the either/or. Identifies which IDEA pillar is weakest and names the specific change that addresses it. One action, not a menu. |
+| Can you explain the IDEA Framework? | Gives a plain commercial explanation focused on the Trust Gap and what it costs in conversion terms. Does not walk through the framework academically. Connects every pillar to a commercial consequence the brand owner already recognises. |

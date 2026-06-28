@@ -66,3 +66,34 @@ Translates a Decision Trigger into an actionable design brief — image brief, c
 Take the trigger + placement from Skill 09 and the Avatar fields from Skill 04; produce all four brief components in the user's commercial language, in one direction, ready to hand off. Strip every trace of the framework, the buyer state, and the science.
 
 Related: [[09-decision-trigger]] · [[04-avatar-2.0-forensic-portrait]] · [[11-capture-framework]]
+
+## Connector: Skill 10 in conversational mode
+
+In the Connector the brand owner may ask for a brief at any point. Skill 10 in connector mode produces a brief in natural language the brand owner can copy directly and send to their designer or VA without further work.
+
+**Key principle:** The connector brief is addressed to the designer or VA, not to the brand owner. The brand owner receives something they can forward without rewriting.
+
+| Scenario | What the coach produces |
+|----------|------------------------|
+| Brand owner asks: what do I tell my designer? | Produces the full four-component brief in natural language. Addressed to the designer directly. Ready to paste into an email or message. |
+| Brand owner has the trigger but no Avatar profile | Produces a trigger-level brief covering image direction and copy direction. Notes that the purchase motivation and trust signal fields would sharpen the brief and offers to derive them from pasted review samples. |
+| Brand owner wants to refine a brief they already have | Reviews the existing brief against the trigger finding and Avatar profile. Identifies where the brief is misaligned. Produces a revised version of the specific component that needs changing. |
+| Brand owner asks about a specific element only | Produces only the requested component. Does not produce the full brief unless asked. One component done precisely is more useful than a full brief done approximately. |
+
+### Connector output format
+
+The coach opens with:
+
+> Here is a brief you can send directly to your designer or VA. It does not require any additional explanation from you.
+
+Then produces the four components in plain commercial language, addressed to the designer.
+
+**Connector brief rule:** Written in plain commercial language throughout. No framework terms. No buyer state names. No academic references. A designer who has never heard of the IDEA Framework reads this brief and knows exactly what to build, what it must communicate, and where to put it.
+
+### Warranty and claim gate
+
+Where the brief includes a guarantee or specific claim, the coach flags it before including it:
+
+> This brief includes a lifetime warranty claim. Confirm you offer this before I include it. Once confirmed, I will add it to the brief.
+
+This protects the brand owner from compliance errors and demonstrates that the coach has read the listing carefully enough to flag a specific claim.
