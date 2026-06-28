@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createServer } from '../server.js';
+import { registerDraftAssetTool } from '../tools/draftAsset.js';
 import type { HostConfig } from '../config.js';
 import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
 import { buildConceptPrompt, parseConcepts } from '../service/concepts.js';
@@ -19,6 +20,8 @@ const cfg: HostConfig = {
   supabaseAnonKey: 'anon',
   slackBotToken: null,
   slackFeedbackChannelId: 'C0TEST',
+  mcpPublicUrl: 'https://app.example.com/mcp',
+  oauthRequireAuth: false,
 };
 
 /** Stub EdgeFnClient returning canned per-function responses. */
@@ -31,8 +34,18 @@ function stubEdgeFn(responses: Record<string, unknown>): EdgeFnClient {
   } as unknown as EdgeFnClient;
 }
 
+/** Degrading ledger (mirrors the original unconfigured-ledger path: auto-record degrades,
+ *  draft still succeeds with recorded.ok=false). */
+const degradingIvos = {
+  logAsset: async () => ({ available: false, data: null, note: 'IV-OS unreachable' }),
+  recordAssessment: async () => ({ available: false, data: null, note: 'IV-OS unreachable' }),
+} as unknown as Parameters<typeof registerDraftAssetTool>[2];
+
 async function connectedClient(edgeFn?: EdgeFnClient) {
   const { server } = createServer(cfg, edgeFn);
+  // draft_asset is off the default Alpha surface (Trevor 2026-06-25); register it directly
+  // for the module's chain tests (same wrapped registerTool).
+  if (edgeFn) registerDraftAssetTool(server, edgeFn, degradingIvos);
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
   await Promise.all([server.connect(st), client.connect(ct)]);

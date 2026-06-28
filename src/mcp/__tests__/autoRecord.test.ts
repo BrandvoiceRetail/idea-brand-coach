@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createServer } from '../server.js';
+import { registerDraftAssetTool } from '../tools/draftAsset.js';
 import type { HostConfig } from '../config.js';
 import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
 import type { IvosLedgerClient } from '../ivos/client.js';
@@ -17,6 +18,8 @@ const cfg: HostConfig = {
   supabaseAnonKey: 'anon',
   slackBotToken: null,
   slackFeedbackChannelId: 'C0TEST',
+  mcpPublicUrl: 'https://app.example.com/mcp',
+  oauthRequireAuth: false,
 };
 
 const authed = { userId: 'user-1', token: 'tok', authenticated: true };
@@ -64,7 +67,11 @@ function stubIvos(writeOk = true) {
 }
 
 async function connectedClient(ivos: IvosLedgerClient) {
-  const { server } = createServer(cfg, stubEdgeFn(), ivos);
+  const edge = stubEdgeFn();
+  const { server } = createServer(cfg, edge, ivos);
+  // draft_asset is off the default Alpha surface (Trevor 2026-06-25); register it directly
+  // here to test the module's auto-record behavior. Goes through the same wrapped registerTool.
+  registerDraftAssetTool(server, edge, ivos);
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
   await Promise.all([server.connect(st), client.connect(ct)]);

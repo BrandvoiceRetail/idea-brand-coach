@@ -232,23 +232,29 @@ serve(async (req) => {
 
     const body = await req.json();
     const canvas = body?.canvas ?? null;
+    const signature = body?.signature ?? null;
     const confirmedClaims: ConfirmedClaim[] = Array.isArray(body?.confirmed_claims) ? body.confirmed_claims : [];
 
-    // The brief is written against the canvas; without it, ask.
-    if (canvas == null) {
+    // The brief is written against the brand positioning. Prefer the Brand Canvas; degrade
+    // to the chosen Signature when no canvas exists yet (so the owner gets a shippable brief
+    // today instead of canvas homework). Only ask when NEITHER positioning source exists.
+    if (canvas == null && signature == null) {
       return new Response(
         JSON.stringify({
           needs_input: [{
             slot: 1,
-            question: 'Compile the Brand Canvas first (generate_canvas), then run the Export Brief. The brief is written against the canvas.',
-            why: 'The title formula, bullets, image brief, and PPC tiers all derive from the Brand Canvas positioning and voice.',
+            question: 'Create a Signature (generate_signature) or compile the Brand Canvas (generate_canvas) first, then run the Export Brief.',
+            why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning and voice — held in the Brand Canvas, or in the Signature when no canvas exists yet.',
           }],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const canvasBlock = formatArtifact('BRAND CANVAS (the source of truth for voice and positioning)', canvas);
+    // Root positioning block: the canvas if present, else the Signature acting as the canvas.
+    const canvasBlock = canvas != null
+      ? formatArtifact('BRAND CANVAS (the source of truth for voice and positioning)', canvas)
+      : formatArtifact('SIGNATURE (your positioning + voice — no Brand Canvas exists yet, so treat this as the canvas; for any bullet that would cite the canvas, use stage_ref "signature")', signature);
     const s1Block = formatArtifact('STAGE 1 VOCABULARY CLUSTERS', body?.s1 ?? body?.prior?.s1);
     const s3Block = formatArtifact('STAGE 3 DECISION TRIGGERS (for PPC tier A and bullet 1)', body?.s3 ?? body?.prior?.s3);
     const s4Block = formatArtifact('STAGE 4 OBJECTIONS (for risk reversal and bullet 2)', body?.s4 ?? body?.prior?.s4);
@@ -352,8 +358,11 @@ serve(async (req) => {
       throw new Error('Export Brief output was incomplete (expected 5 bullets, 7 image slots, 3 keyword tiers).');
     }
 
-    // S3/S4/canvas grounding present -> evidence; canvas-only synthesis -> inference.
-    const evidenceRefs: Array<{ kind: string; ref: string }> = [{ kind: 'artifact', ref: 'brand_canvas' }];
+    // Root ref is the canvas, or the Signature when degrading. S3/S4 grounding present
+    // -> evidence; root-only synthesis -> inference.
+    const evidenceRefs: Array<{ kind: string; ref: string }> = [
+      { kind: 'artifact', ref: canvas != null ? 'brand_canvas' : 'signature' },
+    ];
     if (body?.s3 ?? body?.prior?.s3) evidenceRefs.push({ kind: 'artifact', ref: 'avatar_s3_triggers' });
     if (body?.s4 ?? body?.prior?.s4) evidenceRefs.push({ kind: 'artifact', ref: 'avatar_s4_objections' });
     const grounding = evidenceRefs.length > 1 ? 'evidence' : 'inference';

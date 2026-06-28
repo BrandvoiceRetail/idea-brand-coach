@@ -7,6 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { registerGetContextStatusTool } from '../tools/getContextStatus.js';
 import { registerProvideContextTool } from '../tools/provideContext.js';
 import { registerIngestEvidenceTool, parseReviews } from '../tools/ingestEvidence.js';
+import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
 import { __setUserSupabaseFactory } from '../supabaseUser.js';
 import { runWithIdentity, type Identity } from '../context/identity.js';
 
@@ -120,6 +121,25 @@ async function connect(register: (s: McpServer) => void): Promise<Client> {
   await Promise.all([server.connect(st), client.connect(ct)]);
   return client;
 }
+
+/** Stub EdgeFnClient for ingest_evidence: replies with `reply` (default: unavailable). */
+function stubEdge(
+  reply?: EdgeFnResult<unknown>,
+  capture?: (name: string, body: unknown) => void,
+): EdgeFnClient {
+  return {
+    invoke: async <T>(name: string, body: unknown): Promise<EdgeFnResult<T>> => {
+      capture?.(name, body);
+      return (reply ?? { ok: false, data: null, note: 'unavailable' }) as EdgeFnResult<T>;
+    },
+  } as unknown as EdgeFnClient;
+}
+
+/** Register ingest_evidence with a (usually never-called) stub edge client. */
+const ingestWith =
+  (edge: EdgeFnClient = stubEdge()) =>
+  (s: McpServer): void =>
+    registerIngestEvidenceTool(s, edge);
 
 afterEach(() => __setUserSupabaseFactory(null));
 
@@ -334,7 +354,7 @@ describe('parseReviews', () => {
 
 describe('ingest_evidence tool', () => {
   it('denies anonymous callers before any store write', async () => {
-    const client = await connect(registerIngestEvidenceTool); // no stub: leaked write would throw
+    const client = await connect(ingestWith()); // no stub: leaked write would throw
     const res = await client.callTool({
       name: 'ingest_evidence',
       arguments: { reviews_text: 'great vault' },
@@ -348,7 +368,7 @@ describe('ingest_evidence tool', () => {
   it('freezes pasted reviews into an evidence_snapshots row (reviews jsonb)', async () => {
     const stub = install();
     stub.on('evidence_snapshots', 'insert', { data: { id: 'snap-1' }, error: null });
-    const client = await connect(registerIngestEvidenceTool);
+    const client = await connect(ingestWith());
     const res = await runWithIdentity(authed, () =>
       client.callTool({
         name: 'ingest_evidence',
@@ -375,7 +395,7 @@ describe('ingest_evidence tool', () => {
     const stub = install();
     stub.on('evidence_snapshots', 'insert', { data: { id: 'snap-2' }, error: null });
     stub.on('user_product_reviews', 'insert', { data: [{ id: 'r1' }, { id: 'r2' }], error: null });
-    const client = await connect(registerIngestEvidenceTool);
+    const client = await connect(ingestWith());
     const res = await runWithIdentity(authed, () =>
       client.callTool({
         name: 'ingest_evidence',
@@ -393,7 +413,7 @@ describe('ingest_evidence tool', () => {
   it('captures listing copy into the snapshot listing column', async () => {
     const stub = install();
     stub.on('evidence_snapshots', 'insert', { data: { id: 'snap-3' }, error: null });
-    const client = await connect(registerIngestEvidenceTool);
+    const client = await connect(ingestWith());
     const res = await runWithIdentity(authed, () =>
       client.callTool({
         name: 'ingest_evidence',
@@ -406,16 +426,161 @@ describe('ingest_evidence tool', () => {
     expect((ins?.payload as { listing?: { text: string } }).listing?.text).toMatch(/Holds 432 cards/);
   });
 
-  it('asin-only returns a clearly-marked stub note and ingests nothing', async () => {
-    install();
-    const client = await connect(registerIngestEvidenceTool);
-    const res = await runWithIdentity(authed, () =>
-      client.callTool({ name: 'ingest_evidence', arguments: { asin: 'B0XYZ' } }),
+  it('asin: scrapes reviews via review-scraper and freezes them (title folded, reviewer/rating kept)', async () => {
+    const stub = install();
+    stub.on('evidence_snapshots', 'insert', { data: { id: 'snap-asin' }, error: null });
+    const calls: Array<{ name: string; body: { urls?: string[] } }> = [];
+    const edge = stubEdge(
+      {
+        ok: true,
+        data: {
+          results: [
+            {
+              url: 'x',
+              reviews: [
+                { reviewerName: 'Kit', rating: 5, title: 'sleek design', body: 'my favorite binder' },
+                { reviewerName: 'Anonymous', rating: 0, title: '', body: 'great quality' },
+              ],
+            },
+          ],
+        },
+      },
+      (name, body) => {
+        calls.push({ name, body: body as { urls?: string[] } });
+      },
     );
-    const sc = res.structuredContent as { ok: boolean; notes: string[]; snapshot_id: string | null };
+    const res = await runWithIdentity(authed, () =>
+      connect(ingestWith(edge)).then((c) =>
+        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B0CJBN849W', marketplace: 'co.uk' } }),
+      ),
+    );
+    const sc = res.structuredContent as { ok: boolean; reviews_parsed: number; notes: string[] };
+    expect(sc.ok).toBe(true);
+    expect(sc.reviews_parsed).toBe(2);
+    // Called review-scraper with the right marketplace /dp/ URL.
+    expect(calls[0]?.name).toBe('review-scraper');
+    expect(calls[0]?.body.urls?.[0]).toBe('https://www.amazon.co.uk/dp/B0CJBN849W');
+    // Title folded into body; reviewer/rating captured; "Anonymous"/0 dropped.
+    const ins = stub.ops.find((o) => o.table === 'evidence_snapshots' && o.verb === 'insert');
+    const reviews = (ins?.payload as { reviews: Array<{ body: string; reviewer?: string; rating?: number }> }).reviews;
+    expect(reviews[0].body).toContain('sleek design');
+    expect(reviews[0].reviewer).toBe('Kit');
+    expect(reviews[0].rating).toBe(5);
+    expect(reviews[1].reviewer).toBeUndefined();
+    expect(sc.notes.join(' ')).toMatch(/Scraped 2 review/);
+  });
+
+  it('asin: degrades to a note when the scrape fails — never fabricates', async () => {
+    install();
+    const edge = stubEdge({ ok: false, data: null, note: 'edge function review-scraper failed (HTTP 500)' });
+    const res = await runWithIdentity(authed, () =>
+      connect(ingestWith(edge)).then((c) =>
+        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B000000001' } }),
+      ),
+    );
+    const sc = res.structuredContent as { ok: boolean; snapshot_id: string | null; notes: string[] };
     expect(sc.ok).toBe(false);
     expect(sc.snapshot_id).toBeNull();
-    expect(sc.notes.join(' ')).toMatch(/not yet wired/i);
-    expect(sc.notes.join(' ')).toContain('B0XYZ');
+    expect(sc.notes.join(' ')).toMatch(/asin-scrape failed/i);
+  });
+
+  it('asin: notes zero results without inventing reviews', async () => {
+    install();
+    const edge = stubEdge({ ok: true, data: { results: [{ url: 'x', reviews: [] }] } });
+    const res = await runWithIdentity(authed, () =>
+      connect(ingestWith(edge)).then((c) =>
+        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B000000001', marketplace: 'com' } }),
+      ),
+    );
+    const sc = res.structuredContent as { ok: boolean; notes: string[] };
+    expect(sc.ok).toBe(false);
+    expect(sc.notes.join(' ')).toMatch(/0 reviews/);
+  });
+
+  it('asin: surfaces a per-URL scrape error (e.g. rate limit) instead of a generic 0-reviews note', async () => {
+    install();
+    const edge = stubEdge({
+      ok: true,
+      data: { results: [{ url: 'x', reviews: [], error: 'rate limit: global daily scrape budget reached' }] },
+    });
+    const res = await runWithIdentity(authed, () =>
+      connect(ingestWith(edge)).then((c) =>
+        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B000000001' } }),
+      ),
+    );
+    const sc = res.structuredContent as { ok: boolean; notes: string[] };
+    expect(sc.ok).toBe(false);
+    expect(sc.notes.join(' ')).toMatch(/unavailable/i);
+    expect(sc.notes.join(' ')).toMatch(/global daily scrape budget/i);
+  });
+
+  it('asin: a full amazon.* URL is passed through verbatim (marketplace ignored)', async () => {
+    const stub = install();
+    stub.on('evidence_snapshots', 'insert', { data: { id: 'snap-url' }, error: null });
+    const calls: Array<{ body: { urls?: string[] } }> = [];
+    const edge = stubEdge(
+      { ok: true, data: { results: [{ url: 'x', reviews: [{ body: 'solid binder' }] }] } },
+      (_n, body) => calls.push({ body: body as { urls?: string[] } }),
+    );
+    const res = await runWithIdentity(authed, () =>
+      connect(ingestWith(edge)).then((c) =>
+        c.callTool({
+          name: 'ingest_evidence',
+          arguments: { asin: 'https://www.amazon.de/dp/B000000002', marketplace: 'com' },
+        }),
+      ),
+    );
+    const sc = res.structuredContent as { ok: boolean; reviews_parsed: number };
+    expect(sc.ok).toBe(true);
+    expect(sc.reviews_parsed).toBe(1);
+    expect(calls[0]?.body.urls?.[0]).toBe('https://www.amazon.de/dp/B000000002'); // verbatim, .com ignored
+  });
+
+  it('asin: rejects a non-ASIN / non-amazon input without calling the scraper (no fabrication)', async () => {
+    install();
+    const calls: string[] = [];
+    const edge = stubEdge({ ok: true, data: { results: [] } }, (n) => calls.push(n));
+    const bad = async (args: Record<string, unknown>) =>
+      runWithIdentity(authed, () =>
+        connect(ingestWith(edge)).then((c) => c.callTool({ name: 'ingest_evidence', arguments: args })),
+      );
+
+    const short = (await bad({ asin: 'B0XYZ' })).structuredContent as { ok: boolean; notes: string[] };
+    expect(short.ok).toBe(false);
+    expect(short.notes.join(' ')).toMatch(/not a valid 10-character ASIN/i);
+
+    const traversal = (await bad({ asin: 'B0CJBN849W/../../s?k=x' })).structuredContent as { notes: string[] };
+    expect(traversal.notes.join(' ')).toMatch(/not a valid 10-character ASIN/i);
+
+    const evilMkt = (await bad({ asin: 'B000000001', marketplace: 'evil.com/x?=' })).structuredContent as { notes: string[] };
+    expect(evilMkt.notes.join(' ')).toMatch(/unknown marketplace/i);
+
+    const evilUrl = (await bad({ asin: 'https://evil.com/dp/B000000001' })).structuredContent as { notes: string[] };
+    expect(evilUrl.notes.join(' ')).toMatch(/amazon\.\* product page/i);
+
+    expect(calls).toHaveLength(0); // the scraper was never invoked for any invalid input
+  });
+
+  it('asin + product_id: scraped reviews are also written to user_product_reviews', async () => {
+    const stub = install();
+    stub.on('evidence_snapshots', 'insert', { data: { id: 'snap-pid' }, error: null });
+    stub.on('user_product_reviews', 'insert', { data: [{ id: 'r1' }, { id: 'r2' }], error: null });
+    const edge = stubEdge({
+      ok: true,
+      data: {
+        results: [
+          { url: 'x', reviews: [{ reviewerName: 'Kit', rating: 5, body: 'a' }, { reviewerName: 'Anne', rating: 4, body: 'b' }] },
+        ],
+      },
+    });
+    const res = await runWithIdentity(authed, () =>
+      connect(ingestWith(edge)).then((c) =>
+        c.callTool({ name: 'ingest_evidence', arguments: { asin: 'B000000001', product_id: 'prod-9' } }),
+      ),
+    );
+    const sc = res.structuredContent as { reviews_rows: number };
+    expect(sc.reviews_rows).toBe(2);
+    const ins = stub.ops.find((o) => o.table === 'user_product_reviews' && o.verb === 'insert');
+    expect((ins?.payload as Array<{ product_id: string }>)[0]).toMatchObject({ product_id: 'prod-9' });
   });
 });

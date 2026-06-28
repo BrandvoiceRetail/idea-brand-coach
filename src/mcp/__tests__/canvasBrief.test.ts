@@ -258,11 +258,24 @@ describe('runGenerateBrief', () => {
     };
   }
 
-  it('returns needs_input when no Brand Canvas exists', async () => {
+  it('returns needs_input only when NEITHER a Signature nor a Brand Canvas exists', async () => {
     const res = await runGenerateBrief(null, deps({ getCurrentArtifact: makeGetCurrent(new Map()) }));
     expect(res.status).toBe('needs_input');
     if (res.status !== 'needs_input') return;
     expect(res.reason).toBe('no_canvas');
+  });
+
+  it('degrades to the Signature when no Brand Canvas exists — persists the brief (kills the homework wall)', async () => {
+    const saved: Array<{ kind: ArtifactKind; content: unknown; opts: SaveArtifactOptions }> = [];
+    // Signature present, NO brand_canvas — the P1 "shippable brief today" path.
+    const sigOnly = makeGetCurrent(new Map<ArtifactKind, unknown>([
+      ['signature', { options: [{ option: 1, sentence: 'x' }], chosen_option: 1, grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }],
+    ]));
+    const res = await runGenerateBrief(null, deps({ getCurrentArtifact: sigOnly, saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'] }));
+    expect(res.status).toBe('persisted');
+    if (res.status !== 'persisted') return;
+    expect(saved).toHaveLength(1);
+    expect(saved[0].kind).toBe('export_brief');
   });
 
   it('returns needs_input when the product-claims slot (#6) is unconfirmed', async () => {
