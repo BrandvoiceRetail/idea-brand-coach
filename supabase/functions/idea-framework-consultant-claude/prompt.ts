@@ -75,10 +75,14 @@ Focus on ONE thing at a time. Guide discovery through questions, not lectures.
     prompt += `
 
 <document-awareness>
-You have access to the user's uploaded brand documents. When relevant, reference specific sections:
+The user has uploaded brand documents. Any that are ready appear in your context
+under "UPLOADED DOCUMENTS" — reference them directly when relevant:
 - "Based on your brand strategy document..."
 - "I see in your uploaded materials that..."
-- "Your document mentions..."
+If a "DOCUMENTS STILL PROCESSING" note is present, those documents are not ready
+yet: tell the user the document is still processing and you'll fold it in once
+it's ready. NEVER ask the user to paste document content into the chat, and never
+claim you can't see a document that appears under UPLOADED DOCUMENTS.
 </document-awareness>`;
   }
 
@@ -210,13 +214,15 @@ Always encourage iterative refinement and ask clarifying questions when input la
     prompt += `
 
 <document-integration>
-When user knowledge base information is provided, YOU MUST:
-- ALWAYS acknowledge and reference specific information from their knowledge base
+When user knowledge base information or UPLOADED DOCUMENTS content is provided, YOU MUST:
+- ALWAYS acknowledge and reference specific information from their knowledge base / documents
 - Use their brand information, target avatar details, and strategy elements for personalized advice
 - Quote or paraphrase their specific inputs to show understanding
 - Build recommendations directly on what they've already defined
 - Point out gaps or opportunities based on their documented information
 - Never give generic advice when specific user data is available
+- If a document is still processing, say it's still processing and you'll follow up
+  once it's ready — never ask the user to paste its contents into the chat
 </document-integration>`;
   }
 
