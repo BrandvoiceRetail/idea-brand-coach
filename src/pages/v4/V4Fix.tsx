@@ -37,6 +37,7 @@ import { FunnelPieceDetail } from '@/components/v4/fix/FunnelPieceDetail';
 import { AddPieceDialog } from '@/components/v4/fix/AddPieceDialog';
 import { FixTestPanel } from '@/components/v4/fix/FixTestPanel';
 import { TestingLiftTab } from '@/components/v4/fix/TestingLiftTab';
+import { FixBreadcrumb } from '@/components/v4/fix/FixBreadcrumb';
 import type { GroundedField } from '@/components/v4/GroundedStrip';
 import { useFixRun } from '@/hooks/useFixRun';
 import { useAvatarContext } from '@/contexts/AvatarContext';
@@ -121,6 +122,10 @@ export default function V4Fix(): JSX.Element {
   const [view, setViewState] = useState<FixView>('map');
   const [addOpen, setAddOpen] = useState(false);
 
+  // The piece whose test was last opened — drives the "← Back to {piece}" return
+  // affordance in Testing & Lift so opening a test is never a dead-end.
+  const [lastWorkedPiece, setLastWorkedPiece] = useState<{ id: string; label: string } | null>(null);
+
   // Toolbar scope, lifted from FunnelMap so the controls drive real reads:
   // `range` threads into the piece-metrics window; `marketplace` is the parent-owned
   // storefront scope. (Avatar switching is owned by AvatarContext.)
@@ -164,6 +169,19 @@ export default function V4Fix(): JSX.Element {
     emitPage('v4_fix_view_changed', { view: next });
   };
 
+  // Breadcrumb / tab "Funnel" = the canonical "up" control for the Funnel
+  // drill-down. Jumping to the map clears the piece selection (leaving the
+  // drill-down is a clean slate — no stale piece lingers); jumping to detail
+  // keeps the worked piece. Replaces the scattered single-step back buttons.
+  const handleCrumb = (target: 'map' | 'detail'): void => {
+    if (target === 'map') {
+      clearSelection();
+      goTo('map');
+    } else {
+      goTo('detail');
+    }
+  };
+
   const pieceLabel = selectedPiece
     ? getTouchpoint(selectedPiece.touchpointId)?.label ?? selectedPiece.touchpointId
     : '';
@@ -199,6 +217,8 @@ export default function V4Fix(): JSX.Element {
       baseline: parseBaseline(baseline),
     });
     if (ok) {
+      // Remember the worked piece so Testing & Lift can offer a route back to it.
+      setLastWorkedPiece({ id: selectedPiece.id, label: pieceLabel });
       toast.success('Test opened. Track its lift in Testing & Lift.');
       goTo('testing');
     }
@@ -343,7 +363,7 @@ export default function V4Fix(): JSX.Element {
               size="sm"
               variant={view === 'map' || view === 'detail' || view === 'fix' ? 'brand' : 'ghost'}
               className="min-h-9 gap-1.5"
-              onClick={() => goTo('map')}
+              onClick={() => handleCrumb('map')}
               data-testid="v4-fix-tab-funnel"
             >
               <MapIcon className="h-4 w-4" />
@@ -361,6 +381,16 @@ export default function V4Fix(): JSX.Element {
               Testing &amp; Lift
             </Button>
           </nav>
+
+          {/* Funnel drill-down trail — the canonical "up" control for map → piece
+              → Fix (replaces the scattered back buttons). Sticky header on mobile
+              (sits below the spine stepper at top-12); inline above content on
+              desktop. Only the Funnel drill-down (detail/fix) has a trail. */}
+          {(view === 'detail' || view === 'fix') && (
+            <div className="sticky top-12 z-10 -mx-4 border-b border-border bg-background px-4 py-2 sm:-mx-6 sm:px-6 md:static md:top-auto md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0">
+              <FixBreadcrumb view={view} pieceLabel={pieceLabel || null} onCrumb={handleCrumb} />
+            </div>
+          )}
 
           {/* ── Map view (default) ── */}
           {view === 'map' && (
@@ -420,10 +450,6 @@ export default function V4Fix(): JSX.Element {
                 onGetBrief={handleGetBriefOrTest}
                 onOpenTest={handleGetBriefOrTest}
                 onCheckAsset={handleCheckAsset}
-                onBack={() => {
-                  clearSelection();
-                  goTo('map');
-                }}
               />
             ) : (
               <Card data-testid="v4-fix-detail-empty">
@@ -437,15 +463,6 @@ export default function V4Fix(): JSX.Element {
           {view === 'fix' &&
             (selectedPiece ? (
               <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => goTo('detail')}
-                  data-testid="v4-fix-test-back"
-                  className="inline-flex min-h-10 items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Back to piece
-                </button>
                 <FixTestPanel
                   pieceLabel={pieceLabel}
                   stageLabel={stageLabelFor(selectedPiece.stage)}
@@ -482,16 +499,34 @@ export default function V4Fix(): JSX.Element {
 
           {/* ── Testing & Lift view ── */}
           {view === 'testing' && (
-            <TestingLiftTab
-              tests={tests}
-              isLoading={testsLoading}
-              error={testsError}
-              onRetry={() => void load()}
-              onExport={handleExportTests}
-              onMarkAssetCreated={(id) => void markAssetCreated(id)}
-              onMarkAssetLive={(id) => void markAssetLive(id)}
-              advancingTestId={advancingTestId}
-            />
+            <div className="space-y-3">
+              {/* No dead-end: hop straight back to the piece whose test we just
+                  opened (not just the tab). */}
+              {lastWorkedPiece && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void selectPiece(lastWorkedPiece.id, range);
+                    goTo('detail');
+                  }}
+                  data-testid="v4-fix-testing-back-to-piece"
+                  className="inline-flex min-h-10 items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back to {lastWorkedPiece.label}
+                </button>
+              )}
+              <TestingLiftTab
+                tests={tests}
+                isLoading={testsLoading}
+                error={testsError}
+                onRetry={() => void load()}
+                onExport={handleExportTests}
+                onMarkAssetCreated={(id) => void markAssetCreated(id)}
+                onMarkAssetLive={(id) => void markAssetLive(id)}
+                advancingTestId={advancingTestId}
+              />
+            </div>
           )}
         </div>
       )}
