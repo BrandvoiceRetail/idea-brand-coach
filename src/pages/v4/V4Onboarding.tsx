@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ContextCard } from '@/components/v4/ContextCard';
 import { OnboardingReflectionRun } from '@/components/v4/onboarding/OnboardingReflectionRun';
 import { useOnboardingReflectionRun } from '@/hooks/useOnboardingReflectionRun';
+import { useFieldSync } from '@/hooks/useFieldSync';
 import { useV4Context } from '@/contexts/V4ContextStore';
 import { V4_ROUTES } from '@/config/v4';
 import {
@@ -66,7 +67,13 @@ export default function V4Onboarding(): JSX.Element {
     .filter((s) => !s.value)
     .map((s) => ({ key: s.key, question: s.askQuestion }));
 
-  const [megaprompt, setMegaprompt] = useState('');
+  // Persist the raw paste (draft) so a refresh or navigating away before
+  // "Read it back" doesn't lose it — saved by default like the extracted context.
+  const { value: megaprompt, onChange: setMegaprompt } = useFieldSync<string>({
+    fieldIdentifier: 'v4_onboarding_megaprompt_draft',
+    category: 'consultant',
+    defaultValue: '',
+  });
   const [started, setStarted] = useState(false);
   // Seed from the persisted store so a returning user with complete context sees
   // their Context Card + Continue CTA on refresh, not just the empty textarea.
@@ -117,6 +124,9 @@ export default function V4Onboarding(): JSX.Element {
 
   const handleAdvance = (): void => {
     emitPage('v4_onboarding_advanced_to_diagnose', {});
+    // Onboarding context is saved; clear the raw-paste draft so a return visit
+    // shows the Context Card, not a stale paste.
+    setMegaprompt('');
     navigate(V4_ROUTES.DIAGNOSE);
   };
 
