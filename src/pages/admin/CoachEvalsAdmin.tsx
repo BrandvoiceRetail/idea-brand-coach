@@ -33,8 +33,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import EvalBench from './EvalBench';
 import CriteriaStudio from './CriteriaStudio';
 
-const BRAND_BLUE = '#1A3557';
-const BRAND_GOLD = '#C9A84C';
+const BRAND_BLUE = '#111111';
+const BRAND_GOLD = '#D4960A';
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 

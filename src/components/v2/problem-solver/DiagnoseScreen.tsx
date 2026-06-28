@@ -142,7 +142,7 @@ export function DiagnoseScreen({ answers, onAnswer, onReveal, onContinue }: Diag
                 className="block h-full"
                 style={{
                   width: `${model.overall}%`,
-                  background: 'linear-gradient(90deg,#B42318,#B54708 35%,#C9A84C 60%,#027A48 100%)',
+                  background: 'linear-gradient(90deg,#B42318,#B54708 35%,#D4960A 60%,#027A48 100%)',
                 }}
               />
             </div>
