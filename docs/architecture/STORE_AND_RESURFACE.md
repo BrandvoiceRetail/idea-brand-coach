@@ -39,6 +39,14 @@ Two resolver rules that keep resurface honest:
 - **Brand-level fallback.** Avatar-scoped reads fall back to brand-level (`avatar_id IS NULL`)
   rows. Evidence ingested before an avatar was chosen (the onboarding case) must still resolve
   for an avatar-scoped read — otherwise freshly-stored data reads back as "missing".
+- **A `conflict` status still carries a real value — read it.** When two stores hold the same
+  field and disagree, `reconcile()` keeps the highest-priority store's value and flags
+  `conflict` so the disagreement can surface for the owner. A consumer that *reads evidence to
+  analyse* (assess, diagnostic, decision-trigger, audit) must treat `conflict` (and `stale`,
+  which is "real but old") as a usable fill — dropping it reports "no evidence" when the data is
+  on file, which is the exact store-and-resurface failure. The one exception is the
+  **fabrication gate** in `generate_brief`: there `conflict` must stay excluded, because a
+  disagreement is not a *confirmation* and unconfirmed claims may never enter generated copy.
 
 ### App side — load-on-mount
 A screen that lets the user enter a field must load that field's store on mount and prefill,

@@ -126,8 +126,13 @@ export interface ResolvedFactSlot {
   status: string;
 }
 
-/** Statuses that count as a usable BUSINESS-FACT fill (owner-stated / evidence-backed). */
-const USABLE_STATUSES: ReadonlySet<string> = new Set(['filled-evidence', 'filled-stated']);
+/**
+ * Statuses that count as a usable BUSINESS-FACT fill (owner-stated / evidence-backed).
+ * Includes `conflict` (reconcile() still carries a real winning value — two stores disagreeing
+ * on a fact is not the same as having no fact). `stale` stays OUT: for BUSINESS-FACTs the
+ * 90-day staleness flag is meaningful, and calibrating an audit on year-old financials is wrong.
+ */
+const USABLE_STATUSES: ReadonlySet<string> = new Set(['filled-evidence', 'filled-stated', 'conflict']);
 
 // ───────────────────────────────────────────────────────────────────────────
 // Tolerant value coercion (business_facts.structured_data is loosely typed).
