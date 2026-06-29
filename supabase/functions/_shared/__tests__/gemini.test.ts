@@ -49,6 +49,13 @@ describe('buildGeminiRequest', () => {
     expect(body.contents[0].parts[1]).toEqual({ inlineData: { mimeType: 'image/png', data: 'AAA' } });
     expect(body.generationConfig.responseModalities).toContain('IMAGE');
   });
+
+  it('defaults to the Amazon size (1:1 @ 2K → 2048x2048) and honours overrides', () => {
+    const def = buildGeminiRequest({ prompt: 'x' }) as { generationConfig: { imageConfig: { aspectRatio: string; imageSize: string } } };
+    expect(def.generationConfig.imageConfig).toEqual({ aspectRatio: '1:1', imageSize: '2K' });
+    const over = buildGeminiRequest({ prompt: 'x', aspectRatio: '16:9', imageSize: '4K' }) as { generationConfig: { imageConfig: { aspectRatio: string; imageSize: string } } };
+    expect(over.generationConfig.imageConfig).toEqual({ aspectRatio: '16:9', imageSize: '4K' });
+  });
 });
 
 describe('extractInlineImages', () => {
