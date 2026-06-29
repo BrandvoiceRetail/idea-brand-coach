@@ -9,12 +9,13 @@
  * reimplemented here. This component is only the surface.
  *
  * Look (per the reference): right-docked, full-height panel, ~460px on desktop /
- * full-width on mobile, a ~10% tint with NO backdrop-blur so the content behind
- * stays sharp (transparent, not frosted). Message bubbles carry a light translucent
- * backing for legibility; the open areas stay see-through. On-brand v4 tokens
- * (foreground / gold-warm). Launched by a gold FAB; closes back to the FAB.
+ * full-width on mobile, a smoked dark tint with NO backdrop-blur so the content
+ * behind stays sharp (transparent, not frosted), edged with a barely-there gold
+ * hairline. Message bubbles carry a translucent backing for legibility; the open
+ * areas stay see-through. On-brand v4 tokens (background / gold-warm). Launched by
+ * a gold FAB; closes back to the FAB.
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, Fragment } from 'react';
 import { Sparkles, X, Send, Loader2, Menu, Paperclip, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,9 +26,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useChat } from '@/hooks/useChat';
@@ -133,9 +131,9 @@ export function TrevorCoachWidget(): JSX.Element {
       aria-label="Brand Coach"
       data-testid="coach-widget-panel"
       className={cn(
-        'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-foreground/15 shadow-2xl',
-        // ~10% tint, NO blur → the page behind stays sharp (transparent, not frosted)
-        'bg-foreground/10',
+        'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-gold-warm/25 shadow-2xl',
+        // smoked dark tint, NO blur → the page behind stays sharp (transparent, not frosted)
+        'bg-background/30',
         // right-docked, full height; full-width on mobile, ~460px on desktop
         'inset-x-2 top-16 bottom-20 sm:inset-x-auto sm:right-3 sm:w-[460px] md:top-4 md:bottom-4 md:right-4',
       )}
@@ -254,9 +252,19 @@ export function TrevorCoachWidget(): JSX.Element {
                 <Menu className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="top" className="max-h-[60vh] w-64 overflow-y-auto">
+            <DropdownMenuContent
+              align="end"
+              side="top"
+              collisionPadding={12}
+              className="w-72 max-h-[70vh] overflow-y-auto"
+            >
               <DropdownMenuItem
-                onSelect={() => fileInputRef.current?.click()}
+                onSelect={(e) => {
+                  // Keep the gesture; let the menu close first, then open the OS
+                  // file picker (clicking the hidden input inside onSelect is dropped).
+                  e.preventDefault();
+                  setTimeout(() => fileInputRef.current?.click(), 0);
+                }}
                 data-testid="coach-widget-addfiles"
               >
                 <Paperclip className="mr-2 h-4 w-4" />
@@ -267,23 +275,25 @@ export function TrevorCoachWidget(): JSX.Element {
                 <Wrench className="h-3.5 w-3.5" />
                 Brand Coach tools
               </DropdownMenuLabel>
+              {/* One scrollable, grouped list — never overflows off-screen. */}
               {TOOL_GROUPS.map((g) => (
-                <DropdownMenuSub key={g.group}>
-                  <DropdownMenuSubTrigger data-testid={`coach-tool-group-${g.group}`}>
+                <Fragment key={g.group}>
+                  <DropdownMenuLabel
+                    className="px-2 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-foreground/45"
+                    data-testid={`coach-tool-group-${g.group}`}
+                  >
                     {g.group}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="max-h-[50vh] w-64 overflow-y-auto">
-                    {g.tools.map((t) => (
-                      <DropdownMenuItem
-                        key={t.name}
-                        onSelect={() => seedTool(t.name)}
-                        title={t.description}
-                      >
-                        {toolRequest(t.name)}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
+                  </DropdownMenuLabel>
+                  {g.tools.map((t) => (
+                    <DropdownMenuItem
+                      key={t.name}
+                      onSelect={() => seedTool(t.name)}
+                      title={t.description}
+                    >
+                      {toolRequest(t.name)}
+                    </DropdownMenuItem>
+                  ))}
+                </Fragment>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
