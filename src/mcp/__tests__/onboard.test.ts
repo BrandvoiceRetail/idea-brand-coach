@@ -103,7 +103,7 @@ describe('onboard front door (end-to-end, anonymous via in-memory transport)', (
 });
 
 describe('onboard interactive panel (MCP Apps / io.modelcontextprotocol/ui)', () => {
-  it('panel HTML is branded, inlines the ext-apps client, and calls onboard_choose', () => {
+  it('panel HTML is branded, inlines the ext-apps client, and sends the selection to the chat', () => {
     const html = buildOnboardPanelHtml();
     expect(html).toContain('IDEA Brand Coach');
     expect(html).toContain('What captures the heart goes in the cart');
@@ -119,7 +119,10 @@ describe('onboard interactive panel (MCP Apps / io.modelcontextprotocol/ui)', ()
     expect(html).toContain('ui/initialize');
     expect(html).toContain('ui/notifications/initialized');
     expect(html).toContain('tools/call');
-    expect(html).toContain('onboard_choose');
+    // the choice click sends the user's selection to the chat (sendMessage) so the coach
+    // continues onboarding — it no longer renders a server-tool stub inside the panel
+    expect(html).toContain('sendMessage');
+    expect(html).toContain('Walk me through the four parts of trust');
     // exactly one closing </script> (the wrapper) — the inlined bundle must not
     // contain a literal </script that would terminate the tag early
     expect((html.match(/<\/script>/gi) ?? []).length).toBe(1);
