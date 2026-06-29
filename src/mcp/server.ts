@@ -48,6 +48,7 @@ import { registerIdentifyDecisionTriggerTool } from './tools/identifyDecisionTri
 import { registerComputeTrustGapLiftTool } from './tools/computeTrustGapLift.js';
 import { registerGenerateCanvasTool } from './tools/generateCanvas.js';
 import { registerGenerateBriefTool } from './tools/generateBrief.js';
+import { registerGenerateListingImageBriefTool } from './tools/generateListingImageBrief.js';
 import { registerGenerateAuditIdeaMapTool } from './tools/generateAuditIdeaMap.js';
 import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
@@ -207,6 +208,10 @@ export function createServer(
   registerComputeTrustGapLiftTool(server);
   registerGenerateCanvasTool(server);
   registerGenerateBriefTool(server);
+  // Amazon listing image-SET design brief (main + gallery), IDEA-grounded; the coach composes
+  // per-slot briefs + photoreal prompts. Knows Amazon image conventions; routes photoreal slots
+  // away from Canva layout-gen. Director only — never produces images or invents claims.
+  registerGenerateListingImageBriefTool(server);
   registerGenerateAuditIdeaMapTool(server);
 
   // Marketing-audit engine (Phase 5, manifest §2 sheet B): run_marketing_audit

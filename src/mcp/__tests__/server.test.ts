@@ -63,6 +63,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'generate_brief',
       'generate_canvas',
       'generate_concepts',
+      'generate_listing_image_brief',
       'generate_positioning_moves',
       'generate_signature',
       'get_asset',
