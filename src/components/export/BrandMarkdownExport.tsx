@@ -17,6 +17,7 @@ import { useBrand } from '@/contexts/BrandContext';
 import { MarkdownExportService } from './MarkdownExportService';
 import { KnowledgeBaseFactory } from '@/lib/knowledge-base';
 import { SupabaseChatService } from '@/services/SupabaseChatService';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 /** Progress stages shown during V2 document generation */
 const PROGRESS_STAGES = [
@@ -143,6 +144,9 @@ export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkd
 
     setExportState({ isExporting: true });
     startProgressCycle();
+    // v2 coach "Export Brand Strategy" path (the markdown export; the PDF path is
+    // instrumented separately in usePDFGeneration). Counts/booleans only.
+    captureAlphaEvent('export_started', { which: 'brand_strategy_markdown', include_chats: includeChats });
 
     try {
       const exportBrandData = {
@@ -180,9 +184,10 @@ export const BrandMarkdownExport = forwardRef<BrandMarkdownExportRef, BrandMarkd
         description: `Your brand strategy has been exported as ${result.filename}`,
       });
 
-      console.log('Export metadata:', result.metadata);
+      captureAlphaEvent('export_completed', { which: 'brand_strategy_markdown' });
     } catch (error) {
       console.error('Export failed:', error);
+      captureAlphaEvent('export_failed', { which: 'brand_strategy_markdown' });
 
       toast({
         title: 'Export Failed',

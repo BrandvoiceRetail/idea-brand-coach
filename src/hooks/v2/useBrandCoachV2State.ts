@@ -284,7 +284,20 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
   const {
     sessions, currentSessionId, isLoadingSessions, isCreating, isRegeneratingTitle,
     createNewChat, renameSession, deleteSession, regenerateTitle, switchToSession,
+    error: sessionsError,
   } = useChatSessions({ chatbotType: 'idea-framework-consultant', avatarId: currentAvatar?.id });
+
+  // Surface a sessions-load failure instead of silently showing an empty sidebar.
+  useEffect(() => {
+    if (sessionsError) {
+      console.error('[BrandCoachV2] Failed to load conversations:', sessionsError);
+      toast({
+        title: 'Could not load your conversations',
+        description: 'Please refresh to try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [sessionsError, toast]);
 
   // ── Chapter progress ──────────────────────────────────────────────────
   const {

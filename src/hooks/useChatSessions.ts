@@ -11,6 +11,7 @@ import { useServices } from '@/services/ServiceProvider';
 import { ChatSession, ChatSessionCreate, ChatSessionUpdate, ChatbotType } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 import { avatarChatSessionsKey } from '@/lib/queryKeys';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 interface UseChatSessionsOptions {
   chatbotType?: ChatbotType;
@@ -172,6 +173,9 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     mutationFn: (data?: ChatSessionCreate) => chatService.createSession(data),
     onSuccess: (newSession) => {
       queryClient.invalidateQueries({ queryKey });
+      // First coach engagement after auth — the auth_completed → conversation funnel.
+      // is_first distinguishes a brand-new user's first thread from a returning one.
+      captureAlphaEvent('conversation_started', { is_first: (sessions?.length ?? 0) === 0 });
       // Switch to new session
       setCurrentSessionId(newSession.id);
     },

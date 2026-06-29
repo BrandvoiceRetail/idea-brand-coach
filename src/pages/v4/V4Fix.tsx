@@ -36,11 +36,14 @@ import { FunnelMap } from '@/components/v4/fix/FunnelMap';
 import { FunnelPieceDetail } from '@/components/v4/fix/FunnelPieceDetail';
 import { AddPieceDialog } from '@/components/v4/fix/AddPieceDialog';
 import { ReAuditScreenshotDialog } from '@/components/v4/fix/ReAuditScreenshotDialog';
+import { UpgradeDialog } from '@/components/v4/fix/UpgradeDialog';
 import { FixTestPanel } from '@/components/v4/fix/FixTestPanel';
 import { TestingLiftTab } from '@/components/v4/fix/TestingLiftTab';
 import { FixBreadcrumb } from '@/components/v4/fix/FixBreadcrumb';
 import type { GroundedField } from '@/components/v4/GroundedStrip';
 import { useFixRun } from '@/hooks/useFixRun';
+import { useEntitlement } from '@/hooks/useEntitlement';
+import { FREE_TRIAL_PIECE_LIMIT } from '@/lib/entitlement';
 import { useAvatarContext } from '@/contexts/AvatarContext';
 import { V4_ROUTES } from '@/config/v4';
 import { FUNNEL_JOBS, METRIC_META, type MetricKey } from '@/config/v4Funnel';
@@ -123,6 +126,22 @@ export default function V4Fix(): JSX.Element {
   const [view, setViewState] = useState<FixView>('map');
   const [addOpen, setAddOpen] = useState(false);
   const [reAuditOpen, setReAuditOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  // Free-trial gate: a non-member is held to FREE_TRIAL_PIECE_LIMIT funnel pieces.
+  // The piece COUNT is brand-wide (pieces are brand-scoped), so it's the same for
+  // every avatar lens. Adding the first piece is always free; the next needs membership.
+  const { isMember } = useEntitlement();
+  const pieceCount = pieces?.length ?? 0;
+  const atTrialLimit = !isMember && pieceCount >= FREE_TRIAL_PIECE_LIMIT;
+  const handleAddPiece = (): void => {
+    if (atTrialLimit) {
+      captureAlphaEvent('v4_trial_limit_hit', { piece_count: pieceCount });
+      setUpgradeOpen(true);
+    } else {
+      setAddOpen(true);
+    }
+  };
 
   // The piece whose test was last opened — drives the "← Back to {piece}" return
   // affordance in Testing & Lift so opening a test is never a dead-end.
@@ -399,6 +418,27 @@ export default function V4Fix(): JSX.Element {
           {/* ── Map view (default) ── */}
           {view === 'map' && (
             <div className="space-y-4">
+              {atTrialLimit && (
+                <div
+                  className="flex flex-col gap-2 rounded-lg border border-gold-warm/40 bg-gold-warm/10 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+                  data-testid="v4-fix-trial-banner"
+                >
+                  <span className="text-foreground">
+                    Free trial: {pieceCount} of {FREE_TRIAL_PIECE_LIMIT} funnel piece. Iterate on it freely —
+                    become a member to map and monitor your whole funnel.
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="brand"
+                    className="shrink-0"
+                    onClick={() => setUpgradeOpen(true)}
+                    data-testid="v4-fix-trial-upgrade"
+                  >
+                    Become a member
+                  </Button>
+                </div>
+              )}
               <DriftBanner driftItems={drift} onRecheck={() => void recheckDrift()} />
               <FunnelMap
                 pieces={pieces}
@@ -413,7 +453,7 @@ export default function V4Fix(): JSX.Element {
                 range={range}
                 onRangeChange={setRange}
                 onSelectPiece={handleSelectPiece}
-                onAddPiece={() => setAddOpen(true)}
+                onAddPiece={handleAddPiece}
                 onRetry={() => void load()}
               />
 
@@ -556,6 +596,10 @@ export default function V4Fix(): JSX.Element {
           toast.success('Re-audited — the verdict for this customer is updated.');
         }}
       />
+
+      {/* Free-trial → membership ask, shown when a non-member tries to add a piece
+          beyond their one trial piece. */}
+      <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} />
     </div>
   );
 }

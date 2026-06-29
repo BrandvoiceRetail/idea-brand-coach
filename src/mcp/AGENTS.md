@@ -7,14 +7,19 @@
 
 ## What this is
 
-A TypeScript **streamable-HTTP MCP gateway** for idea-brand-coach. Brand-coach is a
-**consumer** of the IV-OS Marketing MCP: it OWNS the generative front and CONSUMES the
-IV-OS asset/test ledger + knowledge reads. Today the host exposes:
+A TypeScript **streamable-HTTP MCP gateway** for idea-brand-coach. Brand-coach OWNS the
+generative front AND its own asset/test ledger: the ledger is now INTERNAL, backed by the
+brand-coach's own Supabase via `NativeLedgerClient` (`service/nativeLedger.ts`), wired in
+`server.ts` (`const ivos = ledgerClient ?? new NativeLedgerClient()`). It is no longer a
+consumer of an external IV-OS MCP. Today the host exposes:
 
 - `health` — liveness + config probe (no secrets).
-- `list_assets`, `get_asset` — the two **STABLE** IV-OS ledger reads, consumed via the
-  IV-OS MCP client adapter (`ivos/client.ts`). These never throw: they return
-  `available:false` when IV-OS is unconfigured/unreachable.
+- `list_assets`, `get_asset` — the two **STABLE** ledger reads, served by `NativeLedgerClient`
+  (the brand-coach's own Supabase). These never throw: they return `available:false` when the
+  ledger is unconfigured/unreachable.
+
+> The "What this is" list below is illustrative — `src/mcp/server.ts` (the `register*Tool`
+> calls) plus `src/mcp/toolManifest.ts` are the AUTHORITATIVE tool surface (40+ tools).
 
 - `list_coach_conversations` / `get_coach_conversation` — **READ, per avatar.** Surface the
   authenticated caller's own Brand-Coach chat threads (`chat_sessions` + `chat_messages`,
@@ -78,8 +83,17 @@ never bleeds across concurrent requests.
 
 ```bash
 npm run mcp:dev      # tsx watch, boots on MCP_PORT (default 8787), POST /mcp, GET /healthz
-# env: MCP_PORT, IVOS_MCP_URL, IVOS_MCP_TOKEN, SUPABASE_URL, SUPABASE_ANON_KEY
+# env: MCP_PORT, SUPABASE_URL, SUPABASE_ANON_KEY, MCP_OAUTH_REQUIRE_AUTH (OAuth kill-switch)
+# (IVOS_MCP_URL / IVOS_MCP_TOKEN are DEPRECATED — the ledger is internal now)
 ```
+
+## Authentication
+
+The gateway is an OAuth 2.1 resource server. `src/mcp/oauth.ts` serves the RFC 9728
+protected-resource metadata and the 401 challenge that starts a client's OAuth flow;
+the hand-rolled consent page is `src/pages/OAuthConsent.tsx` (`/oauth/consent`). The
+`MCP_OAUTH_REQUIRE_AUTH` env var is the kill-switch (when off, requests are not forced
+through OAuth). Supabase is the authorization server.
 
 ## Acceptance bar (Done-when)
 
@@ -111,9 +125,9 @@ asserts the advertised tool set + handler behavior end-to-end.
 
 ## Guardrails
 
-- **Consume, never duplicate.** No asset-storage / test-storage / brand-canon tools here
-  — call IV-OS. Canonical IV-OS = `ecommerce/ecommerce-brand-business-os` (never the
-  stale clone under `ecommerce-tools/brand-systems/`).
+- **Ledger is internal.** The asset/test ledger is the brand-coach's own Supabase via
+  `NativeLedgerClient` (`service/nativeLedger.ts`) — do NOT re-introduce an external IV-OS
+  MCP dependency. (Historical: this gateway used to consume IV-OS; that boundary was reversed.)
 - **Calculation Parity (Gen-3 lock).** When the owned tools are added next, they must
   wrap the existing Supabase edge fns / TS services **verbatim** (byte-identical output).
 - **Logs are redaction-gated.** Always log via `safeLog` from `logging/redact.ts`.

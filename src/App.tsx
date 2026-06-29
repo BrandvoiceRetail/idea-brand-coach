@@ -1,11 +1,9 @@
-import { useEffect } from "react";
 import { initPostHog } from "@/lib/posthogClient";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { migrateDiagnosticData } from "@/utils/diagnosticDataMigration";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrandProvider } from "@/contexts/BrandContext";
@@ -90,11 +88,6 @@ const queryClient = new QueryClient({
   },
 });
 const App = () => {
-  // Run data migration on app load
-  useEffect(() => {
-    migrateDiagnosticData();
-  }, []);
-
   return (
     <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -155,7 +148,9 @@ const App = () => {
                 <Route path="/v2/coach" element={
                   <RequireAuth>
                     <FeatureGate feature="BRAND_COACH_V2">
-                      <BrandCoachV2 />
+                      <ErrorBoundary>
+                        <BrandCoachV2 />
+                      </ErrorBoundary>
                     </FeatureGate>
                   </RequireAuth>
                 } />
@@ -167,13 +162,13 @@ const App = () => {
                     auth-gated forensic run → customer profile + Decision Trigger fix.
                     Login-gated in-app review flow — the public guest entry point is
                     /v1/diagnostic (FreeDiagnostic), which stays open. */}
-                <Route path="/v2/diagnostic" element={<RequireAuth><ProblemSolverDiagnostic /></RequireAuth>} />
+                <Route path="/v2/diagnostic" element={<RequireAuth><ErrorBoundary><ProblemSolverDiagnostic /></ErrorBoundary></RequireAuth>} />
 
                 {/* Review route: the same flow with Movement 1 (Recognition) in front,
                     per Trevor's Revised Entry Experience Brief (IDEA-APP-ENTRY-001 v1.1).
                     Kept separate from /v2 so the live baseline is untouched while Trevor
                     reviews Movement 1 before Movements 2/3 are built. Login-gated. */}
-                <Route path="/v3/diagnostic" element={<RequireAuth><ProblemSolverDiagnostic showRecognition /></RequireAuth>} />
+                <Route path="/v3/diagnostic" element={<RequireAuth><ErrorBoundary><ProblemSolverDiagnostic showRecognition /></ErrorBoundary></RequireAuth>} />
 
                 {/* /v4 — the new "one and only" surface (app shell + spine + Loop 1).
                     Old routes stay mounted; VersionGate gates the entry behind
@@ -181,7 +176,7 @@ const App = () => {
                     whole group so the surface is login-gated (anon → /auth). Nested
                     under V4Layout so the sidebar + sticky spine stepper + mobile
                     bottom-nav persist across the onboarding + spine screens. */}
-                <Route path={V4_ROUTES.ROOT} element={<RequireAuth><V4Layout /></RequireAuth>}>
+                <Route path={V4_ROUTES.ROOT} element={<RequireAuth><ErrorBoundary><V4Layout /></ErrorBoundary></RequireAuth>}>
                   <Route index element={<V4Onboarding />} />
                   {/* Post-signup fork (CHOICE) + the recommended connector setup guide. */}
                   <Route path="start" element={<V4OnboardingChoice />} />

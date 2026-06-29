@@ -18,6 +18,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Derive the user from the VERIFIED JWT — never trust a userId from the body
+    // (that would let any caller attribute feedback to an arbitrary user). Anonymous
+    // feedback is still allowed (user_id stays null); the widget can be used pre-auth.
+    const authHeader = req.headers.get('Authorization') ?? ''
+    let authedUserId: string | null = null
+    if (authHeader) {
+      const userClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } }
+      )
+      const { data: { user } } = await userClient.auth.getUser()
+      authedUserId = user?.id ?? null
+    }
+
     const requestData = await req.json()
 
     // Check if this is a quick feedback from the widget or full feedback form
@@ -25,20 +40,16 @@ serve(async (req) => {
 
     if (isQuickFeedback) {
       // Handle quick feedback from the widget
-      const { quickFeedback, pageUrl, feedbackType, userId, timestamp } = requestData
+      const { quickFeedback, pageUrl, feedbackType, timestamp } = requestData
 
-      console.log('Saving quick beta feedback:', {
-        feedbackType,
-        pageUrl,
-        userId,
-        timestamp
-      })
+      // MF-5: no PII/content in logs — shape only.
+      console.log('Saving quick beta feedback:', { feedbackType, hasUser: !!authedUserId })
 
       // Store quick feedback in step_comments field with special formatting
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('beta_feedback')
         .insert({
-          user_id: userId || null,
+          user_id: authedUserId,
           step_comments: [{
             stepId: `widget-${feedbackType}`,
             pageUrl: pageUrl,
@@ -50,12 +61,11 @@ serve(async (req) => {
           improvements: feedbackType === 'idea' ? quickFeedback : null,
           liked_most: feedbackType === 'general' ? quickFeedback : null
         })
-        .select()
 
       if (error) {
-        console.error('Error saving quick beta feedback:', error)
+        console.error('Error saving quick beta feedback:', error.message)
         return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: 'Unable to save feedback. Please try again.' }),
           {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -63,10 +73,8 @@ serve(async (req) => {
         )
       }
 
-      console.log('Quick beta feedback saved successfully:', data)
-
       return new Response(
-        JSON.stringify({ success: true, data }),
+        JSON.stringify({ success: true }),
         {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -83,23 +91,22 @@ serve(async (req) => {
       selectedAreas,
       wouldRecommend,
       email,
-      userId,
       betaTesterId,
       stepComments
     } = requestData
 
+    // MF-5: no PII/content in logs — counts/shape only.
     console.log('Saving beta feedback:', {
       overallRating,
-      userId,
-      betaTesterId,
+      hasUser: !!authedUserId,
       areasCount: selectedAreas?.length,
       stepCommentsCount: stepComments?.length || 0
     })
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('beta_feedback')
       .insert({
-        user_id: userId || null,
+        user_id: authedUserId,
         beta_tester_id: betaTesterId || null,
         overall_rating: overallRating ? parseInt(overallRating) : null,
         liked_most: likedMost || null,
@@ -110,24 +117,21 @@ serve(async (req) => {
         contact_email: email || null,
         step_comments: stepComments || []
       })
-      .select()
 
     if (error) {
-      console.error('Error saving beta feedback:', error)
+      console.error('Error saving beta feedback:', error.message)
       return new Response(
-        JSON.stringify({ error: error.message }),
-        { 
+        JSON.stringify({ error: 'Unable to save feedback. Please try again.' }),
+        {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
 
-    console.log('Beta feedback saved successfully:', data)
-
     return new Response(
-      JSON.stringify({ success: true, data }),
-      { 
+      JSON.stringify({ success: true }),
+      {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
@@ -137,7 +141,7 @@ serve(async (req) => {
     console.error('Error in save-beta-feedback function:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { 
+      {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }

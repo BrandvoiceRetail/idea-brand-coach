@@ -55,6 +55,24 @@ Then **verify over HTTP, not just on disk**: `/` serves the static `landing.html
 the served bundle hash matches `dist/assets/index-*.js`. Rollback: an
 `index.html.bak.*` is kept on the box, or rebuild the prior commit + rsync.
 
+> ✅ **FIXED 2026-06-29 — `index.html` no-cache.** The box Caddyfile
+> (`/opt/mango/Caddyfile`, `ideabrandcoach.icodemybusiness.com` block) now sets
+> `Cache-Control: no-cache` on the SPA entry + all deep routes (`@spa_html` = not
+> `/assets/*`, not `/mcp*`) and `public, max-age=31536000, immutable` on `/assets/*`.
+> So browsers revalidate the entry HTML every load (deploys reach users immediately)
+> while hashed bundles stay long-cached. Edit the Caddyfile IN PLACE (it's a
+> single-file bind-mount → preserves inode), then `docker exec mango-caddy-1 caddy
+> reload --config /etc/caddy/Caddyfile --adapter caddyfile`. Backup kept at
+> `/opt/mango/Caddyfile.bak.sally-cachehdr`. (Pre-fix symptom: a test browser ran a
+> days-old `index-*.js`.)
+
+> ⚠️ **Deploy-race clobber is real (observed 2026-06-29):** two sessions deployed
+> minutes apart; the second built from a tree missing the first's commit and its
+> `rsync --delete` reverted the first's live bundle (the code stayed on `main`, just
+> not served). ALWAYS `git fetch` + ff `main` and **rebuild from the latest tip**
+> immediately before rsync, and re-verify the live bundle contains your change (grep
+> the served `index-*.js` for a string unique to your commit).
+
 > `VITE_FORCE_V4` lives only in the worktree's gitignored `.env`; a clean `main`
 > build WITHOUT it reverts to gate-OFF (`/v4` not forced). Set it in the build env
 > (or a repo var) to keep `/v4` forced across rebuilds.

@@ -584,9 +584,15 @@ member for your whole funnel + monitoring". The forensic diagnostic + first fix 
 (free-account gate, not payment). Files: `ProblemSolverDiagnostic.tsx`, `problem-solver/theme.ts`,
 `problem-solver/UnlockScreen.tsx`.
 
-**Follow-up (NOT built — flagged):** the trial *enforcement* — trial state, gating the 2nd+ funnel piece /
-ongoing monitoring behind membership, the one-free-piece entitlement — is a `/v4` build of its own. The
-placement + framing are shipped; the entitlement system is the next monetization story.
+**Follow-up — NOW BUILT (T-trial, 2026-06-29):** the one-piece trial *enforcement*. Entitlement reads the
+existing `user_subscriptions` table (active/trialing = member; fails safe to non-member) via
+`src/lib/entitlement.ts` (`isMember`, `FREE_TRIAL_PIECE_LIMIT=1`) + `useEntitlement` hook. The gate:
+`fixService.addPiece` refuses a non-member's 2nd brand piece (server-side safety net, injectable
+member-check for tests); `V4Fix` gates the "Add a piece" entry points → `UpgradeDialog` + a trial-limit
+banner on the map; the upgrade CTA routes to `/v1/subscribe`. The count is brand-wide (pieces are
+brand-scoped), so the limit is consistent across avatar lenses. Events `v4_trial_limit_hit` /
+`v4_upgrade_cta_clicked`. **Not bypass-proof** without an RLS/edge entitlement gate on `brand_assets`
+inserts (UI + service gate only) — a hardened server gate + real Stripe checkout are the remaining steps.
 
 ### T11 — funnel pieces brand-scoped, evaluation per-avatar (live-verified design, 2026-06-29)
 **Root cause (verified vs LIVE prod, not just repo):** the brand-scoped model ALREADY exists in the DB and
