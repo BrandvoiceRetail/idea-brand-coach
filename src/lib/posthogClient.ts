@@ -138,6 +138,7 @@ export type AlphaEventName =
   | 'v4_onboarding_findings_edited'
   | 'v4_onboarding_advanced_to_diagnose'
   | 'v4_diagnose_run_diagnostic_clicked'
+  | 'v4_diagnose_stage_viewed'
   | 'v4_analyse_stage_viewed'
   | 'v4_analyse_gate_blocked'
   | 'v4_analyse_advanced_to_fix'
