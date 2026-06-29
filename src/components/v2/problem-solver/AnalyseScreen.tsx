@@ -83,7 +83,12 @@ export function AnalyseScreen({
       }
 
       if (!isForensicResponse(data)) {
-        console.error('[AnalyseScreen] unexpected response shape:', data);
+        // MF-5: log only the structural shape, never the values — the forensic
+        // response can carry review/listing content.
+        console.error('[AnalyseScreen] unexpected response shape:', {
+          type: typeof data,
+          keys: data && typeof data === 'object' ? Object.keys(data as Record<string, unknown>) : null,
+        });
         toast.error('We hit a problem reading your forensic report. Please try again.');
         captureAlphaEvent('forensic_analysis_completed', { ok: false });
         setStatus('error');

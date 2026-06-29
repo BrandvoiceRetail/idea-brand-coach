@@ -40,7 +40,12 @@ others — not a deployable function.
 | marketing-audit | Workbook B — Investment Matrix + Recommended Phasing |
 | reveal-signature | Synthesizes 3-4 Signature options (Claude Sonnet) |
 | review-scraper | Scrapes review URLs via Firecrawl |
-| review-scraper-deep | Deep review scrape via Firecrawl |
+| run-forensic-analysis | Signed-in forensic Trust Gap (Claude Sonnet, evidence-grounded) |
+| identify-decision-trigger | Derives the named Decision Trigger |
+| diagnostic-interpretation-evidence | Evidence-grounded Trust Gap interpretation + derive |
+| export-brief | Compiles the listing/image/PPC Export Brief |
+| submit-diagnostic-lead | Lead-magnet capture (anonymous) |
+| get-funnel-piece-metrics | Reads campaign_metrics per funnel piece (RLS-scoped) |
 | save-beta-comment | Persists beta comments |
 | save-beta-feedback | Persists beta/widget feedback |
 | save-beta-tester | Registers beta tester (email send disabled in P0) |

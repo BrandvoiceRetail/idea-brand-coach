@@ -120,6 +120,49 @@ describe('FixService — brand-scoped funnel pieces (T11)', () => {
     expect(res.status).toBe('error');
   });
 
+  describe('free-trial gate (addPiece)', () => {
+    const newInput = { avatarId: 'av1', touchpointId: 'amazon_listing_copy', contextDescription: 'my listing copy' };
+
+    it('blocks a non-member from adding a 2nd piece (already at the 1-piece limit)', async () => {
+      const createAsset = vi.fn();
+      const funnel = fakeFunnel({
+        listBrandAssets: vi.fn(async () => ({ data: [piece('p1', 'amazon_listing_copy', 'misaligned')], error: null })),
+        createAsset,
+      });
+      const svc = new FixService(funnel, undefined, undefined, async () => false); // non-member
+      const res = await svc.addPiece(newInput);
+      expect(res.status).toBe('error');
+      if (res.status === 'error') expect(res.error).toMatch(/free trial/i);
+      expect(createAsset).not.toHaveBeenCalled(); // never created
+    });
+
+    it('lets a non-member add their FIRST piece (under the limit)', async () => {
+      const createAsset = vi.fn(async () => ({ data: piece('new', 'amazon_listing_copy', 'pending'), error: null }));
+      const funnel = fakeFunnel({
+        listBrandAssets: vi.fn(async () => ({ data: [], error: null })), // no pieces yet
+        createAsset,
+        auditAssetForAvatar: vi.fn(async () => ({ data: piece('new', 'amazon_listing_copy', 'misaligned'), error: null })),
+      });
+      const svc = new FixService(funnel, undefined, undefined, async () => false);
+      const res = await svc.addPiece(newInput);
+      expect(res.status).toBe('ok');
+      expect(createAsset).toHaveBeenCalledTimes(1);
+    });
+
+    it('lets a MEMBER add a piece even past the trial limit', async () => {
+      const createAsset = vi.fn(async () => ({ data: piece('new', 'amazon_listing_copy', 'pending'), error: null }));
+      const funnel = fakeFunnel({
+        listBrandAssets: vi.fn(async () => ({ data: [piece('p1', 'paid_social_creative', 'misaligned')], error: null })),
+        createAsset,
+        auditAssetForAvatar: vi.fn(async () => ({ data: piece('new', 'amazon_listing_copy', 'aligned'), error: null })),
+      });
+      const svc = new FixService(funnel, undefined, undefined, async () => true); // member
+      const res = await svc.addPiece(newInput);
+      expect(res.status).toBe('ok');
+      expect(createAsset).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('lists tests across the BRAND pieces (brand-scoped roi), not the avatar', async () => {
     const getAssetRoiForBrand = vi.fn(async (brandId: string) => {
       expect(brandId).toBe('brand-1');

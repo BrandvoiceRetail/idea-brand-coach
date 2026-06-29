@@ -17,7 +17,8 @@ serve(async (req) => {
 
     const { name, email, company, overallScore, categoryScores } = await req.json();
 
-    console.log("Saving beta tester data:", { name, email, company, overallScore });
+    // MF-5: no PII in logs — never log name/email/company.
+    console.log("Saving beta tester data:", { overallScore });
 
     const { data, error } = await supabase
       .from("beta_testers")
@@ -33,13 +34,13 @@ serve(async (req) => {
 
     if (error) {
       console.error("Error saving beta tester:", error);
-      return new Response(JSON.stringify({ error: error.message }), {
+      return new Response(JSON.stringify({ error: "Unable to save. Please try again." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("Beta tester saved successfully:", data);
+    console.log("Beta tester saved successfully:", { id: data?.[0]?.id ?? null });
 
     // Email sending disabled for P0 — Resend integration not yet configured
 

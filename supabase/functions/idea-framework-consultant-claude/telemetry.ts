@@ -2,13 +2,11 @@
  * Per-call latency telemetry for the in-house coach chat (ADR §Observability,
  * "Remaining companion slice: per-call duration inside the chat edge function").
  *
- * The Supabase edge runtime has no server-side PostHog HTTP path today
- * (`save-feedback-event` writes a DB row + relies on a client-side join key;
- * `src/mcp/instrument.ts` is Node-only). To stay surgical and dependency-free,
- * this emits a STRUCTURED CONSOLE LOG using the SAME field vocabulary the MCP
- * uses for `mcp_tool_latency` ({ duration_ms, ok, country, ... }) — so the two
- * coaching surfaces stay sliceable the same way, and a future PostHog edge sink
- * only has to swap the sink, not the call sites.
+ * A server-side PostHog edge sink now exists (`supabase/functions/_shared/posthog.ts`,
+ * `captureServerEvent`). This module still emits a STRUCTURED CONSOLE LOG using the SAME
+ * field vocabulary the MCP uses for `mcp_tool_latency` ({ duration_ms, ok, country, ... }),
+ * so the two coaching surfaces stay sliceable the same way; migrating to the shared sink is
+ * now just a swap of the sink call, not the call sites.
  *
  * CONTENT DISCIPLINE (mirrors src/lib/posthogClient.ts): durations, booleans,
  * counts, model id, and an ISO country code ONLY. Never prompt/message content,

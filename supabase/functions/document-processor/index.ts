@@ -1,148 +1,119 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    // Create Supabase client with service role key for admin access
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const { documentId } = await req.json();
-
-    if (!documentId) {
-      return new Response(JSON.stringify({ error: 'Document ID is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // AuthN: identify the caller from their JWT; ALL data access is scoped to this user_id.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log('Processing document:', documentId);
+    const { documentId } = await req.json();
+    if (!documentId) {
+      return new Response(JSON.stringify({ error: "Document ID is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // Get document metadata
+    // Service-role for storage + DB work, but EVERY query is constrained to the caller's user_id,
+    // so a forged documentId cannot read or mutate another tenant's row (closes the IDOR).
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
     const { data: document, error: docError } = await supabase
-      .from('uploaded_documents')
-      .select('*')
-      .eq('id', documentId)
+      .from("uploaded_documents")
+      .select("*")
+      .eq("id", documentId)
+      .eq("user_id", user.id)
       .single();
 
     if (docError || !document) {
-      throw new Error('Document not found');
+      return new Response(JSON.stringify({ error: "Document not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Download file from storage
     const { data: fileData, error: downloadError } = await supabase.storage
-      .from('documents')
+      .from("documents")
       .download(document.file_path);
 
     if (downloadError || !fileData) {
-      throw new Error('Failed to download file');
-    }
-
-    let extractedContent = '';
-
-    try {
-      // Process different file types
-      if (document.mime_type === 'text/plain') {
-        // Handle plain text files
-        extractedContent = await fileData.text();
-      } else if (document.mime_type === 'application/pdf') {
-        // For PDF files, we'll extract basic text content
-        // Note: This is a simplified extraction. In production, you'd want to use a proper PDF parser
-        const fileBuffer = await fileData.arrayBuffer();
-        const decoder = new TextDecoder('utf-8');
-        let content = decoder.decode(fileBuffer);
-        
-        // Try to extract readable text (basic approach)
-        // Remove non-printable characters and normalize whitespace
-        content = content.replace(/[^\x20-\x7E\n\r\t]/g, ' ')
-                        .replace(/\s+/g, ' ')
-                        .trim();
-        
-        if (content.length < 50) {
-          extractedContent = 'PDF content extraction requires advanced processing. Please convert to text format for full content analysis.';
-        } else {
-          extractedContent = content;
-        }
-      } else if (document.mime_type.includes('document') || document.mime_type.includes('word')) {
-        // For Word documents, we'll provide a placeholder
-        extractedContent = 'Word document content extraction requires advanced processing. Please convert to text format for full content analysis.';
-      } else {
-        extractedContent = 'Unsupported file type for content extraction.';
-      }
-
-      // Limit content length to prevent database issues
-      if (extractedContent.length > 50000) {
-        extractedContent = extractedContent.substring(0, 50000) + '... [Content truncated for storage]';
-      }
-
-      console.log('Extracted content length:', extractedContent.length);
-
-      // Update document with extracted content
-      const { error: updateError } = await supabase
-        .from('uploaded_documents')
-        .update({
-          extracted_content: extractedContent,
-          status: 'completed'
-        })
-        .eq('id', documentId);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      console.log('Document processing completed successfully');
-
-      return new Response(JSON.stringify({ 
-        success: true, 
-        contentLength: extractedContent.length,
-        message: 'Document processed successfully'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-
-    } catch (contentError) {
-      console.error('Content extraction error:', contentError);
-      
-      // Update document status to error
-      await supabase
-        .from('uploaded_documents')
-        .update({
-          status: 'error',
-          extracted_content: `Processing failed: ${contentError.message}`
-        })
-        .eq('id', documentId);
-
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Content extraction failed',
-        details: contentError.message
-      }), {
+      return new Response(JSON.stringify({ error: "Failed to download file" }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    let extractedContent = "";
+    try {
+      if (document.mime_type === "text/plain") {
+        extractedContent = await fileData.text();
+      } else if (document.mime_type === "application/pdf") {
+        const fileBuffer = await fileData.arrayBuffer();
+        let content = new TextDecoder("utf-8").decode(fileBuffer)
+          .replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s+/g, " ").trim();
+        extractedContent = content.length < 50
+          ? "PDF content extraction requires advanced processing. Please convert to text format for full content analysis."
+          : content;
+      } else if (document.mime_type?.includes("document") || document.mime_type?.includes("word")) {
+        extractedContent = "Word document content extraction requires advanced processing. Please convert to text format for full content analysis.";
+      } else {
+        extractedContent = "Unsupported file type for content extraction.";
+      }
+
+      if (extractedContent.length > 50000) {
+        extractedContent = extractedContent.substring(0, 50000) + "... [Content truncated for storage]";
+      }
+
+      const { error: updateError } = await supabase
+        .from("uploaded_documents")
+        .update({ extracted_content: extractedContent, status: "completed" })
+        .eq("id", documentId)
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      return new Response(JSON.stringify({ success: true, contentLength: extractedContent.length, message: "Document processed successfully" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (contentError) {
+      console.error("Content extraction error:", contentError);
+      await supabase
+        .from("uploaded_documents")
+        .update({ status: "error", extracted_content: "Processing failed" })
+        .eq("id", documentId)
+        .eq("user_id", user.id);
+      return new Response(JSON.stringify({ success: false, error: "Content extraction failed" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   } catch (error) {
-    console.error('Error in document-processor function:', error);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: error.message || 'Internal server error' 
-    }), {
+    console.error("Error in document-processor function:", error);
+    return new Response(JSON.stringify({ success: false, error: "Internal server error" }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

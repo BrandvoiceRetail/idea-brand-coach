@@ -110,6 +110,12 @@ export type AlphaEventName =
   // result shape only — never review text, listing copy, or PII.
   | 'forensic_analysis_started'
   | 'forensic_analysis_completed'
+  // Forensic AVATAR build (useForensicAvatarBuild — the 4-stage s1–s4 pipeline,
+  // the primary v2 avatar-creation path). Start / completion / failure. Stage +
+  // booleans only, never extracted content.
+  | 'forensic_build_started'
+  | 'forensic_build_completed'
+  | 'forensic_build_failed'
   // Problem-Solver /v2/diagnostic 8-screen flow — step advance through the
   // Diagnose → Unlock → Upload → Analyse → Customer → Fix → Stay-ahead → In-Claude
   // funnel. Step index + name + self-report score only — never PII or the ASIN value.
@@ -166,6 +172,9 @@ export type AlphaEventName =
   | 'v4_piece_reaudit_submitted'
   | 'v4_piece_reaudit_succeeded'
   | 'v4_piece_reaudit_failed'
+  // Free-trial gate: a non-member hit the one-piece limit / clicked the upgrade CTA.
+  | 'v4_trial_limit_hit'
+  | 'v4_upgrade_cta_clicked'
   // Loop-3 Fix sub-view navigation (funnel map ↔ piece detail ↔ fix & test ↔
   // testing & lift). The `view` slug only — no copy/PII.
   | 'v4_fix_view_changed'

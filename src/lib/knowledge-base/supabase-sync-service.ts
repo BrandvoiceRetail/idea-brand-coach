@@ -103,7 +103,12 @@ export class SupabaseSyncService implements ISyncService {
       .eq('is_current', true)
       .single();
 
-    console.log('[SupabaseSyncService] Query result:', { existingData, fetchError });
+    // MF-5: never log row content (user brand-strategy text) — ids/shape only.
+    console.log('[SupabaseSyncService] Query result:', {
+      found: !!existingData,
+      id: existingData?.id ?? null,
+      fetchError: fetchError?.code ?? null,
+    });
 
     if (fetchError && fetchError.code !== 'PGRST116') {
       // PGRST116 means no rows found, which is okay
@@ -152,7 +157,12 @@ export class SupabaseSyncService implements ISyncService {
         created_at: localEntry.createdAt.toISOString(),
         updated_at: new Date().toISOString()
       };
-      console.log('[SupabaseSyncService] Insert data:', insertData);
+      // MF-5: never log the content/structured_data payload — ids/metadata only.
+      console.log('[SupabaseSyncService] Inserting:', {
+        field_identifier: fieldIdentifier,
+        category: insertData.category,
+        version: insertData.version,
+      });
 
       const { error: insertError } = await supabase
         .from('user_knowledge_base')

@@ -71,8 +71,12 @@ verify_jwt = false
 [functions.idea-framework-consultant]
 verify_jwt = false
 
+# Document text-extraction. verify_jwt stays TRUE: the platform requires a valid JWT,
+# and the function additionally resolves the caller via auth.getUser() and scopes EVERY
+# uploaded_documents query to that user_id (closes the IDOR — a forged documentId can't
+# read or mutate another tenant's row).
 [functions.document-processor]
-verify_jwt = false
+verify_jwt = true
 
 [functions.save-beta-feedback]
 verify_jwt = false
@@ -82,8 +86,11 @@ verify_jwt = false
 [functions.save-feedback-event]
 verify_jwt = true
 
+# Framework-submission email. verify_jwt stays TRUE: requires a valid session, and the
+# recipient is ALWAYS the authenticated user's own email (never a caller-supplied address,
+# so it cannot be used as an open relay); user-supplied fields are HTML-escaped in-function.
 [functions.send-framework-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.sync-diagnostic-to-embeddings]
 verify_jwt = false
@@ -193,3 +200,16 @@ verify_jwt = false
 # work runs service-role INTERNALLY, and a kick only ever triggers a rate-limited drain.
 [functions.process-scrape-jobs]
 verify_jwt = false
+
+# Paid, signed-in-only LLM functions (Claude Sonnet). verify_jwt stays TRUE so the
+# platform rejects anonymous callers before any model call — pinned here explicitly so a
+# redeploy can never drop the gate to --no-verify-jwt and turn these into cost-abuse vectors.
+# Each also resolves the user in-function (parity with run-forensic-analysis).
+[functions.reveal-signature]
+verify_jwt = true
+
+[functions.export-brief]
+verify_jwt = true
+
+[functions.diagnostic-interpretation-evidence]
+verify_jwt = true
