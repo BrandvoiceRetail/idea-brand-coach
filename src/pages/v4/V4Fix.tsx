@@ -26,7 +26,8 @@
  * number.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, FlaskConical, Map as MapIcon, Sparkles, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -134,6 +135,20 @@ export default function V4Fix(): JSX.Element {
   const { isMember } = useEntitlement();
   const pieceCount = pieces?.length ?? 0;
   const atTrialLimit = !isMember && pieceCount >= FREE_TRIAL_PIECE_LIMIT;
+
+  // Stripe checkout returns the user to /v4/fix?checkout=success. The webhook flips
+  // user_subscriptions, but our cached entitlement is stale — refetch it so the funnel
+  // unlocks immediately, welcome them, then strip the param so a refresh won't repeat it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (searchParams.get('checkout') !== 'success') return;
+    void queryClient.invalidateQueries({ queryKey: ['entitlement'] });
+    toast.success('Welcome to membership — your whole funnel is unlocked.');
+    const next = new URLSearchParams(searchParams);
+    next.delete('checkout');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, queryClient]);
   const handleAddPiece = (): void => {
     if (atTrialLimit) {
       captureAlphaEvent('v4_trial_limit_hit', { piece_count: pieceCount });

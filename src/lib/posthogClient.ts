@@ -175,6 +175,8 @@ export type AlphaEventName =
   // Free-trial gate: a non-member hit the one-piece limit / clicked the upgrade CTA.
   | 'v4_trial_limit_hit'
   | 'v4_upgrade_cta_clicked'
+  // Stripe checkout: the user picked a tier and we started a Checkout session.
+  | 'checkout_started'
   // Loop-3 Fix sub-view navigation (funnel map ↔ piece detail ↔ fix & test ↔
   // testing & lift). The `view` slug only — no copy/PII.
   | 'v4_fix_view_changed'
