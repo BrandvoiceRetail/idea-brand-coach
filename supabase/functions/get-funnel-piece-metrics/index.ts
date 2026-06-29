@@ -2,20 +2,21 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 /**
- * get-funnel-piece-metrics — aggregated campaign_metrics for ONE funnel piece.
+ * get-funnel-piece-metrics — primitive-derived metrics for ONE funnel piece.
  *
- * The v4 Fix piece-detail screen (src/services/v4/fixService.ts → getPieceMetrics)
- * calls this to render a piece's numbers. It reads `campaign_metrics` scoped to the
- * caller (RLS: user_id = auth.uid()) for one `brand_asset_id` over a date window and
- * returns one aggregated row per metric_name.
- *
- * NO FABRICATION: returns ONLY metric rows that actually exist for the caller's own
- * piece. An empty result is honest no-data (the UI shows "—"). The frontend derives
- * cvr/aov from primitives, so this never invents a rate.
- *
- * Aggregation over the window:
- *   - additive metrics (counts, revenue, spend) → SUM
- *   - rate / per-unit metrics (ctr, cvr, aov, opens, *_rate, roas, acos, cpc) → AVG
+ * Reads `campaign_metrics` RLS-scoped to the caller for one `brand_asset_id` over a
+ * 7d/30d/90d window and returns one row per metric. RATES ARE DERIVED FROM SUMMED
+ * PRIMITIVES — never averaged from stored rate rows:
+ *   ctr = Σclicks / Σimpressions
+ *   cvr = Σunits_sold (else Σorders) / Σsessions   (Amazon unit-session %; falls back
+ *         to Σorders / Σclicks for ad-only pieces)
+ *   aov = Σrevenue / Σorders
+ * Primitives (sessions, views, clicks, impressions, orders, units_sold, revenue,
+ * spend, …) are summed. This is the correct window aggregation — averaging Amazon's
+ * pre-averaged percentages distorts (mean of ratios ≠ ratio of sums) — and it lets
+ * onboarding pull ONLY raw primitives from Windsor (fast, fewer fields). A stored rate
+ * is used ONLY as a fallback when its primitives are absent. NO FABRICATION: only rows
+ * that exist; an empty result is honest no-data (the UI shows "—").
  *
  * Request:  { brand_asset_id: string (uuid), range?: "7d" | "30d" | "90d" }  (default 30d)
  * Response: { metrics: Array<{ metric_name: string; metric_value: number; source: string | null }> }
@@ -29,13 +30,13 @@ const corsHeaders = {
 
 const RANGE_DAYS: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
 
-// Metrics that SUM across the window. Everything else (rates, per-unit currency,
-// ratios) AVERAGES. Mirrors the v4Funnel METRIC_META formats (count + additive
-// currency are summable; percent/ratio/AOV/CPC are not).
+// Primitives that SUM across the window.
 const ADDITIVE = new Set<string>([
   "impressions", "sessions", "clicks", "views", "engagement",
   "orders", "revenue", "spend", "units_sold", "calls_booked", "subscribe_save",
 ]);
+// Rates we DERIVE from primitives — any stored value is ignored unless primitives are missing.
+const DERIVED = new Set<string>(["ctr", "cvr", "aov"]);
 
 interface MetricRow {
   metric_name: string;
@@ -61,7 +62,10 @@ serve(async (req: Request): Promise<Response> => {
     { global: { headers: { Authorization: authHeader } } },
   );
 
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  // getUser() must be passed the token explicitly — the global Authorization header
+  // scopes PostgREST/RLS reads but auth.getUser() with no arg reads an (empty) session.
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
   if (authErr || !user) return json({ error: "Not authenticated" }, 401);
 
   let payload: { brand_asset_id?: unknown; range?: unknown };
@@ -93,29 +97,73 @@ serve(async (req: Request): Promise<Response> => {
 
   const rows = (data ?? []) as MetricRow[];
 
-  // Aggregate per metric_name: SUM for additive, AVG otherwise. Source: prefer
-  // "windsor" if any row is windsor, else the most-recent row's source.
-  const acc = new Map<string, { sum: number; count: number; source: string | null; latest: string }>();
+  // Accumulate per metric_name: Σ value, n (for averaging residual stored rates), source.
+  const sum = new Map<string, number>();
+  const n = new Map<string, number>();
+  const src = new Map<string, { source: string | null; latest: string }>();
   for (const r of rows) {
     const value = typeof r.metric_value === "number" ? r.metric_value : Number(r.metric_value);
     if (!Number.isFinite(value)) continue;
-    const cur = acc.get(r.metric_name) ?? { sum: 0, count: 0, source: null, latest: "" };
-    cur.sum += value;
-    cur.count += 1;
+    sum.set(r.metric_name, (sum.get(r.metric_name) ?? 0) + value);
+    n.set(r.metric_name, (n.get(r.metric_name) ?? 0) + 1);
+    const cur = src.get(r.metric_name) ?? { source: null, latest: "" };
     if (r.source === "windsor") {
       cur.source = "windsor";
     } else if (cur.source !== "windsor" && r.measured_date >= cur.latest) {
       cur.source = r.source ?? cur.source;
       cur.latest = r.measured_date;
     }
-    acc.set(r.metric_name, cur);
+    src.set(r.metric_name, cur);
   }
 
-  const metrics = [...acc.entries()].map(([metric_name, a]) => ({
-    metric_name,
-    metric_value: ADDITIVE.has(metric_name) ? a.sum : a.sum / a.count,
-    source: a.source,
-  }));
+  const tot = (k: string): number | null => (sum.has(k) ? sum.get(k)! : null);
+  const avg = (k: string): number | null => (sum.has(k) ? sum.get(k)! / (n.get(k) || 1) : null);
+  const srcOf = (...keys: string[]): string | null => {
+    for (const k of keys) {
+      const s = src.get(k)?.source;
+      if (s) return s;
+    }
+    return null;
+  };
 
-  return json({ metrics });
+  const out: { metric_name: string; metric_value: number; source: string | null }[] = [];
+
+  // 1) Primitives summed; any residual non-derived stored metric → averaged fallback.
+  //    DERIVED rates are never passed through — they are computed from primitives below.
+  for (const [name] of sum) {
+    if (DERIVED.has(name)) continue;
+    const value = ADDITIVE.has(name) ? tot(name)! : avg(name)!;
+    out.push({ metric_name: name, metric_value: value, source: src.get(name)?.source ?? null });
+  }
+
+  // 2) Derive rates from summed primitives; fall back to a stored rate only if the
+  //    primitives are absent (so legacy pre-computed rows still render).
+  const sessions = tot("sessions");
+  const clicks = tot("clicks");
+  const impressions = tot("impressions");
+  const orders = tot("orders");
+  const units = tot("units_sold");
+  const revenue = tot("revenue");
+  const conv = units ?? orders; // unit-session basis preferred (Amazon unit-session %), else orders
+
+  const ctr =
+    impressions !== null && impressions > 0 && clicks !== null ? clicks / impressions : avg("ctr");
+  const cvr =
+    sessions !== null && sessions > 0 && conv !== null
+      ? conv / sessions
+      : clicks !== null && clicks > 0 && orders !== null
+        ? orders / clicks
+        : avg("cvr");
+  const aov = orders !== null && orders > 0 && revenue !== null ? revenue / orders : avg("aov");
+
+  const pushRate = (name: string, value: number | null, ...srcKeys: string[]): void => {
+    if (value !== null && Number.isFinite(value)) {
+      out.push({ metric_name: name, metric_value: value, source: srcOf(...srcKeys, name) });
+    }
+  };
+  pushRate("ctr", ctr, "impressions", "clicks");
+  pushRate("cvr", cvr, "sessions", "units_sold", "orders", "clicks");
+  pushRate("aov", aov, "orders", "revenue");
+
+  return json({ metrics: out });
 });

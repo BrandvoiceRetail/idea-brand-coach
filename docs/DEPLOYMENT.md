@@ -33,6 +33,13 @@ Until the box accepts the runner (or a self-hosted runner is added), **deploy fr
 a local machine that can SSH the box**, with key `~/.ssh/lightsail-mango.pem`.
 
 ### Frontend (SPA) — build + rsync
+
+> ⚠️ **Rebuild from the LATEST `main` immediately before you rsync.** `rsync --delete`
+> mirrors your local `dist/` over prod, so a build made from a branch that's behind
+> `main` will silently REVERT whatever landed on `main` since — clobbering other
+> sessions' work (this has happened). Always `git fetch` + fast-forward/merge `main`,
+> rebuild, *then* rsync. If multiple people deploy, coordinate so two rsyncs don't race.
+
 From a `main` checkout:
 
 ```bash
