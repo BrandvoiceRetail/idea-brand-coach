@@ -62,10 +62,17 @@ interface ProblemSolverDiagnosticProps {
    * while Trevor signs off on Movement 1 (his gate: review M1 before M2).
    */
   showRecognition?: boolean;
+  /**
+   * Render without the full-page (`min-h-screen` + background) frame so the flow
+   * runs INSIDE a host shell that already provides page chrome — the dark /v4
+   * surface (V4Layout). Off by default: standalone /v2·/v3 keep their full-page frame.
+   */
+  embedded?: boolean;
 }
 
 export default function ProblemSolverDiagnostic({
   showRecognition = false,
+  embedded = false,
 }: ProblemSolverDiagnosticProps = {}): JSX.Element {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -180,11 +187,11 @@ export default function ProblemSolverDiagnostic({
   // Movement 1 (Recognition) — full-screen, no Stepper/BrandBar chrome: the brief
   // requires no product or framework vocabulary here (AC #1). It precedes the flow.
   if (!entered) {
-    return <RecognitionScreen onContinue={handleEnterFlow} />;
+    return <RecognitionScreen onContinue={handleEnterFlow} embedded={embedded} />;
   }
 
   return (
-    <div className="min-h-screen" style={{ background: PS_COLORS.g100 }}>
+    <div className={embedded ? undefined : 'min-h-screen'} style={embedded ? undefined : { background: PS_COLORS.g100 }}>
       <div className="mx-auto max-w-[880px] px-2 py-4 sm:px-4 sm:py-6">
         <div
           className="overflow-hidden rounded-2xl border"

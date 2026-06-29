@@ -31,8 +31,13 @@ export function useV4ContextAutofill(): void {
       doneRef.current = true;
       return;
     }
-    // Avatars still resolving → wait (don't consume the one shot).
+    // Avatar list still loading → wait (don't consume the one shot).
     if (avatars === undefined) return;
+    // List loaded but the ACTIVE avatar hasn't resolved yet — on a fresh browser
+    // selectedAvatarId is hydrated async from the profile, so currentAvatar lags
+    // the list by a render. Wait for it; firing now would derive from a null
+    // avatar, write nothing, and burn the one shot (leaving Analyse gated).
+    if (avatars.length > 0 && !currentAvatar) return;
 
     const emptyKeys = new Set(fillMap.filter((s) => !s.value).map((s) => s.key));
     const answers = deriveContextFromBrand(currentAvatar, brandData, emptyKeys);
