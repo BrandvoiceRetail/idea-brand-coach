@@ -20,6 +20,7 @@
  * metrics a piece's job calls for and how to label them.
  */
 import type { StageId } from '@/config/touchpointTaxonomy';
+import type { MetricRange } from '@/types/v4Fix';
 
 // ── Metric vocabulary ─────────────────────────────────────────────────────────
 
@@ -119,6 +120,20 @@ export const DERIVED_METRICS: readonly MetricKey[] = ['cvr', 'aov'] as const;
 
 /** Whether a metric is derived (cvr/aov) rather than read straight from a source. */
 export const isDerivedMetric = (key: MetricKey): boolean => DERIVED_METRICS.includes(key);
+
+// ── Metric range (the window the readings cover) ──────────────────────────────
+
+/**
+ * Everyday label for each metric window, shared by the Funnel Map toolbar's range
+ * selector and the piece-detail metrics header so the two never drift on what a
+ * range reads as. `'30d'` is the trailing 30 calendar days from today (the metrics
+ * edge fn subtracts N days from now), so "Last 30 days" is literally accurate.
+ */
+export const RANGE_LABELS: Readonly<Record<MetricRange, string>> = {
+  '7d': 'Last 7 days',
+  '30d': 'Last 30 days',
+  '90d': 'Last 90 days',
+};
 
 // ── Per-stage job contract ────────────────────────────────────────────────────
 
