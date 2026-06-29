@@ -139,6 +139,11 @@ export type AlphaEventName =
   | 'v4_onboarding_advanced_to_diagnose'
   | 'v4_diagnose_run_diagnostic_clicked'
   | 'v4_diagnose_stage_viewed'
+  // Already-diagnosed recap: a returning/MCP-onboarded user with a saved Trust Gap
+  // is offered "Continue to Fix" instead of restarting the diagnostic.
+  | 'v4_diagnose_already_done'
+  | 'v4_diagnose_skip_to_fix'
+  | 'v4_diagnose_rerun'
   | 'v4_analyse_stage_viewed'
   | 'v4_analyse_gate_blocked'
   | 'v4_analyse_advanced_to_fix'
