@@ -73,6 +73,13 @@ const writeSide = (side: DockSide): void => {
 };
 const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n));
 
+/** Gap (px) the panel keeps from the viewport edge when docked (≈ md:right-4). */
+const DOCK_MARGIN = 16;
+/** The on-screen left coordinate for a given dock side — always inside the
+ * viewport, so the panel can never be parked out of view. */
+const leftForSide = (side: DockSide, width: number, vw: number): number =>
+  side === 'left' ? DOCK_MARGIN : Math.max(DOCK_MARGIN, vw - width - DOCK_MARGIN);
+
 export function TrevorCoachWidget(): JSX.Element {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -80,15 +87,16 @@ export function TrevorCoachWidget(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // — Side docking — drag the header to slot the panel against the left or right
-  // edge; on release it snaps to whichever side it's closest to. The dock is a
-  // horizontal translate off the (right-anchored) resting position, so left =
-  // negative translate. Full-width mobile has zero travel ⇒ dragging is a no-op.
+  // edge; on release it snaps to whichever side its centre is nearest. We drive a
+  // concrete, clamped `left` (px) rather than an unbounded translate, so neither a
+  // drag nor the snapped rest position can ever leave the viewport. `pos` is null
+  // until measured / on full-width mobile, where CSS owns the layout and there's
+  // nowhere to drag.
   const panelRef = useRef<HTMLElement>(null);
   const [side, setSide] = useState<DockSide>(readSide);
-  const [translate, setTranslate] = useState(0); // live px offset from the right dock
-  const [maxTravel, setMaxTravel] = useState(0); // px between the right and left docks
+  const [pos, setPos] = useState<{ left: number; width: number } | null>(null);
   const [dragging, setDragging] = useState(false);
-  const dragStart = useRef<{ x: number; t0: number } | null>(null);
+  const dragRef = useRef<{ startX: number; left0: number } | null>(null);
 
   const { selectedAvatarId } = useAvatarContext();
   const avatarId = selectedAvatarId ?? undefined;
@@ -114,67 +122,67 @@ export function TrevorCoachWidget(): JSX.Element {
     if (el) el.scrollTop = el.scrollHeight;
   }, [visibleMessages.length, pendingUser, isSending, open]);
 
-  // Measure the edge-to-edge travel once the panel is on screen, then park it at
-  // the remembered side. Pre-paint (layout effect) so a left-docked panel doesn't
-  // flash on the right first. Re-measures on open and on viewport resize.
+  // Once the panel is on screen, measure its width and park it at the remembered
+  // side. Pre-paint (layout effect) so a left-docked panel doesn't flash right
+  // first. Re-runs on open and on viewport resize. When the panel is ~full-width
+  // (mobile) there's nowhere to dock, so we leave `pos` null and let CSS lay it out.
   useLayoutEffect(() => {
     if (!open) return;
-    const measure = (): void => {
+    const recompute = (): void => {
       const el = panelRef.current;
       if (!el) return;
-      const rect = el.getBoundingClientRect();
-      // Subtract the applied translate to read the resting geometry; the margins
-      // are symmetric, so left + right resting edges minus the viewport = travel.
-      const resting = side === 'left' ? -maxTravel : 0;
-      const travel = Math.max(0, rect.left + rect.right - 2 * resting - window.innerWidth);
-      setMaxTravel(travel);
-      setTranslate(side === 'left' ? -travel : 0);
+      const vw = window.innerWidth;
+      const width = el.getBoundingClientRect().width;
+      if (!width || width >= vw - 2 * DOCK_MARGIN) {
+        setPos(null); // full-width / no room to move — CSS owns it
+        return;
+      }
+      setPos({ left: leftForSide(side, width, vw), width });
     };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-    // maxTravel is read inside but intentionally excluded — including it would
-    // re-run the effect on every measurement and on each drag frame.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    recompute();
+    window.addEventListener('resize', recompute);
+    return () => window.removeEventListener('resize', recompute);
+    // `side` is the only input that should re-run this; width comes from the DOM.
   }, [open, side]);
 
   const onHandlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLElement>): void => {
       // Leave header controls (e.g. the close button) clickable.
       if ((e.target as HTMLElement).closest('button')) return;
-      if (maxTravel <= 0) return; // nothing to dock against (full-width mobile)
+      if (!pos) return; // nothing to dock against (full-width mobile)
       e.preventDefault();
       e.currentTarget.setPointerCapture?.(e.pointerId);
-      dragStart.current = { x: e.clientX, t0: translate };
+      dragRef.current = { startX: e.clientX, left0: pos.left };
       setDragging(true);
     },
-    [maxTravel, translate],
+    [pos],
   );
 
-  const onHandlePointerMove = useCallback(
-    (e: React.PointerEvent<HTMLElement>): void => {
-      const start = dragStart.current;
-      if (!start) return;
-      setTranslate(clamp(start.t0 + (e.clientX - start.x), -maxTravel, 0));
-    },
-    [maxTravel],
-  );
+  const onHandlePointerMove = useCallback((e: React.PointerEvent<HTMLElement>): void => {
+    const start = dragRef.current;
+    if (!start) return;
+    const clientX = e.clientX;
+    setPos((p) => {
+      if (!p) return p;
+      const maxLeft = Math.max(DOCK_MARGIN, window.innerWidth - p.width - DOCK_MARGIN);
+      return { ...p, left: clamp(start.left0 + (clientX - start.startX), DOCK_MARGIN, maxLeft) };
+    });
+  }, []);
 
-  const onHandlePointerEnd = useCallback(
-    (e: React.PointerEvent<HTMLElement>): void => {
-      if (!dragStart.current) return;
-      dragStart.current = null;
-      setDragging(false);
-      e.currentTarget.releasePointerCapture?.(e.pointerId);
-      const rect = panelRef.current?.getBoundingClientRect();
-      const center = rect ? rect.left + rect.width / 2 : 0;
-      const next: DockSide = center > window.innerWidth / 2 ? 'right' : 'left';
+  const onHandlePointerEnd = useCallback((e: React.PointerEvent<HTMLElement>): void => {
+    if (!dragRef.current) return;
+    dragRef.current = null;
+    setDragging(false);
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    setPos((p) => {
+      if (!p) return p;
+      const vw = window.innerWidth;
+      const next: DockSide = p.left + p.width / 2 < vw / 2 ? 'left' : 'right';
       setSide(next);
       writeSide(next);
-      setTranslate(next === 'left' ? -maxTravel : 0);
-    },
-    [maxTravel],
-  );
+      return { ...p, left: leftForSide(next, p.width, vw) };
+    });
+  }, []);
 
   const handleSend = useCallback(async (): Promise<void> => {
     const content = input.trim();
@@ -226,16 +234,18 @@ export function TrevorCoachWidget(): JSX.Element {
       role="dialog"
       aria-label="Brand Coach"
       data-testid="coach-widget-panel"
-      style={{ transform: `translateX(${translate}px)` }}
+      // When measured (desktop/tablet) we own the horizontal position via a
+      // clamped `left`; otherwise CSS lays it out full-width (mobile).
+      style={pos ? { left: `${pos.left}px`, right: 'auto', width: `${pos.width}px` } : undefined}
       className={cn(
-        'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-gold-warm/25 shadow-2xl will-change-transform',
+        'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-gold-warm/25 shadow-2xl',
         // smoked dark tint, NO blur → the page behind stays sharp (transparent, not frosted)
         'bg-background/30',
-        // right-anchored, full height; full-width on mobile, ~460px on desktop.
-        // The dock side is applied as a horizontal translate (left = negative).
+        // full height; full-width on mobile, ~460px on desktop. The horizontal
+        // dock is driven by the inline `left` above (overriding the right anchor).
         'inset-x-2 top-16 bottom-20 sm:inset-x-auto sm:right-3 sm:w-[460px] md:top-4 md:bottom-4 md:right-4',
         // glide to the snapped side on release; track the pointer 1:1 while dragging
-        !dragging && 'transition-transform duration-300 ease-out',
+        !dragging && 'transition-[left] duration-300 ease-out',
       )}
     >
       {/* Header — doubles as the drag handle to dock the panel left or right */}
@@ -244,14 +254,14 @@ export function TrevorCoachWidget(): JSX.Element {
         onPointerMove={onHandlePointerMove}
         onPointerUp={onHandlePointerEnd}
         onPointerCancel={onHandlePointerEnd}
-        title={maxTravel > 0 ? 'Drag to dock left or right' : undefined}
+        title={pos ? 'Drag to dock left or right' : undefined}
         className={cn(
           'flex select-none touch-none items-center justify-between gap-2 border-b border-foreground/10 bg-background/70 px-4 py-3',
-          maxTravel > 0 && (dragging ? 'cursor-grabbing' : 'cursor-grab'),
+          pos && (dragging ? 'cursor-grabbing' : 'cursor-grab'),
         )}
       >
         <div className="flex items-center gap-2 min-w-0">
-          {maxTravel > 0 && (
+          {pos && (
             <GripVertical className="h-4 w-4 shrink-0 text-foreground/30" aria-hidden="true" />
           )}
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold-warm text-foreground">
