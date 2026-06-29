@@ -49,6 +49,7 @@ import { registerComputeTrustGapLiftTool } from './tools/computeTrustGapLift.js'
 import { registerGenerateCanvasTool } from './tools/generateCanvas.js';
 import { registerGenerateBriefTool } from './tools/generateBrief.js';
 import { registerGenerateListingImageBriefTool } from './tools/generateListingImageBrief.js';
+import { registerGenerateListingImageTool } from './tools/generateListingImage.js';
 import { registerGenerateAuditIdeaMapTool } from './tools/generateAuditIdeaMap.js';
 import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
@@ -212,6 +213,9 @@ export function createServer(
   // per-slot briefs + photoreal prompts. Knows Amazon image conventions; routes photoreal slots
   // away from Canva layout-gen. Director only — never produces images or invents claims.
   registerGenerateListingImageBriefTool(server);
+  // Brief-driven image executor: turns a slot's IMAGE_PROMPT + the real product photo into
+  // an actual image via Nano Banana Pro (Gemini 3 Pro Image) through gemini-image-generate.
+  registerGenerateListingImageTool(server, edge);
   registerGenerateAuditIdeaMapTool(server);
 
   // Marketing-audit engine (Phase 5, manifest §2 sheet B): run_marketing_audit
