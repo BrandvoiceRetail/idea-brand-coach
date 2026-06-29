@@ -27,7 +27,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, FlaskConical, Map as MapIcon, Sparkles, Wrench } from 'lucide-react';
+import { ArrowRight, ChevronLeft, FlaskConical, Image as ImageIcon, Map as MapIcon, Sparkles, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ import { ReAuditScreenshotDialog } from '@/components/v4/fix/ReAuditScreenshotDi
 import { UpgradeDialog } from '@/components/v4/fix/UpgradeDialog';
 import { FixTestPanel } from '@/components/v4/fix/FixTestPanel';
 import { TestingLiftTab } from '@/components/v4/fix/TestingLiftTab';
+import { GeneratedImagesTab } from '@/components/v4/fix/GeneratedImagesTab';
 import { FixBreadcrumb } from '@/components/v4/fix/FixBreadcrumb';
 import type { GroundedField } from '@/components/v4/GroundedStrip';
 import { useFixRun } from '@/hooks/useFixRun';
@@ -53,7 +54,7 @@ import type { DataResult, FixLeak, MetricRange, PieceMetrics } from '@/types/v4F
 import { captureAlphaEvent, type AlphaEventProps } from '@/lib/posthogClient';
 
 /** The Loop-3 sub-views this page switches between. */
-type FixView = 'map' | 'detail' | 'fix' | 'testing';
+type FixView = 'map' | 'detail' | 'fix' | 'testing' | 'images';
 
 /**
  * Page-level Loop-3 funnel events. All names are registered in the canonical
@@ -403,6 +404,17 @@ export default function V4Fix(): JSX.Element {
               <FlaskConical className="h-4 w-4" />
               Testing &amp; Lift
             </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={view === 'images' ? 'brand' : 'ghost'}
+              className="min-h-9 gap-1.5"
+              onClick={() => goTo('images')}
+              data-testid="v4-fix-tab-images"
+            >
+              <ImageIcon className="h-4 w-4" />
+              Images
+            </Button>
           </nav>
 
           {/* Funnel drill-down trail — the canonical "up" control for map → piece
@@ -571,6 +583,10 @@ export default function V4Fix(): JSX.Element {
               />
             </div>
           )}
+
+          {/* ── Generated images view ── the listing images the coach created,
+              surfaced from brand-assets so they live in the app, not just the chat. */}
+          {view === 'images' && <GeneratedImagesTab />}
         </div>
       )}
 

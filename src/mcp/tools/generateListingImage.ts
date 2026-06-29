@@ -22,7 +22,7 @@ interface ImageResult {
   ok: boolean;
   status?: string;
   model?: string;
-  images?: Array<{ storage_path: string; signed_url: string | null; source_url: string }>;
+  images?: Array<{ storage_path: string; signed_url: string | null; b64?: string; mimeType?: string }>;
   error?: string;
   code?: string;
 }
@@ -82,9 +82,20 @@ export function registerGenerateListingImageTool(server: McpServer, edgeFn: Edge
       }
       const images = data.images ?? [];
       safeLog({ event: 'tool.generate_listing_image', caller: userTag(identity), model: data.model ?? null, count: images.length });
+      // Emit an INLINE image content block per result so the connector renders the
+      // image in chat (not just a URL). b64 stays out of structuredContent and the
+      // text block (which the structured-fallback mirrors) so it never bloats those
+      // or reaches logs — the model still gets the storage path + signed URL there.
+      const stored = images.map((im) => ({ storage_path: im.storage_path, signed_url: im.signed_url }));
+      const imageBlocks = images
+        .filter((im) => im.b64)
+        .map((im) => ({ type: 'image' as const, data: im.b64 as string, mimeType: im.mimeType ?? 'image/png' }));
       return {
-        content: [{ type: 'text' as const, text: `Generated ${images.length} image(s) with ${data.model ?? 'fal'} and stored them.\n\n${JSON.stringify({ images }, null, 2)}` }],
-        structuredContent: { ok: true, model: data.model ?? null, images },
+        content: [
+          { type: 'text' as const, text: `Generated ${images.length} image(s) with ${data.model ?? 'the image model'} (2048x2048) and saved them to your assets.\n\n${JSON.stringify({ images: stored }, null, 2)}` },
+          ...imageBlocks,
+        ],
+        structuredContent: { ok: true, model: data.model ?? null, images: stored },
       };
     },
   );
