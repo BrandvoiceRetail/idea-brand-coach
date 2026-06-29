@@ -43,6 +43,7 @@ import { registerIngestEvidenceTool } from './tools/ingestEvidence.js';
 import { registerBulkIngestEvidenceTool, registerGetIngestJobTool } from './tools/bulkIngest.js';
 import { registerBuildAvatarStageTool } from './tools/buildAvatarStage.js';
 import { registerRunDiagnosticEvidenceTool } from './tools/runDiagnosticEvidence.js';
+import { registerAssessIdeaDimensionsTool } from './tools/assessIdeaDimensions.js';
 import { registerIdentifyDecisionTriggerTool } from './tools/identifyDecisionTrigger.js';
 import { registerComputeTrustGapLiftTool } from './tools/computeTrustGapLift.js';
 import { registerGenerateCanvasTool } from './tools/generateCanvas.js';
@@ -195,6 +196,9 @@ export function createServer(
   // the Audit×IDEA cross-map (generate_audit_idea_map). Each validates against its
   // Phase-0 contract, carries grounding evidence|inference, and is gateWrite-gated.
   registerRunDiagnosticEvidenceTool(server);
+  // Keystone: derive the four IDEA scores FROM the user's evidence (no scores to type),
+  // then compute the Trust Gap via the same deterministic engine. Honesty floor; provisional.
+  registerAssessIdeaDimensionsTool(server);
   // The named Decision Trigger™ (the hero output) — bound from the identify-decision-trigger
   // engine so the connector can hand the seller the one lever to fix, not just diagnostics.
   registerIdentifyDecisionTriggerTool(server);

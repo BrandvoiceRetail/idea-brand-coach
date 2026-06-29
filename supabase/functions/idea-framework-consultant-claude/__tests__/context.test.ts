@@ -3,6 +3,7 @@ import {
   retrieveUserContext,
   retrieveAllContext,
   AVATAR_SCOPED_CATEGORIES,
+  buildUploadedDocumentsContext,
 } from '../context';
 
 /**
@@ -270,5 +271,63 @@ describe('retrieveAllContext — threads the avatar SET through', () => {
 describe('AVATAR_SCOPED_CATEGORIES', () => {
   it('matches the backfill policy (avatar + insights)', () => {
     expect([...AVATAR_SCOPED_CATEGORIES].sort()).toEqual(['avatar', 'insights']);
+  });
+});
+
+describe('buildUploadedDocumentsContext', () => {
+  it('returns empty for non-array / empty input', () => {
+    expect(buildUploadedDocumentsContext(undefined)).toEqual({ context: '', hasReady: false, processingNames: [] });
+    expect(buildUploadedDocumentsContext([])).toEqual({ context: '', hasReady: false, processingNames: [] });
+  });
+
+  it('injects ready document content under an UPLOADED DOCUMENTS header', () => {
+    const r = buildUploadedDocumentsContext([
+      { filename: 'brand.md', status: 'ready', extracted_content: 'Our brand voice is bold.' },
+    ]);
+    expect(r.hasReady).toBe(true);
+    expect(r.context).toContain('UPLOADED DOCUMENTS');
+    expect(r.context).toContain('### brand.md');
+    expect(r.context).toContain('Our brand voice is bold.');
+    expect(r.processingNames).toEqual([]);
+  });
+
+  it('names still-processing docs and instructs against asking for a paste', () => {
+    const r = buildUploadedDocumentsContext([
+      { filename: 'big.docx', status: 'indexing' },
+      { filename: 'note.txt', extraction_status: 'extracting' },
+    ]);
+    expect(r.hasReady).toBe(false);
+    expect(r.processingNames).toEqual(['big.docx', 'note.txt']);
+    expect(r.context).toContain('STILL PROCESSING');
+    expect(r.context).toContain('big.docx');
+    expect(r.context.toLowerCase()).toContain('do not ask the user to paste');
+  });
+
+  it('handles a mix of ready + processing docs', () => {
+    const r = buildUploadedDocumentsContext([
+      { filename: 'ready.md', status: 'ready', extracted_content: 'content here' },
+      { filename: 'pending.pdf', status: 'processing' },
+    ]);
+    expect(r.hasReady).toBe(true);
+    expect(r.processingNames).toEqual(['pending.pdf']);
+    expect(r.context).toContain('### ready.md');
+    expect(r.context).toContain('STILL PROCESSING');
+  });
+
+  it('truncates per-doc content and marks it truncated', () => {
+    const big = 'x'.repeat(9000);
+    const r = buildUploadedDocumentsContext([
+      { filename: 'huge.txt', status: 'ready', extracted_content: big },
+    ]);
+    expect(r.context).toContain('truncated');
+    expect(r.context.length).toBeLessThan(5000);
+  });
+
+  it('does not treat a failed doc with no content as processing', () => {
+    const r = buildUploadedDocumentsContext([
+      { filename: 'bad.pdf', status: 'error', extraction_status: 'failed' },
+    ]);
+    expect(r.context).toBe('');
+    expect(r.processingNames).toEqual([]);
   });
 });

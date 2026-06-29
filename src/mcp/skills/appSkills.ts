@@ -92,6 +92,12 @@ const TOOL_APP_SKILLS: Record<string, string[]> = {
   generate_concepts: ['09', '10'],
   // Design brief → the brief generator and the trigger it derives from.
   generate_brief: ['10', '09'],
+  // Evidence-derived Trust Gap → the score skill, the framework lens, the commercial frame.
+  assess_idea_dimensions: ['06', '01', '03'],
+  // The single named Decision Trigger™ lever → the trigger skill + the score + the framework lens.
+  identify_decision_trigger: ['09', '06', '01'],
+  // Onboarding state + the warm single next step → the commercial frame, Trevor's voice, the lens.
+  onboard_status: ['03', '02', '01'],
 };
 
 let cache: AppSkill[] | null = null;

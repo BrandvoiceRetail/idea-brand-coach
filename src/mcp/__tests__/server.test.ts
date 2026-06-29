@@ -48,6 +48,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([
       'add_email_step',
+      'assess_idea_dimensions',
       'audit_asset',
       'build_avatar_stage',
       'bulk_ingest_evidence',
@@ -94,6 +95,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'log_asset',
       'onboard_choose',
       'onboard_panel',
+      'onboard_status',
       'persist_signature',
       'provide_context',
       'publish_filter_check',

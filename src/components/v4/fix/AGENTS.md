@@ -12,6 +12,23 @@ AGENTS.md apply; this adds Loop-3 specifics.
 | `WhatNeedsWork.tsx` | S-13 | Impact-ranked to-do list (lift basis: metrics or coverage). |
 | `AssetDetailTabs.tsx` | S-14 | One asset's content + IDEA audit verdict. |
 | `DriftBanner.tsx` | S-15 | Signature-drift alert; self-hides at zero drift. |
+| `FixBreadcrumb.tsx` | sub-nav | Funnel drill-down trail (map → piece → Fix); the canonical "up" control. |
+
+## Sub-navigation (the one stage with 2nd-level hierarchy)
+
+Spec: [`_bmad-output/planning-artifacts/ux-design-fix-navigation.md`](../../../../_bmad-output/planning-artifacts/ux-design-fix-navigation.md).
+Two nav types, never conflated: a **lateral switch** (the 2 top tabs Funnel ↔
+Testing & Lift) and a **drill-down** (map → piece detail → fix), expressed as
+`FixBreadcrumb`. The breadcrumb is the single multi-level "up" control — it
+REPLACED the scattered single-step back buttons (`FunnelPieceDetail` is no longer
+given `onBack` from V4Fix; the inline "Back to piece" in the fix view is gone).
+Rules baked into `V4Fix.tsx`: switching the Funnel tab or clicking the "Funnel"
+crumb resets to `map` AND `clearSelection()` (no stale piece); opening a test
+stashes `lastWorkedPiece` so Testing & Lift shows a "← Back to {piece}" return
+(no dead-end). Mobile: breadcrumb is a sticky header (`top-24` — below the mobile top bar
+(`V4TopBar`, h-12) + spine stepper (`sticky top-12`), each h-12); zero horizontal
+overflow at 375px (long piece names truncate, full text in `title`). Presentation
+only — no `useFixRun`/`fixService` changes.
 
 ## Integration
 
@@ -55,3 +72,7 @@ yet, so those handlers stay unwired (their tabs show honest empty states).
 
 Vitest + RTL, tests in `__tests__/`. Cover the honest states and the no-emit /
 self-hide paths (e.g. `DriftBanner` renders null and emits nothing at 0 drift).
+Sub-nav: `FixBreadcrumb.test.tsx` (per-view crumbs, leaf = `aria-current`, crumb
+click → `onCrumb`, map shows no trail) + `src/pages/v4/__tests__/V4Fix.nav.test.tsx`
+(drill map→detail→fix→crumb-up; tab-switch reset; Testing→piece return — heavy
+funnel children stubbed, `FixBreadcrumb` kept real).

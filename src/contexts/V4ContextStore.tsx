@@ -16,10 +16,12 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useRef,
   type ReactNode,
 } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useFieldSync } from '@/hooks/useFieldSync';
+import type { KnowledgeCategory, SyncStatus } from '@/lib/knowledge-base/interfaces';
 
 /** Slot statuses mirror the MCP resolver's SlotStatus union. */
 export type V4SlotStatus =
@@ -99,35 +101,43 @@ export interface V4ContextValue {
     needsInput: V4ResolvedSlot[];
     allFilled: boolean;
   };
+  /** True while the persisted store loads from local/remote on first mount. */
+  isLoading: boolean;
+  /** Background sync status to Supabase ('synced' | 'syncing' | 'offline' | 'error'). */
+  syncStatus: SyncStatus;
   /** Clear the store (e.g. "start over"). */
   reset: () => void;
 }
 
 const V4Context = createContext<V4ContextValue | null>(null);
 
-const STORAGE_PREFIX = 'idea.v4.context.';
+/**
+ * Persisted server-side via `user_knowledge_base` (local-first IndexedDB cache +
+ * Supabase background sync, reusing the FieldSyncService stack). One serialized
+ * row per user holds the whole slot map, so the onboarding context survives
+ * across devices/browsers — saved by default, no extra table.
+ */
+const FIELD_IDENTIFIER = 'v4_onboarding_context';
+const CATEGORY: KnowledgeCategory = 'consultant';
 
-function storageKeyFor(userId: string | null): string {
-  return `${STORAGE_PREFIX}${userId ?? 'guest'}`;
-}
+/** Stable empty-store ref — a fresh `{}` each render would churn the load effect. */
+const EMPTY_STORE: StoreShape = {};
 
-function readStore(userId: string | null): StoreShape {
+/**
+ * Pre-sync localStorage bucket. Retained ONLY to migrate existing /v4 users into
+ * the server-backed store on first load (see V4ContextProvider). No longer written.
+ */
+const LEGACY_STORAGE_PREFIX = 'idea.v4.context.';
+
+function readLegacyStore(userId: string | null): StoreShape {
   try {
-    const raw = localStorage.getItem(storageKeyFor(userId));
+    const raw = localStorage.getItem(`${LEGACY_STORAGE_PREFIX}${userId ?? 'guest'}`);
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
     if (parsed && typeof parsed === 'object') return parsed as StoreShape;
     return {};
   } catch {
     return {};
-  }
-}
-
-function writeStore(userId: string | null, store: StoreShape): void {
-  try {
-    localStorage.setItem(storageKeyFor(userId), JSON.stringify(store));
-  } catch {
-    // Storage may be unavailable (private mode); the in-memory state still works.
   }
 }
 
@@ -146,43 +156,72 @@ function resolveSlot(def: V4SlotDef, store: StoreShape): V4ResolvedSlot {
 export function V4ContextProvider({ children }: { children: ReactNode }): JSX.Element {
   const { user } = useAuth();
   const userId = user?.id ?? null;
-  const [store, setStore] = useState<StoreShape>(() => readStore(userId));
 
-  // Re-hydrate when the signed-in user changes (guest → authed, or switch).
+  // Server-backed, local-first persistence. The whole slot map is one serialized
+  // value in user_knowledge_base, so every field is saved by default and follows
+  // the user across devices (replaces the prior localStorage-only store).
+  const {
+    value: store,
+    onChange: persistStore,
+    isLoading,
+    syncStatus,
+  } = useFieldSync<StoreShape>({
+    fieldIdentifier: FIELD_IDENTIFIER,
+    category: CATEGORY,
+    defaultValue: EMPTY_STORE,
+  });
+
+  // Latest-value ref: useFieldSync's value updates async + debounced, so
+  // provideContext merges against this rather than a possibly-stale closure.
+  const storeRef = useRef<StoreShape>(store);
   useEffect(() => {
-    setStore(readStore(userId));
-  }, [userId]);
+    storeRef.current = store;
+  }, [store]);
+
+  // One-time bridge from the pre-sync localStorage bucket so existing /v4 users
+  // don't lose context already entered before this shipped. Runs once the synced
+  // store has loaded and only while it is still empty (never clobbers server data).
+  const migratedRef = useRef(false);
+  useEffect(() => {
+    if (migratedRef.current || isLoading || !userId) return;
+    migratedRef.current = true;
+    if (Object.keys(store).length > 0) return;
+    const legacy = readLegacyStore(userId);
+    if (Object.keys(legacy).length > 0) {
+      storeRef.current = legacy;
+      persistStore(legacy);
+    }
+  }, [isLoading, userId, store, persistStore]);
 
   const provideContext = useCallback(
     (answers: V4Answer[]) => {
-      setStore((prev) => {
-        const next: StoreShape = { ...prev };
-        for (const a of answers) {
-          if (!V4_SLOTS.some((s) => s.key === a.key)) continue;
-          const value = a.value.trim();
-          if (!value && !a.confirm) continue;
-          next[a.key] = {
-            value: value || prev[a.key]?.value || '',
-            // Owner-supplied or confirmed → stated; bare extraction stays inferred
-            // until the user confirms it via the read-it-back step.
-            status:
-              a.confirm || a.source === 'manual' || a.source === undefined
-                ? 'filled-stated'
-                : 'filled-inferred',
-            source: a.source ?? 'manual',
-          };
-        }
-        writeStore(userId, next);
-        return next;
-      });
+      const prev = storeRef.current;
+      const next: StoreShape = { ...prev };
+      for (const a of answers) {
+        if (!V4_SLOTS.some((s) => s.key === a.key)) continue;
+        const value = a.value.trim();
+        if (!value && !a.confirm) continue;
+        next[a.key] = {
+          value: value || prev[a.key]?.value || '',
+          // Owner-supplied or confirmed → stated; bare extraction stays inferred
+          // until the user confirms it via the read-it-back step.
+          status:
+            a.confirm || a.source === 'manual' || a.source === undefined
+              ? 'filled-stated'
+              : 'filled-inferred',
+          source: a.source ?? 'manual',
+        };
+      }
+      storeRef.current = next;
+      persistStore(next);
     },
-    [userId],
+    [persistStore],
   );
 
   const reset = useCallback(() => {
-    setStore({});
-    writeStore(userId, {});
-  }, [userId]);
+    storeRef.current = EMPTY_STORE;
+    persistStore(EMPTY_STORE);
+  }, [persistStore]);
 
   const value = useMemo<V4ContextValue>(() => {
     const fillMap = V4_SLOTS.map((def) => resolveSlot(def, store));
@@ -204,9 +243,11 @@ export function V4ContextProvider({ children }: { children: ReactNode }): JSX.El
       contextCard,
       provideContext,
       getContextStatus,
+      isLoading,
+      syncStatus,
       reset,
     };
-  }, [store, provideContext, reset]);
+  }, [store, provideContext, reset, isLoading, syncStatus]);
 
   return <V4Context.Provider value={value}>{children}</V4Context.Provider>;
 }

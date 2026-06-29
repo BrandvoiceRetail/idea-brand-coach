@@ -20,14 +20,29 @@ import {
   buildOnboardPanelHtml,
   ONBOARD_UI_URI,
 } from '../service/onboard.js';
+import { assembleOnboardState, type OnboardReadDeps } from '../service/onboardOrchestrator.js';
+import { resolve as resolveSlots } from '../service/contextResolver.js';
+import { listAvatars } from '../service/avatarLifecycle.js';
+import { resolveBrandId } from '../service/avatarOwnership.js';
+import { listInventory } from '../service/funnelInventory.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
+import { appGroundingPreamble } from '../skills/appSkills.js';
 
 const chooseInput = {
   path: z.enum(['diagnostic', 'upload']),
 };
 
-export function registerOnboard(server: McpServer): void {
+/** Live read services bound for the orchestrator (RLS-scoped to the caller). */
+const liveOnboardDeps: OnboardReadDeps = {
+  resolve: (slots, opts) => resolveSlots(slots, opts),
+  listAvatars: () => listAvatars(),
+  // Funnel needs the brand id; for an anon/no-brand caller this throws and the
+  // orchestrator fails it soft (a brand with no funnel yet is normal at onboarding).
+  listFunnel: async () => listInventory(await resolveBrandId()),
+};
+
+export function registerOnboard(server: McpServer, onboardDeps: OnboardReadDeps = liveOnboardDeps): void {
   // Advertise the MCP Apps UI extension server-side (bidirectional capability
   // negotiation, io.modelcontextprotocol/ui) so capable hosts know to render the
   // `ui://` panel below. Must run before connect; createServer() is pre-connect.
@@ -71,6 +86,35 @@ export function registerOnboard(server: McpServer): void {
       return {
         content: [{ type: 'text', text: stub.markdown }],
         structuredContent: { path: stub.path, title: stub.title },
+      };
+    },
+  );
+
+  // TOOL `onboard_status` — the optimized onboarding pass. One call reads everything we
+  // already know about the brand (context fill-map, avatars, evidence, funnel) in a single
+  // parallel pass and returns a unified state ending on the ONE next action. RLS-scoped:
+  // an anonymous caller resolves to the cold-start next step rather than an error.
+  server.registerTool(
+    'onboard_status',
+    {
+      title: 'Onboarding status — what we know + your next step',
+      description:
+        "GUIDE — read onboarding state + the single warm next step (a READ; it does not pull analytics or run the sequence). Reads everything already on file for the brand — context fill-map, customer avatars, listing/review evidence, and funnel pieces — in ONE efficient pass, and returns a single unified state ending on the ONE highest-leverage next action. Recognition-first (Trevor's doctrine): the `summary` opens by reflecting the user's situation, and `nextAction.invite` is the warm, single, conversation-style ask to deliver — relay it to gather the one piece of context that unlocks the most. Never a form, never framework jargon, never fabrication (unfilled inputs come back as needs_input). Use this for any 'where am I / what's my next step' moment, or to guide onboarding one warm step at a time. When the user instead wants to EXECUTE the full onboarding/refresh (pull their analytics, create funnel pieces, ingest metrics, run the Trust Gap), call `run_onboarding`. RLS-scoped; anonymous callers get the cold-start next step." +
+        appGroundingPreamble('onboard_status'),
+      inputSchema: {},
+    },
+    async () => {
+      const state = await assembleOnboardState(onboardDeps);
+      safeLog({
+        event: 'tool.onboard_status',
+        caller: userTag(getIdentity()),
+        next_action: state.nextAction.id,
+        ready_to_derive: state.readyToDerive,
+        needs_input: state.context.needsInput.length,
+      });
+      return {
+        content: [{ type: 'text' as const, text: state.summary }],
+        structuredContent: { ok: true, ...state },
       };
     },
   );

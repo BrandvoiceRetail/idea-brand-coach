@@ -30,9 +30,10 @@ import { generateSystemPrompt, buildSessionContext } from './prompt.ts';
 import { buildAgentTools } from './tools.ts';
 import { MCP_TOOL_DEFS } from './mcpTools.ts';
 import { buildTieredFieldContext } from './fields.ts';
-import { retrieveAllContext } from './context.ts';
+import { retrieveAllContext, buildUploadedDocumentsContext } from './context.ts';
 import { buildMemorySnapshot } from './memory-context.ts';
 import { runAgenticLoop, runNonStreamingLoop } from './loop.ts';
+import { stripAiDashes } from './sanitize.ts';
 import { computeToolLoopActive } from './registry.ts';
 import { resolveCountry } from './telemetry.ts';
 
@@ -234,8 +235,15 @@ serve(async (req) => {
     });
 
     // ── Per-user system block (BP2 — stable within a session) ───────────
+    // Inject the forwarded uploaded-document text directly (bounded), so the
+    // coach can see freshly-uploaded docs even when RAG retrieval misses them
+    // (no semantic overlap, still embedding, or avatar-scope filtered). Names
+    // still-processing docs so the model defers gracefully instead of asking
+    // the user to paste content.
+    const uploadedDocs = buildUploadedDocumentsContext(metadata?.userDocuments);
     const perUserParts: string[] = [];
     if (userKnowledgeContext) perUserParts.push(userKnowledgeContext);
+    if (uploadedDocs.context) perUserParts.push(uploadedDocs.context);
     if (productContext) perUserParts.push(`THE FOUNDER'S OWN PRODUCT (from their live Amazon listing):\n${productContext}`);
     if (memorySnapshot) perUserParts.push(memorySnapshot);
 
@@ -391,7 +399,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        response: responseText,
+        response: stripAiDashes(responseText),
         extractedFields,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

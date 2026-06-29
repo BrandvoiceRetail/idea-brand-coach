@@ -184,7 +184,11 @@ describe('owned chain tools (end-to-end via in-memory transport)', () => {
     const scores = { insight: 80, distinctive: 60, empathetic: 70, authentic: 90 };
     const res = await client.callTool({ name: 'run_trust_gap', arguments: scores });
     const direct = buildTrustGap({ ...scores, overall: (80 + 60 + 70 + 90) / 4 });
-    expect(res.structuredContent).toEqual(JSON.parse(JSON.stringify(direct)));
+    // Calculation Parity: every scorecard field stays byte-identical to the in-app
+    // engine; toMatchObject allows the ADDITIVE plain-language `explanation` artifact
+    // (determination #3) without weakening the parity lock on the numbers.
+    expect(res.structuredContent).toMatchObject(JSON.parse(JSON.stringify(direct)));
+    expect(typeof (res.structuredContent as { explanation?: unknown }).explanation).toBe('string');
   });
 
   it('design_test returns a spec with deferred record_test', async () => {

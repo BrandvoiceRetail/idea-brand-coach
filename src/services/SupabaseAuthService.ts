@@ -24,6 +24,24 @@ export class SupabaseAuthService implements IAuthService {
       },
     });
 
+    // Supabase enumeration protection: signing up with an already-registered
+    // email returns NO error, no session, and a "fake" user whose `identities`
+    // array is empty. Without this check the caller mistakes it for a fresh
+    // signup and shows a "check your email" screen for a confirmation email that
+    // is never sent. Detect it and fail fast with a clear, actionable error.
+    if (
+      !error &&
+      data.user &&
+      Array.isArray(data.user.identities) &&
+      data.user.identities.length === 0
+    ) {
+      return {
+        user: null,
+        session: null,
+        error: new Error('An account with this email already exists. Please sign in instead.'),
+      };
+    }
+
     return {
       user: data.user,
       session: data.session,

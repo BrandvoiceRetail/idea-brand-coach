@@ -7,13 +7,25 @@
  * read. "Restart" resets the whole flow back to S1.
  */
 
-import { ArrowLeft, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { PS_COLORS } from './theme';
-import { Eyebrow, ScreenHeading, Lede, GhostButton } from './primitives';
+import { Eyebrow, ScreenHeading, Lede, GhostButton, GoldButton } from './primitives';
 
 interface InClaudeScreenProps {
   onBack: () => void;
   onRestart: () => void;
+  /**
+   * Exit forward into the main app (e.g. the next spine stage). Optional: only
+   * callers with a "next" destination — the /v4 spine — pass it.
+   */
+  onContinue?: () => void;
+  /** Label for the forward-exit CTA, e.g. "Continue to Analyse". */
+  continueLabel?: string;
+  /**
+   * Return to the app home/dashboard. Always provided by the flow so the
+   * terminal screen is never a dead-end (the original bug: Back/Restart only).
+   */
+  onHome?: () => void;
 }
 
 const DIMS: ReadonlyArray<{ label: string; pct: number; color: string }> = [
@@ -23,7 +35,13 @@ const DIMS: ReadonlyArray<{ label: string; pct: number; color: string }> = [
   { label: 'A', pct: 60, color: '#F08A00' },
 ];
 
-export function InClaudeScreen({ onBack, onRestart }: InClaudeScreenProps): JSX.Element {
+export function InClaudeScreen({
+  onBack,
+  onRestart,
+  onContinue,
+  continueLabel,
+  onHome,
+}: InClaudeScreenProps): JSX.Element {
   return (
     <div>
       <Eyebrow>Every surface · same engine</Eyebrow>
@@ -157,6 +175,38 @@ export function InClaudeScreen({ onBack, onRestart }: InClaudeScreenProps): JSX.
           Restart
         </GhostButton>
       </div>
+
+      {/* Forward / home exit — the diagnostic's terminal screen must lead back
+          into the main app, not dead-end on Back/Restart. */}
+      {(onContinue || onHome) && (
+        <div className="mt-3 flex flex-col items-center gap-2.5">
+          {onContinue ? (
+            <>
+              <GoldButton onClick={onContinue} className="w-full sm:w-auto">
+                {continueLabel ?? 'Continue'}
+                <ArrowRight className="h-4 w-4" />
+              </GoldButton>
+              {onHome && (
+                <button
+                  type="button"
+                  onClick={onHome}
+                  className="text-xs font-bold underline-offset-2 hover:underline"
+                  style={{ color: PS_COLORS.g500 }}
+                >
+                  Back to home
+                </button>
+              )}
+            </>
+          ) : (
+            onHome && (
+              <GoldButton onClick={onHome} className="w-full sm:w-auto">
+                Done — back to home
+                <ArrowRight className="h-4 w-4" />
+              </GoldButton>
+            )
+          )}
+        </div>
+      )}
     </div>
   );
 }

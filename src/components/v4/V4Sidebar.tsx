@@ -8,6 +8,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { V4_ROUTES, V4_SPINE, activeStageFor, type SpineStage } from '@/config/v4';
+import { ProfileMenu } from './ProfileMenu';
 
 const TONE_TEXT: Record<SpineStage['tone'], string> = {
   'idea-i': 'text-idea-i',
@@ -74,6 +75,11 @@ export function V4Sidebar(): JSX.Element {
           );
         })}
       </nav>
+
+      {/* Account owner control pinned to the rail bottom (opens upward). */}
+      <div className="mt-2 border-t border-background/10 pt-1">
+        <ProfileMenu variant="full" side="top" />
+      </div>
 
       <div className="border-t border-background/10 p-3">
         <NavLink

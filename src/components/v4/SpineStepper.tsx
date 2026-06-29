@@ -20,7 +20,7 @@ export function SpineStepper(): JSX.Element {
   return (
     <nav
       aria-label="Brand journey progress"
-      className="sticky top-0 z-20 w-full bg-foreground"
+      className="sticky top-12 z-20 w-full bg-foreground md:top-0"
     >
       <ol className="flex items-center gap-1 overflow-x-auto px-3 py-2.5 sm:px-4">
         {V4_SPINE.map((stage, i) => {

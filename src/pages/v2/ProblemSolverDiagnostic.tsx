@@ -22,8 +22,9 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/config/routes';
 import { captureAlphaEvent } from '@/lib/posthogClient';
 import type { TrustGapInputScores } from '@/lib/trustGap';
 import { Stepper } from '@/components/v2/problem-solver/Stepper';
@@ -74,6 +75,7 @@ export default function ProblemSolverDiagnostic({
   embedded = false,
 }: ProblemSolverDiagnosticProps = {}): JSX.Element {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [step, setStep] = useState<ProblemSolverStep>(1);
   // When Recognition is shown, the flow proper begins only after the user enters
@@ -163,6 +165,25 @@ export default function ProblemSolverDiagnostic({
     setEntered(!showRecognition); // back to Recognition when it's the opener
   }, [showRecognition]);
 
+  // Terminal-screen exits. The flow is shared by /v2, /v3, and the /v4 spine, so
+  // rather than hard-code a v4 route here the caller passes its forward target via
+  // query params (the /v4 Diagnose stage links with ?next=/v4/analyse&nextLabel=Analyse).
+  // `next` is sanitised to an internal path to avoid an open-redirect. Home always
+  // falls back to APP_ROOT, which VersionGate resolves to the user's surface — so
+  // the diagnostic is never a dead-end regardless of how it was entered.
+  const rawNext = searchParams.get('next');
+  const nextRoute =
+    rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null;
+  const nextLabel = searchParams.get('nextLabel');
+
+  const handleExitHome = useCallback((): void => {
+    navigate(ROUTES.APP_ROOT);
+  }, [navigate]);
+
+  const handleExitContinue = useCallback((): void => {
+    if (nextRoute) navigate(nextRoute);
+  }, [navigate, nextRoute]);
+
   // Movement 1 (Recognition) — full-screen, no Stepper/BrandBar chrome: the brief
   // requires no product or framework vocabulary here (AC #1). It precedes the flow.
   if (!entered) {
@@ -210,7 +231,15 @@ export default function ProblemSolverDiagnostic({
               <FixScreen report={flow.report} onBack={() => goTo(5)} onContinue={() => goTo(7)} />
             )}
             {step === 7 && <StayAheadScreen onBack={() => goTo(6)} onContinue={() => goTo(8)} />}
-            {step === 8 && <InClaudeScreen onBack={() => goTo(7)} onRestart={handleRestart} />}
+            {step === 8 && (
+              <InClaudeScreen
+                onBack={() => goTo(7)}
+                onRestart={handleRestart}
+                onContinue={nextRoute ? handleExitContinue : undefined}
+                continueLabel={nextLabel ? `Continue to ${nextLabel}` : 'Continue'}
+                onHome={handleExitHome}
+              />
+            )}
           </div>
         </div>
       </div>
