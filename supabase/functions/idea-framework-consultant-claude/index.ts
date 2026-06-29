@@ -33,6 +33,7 @@ import { buildTieredFieldContext } from './fields.ts';
 import { retrieveAllContext, buildUploadedDocumentsContext } from './context.ts';
 import { buildMemorySnapshot } from './memory-context.ts';
 import { runAgenticLoop, runNonStreamingLoop } from './loop.ts';
+import { stripAiDashes } from './sanitize.ts';
 import { computeToolLoopActive } from './registry.ts';
 import { resolveCountry } from './telemetry.ts';
 
@@ -398,7 +399,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        response: responseText,
+        response: stripAiDashes(responseText),
         extractedFields,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
