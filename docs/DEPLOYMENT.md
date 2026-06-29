@@ -55,6 +55,22 @@ Then **verify over HTTP, not just on disk**: `/` serves the static `landing.html
 the served bundle hash matches `dist/assets/index-*.js`. Rollback: an
 `index.html.bak.*` is kept on the box, or rebuild the prior commit + rsync.
 
+> ⚠️ **`index.html` is served WITHOUT `Cache-Control: no-cache`** (only ETag/Last-Modified),
+> so browsers heuristically cache it and a returning user can keep loading a STALE
+> hashed bundle after a deploy (observed 2026-06-29 — a test browser ran a days-old
+> `index-*.js`). The hashed `assets/*` are immutable+fine; the entry HTML is the
+> problem. **Fix (recommended): add `Cache-Control: no-cache` (revalidate) on
+> `index.html` / `404.html` in the box Caddyfile**, keeping `assets/*` long-cache.
+> Until then, verify deploys with a cache-busting query param (`/welcome?cb=…`), and
+> tell testers a hard-refresh may be needed.
+
+> ⚠️ **Deploy-race clobber is real (observed 2026-06-29):** two sessions deployed
+> minutes apart; the second built from a tree missing the first's commit and its
+> `rsync --delete` reverted the first's live bundle (the code stayed on `main`, just
+> not served). ALWAYS `git fetch` + ff `main` and **rebuild from the latest tip**
+> immediately before rsync, and re-verify the live bundle contains your change (grep
+> the served `index-*.js` for a string unique to your commit).
+
 > `VITE_FORCE_V4` lives only in the worktree's gitignored `.env`; a clean `main`
 > build WITHOUT it reverts to gate-OFF (`/v4` not forced). Set it in the build env
 > (or a repo var) to keep `/v4` forced across rebuilds.
