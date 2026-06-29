@@ -11,6 +11,7 @@ import { SpineStepper } from './SpineStepper';
 import { V4Sidebar } from './V4Sidebar';
 import { V4BottomNav } from './V4BottomNav';
 import { V4TopBar } from './V4TopBar';
+import { TrevorCoachWidget } from './TrevorCoachWidget';
 import { useV4ContextAutofill } from '@/hooks/useV4ContextAutofill';
 
 export function V4Layout(): JSX.Element {
@@ -29,6 +30,8 @@ export function V4Layout(): JSX.Element {
         </main>
         <V4BottomNav />
       </div>
+      {/* Floating, transparent Brand Coach — overlays every /v4 page. */}
+      <TrevorCoachWidget />
     </div>
   );
 }
