@@ -36,8 +36,7 @@ export function V4Sidebar(): JSX.Element {
       </div>
 
       <NavLink
-        to={V4_ROUTES.ROOT}
-        end
+        to={V4_ROUTES.CHOICE}
         className={({ isActive }) =>
           cn(
             'mx-3 mb-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
