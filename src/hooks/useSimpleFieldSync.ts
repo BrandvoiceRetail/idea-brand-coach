@@ -1,8 +1,9 @@
 /**
- * useSimpleFieldSync - Simplified field database sync for single avatar
+ * useSimpleFieldSync - Simplified field database sync, avatar-scoped
  *
  * Automatically saves field changes to database as they occur during chat.
- * Designed for single avatar per account workflow.
+ * Takes an `avatarId` and supports the multi-avatar coach: it resets its
+ * per-field sync state when `avatarId` changes (no cross-avatar bleed).
  */
 
 import { useEffect, useCallback, useRef } from 'react';

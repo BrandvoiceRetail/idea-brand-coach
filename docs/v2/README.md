@@ -1,3 +1,5 @@
+> ⚠️ **HISTORICAL** planning doc — v2 is fully implemented, and v4 is now the prod surface. Kept for history.
+
 # IDEA Brand Coach v2 Documentation
 
 ## What's New in v2

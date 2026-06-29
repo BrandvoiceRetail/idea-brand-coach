@@ -15,9 +15,15 @@ Routes are defined centrally in `src/App.tsx` (`react-router-dom`), **statically
 
 ## Primary routes
 
+> `src/App.tsx` is the authoritative route map. The **v4 surface (`/v4/*`) is the prod
+> surface** (`VITE_FORCE_V4` default-on; `VersionGate` resolves `/` into it). v4 routes:
+> `/v4` (onboarding), `/v4/start`, `/v4/connect`, `/v4/diagnose`, `/v4/analyse`, `/v4/fix`,
+> `/v4/remeasure`, `/v4/defend`, `/v4/tools` — all under `V4Layout` except `/v4/tools`.
+> `/v2/coach` is the legacy coach.
+
 | Path | Page | Notes |
 |------|------|-------|
-| `/` | `VersionGate` | resolves to versioned landing/journey |
+| `/` | `VersionGate` | resolves to versioned landing/journey (v4 when `VITE_FORCE_V4`) |
 | `/auth` | `Auth` | sign in / sign up |
 | `/beta` | `BetaWelcome` | beta front door |
 | `/v1/diagnostic` | `FreeDiagnostic` | guest diagnostic flow |

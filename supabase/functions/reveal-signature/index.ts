@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getServiceClient, getAuthedUserId } from "../_shared/edge-auth.ts";
+import { meterAndDebit } from "../_shared/meter.ts";
 import { captureServerException } from "../_shared/posthog.ts";
 
 /**
@@ -251,6 +253,9 @@ serve(async (req) => {
 
     const data = await response.json();
     const rawText = data?.content?.[0]?.text ?? '';
+    // Meter the real token usage for this paid op (records always; debits; never throws).
+    const meterUserId = await getAuthedUserId(req);
+    if (meterUserId) await meterAndDebit(getServiceClient(), { userId: meterUserId, op: 'reveal_signature', model: SONNET_MODEL, usage: data.usage });
     // Without the prefill the model returns the full object; fall back to the
     // legacy fragment reconstruction if it ever emits a bare value.
     const unfenced = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');

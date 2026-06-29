@@ -1,3 +1,5 @@
+> ⚠️ **HISTORICAL** (last updated 2025-11-29). Superseded — the product is now the v4 surface. Kept for history only; do not read as current state.
+
 # Project: IDEA Brand Coach - Current Status
 
 **Branch:** `phase-2-mvp-beta`

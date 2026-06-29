@@ -138,6 +138,7 @@ export default function V4Defend(): JSX.Element {
         <div className="space-y-4">
           <DriftWatchCard
             watch={status?.drift ?? null}
+            hasBaseline={status?.hasBaseline ?? false}
             isLoading={statusLoading}
             error={statusError}
             onRetry={() => void load()}

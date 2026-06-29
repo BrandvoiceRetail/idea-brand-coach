@@ -36,6 +36,7 @@ import {
   type StageId,
 } from '@/config/touchpointTaxonomy';
 import { SupabaseBrandFunnelService } from '@/services/SupabaseBrandFunnelService';
+import { isMember, FREE_TRIAL_PIECE_LIMIT } from '@/lib/entitlement';
 import type {
   IBrandFunnelService,
   BrandAsset,
@@ -329,6 +330,8 @@ export class FixService {
     private readonly funnel: IBrandFunnelService = new SupabaseBrandFunnelService(),
     private readonly invoke: EdgeInvoke = defaultEdgeInvoke,
     private readonly readMetrics: MetricsReader = defaultMetricsReader,
+    /** Membership check for the free-trial gate; injectable for tests. */
+    private readonly checkMember: () => Promise<boolean> = isMember,
   ) {}
 
   /**
@@ -918,6 +921,18 @@ export class FixService {
     // shared across the brand's avatars (not avatar-keyed). The verdict is then
     // recorded per-avatar via the overlay.
     const brandId = input.brandId ?? (input.avatarId ? await this.resolveBrandId(input.avatarId) : null);
+    // Free-trial gate (safety net behind the UI gate): a non-member is held to
+    // FREE_TRIAL_PIECE_LIMIT funnel pieces per brand; the rest needs membership.
+    if (brandId && !(await this.checkMember())) {
+      const existing = await this.funnel.listBrandAssets(brandId, null);
+      const count = existing.data?.length ?? 0;
+      if (count >= FREE_TRIAL_PIECE_LIMIT) {
+        return {
+          status: 'error',
+          error: `Your free trial covers ${FREE_TRIAL_PIECE_LIMIT} funnel piece to iterate on. Become a member to map and monitor your whole funnel.`,
+        };
+      }
+    }
     const created = await this.funnel.createAsset({ ...input, brandId: brandId ?? undefined });
     if (created.error) return dataErr(created.error, 'Could not add that funnel piece.');
     if (!created.data) return dataErr(null, 'The piece was not created.');

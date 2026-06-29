@@ -22,6 +22,9 @@
 const GEMINI_DEFAULT_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 /** Nano Banana Pro = Gemini 3 Pro Image. Override with GEMINI_IMAGE_MODEL. */
 const GEMINI_DEFAULT_IMAGE_MODEL = 'gemini-3-pro-image-preview';
+/** Amazon default: 1:1 at the 2K tier → 2048x2048 (zoom-eligible, native, no downscale). */
+export const AMAZON_DEFAULT_ASPECT = '1:1';
+export const AMAZON_DEFAULT_IMAGE_SIZE = '2K';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -63,6 +66,11 @@ export interface GeminiImageInput {
   prompt: string;
   /** Reference image(s) — the real product photo(s), already fetched + base64-encoded. */
   referenceImages?: InlineImage[];
+  /** Aspect ratio (Nano Banana Pro imageConfig), e.g. "1:1", "4:3", "16:9". */
+  aspectRatio?: string;
+  /** Output resolution tier (Nano Banana Pro imageConfig): "1K" | "2K" | "4K".
+   *  Amazon default is 2K → 2048x2048 at 1:1 (zoom-eligible, no downscale step). */
+  imageSize?: string;
 }
 
 export type GeminiImageResult =
@@ -80,7 +88,8 @@ export function validateGeminiImageInput(input: Partial<GeminiImageInput>): stri
   return null;
 }
 
-/** Build the generateContent request body (camelCase JSON, accepted by v1beta). */
+/** Build the generateContent request body (camelCase JSON, accepted by v1beta).
+ *  Defaults to the Amazon size (1:1 @ 2K → 2048x2048); aspect/size are overridable. */
 export function buildGeminiRequest(input: GeminiImageInput): Record<string, unknown> {
   const parts: Array<Record<string, unknown>> = [{ text: input.prompt.trim() }];
   for (const ref of input.referenceImages ?? []) {
@@ -88,7 +97,13 @@ export function buildGeminiRequest(input: GeminiImageInput): Record<string, unkn
   }
   return {
     contents: [{ role: 'user', parts }],
-    generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
+    generationConfig: {
+      responseModalities: ['TEXT', 'IMAGE'],
+      imageConfig: {
+        aspectRatio: input.aspectRatio?.trim() || AMAZON_DEFAULT_ASPECT,
+        imageSize: input.imageSize?.trim() || AMAZON_DEFAULT_IMAGE_SIZE,
+      },
+    },
   };
 }
 

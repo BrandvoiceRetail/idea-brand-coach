@@ -35,6 +35,10 @@ interface CreateBody {
   prompt?: string;
   referenceImageUrls?: string[];
   model?: string;
+  /** Aspect ratio (default 1:1 for Amazon). */
+  aspectRatio?: string;
+  /** Resolution tier "1K"|"2K"|"4K" (default 2K → 2048x2048 at 1:1 for Amazon). */
+  imageSize?: string;
 }
 
 function fail(error: string, extra: Record<string, unknown> = {}): Response {
@@ -99,7 +103,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const model = resolveGeminiImageModel(body.model);
-    const result = await generateImage(model, { prompt, referenceImages });
+    const result = await generateImage(model, { prompt, referenceImages, aspectRatio: body.aspectRatio, imageSize: body.imageSize });
     if (result.status === 'not_configured') {
       return fail('Image generation is not configured. Set the GEMINI_API_KEY secret.', { code: 'NOT_CONFIGURED' });
     }
