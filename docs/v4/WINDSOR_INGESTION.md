@@ -78,18 +78,23 @@ Empty result = honest no-data; the Fix detail renders "—", never a guess.
 ## Seeding a piece for testing (so Fix shows real numbers)
 
 Until a user actually ingests Windsor data, every piece is empty. To exercise the Fix
-detail end-to-end (e.g. the QA account), seed a piece + metrics directly. A funnel piece
-needs an owning brand; metrics need a `campaign_id` (NOT NULL) and pass the owner-guard
-when `user_id` owns `brand_asset_id`'s brand. Example (QA brand `My Brand`):
+detail end-to-end (e.g. the QA account), seed a piece + metrics directly. Three gotchas:
+(1) a funnel piece needs an owning brand; (2) **v4 funnel pieces are AVATAR-scoped** —
+`SupabaseBrandFunnelService.listAssets` filters `brand_assets` by `avatar_id` (NOT the
+brand-level `avatar_id IS NULL` the v2/MCP inventory uses), so attach the piece to the
+user's **current avatar** (`profiles.current_avatar_id`) or it won't render in their Fix
+funnel; (3) metrics need a `campaign_id` (NOT NULL) and pass the owner-guard only when
+`user_id` owns `brand_asset_id`'s brand. Example (QA brand `My Brand`):
 
 ```sql
--- 1) campaign + funnel piece (piece.brand_id must be a brand owned by user_id)
+-- 1) campaign + funnel piece (piece.brand_id must be a brand owned by user_id;
+--    avatar_id MUST be the user's current/primary avatar — v4 is avatar-scoped)
 with cmp as (
   insert into public.campaigns (user_id, brand_id, name, channel, status)
   values (:uid, :brand_id, 'QA Amazon Listing (seed)', 'amazon', 'active') returning id),
 piece as (
-  insert into public.brand_assets (brand_id, touchpoint_id, stage, status, context_description)
-  values (:brand_id, 'amazon_listing_copy', 'consideration', 'misaligned', 'QA seed') returning id)
+  insert into public.brand_assets (brand_id, avatar_id, touchpoint_id, stage, status, context_description)
+  values (:brand_id, :avatar_id, 'amazon_listing_copy', 'consideration', 'misaligned', 'QA seed') returning id)
 select (select id from cmp) campaign_id, (select id from piece) piece_id;
 
 -- 2) metrics for that piece (run AFTER step 1 so the owner-guard sees the committed piece)
@@ -107,5 +112,6 @@ from (values
 `measured_date` must fall inside the read window. The real path is the `ingest_*` tools;
 this SQL just mimics their output for local/QA verification.
 
-> A live QA seed exists on the shared QA brand (`My Brand`) — touchpoint
-> `amazon_listing_copy` — so the Fix piece-detail renders real numbers on that account.
+> A live QA seed exists on the shared QA brand (`My Brand`), attached to its **current
+> avatar** ("Default Avatar") — touchpoint `amazon_listing_copy` — so the Fix funnel lists
+> the piece and its detail renders real numbers on that account.
