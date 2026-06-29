@@ -37,6 +37,33 @@ Windsor (the user connected it), so it does the read and the mapping, and only t
 the trust boundary clean (Brand Coach stores only what an authenticated owner pushed) and
 matches the "no fabrication" rule — the server can't invent a number it never received.
 
+## Pulling from Windsor: the reports are async (retry, don't narrow)
+
+Amazon's ASIN-grain Sales & Traffic reports (and other large Windsor pulls) are
+**asynchronous**. The first `get_data` call for a date range tells Amazon to *generate*
+the report; Windsor polls, and a slow build often **times out on the host's side before it
+finishes, but Amazon completes the report server-side and caches it.** So the host's pull
+strategy is **retry, not narrow**:
+
+- **A timeout is priming, not failure.** Re-issue the *same* request (same window, same
+  fields); the retry usually catches the now-cached report and returns instantly.
+- **Request the whole window in one call**, at daily granularity, all primitives at once.
+  The date *range* drives the assembly time, not the field count, so do not drop fields or
+  pre-split into 30 single-day calls (each single day is a fresh, un-primed report).
+- **Do not narrow on the first timeout.** Narrowing (30d to 7d) abandons the report Amazon
+  is already building and starts a new one that also times out. Only narrow if the
+  same-range retry still fails after 2 to 3 tries.
+- **Parallelism:** priming several *different* ranges or sources at once is fine (they are
+  independent reports), but firing the *same* call twice simultaneously does not help, the
+  catch needs a brief gap that the next turn naturally provides.
+- Pull **primitives only** (sessions, page_views, units_ordered, order_items,
+  ordered_product_sales, impressions, clicks, spend); the app derives every rate. Ingest the
+  whole window in **one** `ingest_*` call (re-uploads reconcile per-day, no duplicates).
+
+This is the same behaviour the host executes from the `run_onboarding` playbook
+(`src/mcp/service/onboardingState.ts`, the single source of truth) and `SERVER_INSTRUCTIONS`
+(`src/mcp/config.ts`).
+
 ## The pieces
 
 | Piece | Where | Role |
