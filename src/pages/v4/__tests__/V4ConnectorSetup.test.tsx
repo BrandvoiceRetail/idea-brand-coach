@@ -38,15 +38,18 @@ describe('V4ConnectorSetup', () => {
     expect(captureAlphaEvent).toHaveBeenCalledWith('v4_connector_setup_viewed');
   });
 
-  it('renders the connector + Windsor walkthroughs and both case prompts', () => {
+  it('renders the connector + Windsor walkthroughs and the single conversational opener', () => {
     renderPage();
     expect(screen.getByTestId('connector-steps')).toBeInTheDocument();
     expect(screen.getByTestId('windsor-steps')).toBeInTheDocument();
     expect(screen.getByTestId('mcp-url')).toHaveTextContent(
       'https://ideabrandcoach.icodemybusiness.com/mcp',
     );
-    expect(screen.getByTestId('prompt-case-a')).toBeInTheDocument();
-    expect(screen.getByTestId('prompt-case-b')).toBeInTheDocument();
+    // Single casual onboarding prompt (replaces the old two-case walls of text).
+    expect(screen.getByTestId('onboard-prompt')).toBeInTheDocument();
+    expect(screen.getByTestId('onboard-prompt')).toHaveTextContent(/onboard my brand/i);
+    expect(screen.queryByTestId('prompt-case-a')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('prompt-case-b')).not.toBeInTheDocument();
   });
 
   it('copies the MCP URL and emits a copy event', async () => {
@@ -61,15 +64,11 @@ describe('V4ConnectorSetup', () => {
     await screen.findByText('Copied');
   });
 
-  it('copies each prompt with its case slug', async () => {
+  it('copies the onboarding prompt and emits its copy event', async () => {
     renderPage();
-    fireEvent.click(screen.getByTestId('prompt-case-a-copy'));
+    fireEvent.click(screen.getByTestId('onboard-prompt-copy'));
     await waitFor(() =>
-      expect(captureAlphaEvent).toHaveBeenCalledWith('v4_connector_prompt_copied', { case: 'a' }),
-    );
-    fireEvent.click(screen.getByTestId('prompt-case-b-copy'));
-    await waitFor(() =>
-      expect(captureAlphaEvent).toHaveBeenCalledWith('v4_connector_prompt_copied', { case: 'b' }),
+      expect(captureAlphaEvent).toHaveBeenCalledWith('v4_connector_prompt_copied', { case: 'onboard' }),
     );
   });
 
@@ -92,7 +91,6 @@ describe('V4ConnectorSetup', () => {
 
   it('never instructs the coach to invent metrics (no-fabrication posture)', () => {
     renderPage();
-    expect(screen.getByTestId('prompt-case-a')).toHaveTextContent(/rather than guessing/i);
-    expect(screen.getByTestId('prompt-case-b')).toHaveTextContent(/don't invent any numbers/i);
+    expect(screen.getByTestId('onboard-prompt')).toHaveTextContent(/no made-up numbers/i);
   });
 });

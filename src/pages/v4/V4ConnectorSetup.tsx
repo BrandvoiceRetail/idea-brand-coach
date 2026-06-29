@@ -32,25 +32,15 @@ const WINDSOR_HONESTY =
   'Brand Coach never fetches data itself — it reads what Windsor exposes and stores it against each piece, with an honest "—" for anything you haven\'t connected.';
 
 /**
- * Two-case prepared prompts (ONBOARDING_INVENTORY.md §4). Drafted to be pasted
- * into a fresh Claude/ChatGPT chat with the Brand Coach connector enabled.
+ * One casual, conversational opener. The connector coach's `run_onboarding`
+ * DIRECTOR tool is built to fire on a plain "onboard / set up my brand" — it then
+ * runs the whole sequence itself (read brand context → build funnel pieces → pull
+ * whatever analytics are connected → ingest → Trust Gap), and handles the
+ * analytics-or-not branching internally, so there's no need for the old two-case
+ * walls of text. Keeps the no-fabrication clause so the coach marks "—" instead of
+ * guessing.
  */
-const PROMPT_CASE_A = `You have the IDEA Brand Coach connector and my analytics (Windsor.ai or similar).
-Onboard my brand: first read what you already know about my products, customers,
-and reviews. Then pull ALL the funnel history my analytics can give — go as far
-back as each source allows, at daily granularity — and store it against each funnel
-piece (create the pieces if they don't exist yet). Pull source by source so nothing
-is dropped or truncated. Also check which of my analytics connectors are registered
-but not yet enabled/connected — and tell me which ones to switch on to fill gaps in
-my funnel data — instead of silently leaving them "—". Where a metric still isn't
-connected, mark it "—" rather than guessing. When you're done, give me my Trust Gap
-and tell me which funnel piece is weakest, and why.`;
-
-const PROMPT_CASE_B = `You have the IDEA Brand Coach connector but no analytics connected yet. Onboard my
-brand from what you know about me and what I paste: my product, who it's for, where
-I sell, and my goal. Don't invent any numbers — if you need a metric, ask me or
-leave it "—". Walk me to my Trust Gap one question at a time, then tell me the one
-thing to fix first. (I can connect Windsor.ai later to add real funnel numbers.)`;
+const ONBOARD_PROMPT = `Hey — can you onboard my brand in IDEA Brand Coach and set up my funnel? Pull in whatever analytics I've already connected, leave anything that isn't as "—" (no made-up numbers), then show me my Trust Gap and the one piece to fix first.`;
 
 interface AddConnectorStep {
   title: string;
@@ -85,7 +75,7 @@ const WINDSOR_STEPS: readonly AddConnectorStep[] = [
   },
   {
     title: 'Ask the coach to pull them',
-    body: 'In any Brand Coach chat, just ask — the coach maps each metric to the right funnel piece and stores it. Use the prompts below.',
+    body: 'In any Brand Coach chat, just ask — the coach maps each metric to the right funnel piece and stores it. Use the prompt below.',
   },
 ];
 
@@ -203,9 +193,10 @@ export default function V4ConnectorSetup(): JSX.Element {
           Bring your brand in through the connector
         </h1>
         <p className="max-w-2xl text-muted-foreground">
-          Add the IDEA Brand Coach once as a connector, then paste one prompt. It
-          reads what your AI already knows about your brand and analytics — and
-          everything it brings in shows up here in your funnel.
+          Add the IDEA Brand Coach once as a connector, then just ask it to onboard
+          you — in plain English. It reads what your AI already knows about your
+          brand and analytics, and everything it brings in shows up here in your
+          funnel.
         </p>
       </header>
 
@@ -264,45 +255,28 @@ export default function V4ConnectorSetup(): JSX.Element {
         </CardContent>
       </Card>
 
-      {/* 3 — Two-case prompts */}
+      {/* 3 — One conversational opener (the coach's run_onboarding does the rest) */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="h-5 w-5 text-gold-warm" />
-            3 · Paste a prompt to begin
+            3 · Just ask your coach to begin
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">
-              If your analytics ARE connected (Windsor or otherwise)
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              The coach pulls all the history your sources allow, builds the funnel
-              pieces, and marks anything unconnected with "—".
-            </p>
-            <CopyBlock
-              label="Prompt · analytics available"
-              value={PROMPT_CASE_A}
-              testId="prompt-case-a"
-              onCopied={() => emit('v4_connector_prompt_copied', { case: 'a' })}
-            />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">
-              If you don't have analytics connected yet
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              The coach onboards your brand context and sets up the funnel without
-              metrics — honest about what it doesn't have, no invented numbers.
-            </p>
-            <CopyBlock
-              label="Prompt · no analytics yet"
-              value={PROMPT_CASE_B}
-              testId="prompt-case-b"
-              onCopied={() => emit('v4_connector_prompt_copied', { case: 'b' })}
-            />
-          </div>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            No setup script — just say this in your Brand Coach chat (or your own
+            words). It reads your brand, builds your funnel, pulls in whatever
+            analytics you've connected, and gives you your Trust Gap. Works the same
+            whether or not your analytics are hooked up yet — anything unconnected
+            shows an honest "—", never a guessed number.
+          </p>
+          <CopyBlock
+            label="Say this to your coach"
+            value={ONBOARD_PROMPT}
+            testId="onboard-prompt"
+            onCopied={() => emit('v4_connector_prompt_copied', { case: 'onboard' })}
+          />
         </CardContent>
       </Card>
 
