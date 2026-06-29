@@ -29,6 +29,7 @@ Routes are defined centrally in `src/App.tsx` (`react-router-dom`), **statically
 ## Conventions
 
 - Pages are **thin wiring shells**: compose components, read route/auth context, wire callbacks. Business logic belongs in `services/` and `hooks/`.
+- **Resurface stored input on mount.** A page that captures a user field (ASIN, listing, answers) must load that field's store on mount and prefill the input — a returning user never sees a blank field for data they already gave. `ProblemSolverDiagnostic` loads `productDataService.getProducts()` to prefill the ASIN; `DiagnosticResults` does the same. If a screen's copy implies persistence ("upload once; every future session builds on it"), the code must deliver it. See [`docs/architecture/STORE_AND_RESURFACE.md`](../../docs/architecture/STORE_AND_RESURFACE.md).
 - New authed/flagged routes go through `Layout` + the appropriate gate (`AuthGate` is already global; add `FeatureGate` for flagged features) — do not invent a `ProtectedRoute`.
 - Add the route to `src/App.tsx`; prefer `ROUTES`/`V1_ROUTES` constants from `src/config/routes`.
 - Tests live in `src/pages/__tests__/`.

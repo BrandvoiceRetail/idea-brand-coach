@@ -38,6 +38,13 @@ ids the resolver must fill for that generator to run in evidence mode.
    so a missing kind is a type error — keep them in sync when adding a kind.
 5. **Fixtures-parse-against-contracts** is the Phase-0 invariant: every gold-fixture table column
    maps to a schema field, and the fixtures parse clean.
+6. **Every user-enterable field has a real `residesIn` store before `ask`** (store-and-resurface,
+   [`docs/architecture/STORE_AND_RESURFACE.md`](../../../docs/architecture/STORE_AND_RESURFACE.md)).
+   A slot whose `residesIn` is `['ask']`-only is write-only — the field is captured somewhere the
+   resolver never reads, so the coach asks for it again. When a field is written by more than one
+   surface (app scrape vs connector ingest), `residesIn` must name **every** store that holds it —
+   e.g. listing #3 reads `evidence_snapshots` AND `user_products`; reviews #1 reads
+   `user_product_reviews` AND `evidence_snapshots`.
 
 ## Manifest-vs-implementation divergences (recorded so readers don't trust the manifest literally)
 

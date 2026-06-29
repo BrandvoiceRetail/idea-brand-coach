@@ -82,7 +82,10 @@ export const CONTEXT_SLOTS = [
     id: 3,
     name: 'Own listing copy (title/bullets/A+/desc)',
     class: 'EVIDENCE',
-    residesIn: ['evidence_snapshots', 'ask'],
+    // evidence_snapshots first (an explicit ingest_evidence wins), then the app's scraped
+    // listing in user_products (title/bullets/description) so a listing the user already
+    // imported in-app resolves here without re-asking. See store-and-resurface principle.
+    residesIn: ['evidence_snapshots', 'user_products', 'ask'],
     askQuestion:
       'Paste your current listing title, bullets, A+ content, and description (or an Amazon /dp/ URL). The diagnostic cites these as evidence.',
   },
@@ -106,7 +109,9 @@ export const CONTEXT_SLOTS = [
     id: 6,
     name: 'Product claims (capacity, materials, compatibility, guarantees/policies)',
     class: 'PRODUCT-TRUTH',
-    residesIn: ['evidence_snapshots', 'ivos_mcp', 'ask'],
+    // user_products carries the scraped bullets/description (where claims live) alongside
+    // evidence_snapshots, so an already-imported listing surfaces its claims here too.
+    residesIn: ['evidence_snapshots', 'user_products', 'ivos_mcp', 'ask'],
     askQuestion:
       'Confirm the exact product facts and policies (capacity, materials, compatibility, return/guarantee terms). FABRICATION-GATED: these may never appear in generated copy unconfirmed.',
   },

@@ -66,3 +66,9 @@ token). Per-function flags live in `../config.toml`.
 
 - Secrets via Supabase function env (`Deno.env.get`), never committed.
 - Changing auth flows or RLS-affecting behavior requires asking first (root Boundaries).
+- **A function that captures user input must write it where a resolver/reader can resurface it**
+  (store-and-resurface, [`docs/architecture/STORE_AND_RESURFACE.md`](../../docs/architecture/STORE_AND_RESURFACE.md)).
+  `import-product-data` writes `user_products`/`user_product_reviews`, which the MCP context resolver
+  reads for slots #1/#3/#5/#6 — so a listing imported in the app surfaces in the connector coach.
+  When you add a function that stores a new user field, confirm a read path exists (a resolver slot
+  store, or an app/edge read) before considering it done; a write with no read is dead data.

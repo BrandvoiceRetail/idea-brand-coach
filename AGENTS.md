@@ -43,6 +43,12 @@ doing it by hand. 90% accuracy per manual step compounds to ~59% over five steps
 ## Boundaries
 
 ### Always Do
+- **Store and resurface every user input.** Anything a user enters must be (1) persisted to a durable
+  RLS-scoped table the moment it is given (never left in transient component state), and (2) read back
+  at the points where it is useful — the right MCP tool/workflow step, the app UI (load-on-mount +
+  prefill), and the MCP-app panels. A field captured but never resurfaced is a bug even when nothing
+  throws. Full principle, the data register, and the per-field checklist:
+  [`docs/architecture/STORE_AND_RESURFACE.md`](docs/architecture/STORE_AND_RESURFACE.md).
 - Use the Supabase client from `src/integrations/supabase/client.ts`; type queries with the generated
   `src/integrations/supabase/types.ts` (auto-generated — never hand-edit).
 - Handle Supabase errors gracefully: log details to console, surface a `sonner` toast with a clear,
