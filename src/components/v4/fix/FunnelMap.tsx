@@ -516,21 +516,46 @@ export function FunnelMap({
     onRetry?.();
   };
 
+  // ── The avatar picker is the ONLY way to re-scope the map to a different customer
+  // Avatar. It must stay reachable in EVERY state (error/empty included): an active
+  // avatar with no pieces would otherwise trap the user on the empty state with no
+  // way to switch. Defined once here, used by the toolbar AND the error/empty cards. ──
+  const avatarPicker =
+    avatars.length > 0 ? (
+      <ToolbarSelect
+        label="Avatar"
+        value={selectedAvatarId ?? ''}
+        onChange={(v) => {
+          if (!v || v === selectedAvatarId) return;
+          emitFunnel(FUNNEL_MAP_EVENTS.AVATAR_CHANGED, { avatar_id: v });
+          onAvatarChange?.(v);
+        }}
+        options={avatars.map((a) => ({ value: a.id, label: a.name }))}
+      />
+    ) : null;
+
   // ── Error: honest "couldn't reach the coach" + retry, never a faked map ──
   if (error) {
     return (
       <Card data-testid="funnel-map">
-        <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-          <AlertCircle className="h-8 w-8 text-destructive" />
-          <p className="text-sm text-muted-foreground" data-testid="funnel-map-error">
-            {error}
-          </p>
-          {onRetry && (
-            <Button variant="outline" size="sm" onClick={handleRetry} data-testid="funnel-map-retry">
-              <RotateCw className="mr-2 h-4 w-4" />
-              Try again
-            </Button>
+        <CardContent className="py-6">
+          {avatarPicker && (
+            <div className="mb-4 flex justify-end" data-testid="funnel-map-avatar-switch">
+              {avatarPicker}
+            </div>
           )}
+          <div className="flex flex-col items-center gap-3 py-4 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm text-muted-foreground" data-testid="funnel-map-error">
+              {error}
+            </p>
+            {onRetry && (
+              <Button variant="outline" size="sm" onClick={handleRetry} data-testid="funnel-map-retry">
+                <RotateCw className="mr-2 h-4 w-4" />
+                Try again
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
@@ -557,22 +582,29 @@ export function FunnelMap({
   if (isEmpty) {
     return (
       <Card data-testid="funnel-map">
-        <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-          <MapIcon className="h-8 w-8 text-muted-foreground" />
-          <p className="max-w-prose text-sm text-muted-foreground" data-testid="funnel-map-empty">
-            No funnel pieces yet. Add your active brand assets — your listing, ads, emails,
-            packaging — and each will appear here in journey order, judged by its own job. Nothing
-            is invented.
-          </p>
-          {onAddPiece && (
-            <Button variant="brand" size="sm" className="gap-1.5" onClick={handleAddPiece}>
-              <Plus className="h-4 w-4" />
-              Add a piece
-            </Button>
+        <CardContent className="py-6">
+          {avatarPicker && (
+            <div className="mb-4 flex justify-end" data-testid="funnel-map-avatar-switch">
+              {avatarPicker}
+            </div>
           )}
-          <p className="max-w-prose text-xs text-muted-foreground" data-testid="funnel-map-empty-metrics-hint">
-            Metrics appear here once your coach pulls them in Claude.
-          </p>
+          <div className="flex flex-col items-center gap-3 py-4 text-center">
+            <MapIcon className="h-8 w-8 text-muted-foreground" />
+            <p className="max-w-prose text-sm text-muted-foreground" data-testid="funnel-map-empty">
+              No funnel pieces yet for this avatar. Switch avatar above, or add your active brand
+              assets — your listing, ads, emails, packaging — and each will appear here in journey
+              order, judged by its own job. Nothing is invented.
+            </p>
+            {onAddPiece && (
+              <Button variant="brand" size="sm" className="gap-1.5" onClick={handleAddPiece}>
+                <Plus className="h-4 w-4" />
+                Add a piece
+              </Button>
+            )}
+            <p className="max-w-prose text-xs text-muted-foreground" data-testid="funnel-map-empty-metrics-hint">
+              Metrics appear here once your coach pulls them in Claude.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -613,18 +645,7 @@ export function FunnelMap({
               { value: 'website', label: 'Website (DTC)' },
             ]}
           />
-          {avatars.length > 0 && (
-            <ToolbarSelect
-              label="Avatar"
-              value={selectedAvatarId ?? ''}
-              onChange={(v) => {
-                if (!v || v === selectedAvatarId) return;
-                emitFunnel(FUNNEL_MAP_EVENTS.AVATAR_CHANGED, { avatar_id: v });
-                onAvatarChange?.(v);
-              }}
-              options={avatars.map((a) => ({ value: a.id, label: a.name }))}
-            />
-          )}
+          {avatarPicker}
           <ToolbarSelect
             label="Range"
             value={range}
