@@ -35,6 +35,7 @@ import { DriftBanner } from '@/components/v4/fix/DriftBanner';
 import { FunnelMap } from '@/components/v4/fix/FunnelMap';
 import { FunnelPieceDetail } from '@/components/v4/fix/FunnelPieceDetail';
 import { AddPieceDialog } from '@/components/v4/fix/AddPieceDialog';
+import { ReAuditScreenshotDialog } from '@/components/v4/fix/ReAuditScreenshotDialog';
 import { FixTestPanel } from '@/components/v4/fix/FixTestPanel';
 import { TestingLiftTab } from '@/components/v4/fix/TestingLiftTab';
 import { FixBreadcrumb } from '@/components/v4/fix/FixBreadcrumb';
@@ -121,6 +122,7 @@ export default function V4Fix(): JSX.Element {
 
   const [view, setViewState] = useState<FixView>('map');
   const [addOpen, setAddOpen] = useState(false);
+  const [reAuditOpen, setReAuditOpen] = useState(false);
 
   // The piece whose test was last opened — drives the "← Back to {piece}" return
   // affordance in Testing & Lift so opening a test is never a dead-end.
@@ -197,8 +199,9 @@ export default function V4Fix(): JSX.Element {
     goTo('fix');
   };
   const handleCheckAsset = (): void => {
-    // "Check an uploaded asset" = put it under the coach's eye via the upload flow.
-    setAddOpen(true);
+    // "Check this asset" = upload a fresh screenshot of THIS piece and re-audit it
+    // for the active customer (in-place), not create a new piece.
+    setReAuditOpen(true);
   };
 
   // ── Fix → open a test ──────────────────────────────────────────────────────
@@ -530,13 +533,28 @@ export default function V4Fix(): JSX.Element {
         </div>
       )}
 
-      {/* Add-a-piece dialog (modal overlay) — reachable from the map / check-asset. */}
+      {/* Add-a-piece dialog (modal overlay) — reachable from the map. */}
       <AddPieceDialog
         open={addOpen}
         onOpenChange={setAddOpen}
         avatarId={avatarId}
         brandTags={brandTags}
         onAdded={() => void onPieceAdded()}
+      />
+
+      {/* Re-audit an existing piece from a fresh screenshot, scored for the active
+          customer — reachable from the piece detail's "check this asset". */}
+      <ReAuditScreenshotDialog
+        open={reAuditOpen}
+        onOpenChange={setReAuditOpen}
+        pieceId={selectedPiece?.id ?? null}
+        pieceLabel={pieceLabel}
+        avatarId={avatarId}
+        onReAudited={() => {
+          void load();
+          if (selectedPiece) void selectPiece(selectedPiece.id, range);
+          toast.success('Re-audited — the verdict for this customer is updated.');
+        }}
       />
     </div>
   );

@@ -26,7 +26,6 @@ import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import BrandDiagnostic from "./pages/BrandDiagnostic";
-import FreeDiagnostic from "./pages/FreeDiagnostic";
 import ProblemSolverDiagnostic from "./pages/v2/ProblemSolverDiagnostic";
 import DiagnosticResults from "./pages/DiagnosticResults";
 import JourneyBridge from "./components/diagnostic/JourneyBridge";
@@ -293,7 +292,10 @@ const App = () => {
                   </RequireAuth>
                 } />
 
-                <Route path="/v1/diagnostic" element={<FreeDiagnostic />} />
+                {/* Consolidated (2026-06-29): /v1 uses the one diagnostic engine
+                    (ProblemSolverDiagnostic + Recognition), gated like /v2,/v3 —
+                    the divergent FreeDiagnostic questionnaire is retired. */}
+                <Route path="/v1/diagnostic" element={<RequireAuth><ProblemSolverDiagnostic showRecognition /></RequireAuth>} />
 
                 <Route path="/v1/subscribe" element={<RequireAuth><PricingPaywall /></RequireAuth>} />
 

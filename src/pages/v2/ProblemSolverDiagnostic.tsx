@@ -44,11 +44,11 @@ import { InClaudeScreen } from '@/components/v2/problem-solver/InClaudeScreen';
 
 const NAV_NOTE: Record<ProblemSolverStep, string> = {
   1: 'Free Trust Gap Diagnostic',
-  2: 'Your fix — founding offer',
-  3: 'Upload · context remembered',
-  4: 'Analysing…',
-  5: 'Your customer profile',
-  6: 'Your Decision Trigger',
+  2: 'Upload · context remembered',
+  3: 'Analysing…',
+  4: 'Your customer profile',
+  5: 'Your Decision Trigger',
+  6: 'Keep going · membership',
   7: 'Brand Defense · Beta',
   8: 'Inside Claude · Connector',
 };
@@ -146,14 +146,16 @@ export default function ProblemSolverDiagnostic({
    */
   const handleJump = useCallback(
     (target: ProblemSolverStep): void => {
-      if (target >= 3 && !user) {
+      // A FREE ACCOUNT (not payment) is needed to leave the free score and run the
+      // forensic — "earn the ask": the diagnostic + first fix are free.
+      if (target >= 2 && !user) {
         captureAlphaEvent('problem_solver_unlock_gated', { step: target });
         navigate(AUTH_REDIRECT);
         return;
       }
       if (target >= 2 && !flow.selfReport) return; // must diagnose first
-      if (target >= 4 && !flow.asin) return; // must supply an ASIN first
-      if ((target === 5 || target === 6) && !flow.report) return; // need a completed run
+      if (target >= 3 && !flow.asin) return; // must supply an ASIN first
+      if ((target === 4 || target === 5 || target === 6) && !flow.report) return; // need a completed run
       setStep(target);
     },
     [user, flow.selfReport, flow.asin, flow.report, navigate],
@@ -163,19 +165,27 @@ export default function ProblemSolverDiagnostic({
     setFlow((f) => ({ ...f, selfReport: scores }));
   }, []);
 
-  // S2 CTA: auth gate. Signed-in → S3; signed-out → /auth?redirect=/v2/diagnostic.
-  const handleUnlock = useCallback((): void => {
+  // S1 → Upload: the free score is done; gate a FREE ACCOUNT (not payment) before
+  // the forensic run, then proceed. The paywall is gone from here — value first.
+  const handleStartUpload = useCallback((): void => {
     if (!user) {
       captureAlphaEvent('problem_solver_unlock_gated', { step: 2 });
       navigate(AUTH_REDIRECT);
       return;
     }
-    setStep(3);
+    setStep(2);
   }, [user, navigate]);
+
+  // S6 membership ask (AFTER the fix is delivered): continue into the Brand Defence
+  // showcase. The ask is "keep your whole funnel + ongoing monitoring"; the free
+  // trial covers one funnel piece to iterate on (enforcement is a follow-up).
+  const handleMembershipContinue = useCallback((): void => {
+    setStep(7);
+  }, []);
 
   const handleAnalyse = useCallback((asin: string): void => {
     setFlow((f) => ({ ...f, asin, report: null }));
-    setStep(4);
+    setStep(3);
   }, []);
 
   const handleReportComplete = useCallback((report: ForensicResponse): void => {
@@ -221,8 +231,12 @@ export default function ProblemSolverDiagnostic({
           className="overflow-hidden rounded-2xl border"
           style={{ background: PS_COLORS.warm, borderColor: PS_COLORS.line, boxShadow: '0 4px 10px rgba(16,24,40,.10)' }}
         >
-          <Stepper current={step} onJump={handleJump} />
-          <BrandBar note={NAV_NOTE[step]} />
+          {!embedded && (
+            <>
+              <Stepper current={step} onJump={handleJump} />
+              <BrandBar note={NAV_NOTE[step]} />
+            </>
+          )}
 
           <div className="px-4 py-6 sm:px-6 sm:py-7">
             {step === 1 && (
@@ -230,29 +244,30 @@ export default function ProblemSolverDiagnostic({
                 answers={answers}
                 onAnswer={(id, value) => setAnswers((a) => ({ ...a, [id]: value }))}
                 onReveal={handleReveal}
-                onContinue={() => goTo(2)}
+                onContinue={handleStartUpload}
+                embedded={embedded}
               />
             )}
             {step === 2 && (
-              <UnlockScreen isAuthenticated={!!user} onUnlock={handleUnlock} onBack={() => goTo(1)} />
+              <UploadScreen defaultValue={flow.asin ?? undefined} onAnalyse={handleAnalyse} onBack={() => goTo(1)} />
             )}
-            {step === 3 && (
-              <UploadScreen defaultValue={flow.asin ?? undefined} onAnalyse={handleAnalyse} onBack={() => goTo(2)} />
-            )}
-            {step === 4 && flow.asin && flow.selfReport && (
+            {step === 3 && flow.asin && flow.selfReport && (
               <AnalyseScreen
                 asin={flow.asin}
                 selfReport={flow.selfReport}
                 existingReport={flow.report}
                 onComplete={handleReportComplete}
-                onContinue={() => goTo(5)}
+                onContinue={() => goTo(4)}
               />
             )}
-            {step === 5 && flow.report && (
-              <CustomerScreen report={flow.report} onBack={() => goTo(4)} onContinue={() => goTo(6)} />
+            {step === 4 && flow.report && (
+              <CustomerScreen report={flow.report} onBack={() => goTo(3)} onContinue={() => goTo(5)} />
             )}
-            {step === 6 && flow.report && (
-              <FixScreen report={flow.report} onBack={() => goTo(5)} onContinue={() => goTo(7)} />
+            {step === 5 && flow.report && (
+              <FixScreen report={flow.report} onBack={() => goTo(4)} onContinue={() => goTo(6)} />
+            )}
+            {step === 6 && (
+              <UnlockScreen isAuthenticated={!!user} onUnlock={handleMembershipContinue} onBack={() => goTo(5)} />
             )}
             {step === 7 && <StayAheadScreen onBack={() => goTo(6)} onContinue={() => goTo(8)} />}
             {step === 8 && (

@@ -33,12 +33,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { captureAlphaEvent, type AlphaEventProps } from '@/lib/posthogClient';
+import { formatMetricValue } from '@/lib/formatMetric';
 import { STAGES, getTouchpoint, type StageId } from '@/config/touchpointTaxonomy';
 import {
   FUNNEL_JOBS,
   METRIC_META,
   type MetricKey,
-  type MetricFormat,
 } from '@/config/v4Funnel';
 import type { FunnelPiece, JobVerdict, MetricRange, PieceMetrics } from '@/types/v4Fix';
 import { FUNNEL_MAP_EVENTS, type FunnelMapEvent } from './funnelMapEvents';
@@ -140,29 +140,8 @@ const RANGE_LABEL: Record<MetricRange, string> = {
   '90d': 'Last 90 days',
 };
 
-const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
-
-/**
- * Render one metric value in its natural unit. Percent metrics may arrive as a
- * fraction (derived cvr = orders ÷ clicks) or already as a percentage from the
- * source — so values ≤ 1 are scaled ×100, larger values are taken as-is. Never
- * fabricates: a null/absent value is the caller's "—".
- */
-function formatMetricValue(value: number, format: MetricFormat): string {
-  switch (format) {
-    case 'percent': {
-      const pct = value <= 1 ? value * 100 : value;
-      return `${pct.toFixed(1)}%`;
-    }
-    case 'currency':
-      return value >= 1000 ? `$${compact.format(value)}` : `$${value.toFixed(2)}`;
-    case 'ratio':
-      return `${value.toFixed(1)}×`;
-    case 'count':
-    default:
-      return value >= 10000 ? compact.format(value) : value.toLocaleString('en-US');
-  }
-}
+// Metric formatting now lives in the shared `@/lib/formatMetric` (imported above)
+// so FunnelMap and FunnelPieceDetail can never drift on the percent ×100 scaling.
 
 // ── Roll-up counts (derived from the pieces, never fabricated) ─────────────────
 

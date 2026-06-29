@@ -11,11 +11,12 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { V4_SPINE, activeStageFor } from '@/config/v4';
+import { useSpineCompletion } from '@/hooks/useSpineCompletion';
 
 export function SpineStepper(): JSX.Element {
   const { pathname } = useLocation();
   const active = activeStageFor(pathname);
-  const activeIndex = active ? V4_SPINE.findIndex((s) => s.key === active.key) : -1;
+  const completion = useSpineCompletion();
 
   return (
     <nav
@@ -24,7 +25,7 @@ export function SpineStepper(): JSX.Element {
     >
       <ol className="flex items-center gap-1 overflow-x-auto px-3 py-2.5 sm:px-4">
         {V4_SPINE.map((stage, i) => {
-          const isDone = activeIndex > -1 && i < activeIndex;
+          const isDone = completion[stage.key];
           const isCurrent = active?.key === stage.key;
           return (
             <li key={stage.key} className="flex shrink-0 items-center gap-1">

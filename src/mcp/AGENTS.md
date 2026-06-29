@@ -117,4 +117,14 @@ asserts the advertised tool set + handler behavior end-to-end.
 - **Calculation Parity (Gen-3 lock).** When the owned tools are added next, they must
   wrap the existing Supabase edge fns / TS services **verbatim** (byte-identical output).
 - **Logs are redaction-gated.** Always log via `safeLog` from `logging/redact.ts`.
+- **Tool telemetry is uniform + MF-5-safe.** `instrument.ts` wraps `registerTool` ONCE
+  (`instrumentToolLatency(server)` in `server.ts`, before any `register*Tool`), so EVERY tool
+  emits one `mcp_tool_latency` event per call — no per-tool wiring. Properties: `tool`,
+  `duration_ms`, `ok`, `error_name`, `outcome` (`delivered` | `needs_input` | `error` |
+  `empty` — the bounce signal: a session whose terminal call is not `delivered` is a bounce
+  candidate), `session_id` (best-effort `Mcp-Session-Id`; also promoted to PostHog
+  `$session_id` in `posthog.ts` so events sessionize for funnel/path analysis), `arg_keys`
+  (top-level input key NAMES only, sorted — schema, NOT values, so MF-5 holds), `authenticated`,
+  `country`, `region`. Session anchors `mcp_session_authenticated` / `mcp_auth_challenge` carry
+  `session_id` too. To add a signal, extend the wrapper — never instrument tools individually.
 - Don't bind PROVISIONAL IV-OS tools until D5 lands.

@@ -28,7 +28,7 @@
  * split as the other v4 services.
  */
 import { supabase } from '@/integrations/supabase/client';
-import { getDrift as defaultGetDrift } from '@/services/v4/fixService';
+import { getDrift as defaultGetDrift, getFunnelPieces as defaultGetPieces } from '@/services/v4/fixService';
 import { getTrustGapLift as defaultGetLift } from '@/services/v4/remeasureService';
 import type { FixResult } from '@/types/v4Fix';
 import type { RemeasureResult, TrustGapLift } from '@/types/v4Remeasure';
@@ -52,9 +52,23 @@ export type DriftReader = (avatarId: string | null) => Promise<FixResult<DriftIt
 /** Reads the real before/after Trust Gap lift (defaults to Loop-4 getTrustGapLift). */
 export type LiftReader = (avatarId: string | null) => Promise<RemeasureResult<TrustGapLift>>;
 
+/**
+ * Reports whether the avatar has a real baseline to defend — at least one ALIGNED
+ * asset. An aligned asset can only exist once it was audited against a Signature,
+ * so a single aligned piece is concrete proof of BOTH real aligned assets and a
+ * Signature; it is NEVER inferred from an empty drift list.
+ */
+export type BaselineReader = (avatarId: string) => Promise<boolean>;
+
 const defaultEdgeInvoke: EdgeInvoke = async (fn, body) => {
   const { data, error } = await supabase.functions.invoke(fn, { body });
   return { data, error };
+};
+
+/** Real baseline check: the avatar has something to defend only once a piece is aligned. */
+const defaultReadBaseline: BaselineReader = async (avatarId) => {
+  const res = await defaultGetPieces(avatarId);
+  return res.status === 'ok' && res.data.some((p) => p.status === 'doing_job');
 };
 
 // ── value guards ────────────────────────────────────────────────────────────────
@@ -84,6 +98,7 @@ export class DefendService {
     private readonly readDrift: DriftReader = defaultGetDrift,
     private readonly readLift: LiftReader = defaultGetLift,
     private readonly invoke: EdgeInvoke = defaultEdgeInvoke,
+    private readonly readBaseline: BaselineReader = defaultReadBaseline,
   ) {}
 
   /**
@@ -112,12 +127,22 @@ export class DefendService {
       liftConfirmed = false;
     }
 
+    // Is there anything real to defend? Only true once an asset is ALIGNED (which
+    // requires a Signature). A read failure degrades to an honest "nothing yet".
+    let hasBaseline = false;
+    try {
+      hasBaseline = await this.readBaseline(avatarId);
+    } catch {
+      hasBaseline = false;
+    }
+
     return {
       status: 'ok',
       data: {
         drift: { items, count: items.length },
         liftConfirmed,
-        checklist: buildChecklist(items.length, liftConfirmed),
+        hasBaseline,
+        checklist: buildChecklist(items.length, liftConfirmed, hasBaseline),
       },
     };
   }
@@ -166,6 +191,7 @@ export class DefendService {
 export function buildChecklist(
   driftCount: number,
   liftConfirmed: boolean,
+  hasBaseline = true,
 ): DefendChecklistItem[] {
   return [
     {
@@ -179,11 +205,12 @@ export function buildChecklist(
     {
       key: 'drift',
       label: 'No assets drifted from your Signature',
-      detail:
-        driftCount === 0
+      detail: !hasBaseline
+        ? 'Nothing aligned to a Signature yet — work a fix first and I will watch it for drift.'
+        : driftCount === 0
           ? 'Every aligned asset still matches your current Signature.'
           : `${driftCount} asset${driftCount === 1 ? '' : 's'} built against an older Signature — re-check ${driftCount === 1 ? 'it' : 'them'} in Fix.`,
-      state: driftCount === 0 ? 'done' : 'attention',
+      state: !hasBaseline ? 'pending' : driftCount === 0 ? 'done' : 'attention',
     },
     {
       key: 'competitor',

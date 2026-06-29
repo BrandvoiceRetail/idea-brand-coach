@@ -39,6 +39,8 @@ import { registerGenerateSignatureTool } from './tools/generateSignature.js';
 import { registerPersistSignatureTool } from './tools/persistSignature.js';
 import { registerGetContextStatusTool } from './tools/getContextStatus.js';
 import { registerProvideContextTool } from './tools/provideContext.js';
+import { registerRememberTool } from './tools/remember.js';
+import { registerRecallTool } from './tools/recall.js';
 import { registerIngestEvidenceTool } from './tools/ingestEvidence.js';
 import { registerBulkIngestEvidenceTool, registerGetIngestJobTool } from './tools/bulkIngest.js';
 import { registerBuildAvatarStageTool } from './tools/buildAvatarStage.js';
@@ -179,6 +181,8 @@ export function createServer(
   // All three are identity-gated (gateWrite) and never fabricate PRODUCT-TRUTH.
   registerGetContextStatusTool(server);
   registerProvideContextTool(server);
+  registerRememberTool(server);
+  registerRecallTool(server);
   registerIngestEvidenceTool(server, edge);
   registerBulkIngestEvidenceTool(server, edge);
   registerGetIngestJobTool(server, edge);

@@ -25,9 +25,15 @@ interface DiagnoseScreenProps {
   onReveal: (scores: TrustGapInputScores) => void;
   /** Advance to S2 (Unlock). */
   onContinue: () => void;
+  /**
+   * Drop the screen's own "Free Trust Gap Diagnostic" eyebrow when embedded in a
+   * host shell (the /v4 spine) that already supplies page chrome. Off by default,
+   * so standalone /v2·/v3 keep the eyebrow.
+   */
+  embedded?: boolean;
 }
 
-export function DiagnoseScreen({ answers, onAnswer, onReveal, onContinue }: DiagnoseScreenProps): JSX.Element {
+export function DiagnoseScreen({ answers, onAnswer, onReveal, onContinue, embedded = false }: DiagnoseScreenProps): JSX.Element {
   const [revealed, setRevealed] = useState(false);
   const allAnswered = PROBLEM_SOLVER_QUESTIONS.every((q) => !!answers[q.id]);
 
@@ -41,7 +47,7 @@ export function DiagnoseScreen({ answers, onAnswer, onReveal, onContinue }: Diag
 
   return (
     <div>
-      <Eyebrow>Free Trust Gap Diagnostic™</Eyebrow>
+      {!embedded && <Eyebrow>Free Trust Gap Diagnostic™</Eyebrow>}
       <ScreenHeading accent="working.">You already know something isn&rsquo;t</ScreenHeading>
       <Lede>
         Your numbers are off and you don&rsquo;t know what to fix first. Four quick questions give you a fast
@@ -49,6 +55,7 @@ export function DiagnoseScreen({ answers, onAnswer, onReveal, onContinue }: Diag
         listing and reviews.
       </Lede>
 
+      {!revealed && (
       <PSCard>
         <div
           className="mb-3 text-[11px] font-extrabold uppercase tracking-wide"
@@ -117,13 +124,29 @@ export function DiagnoseScreen({ answers, onAnswer, onReveal, onContinue }: Diag
             className="mt-1.5 w-full rounded-[10px] px-5 py-3 text-sm font-extrabold text-white transition-opacity disabled:opacity-50"
             style={{ background: PS_COLORS.navy }}
           >
-            Reveal my Trust Gap Score →
+            Find my Trust Gap →
           </button>
         )}
       </PSCard>
+      )}
 
       {model && (
         <PSCard>
+          {/* Finding first — the plain-language read leads; the score supports it. */}
+          <div
+            className="mb-4 rounded-[10px] border p-4"
+            style={{ background: PS_COLORS.redLight, borderColor: '#FDA29B' }}
+          >
+            <div
+              className="text-[11px] font-extrabold uppercase tracking-wide"
+              style={{ color: PS_COLORS.red }}
+            >
+              What this means
+            </div>
+            <p className="mt-1 text-[15px] font-bold leading-snug" style={{ color: PS_COLORS.navy }}>
+              Your widest gap is {model.primaryGapMeta.label} — {model.primaryGapMeta.measures}
+            </p>
+          </div>
           <div className="py-1 text-center">
             <div className="text-[60px] font-extrabold leading-none" style={{ color: PS_COLORS.navy }}>
               {model.overall}
@@ -150,12 +173,6 @@ export function DiagnoseScreen({ answers, onAnswer, onReveal, onContinue }: Diag
               <span>Wide gap</span>
               <span>Moderate</span>
               <span>Strong</span>
-            </div>
-            <div
-              className="mt-2 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold"
-              style={{ background: PS_COLORS.redLight, color: PS_COLORS.red, borderColor: '#FDA29B' }}
-            >
-              ⚠ Primary gap: {model.primaryGapMeta.label}
             </div>
           </div>
 
@@ -198,7 +215,7 @@ export function DiagnoseScreen({ answers, onAnswer, onReveal, onContinue }: Diag
 
           <div className="mt-4 flex justify-end">
             <GoldButton onClick={onContinue}>
-              Find out exactly what to fix
+              Upload my listing and find the fix
               <ArrowRight className="h-4 w-4" />
             </GoldButton>
           </div>

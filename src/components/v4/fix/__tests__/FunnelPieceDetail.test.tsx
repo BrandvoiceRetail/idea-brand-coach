@@ -44,7 +44,9 @@ const METRICS_OK: DataResult<PieceMetrics> = {
     pieceId: 'piece-1',
     range: '30d',
     metrics: {
-      cvr: { key: 'cvr', value: 10.7, source: 'derived', derived: true },
+      // Stored as a FRACTION (orders ÷ clicks). Must render ×100 = "5.0%", not "0.1%"
+      // — the bug where FunnelPieceDetail skipped the percent scaling FunnelMap had.
+      cvr: { key: 'cvr', value: 0.05, source: 'derived', derived: true },
       aov: { key: 'aov', value: 25.02, source: 'derived', derived: true },
       clicks: { key: 'clicks', value: 9360, source: 'amazon_ads', derived: false },
       orders: { key: 'orders', value: 1003, source: 'amazon_sp', derived: false },
@@ -102,8 +104,8 @@ describe('FunnelPieceDetail', () => {
     render(
       <FunnelPieceDetail piece={makePiece()} pieceLabel="Amazon Listing — TLB216" metrics={METRICS_OK} />,
     );
-    // consideration → primary metrics are cvr + aov
-    expect(screen.getByTestId('funnel-piece-metric-cvr')).toHaveTextContent('10.7%');
+    // consideration → primary metrics are cvr + aov. cvr 0.05 (fraction) → "5.0%".
+    expect(screen.getByTestId('funnel-piece-metric-cvr')).toHaveTextContent('5.0%');
     expect(screen.getByTestId('funnel-piece-metric-aov')).toHaveTextContent('$25.02');
     // secondary pills carry the rest
     expect(screen.getByTestId('funnel-piece-pill-clicks')).toHaveTextContent('9,360');

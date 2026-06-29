@@ -32,6 +32,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import EvalBench from './EvalBench';
 import CriteriaStudio from './CriteriaStudio';
+import McpTelemetry from './McpTelemetry';
 
 const BRAND_BLUE = '#111111';
 const BRAND_GOLD = '#D4960A';
@@ -103,6 +104,7 @@ export default function CoachEvalsAdmin() {
           <TabsTrigger value="guardrails">Guardrails &amp; flags</TabsTrigger>
           <TabsTrigger value="bench">Eval bench</TabsTrigger>
           <TabsTrigger value="criteria">Criteria studio</TabsTrigger>
+          <TabsTrigger value="telemetry">MCP telemetry</TabsTrigger>
         </TabsList>
 
         {/* ── Current coach value scorecard ── */}
@@ -277,6 +279,10 @@ export default function CoachEvalsAdmin() {
         {/* ── Non-technical criteria authoring ── */}
         <TabsContent value="criteria" className="mt-6">
           <CriteriaStudio />
+        </TabsContent>
+
+        <TabsContent value="telemetry" className="mt-6">
+          <McpTelemetry />
         </TabsContent>
       </Tabs>
     </div>

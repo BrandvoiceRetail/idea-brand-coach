@@ -139,6 +139,11 @@ export type AlphaEventName =
   | 'v4_onboarding_advanced_to_diagnose'
   | 'v4_diagnose_run_diagnostic_clicked'
   | 'v4_diagnose_stage_viewed'
+  // Already-diagnosed recap: a returning/MCP-onboarded user with a saved Trust Gap
+  // is offered "Continue to Fix" instead of restarting the diagnostic.
+  | 'v4_diagnose_already_done'
+  | 'v4_diagnose_skip_to_fix'
+  | 'v4_diagnose_rerun'
   | 'v4_analyse_stage_viewed'
   | 'v4_analyse_gate_blocked'
   | 'v4_analyse_advanced_to_fix'
@@ -157,6 +162,10 @@ export type AlphaEventName =
   | 'v4_fix_stage_viewed'
   | 'v4_fix_gate_blocked'
   | 'v4_fix_advanced_to_remeasure'
+  // Re-audit an existing piece from a fresh screenshot (per-avatar overlay).
+  | 'v4_piece_reaudit_submitted'
+  | 'v4_piece_reaudit_succeeded'
+  | 'v4_piece_reaudit_failed'
   // Loop-3 Fix sub-view navigation (funnel map ↔ piece detail ↔ fix & test ↔
   // testing & lift). The `view` slug only — no copy/PII.
   | 'v4_fix_view_changed'

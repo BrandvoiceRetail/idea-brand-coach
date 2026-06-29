@@ -38,23 +38,26 @@ export const PS_STEPS: ReadonlyArray<{
   /** Analytics name for the step — stable, PII-free. */
   name: string;
 }> = [
+  // "Earn the ask": the full diagnostic + the first fix are FREE; the membership
+  // ask (free trial = one funnel piece to iterate on; paid = whole funnel + ongoing
+  // monitoring) lands AFTER the fix, never before value.
   { step: 1, label: 'Diagnose', tag: 'FREE', name: 'diagnose' },
-  { step: 2, label: 'Unlock', name: 'unlock' },
-  { step: 3, label: 'Upload', name: 'upload' },
-  { step: 4, label: 'Analyse', name: 'analyse' },
-  { step: 5, label: 'Customer', name: 'customer' },
-  { step: 6, label: 'Your fix', name: 'fix' },
+  { step: 2, label: 'Upload', name: 'upload' },
+  { step: 3, label: 'Analyse', name: 'analyse' },
+  { step: 4, label: 'Customer', name: 'customer' },
+  { step: 5, label: 'Your fix', name: 'fix' },
+  { step: 6, label: 'Keep going', name: 'membership' },
   { step: 7, label: 'Stay ahead', tag: 'BETA', name: 'stay_ahead' },
   { step: 8, label: 'In Claude', name: 'in_claude' },
 ];
 
 export const PS_STEP_NAME: Record<ProblemSolverStep, string> = {
   1: 'diagnose',
-  2: 'unlock',
-  3: 'upload',
-  4: 'analyse',
-  5: 'customer',
-  6: 'fix',
+  2: 'upload',
+  3: 'analyse',
+  4: 'customer',
+  5: 'fix',
+  6: 'membership',
   7: 'stay_ahead',
   8: 'in_claude',
 };

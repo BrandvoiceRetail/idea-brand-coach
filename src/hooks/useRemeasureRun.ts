@@ -105,10 +105,22 @@ export function useRemeasureRun(): RemeasureRunHook {
     if (liftRes.status === 'ok') {
       setLift(liftRes.data);
       pivot = liftRes.data.measuredAt || null;
-    } else {
+    } else if (liftRes.status === 'needs_input') {
+      // Missing/insufficient diagnostic history is NOT an error — degrade to an
+      // honest neutral state (the card's needs-run branch), never the hard
+      // "couldn't read your diagnostic history" box. The service can't tell zero
+      // prior runs from one, so use a single baseline-honest message that is true
+      // either way and never implies a before/after that doesn't exist.
       setLift(null);
+      setLiftNeedsRun(true);
+      setLiftMessage(
+        'No before-and-after to compare yet — I need two real diagnostic runs. Run the Trust Gap diagnostic to set your baseline, then re-run it after your fix and I’ll show the gap closing. I never invent a before/after.',
+      );
+    } else {
+      // Genuine fetch failure only — keep the retryable error path.
+      setLift(null);
+      setLiftNeedsRun(false);
       setLiftMessage(messageFor(liftRes));
-      setLiftNeedsRun(liftRes.status === 'needs_input');
     }
     setLiftLoading(false);
 

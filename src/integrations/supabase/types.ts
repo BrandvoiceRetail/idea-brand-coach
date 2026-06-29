@@ -371,6 +371,7 @@ export type Database = {
           grounding: string
           id: string
           overall_score: number | null
+          status: string | null
           superseded_by: string | null
           user_id: string
         }
@@ -384,6 +385,7 @@ export type Database = {
           grounding?: string
           id?: string
           overall_score?: number | null
+          status?: string | null
           superseded_by?: string | null
           user_id: string
         }
@@ -397,6 +399,7 @@ export type Database = {
           grounding?: string
           id?: string
           overall_score?: number | null
+          status?: string | null
           superseded_by?: string | null
           user_id?: string
         }
@@ -3068,6 +3071,7 @@ export type Database = {
           p_evidence_refs: Json
           p_grounding: string
           p_overall_score: number
+          p_status?: string
         }
         Returns: {
           audit_result: Json | null
@@ -3079,6 +3083,7 @@ export type Database = {
           grounding: string
           id: string
           overall_score: number | null
+          status: string | null
           superseded_by: string | null
           user_id: string
         }

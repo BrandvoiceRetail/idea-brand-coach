@@ -6,6 +6,8 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { registerGetContextStatusTool } from '../tools/getContextStatus.js';
 import { registerProvideContextTool } from '../tools/provideContext.js';
+import { registerRememberTool } from '../tools/remember.js';
+import { registerRecallTool } from '../tools/recall.js';
 import { registerIngestEvidenceTool, parseReviews } from '../tools/ingestEvidence.js';
 import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
 import { __setUserSupabaseFactory } from '../supabaseUser.js';
@@ -314,6 +316,120 @@ describe('provide_context tool', () => {
     expect(sc.results[0].status).toBe('filled-stated');
     const ins = stub.ops.find((o) => o.table === 'avatar_field_values' && o.verb === 'insert');
     expect(ins?.payload).toMatchObject({ avatar_id: 'av-1', field_source: 'manual' });
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// remember — proactive capture, relevance-filtered to the stated classes
+// ---------------------------------------------------------------------------------------
+describe('remember tool', () => {
+  it('denies anonymous callers before any store write', async () => {
+    const client = await connect(registerRememberTool); // no stub: a leaked write would throw
+    const res = await client.callTool({
+      name: 'remember',
+      arguments: { facts: [{ slot: 8, value: { revenue: 10000 } }] },
+    });
+    const sc = res.structuredContent as { ok: boolean; note: string };
+    expect(res.isError).toBe(true);
+    expect(sc.ok).toBe(false);
+    expect(sc.note).toMatch(/unauthenticated/i);
+  });
+
+  it('captures a BUSINESS-FACT and re-resolves it to confirmable filled-stated', async () => {
+    const stub = install();
+    stub.on('business_facts', 'select', { data: null, error: null }); // writeback: no prior current
+    stub.on('business_facts', 'insert', { data: { id: 'bf-1' }, error: null });
+    stub.on('business_facts', 'select', {
+      data: { structured_data: { revenue: 10000 }, content: null, updated_at: new Date().toISOString() },
+      error: null,
+    }); // re-resolve read
+    const client = await connect(registerRememberTool);
+    const res = await runWithIdentity(authed, () =>
+      client.callTool({ name: 'remember', arguments: { facts: [{ slot: 8, value: { revenue: 10000 } }] } }),
+    );
+    const sc = res.structuredContent as {
+      ok: boolean;
+      captured: number;
+      results: Array<{ slot: number; ok: boolean; store: string; status: string }>;
+    };
+    expect(sc.ok).toBe(true);
+    expect(sc.captured).toBe(1);
+    expect(sc.results[0].store).toBe('business_facts');
+    expect(sc.results[0].status).toBe('filled-stated'); // never filled-evidence
+  });
+
+  it('REJECTS an EVIDENCE slot (verbatim) and points to ingest_evidence — no store write', async () => {
+    install(); // any leaked write would surface as a different result than the rejection
+    const client = await connect(registerRememberTool);
+    const res = await runWithIdentity(authed, () =>
+      client.callTool({ name: 'remember', arguments: { facts: [{ slot: 1, value: 'a review the owner mentioned' }] } }),
+    );
+    const sc = res.structuredContent as {
+      captured: number;
+      rejected: number;
+      results: Array<{ slot: number; ok: boolean; note?: string }>;
+    };
+    expect(sc.captured).toBe(0);
+    expect(sc.rejected).toBe(1);
+    expect(sc.results[0].ok).toBe(false);
+    expect(sc.results[0].note).toMatch(/ingest_evidence/);
+  });
+
+  it('an inferred OWNER-INTENT fact stores field_source=ai → resolves filled-inferred (confirmable)', async () => {
+    const stub = install();
+    stub.on('avatars', 'select', { data: { id: 'av-1', brand_id: 'brand-1' }, error: null }); // ownership gate
+    stub.on('avatar_field_values', 'insert', { data: { id: 'afv-1' }, error: null });
+    stub.on('avatar_field_values', 'select', {
+      data: { field_value: 'wants status', field_source: 'ai', extracted_at: new Date().toISOString() },
+      error: null,
+    }); // re-resolve read
+    const client = await connect(registerRememberTool);
+    const res = await runWithIdentity(authed, () =>
+      client.callTool({
+        name: 'remember',
+        arguments: { facts: [{ slot: 14, value: 'wants status', source: 'inferred' }], avatar_id: 'av-1' },
+      }),
+    );
+    const sc = res.structuredContent as { results: Array<{ slot: number; store: string; status: string }> };
+    expect(sc.results[0].store).toBe('avatar_field_values');
+    expect(sc.results[0].status).toBe('filled-inferred');
+    const ins = stub.ops.find((o) => o.table === 'avatar_field_values' && o.verb === 'insert');
+    expect(ins?.payload).toMatchObject({ field_source: 'ai' });
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// recall — the symmetric load half (session-start resurface)
+// ---------------------------------------------------------------------------------------
+describe('recall tool', () => {
+  it('loads the filled slots as a readable summary, excluding framework slots', async () => {
+    const stub = install();
+    // One BUSINESS-FACT read resolves (first business_facts read wins the queued row); the
+    // rest of the stores are empty. Framework slots (17/18) always fill but recall excludes them.
+    stub.on('business_facts', 'select', {
+      data: { structured_data: { registry: 'brand registered' }, content: null, updated_at: new Date().toISOString() },
+      error: null,
+    });
+    const client = await connect(registerRecallTool);
+    const res = await runWithIdentity(authed, () => client.callTool({ name: 'recall', arguments: {} }));
+    const sc = res.structuredContent as {
+      ok: boolean;
+      known: Array<{ slot: number; class: string; status: string }>;
+      missing: number;
+    };
+    expect(sc.ok).toBe(true);
+    expect(sc.known.some((k) => k.class === 'BUSINESS-FACT' && k.status === 'filled-stated')).toBe(true);
+    expect(sc.known.some((k) => k.slot === 17 || k.slot === 18)).toBe(false); // framework excluded
+  });
+
+  it('empty brand → nothing on file', async () => {
+    install(); // every store empty → only framework slots fill, which recall excludes
+    const client = await connect(registerRecallTool);
+    const res = await runWithIdentity(authed, () => client.callTool({ name: 'recall', arguments: {} }));
+    const sc = res.structuredContent as { known: unknown[] };
+    const text = (res.content as Array<{ text: string }>)[0].text;
+    expect(sc.known).toEqual([]);
+    expect(text).toMatch(/nothing is on file/i);
   });
 });
 
