@@ -38,6 +38,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GroundedStrip, type GroundedField } from '@/components/v4/GroundedStrip';
 import { captureAlphaEvent } from '@/lib/posthogClient';
+import { formatMetricValue } from '@/lib/formatMetric';
 import { STAGES, type StageId } from '@/config/touchpointTaxonomy';
 import {
   FUNNEL_JOBS,
@@ -76,32 +77,11 @@ function emit(name: FunnelPieceEvent, props?: Record<string, string | number | b
   captureAlphaEvent(name, props);
 }
 
-/** Format a metric value for display per its format; null → honest "—". */
-function formatMetric(value: number | null, format: MetricFormat): string {
-  if (value === null || Number.isNaN(value)) return '—';
-  switch (format) {
-    case 'percent':
-      return `${round(value, 1)}%`;
-    case 'currency':
-      return value >= 1000 ? `$${compact(value)}` : `$${value.toFixed(2)}`;
-    case 'ratio':
-      return `${value.toFixed(1)}×`;
-    case 'count':
-    default:
-      return value >= 10000 ? compact(value) : Math.round(value).toLocaleString();
-  }
-}
-
-function round(value: number, dp: number): number {
-  const f = 10 ** dp;
-  return Math.round(value * f) / f;
-}
-
-function compact(value: number): string {
-  return new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(
-    value,
-  );
-}
+/**
+ * Format a metric value for display — delegates to the shared formatter so the
+ * percent ×100 scaling matches FunnelMap (a CVR of 0.05 reads "5.0%", not "0.1%").
+ */
+const formatMetric = formatMetricValue;
 
 /** "12 Jun" style date; null/invalid → null. */
 function formatDate(iso: string | null): string | null {
@@ -192,7 +172,7 @@ export function FunnelPieceDetail({
 
       <header className="space-y-2">
         <span
-          className="inline-block rounded-full bg-gold-light/40 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-gold-warm"
+          className="inline-block rounded-full border border-gold-warm/40 bg-gold-warm/20 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-gold-warm"
           data-testid="funnel-piece-stage"
         >
           {STAGE_LABEL[piece.stage]}
@@ -514,7 +494,7 @@ function MetricsBody({
           return (
             <div
               key={key}
-              className="rounded-lg border border-gold-warm bg-gold-light/30 p-3"
+              className="rounded-lg border-2 border-gold-warm bg-gold-warm/15 p-3"
               data-testid={`funnel-piece-metric-${key}`}
             >
               <div className="text-[0.65rem] font-bold uppercase tracking-wide text-muted-foreground">

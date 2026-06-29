@@ -162,6 +162,10 @@ export type AlphaEventName =
   | 'v4_fix_stage_viewed'
   | 'v4_fix_gate_blocked'
   | 'v4_fix_advanced_to_remeasure'
+  // Re-audit an existing piece from a fresh screenshot (per-avatar overlay).
+  | 'v4_piece_reaudit_submitted'
+  | 'v4_piece_reaudit_succeeded'
+  | 'v4_piece_reaudit_failed'
   // Loop-3 Fix sub-view navigation (funnel map ↔ piece detail ↔ fix & test ↔
   // testing & lift). The `view` slug only — no copy/PII.
   | 'v4_fix_view_changed'

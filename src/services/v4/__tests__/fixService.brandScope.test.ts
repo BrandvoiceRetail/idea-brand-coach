@@ -48,6 +48,7 @@ function fakeFunnel(over: Partial<IBrandFunnelService>): IBrandFunnelService {
     getAsset: vi.fn(),
     auditAsset: vi.fn(),
     auditAssetForAvatar: vi.fn(),
+    reAuditWithScreenshot: vi.fn(),
     applyRewrite: vi.fn(),
     getAvatarFieldCount: vi.fn(),
     getCoverage: vi.fn(),
@@ -93,6 +94,29 @@ describe('FixService — brand-scoped funnel pieces (T11)', () => {
     maybeSingle.mockResolvedValueOnce({ data: { brand_id: null }, error: null });
     const svc = new FixService(fakeFunnel({}));
     const res = await svc.getFunnelPieces('av1');
+    expect(res.status).toBe('error');
+  });
+
+  it('re-audits an existing piece from a screenshot, scored for the active avatar', async () => {
+    const reAuditWithScreenshot = vi.fn(async (id: string, _file: File, avatarId: string) => {
+      expect(id).toBe('p1');
+      expect(avatarId).toBe('av1');
+      return { data: piece('p1', 'amazon_listing_copy', 'aligned'), error: null };
+    });
+    const svc = new FixService(fakeFunnel({ reAuditWithScreenshot }));
+    const file = new File(['x'], 'shot.png', { type: 'image/png' });
+
+    const res = await svc.reAuditPiece('p1', file, 'av1');
+
+    expect(reAuditWithScreenshot).toHaveBeenCalledTimes(1);
+    expect(res.status).toBe('ok');
+    if (res.status === 'ok') expect(res.data.status).toBe('doing_job'); // aligned → doing_job verdict
+  });
+
+  it('refuses to re-audit without an avatar lens (honest error, no fabrication)', async () => {
+    const svc = new FixService(fakeFunnel({}));
+    const file = new File(['x'], 'shot.png', { type: 'image/png' });
+    const res = await svc.reAuditPiece('p1', file, null);
     expect(res.status).toBe('error');
   });
 

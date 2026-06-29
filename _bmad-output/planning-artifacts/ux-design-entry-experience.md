@@ -572,6 +572,22 @@ avatar — confirmed live (KE's active "Default Avatar" has no own diagnostic). 
 **T9 & T10** touch the live funnel + the £97 monetization + a real refactor — flagged for a product call
 before I rip out routes/engines.
 
+### Monetization model (Matthew, 2026-06-29) — "earn the ask", trial = one piece
+**Decisions:** (1) *Earn the ask* — the full diagnostic + the first fix are FREE; never ask before value.
+(2) *Pay to continue monitoring the funnel and using the app* — membership is the ongoing Brand Defence
+loop, not a one-time fee. (3) *Free trial = ONE funnel piece the user can iterate on* (diagnose → fix →
+re-test that single piece) until the trial runs out; paid unlocks the WHOLE funnel + ongoing monitoring.
+
+**Shipped (T-paywall, 2026-06-29):** the £97 Unlock screen moved from Step 2 (before any value) to AFTER
+the fix (now step 6), reframed from "pay to see your fix" → "free trial: one piece to iterate on; become a
+member for your whole funnel + monitoring". The forensic diagnostic + first fix are now reachable free
+(free-account gate, not payment). Files: `ProblemSolverDiagnostic.tsx`, `problem-solver/theme.ts`,
+`problem-solver/UnlockScreen.tsx`.
+
+**Follow-up (NOT built — flagged):** the trial *enforcement* — trial state, gating the 2nd+ funnel piece /
+ongoing monitoring behind membership, the one-free-piece entitlement — is a `/v4` build of its own. The
+placement + framing are shipped; the entitlement system is the next monetization story.
+
 ### T11 — funnel pieces brand-scoped, evaluation per-avatar (live-verified design, 2026-06-29)
 **Root cause (verified vs LIVE prod, not just repo):** the brand-scoped model ALREADY exists in the DB and
 the MCP/connector service — but the **frontend `/v4` Fix uses the legacy avatar-keyed path**

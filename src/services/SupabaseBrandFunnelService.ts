@@ -268,6 +268,31 @@ export class SupabaseBrandFunnelService implements IBrandFunnelService {
     }
   }
 
+  /**
+   * Upload a screenshot for an EXISTING piece (in-place: compress → upload to the
+   * piece's own storage slot → update storage_path) and re-audit it for the avatar.
+   * No new version is created — this is "re-check THIS piece with a fresh image".
+   */
+  async reAuditWithScreenshot(assetId: string, file: File, avatarId: string): Promise<Result<BrandAsset>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+      const compressed = await imageCompression(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1600, useWebWorker: true });
+      const path = `${user.id}/funnel/${assetId}.${ext}`;
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, compressed, { upsert: true, contentType: compressed.type });
+      if (upErr) throw upErr;
+      const { error: updErr } = await supabase.from('brand_assets')
+        .update({ storage_path: path, updated_at: new Date().toISOString() })
+        .eq('id', assetId);
+      if (updErr) throw updErr;
+      return await this.auditAssetForAvatar(assetId, avatarId);
+    } catch (error) {
+      console.error('reAuditWithScreenshot error:', error);
+      return { data: null, error: error as Error };
+    }
+  }
+
   /** Apply a coach rewrite: save the revised copy as a new asset version and re-audit. */
   async applyRewrite(asset: BrandAsset, revisedText: string): Promise<Result<BrandAsset>> {
     try {

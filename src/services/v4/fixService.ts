@@ -841,6 +841,25 @@ export class FixService {
   }
 
   /**
+   * Re-audit an EXISTING piece from a freshly-uploaded screenshot, scored for the
+   * active avatar (in-place — no new version). Returns the piece with its fresh
+   * per-avatar verdict; `error` when not scoped to an avatar or the audit fails.
+   */
+  async reAuditPiece(
+    pieceId: string,
+    file: File,
+    avatarId: string | null,
+  ): Promise<DataResult<FunnelPiece>> {
+    if (!avatarId) {
+      return { status: 'error', error: 'Pick a customer avatar to re-audit this piece for.' };
+    }
+    const res = await this.funnel.reAuditWithScreenshot(pieceId, file, avatarId);
+    if (res.error) return dataErr(res.error, 'Could not re-audit that piece.');
+    if (!res.data) return dataErr(null, 'The re-audit returned nothing.');
+    return { status: 'ok', data: this.toFunnelPiece(res.data) };
+  }
+
+  /**
    * Open a test against a piece (writes to brand_tests via `recordTest`). Returns
    * the new row for the Testing-&-Lift table; `error` when the write fails.
    */
@@ -960,6 +979,11 @@ export const getPieceMetrics = (
 ): Promise<DataResult<PieceMetrics>> => fixService.getPieceMetrics(brandAssetId, range);
 export const addPiece = (input: BrandAssetCreate): Promise<DataResult<FunnelPiece>> =>
   fixService.addPiece(input);
+export const reAuditPiece = (
+  pieceId: string,
+  file: File,
+  avatarId: string | null,
+): Promise<DataResult<FunnelPiece>> => fixService.reAuditPiece(pieceId, file, avatarId);
 export const openTest = (input: OpenTestInput): Promise<DataResult<TestRow>> =>
   fixService.openTest(input);
 export const listTests = (avatarId: string | null): Promise<DataResult<TestRow[]>> =>

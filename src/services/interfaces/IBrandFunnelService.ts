@@ -130,6 +130,12 @@ export interface IBrandFunnelService {
    * overlaid. This is how the SAME brand piece carries a different verdict per avatar.
    */
   auditAssetForAvatar(assetId: string, avatarId: string): Promise<Result<BrandAsset>>;
+  /**
+   * Upload a screenshot for an EXISTING piece (in-place — updates the piece's
+   * storage_path, no new version) and re-audit it for the given avatar. Returns
+   * the asset with the fresh per-avatar verdict overlaid.
+   */
+  reAuditWithScreenshot(assetId: string, file: File, avatarId: string): Promise<Result<BrandAsset>>;
   /** Save a coach rewrite as a new asset version (supersedes prior) and re-audit it. */
   applyRewrite(asset: BrandAsset, revisedText: string): Promise<Result<BrandAsset>>;
   /** Count the avatar's strategy fields — drives the grounding gate/badge. */
