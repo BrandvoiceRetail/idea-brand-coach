@@ -47,9 +47,11 @@ strategy is **retry, not narrow**:
 
 - **A timeout is priming, not failure.** Re-issue the *same* request (same window, same
   fields); the retry usually catches the now-cached report and returns instantly.
-- **Request the whole window in one call**, at daily granularity, all primitives at once.
-  The date *range* drives the assembly time, not the field count, so do not drop fields or
-  pre-split into 30 single-day calls (each single day is a fresh, un-primed report).
+- **Request a recent window first** (the last 30 to 90 days is enough for the first
+  diagnostic and assembles fastest; backfill older history after), in **one call** at daily
+  granularity with all primitives at once. The date *range* drives the assembly time, not the
+  field count, so do not drop fields or pre-split into 30 single-day calls (each single day is
+  a fresh, un-primed report).
 - **Do not narrow on the first timeout.** Narrowing (30d to 7d) abandons the report Amazon
   is already building and starts a new one that also times out. Only narrow if the
   same-range retry still fails after 2 to 3 tries.
