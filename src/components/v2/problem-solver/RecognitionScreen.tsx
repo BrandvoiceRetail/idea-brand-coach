@@ -56,16 +56,22 @@ const RECOGNITION_IMAGE: { src: string; alt: string } | null = {
 interface RecognitionScreenProps {
   /** Enter the diagnostic flow. (Later: advance to Movement 2 — Diagnosis.) */
   onContinue: () => void;
+  /**
+   * Render without the full-page (`min-h-screen` + background) frame so the screen
+   * flows inside a host shell that already provides the page chrome (the /v4 surface).
+   * Off by default — the standalone /v2·/v3 routes keep their own full-page frame.
+   */
+  embedded?: boolean;
 }
 
-export function RecognitionScreen({ onContinue }: RecognitionScreenProps): JSX.Element {
+export function RecognitionScreen({ onContinue, embedded = false }: RecognitionScreenProps): JSX.Element {
   // Keep the recognition moment at the top of the viewport on arrival.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   return (
-    <div className="min-h-screen" style={{ background: PS_COLORS.g100 }}>
+    <div className={embedded ? undefined : 'min-h-screen'} style={embedded ? undefined : { background: PS_COLORS.g100 }}>
       <div className="mx-auto flex max-w-[640px] flex-col items-center px-5 py-10 text-center sm:py-16">
         {/* The recognition image — the mirror that lands before a word is read. */}
         <div className="mb-7 w-full">

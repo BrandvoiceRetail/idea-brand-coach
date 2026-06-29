@@ -485,9 +485,7 @@ export default function V4Fix(): JSX.Element {
                   onOpenTest={() => void handleOpenTest()}
                   openTestLoading={openTestSubmitting}
                   openTestError={openTestError}
-                  onOpenCoach={() =>
-                    toast.info('Open a Brand Coach chat to refine this fix with the coach.')
-                  }
+                  onOpenCoach={() => navigate(`/v2/coach?fixAsset=${selectedPiece.id}`)}
                 />
               </div>
             ) : (

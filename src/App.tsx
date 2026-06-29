@@ -67,7 +67,7 @@ import { V4Layout } from "@/components/v4/V4Layout";
 import V4Onboarding from "./pages/v4/V4Onboarding";
 import V4OnboardingChoice from "./pages/v4/V4OnboardingChoice";
 import V4ConnectorSetup from "./pages/v4/V4ConnectorSetup";
-import V4Stage from "./pages/v4/V4Stage";
+import V4Diagnose from "./pages/v4/V4Diagnose";
 import V4Analyse from "./pages/v4/V4Analyse";
 import V4Fix from "./pages/v4/V4Fix";
 import V4Remeasure from "./pages/v4/V4Remeasure";
@@ -187,7 +187,7 @@ const App = () => {
                   {/* Post-signup fork (CHOICE) + the recommended connector setup guide. */}
                   <Route path="start" element={<V4OnboardingChoice />} />
                   <Route path="connect" element={<V4ConnectorSetup />} />
-                  <Route path="diagnose" element={<V4Stage />} />
+                  <Route path="diagnose" element={<V4Diagnose />} />
                   <Route path="analyse" element={<V4Analyse />} />
                   <Route path="fix" element={<V4Fix />} />
                   <Route path="remeasure" element={<V4Remeasure />} />
