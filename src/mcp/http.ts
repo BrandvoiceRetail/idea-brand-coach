@@ -148,7 +148,7 @@ async function handleMcp(
     safeLog({ event: 'http.mcp_unauthorized', had_token: hadToken });
     // Telemetry: the OAuth-funnel entry point. had_token=true => expired/invalid token
     // (client should refresh); false => first/anonymous connect.
-    captureMcpEvent('anon', 'mcp_auth_challenge', { had_token: hadToken, country: meta.country });
+    captureMcpEvent('anon', 'mcp_auth_challenge', { had_token: hadToken, country: meta.country, session_id: meta.sessionId });
     sendUnauthorized(config, res);
     return;
   }
@@ -163,6 +163,7 @@ async function handleMcp(
         client_name: init.clientName,
         client_version: init.clientVersion,
         country: meta.country,
+        session_id: meta.sessionId,
       });
     }
   }
