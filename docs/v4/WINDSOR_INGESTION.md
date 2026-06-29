@@ -52,6 +52,16 @@ strategy is **retry, not narrow**:
   granularity with all primitives at once. The date *range* drives the assembly time, not the
   field count, so do not drop fields or pre-split into 30 single-day calls (each single day is
   a fresh, un-primed report).
+- **Amazon: pull the by-DATE aggregate for the first Trust Gap, not the per-ASIN grain.**
+  Amazon Sales & Traffic exposes both `trafficByDate`/`salesByDate` (one row per day, all
+  ASINs summed) and `trafficByAsin`/`salesByAsin` (per child ASIN). The by-date aggregate
+  returns the *same* headline numbers (sessions, page views, units, order items, revenue) but
+  Amazon does not assemble per-ASIN rows, so it is far faster and far less likely to time out.
+  Verified live: the by-date pull matched the per-ASIN per-day totals exactly. Reach for the
+  per-ASIN grain only when the user needs per-listing attribution (several listings on one
+  piece). Field IDs: `sales_and_traffic_report_by_date__trafficbydate_sessions` /
+  `__trafficbydate_pageviews` / `__salesbydate_unitsordered` / `__salesbydate_totalorderitems`
+  / `__salesbydate_orderedproductsales_amount`.
 - **Do not narrow on the first timeout.** Narrowing (30d to 7d) abandons the report Amazon
   is already building and starts a new one that also times out. Only narrow if the
   same-range retry still fails after 2 to 3 tries.
