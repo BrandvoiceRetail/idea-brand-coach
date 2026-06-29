@@ -171,7 +171,7 @@ export default function V4ConnectorSetup(): JSX.Element {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="v4-chrome space-y-8">
       {/* Quiet escape hatch back to the post-signup CHOICE fork (Nielsen #3 —
           user control: arriving here in error must have a clear way out). */}
       <button

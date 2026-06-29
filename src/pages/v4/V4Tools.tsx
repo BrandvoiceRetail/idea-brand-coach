@@ -39,7 +39,7 @@ export default function V4Tools(): JSX.Element {
   const generatedDate = TOOL_REGISTRY_GENERATED_AT.slice(0, 10);
 
   return (
-    <div className="min-h-screen bg-foreground font-[Helvetica_Neue,Helvetica,Arial,sans-serif] text-background">
+    <div className="v4-chrome min-h-screen bg-foreground font-[Helvetica_Neue,Helvetica,Arial,sans-serif] text-background">
       <div className="mx-auto max-w-5xl px-5 pb-20 pt-12">
         <header className="border-b border-background/15 pb-6">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">

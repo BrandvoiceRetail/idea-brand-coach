@@ -19,8 +19,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, CheckCircle2, RotateCcw, Stethoscope } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { GlassPanel } from '@/components/v2/problem-solver/glass';
 import ProblemSolverDiagnostic from '@/pages/v2/ProblemSolverDiagnostic';
 import { useAvatarContext } from '@/contexts/AvatarContext';
 import { useServices } from '@/services/ServiceProvider';
@@ -116,17 +116,17 @@ export default function V4Diagnose(): JSX.Element {
     };
 
     return (
-      <div className="space-y-6">
+      <div className="glass-stage space-y-6">
         <header className="flex items-center gap-3">
           <Stethoscope className="h-7 w-7 text-gold-warm" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Diagnose</h1>
+            <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Diagnose</h1>
             <p className="text-muted-foreground">You&apos;ve already found your Trust Gap</p>
           </div>
         </header>
 
-        <Card data-testid="v4-diagnose-recap">
-          <CardContent className="flex flex-col items-start gap-4 py-8">
+        <GlassPanel strong className="animate-view-in mx-auto w-full max-w-[460px]" data-testid="v4-diagnose-recap">
+          <div className="flex flex-col items-start gap-4 p-7">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <CheckCircle2 className="h-4 w-4 text-gold-warm" />
@@ -163,8 +163,8 @@ export default function V4Diagnose(): JSX.Element {
                 Re-run the diagnostic
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </GlassPanel>
       </div>
     );
   }

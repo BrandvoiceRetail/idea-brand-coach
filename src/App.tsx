@@ -10,6 +10,7 @@ import { BrandProvider } from "@/contexts/BrandContext";
 import { AvatarProvider } from "@/contexts/AvatarContext";
 import { VersionProvider } from "@/contexts/VersionContext";
 import { ServiceProvider } from "@/services/ServiceProvider";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SystemKBProvider } from "@/contexts/SystemKBContext";
 import { OnboardingTourProvider } from "@/contexts/OnboardingTourContext";
 import { FieldReviewProvider } from "@/contexts/FieldReviewContext";
@@ -90,6 +91,7 @@ const queryClient = new QueryClient({
 const App = () => {
   return (
     <ErrorBoundary>
+    <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <ServiceProvider>
         <AuthProvider>
@@ -430,6 +432,7 @@ const App = () => {
         </AuthProvider>
       </ServiceProvider>
     </QueryClientProvider>
+    </ThemeProvider>
     </ErrorBoundary>
   );
 };

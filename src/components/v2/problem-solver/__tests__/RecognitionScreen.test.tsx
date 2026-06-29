@@ -17,7 +17,7 @@ describe('RecognitionScreen (Movement 1 — Recognition)', () => {
   it('mirrors the customer experience and ends on the unanswered "why"', () => {
     render(<RecognitionScreen onContinue={vi.fn()} />);
     expect(
-      screen.getByText(/looked at that listing more times than you can count/i),
+      screen.getByText(/looked at your listing more times than you can count/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/nobody has been able to tell you why/i)).toBeInTheDocument();
   });
