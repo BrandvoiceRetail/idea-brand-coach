@@ -56,6 +56,26 @@ describe('buildListingImageBrief', () => {
     }
   });
 
+  it('carries the A+ long-form editorial brief (desktop-premium-aplus-creator intelligence)', () => {
+    const r = buildListingImageBrief({ product: 'X' });
+    expect(r.aplus_content.format.toLowerCase()).toMatch(/continuous|long-form|1472x3008/);
+    expect(r.aplus_content.format.toLowerCase()).toContain('not');
+    expect(r.aplus_content.structure.toLowerCase()).toMatch(/4 distinct|4-5/);
+  });
+
+  it('provides IMAGE_PROMPT production-prompt construction + the exact negative prompt', () => {
+    const r = buildListingImageBrief({ product: 'X' });
+    expect(r.prompt_construction.steps[0]).toContain('IMAGE_PROMPT:');
+    expect(r.prompt_construction.exact_negative_prompt.toLowerCase()).toContain('negative prompt:');
+    expect(r.prompt_construction.exact_negative_prompt.toLowerCase()).toMatch(/stacked banners|template a\+/);
+  });
+
+  it('carries evidence triage + a QA bar (verified vs strategy vs unsupported; honest dimensions)', () => {
+    const r = buildListingImageBrief({ product: 'X' });
+    expect(r.evidence_discipline.join(' ').toLowerCase()).toMatch(/verified facts|strategy signals|unsupported/);
+    expect(r.qa_checklist.join(' ').toLowerCase()).toMatch(/actual pixel dimensions|report it honestly|never claim a size/);
+  });
+
   it('instructs the coach to compose per-slot briefs and wire the split-test', () => {
     const r = buildListingImageBrief({ product: 'X' });
     const joined = r.instructions.join(' ').toLowerCase();
