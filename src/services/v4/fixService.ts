@@ -111,34 +111,15 @@ const defaultEdgeInvoke: EdgeInvoke = async (fn, body) => {
 };
 
 /**
- * Default lift reader. `campaign_metrics` is NOT in the generated Database types
- * yet (migration unapplied), so we read it through an untyped view of the client
- * and guard every row. Returns an empty map on any error / no rows — the honest
- * no-data path. Activates automatically once the migration lands and rows carry
- * `touchpoint_id` + `estimated_lift`.
+ * Per-piece lift reader — intentionally a no-op today. The original design stored an
+ * `estimated_lift` on campaign_metrics keyed by `touchpoint_id`, but the SHIPPED schema
+ * went a different way: campaign_metrics carries raw metrics per `brand_asset_id`, and
+ * realized lift is DERIVED from brand_tests (baseline → result), not stored per piece
+ * (see migration 20260627010000 — derivable/lift metrics are computed, not stored). There
+ * is therefore no stored per-piece lift column to read, so this returns an empty map and
+ * lift ranking via getWorkItems stays coverage-based until a real lift source is wired.
  */
-const defaultMetricsReader: MetricsReader = async (avatarId) => {
-  const out = new Map<string, number>();
-  try {
-    const untyped = supabase as unknown as SupabaseClient;
-    const { data, error } = await untyped
-      .from('campaign_metrics')
-      .select('touchpoint_id, estimated_lift')
-      .eq('avatar_id', avatarId);
-    if (error) return out;
-    const rows: unknown[] = Array.isArray(data) ? data : [];
-    for (const row of rows) {
-      const r = asRecord(row);
-      if (!r) continue;
-      const id = asString(r.touchpoint_id);
-      const lift = asNumber(r.estimated_lift);
-      if (id != null && lift != null) out.set(id, lift);
-    }
-    return out;
-  } catch {
-    return out;
-  }
-};
+const defaultMetricsReader: MetricsReader = async () => new Map<string, number>();
 
 const asRecord = (v: unknown): Record<string, unknown> | null =>
   v && typeof v === 'object' ? (v as Record<string, unknown>) : null;
