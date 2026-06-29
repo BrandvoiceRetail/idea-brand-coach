@@ -92,6 +92,8 @@ const TOOL_APP_SKILLS: Record<string, string[]> = {
   generate_concepts: ['09', '10'],
   // Design brief → the brief generator and the trigger it derives from.
   generate_brief: ['10', '09'],
+  // Listing image-set brief → design-brief generator + trigger + avatar + trust gap + listing analysis.
+  generate_listing_image_brief: ['10', '09', '04', '06', '12'],
   // Evidence-derived Trust Gap → the score skill, the framework lens, the commercial frame.
   assess_idea_dimensions: ['06', '01', '03'],
   // The single named Decision Trigger™ lever → the trigger skill + the score + the framework lens.
