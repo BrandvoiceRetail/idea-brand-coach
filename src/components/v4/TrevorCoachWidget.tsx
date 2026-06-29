@@ -15,7 +15,7 @@
  * areas stay see-through. On-brand v4 tokens (background / gold-warm). Launched by
  * a gold FAB; closes back to the FAB.
  */
-import { useState, useRef, useEffect, useCallback, Fragment } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sparkles, X, Send, Loader2, Menu, Paperclip, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +26,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useChat } from '@/hooks/useChat';
@@ -51,8 +54,8 @@ const toolRequest = (name: string): string => {
   return phrase.charAt(0).toUpperCase() + phrase.slice(1);
 };
 
-export function TrevorCoachWidget(): JSX.Element {
-  const [open, setOpen] = useState(false);
+export function TrevorCoachWidget({ defaultOpen = false }: { defaultOpen?: boolean } = {}): JSX.Element {
+  const [open, setOpen] = useState(defaultOpen);
   const [input, setInput] = useState('');
   const [pendingUser, setPendingUser] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -275,25 +278,29 @@ export function TrevorCoachWidget(): JSX.Element {
                 <Wrench className="h-3.5 w-3.5" />
                 Brand Coach tools
               </DropdownMenuLabel>
-              {/* One scrollable, grouped list — never overflows off-screen. */}
+              {/* Two layers: category → its tools. The flyout flips into view
+                  (avoidCollisions, panel is at the screen edge) and caps to the
+                  available height + scrolls, so every tool stays on-screen. */}
               {TOOL_GROUPS.map((g) => (
-                <Fragment key={g.group}>
-                  <DropdownMenuLabel
-                    className="px-2 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-foreground/45"
-                    data-testid={`coach-tool-group-${g.group}`}
-                  >
+                <DropdownMenuSub key={g.group}>
+                  <DropdownMenuSubTrigger data-testid={`coach-tool-group-${g.group}`}>
                     {g.group}
-                  </DropdownMenuLabel>
-                  {g.tools.map((t) => (
-                    <DropdownMenuItem
-                      key={t.name}
-                      onSelect={() => seedTool(t.name)}
-                      title={t.description}
-                    >
-                      {toolRequest(t.name)}
-                    </DropdownMenuItem>
-                  ))}
-                </Fragment>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent
+                    collisionPadding={12}
+                    className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-64 overflow-y-auto"
+                  >
+                    {g.tools.map((t) => (
+                      <DropdownMenuItem
+                        key={t.name}
+                        onSelect={() => seedTool(t.name)}
+                        title={t.description}
+                      >
+                        {toolRequest(t.name)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
