@@ -28,7 +28,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, ChevronLeft, FlaskConical, Map as MapIcon, Sparkles, Wrench } from 'lucide-react';
+import { ArrowRight, ChevronLeft, FlaskConical, Image as ImageIcon, Map as MapIcon, Sparkles, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,7 @@ import { ReAuditScreenshotDialog } from '@/components/v4/fix/ReAuditScreenshotDi
 import { UpgradeDialog } from '@/components/v4/fix/UpgradeDialog';
 import { FixTestPanel } from '@/components/v4/fix/FixTestPanel';
 import { TestingLiftTab } from '@/components/v4/fix/TestingLiftTab';
+import { GeneratedImagesTab } from '@/components/v4/fix/GeneratedImagesTab';
 import { FixBreadcrumb } from '@/components/v4/fix/FixBreadcrumb';
 import type { GroundedField } from '@/components/v4/GroundedStrip';
 import { useFixRun } from '@/hooks/useFixRun';
@@ -54,7 +55,7 @@ import type { DataResult, FixLeak, MetricRange, PieceMetrics } from '@/types/v4F
 import { captureAlphaEvent, type AlphaEventProps } from '@/lib/posthogClient';
 
 /** The Loop-3 sub-views this page switches between. */
-type FixView = 'map' | 'detail' | 'fix' | 'testing';
+type FixView = 'map' | 'detail' | 'fix' | 'testing' | 'images';
 
 /**
  * Page-level Loop-3 funnel events. All names are registered in the canonical
@@ -87,6 +88,7 @@ export default function V4Fix(): JSX.Element {
   const {
     hasAvatar,
     avatarId,
+    loadKey,
     avatarName,
     pieces,
     piecesLoading,
@@ -118,7 +120,7 @@ export default function V4Fix(): JSX.Element {
   } = useFixRun();
 
   // Avatar scope for the toolbar selector (the canonical store).
-  const { avatars, setCurrentAvatar } = useAvatarContext();
+  const { avatars, setCurrentAvatar, contextAvatarIds } = useAvatarContext();
   const avatarOptions = useMemo(
     () => (avatars ?? []).filter((a) => !a.is_template).map((a) => ({ id: a.id, name: a.name })),
     [avatars],
@@ -175,21 +177,21 @@ export default function V4Fix(): JSX.Element {
 
   const brandTags = useMemo(() => DEFAULT_BRAND_TAGS, []);
 
-  // Keyed on the avatar id (not a boolean) so switching avatars while the page
-  // stays mounted re-loads the funnel for the new avatar instead of showing stale
-  // data scoped to the old one.
+  // Keyed on the avatar SET signature (not just the focus) so changing which
+  // customers are in the funnel analysis — or switching the focus — re-loads the
+  // funnel instead of showing data scoped to the old set.
   const loadedForRef = useRef<string | null>(null);
 
-  // Auto-load the funnel on entry — and again whenever the active avatar changes.
+  // Auto-load the funnel on entry — and again whenever the active avatar set changes.
   useEffect(() => {
     emitPage('v4_fix_stage_viewed', { has_avatar: hasAvatar });
-    if (hasAvatar && loadedForRef.current !== avatarId) {
-      loadedForRef.current = avatarId;
+    if (hasAvatar && loadedForRef.current !== loadKey) {
+      loadedForRef.current = loadKey;
       void load();
     } else if (!hasAvatar) {
       emitPage('v4_fix_gate_blocked', {});
     }
-  }, [hasAvatar, avatarId, load]);
+  }, [hasAvatar, loadKey, load]);
 
   // Reset the fix form whenever the piece under fix changes (default the metric
   // to that stage's primary job metric).
@@ -417,6 +419,17 @@ export default function V4Fix(): JSX.Element {
               <FlaskConical className="h-4 w-4" />
               Testing &amp; Lift
             </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={view === 'images' ? 'brand' : 'ghost'}
+              className="min-h-9 gap-1.5"
+              onClick={() => goTo('images')}
+              data-testid="v4-fix-tab-images"
+            >
+              <ImageIcon className="h-4 w-4" />
+              Images
+            </Button>
           </nav>
 
           {/* Funnel drill-down trail — the canonical "up" control for map → piece
@@ -460,7 +473,7 @@ export default function V4Fix(): JSX.Element {
                 loading={piecesLoading}
                 error={piecesError}
                 coveragePct={null}
-                avatars={avatarOptions}
+                avatars={contextAvatarIds.length > 1 ? [] : avatarOptions}
                 selectedAvatarId={avatarId}
                 onAvatarChange={(id) => void setCurrentAvatar(id)}
                 marketplace={marketplace}
@@ -585,6 +598,10 @@ export default function V4Fix(): JSX.Element {
               />
             </div>
           )}
+
+          {/* ── Generated images view ── the listing images the coach created,
+              surfaced from brand-assets so they live in the app, not just the chat. */}
+          {view === 'images' && <GeneratedImagesTab />}
         </div>
       )}
 

@@ -52,9 +52,11 @@ import {
 import type {
   DataResult,
   FunnelPiece,
+  JobVerdict,
   MetricCell,
   PieceMetrics,
 } from '@/types/v4Fix';
+import { cn } from '@/lib/utils';
 import { FUNNEL_PIECE_EVENTS, type FunnelPieceEvent } from './funnelPieceDetailEvents';
 
 /** Everyday journey-stage label, from the taxonomy (Tier-A). */
@@ -128,6 +130,20 @@ export interface FunnelPieceDetailProps {
   onBack?: () => void;
 }
 
+/** Plain-language label + tone per verdict, for the per-customer breakdown strip. */
+const PER_AVATAR_LABEL: Readonly<Record<JobVerdict, string>> = {
+  doing_job: 'doing its job',
+  leaking: 'leaking',
+  off_brand: 'off-brand',
+  missing: 'missing',
+};
+const PER_AVATAR_TONE: Readonly<Record<JobVerdict, string>> = {
+  doing_job: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  leaking: 'border-amber-200 bg-amber-50 text-amber-700',
+  off_brand: 'border-rose-200 bg-rose-50 text-rose-700',
+  missing: 'border-border bg-muted text-muted-foreground',
+};
+
 export function FunnelPieceDetail({
   piece,
   pieceLabel,
@@ -195,6 +211,38 @@ export function FunnelPieceDetail({
         </span>
         <span className="text-sm">{piece.job || job.job}</span>
       </div>
+
+      {/* Per-customer breakdown — only when the funnel considers a multi-avatar set.
+          The piece's headline status above is the weakest-link rollup of these. */}
+      {piece.perAvatar && piece.perAvatar.length > 1 && (
+        <div
+          className="rounded-lg border border-border bg-muted/40 px-4 py-3"
+          data-testid="funnel-piece-per-avatar"
+        >
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            How it lands per customer
+          </p>
+          <ul className="flex flex-wrap gap-2">
+            {piece.perAvatar.map((pv) => (
+              <li
+                key={pv.avatarId}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium',
+                  PER_AVATAR_TONE[pv.status],
+                )}
+              >
+                <span className="max-w-[10rem] truncate" title={pv.avatarName}>
+                  {pv.avatarName}
+                </span>
+                <span aria-hidden className="opacity-50">
+                  ·
+                </span>
+                <span>{PER_AVATAR_LABEL[pv.status]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
         <StoredPanel

@@ -9,6 +9,7 @@ import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { V4_ROUTES, V4_SPINE, activeStageFor, type SpineStage } from '@/config/v4';
 import { ProfileMenu } from './ProfileMenu';
+import { CustomerAvatarChip } from './avatar/CustomerAvatarChip';
 
 const TONE_TEXT: Record<SpineStage['tone'], string> = {
   'idea-i': 'text-idea-i',
@@ -33,6 +34,12 @@ export function V4Sidebar(): JSX.Element {
         <span className="text-base font-bold tracking-tight text-background">
           Brand Coach
         </span>
+      </div>
+
+      {/* Customer Avatar control — the active customer lens (top of rail, opposite
+          the account owner's ProfileMenu pinned at the bottom). */}
+      <div className="mb-2 border-b border-background/10 pb-2">
+        <CustomerAvatarChip variant="full" />
       </div>
 
       <NavLink

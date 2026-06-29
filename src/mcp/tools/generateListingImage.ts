@@ -22,7 +22,7 @@ interface ImageResult {
   ok: boolean;
   status?: string;
   model?: string;
-  images?: Array<{ storage_path: string; signed_url: string | null; source_url: string }>;
+  images?: Array<{ storage_path: string; signed_url: string | null; b64?: string; mimeType?: string }>;
   error?: string;
   code?: string;
 }
@@ -37,6 +37,14 @@ const inputSchema = {
     .optional()
     .describe('The real product photo URL(s). Strongly recommended — the reference keeps the actual product accurate (required for the main image; a generated product is not your product).'),
   model: z.string().optional().describe('Gemini image model override (default: GEMINI_IMAGE_MODEL, Nano Banana Pro / gemini-3-pro-image-preview).'),
+  aspect_ratio: z
+    .enum(['1:1', '4:3', '3:4', '16:9', '9:16'])
+    .optional()
+    .describe('Aspect ratio. Default 1:1 — the Amazon main/gallery shape. Use a wide/tall ratio only for off-Amazon creative.'),
+  image_size: z
+    .enum(['1K', '2K', '4K'])
+    .optional()
+    .describe('Resolution tier. Default 2K → 2048x2048 at 1:1 (Amazon zoom-eligible). 4K for hero/print.'),
 };
 
 export function registerGenerateListingImageTool(server: McpServer, edgeFn: EdgeFnClient): void {
@@ -45,15 +53,17 @@ export function registerGenerateListingImageTool(server: McpServer, edgeFn: Edge
     {
       title: 'Generate a listing image (brief-driven)',
       description:
-        'Turn one slot\'s IMAGE_PROMPT (from generate_listing_image_brief) plus the real product photo into an actual image, via a reference-conditioned generator we own: Google\'s Gemini API with Nano Banana Pro (Gemini 3 Pro Image). The prompt + reference image ARE the input, so the IDEA brief drives the result — and the real product stays accurate (it never invents a product). Persists to the private brand-assets bucket and returns storage paths + signed display URLs. Requires an authenticated Supabase JWT. For the MAIN image, always pass the real product photo as reference and keep the background pure white with no added text/badges (Amazon policy).',
+        'Turn one slot\'s IMAGE_PROMPT (from generate_listing_image_brief) plus the real product photo into an actual image, via a reference-conditioned generator we own: Google\'s Gemini API with Nano Banana Pro (Gemini 3 Pro Image). The prompt + reference image ARE the input, so the IDEA brief drives the result — and the real product stays accurate (it never invents a product). Outputs 2048x2048 by default (1:1 @ 2K — Amazon zoom-eligible). Persists to the private brand-assets bucket and returns storage paths + signed display URLs. Requires an authenticated Supabase JWT. For the MAIN image, always pass the real product photo as reference and keep the background pure white with no added text/badges (Amazon policy).',
       inputSchema,
     },
-    async ({ prompt, reference_image_urls, model }) => {
+    async ({ prompt, reference_image_urls, model, aspect_ratio, image_size }) => {
       const identity = getIdentity();
       const res = await edgeFn.invoke<ImageResult>('gemini-image-generate', {
         prompt,
         referenceImageUrls: reference_image_urls,
         model,
+        aspectRatio: aspect_ratio,
+        imageSize: image_size,
       });
       if (!res.ok || !res.data) {
         safeLog({ level: 'warn', event: 'tool.generate_listing_image.unavailable', caller: userTag(identity) });
@@ -72,9 +82,20 @@ export function registerGenerateListingImageTool(server: McpServer, edgeFn: Edge
       }
       const images = data.images ?? [];
       safeLog({ event: 'tool.generate_listing_image', caller: userTag(identity), model: data.model ?? null, count: images.length });
+      // Emit an INLINE image content block per result so the connector renders the
+      // image in chat (not just a URL). b64 stays out of structuredContent and the
+      // text block (which the structured-fallback mirrors) so it never bloats those
+      // or reaches logs — the model still gets the storage path + signed URL there.
+      const stored = images.map((im) => ({ storage_path: im.storage_path, signed_url: im.signed_url }));
+      const imageBlocks = images
+        .filter((im) => im.b64)
+        .map((im) => ({ type: 'image' as const, data: im.b64 as string, mimeType: im.mimeType ?? 'image/png' }));
       return {
-        content: [{ type: 'text' as const, text: `Generated ${images.length} image(s) with ${data.model ?? 'fal'} and stored them.\n\n${JSON.stringify({ images }, null, 2)}` }],
-        structuredContent: { ok: true, model: data.model ?? null, images },
+        content: [
+          { type: 'text' as const, text: `Generated ${images.length} image(s) with ${data.model ?? 'the image model'} (2048x2048) and saved them to your assets.\n\n${JSON.stringify({ images: stored }, null, 2)}` },
+          ...imageBlocks,
+        ],
+        structuredContent: { ok: true, model: data.model ?? null, images: stored },
       };
     },
   );

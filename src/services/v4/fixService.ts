@@ -60,6 +60,7 @@ import type {
   FixResult,
   FunnelMapView,
   FunnelPiece,
+  PieceAvatarVerdict,
   FunnelStageView,
   JobVerdict,
   MetricCell,
@@ -212,6 +213,27 @@ function toJobVerdict(status: AssetStatus): JobVerdict {
     default:
       return 'leaking';
   }
+}
+
+/** Severity for the weakest-link funnel rollup (higher = worse / needs more work). */
+const VERDICT_SEVERITY: Readonly<Record<JobVerdict, number>> = {
+  doing_job: 0,
+  leaking: 1,
+  off_brand: 2,
+  missing: 3,
+};
+
+/**
+ * The weakest-link rollup across a set of per-avatar verdicts: the WORST verdict
+ * wins, so a piece reads `doing_job` only when it does its job for EVERY selected
+ * customer. Deterministic — no invented consensus (preserves the no-fabrication bar).
+ */
+export function weakestLinkVerdict(verdicts: JobVerdict[]): JobVerdict {
+  let worst: JobVerdict = 'doing_job';
+  for (const v of verdicts) {
+    if (VERDICT_SEVERITY[v] > VERDICT_SEVERITY[worst]) worst = v;
+  }
+  return worst;
 }
 
 /**
@@ -717,6 +739,72 @@ export class FixService {
       };
     }
     return { status: 'ok', data: assets.map((a) => this.toFunnelPiece(a)) };
+  }
+
+  /**
+   * Funnel pieces for a SET of avatars (multi-avatar funnel analysis). Pieces are
+   * BRAND-scoped (shared); each avatar is an evaluation LENS that overlays its own
+   * verdict. We read the brand's pieces once per selected avatar (the per-avatar
+   * overlay), combine by piece id, attach the per-avatar verdicts, and set the
+   * piece `status` to a deterministic WEAKEST-LINK rollup — a piece reads
+   * `doing_job` only if it does its job for EVERY selected customer. A single-id
+   * set delegates to `getFunnelPieces`. Never fabricates a piece or a verdict.
+   */
+  async getFunnelPiecesForSet(
+    avatarIds: string[],
+    avatarNames: Record<string, string>,
+  ): Promise<DataResult<FunnelPiece[]>> {
+    const ids = [...new Set(avatarIds)].filter(Boolean);
+    if (ids.length === 0) {
+      return { status: 'error', error: 'Pick at least one customer avatar to load the funnel.' };
+    }
+    if (ids.length === 1) return this.getFunnelPieces(ids[0]);
+
+    const focus = ids[0];
+    const brandId = await this.resolveBrandId(focus);
+    if (!brandId) return dataErr(null, 'Could not resolve your brand for the funnel.');
+
+    // Read the brand's pieces once PER avatar — the SAME brand pieces, each with
+    // that avatar's verdict overlaid (un-audited pieces come back as 'pending').
+    const overlays = await Promise.all(ids.map((aid) => this.funnel.listBrandAssets(brandId, aid)));
+    const failed = overlays.find((o) => o.error);
+    if (failed?.error) return dataErr(failed.error, 'Could not load your funnel pieces.');
+
+    // Combine by brand-piece id: each avatar contributes its verdict on the same piece.
+    const byId = new Map<string, { asset: BrandAsset; verdicts: Map<string, JobVerdict> }>();
+    ids.forEach((aid, i) => {
+      for (const a of overlays[i].data ?? []) {
+        let entry = byId.get(a.id);
+        if (!entry) {
+          entry = { asset: a, verdicts: new Map<string, JobVerdict>() };
+          byId.set(a.id, entry);
+        }
+        if (aid === focus) entry.asset = a; // prefer the focus avatar's row as representative
+        entry.verdicts.set(aid, toJobVerdict(a.status));
+      }
+    });
+
+    if (byId.size === 0) {
+      return {
+        status: 'no_data',
+        reason: 'No funnel pieces yet — add your first active brand asset to start the map.',
+      };
+    }
+
+    const pieces: FunnelPiece[] = [];
+    for (const { asset, verdicts } of byId.values()) {
+      const perAvatar: PieceAvatarVerdict[] = ids.map((aid) => ({
+        avatarId: aid,
+        avatarName: avatarNames[aid] ?? 'Customer',
+        status: verdicts.get(aid) ?? 'leaking',
+      }));
+      pieces.push({
+        ...this.toFunnelPiece(asset),
+        status: weakestLinkVerdict(perAvatar.map((p) => p.status)),
+        perAvatar,
+      });
+    }
+    return { status: 'ok', data: pieces };
   }
 
   private toFunnelPiece(a: BrandAsset): FunnelPiece {

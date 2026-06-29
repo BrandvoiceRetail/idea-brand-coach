@@ -35,6 +35,10 @@ interface CreateBody {
   prompt?: string;
   referenceImageUrls?: string[];
   model?: string;
+  /** Aspect ratio (default 1:1 for Amazon). */
+  aspectRatio?: string;
+  /** Resolution tier "1K"|"2K"|"4K" (default 2K → 2048x2048 at 1:1 for Amazon). */
+  imageSize?: string;
 }
 
 function fail(error: string, extra: Record<string, unknown> = {}): Response {
@@ -99,7 +103,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const model = resolveGeminiImageModel(body.model);
-    const result = await generateImage(model, { prompt, referenceImages });
+    const result = await generateImage(model, { prompt, referenceImages, aspectRatio: body.aspectRatio, imageSize: body.imageSize });
     if (result.status === 'not_configured') {
       return fail('Image generation is not configured. Set the GEMINI_API_KEY secret.', { code: 'NOT_CONFIGURED' });
     }
@@ -122,9 +126,13 @@ serve(async (req: Request): Promise<Response> => {
 interface PersistedImage {
   storage_path: string;
   signed_url: string | null;
+  /** base64 bytes + mime, so the caller (MCP tool) can emit an inline image content
+   *  block for the connector to render. Echoed back to the model, NOT to logs. */
+  b64: string;
+  mimeType: string;
 }
 
-/** Decode each returned base64 image into the private bucket; return paths + signed urls. */
+/** Decode each returned base64 image into the private bucket; return paths + signed urls + b64. */
 async function persistImages(
   svc: ReturnType<typeof getServiceClient>,
   userId: string,
@@ -134,14 +142,14 @@ async function persistImages(
   const out: PersistedImage[] = [];
   for (let i = 0; i < images.length; i++) {
     try {
-      const bytes = base64Decode(images[i].dataB64);
       const ct = images[i].mimeType || 'image/png';
+      const bytes = base64Decode(images[i].dataB64);
       const ext = ct.includes('jpeg') || ct.includes('jpg') ? 'jpg' : ct.includes('webp') ? 'webp' : 'png';
       const path = `${userId}/coach/generated/${folder}/${i}.${ext}`;
       const { error: upErr } = await svc.storage.from(BUCKET).upload(path, bytes, { contentType: ct, upsert: true });
       if (upErr) { console.warn('gemini-image-generate: storage upload failed', upErr.message); continue; }
       const { data: signed } = await svc.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
-      out.push({ storage_path: path, signed_url: signed?.signedUrl ?? null });
+      out.push({ storage_path: path, signed_url: signed?.signedUrl ?? null, b64: images[i].dataB64, mimeType: ct });
     } catch (err) {
       console.warn('gemini-image-generate: persist error', err instanceof Error ? err.message : err);
     }

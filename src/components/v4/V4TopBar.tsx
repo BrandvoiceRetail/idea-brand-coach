@@ -7,6 +7,7 @@
 import { Link } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { ProfileMenu } from './ProfileMenu';
+import { CustomerAvatarChip } from './avatar/CustomerAvatarChip';
 
 export function V4TopBar(): JSX.Element {
   return (
@@ -17,7 +18,11 @@ export function V4TopBar(): JSX.Element {
         </span>
         <span className="text-sm font-bold tracking-tight">Brand Coach</span>
       </Link>
-      <ProfileMenu variant="compact" side="bottom" />
+      <div className="flex items-center gap-1">
+        {/* Customer Avatar control (left of the account owner) — owner ≠ customer. */}
+        <CustomerAvatarChip variant="compact" />
+        <ProfileMenu variant="compact" side="bottom" />
+      </div>
     </header>
   );
 }
