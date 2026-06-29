@@ -34,7 +34,6 @@ import {
   Trash2,
   Star,
   SlidersHorizontal,
-  Focus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -305,24 +304,38 @@ export function CustomerAvatarMenu({
                   />
                 ) : (
                   <>
-                    <DropdownMenuItem
-                      onSelect={(e) => {
-                        e.preventDefault(); // keep the menu open to build the set
+                    {/* Checkbox: add/remove this customer from the funnel-analysis SET
+                        (multi-select) — keeps the menu open. */}
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={inSet}
+                      aria-label={
+                        inSet
+                          ? `Remove ${a.name} from the funnel analysis`
+                          : `Add ${a.name} to the funnel analysis`
+                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleToggleMembership(a);
                       }}
-                      role="menuitemcheckbox"
-                      aria-checked={inSet}
+                      className={cn(
+                        'ml-1 grid h-5 w-5 shrink-0 place-items-center rounded border outline-none transition-colors',
+                        'focus-visible:ring-2 focus-visible:ring-gold-warm',
+                        inSet
+                          ? 'border-gold-warm bg-gold-warm text-foreground'
+                          : 'border-muted-foreground/40 hover:border-gold-warm',
+                      )}
+                    >
+                      {inSet && <Check className="h-3.5 w-3.5" />}
+                    </button>
+
+                    {/* Name: SWITCH to (only) this customer — the primary action; closes the menu. */}
+                    <DropdownMenuItem
+                      onSelect={() => handleWorkAsOnly(a)}
+                      aria-current={isFocus ? 'true' : undefined}
                       className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
                     >
-                      <span
-                        aria-hidden
-                        className={cn(
-                          'grid h-4 w-4 shrink-0 place-items-center rounded border transition-colors',
-                          inSet ? 'border-gold-warm bg-gold-warm text-foreground' : 'border-muted-foreground/40',
-                        )}
-                      >
-                        {inSet && <Check className="h-3 w-3" />}
-                      </span>
                       <span
                         aria-hidden
                         className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-gold-warm text-[11px] font-semibold text-gold-warm"
@@ -337,9 +350,7 @@ export function CustomerAvatarMenu({
                           {a.name}
                         </span>
                       </span>
-                      {isFocus && selectedCount > 1 && (
-                        <span className="ml-auto text-[10px] font-medium text-muted-foreground">focus</span>
-                      )}
+                      {isFocus && <Check className="ml-auto h-4 w-4 shrink-0 text-gold-warm" aria-hidden />}
                     </DropdownMenuItem>
 
                     <DropdownMenuSub>
@@ -350,10 +361,6 @@ export function CustomerAvatarMenu({
                         <MoreVertical className="h-4 w-4 text-muted-foreground" />
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent>
-                        <DropdownMenuItem onSelect={() => handleWorkAsOnly(a)} className="cursor-pointer gap-2">
-                          <Focus className="h-4 w-4" />
-                          <span>Work as only this</span>
-                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onSelect={(e) => {
                             e.preventDefault();

@@ -119,7 +119,7 @@ export default function V4Fix(): JSX.Element {
   } = useFixRun();
 
   // Avatar scope for the toolbar selector (the canonical store).
-  const { avatars, setCurrentAvatar, contextAvatarIds } = useAvatarContext();
+  const { avatars, setCurrentAvatar } = useAvatarContext();
   const avatarOptions = useMemo(
     () => (avatars ?? []).filter((a) => !a.is_template).map((a) => ({ id: a.id, name: a.name })),
     [avatars],
@@ -458,7 +458,7 @@ export default function V4Fix(): JSX.Element {
                 loading={piecesLoading}
                 error={piecesError}
                 coveragePct={null}
-                avatars={contextAvatarIds.length > 1 ? [] : avatarOptions}
+                avatars={avatarOptions}
                 selectedAvatarId={avatarId}
                 onAvatarChange={(id) => void setCurrentAvatar(id)}
                 marketplace={marketplace}

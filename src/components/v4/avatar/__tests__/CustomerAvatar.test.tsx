@@ -148,7 +148,7 @@ describe('CustomerAvatarEcho', () => {
 });
 
 describe('CustomerAvatarMenu — multi-select + create', () => {
-  it('toggles an avatar into the funnel-analysis set without closing', async () => {
+  it('adds a customer to the funnel-analysis set via its checkbox (not a switch)', async () => {
     const user = userEvent.setup();
     ctx.avatars = [mk('maya', 'Maya'), mk('rico', 'Rico')];
     ctx.contextAvatarIds = ['maya'];
@@ -157,13 +157,27 @@ describe('CustomerAvatarMenu — multi-select + create', () => {
 
     await user.click(screen.getByTestId('customer-avatar-chip'));
     // Maya (in set) is checked; Rico (not in set) is not.
-    const maya = await screen.findByRole('menuitemcheckbox', { name: /Maya/ });
-    const rico = screen.getByRole('menuitemcheckbox', { name: /Rico/ });
-    expect(maya).toHaveAttribute('aria-checked', 'true');
-    expect(rico).toHaveAttribute('aria-checked', 'false');
+    const mayaBox = await screen.findByRole('checkbox', { name: /Remove Maya/ });
+    const ricoBox = screen.getByRole('checkbox', { name: /Add Rico/ });
+    expect(mayaBox).toHaveAttribute('aria-checked', 'true');
+    expect(ricoBox).toHaveAttribute('aria-checked', 'false');
 
-    await user.click(rico);
+    await user.click(ricoBox);
     expect(ctx.toggleAvatarInContext).toHaveBeenCalledWith('rico');
+    // Ticking the checkbox adds to the set — it does NOT switch the focus.
+    expect(ctx.setContextAvatars).not.toHaveBeenCalled();
+  });
+
+  it('clicking a customer name switches to only that customer', async () => {
+    const user = userEvent.setup();
+    ctx.avatars = [mk('maya', 'Maya'), mk('rico', 'Rico')];
+    ctx.contextAvatarIds = ['maya'];
+    ctx.selectedAvatarId = 'maya';
+    renderEl(<CustomerAvatarChip variant="full" />);
+
+    await user.click(screen.getByTestId('customer-avatar-chip'));
+    await user.click(await screen.findByRole('menuitem', { name: 'Rico' }));
+    expect(ctx.setContextAvatars).toHaveBeenCalledWith(['rico']);
   });
 
   it('creates a new customer inline and routes to Analyse', async () => {
