@@ -572,4 +572,31 @@ avatar — confirmed live (KE's active "Default Avatar" has no own diagnostic). 
 **T9 & T10** touch the live funnel + the £97 monetization + a real refactor — flagged for a product call
 before I rip out routes/engines.
 
+### T11 — funnel pieces brand-scoped, evaluation per-avatar (live-verified design, 2026-06-29)
+**Root cause (verified vs LIVE prod, not just repo):** the brand-scoped model ALREADY exists in the DB and
+the MCP/connector service — but the **frontend `/v4` Fix uses the legacy avatar-keyed path**
+(`SupabaseBrandFunnelService.listAssets(avatarId)` / `getCoverage(avatarId)` via `fixService`). That is
+why pieces vanish when the avatar is switched.
+
+**Live facts (Supabase MCP):** `brands` table is the anchor (one per user, `primary_avatar_id`).
+`brand_assets.brand_id` exists + is populated on all 3 live rows + FK'd to brands; `avatar_id` now nullable;
+brand-scoped unique index `uq_brand_assets_current_per_touchpoint (brand_id, touchpoint_id) WHERE
+superseded_by IS NULL` is live. `brand_asset_audits` (per-avatar overlay) + `save_asset_audit_atomic(...)`
+RPC are live. 3 pieces, **0 duplicates**, 0 brand_tests, 1 audit row → migration is near-zero-risk on data.
+**Gap:** `brand_asset_audits` has `overall_score` + `audit_result` but **no per-avatar `status`** column
+(status is piece-level on `brand_assets`).
+
+**Design:**
+1. **Tiny additive migration** — add `status text` (same CHECK as brand_assets) to `brand_asset_audits`;
+   extend `save_asset_audit_atomic` with `p_status`; backfill the 1 existing audit row. Additive, reversible.
+2. **Frontend re-scope (no edge change)** — pieces read by `brand_id`; the per-avatar verdict
+   (status/score/audit) reads from `brand_asset_audits` for the active avatar, `pending` when none yet;
+   audits are recorded to the overlay via `save_asset_audit_atomic` AFTER the existing `audit-asset` edge fn
+   computes them (edge fn untouched → not Ask-First).
+3. **UI** — `V4Fix` reads pieces from the brand (via `useBrand().brand.id`); the avatar selector becomes the
+   **evaluation lens** ("assess these pieces for which customer"), so pieces never disappear on switch.
+
+This keeps the deeper edge-function reconciliation out of scope; the existing live RPC + overlay carry the
+per-avatar evaluation.
+
 

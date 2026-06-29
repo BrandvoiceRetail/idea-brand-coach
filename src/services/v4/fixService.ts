@@ -310,6 +310,23 @@ export class FixService {
   ) {}
 
   /**
+   * Resolve the BRAND a funnel is scoped to from the active avatar lens. Funnel
+   * pieces are the brand's (one inventory shared by all the brand's avatars); the
+   * avatar is only the EVALUATION lens. `avatars.brand_id` is NOT NULL (P1), so a
+   * real avatar always resolves a brand. Cached per instance to avoid re-querying.
+   */
+  private readonly brandIdCache = new Map<string, string>();
+  private async resolveBrandId(avatarId: string): Promise<string | null> {
+    const cached = this.brandIdCache.get(avatarId);
+    if (cached) return cached;
+    const { data } = await supabase
+      .from('avatars').select('brand_id').eq('id', avatarId).maybeSingle();
+    const brandId = (data?.brand_id as string | null) ?? null;
+    if (brandId) this.brandIdCache.set(avatarId, brandId);
+    return brandId;
+  }
+
+  /**
    * S-12 — the five-stage Funnel Map. Reads deterministic current-vs-desired
    * coverage (RLS), maps each cell to a display touchpoint, and rolls up counts.
    * `needs_input` when there is no avatar to scope to; never fabricates a status.
@@ -531,8 +548,10 @@ export class FixService {
    */
   async getDrift(avatarId: string | null): Promise<FixResult<DriftItem[]>> {
     if (!avatarId) return needAvatar();
+    const brandId = await this.resolveBrandId(avatarId);
+    if (!brandId) return errResult(null, 'Could not resolve your brand for drift.');
     const [{ data: assets, error }, current] = await Promise.all([
-      this.funnel.listAssets(avatarId),
+      this.funnel.listBrandAssets(brandId, avatarId),
       this.currentSignatureVersion(avatarId),
     ]);
     if (error) return errResult(error, 'Could not read your assets for drift.');
@@ -680,7 +699,12 @@ export class FixService {
     if (!avatarId) {
       return { status: 'error', error: 'Pick a customer avatar to load its funnel pieces.' };
     }
-    const { data, error } = await this.funnel.listAssets(avatarId);
+    // Pieces are BRAND-scoped (shared across the brand's avatars); the avatar is the
+    // evaluation lens. Resolve the brand from the avatar, read pieces by brand with
+    // the per-avatar verdict overlaid.
+    const brandId = await this.resolveBrandId(avatarId);
+    if (!brandId) return dataErr(null, 'Could not resolve your brand for the funnel.');
+    const { data, error } = await this.funnel.listBrandAssets(brandId, avatarId);
     if (error) return dataErr(error, 'Could not load your funnel pieces.');
     const assets = data ?? [];
     if (assets.length === 0) {
@@ -802,10 +826,16 @@ export class FixService {
    * `error` only when the create itself fails. Never fabricates an audit verdict.
    */
   async addPiece(input: BrandAssetCreate): Promise<DataResult<FunnelPiece>> {
-    const created = await this.funnel.createAsset(input);
+    // Create as BRAND inventory: resolve the brand from the avatar so the piece is
+    // shared across the brand's avatars (not avatar-keyed). The verdict is then
+    // recorded per-avatar via the overlay.
+    const brandId = input.brandId ?? (input.avatarId ? await this.resolveBrandId(input.avatarId) : null);
+    const created = await this.funnel.createAsset({ ...input, brandId: brandId ?? undefined });
     if (created.error) return dataErr(created.error, 'Could not add that funnel piece.');
     if (!created.data) return dataErr(null, 'The piece was not created.');
-    const audited = await this.funnel.auditAsset(created.data.id);
+    const audited = input.avatarId
+      ? await this.funnel.auditAssetForAvatar(created.data.id, input.avatarId)
+      : { data: null };
     const asset = audited.data ?? created.data;
     return { status: 'ok', data: this.toFunnelPiece(asset) };
   }
@@ -832,9 +862,12 @@ export class FixService {
    */
   async listTests(avatarId: string | null): Promise<DataResult<TestRow[]>> {
     if (!avatarId) return { status: 'error', error: 'Pick a customer avatar to load its tests.' };
+    const brandId = await this.resolveBrandId(avatarId);
+    if (!brandId) return dataErr(null, 'Could not resolve your brand for tests.');
+    // Tests span the brand's pieces (brand-scoped); piece labels from the same set.
     const [roi, assets] = await Promise.all([
-      this.funnel.getAssetRoi(avatarId),
-      this.funnel.listAssets(avatarId),
+      this.funnel.getAssetRoiForBrand(brandId),
+      this.funnel.listBrandAssets(brandId, avatarId),
     ]);
     if (roi.error) return dataErr(roi.error, 'Could not load your tests.');
     const tests = roi.data ?? [];
