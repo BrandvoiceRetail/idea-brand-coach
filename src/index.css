@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    /* Trevor v23 palette — SSOT. blk #111111 · wrm #F5F4F0 · gld #D4960A · gld-lt #FEF5DC */
+    /* Trevor v23 palette — LIGHT mode. blk #111111 · wrm #F5F4F0 · gld #D4960A · gld-lt #FEF5DC */
     --background: 48 20% 95%;
     --foreground: 0 0% 7%;
 
@@ -62,69 +62,112 @@ All colors MUST be HSL.
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* ---- Dark-liquid-glass primitives (LIGHT register — K-beauty light glass) ---- */
+    --glass-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.46));
+    --glass-strong-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.64));
+    --glass-border: rgba(17, 17, 17, 0.08);
+    --glass-border-strong: rgba(17, 17, 17, 0.12);
+    --glass-shadow: 0 18px 50px rgba(17, 17, 17, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    --glass-strong-shadow: 0 26px 70px rgba(17, 17, 17, 0.13), 0 0 34px rgba(212, 150, 10, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    --glass-blur: 26px;
+    --glass-blur-strong: 38px;
+    --glass-radius: 22px;
+    --glass-radius-lg: 30px;
+    --glass-fallback: rgba(255, 255, 255, 0.97);
+    --glass-fallback-strong: rgba(255, 255, 255, 0.99);
+    /* ambient gold-glow blobs the glass refracts */
+    --ambient-1: rgba(212, 150, 10, 0.1);
+    --ambient-2: rgba(212, 150, 10, 0.06);
+    --ambient-3: rgba(120, 140, 170, 0.05);
+    /* cinematic Recognition backdrop tint (image overlay) */
+    --cine-tint: linear-gradient(180deg, rgba(248, 247, 243, 0.4) 0%, rgba(248, 247, 243, 0.2) 36%, rgba(248, 247, 243, 0.92) 100%);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Trevor v23 palette — DARK mode (the dark-liquid-glass register). */
+    --background: 0 0% 7%;
+    --foreground: 48 20% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 9%;
+    --card-foreground: 48 20% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 48 20% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 48 20% 95%;
+    --primary-foreground: 0 0% 7%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 48 20% 95%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 45 14% 76%; /* dim warm ink — AA over dark glass (spec floor 0.85) */
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 38 92% 44%;
+    --accent-foreground: 0 0% 7%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 48 20% 95%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
     --ring: 38 92% 44%;
 
-    /* IDEA-dimension tokens (shared with light; dark v23 out of scope) */
+    /* IDEA-dimension tokens (shared with light) */
     --idea-i: 41 86% 54%;
     --idea-d: 124 39% 49%;
     --idea-e: 200 67% 50%;
     --idea-a: 33 89% 47%;
     --gld-lt: 46 95% 93%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Milestone palette (dark) */
-    --heart-red: 0 84% 50%;
-    --gold-warm: 38 92% 44%;
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 10%) 0%, hsl(0 0% 7%) 100%);
+
+    --heart-red: 0 84% 55%;
+    --gold-warm: 38 92% 48%;
+
+    --shadow-card: 0 18px 50px rgba(0, 0, 0, 0.62);
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 48 12% 88%;
+    --sidebar-primary: 38 92% 44%;
+    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 48 20% 95%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 38 92% 44%;
+
+    /* ---- Dark-liquid-glass primitives (DARK register — ported from the spec mock) ---- */
+    --glass-bg: linear-gradient(155deg, rgba(32, 32, 35, 0.64), rgba(11, 11, 13, 0.46));
+    --glass-strong-bg: linear-gradient(155deg, rgba(40, 40, 44, 0.8), rgba(11, 11, 13, 0.58));
+    --glass-border: rgba(245, 244, 240, 0.1);
+    --glass-border-strong: rgba(245, 244, 240, 0.16);
+    --glass-shadow: 0 18px 50px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+    --glass-strong-shadow: 0 26px 70px rgba(0, 0, 0, 0.66), 0 0 34px rgba(212, 150, 10, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.26), inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+    --glass-fallback: rgba(22, 22, 26, 0.98);
+    --glass-fallback-strong: rgba(28, 28, 32, 0.99);
+    --ambient-1: rgba(212, 150, 10, 0.1);
+    --ambient-2: rgba(212, 150, 10, 0.055);
+    --ambient-3: rgba(180, 200, 230, 0.045);
+    --cine-tint: linear-gradient(180deg, rgba(8, 8, 9, 0.5) 0%, rgba(8, 8, 9, 0.28) 36%, rgba(8, 8, 9, 0.92) 100%);
+  }
+
+  /*
+   * v4 chrome frame — sidebar / spine stepper / top + bottom nav. These components
+   * intentionally invert tokens (bg-foreground + text-background) to render a dark
+   * rail. We keep that frame DARK in BOTH light and dark themes (only the content
+   * area flips), by pinning foreground/background to their chrome values locally.
+   */
+  .v4-chrome {
+    --background: 48 20% 95%;
+    --foreground: 0 0% 7%;
   }
 }
 
@@ -135,6 +178,121 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Real glass: translucent surface under backdrop-blur, hairline border, lit edges. */
+  .glass {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%) contrast(1.04);
+    backdrop-filter: blur(var(--glass-blur)) saturate(150%) contrast(1.04);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--glass-radius);
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-strong {
+    background: var(--glass-strong-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(165%) contrast(1.05);
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(165%) contrast(1.05);
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: var(--glass-strong-shadow);
+    border-radius: var(--glass-radius-lg);
+    position: relative;
+    overflow: hidden;
+  }
+  /* diagonal specular streak — the crisp "wet glass" tell */
+  .sheen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.07) 12%, rgba(255, 255, 255, 0) 28%);
+    mix-blend-mode: screen;
+  }
+  /* glossy top reflection — light pooling across the surface */
+  .sheen::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 44%;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0));
+    mix-blend-mode: screen;
+  }
+  /* the lit stage the glass floats over: ambient gold-glow blobs behind everything */
+  .glass-stage {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden; /* contain the ambient blobs so they don't cause horizontal scroll */
+  }
+  .glass-stage::before {
+    content: "";
+    position: absolute;
+    inset: -10vmax;
+    z-index: -2;
+    pointer-events: none;
+    background:
+      radial-gradient(34vmax 34vmax at 16% 4%, var(--ambient-1), transparent 60%),
+      radial-gradient(38vmax 38vmax at 88% 12%, var(--ambient-2), transparent 62%),
+      radial-gradient(46vmax 46vmax at 70% 98%, var(--ambient-3), transparent 62%);
+    filter: saturate(112%);
+  }
+  /* Inter display face for the diagnose surface headlines (serif retired). */
+  .font-display {
+    font-family: "Inter", system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* fade-rise on view change (cubic-bezier(.22,.8,.3,1)) */
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-view-in {
+  animation: view-in 0.5s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+/* honour reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-view-in {
+    animation: none;
+  }
+}
+
+/* non-backdrop-filter fallback + reduced-transparency: solid surfaces */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .glass {
+    background: var(--glass-fallback);
+  }
+  .glass-strong {
+    background: var(--glass-fallback-strong);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--glass-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .glass-strong {
+    background: var(--glass-fallback-strong);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 

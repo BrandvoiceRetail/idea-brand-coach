@@ -24,7 +24,7 @@ export function V4BottomNav(): JSX.Element {
   return (
     <nav
       aria-label="Brand journey"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-background/10 bg-foreground pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="v4-chrome fixed inset-x-0 bottom-0 z-30 border-t border-background/10 bg-foreground pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-1">
         {V4_SPINE.map((stage) => {

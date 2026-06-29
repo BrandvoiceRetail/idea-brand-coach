@@ -26,7 +26,7 @@ export function V4Sidebar(): JSX.Element {
   const activeKey = activeStageFor(pathname)?.key ?? null;
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col bg-foreground text-background md:flex">
+    <aside className="v4-chrome hidden w-64 shrink-0 flex-col bg-foreground text-background md:flex">
       <div className="flex items-center gap-2.5 px-5 py-5">
         <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gold-warm text-foreground">
           <Sparkles className="h-4 w-4" />

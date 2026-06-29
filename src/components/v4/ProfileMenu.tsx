@@ -14,7 +14,7 @@
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Settings, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { LogOut, Settings, ChevronsUpDown, Loader2, Moon, Sun } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { ROUTES } from '@/config/routes';
 import { cn } from '@/lib/utils';
 
@@ -49,6 +50,7 @@ export interface ProfileMenuProps {
 export function ProfileMenu({ variant = 'full', side = 'top' }: ProfileMenuProps): JSX.Element {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [signingOut, setSigningOut] = useState(false);
   const email = user?.email ?? null;
   const initials = initialsFromEmail(email);
@@ -101,6 +103,21 @@ export function ProfileMenu({ variant = 'full', side = 'top' }: ProfileMenuProps
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem
+          data-testid="profile-menu-theme-toggle"
+          onSelect={(e) => {
+            // Keep the menu open so the user can see the surface change behind it.
+            e.preventDefault();
+            toggleTheme();
+          }}
+        >
+          {theme === 'dark' ? (
+            <Sun className="mr-2 h-4 w-4" aria-hidden />
+          ) : (
+            <Moon className="mr-2 h-4 w-4" aria-hidden />
+          )}
+          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => navigate(ROUTES.SETTINGS)}>
           <Settings className="mr-2 h-4 w-4" aria-hidden />
           Settings

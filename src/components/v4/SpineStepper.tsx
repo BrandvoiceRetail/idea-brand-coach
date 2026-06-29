@@ -22,7 +22,7 @@ export function SpineStepper(): JSX.Element {
   return (
     <nav
       aria-label="Brand journey progress"
-      className="sticky top-12 z-20 w-full bg-foreground md:top-0"
+      className="v4-chrome sticky top-12 z-20 w-full bg-foreground md:top-0"
     >
       <div className="flex items-center gap-2 px-3 sm:px-4">
       <ol className="flex flex-1 items-center gap-1 overflow-x-auto py-2.5">

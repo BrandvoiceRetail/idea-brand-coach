@@ -30,9 +30,11 @@ import { captureAlphaEvent } from '@/lib/posthogClient';
 import type { TrustGapInputScores } from '@/lib/trustGap';
 import { Stepper } from '@/components/v2/problem-solver/Stepper';
 import { BrandBar } from '@/components/v2/problem-solver/primitives';
-import { PS_COLORS, PS_STEP_NAME, type ProblemSolverStep } from '@/components/v2/problem-solver/theme';
+import { PS_STEP_NAME, type ProblemSolverStep } from '@/components/v2/problem-solver/theme';
 import type { ForensicResponse, ProblemSolverFlowState } from '@/components/v2/problem-solver/types';
 import { RecognitionScreen } from '@/components/v2/problem-solver/RecognitionScreen';
+import { DiagnosisScreen } from '@/components/v2/problem-solver/DiagnosisScreen';
+import { PrescriptionScreen } from '@/components/v2/problem-solver/PrescriptionScreen';
 import { DiagnoseScreen } from '@/components/v2/problem-solver/DiagnoseScreen';
 import { UnlockScreen } from '@/components/v2/problem-solver/UnlockScreen';
 import { UploadScreen } from '@/components/v2/problem-solver/UploadScreen';
@@ -80,10 +82,13 @@ export default function ProblemSolverDiagnostic({
   const { user } = useAuth();
   const { productDataService } = useServices();
   const [step, setStep] = useState<ProblemSolverStep>(1);
-  // When Recognition is shown, the flow proper begins only after the user enters
-  // it; otherwise (canonical /v2) we start already inside the flow. Movements 2/3
-  // will later slot in before `entered` flips.
-  const [entered, setEntered] = useState(!showRecognition);
+  // The Recognition-led arc plays before the four questions: Recognition (M1) →
+  // Diagnosis (M2) → Prescription (M3) → the flow. `entryStage = null` means the
+  // user is inside the flow proper. Canonical /v2 (no Recognition) starts in-flow.
+  const [entryStage, setEntryStage] = useState<'recognition' | 'diagnosis' | 'prescription' | null>(
+    showRecognition ? 'recognition' : null,
+  );
+  const entered = entryStage === null;
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [flow, setFlow] = useState<ProblemSolverFlowState>({ selfReport: null, asin: null, report: null });
 
@@ -133,10 +138,20 @@ export default function ProblemSolverDiagnostic({
 
   const goTo = useCallback((next: ProblemSolverStep): void => setStep(next), []);
 
-  // Movement 1 → enter the diagnostic flow. (Later: → Movement 2, Diagnosis.)
-  const handleEnterFlow = useCallback((): void => {
+  // The Recognition-led arc: M1 Recognition → M2 Diagnosis → M3 Prescription → flow.
+  const handleRecognitionContinue = useCallback((): void => {
     captureAlphaEvent('entry_movement_advanced', { movement: 1, movement_name: 'recognition' });
-    setEntered(true);
+    captureAlphaEvent('entry_movement_viewed', { movement: 2, movement_name: 'diagnosis' });
+    setEntryStage('diagnosis');
+  }, []);
+  const handleDiagnosisContinue = useCallback((): void => {
+    captureAlphaEvent('entry_movement_advanced', { movement: 2, movement_name: 'diagnosis' });
+    captureAlphaEvent('entry_movement_viewed', { movement: 3, movement_name: 'prescription' });
+    setEntryStage('prescription');
+  }, []);
+  const handlePrescriptionContinue = useCallback((): void => {
+    captureAlphaEvent('entry_movement_advanced', { movement: 3, movement_name: 'prescription' });
+    setEntryStage(null);
   }, []);
 
   /**
@@ -196,7 +211,7 @@ export default function ProblemSolverDiagnostic({
     setAnswers({});
     setFlow({ selfReport: null, asin: null, report: null });
     setStep(1);
-    setEntered(!showRecognition); // back to Recognition when it's the opener
+    setEntryStage(showRecognition ? 'recognition' : null); // back to Recognition when it's the opener
   }, [showRecognition]);
 
   // Terminal-screen exits. The flow is shared by /v2, /v3, and the /v4 spine, so
@@ -218,27 +233,24 @@ export default function ProblemSolverDiagnostic({
     if (nextRoute) navigate(nextRoute);
   }, [navigate, nextRoute]);
 
-  // Movement 1 (Recognition) — full-screen, no Stepper/BrandBar chrome: the brief
-  // requires no product or framework vocabulary here (AC #1). It precedes the flow.
-  if (!entered) {
-    return <RecognitionScreen onContinue={handleEnterFlow} embedded={embedded} />;
+  // The Recognition-led arc — full-screen movements, no Stepper/BrandBar chrome:
+  // the brief requires no product or framework vocabulary on Recognition (AC#1),
+  // and each movement is one screen, one job (glass over the lit dark).
+  if (entryStage === 'recognition') {
+    return <RecognitionScreen onContinue={handleRecognitionContinue} embedded={embedded} />;
+  }
+  if (entryStage === 'diagnosis') {
+    return <DiagnosisScreen onContinue={handleDiagnosisContinue} />;
+  }
+  if (entryStage === 'prescription') {
+    return <PrescriptionScreen onContinue={handlePrescriptionContinue} />;
   }
 
-  return (
-    <div className={embedded ? undefined : 'min-h-screen'} style={embedded ? undefined : { background: PS_COLORS.g100 }}>
-      <div className="mx-auto max-w-[880px] px-2 py-4 sm:px-4 sm:py-6">
-        <div
-          className="overflow-hidden rounded-2xl border"
-          style={{ background: PS_COLORS.warm, borderColor: PS_COLORS.line, boxShadow: '0 4px 10px rgba(16,24,40,.10)' }}
-        >
-          {!embedded && (
-            <>
-              <Stepper current={step} onJump={handleJump} />
-              <BrandBar note={NAV_NOTE[step]} />
-            </>
-          )}
-
-          <div className="px-4 py-6 sm:px-6 sm:py-7">
+  // Embedded in the /v4 spine: de-chromed — ONE surface, no inner Stepper/BrandBar
+  // and no nested card frame (the v4 shell already supplies the page chrome). The
+  // four-question + results screens carry their own glass; the engine steps flow in <main>.
+  const stepContent = (
+    <div className="px-0 py-0">
             {step === 1 && (
               <DiagnoseScreen
                 answers={answers}
@@ -279,7 +291,22 @@ export default function ProblemSolverDiagnostic({
                 onHome={handleExitHome}
               />
             )}
-          </div>
+    </div>
+  );
+
+  // Embedded (/v4 spine): render the de-chromed single surface directly in <main>.
+  if (embedded) {
+    return <div className="glass-stage mx-auto w-full max-w-[640px]">{stepContent}</div>;
+  }
+
+  // Standalone /v2·/v3: keep the framed card with its own Stepper + BrandBar chrome.
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-[880px] px-2 py-4 sm:px-4 sm:py-6">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+          <Stepper current={step} onJump={handleJump} />
+          <BrandBar note={NAV_NOTE[step]} />
+          <div className="px-4 py-6 sm:px-6 sm:py-7">{stepContent}</div>
         </div>
       </div>
     </div>
