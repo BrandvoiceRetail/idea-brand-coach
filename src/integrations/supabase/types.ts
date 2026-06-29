@@ -622,7 +622,9 @@ export type Database = {
       }
       brand_tests: {
         Row: {
+          asset_created_at: string | null
           asset_id: string | null
+          asset_live_at: string | null
           avatar_id: string | null
           baseline_value: number | null
           channel: string | null
@@ -646,7 +648,9 @@ export type Database = {
           variants: Json
         }
         Insert: {
+          asset_created_at?: string | null
           asset_id?: string | null
+          asset_live_at?: string | null
           avatar_id?: string | null
           baseline_value?: number | null
           channel?: string | null
@@ -670,7 +674,9 @@ export type Database = {
           variants?: Json
         }
         Update: {
+          asset_created_at?: string | null
           asset_id?: string | null
+          asset_live_at?: string | null
           avatar_id?: string | null
           baseline_value?: number | null
           channel?: string | null
@@ -796,6 +802,113 @@ export type Database = {
           version?: number
         }
         Relationships: []
+      }
+      campaign_metrics: {
+        Row: {
+          brand_asset_id: string | null
+          campaign_id: string
+          channel: string
+          created_at: string
+          funnel_stage: string | null
+          granularity: string
+          id: string
+          journey_stage: string | null
+          measured_date: string
+          metric_name: string
+          metric_value: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          brand_asset_id?: string | null
+          campaign_id: string
+          channel: string
+          created_at?: string
+          funnel_stage?: string | null
+          granularity?: string
+          id?: string
+          journey_stage?: string | null
+          measured_date: string
+          metric_name: string
+          metric_value: number
+          source?: string
+          user_id?: string
+        }
+        Update: {
+          brand_asset_id?: string | null
+          campaign_id?: string
+          channel?: string
+          created_at?: string
+          funnel_stage?: string | null
+          granularity?: string
+          id?: string
+          journey_stage?: string | null
+          measured_date?: string
+          metric_name?: string
+          metric_value?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_metrics_brand_asset_id_fkey"
+            columns: ["brand_asset_id"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_metrics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          brand_id: string
+          channel: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_id: string
+          channel: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          brand_id?: string
+          channel?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       canva_connections: {
         Row: {
@@ -1012,6 +1125,133 @@ export type Database = {
           },
         ]
       }
+      coach_asset_events: {
+        Row: {
+          actor: string | null
+          asset_id: string
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          notes: string | null
+          recommendations: string | null
+          scores: Json | null
+          summary: string | null
+          to_status: string | null
+          user_id: string
+          verdict: string | null
+        }
+        Insert: {
+          actor?: string | null
+          asset_id: string
+          created_at?: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          recommendations?: string | null
+          scores?: Json | null
+          summary?: string | null
+          to_status?: string | null
+          user_id?: string
+          verdict?: string | null
+        }
+        Update: {
+          actor?: string | null
+          asset_id?: string
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          recommendations?: string | null
+          scores?: Json | null
+          summary?: string | null
+          to_status?: string | null
+          user_id?: string
+          verdict?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_asset_events_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "coach_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_assets: {
+        Row: {
+          agent_name: string | null
+          approval_status: string
+          campaign_id: string | null
+          content: string
+          content_type: string
+          created_at: string
+          external_id: string | null
+          id: string
+          metadata: Json
+          model: string | null
+          parameters: Json
+          performance_metrics: Json
+          prompt: string | null
+          status: string
+          superseded_by: string | null
+          tokens_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_name?: string | null
+          approval_status?: string
+          campaign_id?: string | null
+          content: string
+          content_type?: string
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          metadata?: Json
+          model?: string | null
+          parameters?: Json
+          performance_metrics?: Json
+          prompt?: string | null
+          status?: string
+          superseded_by?: string | null
+          tokens_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          agent_name?: string | null
+          approval_status?: string
+          campaign_id?: string | null
+          content?: string
+          content_type?: string
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          metadata?: Json
+          model?: string | null
+          parameters?: Json
+          performance_metrics?: Json
+          prompt?: string | null
+          status?: string
+          superseded_by?: string | null
+          tokens_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_assets_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "coach_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competitor_asin_cache: {
         Row: {
           cache_key: string
@@ -1085,6 +1325,148 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_generation_jobs: {
+        Row: {
+          avatar_id: string | null
+          brand_asset_id: string | null
+          brand_id: string | null
+          capability: string
+          created_at: string
+          error: Json | null
+          external_job_id: string | null
+          id: string
+          output: Json | null
+          output_kind: string
+          provider: string
+          request: Json
+          status: string
+          touchpoint_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_id?: string | null
+          brand_asset_id?: string | null
+          brand_id?: string | null
+          capability: string
+          created_at?: string
+          error?: Json | null
+          external_job_id?: string | null
+          id?: string
+          output?: Json | null
+          output_kind: string
+          provider: string
+          request?: Json
+          status?: string
+          touchpoint_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_id?: string | null
+          brand_asset_id?: string | null
+          brand_id?: string | null
+          capability?: string
+          created_at?: string
+          error?: Json | null
+          external_job_id?: string | null
+          id?: string
+          output?: Json | null
+          output_kind?: string
+          provider?: string
+          request?: Json
+          status?: string
+          touchpoint_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_generation_jobs_avatar_id_fkey"
+            columns: ["avatar_id"]
+            isOneToOne: false
+            referencedRelation: "avatars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_generation_jobs_brand_asset_id_fkey"
+            columns: ["brand_asset_id"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_generation_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_ledger: {
+        Row: {
+          balance_after: number
+          created_at: string
+          delta: number
+          id: number
+          input_tokens: number | null
+          model: string | null
+          op_name: string | null
+          output_tokens: number | null
+          raw_cost_usd: number | null
+          reason: string
+          stripe_event_id: string | null
+          user_id: string
+        }
+        Insert: {
+          balance_after: number
+          created_at?: string
+          delta: number
+          id?: never
+          input_tokens?: number | null
+          model?: string | null
+          op_name?: string | null
+          output_tokens?: number | null
+          raw_cost_usd?: number | null
+          reason: string
+          stripe_event_id?: string | null
+          user_id: string
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string
+          delta?: number
+          id?: never
+          input_tokens?: number | null
+          model?: string | null
+          op_name?: string | null
+          output_tokens?: number | null
+          raw_cost_usd?: number | null
+          reason?: string
+          stripe_event_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_wallets: {
+        Row: {
+          balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       decision_triggers: {
         Row: {
@@ -1204,6 +1586,104 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_sequences: {
+        Row: {
+          brand_id: string
+          campaign_id: string | null
+          created_at: string
+          id: string
+          name: string
+          sequence_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_id: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          sequence_type: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          brand_id?: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          sequence_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_sequences_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_sequences_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_steps: {
+        Row: {
+          body: string
+          created_at: string
+          delay_hours: number
+          email_type: string | null
+          id: string
+          sequence_id: string
+          step_number: number
+          subject: string
+          trigger_event: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          delay_hours?: number
+          email_type?: string | null
+          id?: string
+          sequence_id: string
+          step_number: number
+          subject: string
+          trigger_event?: string | null
+          user_id?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          delay_hours?: number
+          email_type?: string | null
+          id?: string
+          sequence_id?: string
+          step_number?: number
+          subject?: string
+          trigger_event?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_steps_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "email_sequences"
             referencedColumns: ["id"]
           },
         ]
@@ -1467,6 +1947,60 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          answers: Json | null
+          company: string | null
+          consent: boolean
+          created_at: string
+          email: string
+          emailed_at: string | null
+          id: string
+          name: string | null
+          overall_score: number | null
+          posthog_distinct_id: string | null
+          primary_gap: string | null
+          scores: Json | null
+          source: string
+          user_agent: string | null
+          utm: Json | null
+        }
+        Insert: {
+          answers?: Json | null
+          company?: string | null
+          consent?: boolean
+          created_at?: string
+          email: string
+          emailed_at?: string | null
+          id?: string
+          name?: string | null
+          overall_score?: number | null
+          posthog_distinct_id?: string | null
+          primary_gap?: string | null
+          scores?: Json | null
+          source?: string
+          user_agent?: string | null
+          utm?: Json | null
+        }
+        Update: {
+          answers?: Json | null
+          company?: string | null
+          consent?: boolean
+          created_at?: string
+          email?: string
+          emailed_at?: string | null
+          id?: string
+          name?: string | null
+          overall_score?: number | null
+          posthog_distinct_id?: string | null
+          primary_gap?: string | null
+          scores?: Json | null
+          source?: string
+          user_agent?: string | null
+          utm?: Json | null
+        }
+        Relationships: []
+      }
       marketing_audits: {
         Row: {
           constraints: Json | null
@@ -1494,6 +2028,27 @@ export type Database = {
           rollout?: Json | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      model_rates: {
+        Row: {
+          input_per_mtok_usd: number
+          model: string
+          output_per_mtok_usd: number
+          updated_at: string
+        }
+        Insert: {
+          input_per_mtok_usd: number
+          model: string
+          output_per_mtok_usd: number
+          updated_at?: string
+        }
+        Update: {
+          input_per_mtok_usd?: number
+          model?: string
+          output_per_mtok_usd?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1546,6 +2101,116 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scrape_job_items: {
+        Row: {
+          asin: string | null
+          attempts: number
+          created_at: string
+          error: string | null
+          id: string
+          job_id: string
+          reviews_count: number
+          status: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          asin?: string | null
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_id: string
+          reviews_count?: number
+          status?: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          asin?: string | null
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_id?: string
+          reviews_count?: number
+          status?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_job_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "scrape_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scrape_jobs: {
+        Row: {
+          avatar_id: string | null
+          created_at: string
+          done: number
+          failed: number
+          id: string
+          marketplace: string | null
+          product_id: string | null
+          status: string
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_id?: string | null
+          created_at?: string
+          done?: number
+          failed?: number
+          id?: string
+          marketplace?: string | null
+          product_id?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_id?: string | null
+          created_at?: string
+          done?: number
+          failed?: number
+          id?: string
+          marketplace?: string | null
+          product_id?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scrape_rate_usage: {
+        Row: {
+          bucket: string
+          count: number
+          expires_at: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          expires_at: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          expires_at?: string
+        }
+        Relationships: []
       }
       signatures: {
         Row: {
@@ -2078,6 +2743,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          interval: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          interval?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          interval?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       user_knowledge_current: {
@@ -2139,8 +2846,60 @@ export type Database = {
       }
     }
     Functions: {
+      claim_scrape_items: {
+        Args: { p_limit: number }
+        Returns: {
+          asin: string | null
+          attempts: number
+          created_at: string
+          error: string | null
+          id: string
+          job_id: string
+          reviews_count: number
+          status: string
+          updated_at: string
+          url: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "scrape_job_items"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      consume_scrape_quota: {
+        Args: {
+          p_global_daily_max: number
+          p_global_window_max: number
+          p_user: string
+          p_user_daily_max: number
+        }
+        Returns: Json
+      }
+      debit_credits: {
+        Args: {
+          p_in_tok: number
+          p_model: string
+          p_op: string
+          p_out_tok: number
+          p_user: string
+        }
+        Returns: Json
+      }
+      grant_credits: {
+        Args: {
+          p_credits: number
+          p_reason?: string
+          p_set_to_allotment?: boolean
+          p_stripe_event_id?: string
+          p_user: string
+        }
+        Returns: number
+      }
       handle_ai_insight_guidance: { Args: never; Returns: undefined }
       handle_buyer_intent_analysis: { Args: never; Returns: undefined }
+      kick_scrape_drain: { Args: never; Returns: undefined }
       match_document_chunks:
         | {
             Args: {
@@ -2234,6 +2993,7 @@ export type Database = {
           similarity: number
         }[]
       }
+      refresh_scrape_job: { Args: { p_job: string }; Returns: undefined }
       save_artifact_atomic:
         | {
             Args: {

@@ -11,8 +11,13 @@ import { SpineStepper } from './SpineStepper';
 import { V4Sidebar } from './V4Sidebar';
 import { V4BottomNav } from './V4BottomNav';
 import { V4TopBar } from './V4TopBar';
+import { useV4ContextAutofill } from '@/hooks/useV4ContextAutofill';
 
 export function V4Layout(): JSX.Element {
+  // Pre-fill the onboarding context from existing Brand Coach data (avatar +
+  // brand) so /v4 doesn't re-ask what the user already gave, and Analyse unblocks.
+  useV4ContextAutofill();
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <V4Sidebar />
