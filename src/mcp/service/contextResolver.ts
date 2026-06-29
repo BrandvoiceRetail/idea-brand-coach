@@ -226,31 +226,49 @@ async function readArtifacts(slot: ContextSlot, scope: ResolveScope): Promise<Ca
   const kind = artifactKindForSlot(slot.id);
   if (!kind) return null;
   const supabase = getUserSupabase();
-  let query = supabase.from('artifacts').select('content, grounding, created_at').eq('kind', kind).is('superseded_by', null);
-  query = scope.avatarId == null ? query.is('avatar_id', null) : query.eq('avatar_id', scope.avatarId);
-  const { data, error } = await query.maybeSingle();
-  if (error || !data) return null;
-  const row = data as { content: unknown; grounding: string; created_at: string };
-  return {
-    store: 'artifacts',
-    value: row.content,
-    status: row.grounding === 'evidence' ? 'filled-evidence' : 'filled-inferred',
-    asOf: row.created_at,
+  const readAt = async (avatarId: string | null): Promise<Candidate | null> => {
+    let query = supabase.from('artifacts').select('content, grounding, created_at').eq('kind', kind).is('superseded_by', null);
+    query = avatarId == null ? query.is('avatar_id', null) : query.eq('avatar_id', avatarId);
+    const { data, error } = await query.maybeSingle();
+    if (error || !data) return null;
+    const row = data as { content: unknown; grounding: string; created_at: string };
+    return {
+      store: 'artifacts',
+      value: row.content,
+      status: row.grounding === 'evidence' ? 'filled-evidence' : 'filled-inferred',
+      asOf: row.created_at,
+    };
   };
+  // Avatar-scoped first, then brand-level fallback (same read-after-write reasoning as
+  // readEvidenceSnapshots): a brand-level artifact must surface for an avatar-scoped read.
+  if (scope.avatarId != null) {
+    return (await readAt(scope.avatarId)) ?? (await readAt(null));
+  }
+  return readAt(null);
 }
 
 async function readEvidenceSnapshots(slot: ContextSlot, scope: ResolveScope): Promise<Candidate | null> {
   const supabase = getUserSupabase();
   // Listing-copy slots read the `listing` column; review slots read `reviews`.
   const column = slot.id === 3 || slot.id === 6 ? 'listing' : 'reviews';
-  let query = supabase.from('evidence_snapshots').select(`${column}, created_at`).not(column, 'is', null);
-  query = scope.avatarId == null ? query.is('avatar_id', null) : query.eq('avatar_id', scope.avatarId);
-  const { data, error } = await query.order('created_at', { ascending: false }).limit(1).maybeSingle();
-  if (error || !data) return null;
-  const row = data as Record<string, unknown> & { created_at: string };
-  const value = row[column];
-  if (value == null) return null;
-  return { store: 'evidence_snapshots', value, status: 'filled-evidence', asOf: row.created_at };
+  const readAt = async (avatarId: string | null): Promise<Candidate | null> => {
+    let query = supabase.from('evidence_snapshots').select(`${column}, created_at`).not(column, 'is', null);
+    query = avatarId == null ? query.is('avatar_id', null) : query.eq('avatar_id', avatarId);
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (error || !data) return null;
+    const row = data as Record<string, unknown> & { created_at: string };
+    const value = row[column];
+    if (value == null) return null;
+    return { store: 'evidence_snapshots', value, status: 'filled-evidence', asOf: row.created_at };
+  };
+  // Avatar-scoped first; then fall back to brand-level (avatar_id IS NULL). Evidence
+  // ingested before an avatar was chosen (the onboarding case) lives at brand-level, so an
+  // avatar-scoped assess must see it rather than report a false "no evidence". The fallback
+  // never reaches a DIFFERENT avatar's rows — only the shared brand-level ones.
+  if (scope.avatarId != null) {
+    return (await readAt(scope.avatarId)) ?? (await readAt(null));
+  }
+  return readAt(null);
 }
 
 async function readUserProducts(_slot: ContextSlot, _scope: ResolveScope): Promise<Candidate | null> {

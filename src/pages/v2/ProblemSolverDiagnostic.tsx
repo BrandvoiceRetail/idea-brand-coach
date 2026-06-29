@@ -24,6 +24,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useServices } from '@/services/ServiceProvider';
 import { ROUTES } from '@/config/routes';
 import { captureAlphaEvent } from '@/lib/posthogClient';
 import type { TrustGapInputScores } from '@/lib/trustGap';
@@ -77,6 +78,7 @@ export default function ProblemSolverDiagnostic({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { productDataService } = useServices();
   const [step, setStep] = useState<ProblemSolverStep>(1);
   // When Recognition is shown, the flow proper begins only after the user enters
   // it; otherwise (canonical /v2) we start already inside the flow. Movements 2/3
@@ -91,6 +93,28 @@ export default function ProblemSolverDiagnostic({
     if (!showRecognition) return;
     captureAlphaEvent('entry_movement_viewed', { movement: 1, movement_name: 'recognition' });
   }, [showRecognition]);
+
+  // Resurface a previously imported listing. The user's ASIN is stored durably in
+  // user_products, so a returning user must NOT face a blank upload screen — the screen's
+  // own copy promises "upload once; every future session builds on it". Prefill flow.asin
+  // from their most-recent import on mount; the functional update never clobbers an ASIN
+  // the user has already entered this session, and a load failure degrades silently.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const products = await productDataService.getProducts();
+        if (cancelled || products.length === 0) return;
+        setFlow((f) => (f.asin ? f : { ...f, asin: products[0].asin }));
+      } catch {
+        /* best-effort resurface — leave the screen as-is on failure */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, productDataService]);
 
   // Step-advance funnel event (step index + name + overall self-report only — no PII).
   // Deferred until the user has entered the flow, so Recognition does not emit a
