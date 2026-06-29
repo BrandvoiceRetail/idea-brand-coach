@@ -61,7 +61,10 @@ serve(async (req: Request): Promise<Response> => {
     { global: { headers: { Authorization: authHeader } } },
   );
 
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  // getUser() must be passed the token explicitly — the global Authorization header
+  // scopes PostgREST/RLS reads but auth.getUser() with no arg reads an (empty) session.
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
   if (authErr || !user) return json({ error: "Not authenticated" }, 401);
 
   let payload: { brand_asset_id?: unknown; range?: unknown };
