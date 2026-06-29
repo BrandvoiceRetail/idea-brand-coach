@@ -57,8 +57,13 @@ const REVIEWS_SLOT: SlotId = 1;
 const LISTING_SLOT: SlotId = 3;
 const INTAKE_SLOT: SlotId = 15;
 
-/** Statuses that count as an evidence/stated fill (enough to cite / to confirm intake). */
-const FILLED: ReadonlySet<ResolvedSlot['status']> = new Set(['filled-evidence', 'filled-stated']);
+/**
+ * Statuses that count as an evidence/stated fill (enough to cite / to confirm intake).
+ * Includes `conflict` and `stale`: reconcile() carries a real winning value for both, so
+ * dropping them would report "no evidence" when the user's reviews/listing are on file but
+ * two stores hold them (store-and-resurface). EVIDENCE slots carry no staleness window.
+ */
+const FILLED: ReadonlySet<ResolvedSlot['status']> = new Set(['filled-evidence', 'filled-stated', 'conflict', 'stale']);
 
 /**
  * Extra engine attempts on a transient failure (a 500 from a JSON shape the fn's tolerant

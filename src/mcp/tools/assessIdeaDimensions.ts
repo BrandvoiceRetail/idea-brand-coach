@@ -30,11 +30,25 @@ const REVIEWS_SLOT: SlotId = 1;
 const LISTING_SLOT: SlotId = 3;
 const POSITIONING_SLOT: SlotId = 12;
 const BELIEFS_SLOT: SlotId = 14;
-const FILLED: ReadonlySet<ResolvedSlot['status']> = new Set(['filled-evidence', 'filled-stated']);
+// Statuses that carry a usable value. `conflict` and `stale` are INCLUDED: reconcile() always
+// puts the highest-priority store's real value in `value` for those — a conflict means "two
+// stores disagree on the details", not "no evidence", and stale means "real but old". Excluding
+// them made assess report "no evidence" when the user's reviews/listing were on file but two
+// stores held them (e.g. user_product_reviews + evidence_snapshots) — the opposite of
+// store-and-resurface. Only `missing` (no value) and loose `filled-inferred` (RAG) are dropped.
+const FILLED: ReadonlySet<ResolvedSlot['status']> = new Set(['filled-evidence', 'filled-stated', 'conflict', 'stale']);
 
 const inputSchema = {
   avatar_id: z.string().optional().describe('Avatar scope; omit for the brand-level read.'),
 };
+
+/** Extract the known text-bearing keys from one object (listing/review row or {text} blob). */
+function textFromObject(o: Record<string, unknown>): string {
+  return ['title', 'bullets', 'description', 'body', 'text', 'review', 'content']
+    .map((k) => (typeof o[k] === 'string' ? (o[k] as string) : Array.isArray(o[k]) ? (o[k] as unknown[]).filter((x) => typeof x === 'string').join('\n') : ''))
+    .filter(Boolean)
+    .join('\n');
+}
 
 /** Pull pasteable text out of a resolved slot (string | row[] | object). */
 function slotText(resolved: ResolvedSlot | undefined): string | null {
@@ -43,20 +57,13 @@ function slotText(resolved: ResolvedSlot | undefined): string | null {
   if (typeof v === 'string') return v.trim() || null;
   if (Array.isArray(v)) {
     const parts = v
-      .map((e) => {
-        if (typeof e === 'string') return e.trim();
-        if (e && typeof e === 'object') {
-          const o = e as Record<string, unknown>;
-          return ['title', 'bullets', 'description', 'body', 'text', 'review', 'content']
-            .map((k) => (typeof o[k] === 'string' ? (o[k] as string) : Array.isArray(o[k]) ? (o[k] as unknown[]).filter((x) => typeof x === 'string').join('\n') : ''))
-            .filter(Boolean)
-            .join('\n');
-        }
-        return '';
-      })
+      .map((e) => (typeof e === 'string' ? e.trim() : e && typeof e === 'object' ? textFromObject(e as Record<string, unknown>) : ''))
       .filter(Boolean);
     return parts.length ? parts.join('\n\n') : null;
   }
+  // A plain object — e.g. evidence_snapshots stores listing as `{ text: "..." }`. Without this
+  // branch the listing slot resolves but reads back empty, so assess reports "no listing copy".
+  if (typeof v === 'object') return textFromObject(v as Record<string, unknown>).trim() || null;
   return null;
 }
 

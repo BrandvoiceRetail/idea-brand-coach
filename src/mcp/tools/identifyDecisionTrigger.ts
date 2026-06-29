@@ -35,7 +35,10 @@ import { captureMcpEvent } from '../posthog.js';
 /** Evidence slots: #1 reviews, #3 listing copy. */
 const REVIEWS_SLOT: SlotId = 1;
 const LISTING_SLOT: SlotId = 3;
-const FILLED: ReadonlySet<ResolvedSlot['status']> = new Set(['filled-evidence', 'filled-stated']);
+// Includes `conflict`/`stale`: reconcile() carries a real winning value for both, so the
+// trigger still derives from on-file reviews/listing when two stores hold them rather than
+// falsely reporting no evidence (store-and-resurface). EVIDENCE slots have no staleness window.
+const FILLED: ReadonlySet<ResolvedSlot['status']> = new Set(['filled-evidence', 'filled-stated', 'conflict', 'stale']);
 
 const inputSchema = {
   scores: z
