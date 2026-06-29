@@ -211,6 +211,13 @@ export interface StoredContent {
  * campaign (decision #1). Metrics attach to THIS via its `id` (the brand_asset id).
  * Carries its job (from `FUNNEL_JOBS[stage]`) and its stored text-only content.
  */
+/** One customer's verdict on a piece, when the funnel considers a multi-avatar set. */
+export interface PieceAvatarVerdict {
+  avatarId: string;
+  avatarName: string;
+  status: JobVerdict;
+}
+
 export interface FunnelPiece {
   /** The backing brand_asset id — the entity metrics attach to. */
   id: string;
@@ -224,6 +231,13 @@ export interface FunnelPiece {
   job: string;
   /** Stored, text-only current version (Alpha). */
   storedContent: StoredContent;
+  /**
+   * Per-avatar verdicts when >1 customer is in the funnel analysis. The piece's
+   * `status` above is the deterministic weakest-link rollup of these (a piece is
+   * `doing_job` only if it does its job for EVERY selected customer). Absent for
+   * single-avatar (the common case).
+   */
+  perAvatar?: PieceAvatarVerdict[];
 }
 
 /** The metric window a `PieceMetrics` covers, matching the funnel toolbar. */

@@ -56,6 +56,8 @@ export interface FixRunHook {
   hasAvatar: boolean;
   /** The active avatar id (null when none) — lets the page reload on a switch. */
   avatarId: string | null;
+  /** Signature of the active avatar SET — the page reloads the funnel when it changes. */
+  loadKey: string;
   /** The active avatar's display name (for piece labels); null when none. */
   avatarName: string | null;
 
@@ -111,8 +113,17 @@ export interface FixRunHook {
 }
 
 export function useFixRun(): FixRunHook {
-  const { selectedAvatarId, currentAvatar } = useAvatarContext();
+  const { selectedAvatarId, currentAvatar, contextAvatarIds, avatars } = useAvatarContext();
   const service = useMemo(() => new FixService(), []);
+
+  // Name lookup for the per-avatar funnel verdicts (multi-avatar analysis).
+  const avatarNames = useMemo(
+    () => Object.fromEntries((avatars ?? []).map((a) => [a.id, a.name])),
+    [avatars],
+  );
+  // A stable signature of the active avatar SET — the funnel reloads when the set
+  // changes (not only when the focus avatar changes).
+  const loadKey = contextAvatarIds.join(',');
 
   const [pieces, setPieces] = useState<FunnelPiece[] | null>(null);
   const [piecesLoading, setPiecesLoading] = useState(false);
@@ -178,8 +189,14 @@ export function useFixRun(): FixRunHook {
     setTestsError(null);
     setTestsNoData(null);
 
+    // Multi-avatar funnel analysis: when >1 customer is in the set, fetch the
+    // weakest-link rollup across the set; single-avatar uses the unchanged path.
+    const piecesPromise =
+      contextAvatarIds.length > 1
+        ? service.getFunnelPiecesForSet(contextAvatarIds, avatarNames)
+        : service.getFunnelPieces(selectedAvatarId);
     const [piecesRes, driftRes] = await Promise.all([
-      service.getFunnelPieces(selectedAvatarId),
+      piecesPromise,
       service.getDrift(selectedAvatarId),
       refreshTests(selectedAvatarId),
     ]);
@@ -197,7 +214,7 @@ export function useFixRun(): FixRunHook {
 
     setDrift(driftRes.status === 'ok' ? driftRes.data : []);
     setTestsLoading(false);
-  }, [service, selectedAvatarId, refreshTests]);
+  }, [service, selectedAvatarId, contextAvatarIds, avatarNames, refreshTests]);
 
   /** Read one piece's metrics for the detail's "did it do its job?" panel. */
   const readPieceMetrics = useCallback(
@@ -345,6 +362,7 @@ export function useFixRun(): FixRunHook {
   return {
     hasAvatar,
     avatarId: selectedAvatarId,
+    loadKey,
     avatarName: currentAvatar?.name ?? null,
     pieces,
     piecesLoading,

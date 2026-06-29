@@ -12,6 +12,7 @@ import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { V4_SPINE, activeStageFor } from '@/config/v4';
 import { useSpineCompletion } from '@/hooks/useSpineCompletion';
+import { CustomerAvatarEcho } from './avatar/CustomerAvatarEcho';
 
 export function SpineStepper(): JSX.Element {
   const { pathname } = useLocation();
@@ -23,7 +24,8 @@ export function SpineStepper(): JSX.Element {
       aria-label="Brand journey progress"
       className="sticky top-12 z-20 w-full bg-foreground md:top-0"
     >
-      <ol className="flex items-center gap-1 overflow-x-auto px-3 py-2.5 sm:px-4">
+      <div className="flex items-center gap-2 px-3 sm:px-4">
+      <ol className="flex flex-1 items-center gap-1 overflow-x-auto py-2.5">
         {V4_SPINE.map((stage, i) => {
           const isDone = completion[stage.key];
           const isCurrent = active?.key === stage.key;
@@ -58,6 +60,9 @@ export function SpineStepper(): JSX.Element {
           );
         })}
       </ol>
+        {/* In-stage echo of the active customer lens — opens the same menu as the rail chip. */}
+        <CustomerAvatarEcho />
+      </div>
     </nav>
   );
 }
