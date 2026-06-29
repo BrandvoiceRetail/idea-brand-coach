@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Zap, Crown, ArrowRight, Lock } from 'lucide-react';
+import { Check, Sparkles, Zap, Crown, ArrowRight, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { ROUTES } from '@/config/routes';
+import { supabase } from '@/integrations/supabase/client';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 
 interface PricingTier {
   id: 'starter' | 'professional' | 'premium';
@@ -86,22 +89,39 @@ const pricingTiers: PricingTier[] = [
 export default function PricingPaywall(): JSX.Element {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [pendingTier, setPendingTier] = useState<string | null>(null);
 
   // TODO: Phase 2 - Fetch user's current subscription from database
   const currentSubscription = null; // Will be fetched from user_subscriptions table
 
-  const handleSelectTier = (tierId: string) => {
-    // Store selected tier in localStorage
+  const handleSelectTier = async (tierId: string): Promise<void> => {
     localStorage.setItem('selectedTier', tierId);
 
-    // TODO: Phase 2 - When Stripe is integrated, this will create checkout session
-    // For now, just navigate to dashboard if authenticated, otherwise to auth
-    if (user) {
-      // User is authenticated - proceed to app (stripe checkout will be added in Phase 2)
-      navigate(ROUTES.HOME_PAGE);
-    } else {
-      // User not authenticated - need to sign up/sign in first
+    // Not signed in → sign up/in first, then return here to check out.
+    if (!user) {
       navigate(`/auth?plan=${tierId}&redirect=/subscribe`);
+      return;
+    }
+
+    // Signed in → start Stripe Checkout. Membership is granted by the webhook on
+    // payment, not here, so a cancelled checkout never grants access.
+    setPendingTier(tierId);
+    captureAlphaEvent('checkout_started', { tier: tierId });
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { tier: tierId },
+      });
+      const url = (data as { url?: string } | null)?.url;
+      if (error || !url) {
+        const msg = (data as { error?: string } | null)?.error;
+        toast.error(msg ?? 'Membership checkout isn’t available yet. Please try again soon.');
+        setPendingTier(null);
+        return;
+      }
+      window.location.href = url; // hand off to Stripe-hosted Checkout
+    } catch {
+      toast.error('Could not start checkout. Please try again.');
+      setPendingTier(null);
     }
   };
 
@@ -179,7 +199,8 @@ export default function PricingPaywall(): JSX.Element {
                     ))}
                   </ul>
                   <Button
-                    onClick={() => handleSelectTier(tier.id)}
+                    onClick={() => void handleSelectTier(tier.id)}
+                    disabled={pendingTier !== null}
                     className={`w-full ${
                       tier.highlighted
                         ? 'bg-primary hover:bg-primary/90'
@@ -187,9 +208,17 @@ export default function PricingPaywall(): JSX.Element {
                     }`}
                     size="lg"
                   >
-                    {/* TODO: Phase 2 - Show "Upgrade" or "Current Plan" based on subscription status */}
-                    {tier.cta}
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    {pendingTier === tier.id ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Starting checkout…
+                      </>
+                    ) : (
+                      <>
+                        {tier.cta}
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </>
+                    )}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
                     Total first payment: ${tier.monthlyPrice + tier.setupFee}
