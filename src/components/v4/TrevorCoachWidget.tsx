@@ -15,17 +15,43 @@
  * (foreground / gold-warm). Launched by a gold FAB; closes back to the FAB.
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, X, Send, Loader2 } from 'lucide-react';
+import { Sparkles, X, Send, Loader2, Menu, Paperclip, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
+import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { useAvatarContext } from '@/contexts/AvatarContext';
 import { cn } from '@/lib/utils';
+import { TOOL_REGISTRY } from '@/data/toolRegistry.generated';
 import type { ChatMessage, ChatMessageCreate } from '@/types/chat';
 
 const CHATBOT = 'idea-framework-consultant' as const;
+
+/** Tool catalogue for the menu — Available tools only, grouped by category,
+ * roadmap/"Coming next" filtered out. Reuses the generated registry (SSOT). */
+const TOOL_GROUPS = TOOL_REGISTRY.map((g) => ({
+  group: g.group,
+  tools: g.tools.filter((t) => t.status === 'Available'),
+})).filter((g) => g.group !== 'Coming next' && g.tools.length > 0);
+
+/** snake_case tool id → a first-person request the coach's tool loop can act on. */
+const toolRequest = (name: string): string => {
+  const phrase = name.replace(/_/g, ' ');
+  return phrase.charAt(0).toUpperCase() + phrase.slice(1);
+};
 
 export function TrevorCoachWidget(): JSX.Element {
   const [open, setOpen] = useState(false);
@@ -45,6 +71,10 @@ export function TrevorCoachWidget(): JSX.Element {
     avatarId,
   });
 
+  // Reuse the in-app document pipeline for "Add files" (upload + status polling).
+  const { documents, isUploading, fileInputRef, handleFileSelect } = useDocumentUpload();
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
   const visibleMessages = ((messages ?? []) as ChatMessage[]).filter((m) => m.role !== 'system');
 
   // Auto-scroll to the latest turn whenever the thread or pending state changes.
@@ -59,11 +89,22 @@ export function TrevorCoachWidget(): JSX.Element {
     setInput('');
     setPendingUser(content);
     try {
-      await sendMessage({ content, role: 'user' } as ChatMessageCreate);
+      await sendMessage({
+        content,
+        role: 'user',
+        // Attach any uploaded docs so the consultant pulls them in for context.
+        metadata: documents.length > 0 ? { hasUploadedDocuments: true, userDocuments: documents } : undefined,
+      } as ChatMessageCreate);
     } finally {
       setPendingUser(null);
     }
-  }, [input, isSending, sendMessage]);
+  }, [input, isSending, sendMessage, documents]);
+
+  // Picking a tool seeds a first-person request; the coach's tool loop runs it.
+  const seedTool = useCallback((toolName: string): void => {
+    setInput((prev) => (prev.trim() ? prev : toolRequest(toolName)));
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }, []);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -157,8 +198,38 @@ export function TrevorCoachWidget(): JSX.Element {
 
       {/* Input */}
       <div className="border-t border-foreground/10 bg-background/70 p-3">
+        {/* Attached-files indicator */}
+        {(documents.length > 0 || isUploading) && (
+          <div
+            className="mb-2 flex items-center gap-1.5 text-xs text-foreground/70"
+            data-testid="coach-widget-files-indicator"
+          >
+            {isUploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Paperclip className="h-3.5 w-3.5" />
+            )}
+            <span>
+              {isUploading
+                ? 'Uploading…'
+                : `${documents.length} file${documents.length === 1 ? '' : 's'} will be included for context`}
+            </span>
+          </div>
+        )}
+
+        {/* Hidden picker driven by the hamburger's "Add files" */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
+          data-testid="coach-widget-file-input"
+        />
+
         <div className="flex items-end gap-2">
           <Textarea
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
@@ -168,6 +239,55 @@ export function TrevorCoachWidget(): JSX.Element {
             data-testid="coach-widget-input"
             className="max-h-32 min-h-[40px] flex-1 resize-none border-foreground/15 bg-background/80 text-foreground placeholder:text-foreground/45 focus-visible:ring-gold-warm"
           />
+
+          {/* Hamburger: Add files + categorized Brand Coach tools */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                aria-label="Files and tools"
+                data-testid="coach-widget-menu"
+                className="h-10 w-10 shrink-0 border-foreground/15 bg-background/80 text-foreground hover:bg-foreground/10"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top" className="max-h-[60vh] w-64 overflow-y-auto">
+              <DropdownMenuItem
+                onSelect={() => fileInputRef.current?.click()}
+                data-testid="coach-widget-addfiles"
+              >
+                <Paperclip className="mr-2 h-4 w-4" />
+                Add files
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Wrench className="h-3.5 w-3.5" />
+                Brand Coach tools
+              </DropdownMenuLabel>
+              {TOOL_GROUPS.map((g) => (
+                <DropdownMenuSub key={g.group}>
+                  <DropdownMenuSubTrigger data-testid={`coach-tool-group-${g.group}`}>
+                    {g.group}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="max-h-[50vh] w-64 overflow-y-auto">
+                    {g.tools.map((t) => (
+                      <DropdownMenuItem
+                        key={t.name}
+                        onSelect={() => seedTool(t.name)}
+                        title={t.description}
+                      >
+                        {toolRequest(t.name)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button
             type="button"
             size="icon"
