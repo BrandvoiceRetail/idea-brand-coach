@@ -230,6 +230,7 @@ All colors MUST be HSL.
   .glass-stage {
     position: relative;
     isolation: isolate;
+    overflow: hidden; /* contain the ambient blobs so they don't cause horizontal scroll */
   }
   .glass-stage::before {
     content: "";

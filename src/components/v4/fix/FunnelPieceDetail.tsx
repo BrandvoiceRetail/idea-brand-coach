@@ -43,6 +43,7 @@ import { STAGES, type StageId } from '@/config/touchpointTaxonomy';
 import {
   FUNNEL_JOBS,
   METRIC_META,
+  RANGE_LABELS,
   isDerivedMetric,
   type MetricFormat,
   type MetricKey,
@@ -402,6 +403,11 @@ function JobMetricsPanel({
   onRetry?: () => void;
 }): JSX.Element {
   const job = FUNNEL_JOBS[stage];
+  // The window the displayed readings cover — shown as a reference next to the
+  // numbers so a metric is never read out of its time frame. The range travels
+  // WITH the data, so it's only shown when real metrics came back (honest absence
+  // otherwise); it always matches the window those exact numbers were pulled for.
+  const rangeLabel = metrics.status === 'ok' ? RANGE_LABELS[metrics.data.range] : null;
 
   return (
     <Card data-testid="funnel-piece-jobmetrics">
@@ -409,7 +415,12 @@ function JobMetricsPanel({
         <div className="flex items-center gap-2 border-b border-border pb-2">
           <Sparkles className="h-4 w-4 text-gold-warm" aria-hidden="true" />
           <span className="text-sm font-semibold text-foreground">Did this piece do its job?</span>
-          <span className="ml-auto text-xs text-muted-foreground">via Windsor</span>
+          <span
+            className="ml-auto text-xs text-muted-foreground"
+            data-testid="funnel-piece-metrics-range"
+          >
+            {rangeLabel ? `${rangeLabel} · via Windsor` : 'via Windsor'}
+          </span>
         </div>
 
         {isLoading ? (

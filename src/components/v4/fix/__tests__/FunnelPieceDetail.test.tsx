@@ -114,6 +114,35 @@ describe('FunnelPieceDetail', () => {
     expect(sources).toHaveTextContent('Amazon Ads');
     expect(sources).toHaveTextContent('Seller Central');
     expect(sources).toHaveTextContent(/derived/i);
+    // the metrics carry their window as a reference (range travels with the data)
+    expect(screen.getByTestId('funnel-piece-metrics-range')).toHaveTextContent('Last 30 days');
+  });
+
+  it('references the metric window from the data range, and shows none when no metrics', () => {
+    const sevenDay: DataResult<PieceMetrics> = {
+      status: 'ok',
+      data: {
+        pieceId: 'piece-1',
+        range: '7d',
+        metrics: { cvr: { key: 'cvr', value: 0.05, source: 'derived', derived: true } },
+        noData: [],
+      },
+    };
+    const { rerender } = render(
+      <FunnelPieceDetail piece={makePiece()} pieceLabel="Amazon Listing — TLB216" metrics={sevenDay} />,
+    );
+    // the window is driven by the data, not hard-coded
+    expect(screen.getByTestId('funnel-piece-metrics-range')).toHaveTextContent('Last 7 days');
+
+    // honest absence: no window is asserted when there are no metrics to scope
+    const noData: DataResult<PieceMetrics> = {
+      status: 'no_data',
+      reason: 'Windsor is not connected for this channel yet.',
+    };
+    rerender(
+      <FunnelPieceDetail piece={makePiece()} pieceLabel="Amazon Listing — TLB216" metrics={noData} />,
+    );
+    expect(screen.getByTestId('funnel-piece-metrics-range')).not.toHaveTextContent(/Last \d+ days/);
   });
 
   it('renders an honest "—" for a missing primary metric', () => {

@@ -38,6 +38,7 @@ import { STAGES, getTouchpoint, type StageId } from '@/config/touchpointTaxonomy
 import {
   FUNNEL_JOBS,
   METRIC_META,
+  RANGE_LABELS,
   type MetricKey,
 } from '@/config/v4Funnel';
 import type { FunnelPiece, JobVerdict, MetricRange, PieceMetrics } from '@/types/v4Fix';
@@ -134,11 +135,6 @@ function channelBucket(channel: string | null): ChannelChip | null {
 // ── Metric formatting (honest "—" when no value) ──────────────────────────────
 
 const RANGES: readonly MetricRange[] = ['7d', '30d', '90d'] as const;
-const RANGE_LABEL: Record<MetricRange, string> = {
-  '7d': 'Last 7 days',
-  '30d': 'Last 30 days',
-  '90d': 'Last 90 days',
-};
 
 // Metric formatting now lives in the shared `@/lib/formatMetric` (imported above)
 // so FunnelMap and FunnelPieceDetail can never drift on the percent ×100 scaling.
@@ -632,7 +628,7 @@ export function FunnelMap({
               emitFunnel(FUNNEL_MAP_EVENTS.RANGE_CHANGED, { range: v });
               onRangeChange?.(v as MetricRange);
             }}
-            options={RANGES.map((r) => ({ value: r, label: RANGE_LABEL[r] }))}
+            options={RANGES.map((r) => ({ value: r, label: RANGE_LABELS[r] }))}
           />
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
