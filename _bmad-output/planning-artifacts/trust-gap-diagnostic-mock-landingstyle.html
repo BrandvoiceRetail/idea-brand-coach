@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDEA Brand Coach — Trust Gap Diagnostic (landing visual language)</title>
+<!--
+  PROTOTYPE B — the Trust Gap diagnostic in the CURRENT live landing page's
+  visual language (public/landing.html): warm #F3F2EE canvas, black emphasis
+  panels, gold accents, Helvetica, flat editorial cards. Same sequence as the
+  dark-glass mock (IDEA-APP-ENTRY-001 v1.1): Recognition → Diagnosis →
+  Prescription → four questions → results (Component 0 first). UK English.
+-->
+<style>
+  :root{
+    --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    --blk:#0B0B0B; --wht:#FFFFFF; --wrm:#F3F2EE;
+    --gld:#D89B0D; --gld-lt:#F6E8BF;
+    --i:#D89B0D; --d:#54B657; --e:#3BA0D1; --a:#F08A00;
+    --ink:#1c1c1c; --mut:#5f5d57; --line:rgba(11,11,11,.12);
+    --grn:#2e7d32; --red:#d14b43;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font);background:var(--wrm);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .brandline{position:fixed;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:center;
+    background:var(--blk);color:var(--wht);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;z-index:50;border-bottom:1px solid rgba(255,255,255,.08)}
+  .brandline .tm{font-size:8px;vertical-align:super}
+
+  .stage{max-width:620px;margin:0 auto;padding:90px 22px 56px;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+  .eyebrow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--gld);margin-bottom:16px}
+
+  /* views */
+  .view{display:none;animation:viewIn .3s ease}
+  .view.active{display:block}
+  @keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;font-family:var(--font);font-size:15px;font-weight:800;
+    padding:15px 24px;border-radius:5px;border:none;cursor:pointer;text-decoration:none;transition:background .15s,transform .05s,border-color .15s}
+  .btn-primary{background:var(--gld);color:var(--blk)}
+  .btn-primary:hover{background:#e8ac28}
+  .btn-primary:active{transform:translateY(1px)}
+  .btn-ghost{background:transparent;color:var(--blk);border:1.5px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--blk)}
+  .cta-wrap{margin-top:26px;display:grid;gap:12px}
+  .descriptor{text-align:center;font-size:13px;color:var(--mut);line-height:1.5;font-weight:600}
+
+  /* cards */
+  .card{background:var(--wht);border:1px solid var(--line);border-radius:12px;padding:30px 26px}
+  .card.black{background:var(--blk);border-color:var(--blk);color:var(--wht);box-shadow:0 24px 60px rgba(11,11,11,.20)}
+
+  /* movement 1 — recognition (editorial, on warm canvas, like the hero) */
+  .mirror h1{font-size:clamp(26px,5.4vw,40px);font-weight:900;letter-spacing:-1.4px;line-height:1.1;color:var(--blk);margin-bottom:18px}
+  .mirror h1 .soft{color:var(--mut);font-weight:800}
+  .mirror .tail{font-size:16px;color:var(--mut);font-weight:500;max-width:48ch}
+  .nudge{margin-top:30px;opacity:0;animation:fadeUp .6s ease forwards;animation-delay:1.4s}
+  @keyframes fadeUp{to{opacity:1}}
+  .nudge .btn{max-width:300px}
+
+  /* diagnosis / prescription */
+  .lede{font-size:16px;color:var(--mut);line-height:1.62;margin-bottom:18px}
+  .lede b{color:var(--blk)}
+  .name-line{font-size:clamp(20px,3.4vw,26px);font-weight:900;letter-spacing:-.6px;line-height:1.2;color:var(--blk);border-left:4px solid var(--gld);padding-left:16px}
+  .name-line .gld{color:var(--gld)}
+  .cred{margin-top:20px;padding-top:18px;border-top:1px solid var(--line);font-size:13.5px;color:var(--mut);line-height:1.6}
+
+  /* questions */
+  .dx-sub{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gld);margin-bottom:10px}
+  .dx-instr{font-size:clamp(18px,3vw,22px);font-weight:900;letter-spacing:-.5px;line-height:1.25;color:var(--blk);margin-bottom:18px}
+  .prog{height:4px;border-radius:999px;background:rgba(11,11,11,.08);overflow:hidden;margin-bottom:22px}
+  .prog>i{display:block;height:100%;width:8%;border-radius:999px;background:var(--gld);transition:width .45s cubic-bezier(.22,.8,.3,1)}
+  .q-count{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
+  .q-text{font-size:20px;font-weight:900;letter-spacing:-.4px;line-height:1.25;color:var(--blk);margin-bottom:6px}
+  .q-hint{font-size:14px;color:var(--mut);margin-bottom:20px;line-height:1.5}
+  .scale{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:14px}
+  .scale button{appearance:none;cursor:pointer;font-family:var(--font);font-weight:900;font-size:18px;color:var(--blk);
+    padding:16px 0;border-radius:7px;border:1.5px solid var(--line);background:var(--wht);transition:background .15s,border-color .15s,transform .12s,color .15s}
+  .scale button:hover{border-color:var(--gld);transform:translateY(-2px)}
+  .scale button.sel{background:var(--gld);color:var(--blk);border-color:var(--gld)}
+  .scale-ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);font-weight:600}
+
+  /* results */
+  .r-eyebrow{color:var(--gld)}
+  .c0{font-size:clamp(21px,4vw,30px);font-weight:900;letter-spacing:-.8px;line-height:1.22;color:var(--wht)}
+  .c0 .gld{color:var(--gld)}
+  .r-sub{font-size:14px;color:rgba(255,255,255,.62);margin-top:16px;font-weight:600}
+
+  .score-card{margin-top:16px}
+  .score-card .mh{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:14px}
+  .score-top{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+  .score-num{font-size:48px;font-weight:900;letter-spacing:-2px;line-height:1;color:var(--blk)}
+  .score-num small{font-size:20px;color:var(--mut);font-weight:800}
+  .score-lab{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--mut);line-height:1.3}
+  .pillars{display:grid;gap:12px}
+  .pillar{display:grid;grid-template-columns:96px 1fr 40px;align-items:center;gap:10px}
+  .pillar .p-name{font-size:13px;color:var(--ink);font-weight:600}
+  .pillar .p-track{height:8px;border-radius:999px;background:rgba(11,11,11,.08);overflow:hidden}
+  .pillar .p-fill{height:100%;border-radius:999px;background:var(--gld);width:0;transition:width .9s cubic-bezier(.22,.8,.3,1)}
+  .pillar .p-fill.weak{background:var(--red)}
+  .pillar .p-val{font-size:12.5px;color:var(--mut);text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
+  .upgrade{margin-top:16px}
+  .upgrade .u-line{font-size:15px;color:var(--mut);line-height:1.6;margin-bottom:16px}
+  .upgrade .u-line b{color:var(--blk)}
+
+  .loop-card{margin-top:16px}
+  .loop-card .mh{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:14px}
+  .loop{display:flex;gap:8px;flex-wrap:wrap}
+  .lstep{flex:1;min-width:90px;text-align:center;font-size:11.5px;font-weight:800;color:var(--mut);padding:10px 6px;border:1px solid var(--line);border-radius:8px;background:var(--wrm)}
+  .lstep.now{color:var(--blk);border-color:var(--gld);background:var(--gld-lt)}
+  .loop-note{font-size:13.5px;color:var(--mut);margin-top:14px;line-height:1.55;text-align:center}
+
+  .foot{margin-top:26px;text-align:center}
+  .foot .restart{appearance:none;background:transparent;border:0;cursor:pointer;color:var(--mut);font-family:var(--font);font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+  :focus-visible{outline:2.5px solid var(--gld);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="brandline">IDEA<span class="tm">&trade;</span>&nbsp; Brand Coach</div>
+
+<div class="stage">
+
+  <!-- MOVEMENT 1 — RECOGNITION -->
+  <section class="view active" id="v-recognition">
+    <div class="mirror">
+      <h1>You have looked at your listing more times than you can count.
+        <span class="soft">You have changed the images, the headline, the bullets. Maybe the price. You have asked the AI tools and used what they gave you.</span></h1>
+      <h1>And the number is still wrong.</h1>
+      <p class="tail">Not dramatically. Persistently, stubbornly below where it should be for the product you have built — and nobody has been able to tell you why.</p>
+    </div>
+    <div class="nudge">
+      <button class="btn btn-ghost" onclick="go('v-diagnosis')">Show me why ↓</button>
+    </div>
+  </section>
+
+  <!-- MOVEMENT 2 — DIAGNOSIS -->
+  <section class="view" id="v-diagnosis">
+    <div class="card">
+      <p class="lede">The reason the standard fixes do not work is that they address what your customer <b>says</b> about your brand. What decides whether they buy is something else: the quiet check their brain runs in the seconds before deciding — and it is not reading your bullet points. It is asking one question about trust, and something in your brand is failing it.</p>
+      <p class="name-line">That gap has a name. It is a <span class="gld">Trust Gap</span>. And it is measurable.</p>
+    </div>
+    <div class="cta-wrap"><button class="btn btn-primary" onclick="go('v-prescription')">Go on &rarr;</button></div>
+  </section>
+
+  <!-- MOVEMENT 3 — PRESCRIPTION -->
+  <section class="view" id="v-prescription">
+    <div class="card">
+      <p class="lede">The IDEA Brand Coach finds the gap. It reads the emotional state your customer is in when they land on your listing and runs a check no other tool runs — not what they say, but what their language reveals about the part of the brain making the decision. Then it tells you the one thing to change.</p>
+      <p class="cred">Built on 35 years of commercial brand strategy across hundreds of real brands, and grounded in the published neuroscience of Harvard researchers who have spent their careers on exactly this: why customers almost buy, and then do not.</p>
+    </div>
+    <div class="cta-wrap">
+      <button class="btn btn-primary" onclick="go('v-diagnostic')">Find my Trust Gap</button>
+      <p class="descriptor">The IDEA Brand Coach reads what your customer's brain is deciding about your brand and keeps you one step ahead of the gap.</p>
+    </div>
+  </section>
+
+  <!-- FOUR QUESTIONS -->
+  <section class="view" id="v-diagnostic">
+    <div class="dx-sub">Four questions &middot; each looks at a dimension of the gap</div>
+    <div class="dx-instr">Look at your listing as a first-time shopper would. Score what you actually see, not what you intended to show.</div>
+    <div class="prog"><i id="progbar"></i></div>
+    <div class="card">
+      <div class="q-count" id="qcount">Question 1 of 4</div>
+      <div class="q-text" id="qtext"></div>
+      <div class="q-hint" id="qhint"></div>
+      <div class="scale" id="scale">
+        <button onclick="answer(1)">1</button><button onclick="answer(2)">2</button>
+        <button onclick="answer(3)">3</button><button onclick="answer(4)">4</button><button onclick="answer(5)">5</button>
+      </div>
+      <div class="scale-ends" id="qends"></div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="view" id="v-results">
+    <div class="card black">
+      <span class="eyebrow r-eyebrow">What we can already see</span>
+      <div class="c0">Your buyer arrives carrying doubt from products that promised and let them down — and your listing speaks to the <span class="gld">confident</span> shopper, not the <span class="gld">wary one</span> deciding right now.</div>
+      <div class="r-sub">That is the gap. Here is where it sits.</div>
+    </div>
+
+    <div class="card score-card">
+      <div class="mh">Your Trust Gap, scored</div>
+      <div class="score-top">
+        <div class="score-num">54<small>/100</small></div>
+        <div class="score-lab">Trust&nbsp;Gap<br>Score</div>
+      </div>
+      <div class="pillars">
+        <div class="pillar"><div class="p-name">Insight</div><div class="p-track"><div class="p-fill" data-w="48%"></div></div><div class="p-val">12/25</div></div>
+        <div class="pillar"><div class="p-name">Distinctive</div><div class="p-track"><div class="p-fill" data-w="72%"></div></div><div class="p-val">18/25</div></div>
+        <div class="pillar"><div class="p-name">Empathetic</div><div class="p-track"><div class="p-fill weak" data-w="32%"></div></div><div class="p-val">8/25</div></div>
+        <div class="pillar"><div class="p-name">Authentic</div><div class="p-track"><div class="p-fill" data-w="64%"></div></div><div class="p-val">16/25</div></div>
+      </div>
+    </div>
+
+    <div class="card upgrade">
+      <p class="u-line">The score shows you <b>where</b> the gap is. The full analysis shows you what is causing it in <b>your</b> listing, in the language of <b>your</b> customers. That is where the fix comes from.</p>
+      <button class="btn btn-primary" onclick="alert('→ Upload flow (prototype)')">Upload my listing and find the fix</button>
+    </div>
+
+    <div class="card loop-card">
+      <div class="mh">Not a one-time audit</div>
+      <div class="loop">
+        <div class="lstep now">Diagnose</div><div class="lstep">Analyse</div><div class="lstep">Fix</div><div class="lstep">Re-measure</div><div class="lstep">Defend</div>
+      </div>
+      <p class="loop-note">Your Trust Gap Score is the start of the loop, not the end of it. The gap closes. Competitors move. The engine watches both.</p>
+    </div>
+
+    <div class="foot"><button class="restart" onclick="restart()">↺ Replay the prototype</button></div>
+  </section>
+
+</div>
+
+<script>
+function go(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+  if(id==='v-diagnostic'){qIndex=0;renderQ();}
+  if(id==='v-results'){setTimeout(fillPillars,120);}
+}
+const QS=[
+  {t:"Does your hero image speak to the emotional moment your buyer is in?",h:"Not how polished it is — whether it meets a wary shopper where they are.",ends:["All specs & polish","Speaks to the moment"]},
+  {t:"Is what makes you different obvious in the first few seconds?",h:"Distinctiveness shown, not explained.",ends:["Looks like the others","Unmistakably yours"]},
+  {t:"Would a sceptical first-time buyer feel understood here?",h:"The doubt they arrive carrying — is it acknowledged?",ends:["Talks at them","Feels seen"]},
+  {t:"Do your claims read as earned, or as marketing?",h:"Trust the brain will actually accept.",ends:["Sounds like a pitch","Reads as true"]},
+];
+let qIndex=0;const answers=[];
+function renderQ(){
+  const q=QS[qIndex];
+  document.getElementById('qcount').textContent='Question '+(qIndex+1)+' of 4';
+  document.getElementById('qtext').textContent=q.t;
+  document.getElementById('qhint').textContent=q.h;
+  document.getElementById('qends').innerHTML='<span>1 · '+q.ends[0]+'</span><span>'+q.ends[1]+' · 5</span>';
+  document.getElementById('progbar').style.width=(qIndex/4*100+8)+'%';
+  document.querySelectorAll('#scale button').forEach(b=>b.classList.remove('sel'));
+}
+function answer(v){
+  answers[qIndex]=v;
+  const btns=document.querySelectorAll('#scale button');btns.forEach(b=>b.classList.remove('sel'));btns[v-1].classList.add('sel');
+  document.getElementById('progbar').style.width=((qIndex+1)/4*100)+'%';
+  setTimeout(()=>{if(qIndex<3){qIndex++;renderQ();}else{go('v-results');}},320);
+}
+function fillPillars(){document.querySelectorAll('.p-fill').forEach(f=>f.style.width=f.dataset.w);}
+function restart(){qIndex=0;answers.length=0;go('v-recognition');}
+</script>
+</body>
+</html>
