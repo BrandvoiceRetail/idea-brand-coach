@@ -535,4 +535,41 @@ subjective scores vs review-derived) — so the redundancy is structural, not ju
 6. **De-dupe chrome/copy** — one "Brand Coach" header, one "Trust Gap Diagnostic" label, loop diagram once
    per surface. (Closes 🔁#5, #6, #7.)
 
+### Fix → Re-measure → Defend (completing the walk)
+- **Spine checkmarks are loose** — Diagnose/Analyse/Fix render ✓ without genuine completion (Fix ✓ with no
+  funnel built); the `/v4` onboarding detour *resets* them. Progress state isn't trustworthy.
+- **Fix** is scoped to a template "Default Avatar" with "No funnel pieces yet"; data only arrives "once your
+  coach pulls them in Claude" (connector dependency); **"Continue to Re-measure" is enabled with zero data**.
+- **Re-measure** throws a hard **"We couldn't read your diagnostic history / Try again"** error (even though a
+  Trust Gap exists) and **"Continue to Defend" is disabled** (dead-end).
+- **Defend** asserts a healthy verdict from no data — "Holding steady · Nothing has drifted · No assets
+  drifted ✓" with **zero assets and no Signature** (violates no-fabrication); reachable despite "Roadmap";
+  "Export workbook" offered with no loop data.
+
+### Recap deploy note (2026-06-29)
+The diagnose→Fix recap is **deployed** (`main`@212a441 → prod, bundle `index-D3pkiT_t.js`, verified live) but
+detection is **avatar-scoped**, so it doesn't fire when the Trust Gap is on a different scope than the active
+avatar — confirmed live (KE's active "Default Avatar" has no own diagnostic). → **T1 broadens it.**
+
+---
+
+## Consolidated Tickets (fix-all, 2026-06-29)
+
+| # | Fix | Files (approx) | Risk | Status |
+|---|-----|----------------|------|--------|
+| **T1** | Broaden recap detection to a Trust Gap from **any scope** (brand-baseline / any avatar), not just active | `V4Diagnose.tsx` | low | safe-now |
+| **T2** | De-chrome embedded diagnostic in `/v4` — hide inner 7-step stepper + nested "IDEA Brand Coach" header + "FREE" labels when `embedded` | `ProblemSolverDiagnostic.tsx` | low-med | safe-now |
+| **T3** | Results **finding-first** — Component-0 statement above score/pillars; clean results view (drop the questions left above) | results in `ProblemSolverDiagnostic.tsx` | med | safe-now |
+| **T4** | **Defend**: no healthy verdict from no data — gate "holding steady / no drift" behind real assets+Signature; honest empty otherwise | `V4Defend.tsx` | low | safe-now |
+| **T5** | **Re-measure**: graceful empty instead of the hard "couldn't read diagnostic history" error | `V4Remeasure.tsx` / read hook | low | safe-now |
+| **T6** | CTA copy consistency — entry "Find my Trust Gap"; results "Upload my listing and find the fix" | landing + results | low | safe-now |
+| **T7** | De-dupe labels/headers — one "Trust Gap Diagnostic" label, one "Brand Coach" header, loop once/surface | `ProblemSolverDiagnostic.tsx`, landing | low | safe-now |
+| **T8** | Spine checkmarks reflect real completion; don't reset on the onboarding detour | `/v4` spine/stepper state | med | safe-now |
+| **T9** | Landing → **ungated** free diagnostic so "no account first" is true (point CTA at one public diagnostic) | `public/landing.html` + route gating | med-HIGH (funnel/monetization) | **NEEDS DECISION** |
+| **T10** | Consolidate the **two diagnostic engines + one stepper** (retire the duplication) | `App.tsx`, both engines | HIGH (refactor) | **NEEDS DECISION** |
+
+**Plan:** implement **T1–T8** (safe, high-value, no funnel/monetization risk) now, verify, batch-deploy.
+**T9 & T10** touch the live funnel + the £97 monetization + a real refactor — flagged for a product call
+before I rip out routes/engines.
+
 

@@ -51,19 +51,33 @@ export default function V4Diagnose(): JSX.Element {
   // "Re-run" drops the user straight into the diagnostic for this visit, past the recap.
   const [forceRun, setForceRun] = useState(false);
 
-  // Latest persisted diagnostic, scoped to the active avatar (overlay) — or any
-  // scope before an avatar resolves, so a brand-baseline / MCP-written Trust Gap
-  // still counts as "already diagnosed".
-  const { data: latest, isLoading: isLoadingDiagnostic } = useQuery({
+  // Latest persisted diagnostic scoped to the active avatar (overlay), or the
+  // brand baseline before an avatar resolves (`undefined` = any scope).
+  const { data: avatarLatest, isLoading: isLoadingAvatarDiagnostic } = useQuery({
     queryKey: ['v4-diagnose-existing', selectedAvatarId ?? 'any'],
     queryFn: () => diagnosticService.getLatestDiagnostic(selectedAvatarId ?? undefined),
     retry: 1,
   });
 
-  // Decide only once BOTH avatar hydration and the diagnostic read have settled —
+  // Scope-agnostic read: the latest Trust Gap of ANY scope (brand baseline or any
+  // avatar). This is what lets an MCP-onboarded user — whose Trust Gap may sit on
+  // the brand baseline or a different avatar — count as "already diagnosed" even
+  // when the active avatar has no diagnostic of its own.
+  const { data: anyLatest, isLoading: isLoadingAnyDiagnostic } = useQuery({
+    queryKey: ['v4-diagnose-existing', 'any-scope'],
+    queryFn: () => diagnosticService.getLatestDiagnostic(undefined),
+    retry: 1,
+  });
+
+  // Prefer the avatar-scoped result for the displayed score / weakest pillar;
+  // fall back to the any-scope result when the active avatar has none of its own.
+  const latest =
+    typeof avatarLatest?.scores?.overall === 'number' ? avatarLatest : anyLatest;
+
+  // Decide only once avatar hydration AND BOTH diagnostic reads have settled —
   // never flash the questionnaire and then yank the user to the recap (the async
   // race we hit with context autofill).
-  const resolving = isLoadingAvatars || isLoadingDiagnostic;
+  const resolving = isLoadingAvatars || isLoadingAvatarDiagnostic || isLoadingAnyDiagnostic;
   const alreadyDiagnosed = !resolving && typeof latest?.scores?.overall === 'number';
 
   useEffect(() => {

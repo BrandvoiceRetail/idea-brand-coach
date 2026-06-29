@@ -70,4 +70,14 @@ describe('DriftWatchCard', () => {
       expect.objectContaining({ state: 'drifted', count: 2 }),
     );
   });
+
+  it('shows an honest neutral state (not a false all-clear) when there is no baseline', () => {
+    render(<DriftWatchCard watch={CLEAR} hasBaseline={false} />);
+    expect(screen.getByTestId('v4-defend-drift-none')).toBeInTheDocument();
+    expect(screen.queryByTestId('v4-defend-drift-clear')).not.toBeInTheDocument();
+    expect(captureAlphaEvent).toHaveBeenCalledWith(
+      'v4_defend_drift_watch_viewed',
+      expect.objectContaining({ state: 'none', count: 0 }),
+    );
+  });
 });

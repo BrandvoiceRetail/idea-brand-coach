@@ -73,6 +73,13 @@ export interface DefendStatus {
   drift: DriftWatch;
   /** True when a real before/after Trust Gap lift could be computed. */
   liftConfirmed: boolean;
+  /**
+   * True when there is something real to defend: at least one ALIGNED asset
+   * (which can only exist once it was audited against a Signature). When false,
+   * zero drift is "nothing to defend yet" — the screens show an honest neutral
+   * state, never a false all-clear.
+   */
+  hasBaseline: boolean;
   checklist: DefendChecklistItem[];
 }
 

@@ -41,6 +41,12 @@ export interface DriftWatchCardProps {
   onRetry?: () => void;
   /** Jump to Fix to re-check the drifted assets. */
   onRecheck?: () => void;
+  /**
+   * True when there is a real baseline to defend (>=1 aligned asset + a Signature).
+   * When false the all-clear is suppressed for an honest neutral state. Defaults to
+   * true so existing callers keep the all-clear behaviour.
+   */
+  hasBaseline?: boolean;
 }
 
 function Shell({ children }: { children: React.ReactNode }): JSX.Element {
@@ -63,15 +69,16 @@ export function DriftWatchCard({
   error = null,
   onRetry,
   onRecheck,
+  hasBaseline = true,
 }: DriftWatchCardProps): JSX.Element {
   const count = watch?.count ?? 0;
   useEffect(() => {
     if (isLoading || error || !watch) return;
     captureV4('v4_defend_drift_watch_viewed', {
-      state: count === 0 ? 'clear' : 'drifted',
+      state: !hasBaseline ? 'none' : count === 0 ? 'clear' : 'drifted',
       count,
     });
-  }, [isLoading, error, watch, count]);
+  }, [isLoading, error, watch, count, hasBaseline]);
 
   if (isLoading) {
     return (
@@ -101,6 +108,28 @@ export function DriftWatchCard({
               Try again
             </Button>
           )}
+        </div>
+      </Shell>
+    );
+  }
+
+  // Nothing aligned to a Signature yet → an honest neutral state. Zero drift over
+  // zero aligned assets is "nothing to defend yet", never a false all-clear.
+  if (!hasBaseline) {
+    return (
+      <Shell>
+        <div
+          className="flex items-start gap-3 rounded-md border border-border bg-muted/40 p-4 text-sm"
+          data-testid="v4-defend-drift-none"
+        >
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="font-medium text-foreground">Nothing to defend yet.</p>
+            <p className="text-muted-foreground">
+              Work a fix first — align an asset to your Signature — and I&apos;ll
+              watch it for drift.
+            </p>
+          </div>
         </div>
       </Shell>
     );

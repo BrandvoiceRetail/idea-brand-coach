@@ -221,8 +221,12 @@ export default function ProblemSolverDiagnostic({
           className="overflow-hidden rounded-2xl border"
           style={{ background: PS_COLORS.warm, borderColor: PS_COLORS.line, boxShadow: '0 4px 10px rgba(16,24,40,.10)' }}
         >
-          <Stepper current={step} onJump={handleJump} />
-          <BrandBar note={NAV_NOTE[step]} />
+          {!embedded && (
+            <>
+              <Stepper current={step} onJump={handleJump} />
+              <BrandBar note={NAV_NOTE[step]} />
+            </>
+          )}
 
           <div className="px-4 py-6 sm:px-6 sm:py-7">
             {step === 1 && (
@@ -231,6 +235,7 @@ export default function ProblemSolverDiagnostic({
                 onAnswer={(id, value) => setAnswers((a) => ({ ...a, [id]: value }))}
                 onReveal={handleReveal}
                 onContinue={() => goTo(2)}
+                embedded={embedded}
               />
             )}
             {step === 2 && (

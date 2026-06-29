@@ -40,11 +40,13 @@ function makeService(opts: {
   drift?: FixResult<DriftItem[]>;
   lift?: RemeasureResult<TrustGapLift>;
   invoke?: EdgeInvoke;
+  hasBaseline?: boolean;
 }): DefendService {
   return new DefendService(
     async () => opts.drift ?? okDrift([]),
     async () => opts.lift ?? okLift,
     opts.invoke ?? (async () => ({ data: null, error: null })),
+    async () => opts.hasBaseline ?? true,
   );
 }
 
@@ -68,6 +70,13 @@ describe('buildChecklist (deterministic, no fabrication)', () => {
     for (const item of [...buildChecklist(0, true), ...buildChecklist(3, false)]) {
       expect(findTierViolations(`${item.label} ${item.detail}`)).toEqual([]);
     }
+  });
+
+  it('keeps the drift row neutral (not a false done) when there is no baseline', () => {
+    const list = buildChecklist(0, true, false);
+    const drift = list.find((i) => i.key === 'drift');
+    expect(drift?.state).toBe('pending');
+    expect(drift?.detail).toContain('Nothing aligned');
   });
 });
 
@@ -97,6 +106,22 @@ describe('DefendService.getStatus (honest degradation)', () => {
   it('surfaces an error when the drift read errors', async () => {
     const res = await makeService({ drift: { status: 'error', error: 'boom' } }).getStatus('av1');
     expect(res.status).toBe('error');
+  });
+
+  it('reports no baseline (neutral drift row) when no asset is aligned yet', async () => {
+    const res = await makeService({ drift: okDrift([]), hasBaseline: false }).getStatus('av1');
+    expect(res.status).toBe('ok');
+    if (res.status !== 'ok') return;
+    expect(res.data.hasBaseline).toBe(false);
+    expect(res.data.checklist.find((i) => i.key === 'drift')?.state).toBe('pending');
+  });
+
+  it('reports a baseline + all-clear drift row when an asset is aligned with zero drift', async () => {
+    const res = await makeService({ drift: okDrift([]), hasBaseline: true }).getStatus('av1');
+    expect(res.status).toBe('ok');
+    if (res.status !== 'ok') return;
+    expect(res.data.hasBaseline).toBe(true);
+    expect(res.data.checklist.find((i) => i.key === 'drift')?.state).toBe('done');
   });
 });
 
