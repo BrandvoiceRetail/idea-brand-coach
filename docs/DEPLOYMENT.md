@@ -55,14 +55,16 @@ Then **verify over HTTP, not just on disk**: `/` serves the static `landing.html
 the served bundle hash matches `dist/assets/index-*.js`. Rollback: an
 `index.html.bak.*` is kept on the box, or rebuild the prior commit + rsync.
 
-> ⚠️ **`index.html` is served WITHOUT `Cache-Control: no-cache`** (only ETag/Last-Modified),
-> so browsers heuristically cache it and a returning user can keep loading a STALE
-> hashed bundle after a deploy (observed 2026-06-29 — a test browser ran a days-old
-> `index-*.js`). The hashed `assets/*` are immutable+fine; the entry HTML is the
-> problem. **Fix (recommended): add `Cache-Control: no-cache` (revalidate) on
-> `index.html` / `404.html` in the box Caddyfile**, keeping `assets/*` long-cache.
-> Until then, verify deploys with a cache-busting query param (`/welcome?cb=…`), and
-> tell testers a hard-refresh may be needed.
+> ✅ **FIXED 2026-06-29 — `index.html` no-cache.** The box Caddyfile
+> (`/opt/mango/Caddyfile`, `ideabrandcoach.icodemybusiness.com` block) now sets
+> `Cache-Control: no-cache` on the SPA entry + all deep routes (`@spa_html` = not
+> `/assets/*`, not `/mcp*`) and `public, max-age=31536000, immutable` on `/assets/*`.
+> So browsers revalidate the entry HTML every load (deploys reach users immediately)
+> while hashed bundles stay long-cached. Edit the Caddyfile IN PLACE (it's a
+> single-file bind-mount → preserves inode), then `docker exec mango-caddy-1 caddy
+> reload --config /etc/caddy/Caddyfile --adapter caddyfile`. Backup kept at
+> `/opt/mango/Caddyfile.bak.sally-cachehdr`. (Pre-fix symptom: a test browser ran a
+> days-old `index-*.js`.)
 
 > ⚠️ **Deploy-race clobber is real (observed 2026-06-29):** two sessions deployed
 > minutes apart; the second built from a tree missing the first's commit and its
