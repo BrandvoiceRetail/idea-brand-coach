@@ -42,7 +42,7 @@ const CHOICES: readonly OnboardChoice[] = [
     id: 'diagnostic',
     label: 'Simple Diagnostic',
     description:
-      "A guided conversation about your customer and your brand — we talk through the four parts of trust together, then I reflect back where your Trust Gap is. No forms, no ratings to fill in.",
+      "A guided conversation about your customer and your brand, we talk through the four parts of trust together, then I reflect back where your Trust Gap is. No forms, no ratings to fill in.",
   },
   {
     id: 'upload',
@@ -59,15 +59,15 @@ export function buildOnboardSurface(): OnboardSurface {
     '# IDEA Brand Coach',
     `*${TAGLINE}*`,
     '',
-    "I'm your IDEA Brand Coach — here to help you build an authentically human brand that wins the heart, and the sale.",
+    "I'm your IDEA Brand Coach, here to help you build an authentically human brand that wins the heart, and the sale.",
     '',
     "Most brand problems come down to one thing: trust, or the lack of it. Let's find yours. Pick how you'd like to start:",
     '',
-    `**1. ${CHOICES[0].label}** — ${CHOICES[0].description}`,
+    `**1. ${CHOICES[0].label}**: ${CHOICES[0].description}`,
     '',
-    `**2. ${CHOICES[1].label}** — ${CHOICES[1].description}`,
+    `**2. ${CHOICES[1].label}**: ${CHOICES[1].description}`,
     '',
-    "Tell me which one — or run `onboard_choose` with `diagnostic` or `upload` and I'll take it from there.",
+    "Tell me which one, or run `onboard_choose` with `diagnostic` or `upload` and I'll take it from there.",
   ].join('\n');
 
   return { markdown, choices };
@@ -80,15 +80,15 @@ export function buildPathStub(path: OnboardPath): PathStub {
       path,
       title: 'Simple Diagnostic',
       markdown: [
-        '# Simple Diagnostic — let\'s talk it through',
+        '# Simple Diagnostic: let\'s talk it through',
         '',
-        "Good choice. This is a conversation, not a quiz. I'll walk you through the four parts of trust in the IDEA framework — **Insight, Distinctive, Empathetic, Authentic** — **one at a time**, starting with your customer and the heart of your brand.",
+        "Good choice. This is a conversation, not a quiz. I'll walk you through the four parts of trust in the IDEA framework, **Insight, Distinctive, Empathetic, Authentic**, **one at a time**, starting with your customer and the heart of your brand.",
         '',
-        "For each one I'll ask an open question and listen to your actual words. No ratings, no numbers from you. Only once you've genuinely spoken to all four will I reflect back where your **Trust Gap** is — as a mirror of what you shared, never a verdict from nowhere.",
+        "For each one I'll ask an open question and listen to your actual words. No ratings, no numbers from you. Only once you've genuinely spoken to all four will I reflect back where your **Trust Gap** is, as a mirror of what you shared, never a verdict from nowhere.",
         '',
-        "Let's start with **Insight**: who is your customer, really — and what do they most want that they can't quite get anywhere else?",
+        "Let's start with **Insight**: who is your customer, really, and what do they most want that they can't quite get anywhere else?",
         '',
-        "_Posture guardrail: I gather all four dimensions in your own words **before any scoring**; I will never invent your answers. (Walking skeleton: the story→score mapping is the next build — for now I hold the line and ask rather than fabricate.)_",
+        "_Posture guardrail: I gather all four dimensions in your own words **before any scoring**; I will never invent your answers. (Walking skeleton: the story→score mapping is the next build, for now I hold the line and ask rather than fabricate.)_",
       ].join('\n'),
     };
   }
@@ -97,9 +97,9 @@ export function buildPathStub(path: OnboardPath): PathStub {
     path,
     title: 'Full Contextual Upload',
     markdown: [
-      '# Full Contextual Upload — your next step',
+      '# Full Contextual Upload: your next step',
       '',
-      'Smart move. The Full Contextual Upload lets you bring your listings, reviews, and brand materials so I can coach against your **real business** — not generic advice.',
+      'Smart move. The Full Contextual Upload lets you bring your listings, reviews, and brand materials so I can coach against your **real business**, not generic advice.',
       '',
       "_Front door only: the upload pipeline isn't wired up yet. You're seeing the install → invoke → render → choose pipe work end to end._",
     ].join('\n'),

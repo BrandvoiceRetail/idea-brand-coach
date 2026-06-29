@@ -63,7 +63,7 @@ async function main(): Promise<void> {
           content: [{ type: 'text', text: message }],
         });
         if (result?.isError) throw new Error('the host declined the message');
-        setStatus("Sent to the chat — let's keep going below.");
+        setStatus("Sent to the chat. Let's keep going below.");
       } catch (err) {
         setStatus(
           `Couldn't start automatically: ${err instanceof Error ? err.message : 'tell me which path in the chat'}`,
@@ -80,11 +80,11 @@ async function main(): Promise<void> {
     await app.connect();
     applyTheme(app.getHostContext()?.theme);
     setDisabled(false);
-    setStatus('Ready — choose a path.');
+    setStatus('Ready, choose a path.');
   } catch {
     // No host handshake (e.g. opened outside a host): keep the panel usable rather than dead.
     setDisabled(false);
-    setStatus('Ready — choose a path.');
+    setStatus('Ready, choose a path.');
   }
 }
 
