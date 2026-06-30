@@ -35,6 +35,7 @@ import { useChat } from '@/hooks/useChat';
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { useAvatarContext } from '@/contexts/AvatarContext';
+import { useCoachWidget } from '@/contexts/CoachWidgetContext';
 import { cn } from '@/lib/utils';
 import { TOOL_REGISTRY } from '@/data/toolRegistry.generated';
 import type { ChatMessage, ChatMessageCreate } from '@/types/chat';
@@ -101,6 +102,10 @@ export function TrevorCoachWidget(): JSX.Element {
   const { selectedAvatarId, contextAvatarIds } = useAvatarContext();
   const avatarId = selectedAvatarId ?? undefined;
 
+  // Another /v4 surface can ask the coach to take over (e.g. "Open the coach to
+  // refine" on the Fix stage) instead of routing to the legacy /v2/coach page.
+  const { request: coachRequest } = useCoachWidget();
+
   // Session is auto-created by useChatSessions (autoCreate defaults true); useChat
   // loads + persists messages against it and runs the consultant edge function.
   const { currentSessionId } = useChatSessions({ chatbotType: CHATBOT, avatarId, avatarIds: contextAvatarIds });
@@ -122,6 +127,20 @@ export function TrevorCoachWidget(): JSX.Element {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [visibleMessages.length, pendingUser, isSending, open]);
+
+  // Honour an external open request: pop the panel and (if supplied) prefill the
+  // composer with the seed so the coach starts with full context, leaving it
+  // editable so the user can tweak before sending. Keyed on the request nonce so
+  // repeated asks re-open + re-seed even with the same message.
+  useEffect(() => {
+    if (!coachRequest) return;
+    setOpen(true);
+    if (coachRequest.message) {
+      setInput(coachRequest.message);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coachRequest?.nonce]);
 
   // Once the panel is on screen, measure its width and park it at the remembered
   // side. Pre-paint (layout effect) so a left-docked panel doesn't flash right
