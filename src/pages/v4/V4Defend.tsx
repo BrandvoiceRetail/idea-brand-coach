@@ -37,6 +37,7 @@ import { DefendChecklist } from '@/components/v4/defend/DefendChecklist';
 import { CompetitorTeaserCard } from '@/components/v4/defend/CompetitorTeaserCard';
 import { WorkbookExportCard } from '@/components/v4/defend/WorkbookExportCard';
 import { useDefendRun } from '@/hooks/useDefendRun';
+import { useCoachWidget } from '@/contexts/CoachWidgetContext';
 import { V4_ROUTES } from '@/config/v4';
 import {
   captureAlphaEvent,
@@ -73,8 +74,8 @@ export default function V4Defend(): JSX.Element {
     exportResult,
     exportError,
     load,
-    exportWorkbook,
   } = useDefendRun();
+  const { openCoach } = useCoachWidget();
 
   // Keyed on the avatar SET signature (not a boolean) so switching the active
   // customer set while the page stays mounted re-loads for the new set instead of
@@ -91,16 +92,24 @@ export default function V4Defend(): JSX.Element {
     }
   }, [hasAvatar, loadKey, load]);
 
-  // A set export is deferred — the workbook banks the FOCUS avatar only. Show an
-  // honest scope note when Defend covers >1 avatar; never imply a per-avatar set.
+  // The workbook engine is the live MCP tool `export_messaging_workbook`, reached
+  // through the Brand Coach (the in-app coach is wired to the MCP host). The button
+  // opens the coach seeded with the SELECTED avatar set so the request is set-aware;
+  // the coach runs the tool under the user's identity and returns the download.
   const isMulti = (status?.perAvatar?.length ?? 0) > 1;
+  const setNames = (status?.perAvatar ?? []).map((p) => p.avatarName).filter(Boolean);
   const focusOnlyNote = isMulti
-    ? `This banks your focus avatar${avatarName ? `, ${avatarName}` : ''} for now — per-avatar workbooks are coming.`
+    ? `One workbook covering all ${setNames.length} selected avatars — opens in the Brand Coach.`
     : null;
 
   const handleExport = (): void => {
+    const who = setNames.length > 0 ? setNames.join(', ') : avatarName ?? 'my selected avatar';
     emitPage('v4_defend_workbook_requested', { drift_count: status?.drift.count ?? null });
-    void exportWorkbook();
+    openCoach({
+      message:
+        `Build my multi-avatar messaging-perception workbook for these avatars: ${who}. ` +
+        'Use my Signature as the planned message, and upload it so I can download the .xlsx.',
+    });
   };
 
   const handleRestartLoop = (): void => {
