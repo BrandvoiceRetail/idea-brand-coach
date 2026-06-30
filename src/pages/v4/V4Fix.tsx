@@ -46,11 +46,12 @@ import type { GroundedField } from '@/components/v4/GroundedStrip';
 import { useFixRun } from '@/hooks/useFixRun';
 import { useEntitlement } from '@/hooks/useEntitlement';
 import { FREE_TRIAL_PIECE_LIMIT } from '@/lib/entitlement';
+import { useCoachWidget } from '@/contexts/CoachWidgetContext';
 import { V4_ROUTES } from '@/config/v4';
 import { FUNNEL_JOBS, METRIC_META, type MetricKey } from '@/config/v4Funnel';
 import { getTouchpoint, getStages } from '@/config/touchpointTaxonomy';
 import { DEFAULT_BRAND_TAGS } from '@/hooks/useFunnelTracker';
-import type { DataResult, FixLeak, MetricRange, PieceMetrics } from '@/types/v4Fix';
+import type { DataResult, FixLeak, FunnelPiece, MetricRange, PieceMetrics } from '@/types/v4Fix';
 import { captureAlphaEvent, type AlphaEventProps } from '@/lib/posthogClient';
 
 /** The Loop-3 sub-views this page switches between. */
@@ -80,6 +81,26 @@ function stageLabelFor(stageId: string): string {
 function parseBaseline(raw: string): number {
   const n = Number(raw.replace(/[^0-9.-]/g, ''));
   return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * The coach's suggested change for a piece — seeds "What will you change & why?"
+ * so the owner starts from the coach's read of this piece, not a blank box (or a
+ * placeholder). Status-aware, names the job metric, and never invents a number.
+ */
+function coachSuggestionFor(piece: FunnelPiece, label: string): string {
+  const metricLabel = METRIC_META[FUNNEL_JOBS[piece.stage].primaryMetrics[0]].label;
+  switch (piece.status) {
+    case 'doing_job':
+      return `${label} is doing its job — keep it as the control and test the leaks elsewhere.`;
+    case 'off_brand':
+      return `Rewrite ${label} so it sounds on-brand and carries the promise from the step before — expect ${metricLabel} to lift.`;
+    case 'missing':
+      return `Create ${label} so this step of the journey isn't a dead end, then put ${metricLabel} into a test.`;
+    case 'leaking':
+    default:
+      return `Rewrite ${label} to carry the promise from the step before so the message stays continuous — expect ${metricLabel} to lift.`;
+  }
 }
 
 export default function V4Fix(): JSX.Element {
@@ -117,6 +138,10 @@ export default function V4Fix(): JSX.Element {
     markAssetLive,
     recheckDrift,
   } = useFixRun();
+
+  // Open the floating transparent coach (right-docked, see-through) seeded with
+  // the fix context — replaces the old deep-link to the legacy /v2/coach page.
+  const { openCoach } = useCoachWidget();
 
   const [view, setViewState] = useState<FixView>('map');
   const [addOpen, setAddOpen] = useState(false);
@@ -186,10 +211,13 @@ export default function V4Fix(): JSX.Element {
   }, [hasAvatar, loadKey, load]);
 
   // Reset the fix form whenever the piece under fix changes (default the metric
-  // to that stage's primary job metric).
+  // to that stage's primary job metric). Pre-fill "what will you change?" with the
+  // coach's suggestion for THIS piece so the owner starts from the coach's read,
+  // not a blank box — they can edit it before generating the rewrite.
   useEffect(() => {
     if (!selectedPiece) return;
-    setHypothesis('');
+    const label = getTouchpoint(selectedPiece.touchpointId)?.label ?? selectedPiece.touchpointId;
+    setHypothesis(coachSuggestionFor(selectedPiece, label));
     setBaseline('');
     setMetric(FUNNEL_JOBS[selectedPiece.stage].primaryMetrics[0]);
   }, [selectedPiece]);
@@ -344,6 +372,23 @@ export default function V4Fix(): JSX.Element {
   const grounded: GroundedField[] = selectedPiece
     ? [{ label: 'Avatar', present: Boolean(avatarId) }]
     : [];
+
+  // "Open the coach to refine" — pop the floating transparent coach seeded with
+  // this fix's context (piece, leak, current copy, the rewrite, the hypothesis)
+  // so the working session starts grounded, instead of routing to /v2/coach.
+  const openCoachToRefine = (): void => {
+    if (!selectedPiece) return;
+    const currentCopy = selectedPiece.storedContent.title ?? '(no stored copy yet)';
+    const parts = [
+      `I'm refining the fix for "${pieceLabel}" (${stageLabelFor(selectedPiece.stage)}).`,
+      `The leak: ${METRIC_META[leak.metric].label}${leak.continuityBreak ? ` — ${leak.continuityBreak}` : ''}.`,
+      `Current copy: "${currentCopy}".`,
+    ];
+    if (rewrite) parts.push(`The on-brand rewrite I want to sharpen: "${rewrite}".`);
+    if (hypothesis.trim()) parts.push(`My hypothesis: ${hypothesis.trim()}.`);
+    parts.push('Help me sharpen this so it fixes the leak — ask me for anything you need.');
+    openCoach({ message: parts.join('\n') });
+  };
 
   return (
     <div className="space-y-6">
@@ -545,7 +590,7 @@ export default function V4Fix(): JSX.Element {
                   onOpenTest={() => void handleOpenTest()}
                   openTestLoading={openTestSubmitting}
                   openTestError={openTestError}
-                  onOpenCoach={() => navigate(`/v2/coach?fixAsset=${selectedPiece.id}`)}
+                  onOpenCoach={openCoachToRefine}
                 />
               </div>
             ) : (
