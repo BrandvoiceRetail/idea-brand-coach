@@ -37,6 +37,7 @@ import type {
   ExperimentLift,
   ExperimentLiftStatus,
   ExperimentVerdict,
+  LiftAvatarSummary,
   LiftDirection,
   MetricDelta,
   MetricUnit,
@@ -436,10 +437,61 @@ export class RemeasureService {
   }
 
   /**
+   * The Trust Gap lift across a SET of avatars (multi-avatar Re-measure). Each
+   * avatar has its OWN `diagnostic_results` history, so the lift is computed PER
+   * avatar via the unchanged `getTrustGapLift` (N reads of the existing contract).
+   * The lift is a NUMBER (overall before→after delta), so there is no honest
+   * aggregate across customers — the FOCUS avatar's lift is the representative the
+   * card headlines, and every avatar's own delta is attached as `perAvatar` to be
+   * shown side-by-side (an avatar with fewer than two comparable runs carries a
+   * null delta — honest "no run yet", never an invented before/after). When the
+   * focus avatar itself has no computable lift its honest result is returned
+   * unchanged — we never headline another customer's before/after as the focus's.
+   * A single-id set delegates to `getTrustGapLift` (byte-identical single path).
+   */
+  async getTrustGapLiftForSet(
+    avatarIds: string[],
+    avatarNames: Record<string, string>,
+  ): Promise<RemeasureResult<TrustGapLift>> {
+    const ids = [...new Set(avatarIds)].filter(Boolean);
+    if (ids.length === 0) return this.needAvatar();
+    if (ids.length === 1) return this.getTrustGapLift(ids[0]);
+
+    // Per-avatar lift via the unchanged single-avatar read (ids[0] = the focus).
+    const results = await Promise.all(ids.map((id) => this.getTrustGapLift(id)));
+
+    // Honesty: a per-avatar read that ERRORED fails the whole set — a real read
+    // failure must never hide behind a null delta + status 'ok'. (A `needs_input`
+    // avatar legitimately carries a null "no run yet" delta below — honest
+    // emptiness, not a failure — so it does NOT fail the set.)
+    const errored = results.find((r) => r.status === 'error');
+    if (errored) return errored;
+
+    const perAvatar: LiftAvatarSummary[] = ids.map((id, i) => {
+      const r = results[i];
+      return {
+        avatarId: id,
+        avatarName: avatarNames[id] ?? 'Customer',
+        overallDelta: r.status === 'ok' ? r.data.overallDelta : null,
+        direction: r.status === 'ok' ? r.data.direction : null,
+      };
+    });
+
+    const focus = results[0];
+    if (focus.status !== 'ok') return focus;
+    return { status: 'ok', data: { ...focus.data, perAvatar } };
+  }
+
+  /**
    * Before/after on CTR/CVR/AOV/revenue, split around the brand-change pivot date.
    * Reads real `campaign_metrics` facts (RLS); that table is unapplied in prod so
    * the read returns empty → `hasData: false` (honest no-data), NEVER a fabricated
    * lift. `needs_input` when there is no avatar.
+   *
+   * SET-INVARIANT: business metrics are `campaign_metrics` facts keyed by
+   * `brand_asset_id` (brand-scoped), so the read does not change per evaluation
+   * avatar — there is deliberately no `…ForSet` variant; the focus-avatar read
+   * stands for a multi-avatar selection (mirrors `fixService.getPieceMetrics`).
    */
   async getBusinessMetrics(
     avatarId: string | null,
@@ -493,6 +545,11 @@ export class RemeasureService {
    * post-`asset_live_at` `campaign_metrics` pull (the `get_experiment_lift` seam).
    * No live asset / no post-live pull → `pending` (after = null), NEVER a fabricated
    * lift. `needs_input` when there is no avatar; an empty list is honest "no tests".
+   *
+   * SET-INVARIANT: experiments are `brand_tests` rows (brand-scoped tests), so the
+   * read does not change per evaluation avatar — there is deliberately no `…ForSet`
+   * variant; the focus-avatar read stands for a multi-avatar selection (mirrors
+   * `fixService.listTests`).
    */
   async getExperimentLifts(avatarId: string | null): Promise<RemeasureResult<ExperimentLift[]>> {
     if (!avatarId) return this.needAvatar();

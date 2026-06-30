@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { DefendService, buildChecklist } from '../defendService';
+import { DefendService, buildChecklist, defendVerdict } from '../defendService';
 import { findTierViolations } from '@/lib/v4/megapromptParse';
 import type { DriftItem } from '@/types/v4Fix';
 import type { FixResult } from '@/types/v4Fix';
@@ -10,6 +10,15 @@ const DRIFT: DriftItem = {
   assetId: 'a1',
   touchpointId: 'tp1',
   touchpointLabel: 'Product detail page',
+  stage: 'consideration',
+  builtAgainst: 'v1',
+  currentSignature: 'v2',
+};
+
+const DRIFT2: DriftItem = {
+  assetId: 'a2',
+  touchpointId: 'tp2',
+  touchpointLabel: 'Main listing image',
   stage: 'consideration',
   builtAgainst: 'v1',
   currentSignature: 'v2',
@@ -122,6 +131,112 @@ describe('DefendService.getStatus (honest degradation)', () => {
     if (res.status !== 'ok') return;
     expect(res.data.hasBaseline).toBe(true);
     expect(res.data.checklist.find((i) => i.key === 'drift')?.state).toBe('done');
+  });
+});
+
+describe('defendVerdict (deterministic per-customer posture)', () => {
+  it('is drifted when anything drifted, holding with a baseline at zero drift, else none', () => {
+    expect(defendVerdict(2, true)).toBe('drifted');
+    expect(defendVerdict(1, false)).toBe('drifted'); // drift outranks a missing baseline
+    expect(defendVerdict(0, true)).toBe('holding');
+    expect(defendVerdict(0, false)).toBe('none');
+  });
+});
+
+describe('DefendService.getStatusForSet (multi-avatar weakest-link rollup)', () => {
+  /** Per-avatar readers keyed on the avatar id so each customer reads differently. */
+  function makeSetService(
+    per: Record<
+      string,
+      { drift?: DriftItem[]; lift?: RemeasureResult<TrustGapLift>; baseline?: boolean }
+    >,
+    spies?: { drift?: ReturnType<typeof vi.fn> },
+  ): DefendService {
+    const drift = spies?.drift ?? vi.fn(async (avatarId: string | null) => okDrift(per[avatarId ?? '']?.drift ?? []));
+    return new DefendService(
+      drift,
+      async (avatarId) => per[avatarId ?? '']?.lift ?? okLift,
+      async () => ({ data: null, error: null }),
+      async (avatarId) => per[avatarId ?? '']?.baseline ?? true,
+    );
+  }
+
+  it('needs_input on an empty set', async () => {
+    const res = await makeSetService({}).getStatusForSet([], {});
+    expect(res.status).toBe('needs_input');
+  });
+
+  it('delegates a single-id set to the focus path (one drift read, no perAvatar)', async () => {
+    const drift = vi.fn(async () => okDrift([DRIFT]));
+    const svc = makeSetService({ av1: { drift: [DRIFT] } }, { drift });
+    const res = await svc.getStatusForSet(['av1'], { av1: 'Maya' });
+    expect(res.status).toBe('ok');
+    if (res.status !== 'ok') return;
+    expect(drift).toHaveBeenCalledTimes(1);
+    expect(res.data.perAvatar).toBeUndefined();
+    expect(res.data.drift.count).toBe(1);
+  });
+
+  it('unions drifted assets across the set (a piece that drifted for ANY customer surfaces once)', async () => {
+    const svc = makeSetService({
+      av1: { drift: [DRIFT] },
+      av2: { drift: [DRIFT2] },
+    });
+    const res = await svc.getStatusForSet(['av1', 'av2'], { av1: 'Maya', av2: 'Rico' });
+    expect(res.status).toBe('ok');
+    if (res.status !== 'ok') return;
+    expect(res.data.drift.count).toBe(2);
+    expect(res.data.checklist.find((i) => i.key === 'drift')?.state).toBe('attention');
+  });
+
+  it('dedupes the same drifted asset reported for two customers', async () => {
+    const svc = makeSetService({ av1: { drift: [DRIFT] }, av2: { drift: [DRIFT] } });
+    const res = await svc.getStatusForSet(['av1', 'av2'], { av1: 'Maya', av2: 'Rico' });
+    expect(res.status).toBe('ok');
+    if (res.status !== 'ok') return;
+    expect(res.data.drift.count).toBe(1);
+  });
+
+  it('confirms the lift only when confirmed for EVERY customer', async () => {
+    const svc = makeSetService({ av1: { lift: okLift }, av2: { lift: needLift } });
+    const res = await svc.getStatusForSet(['av1', 'av2'], { av1: 'Maya', av2: 'Rico' });
+    expect(res.status).toBe('ok');
+    if (res.status !== 'ok') return;
+    expect(res.data.liftConfirmed).toBe(false);
+    expect(res.data.perAvatar?.find((p) => p.avatarId === 'av1')?.liftConfirmed).toBe(true);
+    expect(res.data.perAvatar?.find((p) => p.avatarId === 'av2')?.liftConfirmed).toBe(false);
+  });
+
+  it('has a baseline for the set when ANY customer has one, and exposes per-customer posture', async () => {
+    const svc = makeSetService({
+      av1: { drift: [], baseline: true },
+      av2: { drift: [DRIFT2], baseline: false },
+    });
+    const res = await svc.getStatusForSet(['av1', 'av2'], { av1: 'Maya', av2: 'Rico' });
+    expect(res.status).toBe('ok');
+    if (res.status !== 'ok') return;
+    expect(res.data.hasBaseline).toBe(true);
+    expect(res.data.perAvatar).toEqual([
+      { avatarId: 'av1', avatarName: 'Maya', driftCount: 0, hasBaseline: true, liftConfirmed: true, verdict: 'holding' },
+      { avatarId: 'av2', avatarName: 'Rico', driftCount: 1, hasBaseline: false, liftConfirmed: true, verdict: 'drifted' },
+    ]);
+  });
+
+  it('falls back to a Customer label when a name is missing', async () => {
+    const svc = makeSetService({ av1: { drift: [] }, av2: { drift: [] } });
+    const res = await svc.getStatusForSet(['av1', 'av2'], { av1: 'Maya' });
+    expect(res.status).toBe('ok');
+    if (res.status !== 'ok') return;
+    expect(res.data.perAvatar?.find((p) => p.avatarId === 'av2')?.avatarName).toBe('Customer');
+  });
+
+  it('fails the set honestly when a per-customer drift read errors', async () => {
+    const drift = vi.fn(async (avatarId: string | null) =>
+      avatarId === 'av2' ? ({ status: 'error', error: 'boom' } as FixResult<DriftItem[]>) : okDrift([]),
+    );
+    const svc = makeSetService({}, { drift });
+    const res = await svc.getStatusForSet(['av1', 'av2'], { av1: 'Maya', av2: 'Rico' });
+    expect(res.status).toBe('error');
   });
 });
 

@@ -33,9 +33,11 @@ import { getTrustGapLift as defaultGetLift } from '@/services/v4/remeasureServic
 import type { FixResult } from '@/types/v4Fix';
 import type { RemeasureResult, TrustGapLift } from '@/types/v4Remeasure';
 import type {
+  DefendAvatarStatus,
   DefendChecklistItem,
   DefendResult,
   DefendStatus,
+  DefendVerdict,
   DriftItem,
   WorkbookExport,
 } from '@/types/v4Defend';
@@ -148,6 +150,82 @@ export class DefendService {
   }
 
   /**
+   * The Defend status across a SET of customers (multi-avatar Defend). Reads each
+   * customer's real `getStatus` (drift + lift + baseline) — N calls of the same
+   * per-avatar contract, no schema/edge change — then rolls up the weakest link:
+   *   - drift   = UNION of the per-customer drifted assets by id (a piece that
+   *               drifted for ANY selected customer surfaces once);
+   *   - lift    = confirmed only when confirmed for EVERY customer;
+   *   - baseline= there is something to defend if ANY customer has a baseline.
+   * The checklist is rebuilt from those rolled-up signals via the existing
+   * `buildChecklist`, and `perAvatar` exposes each customer's own posture.
+   * A single-id set delegates to `getStatus` (the focus path, byte-identical). A
+   * per-avatar read that errors fails the set honestly — never a partial fabrication.
+   */
+  async getStatusForSet(
+    avatarIds: string[],
+    avatarNames: Record<string, string>,
+  ): Promise<DefendResult<DefendStatus>> {
+    const ids = [...new Set(avatarIds)].filter(Boolean);
+    if (ids.length === 0) return needAvatar();
+    if (ids.length === 1) return this.getStatus(ids[0]);
+
+    const results = await Promise.all(ids.map((id) => this.getStatus(id)));
+
+    // Any per-avatar read that errored fails the set honestly (no partial data).
+    const errored = results.find((r) => r.status === 'error');
+    if (errored && errored.status === 'error') {
+      return errResult(errored.error, 'Could not read your assets for drift.');
+    }
+
+    // A customer not yet diagnosed returns `needs_input`. Rolling its null status
+    // into the set would fabricate a settled "nothing to defend" (verdict 'none')
+    // posture — so surface the needs_input honestly ("diagnose this customer
+    // first") instead of inventing a clean bill of health.
+    const needsInput = results.find((r) => r.status === 'needs_input');
+    if (needsInput) return needsInput;
+
+    const dataOf = (r: DefendResult<DefendStatus>): DefendStatus | null =>
+      r.status === 'ok' ? r.data : null;
+
+    // Drift across the set = UNION by asset id (the weakest link surfaces once).
+    const byAsset = new Map<string, DriftItem>();
+    for (const r of results) {
+      for (const item of dataOf(r)?.drift.items ?? []) {
+        if (!byAsset.has(item.assetId)) byAsset.set(item.assetId, item);
+      }
+    }
+    const unionItems = [...byAsset.values()];
+    const liftConfirmed = results.every((r) => dataOf(r)?.liftConfirmed === true);
+    const hasBaseline = results.some((r) => dataOf(r)?.hasBaseline === true);
+
+    const perAvatar: DefendAvatarStatus[] = ids.map((id, i) => {
+      const d = dataOf(results[i]);
+      const driftCount = d?.drift.count ?? 0;
+      const baseline = d?.hasBaseline ?? false;
+      return {
+        avatarId: id,
+        avatarName: avatarNames[id] ?? 'Customer',
+        driftCount,
+        hasBaseline: baseline,
+        liftConfirmed: d?.liftConfirmed ?? false,
+        verdict: defendVerdict(driftCount, baseline),
+      };
+    });
+
+    return {
+      status: 'ok',
+      data: {
+        drift: { items: unionItems, count: unionItems.length },
+        liftConfirmed,
+        hasBaseline,
+        checklist: buildChecklist(unionItems.length, liftConfirmed, hasBaseline),
+        perAvatar,
+      },
+    };
+  }
+
+  /**
    * Export the full-loop workbook via the live `export_workbook` engine. Passes
    * through the engine's `needs_input` (e.g. "run the marketing audit first")
    * unchanged. Returns a real `downloadUrl` only when the engine provides one —
@@ -180,6 +258,17 @@ export class DefendService {
       return errResult(e, 'Could not reach the workbook engine.');
     }
   }
+}
+
+/**
+ * The deterministic per-customer Defend verdict from real signals (pure, no I/O):
+ * any drift → `drifted`; else a real baseline → `holding`; else `none` (nothing to
+ * defend yet). Never fabricates a state — a `none` says "no baseline", not a green.
+ */
+export function defendVerdict(driftCount: number, hasBaseline: boolean): DefendVerdict {
+  if (driftCount > 0) return 'drifted';
+  if (hasBaseline) return 'holding';
+  return 'none';
 }
 
 /**
@@ -235,5 +324,9 @@ export const defendService = new DefendService();
 // imports in screens that don't need custom readers.
 export const getDefendStatus = (avatarId: string | null): Promise<DefendResult<DefendStatus>> =>
   defendService.getStatus(avatarId);
+export const getDefendStatusForSet = (
+  avatarIds: string[],
+  avatarNames: Record<string, string>,
+): Promise<DefendResult<DefendStatus>> => defendService.getStatusForSet(avatarIds, avatarNames);
 export const exportWorkbook = (avatarId: string | null): Promise<DefendResult<WorkbookExport>> =>
   defendService.exportWorkbook(avatarId);

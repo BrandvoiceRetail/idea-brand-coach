@@ -31,10 +31,14 @@ function messageFor(result: DefendResult<unknown>): string {
 }
 
 export interface DefendRunHook {
-  /** True when an avatar is selected to scope the defend to (page-level gate). */
+  /** True when at least one avatar is in the active set (page-level gate). */
   hasAvatar: boolean;
-  /** The active avatar id (null when none) — lets the page reload on a switch. */
+  /** The FOCUS avatar id (null when none) — single-target export + back-compat. */
   avatarId: string | null;
+  /** The focus avatar's display name (for the focus-only export note); null when none. */
+  avatarName: string | null;
+  /** Signature of the active avatar SET — the page reloads Defend when it changes. */
+  loadKey: string;
 
   // ── Status (drift watch + checklist) ──
   status: DefendStatus | null;
@@ -51,8 +55,17 @@ export interface DefendRunHook {
 }
 
 export function useDefendRun(): DefendRunHook {
-  const { selectedAvatarId } = useAvatarContext();
+  const { selectedAvatarId, currentAvatar, contextAvatarIds, avatars } = useAvatarContext();
   const service = useMemo(() => new DefendService(), []);
+
+  // Name lookup for the per-customer Defend breakdown (multi-avatar analysis).
+  const avatarNames = useMemo(
+    () => Object.fromEntries((avatars ?? []).map((a) => [a.id, a.name])),
+    [avatars],
+  );
+  // A stable signature of the active avatar SET — Defend reloads when the set
+  // changes (not only when the focus avatar changes).
+  const loadKey = contextAvatarIds.join(',');
 
   const [status, setStatus] = useState<DefendStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
@@ -62,20 +75,25 @@ export function useDefendRun(): DefendRunHook {
   const [exportResult, setExportResult] = useState<WorkbookExport | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  const hasAvatar = Boolean(selectedAvatarId);
+  const hasAvatar = contextAvatarIds.length > 0;
 
   const load = useCallback(async (): Promise<void> => {
     if (!selectedAvatarId) return;
     setStatusLoading(true);
     setStatusError(null);
-    const res = await service.getStatus(selectedAvatarId);
+    // Multi-avatar Defend: when >1 customer is in the set, roll up the weakest-link
+    // drift/status across the set; single-avatar uses the unchanged focus path.
+    const isMulti = contextAvatarIds.length > 1;
+    const res = isMulti
+      ? await service.getStatusForSet(contextAvatarIds, avatarNames)
+      : await service.getStatus(selectedAvatarId);
     if (res.status === 'ok') setStatus(res.data);
     else {
       setStatus(null);
       setStatusError(messageFor(res));
     }
     setStatusLoading(false);
-  }, [service, selectedAvatarId]);
+  }, [service, selectedAvatarId, contextAvatarIds, avatarNames]);
 
   const exportWorkbook = useCallback(async (): Promise<void> => {
     if (!selectedAvatarId) return;
@@ -91,6 +109,8 @@ export function useDefendRun(): DefendRunHook {
   return {
     hasAvatar,
     avatarId: selectedAvatarId,
+    avatarName: currentAvatar?.name ?? null,
+    loadKey,
     status,
     statusLoading,
     statusError,

@@ -190,6 +190,44 @@ export function TrustGapLiftCard({
         <span className="pb-1 text-xs text-muted-foreground">/ 100</span>
       </div>
 
+      {/* Per-customer breakdown — only when Re-measure considers a multi-avatar set.
+          The headline before/after above is the FOCUS avatar's; the lift is a number,
+          so each customer's own delta is shown side-by-side (never a fabricated
+          aggregate). An avatar with fewer than two runs reads "no run yet". */}
+      {lift.perAvatar && lift.perAvatar.length > 1 && (
+        <div
+          className="rounded-md border border-border bg-muted/40 p-3"
+          data-testid="v4-lift-per-avatar"
+        >
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Each customer&apos;s lift
+          </p>
+          <ul className="flex flex-wrap gap-2">
+            {lift.perAvatar.map((pa) => (
+              <li
+                key={pa.avatarId}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium"
+              >
+                <span className="max-w-[10rem] truncate" title={pa.avatarName}>
+                  {pa.avatarName}
+                </span>
+                <span aria-hidden className="opacity-50">
+                  ·
+                </span>
+                {pa.overallDelta != null && pa.direction ? (
+                  <span className={`flex items-center gap-0.5 ${deltaTone(pa.overallDelta)}`}>
+                    <DirectionIcon direction={pa.direction} />
+                    {sign(pa.overallDelta)}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">no run yet</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Per-pillar before → after with delta + after-score bar */}
       <ul className="space-y-3" data-testid="v4-lift-pillars">
         {PILLARS.map((p) => {

@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { DefendChecklist } from '../DefendChecklist';
 import { buildChecklist } from '@/services/v4/defendService';
 import { findTierViolations } from '@/lib/v4/megapromptParse';
+import type { DefendAvatarStatus } from '@/types/v4Defend';
 
 const captureAlphaEvent = vi.fn();
 vi.mock('@/lib/posthogClient', () => ({
@@ -50,5 +51,22 @@ describe('DefendChecklist', () => {
     for (const item of items) {
       expect(findTierViolations(`${item.label} ${item.detail}`)).toEqual([]);
     }
+  });
+
+  it('renders a per-customer breakdown strip under the rolled-up checklist (multi-avatar)', () => {
+    const perAvatar: DefendAvatarStatus[] = [
+      { avatarId: 'av1', avatarName: 'Maya', driftCount: 0, hasBaseline: true, liftConfirmed: true, verdict: 'holding' },
+      { avatarId: 'av2', avatarName: 'Rico', driftCount: 1, hasBaseline: false, liftConfirmed: false, verdict: 'drifted' },
+    ];
+    render(<DefendChecklist items={buildChecklist(1, false)} perAvatar={perAvatar} />);
+    const strip = screen.getByTestId('v4-defend-per-avatar');
+    expect(strip).toHaveTextContent('Where each customer stands');
+    expect(screen.getByTestId('v4-defend-per-avatar-av2')).toHaveTextContent('1 drifted');
+    expect(findTierViolations(strip.textContent ?? '')).toEqual([]);
+  });
+
+  it('omits the per-customer strip for a single customer (single-avatar parity)', () => {
+    render(<DefendChecklist items={buildChecklist(0, true)} />);
+    expect(screen.queryByTestId('v4-defend-per-avatar')).not.toBeInTheDocument();
   });
 });

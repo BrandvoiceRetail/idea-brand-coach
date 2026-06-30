@@ -64,7 +64,8 @@ export default function V4Defend(): JSX.Element {
   const [roadmapOpen, setRoadmapOpen] = useState(false);
   const {
     hasAvatar,
-    avatarId,
+    avatarName,
+    loadKey,
     status,
     statusLoading,
     statusError,
@@ -75,19 +76,27 @@ export default function V4Defend(): JSX.Element {
     exportWorkbook,
   } = useDefendRun();
 
-  // Keyed on the avatar id (not a boolean) so switching avatars while the page
-  // stays mounted re-loads for the new avatar instead of keeping stale data.
+  // Keyed on the avatar SET signature (not a boolean) so switching the active
+  // customer set while the page stays mounted re-loads for the new set instead of
+  // keeping stale data.
   const loadedForRef = useRef<string | null>(null);
 
   useEffect(() => {
     emitPage('v4_defend_stage_viewed', { has_avatar: hasAvatar });
-    if (hasAvatar && loadedForRef.current !== avatarId) {
-      loadedForRef.current = avatarId;
+    if (hasAvatar && loadedForRef.current !== loadKey) {
+      loadedForRef.current = loadKey;
       void load();
     } else if (!hasAvatar) {
       emitPage('v4_defend_gate_blocked', {});
     }
-  }, [hasAvatar, avatarId, load]);
+  }, [hasAvatar, loadKey, load]);
+
+  // A set export is deferred — the workbook banks the FOCUS customer only. Show an
+  // honest scope note when Defend covers >1 customer; never imply a per-customer set.
+  const isMulti = (status?.perAvatar?.length ?? 0) > 1;
+  const focusOnlyNote = isMulti
+    ? `This banks your focus customer${avatarName ? `, ${avatarName}` : ''} for now — per-customer workbooks are coming.`
+    : null;
 
   const handleExport = (): void => {
     emitPage('v4_defend_workbook_requested', { drift_count: status?.drift.count ?? null });
@@ -139,6 +148,7 @@ export default function V4Defend(): JSX.Element {
           <DriftWatchCard
             watch={status?.drift ?? null}
             hasBaseline={status?.hasBaseline ?? false}
+            perAvatar={status?.perAvatar}
             isLoading={statusLoading}
             error={statusError}
             onRetry={() => void load()}
@@ -147,6 +157,7 @@ export default function V4Defend(): JSX.Element {
 
           <DefendChecklist
             items={status?.checklist ?? []}
+            perAvatar={status?.perAvatar}
             isLoading={statusLoading}
             error={statusError}
             onRetry={() => void load()}
@@ -181,6 +192,7 @@ export default function V4Defend(): JSX.Element {
             isExporting={exporting}
             result={exportResult}
             error={exportError}
+            focusOnlyNote={focusOnlyNote}
             onExport={handleExport}
           />
 

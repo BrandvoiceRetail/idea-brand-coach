@@ -23,7 +23,12 @@ import {
   captureAlphaEvent,
   type AlphaEventProps,
 } from '@/lib/posthogClient';
-import type { ChecklistState, DefendChecklistItem } from '@/types/v4Defend';
+import type {
+  ChecklistState,
+  DefendAvatarStatus,
+  DefendChecklistItem,
+} from '@/types/v4Defend';
+import { DefendPerAvatarStrip } from './DefendPerAvatarStrip';
 
 type V4ChecklistEvent = 'v4_defend_checklist_viewed';
 
@@ -46,6 +51,12 @@ export interface DefendChecklistProps {
   isLoading?: boolean;
   error?: string | null;
   onRetry?: () => void;
+  /**
+   * Per-customer Defend posture when the checklist covers a multi-avatar SET. The
+   * checklist rows above are the rolled-up view; this strip shows where each
+   * customer stands. Absent/single-element = no strip.
+   */
+  perAvatar?: DefendAvatarStatus[];
 }
 
 function Shell({ children }: { children: React.ReactNode }): JSX.Element {
@@ -67,6 +78,7 @@ export function DefendChecklist({
   isLoading = false,
   error = null,
   onRetry,
+  perAvatar = [],
 }: DefendChecklistProps): JSX.Element {
   useEffect(() => {
     if (isLoading || error || items.length === 0) return;
@@ -147,6 +159,7 @@ export function DefendChecklist({
           );
         })}
       </ul>
+      <DefendPerAvatarStrip perAvatar={perAvatar} caption="Where each customer stands" />
     </Shell>
   );
 }

@@ -25,7 +25,8 @@ import {
   captureAlphaEvent,
   type AlphaEventProps,
 } from '@/lib/posthogClient';
-import type { DriftWatch } from '@/types/v4Defend';
+import type { DefendAvatarStatus, DriftWatch } from '@/types/v4Defend';
+import { DefendPerAvatarStrip } from './DefendPerAvatarStrip';
 
 type V4DriftWatchEvent = 'v4_defend_drift_watch_viewed';
 
@@ -47,6 +48,12 @@ export interface DriftWatchCardProps {
    * true so existing callers keep the all-clear behaviour.
    */
   hasBaseline?: boolean;
+  /**
+   * Per-customer drift posture when Defend considers a multi-avatar SET. The
+   * headline above is the weakest-link rollup (drift = union across the set); this
+   * strip shows the per-customer breakdown. Absent/single-element = no strip.
+   */
+  perAvatar?: DefendAvatarStatus[];
 }
 
 function Shell({ children }: { children: React.ReactNode }): JSX.Element {
@@ -70,6 +77,7 @@ export function DriftWatchCard({
   onRetry,
   onRecheck,
   hasBaseline = true,
+  perAvatar = [],
 }: DriftWatchCardProps): JSX.Element {
   const count = watch?.count ?? 0;
   useEffect(() => {
@@ -131,6 +139,7 @@ export function DriftWatchCard({
             </p>
           </div>
         </div>
+        <DefendPerAvatarStrip perAvatar={perAvatar} />
       </Shell>
     );
   }
@@ -152,6 +161,7 @@ export function DriftWatchCard({
             </p>
           </div>
         </div>
+        <DefendPerAvatarStrip perAvatar={perAvatar} />
       </Shell>
     );
   }
@@ -192,6 +202,7 @@ export function DriftWatchCard({
           </Button>
         )}
       </div>
+      <DefendPerAvatarStrip perAvatar={perAvatar} />
     </Shell>
   );
 }

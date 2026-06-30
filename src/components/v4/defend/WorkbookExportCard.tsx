@@ -37,6 +37,12 @@ export interface WorkbookExportCardProps {
   error?: string | null;
   /** Start the export (page owns the action + click event). */
   onExport: () => void;
+  /**
+   * Honest scope note shown when Defend covers a multi-avatar SET: a set export is
+   * deferred, so the workbook banks the FOCUS customer only. Null = single-avatar
+   * (no note). Never fabricates a per-customer workbook it did not produce.
+   */
+  focusOnlyNote?: string | null;
 }
 
 export function WorkbookExportCard({
@@ -44,6 +50,7 @@ export function WorkbookExportCard({
   result = null,
   error = null,
   onExport,
+  focusOnlyNote = null,
 }: WorkbookExportCardProps): JSX.Element {
   useEffect(() => {
     if (isExporting) return;
@@ -64,6 +71,15 @@ export function WorkbookExportCard({
           Export everything from Diagnose to Defend as one workbook — your avatar,
           Trust Gap, fixes, the lift, and where you stand now.
         </p>
+
+        {focusOnlyNote && (
+          <p
+            className="text-xs text-muted-foreground"
+            data-testid="v4-defend-workbook-focus-note"
+          >
+            {focusOnlyNote}
+          </p>
+        )}
 
         {error && (
           <div

@@ -38,6 +38,23 @@ export type PillarScores = Record<TrustPillar, number>;
 export type LiftDirection = 'improved' | 'declined' | 'flat';
 
 /**
+ * One customer's Trust Gap lift summary, when Re-measure considers a multi-avatar
+ * set. Each avatar has its OWN diagnostic history, so the lift is a NUMBER per
+ * customer (the overall before→after delta) — shown side-by-side, NEVER rolled
+ * into a fabricated cross-customer aggregate. `overallDelta` / `direction` are
+ * null when that avatar has fewer than two comparable runs (honest "no run yet",
+ * never an invented before/after).
+ */
+export interface LiftAvatarSummary {
+  avatarId: string;
+  avatarName: string;
+  /** Overall before→after delta for this avatar; null when not yet computable. */
+  overallDelta: number | null;
+  /** Which way the gap moved for this avatar; null when not yet computable. */
+  direction: LiftDirection | null;
+}
+
+/**
  * The deterministic Trust Gap before/after result. Pure arithmetic on the two
  * real score sets — a 1:1 mirror of the live `compute_trust_gap_lift` engine's
  * output (overall delta, per-pillar deltas, biggest mover, weakest pillar now,
@@ -59,6 +76,13 @@ export interface TrustGapLift {
   summary: string;
   /** ISO date the AFTER run was measured — the re-measure pivot. */
   measuredAt: string;
+  /**
+   * Per-avatar lift summaries when >1 customer is in the Re-measure set. The
+   * card's headline before/after above is the FOCUS avatar's (the representative)
+   * — NOT an aggregate; each customer's own delta is shown side-by-side. Absent
+   * for single-avatar (the common case).
+   */
+  perAvatar?: LiftAvatarSummary[];
 }
 
 // ── Business metrics (RLS reads of campaign_metrics; empty until migration) ─────

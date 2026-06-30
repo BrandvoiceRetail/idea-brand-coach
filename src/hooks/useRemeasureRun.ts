@@ -38,10 +38,12 @@ function messageFor(result: RemeasureResult<unknown>): string {
 }
 
 export interface RemeasureRunHook {
-  /** True when an avatar is selected to scope the re-measure to (page-level gate). */
+  /** True when at least one avatar is in the active set (page-level gate). */
   hasAvatar: boolean;
-  /** The active avatar id (null when none) — lets the page reload on a switch. */
+  /** The focus avatar id (null when none) — lets the page reload on a switch. */
   avatarId: string | null;
+  /** Signature of the active avatar SET — the page reloads the lift when it changes. */
+  loadKey: string;
 
   // ── Trust Gap lift (TrustGapLiftCard) ──
   lift: TrustGapLift | null;
@@ -67,8 +69,17 @@ export interface RemeasureRunHook {
 }
 
 export function useRemeasureRun(): RemeasureRunHook {
-  const { selectedAvatarId } = useAvatarContext();
+  const { selectedAvatarId, contextAvatarIds, avatars } = useAvatarContext();
   const service = useMemo(() => new RemeasureService(), []);
+
+  // Name lookup for the per-avatar Trust Gap lift summaries (multi-avatar set).
+  const avatarNames = useMemo(
+    () => Object.fromEntries((avatars ?? []).map((a) => [a.id, a.name])),
+    [avatars],
+  );
+  // A stable signature of the active avatar SET — the lift reloads when the set
+  // changes (not only when the focus avatar changes).
+  const loadKey = contextAvatarIds.join(',');
 
   const [lift, setLift] = useState<TrustGapLift | null>(null);
   const [liftLoading, setLiftLoading] = useState(false);
@@ -83,7 +94,7 @@ export function useRemeasureRun(): RemeasureRunHook {
   const [experimentsLoading, setExperimentsLoading] = useState(false);
   const [experimentsError, setExperimentsError] = useState<string | null>(null);
 
-  const hasAvatar = Boolean(selectedAvatarId);
+  const hasAvatar = contextAvatarIds.length > 0;
 
   /**
    * Read the deterministic Trust Gap lift first, then read the business metrics
@@ -100,7 +111,14 @@ export function useRemeasureRun(): RemeasureRunHook {
     setMetricsError(null);
     setExperimentsError(null);
 
-    const liftRes = await service.getTrustGapLift(selectedAvatarId);
+    // Multi-avatar Re-measure: when >1 customer is in the set, fetch the focus
+    // avatar's lift with every customer's own delta attached (perAvatar) for the
+    // side-by-side; single-avatar uses the unchanged path. Business metrics +
+    // experiments are brand-scoped (set-invariant) → always the focus read.
+    const isMulti = contextAvatarIds.length > 1;
+    const liftRes = isMulti
+      ? await service.getTrustGapLiftForSet(contextAvatarIds, avatarNames)
+      : await service.getTrustGapLift(selectedAvatarId);
     let pivot: string | null = null;
     if (liftRes.status === 'ok') {
       setLift(liftRes.data);
@@ -139,7 +157,7 @@ export function useRemeasureRun(): RemeasureRunHook {
       setExperimentsError(messageFor(expRes));
     }
     setExperimentsLoading(false);
-  }, [service, selectedAvatarId]);
+  }, [service, selectedAvatarId, contextAvatarIds, avatarNames]);
 
   /**
    * Record the tester's verdict on an experiment, then refresh so the row flips to
@@ -160,6 +178,7 @@ export function useRemeasureRun(): RemeasureRunHook {
   return {
     hasAvatar,
     avatarId: selectedAvatarId,
+    loadKey,
     lift,
     liftLoading,
     liftMessage,

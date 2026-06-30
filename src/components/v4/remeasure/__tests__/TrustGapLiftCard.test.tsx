@@ -71,4 +71,28 @@ describe('TrustGapLiftCard', () => {
     render(<TrustGapLiftCard lift={LIFT} />);
     expect(findTierViolations(LIFT.summary)).toEqual([]);
   });
+
+  it('renders the per-customer side-by-side strip for a multi-avatar set', () => {
+    render(
+      <TrustGapLiftCard
+        lift={{
+          ...LIFT,
+          perAvatar: [
+            { avatarId: 'av-1', avatarName: 'Maya', overallDelta: 9, direction: 'improved' },
+            { avatarId: 'av-2', avatarName: 'Rico', overallDelta: null, direction: null },
+          ],
+        }}
+      />,
+    );
+    const strip = screen.getByTestId('v4-lift-per-avatar');
+    expect(strip).toHaveTextContent('Maya');
+    expect(strip).toHaveTextContent('+9');
+    expect(strip).toHaveTextContent('Rico');
+    expect(strip).toHaveTextContent(/no run yet/i);
+  });
+
+  it('hides the per-customer strip for a single-avatar lift', () => {
+    render(<TrustGapLiftCard lift={LIFT} />);
+    expect(screen.queryByTestId('v4-lift-per-avatar')).not.toBeInTheDocument();
+  });
 });

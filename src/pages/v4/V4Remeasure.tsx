@@ -65,22 +65,24 @@ export default function V4Remeasure(): JSX.Element {
     experimentsError,
     load,
     markResult,
+    loadKey,
   } = useRemeasureRun();
 
-  // Keyed on the avatar id (not a boolean) so switching avatars while the page
-  // stays mounted re-loads for the new avatar instead of keeping stale data.
+  // Keyed on the active SET (loadKey = the selected avatar ids joined) so swapping
+  // any set member while the page stays mounted re-loads instead of keeping stale
+  // data — not just when the focus avatar (ids[0]) changes.
   const loadedForRef = useRef<string | null>(null);
 
-  // Auto-load on entry — and again whenever the active avatar changes.
+  // Auto-load on entry — and again whenever the active avatar set changes.
   useEffect(() => {
     emitPage('v4_remeasure_stage_viewed', { has_avatar: hasAvatar });
-    if (hasAvatar && loadedForRef.current !== avatarId) {
-      loadedForRef.current = avatarId;
+    if (hasAvatar && loadedForRef.current !== loadKey) {
+      loadedForRef.current = loadKey;
       void load();
     } else if (!hasAvatar) {
       emitPage('v4_remeasure_gate_blocked', {});
     }
-  }, [hasAvatar, avatarId, load]);
+  }, [hasAvatar, loadKey, load]);
 
   // Gate the CTA consistently with the other stages: block while the lift read is
   // in flight, and block a hard error with no resolution. Allow advance when a

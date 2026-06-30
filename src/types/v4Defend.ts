@@ -65,6 +65,32 @@ export interface DriftWatch {
 }
 
 /**
+ * One customer's Defend posture, derived deterministically from real reads:
+ * - `drifted` — at least one asset drifted from that customer's Signature.
+ * - `holding` — has a baseline and zero drift (holding steady).
+ * - `none`    — no baseline yet (nothing to defend for that customer).
+ * A subset/peer of the single-avatar drift-watch states, named for the strip.
+ */
+export type DefendVerdict = 'holding' | 'drifted' | 'none';
+
+/**
+ * One customer's Defend posture when Defend considers a multi-avatar SET. Every
+ * field comes from that avatar's own real `getStatus` read — never fabricated.
+ */
+export interface DefendAvatarStatus {
+  avatarId: string;
+  avatarName: string;
+  /** That customer's own drifted-asset count. */
+  driftCount: number;
+  /** Whether that customer has a real baseline to defend (>=1 aligned asset). */
+  hasBaseline: boolean;
+  /** Whether that customer's lift was confirmed on a real re-run. */
+  liftConfirmed: boolean;
+  /** Deterministic display verdict from (driftCount, hasBaseline). */
+  verdict: DefendVerdict;
+}
+
+/**
  * The full Defend status view: the drift watch, whether the lift was confirmed
  * (a second real diagnostic run exists), and the derived checklist. Every field
  * is grounded — no fabricated counts or states.
@@ -81,6 +107,14 @@ export interface DefendStatus {
    */
   hasBaseline: boolean;
   checklist: DefendChecklistItem[];
+  /**
+   * Per-customer Defend posture when >1 customer is in the set. The top-level
+   * fields above are the rolled-up view (drift = UNION across the set,
+   * liftConfirmed = confirmed for EVERY customer, hasBaseline = something to
+   * defend for ANY customer); this exposes the per-customer breakdown. Absent for
+   * single-avatar (the common case).
+   */
+  perAvatar?: DefendAvatarStatus[];
 }
 
 // ── Workbook export (live export_workbook engine) ───────────────────────────────

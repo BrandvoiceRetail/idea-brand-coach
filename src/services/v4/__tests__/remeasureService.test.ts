@@ -100,6 +100,58 @@ describe('RemeasureService.getTrustGapLift (honest degradation)', () => {
   });
 });
 
+describe('RemeasureService.getTrustGapLiftForSet (multi-avatar, side-by-side, no fabricated aggregate)', () => {
+  const twoRuns: DiagnosticRun[] = [
+    { scores: after, measuredAt: '2026-06-20' },
+    { scores: before, measuredAt: '2026-06-01' },
+  ];
+  /** Service whose run reader yields per-avatar runs (so each avatar differs). */
+  function makeSetService(byAvatar: Record<string, DiagnosticRun[]>): RemeasureService {
+    return new RemeasureService(
+      async (avatarId) => byAvatar[avatarId] ?? [],
+      async () => [],
+    );
+  }
+
+  it('needs_input for an empty set', async () => {
+    const res = await makeSetService({}).getTrustGapLiftForSet([], {});
+    expect(res.status).toBe('needs_input');
+  });
+
+  it('delegates to the single-avatar path for a one-id set (byte-identical, no perAvatar)', async () => {
+    const svc = makeSetService({ 'av-1': twoRuns });
+    const single = await svc.getTrustGapLift('av-1');
+    const set = await svc.getTrustGapLiftForSet(['av-1'], { 'av-1': 'Maya' });
+    expect(set).toEqual(single);
+    if (set.status === 'ok') expect(set.data.perAvatar).toBeUndefined();
+  });
+
+  it('headlines the focus avatar and attaches each customer\'s own delta (honest null when <2 runs)', async () => {
+    const svc = makeSetService({
+      'av-1': twoRuns, // focus: computable lift
+      'av-2': [{ scores: after, measuredAt: '2026-06-20' }], // one run → no lift
+    });
+    const res = await svc.getTrustGapLiftForSet(['av-1', 'av-2'], { 'av-1': 'Maya', 'av-2': 'Rico' });
+    expect(res.status).toBe('ok');
+    if (res.status === 'ok') {
+      expect(res.data.overallDelta).toBe(9); // headline = focus (av-1)
+      expect(res.data.perAvatar).toEqual([
+        { avatarId: 'av-1', avatarName: 'Maya', overallDelta: 9, direction: 'improved' },
+        { avatarId: 'av-2', avatarName: 'Rico', overallDelta: null, direction: null },
+      ]);
+    }
+  });
+
+  it('returns the focus avatar\'s honest result when it has no computable lift (never headlines another customer)', async () => {
+    const svc = makeSetService({
+      'av-1': [{ scores: after, measuredAt: '2026-06-20' }], // focus: one run only
+      'av-2': twoRuns, // a different customer DOES have a lift
+    });
+    const res = await svc.getTrustGapLiftForSet(['av-1', 'av-2'], { 'av-1': 'Maya', 'av-2': 'Rico' });
+    expect(res.status).toBe('needs_input');
+  });
+});
+
 describe('RemeasureService.getBusinessMetrics (no-data is honest, never fabricated)', () => {
   it('returns hasData=false with all-null cells when no rows exist', async () => {
     const res = await makeService([], []).getBusinessMetrics('av-1', '2026-06-15');
