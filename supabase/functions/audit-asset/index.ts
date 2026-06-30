@@ -106,13 +106,43 @@ serve(async (req: Request) => {
     if (userErr || !user) return json({ ok: false, error: "unauthorized" }, 401);
     if (rateLimited(user.id)) return json({ ok: false, error: "rate_limited" }, 429);
 
-    const { assetId, touchpointLabel, brandTask, auditAgainst } = await req.json();
+    const { assetId, touchpointLabel, brandTask, auditAgainst, extractOnly } = await req.json();
     if (!assetId) throw new Error("assetId is required");
     const bindings: string[] = Array.isArray(auditAgainst) ? auditAgainst : [];
 
     const { data: asset, error: assetErr } = await supabase
       .from("brand_assets").select("*").eq("id", assetId).single();
     if (assetErr || !asset) throw new Error("asset not found");
+
+    // Extract-only mode: transcribe the marketing copy VISIBLE in the screenshot so
+    // the app can pre-fill "Update stored copy" for the user to review. No scoring,
+    // no avatar/signature grounding, no DB write — verbatim transcription only.
+    if (extractOnly) {
+      if (!asset.storage_path) return json({ ok: true, extracted_copy: "" });
+      const { data: blob, error: dlErr } = await supabase.storage.from("brand-assets").download(asset.storage_path);
+      if (dlErr || !blob) throw new Error("could not read the screenshot");
+      if (blob.size > MAX_IMAGE_BYTES) throw new Error("screenshot too large (max 5MB)");
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const img = { type: "image", source: { type: "base64", media_type: mediaTypeFor(asset.storage_path), data: encodeBase64(bytes) } };
+      const exResp = await fetch(CLAUDE_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": anthropicApiKey, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: SONNET_MODEL,
+          max_tokens: 1500,
+          system: "You transcribe marketing copy from an image. Output the visible copy VERBATIM — headlines, bullets, body, CTAs — preserving line breaks and reading order. Do NOT summarize, rewrite, translate, or invent anything. Output only the transcribed text. If the image has no readable marketing copy, output nothing.",
+          messages: [{ role: "user", content: [img, { type: "text", text: "Transcribe the visible marketing copy verbatim." }] }],
+        }),
+      });
+      if (!exResp.ok) throw new Error(`anthropic ${exResp.status}: ${await exResp.text()}`);
+      const exOut = await exResp.json();
+      const extracted_copy = (exOut.content ?? [])
+        .filter((b: { type: string }) => b.type === "text")
+        .map((b: { text: string }) => b.text)
+        .join("\n")
+        .trim();
+      return json({ ok: true, extracted_copy });
+    }
 
     // Signature: avatar-scoped first, else latest brand-level (avatar_id IS NULL). RLS scopes to user.
     let sig = null as { artifact_id: string | null; id: string; signature_text: string | null } | null;

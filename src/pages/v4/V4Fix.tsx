@@ -37,6 +37,7 @@ import { FunnelMap } from '@/components/v4/fix/FunnelMap';
 import { FunnelPieceDetail } from '@/components/v4/fix/FunnelPieceDetail';
 import { AddPieceDialog } from '@/components/v4/fix/AddPieceDialog';
 import { ReAuditScreenshotDialog } from '@/components/v4/fix/ReAuditScreenshotDialog';
+import { UpdateStoredCopyDialog } from '@/components/v4/fix/UpdateStoredCopyDialog';
 import { UpgradeDialog } from '@/components/v4/fix/UpgradeDialog';
 import { FixTestPanel } from '@/components/v4/fix/FixTestPanel';
 import { TestingLiftTab } from '@/components/v4/fix/TestingLiftTab';
@@ -146,6 +147,7 @@ export default function V4Fix(): JSX.Element {
   const [view, setViewState] = useState<FixView>('map');
   const [addOpen, setAddOpen] = useState(false);
   const [reAuditOpen, setReAuditOpen] = useState(false);
+  const [updateStoredOpen, setUpdateStoredOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   // Free-trial gate: a non-member is held to FREE_TRIAL_PIECE_LIMIT funnel pieces.
@@ -552,7 +554,7 @@ export default function V4Fix(): JSX.Element {
                 onRetryMetrics={() => void retryPieceMetrics()}
                 insight={insight}
                 grounded={grounded}
-                onUpdateStored={() => setAddOpen(true)}
+                onUpdateStored={() => setUpdateStoredOpen(true)}
                 onGetBrief={handleGetBriefOrTest}
                 onOpenTest={handleGetBriefOrTest}
                 onCheckAsset={handleCheckAsset}
@@ -660,6 +662,28 @@ export default function V4Fix(): JSX.Element {
           void load();
           if (selectedPiece) void selectPiece(selectedPiece.id, range);
           toast.success('Re-audited — the verdict for this customer is updated.');
+        }}
+      />
+
+      {/* Update THIS piece's stored copy (paste or read from a screenshot) — the
+          piece is already known, so it never asks "which piece". */}
+      <UpdateStoredCopyDialog
+        open={updateStoredOpen}
+        onOpenChange={setUpdateStoredOpen}
+        pieceId={selectedPiece?.id ?? null}
+        pieceLabel={pieceLabel}
+        currentCopy={
+          selectedPiece
+            ? [selectedPiece.storedContent.title, ...selectedPiece.storedContent.bullets]
+                .filter((s): s is string => Boolean(s && s.trim()))
+                .join('\n')
+            : ''
+        }
+        avatarId={avatarId}
+        onUpdated={() => {
+          void load();
+          if (selectedPiece) void selectPiece(selectedPiece.id, range);
+          toast.success('Stored copy updated — re-audited for this customer.');
         }}
       />
 

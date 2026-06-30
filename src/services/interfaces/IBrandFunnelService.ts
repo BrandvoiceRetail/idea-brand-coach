@@ -136,6 +136,17 @@ export interface IBrandFunnelService {
    * the asset with the fresh per-avatar verdict overlaid.
    */
   reAuditWithScreenshot(assetId: string, file: File, avatarId: string): Promise<Result<BrandAsset>>;
+  /**
+   * Upload a screenshot for an EXISTING piece and transcribe its visible copy
+   * (verbatim, vision) so "Update stored copy" can pre-fill for review. Returns the
+   * extracted text; does not write content_text.
+   */
+  extractCopyFromImage(assetId: string, file: File): Promise<Result<string>>;
+  /**
+   * Update an existing piece's stored copy (content_text) in place and re-audit it
+   * for the avatar — no new version, no re-selection of the piece.
+   */
+  updateStoredCopy(assetId: string, contentText: string, avatarId: string): Promise<Result<BrandAsset>>;
   /** Save a coach rewrite as a new asset version (supersedes prior) and re-audit it. */
   applyRewrite(asset: BrandAsset, revisedText: string): Promise<Result<BrandAsset>>;
   /** Count the avatar's strategy fields — drives the grounding gate/badge. */
