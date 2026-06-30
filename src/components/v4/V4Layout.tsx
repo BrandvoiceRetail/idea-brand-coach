@@ -12,6 +12,7 @@ import { V4Sidebar } from './V4Sidebar';
 import { V4BottomNav } from './V4BottomNav';
 import { V4TopBar } from './V4TopBar';
 import { TrevorCoachWidget } from './TrevorCoachWidget';
+import { CoachWidgetProvider } from '@/contexts/CoachWidgetContext';
 import { useV4ContextAutofill } from '@/hooks/useV4ContextAutofill';
 
 export function V4Layout(): JSX.Element {
@@ -20,18 +21,22 @@ export function V4Layout(): JSX.Element {
   useV4ContextAutofill();
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <V4Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <V4TopBar />
-        <SpineStepper />
-        <main className="mx-auto w-full max-w-[1100px] flex-1 px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-          <Outlet />
-        </main>
-        <V4BottomNav />
+    // Provider wraps both the routed page and the widget so any /v4 surface can
+    // open + seed the floating coach instead of routing to the legacy /v2/coach.
+    <CoachWidgetProvider>
+      <div className="flex min-h-screen bg-background text-foreground">
+        <V4Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <V4TopBar />
+          <SpineStepper />
+          <main className="mx-auto w-full max-w-[1100px] flex-1 px-4 pb-24 pt-6 sm:px-6 md:pb-10">
+            <Outlet />
+          </main>
+          <V4BottomNav />
+        </div>
+        {/* Floating, transparent Brand Coach — overlays every /v4 page. */}
+        <TrevorCoachWidget />
       </div>
-      {/* Floating, transparent Brand Coach — overlays every /v4 page. */}
-      <TrevorCoachWidget />
-    </div>
+    </CoachWidgetProvider>
   );
 }
