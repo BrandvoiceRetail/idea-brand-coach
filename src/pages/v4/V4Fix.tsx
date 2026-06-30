@@ -46,7 +46,6 @@ import type { GroundedField } from '@/components/v4/GroundedStrip';
 import { useFixRun } from '@/hooks/useFixRun';
 import { useEntitlement } from '@/hooks/useEntitlement';
 import { FREE_TRIAL_PIECE_LIMIT } from '@/lib/entitlement';
-import { useAvatarContext } from '@/contexts/AvatarContext';
 import { V4_ROUTES } from '@/config/v4';
 import { FUNNEL_JOBS, METRIC_META, type MetricKey } from '@/config/v4Funnel';
 import { getTouchpoint, getStages } from '@/config/touchpointTaxonomy';
@@ -118,13 +117,6 @@ export default function V4Fix(): JSX.Element {
     markAssetLive,
     recheckDrift,
   } = useFixRun();
-
-  // Avatar scope for the toolbar selector (the canonical store).
-  const { avatars, setCurrentAvatar } = useAvatarContext();
-  const avatarOptions = useMemo(
-    () => (avatars ?? []).filter((a) => !a.is_template).map((a) => ({ id: a.id, name: a.name })),
-    [avatars],
-  );
 
   const [view, setViewState] = useState<FixView>('map');
   const [addOpen, setAddOpen] = useState(false);
@@ -473,9 +465,6 @@ export default function V4Fix(): JSX.Element {
                 loading={piecesLoading}
                 error={piecesError}
                 coveragePct={null}
-                avatars={avatarOptions}
-                selectedAvatarId={avatarId}
-                onAvatarChange={(id) => void setCurrentAvatar(id)}
                 marketplace={marketplace}
                 onMarketplaceChange={setMarketplace}
                 range={range}
