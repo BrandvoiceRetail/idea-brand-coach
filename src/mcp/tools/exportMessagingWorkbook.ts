@@ -325,16 +325,21 @@ export function registerExportMessagingWorkbookTool(server: McpServer, deps?: Pa
           sheet_count: result.sheets.length,
           uploaded: !!result.uploaded,
         });
+        const summary = `${result.avatars} avatar(s), set verdict: ${result.weakest ?? 'not yet analysable'}; sheets: ${result.sheets.join(', ')}`;
+        const downloadUrl = result.uploaded?.signedUrl ?? null;
         return {
           content: [
             {
               type: 'text' as const,
-              text: `Messaging workbook exported to ${result.path} (${result.avatars} avatar(s), set verdict: ${result.weakest ?? 'not yet analysable'}; sheets: ${result.sheets.join(', ')}).`,
+              text: downloadUrl
+                ? `Your messaging-perception workbook is ready (${summary}).\n\n**Download it here** (link valid 7 days): ${downloadUrl}`
+                : `Your messaging-perception workbook was generated (${summary}), but a download link could not be created${result.uploaded?.note ? ` — ${result.uploaded.note}` : ' (upload was not requested)'}. Ask me to export it again with upload enabled.`,
             },
           ],
           structuredContent: {
             ok: true,
             path: result.path,
+            download_url: downloadUrl,
             avatars: result.avatars,
             weakest: result.weakest,
             ...(result.uploaded ? { uploaded: result.uploaded } : {}),
