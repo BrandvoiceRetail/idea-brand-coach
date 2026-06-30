@@ -293,6 +293,55 @@ export class SupabaseBrandFunnelService implements IBrandFunnelService {
     }
   }
 
+  /**
+   * Upload a fresh screenshot to the piece's own slot and transcribe its VISIBLE
+   * copy (Claude vision, verbatim) so "Update stored copy" can pre-fill the box for
+   * the user to review. Returns the extracted text; the image stays on the piece so
+   * the subsequent updateStoredCopy audit can use it. No content_text write here.
+   */
+  async extractCopyFromImage(assetId: string, file: File): Promise<Result<string>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+      const compressed = await imageCompression(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1600, useWebWorker: true });
+      const path = `${user.id}/funnel/${assetId}.${ext}`;
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, compressed, { upsert: true, contentType: compressed.type });
+      if (upErr) throw upErr;
+      const { error: updErr } = await supabase.from('brand_assets')
+        .update({ storage_path: path, updated_at: new Date().toISOString() })
+        .eq('id', assetId);
+      if (updErr) throw updErr;
+      const { data, error } = await supabase.functions.invoke('audit-asset', {
+        body: { assetId, extractOnly: true },
+      });
+      if (error) throw error;
+      const extracted = typeof data?.extracted_copy === 'string' ? data.extracted_copy : '';
+      return { data: extracted, error: null };
+    } catch (error) {
+      console.error('extractCopyFromImage error:', error);
+      return { data: null, error: error as Error };
+    }
+  }
+
+  /**
+   * Update the piece's stored copy (content_text) IN PLACE — no new version — and
+   * re-audit it for the avatar. This is the baseline copy we track and score; it's
+   * the existing piece, so the caller already knows which piece (no re-selection).
+   */
+  async updateStoredCopy(assetId: string, contentText: string, avatarId: string): Promise<Result<BrandAsset>> {
+    try {
+      const { error: updErr } = await supabase.from('brand_assets')
+        .update({ content_text: contentText.trim(), updated_at: new Date().toISOString() })
+        .eq('id', assetId);
+      if (updErr) throw updErr;
+      return await this.auditAssetForAvatar(assetId, avatarId);
+    } catch (error) {
+      console.error('updateStoredCopy error:', error);
+      return { data: null, error: error as Error };
+    }
+  }
+
   /** Apply a coach rewrite: save the revised copy as a new asset version and re-audit. */
   async applyRewrite(asset: BrandAsset, revisedText: string): Promise<Result<BrandAsset>> {
     try {

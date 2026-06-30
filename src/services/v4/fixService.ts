@@ -985,6 +985,38 @@ export class FixService {
   }
 
   /**
+   * Transcribe the visible copy from a screenshot of an existing piece (vision,
+   * verbatim) so "Update stored copy" can pre-fill the box for review. Does not
+   * write content_text — the user confirms, then updateStoredCopy commits.
+   */
+  async extractCopyFromImage(pieceId: string, file: File): Promise<DataResult<string>> {
+    const res = await this.funnel.extractCopyFromImage(pieceId, file);
+    if (res.error) return dataErr(res.error, 'Could not read the copy from that screenshot.');
+    return { status: 'ok', data: res.data ?? '' };
+  }
+
+  /**
+   * Update an existing piece's stored copy in place and re-audit it — the piece is
+   * already known (no re-selection). Empty copy / no avatar are honest errors.
+   */
+  async updateStoredCopy(
+    pieceId: string,
+    contentText: string,
+    avatarId: string | null,
+  ): Promise<DataResult<FunnelPiece>> {
+    if (!avatarId) {
+      return { status: 'error', error: 'Pick a customer avatar to update this piece for.' };
+    }
+    if (contentText.trim().length === 0) {
+      return { status: 'error', error: 'Add the copy to store for this piece.' };
+    }
+    const res = await this.funnel.updateStoredCopy(pieceId, contentText, avatarId);
+    if (res.error) return dataErr(res.error, 'Could not update the stored copy.');
+    if (!res.data) return dataErr(null, 'Updating the stored copy returned nothing.');
+    return { status: 'ok', data: this.toFunnelPiece(res.data) };
+  }
+
+  /**
    * Open a test against a piece (writes to brand_tests via `recordTest`). Returns
    * the new row for the Testing-&-Lift table; `error` when the write fails.
    */
@@ -1109,6 +1141,13 @@ export const reAuditPiece = (
   file: File,
   avatarId: string | null,
 ): Promise<DataResult<FunnelPiece>> => fixService.reAuditPiece(pieceId, file, avatarId);
+export const extractCopyFromImage = (pieceId: string, file: File): Promise<DataResult<string>> =>
+  fixService.extractCopyFromImage(pieceId, file);
+export const updateStoredCopy = (
+  pieceId: string,
+  contentText: string,
+  avatarId: string | null,
+): Promise<DataResult<FunnelPiece>> => fixService.updateStoredCopy(pieceId, contentText, avatarId);
 export const openTest = (input: OpenTestInput): Promise<DataResult<TestRow>> =>
   fixService.openTest(input);
 export const listTests = (avatarId: string | null): Promise<DataResult<TestRow[]>> =>
