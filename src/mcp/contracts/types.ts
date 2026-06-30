@@ -20,7 +20,11 @@ export type ArtifactKind =
   | 'export_brief'
   | 'audit_x_idea'
   | 'marketing_audit'
-  | 'rollout_plan';
+  | 'rollout_plan'
+  // Multi-avatar messaging-perception workbook (SET view). NOT a manifest §7 generator —
+  // assembled from persisted forensics, carries grounding INLINE (see messagingPerception.ts),
+  // so its contract has no grounding envelope and `requiredContext: []`.
+  | 'messaging_perception';
 
 /**
  * An artifact contract: the kind, its validated output shape, and the context

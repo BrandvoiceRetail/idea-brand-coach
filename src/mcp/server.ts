@@ -55,6 +55,7 @@ import { registerGenerateListingImageTool } from './tools/generateListingImage.j
 import { registerGenerateAuditIdeaMapTool } from './tools/generateAuditIdeaMap.js';
 import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
+import { registerExportMessagingWorkbookTool } from './tools/exportMessagingWorkbook.js';
 import { registerListCoachConversationsTool } from './tools/listCoachConversations.js';
 import { registerGetCoachConversationTool } from './tools/getCoachConversation.js';
 import { registerGetFunnelAssetsTool } from './tools/getFunnelAssets.js';
@@ -239,6 +240,17 @@ export function createServer(
   // the optional Storage upload is never-fail (the local file is the deliverable).
   // gateWrite identity-gated.
   registerExportWorkbookTool(server);
+
+  // Output engine SET variant: export_messaging_workbook renders the multi-avatar
+  // messaging-perception workbook — for ONE planned message (param, else the set Signature),
+  // how each selected avatar perceives it across the four IDEA dimensions, judged ONLY from
+  // that avatar's persisted Avatar 2.0 forensics, rolled up to a weakest-link set verdict.
+  // Unlike export_workbook (pure read→render), this tool DOES the AI + persistence (so the
+  // assembler stays pure): per avatar it reuses an on-file messaging_perception for this
+  // message, else invokes the analyze-message-perception engine and persists the result; an
+  // avatar with no forensics is emitted honestly as "not yet analysable", never a guessed
+  // score. gateWrite identity-gated; every avatar_id must be owned (requireOwnedAvatar).
+  registerExportMessagingWorkbookTool(server);
 
   // Coach conversations (READ, per avatar): list_coach_conversations indexes the caller's
   // Brand-Coach chat threads — each annotated with its avatar (avatar_id + avatar_name;

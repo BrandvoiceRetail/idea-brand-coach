@@ -513,10 +513,23 @@ export class FixService {
     context?: string;
   }): Promise<FixResult<BriefSlots>> {
     try {
+      // The engine writes the brief from your positioning. Resolve it the way the
+      // generate_brief MCP tool does (Brand Canvas → else your chosen Signature)
+      // and PASS it in the body. The app previously sent none, so the engine always
+      // hit its "create a Signature first" wall — that was the "rewrite doesn't
+      // work" bug. When no positioning artifact exists yet, `resolvePositioning`
+      // degrades to the avatar's own profile so the owner still gets a brief.
+      const positioning = await this.resolvePositioning(input.avatarId);
       const { data, error } = await this.invoke('export-brief', {
         touchpoint_id: input.touchpointId,
         avatar_id: input.avatarId,
         context: input.context,
+        canvas: positioning.canvas,
+        signature: positioning.signature,
+        s1: positioning.s1,
+        s3: positioning.s3,
+        s4: positioning.s4,
+        confirmed_claims: [],
       });
       if (error) return errResult(error, 'Could not reach the brief engine.');
       const rec = asRecord(data);
@@ -529,6 +542,95 @@ export class FixService {
     } catch (e) {
       return errResult(e, 'Could not reach the brief engine.');
     }
+  }
+
+  /**
+   * Resolve the positioning the Export Brief is written against, mirroring the
+   * generate_brief MCP tool's root so the in-app rewrite has the same source:
+   *   • canvas    — current `brand_canvas` artifact (avatar scope, else brand-level)
+   *   • signature — the chosen Signature from the app's `signatures` table (where the
+   *                 in-app reveal persists), avatar scope first then brand-level
+   *   • s1/s3/s4  — supporting forensic artifacts (best-effort, enrich the brief)
+   * DEGRADE: when NEITHER a canvas nor a signature exists yet, synthesise a
+   * positioning block from the avatar's own profile so the engine writes an
+   * (inference-grounded) brief today instead of walling on canvas/signature
+   * homework. All reads are RLS-scoped to the caller.
+   */
+  private async resolvePositioning(avatarId: string): Promise<{
+    canvas: unknown;
+    signature: unknown;
+    s1: unknown;
+    s3: unknown;
+    s4: unknown;
+  }> {
+    const [canvas, signature, s1, s3, s4] = await Promise.all([
+      this.currentArtifactContent('brand_canvas', avatarId),
+      this.currentSignatureContent(avatarId),
+      this.currentArtifactContent('avatar_s1_vocab', avatarId),
+      this.currentArtifactContent('avatar_s3_triggers', avatarId),
+      this.currentArtifactContent('avatar_s4_objections', avatarId),
+    ]);
+    if (canvas == null && signature == null) {
+      return { canvas: null, signature: await this.avatarProfilePositioning(avatarId), s1, s3, s4 };
+    }
+    return { canvas, signature, s1, s3, s4 };
+  }
+
+  /**
+   * The current (non-superseded) `artifacts` content of a kind for an avatar,
+   * falling back to the brand-level (null-avatar) chain. RLS-scoped; null absent.
+   */
+  private async currentArtifactContent(kind: string, avatarId: string): Promise<unknown> {
+    const read = async (scoped: boolean): Promise<unknown> => {
+      const base = supabase
+        .from('artifacts')
+        .select('content')
+        .eq('kind', kind)
+        .is('superseded_by', null);
+      const q = scoped ? base.eq('avatar_id', avatarId) : base.is('avatar_id', null);
+      const { data } = await q.order('created_at', { ascending: false }).limit(1).maybeSingle();
+      return (data?.content as unknown) ?? null;
+    };
+    return (await read(true)) ?? (await read(false));
+  }
+
+  /**
+   * The chosen Signature for the brief root, read from the app's `signatures`
+   * table (where the in-app reveal persists, not the artifact chain): avatar scope
+   * first, else brand-level. Returns the engine-rendered shape, or null when none.
+   */
+  private async currentSignatureContent(avatarId: string): Promise<unknown> {
+    const read = async (scoped: boolean) => {
+      const base = supabase.from('signatures').select('signature_text, all_options');
+      const q = scoped ? base.eq('avatar_id', avatarId) : base.is('avatar_id', null);
+      const { data } = await q.order('created_at', { ascending: false }).limit(1).maybeSingle();
+      return data ?? null;
+    };
+    const row = (await read(true)) ?? (await read(false));
+    if (!row || !row.signature_text) return null;
+    return { signature: row.signature_text, options: row.all_options ?? [] };
+  }
+
+  /**
+   * Degrade root: the avatar's own profile as an INFERENCE positioning block when
+   * no Signature/Canvas exists yet — so the brief writes from the real avatar
+   * description instead of walling. Null only when the avatar can't be read.
+   */
+  private async avatarProfilePositioning(avatarId: string): Promise<unknown> {
+    const { data } = await supabase
+      .from('avatars')
+      .select('name, description, psychographics, demographics')
+      .eq('id', avatarId)
+      .maybeSingle();
+    if (!data) return null;
+    return {
+      source: 'avatar_profile',
+      note: 'No Signature or Brand Canvas exists yet — this is the avatar profile used as positioning context (treat as inference; assert no product facts).',
+      avatar: data.name,
+      positioning: data.description ?? null,
+      psychographics: data.psychographics ?? null,
+      audience: data.demographics ?? null,
+    };
   }
 
   /**

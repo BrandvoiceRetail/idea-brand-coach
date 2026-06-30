@@ -21,6 +21,7 @@ export * from './exportBrief.js';
 export * from './auditXIdea.js';
 export * from './marketingAudit.js';
 export * from './rolloutPlan.js';
+export * from './messagingPerception.js';
 
 import type { ArtifactContract, ArtifactKind } from './types.js';
 import { diagnosticInterpretationContract } from './diagnosticInterpretation.js';
@@ -34,6 +35,7 @@ import { exportBriefContract } from './exportBrief.js';
 import { auditXIdeaContract } from './auditXIdea.js';
 import { marketingAuditContract } from './marketingAudit.js';
 import { rolloutPlanContract } from './rolloutPlan.js';
+import { messagingPerceptionContract } from './messagingPerception.js';
 
 /** Registry of every artifact contract, keyed by kind. */
 export const CONTRACTS: Readonly<Record<ArtifactKind, ArtifactContract>> = {
@@ -48,4 +50,5 @@ export const CONTRACTS: Readonly<Record<ArtifactKind, ArtifactContract>> = {
   audit_x_idea: auditXIdeaContract,
   marketing_audit: marketingAuditContract,
   rollout_plan: rolloutPlanContract,
+  messaging_perception: messagingPerceptionContract,
 };
