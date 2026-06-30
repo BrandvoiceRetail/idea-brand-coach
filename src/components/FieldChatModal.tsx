@@ -74,7 +74,7 @@ export function FieldChatModal({
   const { toast } = useToast();
 
   // Scope the field chat to the current avatar (bleed firewall §2.1/§2.2).
-  const { currentAvatar } = useAvatarContext();
+  const { currentAvatar, contextAvatarIds } = useAvatarContext();
   const avatarId = currentAvatar?.id;
 
   // Session management - filtered to this field only
@@ -96,6 +96,7 @@ export function FieldChatModal({
     fieldLabel: field.fieldLabel,
     autoCreate: false, // Don't auto-create, let user start fresh
     avatarId,
+    avatarIds: contextAvatarIds,
   });
 
   // Chat for current session
@@ -103,6 +104,7 @@ export function FieldChatModal({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
     avatarId,
+    avatarIds: contextAvatarIds,
   });
 
   // Toggle sidebar collapse state

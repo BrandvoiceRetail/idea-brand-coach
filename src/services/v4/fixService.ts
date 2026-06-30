@@ -602,6 +602,28 @@ export class FixService {
     return { status: 'ok', data: drifted };
   }
 
+  /**
+   * Drift across a SET of avatars (multi-avatar funnel analysis): a piece that
+   * drifted for ANY selected customer is surfaced once. Each avatar carries its own
+   * current Signature, so drift is computed per avatar and unioned by piece id. A
+   * single-id set delegates to `getDrift`. Best-effort: a per-avatar read that fails
+   * is skipped rather than failing the whole banner.
+   */
+  async getDriftForSet(avatarIds: string[]): Promise<FixResult<DriftItem[]>> {
+    const ids = [...new Set(avatarIds)].filter(Boolean);
+    if (ids.length === 0) return needAvatar();
+    if (ids.length === 1) return this.getDrift(ids[0]);
+    const results = await Promise.all(ids.map((id) => this.getDrift(id)));
+    const byAsset = new Map<string, DriftItem>();
+    for (const r of results) {
+      if (r.status !== 'ok') continue;
+      for (const item of r.data) {
+        if (!byAsset.has(item.assetId)) byAsset.set(item.assetId, item);
+      }
+    }
+    return { status: 'ok', data: [...byAsset.values()] };
+  }
+
   /** Current Signature version for an avatar: avatar-scoped first, else brand-level. */
   private async currentSignatureVersion(avatarId: string): Promise<string | null> {
     const scoped = await supabase
