@@ -122,7 +122,7 @@ export function BetaFeedbackWidget({
     return (
       <div className={cn(
         "fixed z-[55] animate-fade-in",
-        position === "bottom-right" ? "bottom-6 right-6" : "bottom-6 left-6"
+        position === "bottom-right" ? "bottom-20 right-6 md:bottom-6" : "bottom-20 left-6 md:bottom-6"
       )}>
         <Button
           onClick={() => setIsExpanded(true)}
@@ -142,7 +142,7 @@ export function BetaFeedbackWidget({
     return (
       <div className={cn(
         "fixed z-[55] animate-fade-in",
-        position === "bottom-right" ? "bottom-6 right-6" : "bottom-6 left-6"
+        position === "bottom-right" ? "bottom-20 right-6 md:bottom-6" : "bottom-20 left-6 md:bottom-6"
       )}>
         <Card className="shadow-xl w-[320px]">
           <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsMinimized(false)}>
@@ -180,7 +180,7 @@ export function BetaFeedbackWidget({
   return (
     <div className={cn(
       "fixed z-[55] animate-fade-in",
-      position === "bottom-right" ? "bottom-6 right-6" : "bottom-6 left-6"
+      position === "bottom-right" ? "bottom-20 right-6 md:bottom-6" : "bottom-20 left-6 md:bottom-6"
     )}>
       <Card className="shadow-xl w-[380px]">
         {/* Header */}

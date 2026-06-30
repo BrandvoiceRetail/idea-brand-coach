@@ -166,7 +166,7 @@ function parseScores(raw: unknown): PillarScores | null {
  */
 const defaultRunReader: RunReader = async (avatarId) => {
   const { data, error } = await supabase
-    .from('diagnostic_results')
+    .from('user_diagnostic_results')
     .select('category_scores, created_at, diagnostic_completion_date')
     .eq('avatar_id', avatarId)
     .order('created_at', { ascending: false })
@@ -206,8 +206,9 @@ const defaultMetricsReader: MetricsReader = async (avatarId) => {
     const assetsRes = await untyped
       .from('brand_assets')
       .select('id')
-      .eq('avatar_id', avatarId)
-      .eq('user_id', user.id);
+      // brand_assets has no user_id column — RLS already scopes to the owner.
+      // (.eq('user_id', …) here returned 400: column does not exist.)
+      .eq('avatar_id', avatarId);
     const assetIds = (Array.isArray(assetsRes.data) ? assetsRes.data : [])
       .map((a) => asString(asRecord(a)?.id))
       .filter((id): id is string => id !== null);

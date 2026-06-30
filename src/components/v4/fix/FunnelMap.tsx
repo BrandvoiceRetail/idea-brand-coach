@@ -68,7 +68,8 @@ const VERDICT_META: Record<JobVerdict, VerdictMeta> = {
   },
   leaking: {
     pill: 'Leaking',
-    pillClass: 'bg-gold-light text-gold-warm',
+    // Dark-amber ink on the fixed cream pill (gold-on-cream was 2.15:1); ~7.5:1, theme-independent.
+    pillClass: 'bg-gold-light text-[#7a5a07]',
     verdict: '⚠ leaking',
     verdictClass: 'text-gold-warm',
   },
@@ -288,7 +289,7 @@ function PieceCard({
       ? { text: '↗ holds the message', cls: 'bg-idea-d/10 text-idea-d' }
       : piece.status === 'missing'
         ? null
-        : { text: '⚠ message breaks', cls: 'bg-gold-light text-gold-warm' };
+        : { text: '⚠ message breaks', cls: 'bg-gold-light text-[#7a5a07]' };
 
   return (
     <button
