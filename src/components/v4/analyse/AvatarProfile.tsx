@@ -72,6 +72,45 @@ export interface AvatarProfileProps {
   onConfirm: (portrait: AvatarPortrait) => void;
   /** Retry the build after an error (omit to hide the retry button). */
   onRetry?: () => void;
+  /**
+   * Display name of the FOCUS customer this portrait is built for. The build is
+   * the deterministic restatement of the SHARED brand-level context (not
+   * per-avatar), so it always shows the focus — this names whose portrait it is.
+   */
+  focusAvatarName?: string | null;
+  /**
+   * How many customers are in the active analysis SET. When > 1 a set-context
+   * header makes clear the portrait is the focus customer's (never silently
+   * stranded on the first id); at <= 1 nothing extra renders (single-avatar
+   * render is byte-identical).
+   */
+  avatarCount?: number;
+}
+
+/**
+ * Set-context banner shown only for a multi-avatar set so the single portrait is
+ * never read as the whole set. Self-hides at <= 1 customer (single-avatar path).
+ */
+function SetContextHeader({
+  focusAvatarName,
+  avatarCount,
+}: {
+  focusAvatarName: string | null;
+  avatarCount: number;
+}): JSX.Element | null {
+  if (avatarCount <= 1) return null;
+  return (
+    <div
+      className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"
+      data-testid="v4-avatar-set-context"
+    >
+      Viewing{' '}
+      <span className="font-semibold text-foreground">
+        {focusAvatarName ?? 'your focus customer'}
+      </span>{' '}
+      · {avatarCount} customers in analysis — switch via the customer menu.
+    </div>
+  );
 }
 
 export function AvatarProfile({
@@ -81,6 +120,8 @@ export function AvatarProfile({
   onEdit,
   onConfirm,
   onRetry,
+  focusAvatarName = null,
+  avatarCount = 1,
 }: AvatarProfileProps): JSX.Element {
   const [draft, setDraft] = useState<AvatarPortrait | null>(portrait);
 
@@ -174,6 +215,7 @@ export function AvatarProfile({
   // ── Ready: restate (read-back) + edit + confirm ─────────────────────────────
   return (
     <div className="space-y-4" data-testid="v4-avatar-profile">
+      <SetContextHeader focusAvatarName={focusAvatarName} avatarCount={avatarCount} />
       <AvatarPortraitCard portrait={draft} />
 
       <Card>

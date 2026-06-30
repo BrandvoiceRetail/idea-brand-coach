@@ -29,6 +29,7 @@ import type {
   ClaimGateItem,
   DecisionTriggerType,
   DecisionTriggerView,
+  GapTriggerBundle,
   GapTriggerInput,
   MoveCriterionScore,
   PositioningMove,
@@ -127,7 +128,7 @@ export class AnalyseService {
    */
   async getGapAndTrigger(
     input: GapTriggerInput,
-  ): Promise<AnalyseResult<{ trustGap: TrustGapView; decisionTrigger: DecisionTriggerView | null }>> {
+  ): Promise<AnalyseResult<GapTriggerBundle>> {
     const scores = input.scores ?? {};
     const complete = PILLARS.every((p) => typeof scores[p] === 'number');
     if (!complete) {
@@ -179,6 +180,28 @@ export class AnalyseService {
     const trustGap: TrustGapView = { overall, pillars, primaryGap, primaryGapSummary };
     const decisionTrigger = await this.deriveTrigger(full, input.evidence);
     return { status: 'ok', data: { trustGap, decisionTrigger } };
+  }
+
+  /**
+   * Trust Gap + Decision Trigger across a SET of customers (multi-avatar Analyse).
+   * SET-INVARIANT: the Analyse gap + Decision Trigger are derived from the SHARED
+   * brand-level /v4 context (one megaprompt, not avatar-keyed), so they are
+   * IDENTICAL for every selected customer — like business metrics. We therefore read
+   * ONCE and never fan out to N identical calls or fabricate a per-customer strip of
+   * repeated numbers. The optional `perAvatar` field + `GapAvatarSummary` type stay
+   * in place, ready to carry real per-customer gaps the day per-avatar evidence is
+   * wired into `GapTriggerInput`.
+   */
+  async getGapAndTriggerForSet(
+    avatarIds: string[],
+    avatarNames: Record<string, string>,
+    input: GapTriggerInput,
+  ): Promise<AnalyseResult<GapTriggerBundle>> {
+    // Read once — gap/trigger is set-invariant (shared brand-level input). avatarIds/
+    // avatarNames are accepted for call-site symmetry with the other getXForSet seams.
+    void avatarIds;
+    void avatarNames;
+    return this.getGapAndTrigger(input);
   }
 
   /** Best-effort Decision Trigger derivation; null (not error) when unavailable. */
@@ -414,8 +437,13 @@ export const buildAvatar = (megaprompt: string): AnalyseResult<AvatarPortrait> =
   analyseService.buildAvatar(megaprompt);
 export const getGapAndTrigger = (
   input: GapTriggerInput,
-): Promise<AnalyseResult<{ trustGap: TrustGapView; decisionTrigger: DecisionTriggerView | null }>> =>
-  analyseService.getGapAndTrigger(input);
+): Promise<AnalyseResult<GapTriggerBundle>> => analyseService.getGapAndTrigger(input);
+export const getGapAndTriggerForSet = (
+  avatarIds: string[],
+  avatarNames: Record<string, string>,
+  input: GapTriggerInput,
+): Promise<AnalyseResult<GapTriggerBundle>> =>
+  analyseService.getGapAndTriggerForSet(avatarIds, avatarNames, input);
 export const generatePositioningMoves = (
   avatar: AvatarPortrait,
   decisionTrigger: DecisionTriggerView | null,

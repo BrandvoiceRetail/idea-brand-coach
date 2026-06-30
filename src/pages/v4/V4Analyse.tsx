@@ -58,14 +58,20 @@ export default function V4Analyse(): JSX.Element {
     needsInput,
     runError,
     hasContext,
+    avatarIds,
+    avatarNames,
+    focusAvatarId,
     avatar,
     avatarConfirmed,
     trustGap,
     decisionTrigger,
+    gapPerAvatar,
     moves,
     movesLoading,
     movesError,
     selectedMoveId,
+    movesAvatarId,
+    movesAvatarName,
     brief,
     claims,
     briefLoading,
@@ -133,6 +139,17 @@ export default function V4Analyse(): JSX.Element {
   // pass-through above when the move engine isn't available yet (no dead-end).
   const canAdvance = Boolean(selectedMoveId) || moveEngineUnavailable;
 
+  // Active customer SET context (multi-avatar awareness). The portrait + moves are
+  // scoped to the FOCUS customer; these label whose they are and how many customers
+  // the set covers. At <= 1 customer the screens render byte-identically.
+  const focusAvatarName = focusAvatarId ? (avatarNames[focusAvatarId] ?? null) : null;
+  const avatarCount = avatarIds.length;
+  // Moves were generated for one focus customer; flag when the focus has since
+  // switched so the board reads "regenerate" rather than silently mislabelling.
+  const movesStale = Boolean(
+    movesAvatarId && focusAvatarId && movesAvatarId !== focusAvatarId,
+  );
+
   return (
     <div className="space-y-6">
       <header className="flex items-center gap-3">
@@ -185,6 +202,8 @@ export default function V4Analyse(): JSX.Element {
             onEdit={editAvatar}
             onConfirm={handleConfirmAvatar}
             onRetry={() => void runAnalyse()}
+            focusAvatarName={focusAvatarName}
+            avatarCount={avatarCount}
           />
 
           <GapDecisionTriggerPanel
@@ -193,6 +212,7 @@ export default function V4Analyse(): JSX.Element {
             isLoading={gapLoading}
             error={gapError}
             onRetry={() => void runAnalyse()}
+            perAvatar={gapPerAvatar ?? undefined}
           />
 
           {/* Decision Board + brief only after the avatar is confirmed. */}
@@ -205,6 +225,10 @@ export default function V4Analyse(): JSX.Element {
                 error={movesError}
                 onRetry={() => void generateMoves()}
                 selectedMoveId={selectedMoveId}
+                movesAvatarName={movesAvatarName}
+                focusAvatarName={focusAvatarName}
+                avatarCount={avatarCount}
+                movesStale={movesStale}
               />
 
               <MoveBriefClaimGate

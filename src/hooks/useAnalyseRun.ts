@@ -20,16 +20,20 @@
  * needs_input here → the gap/trigger panel shows its "not enough evidence yet"
  * state. The move engine is net-new and may be unreachable → honest no-moves.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnalyseService } from '@/services/v4/analyseService';
 import { useV4Context, type V4ResolvedSlot } from '@/contexts/V4ContextStore';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import type {
+  AnalyseResult,
   AnalyseRunStep,
   AnalyseStepId,
   AvatarPortrait,
   BriefSlots,
   ClaimGateItem,
   DecisionTriggerView,
+  GapAvatarSummary,
+  GapTriggerBundle,
   NeedsInputItem,
   PositioningMove,
   TrustGapView,
@@ -90,6 +94,18 @@ export interface AnalyseRunHook {
   /** True when the confirmed context lacks the minimum (customer + problem). */
   hasContext: boolean;
 
+  // ── Active customer SET (multi-avatar awareness) ──
+  /** True when at least one customer is in the active set. */
+  hasAvatar: boolean;
+  /** Signature of the active customer SET — presentation re-arms the run on change. */
+  loadKey: string;
+  /** The active customer set (ids[0] = the focus the build reasons over). */
+  avatarIds: string[];
+  /** id → display name for every selectable customer (for set/per-avatar labels). */
+  avatarNames: Record<string, string>;
+  /** The FOCUS customer id (= avatarIds[0]); the portrait + moves are scoped to it. */
+  focusAvatarId: string | null;
+
   // ── Avatar (AvatarProfile) ──
   avatar: AvatarPortrait | null;
   avatarConfirmed: boolean;
@@ -97,12 +113,24 @@ export interface AnalyseRunHook {
   // ── Gap + Decision Trigger (GapDecisionTriggerPanel) ──
   trustGap: TrustGapView | null;
   decisionTrigger: DecisionTriggerView | null;
+  /** Per-customer gap/trigger breakdown for a multi-avatar set; null otherwise. */
+  gapPerAvatar: GapAvatarSummary[] | null;
 
   // ── Decision Board (DecisionBoard) ──
   moves: PositioningMove[];
   movesLoading: boolean;
   movesError: string | null;
   selectedMoveId: string | null;
+  /**
+   * The customer the current moves were generated FOR (set-aware labelling). Moves
+   * are an expensive generate over ONE confirmed (focus) customer — they are NOT
+   * fanned out to N generates; the board labels them with this customer and the
+   * user switches focus (the avatar chip) to generate moves for another. null until
+   * moves are generated; goes stale-aware when it differs from `focusAvatarId`.
+   */
+  movesAvatarId: string | null;
+  /** Display name for {@link movesAvatarId}; null when unknown / not yet generated. */
+  movesAvatarName: string | null;
 
   // ── Brief + claim gate (MoveBriefClaimGate) ──
   brief: BriefSlots | null;
@@ -121,7 +149,17 @@ export interface AnalyseRunHook {
 
 export function useAnalyseRun(): AnalyseRunHook {
   const { contextCard, provideContext } = useV4Context();
+  const { selectedAvatarId, contextAvatarIds, avatars } = useAvatarContext();
   const service = useMemo(() => new AnalyseService(), []);
+
+  // Name lookup for the per-customer gap/trigger summaries (multi-avatar set).
+  const avatarNames = useMemo(
+    () => Object.fromEntries((avatars ?? []).map((a) => [a.id, a.name])),
+    [avatars],
+  );
+  // A stable signature of the active customer SET — the build re-arms when the set
+  // changes (not only when the focus customer changes).
+  const loadKey = contextAvatarIds.join(',');
 
   const [steps, setSteps] = useState<AnalyseRunStep[]>(initialSteps);
   const [isRunning, setIsRunning] = useState(false);
@@ -133,11 +171,13 @@ export function useAnalyseRun(): AnalyseRunHook {
   const [avatarConfirmed, setAvatarConfirmed] = useState(false);
   const [trustGap, setTrustGap] = useState<TrustGapView | null>(null);
   const [decisionTrigger, setDecisionTrigger] = useState<DecisionTriggerView | null>(null);
+  const [gapPerAvatar, setGapPerAvatar] = useState<GapAvatarSummary[] | null>(null);
 
   const [moves, setMoves] = useState<PositioningMove[]>([]);
   const [movesLoading, setMovesLoading] = useState(false);
   const [movesError, setMovesError] = useState<string | null>(null);
   const [selectedMoveId, setSelectedMoveId] = useState<string | null>(null);
+  const [movesAvatarId, setMovesAvatarId] = useState<string | null>(null);
 
   const [brief, setBrief] = useState<BriefSlots | null>(null);
   const [claims, setClaims] = useState<ClaimGateItem[]>([]);
@@ -150,10 +190,38 @@ export function useAnalyseRun(): AnalyseRunHook {
       contextCard.some((s) => s.key === 'problem' && s.value),
     [contextCard],
   );
+  const hasAvatar = contextAvatarIds.length > 0;
 
   const setStep = useCallback((id: AnalyseStepId, patch: Partial<AnalyseRunStep>): void => {
     setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   }, []);
+
+  /**
+   * Re-arm the build-theatre when the active customer SET changes — a build is for
+   * the customer(s) it ran over, so switching the set must not leave a stale avatar
+   * / gap / moves / brief on screen for the prior selection. Keyed on `loadKey`
+   * (the set signature), not the focus id alone, so adding or removing a customer
+   * also resets. (Initial mount is a no-op over already-initial state.)
+   */
+  useEffect(() => {
+    setSteps(initialSteps());
+    setIsRunning(false);
+    setHasRun(false);
+    setNeedsInput(null);
+    setRunError(null);
+    setAvatar(null);
+    setAvatarConfirmed(false);
+    setTrustGap(null);
+    setDecisionTrigger(null);
+    setGapPerAvatar(null);
+    setMoves([]);
+    setMovesError(null);
+    setSelectedMoveId(null);
+    setMovesAvatarId(null);
+    setBrief(null);
+    setClaims([]);
+    setBriefError(null);
+  }, [loadKey]);
 
   /**
    * The auto-run build-theatre: build the avatar (deterministic, from the user's
@@ -169,6 +237,7 @@ export function useAnalyseRun(): AnalyseRunHook {
     setAvatarConfirmed(false);
     setTrustGap(null);
     setDecisionTrigger(null);
+    setGapPerAvatar(null);
     setSteps(initialSteps());
 
     try {
@@ -191,12 +260,19 @@ export function useAnalyseRun(): AnalyseRunHook {
       }
 
       // Step 2 — Trust Gap + Decision Trigger. Without real pillar scores (they
-      // live in the Diagnose stage) this honestly returns needs_input.
+      // live in the Diagnose stage) this honestly returns needs_input. Multi-avatar:
+      // when >1 customer is in the set, read the focus customer's gap with every
+      // customer's own headline gap/trigger attached (perAvatar) for the
+      // side-by-side; single-avatar uses the unchanged path (byte-identical).
       setStep('gap_trigger', { status: 'running' });
-      const gap = await service.getGapAndTrigger({ evidence: megaprompt });
+      const isMulti = contextAvatarIds.length > 1;
+      const gap: AnalyseResult<GapTriggerBundle> = isMulti
+        ? await service.getGapAndTriggerForSet(contextAvatarIds, avatarNames, { evidence: megaprompt })
+        : await service.getGapAndTrigger({ evidence: megaprompt });
       if (gap.status === 'ok') {
         setTrustGap(gap.data.trustGap);
         setDecisionTrigger(gap.data.decisionTrigger);
+        setGapPerAvatar(gap.data.perAvatar ?? null);
         setStep('gap_trigger', {
           status: 'done',
           finding: `Trust Gap ${gap.data.trustGap.overall}/100 — biggest opportunity: ${gap.data.trustGap.primaryGap}.`,
@@ -212,7 +288,7 @@ export function useAnalyseRun(): AnalyseRunHook {
       setIsRunning(false);
       setHasRun(true);
     }
-  }, [service, megaprompt, setStep]);
+  }, [service, megaprompt, setStep, contextAvatarIds, avatarNames]);
 
   const editAvatar = useCallback((field: keyof AvatarPortrait, value: string): void => {
     setAvatar((prev) => (prev ? { ...prev, [field]: value } : prev));
@@ -246,6 +322,12 @@ export function useAnalyseRun(): AnalyseRunHook {
     if (!avatar) return;
     setMovesLoading(true);
     setMovesError(null);
+    // Label which customer these moves are FOR. Moves are an expensive generate over
+    // the ONE confirmed (focus) customer — never fanned out to N generates; the
+    // board labels them with this customer and the user switches focus to generate
+    // moves for another. Captured at generate time so a later focus switch reads as
+    // stale (movesAvatarId !== focusAvatarId) rather than mislabelling.
+    setMovesAvatarId(selectedAvatarId);
     try {
       const result = await service.generatePositioningMoves(avatar, decisionTrigger);
       if (result.status === 'ok') {
@@ -260,7 +342,7 @@ export function useAnalyseRun(): AnalyseRunHook {
     } finally {
       setMovesLoading(false);
     }
-  }, [service, avatar, decisionTrigger]);
+  }, [service, avatar, decisionTrigger, selectedAvatarId]);
 
   /**
    * Expand the chosen move into the 7-slot brief, seeding the claim gate from the
@@ -296,6 +378,8 @@ export function useAnalyseRun(): AnalyseRunHook {
     );
   }, []);
 
+  const movesAvatarName = movesAvatarId ? (avatarNames[movesAvatarId] ?? null) : null;
+
   return {
     steps,
     isRunning,
@@ -303,14 +387,22 @@ export function useAnalyseRun(): AnalyseRunHook {
     needsInput,
     runError,
     hasContext,
+    hasAvatar,
+    loadKey,
+    avatarIds: contextAvatarIds,
+    avatarNames,
+    focusAvatarId: selectedAvatarId,
     avatar,
     avatarConfirmed,
     trustGap,
     decisionTrigger,
+    gapPerAvatar,
     moves,
     movesLoading,
     movesError,
     selectedMoveId,
+    movesAvatarId,
+    movesAvatarName,
     brief,
     claims,
     briefLoading,

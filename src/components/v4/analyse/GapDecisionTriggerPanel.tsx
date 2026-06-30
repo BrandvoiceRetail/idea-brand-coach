@@ -26,6 +26,7 @@ import {
   type AlphaEventProps,
 } from '@/lib/posthogClient';
 import type {
+  GapAvatarSummary,
   TrustGapView,
   TrustPillar,
   DecisionTriggerView,
@@ -59,6 +60,15 @@ export interface GapDecisionTriggerPanelProps {
   error?: string | null;
   /** Retry handler shown alongside the error state. */
   onRetry?: () => void;
+  /**
+   * Per-customer gap/lever breakdown when Analyse considers a multi-avatar SET.
+   * The `trustGap` / `trigger` above are the FOCUS customer's full read (the
+   * headline); this strip shows each customer's own gap + lever side-by-side. The
+   * gap is a number, so there is no honest aggregate — a customer not yet scored
+   * reads "not scored yet" (null fields are never filled with an invented number).
+   * Self-hides unless length > 1, so the single-avatar render is unchanged.
+   */
+  perAvatar?: GapAvatarSummary[];
 }
 
 /** Each IDEA pillar maps to its semantic token (no hardcoded hex). */
@@ -89,6 +99,7 @@ export function GapDecisionTriggerPanel({
   isLoading = false,
   error = null,
   onRetry,
+  perAvatar,
 }: GapDecisionTriggerPanelProps): JSX.Element {
   const hasData = Boolean(trustGap) || Boolean(trigger);
 
@@ -237,6 +248,65 @@ export function GapDecisionTriggerPanel({
             <p className="break-words text-sm text-foreground">{trigger.placementInstruction}</p>
           </div>
         </section>
+      )}
+
+      {/* Per-customer breakdown — only when Analyse considers a multi-avatar set.
+          The read above is the FOCUS customer's (the headline); the gap is a number,
+          so each customer's own gap + lever is shown side-by-side, never a fabricated
+          cross-customer aggregate. A customer not yet scored reads "not scored yet". */}
+      {perAvatar && perAvatar.length > 1 && (
+        <>
+          <Separator />
+          <section
+            className="rounded-md border border-border bg-muted/40 px-3 py-3"
+            data-testid="v4-gap-per-avatar"
+          >
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              Each customer&apos;s gap + lever
+            </p>
+            <ul className="flex flex-wrap gap-2">
+              {perAvatar.map((pa) => (
+                <li
+                  key={pa.avatarId}
+                  data-testid={`v4-gap-per-avatar-${pa.avatarId}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium"
+                >
+                  <span className="max-w-[10rem] truncate text-foreground" title={pa.avatarName}>
+                    {pa.avatarName}
+                  </span>
+                  <span aria-hidden className="opacity-50">
+                    ·
+                  </span>
+                  {pa.overall != null ? (
+                    <span className="font-semibold tabular-nums text-foreground">
+                      {pa.overall}/100
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">not scored yet</span>
+                  )}
+                  {pa.primaryGap && (
+                    <>
+                      <span aria-hidden className="opacity-50">
+                        ·
+                      </span>
+                      <span className={PILLAR_META[pa.primaryGap].tone}>
+                        {PILLAR_META[pa.primaryGap].label}
+                      </span>
+                    </>
+                  )}
+                  {pa.triggerType && (
+                    <>
+                      <span aria-hidden className="opacity-50">
+                        ·
+                      </span>
+                      <span className="text-idea-d">{pa.triggerType}</span>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
       )}
     </PanelShell>
   );

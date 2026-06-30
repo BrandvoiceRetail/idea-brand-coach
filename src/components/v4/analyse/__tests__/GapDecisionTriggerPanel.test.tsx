@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { GapDecisionTriggerPanel } from '../GapDecisionTriggerPanel';
 import { findTierViolations } from '@/lib/v4/megapromptParse';
-import type { TrustGapView, DecisionTriggerView } from '@/types/v4Analyse';
+import type {
+  GapAvatarSummary,
+  TrustGapView,
+  DecisionTriggerView,
+} from '@/types/v4Analyse';
 
 const captureAlphaEvent = vi.fn();
 vi.mock('@/lib/posthogClient', () => ({
@@ -71,6 +75,35 @@ describe('GapDecisionTriggerPanel', () => {
       trigger_type: 'Identity',
       state: 'data',
     }));
+  });
+
+  const PER_AVATAR: GapAvatarSummary[] = [
+    { avatarId: 'a1', avatarName: 'Maya', overall: 62, primaryGap: 'distinctive', triggerType: 'Identity' },
+    { avatarId: 'a2', avatarName: 'Rico', overall: 48, primaryGap: 'authentic', triggerType: 'Belonging' },
+    { avatarId: 'a3', avatarName: 'Unscored', overall: null, primaryGap: null, triggerType: null },
+  ];
+
+  it('renders a per-customer strip with the focus read as the headline for a multi-avatar set', () => {
+    render(<GapDecisionTriggerPanel trustGap={TRUST_GAP} trigger={TRIGGER} perAvatar={PER_AVATAR} />);
+    // Focus headline stays the single read.
+    expect(screen.getByTestId('v4-gap-trigger-trustgap')).toHaveTextContent('62');
+    const strip = screen.getByTestId('v4-gap-per-avatar');
+    expect(strip).toHaveTextContent('Maya');
+    expect(strip).toHaveTextContent('48/100');
+    expect(screen.getByTestId('v4-gap-per-avatar-a2')).toHaveTextContent('Belonging');
+    // Null fields are honest, never an invented number.
+    expect(screen.getByTestId('v4-gap-per-avatar-a3')).toHaveTextContent(/not scored yet/i);
+  });
+
+  it('hides the per-customer strip for a single-avatar set (byte-identical render)', () => {
+    render(
+      <GapDecisionTriggerPanel
+        trustGap={TRUST_GAP}
+        trigger={TRIGGER}
+        perAvatar={[PER_AVATAR[0]]}
+      />,
+    );
+    expect(screen.queryByTestId('v4-gap-per-avatar')).not.toBeInTheDocument();
   });
 
   it('leaks no Tier-C internals across any string it renders', () => {

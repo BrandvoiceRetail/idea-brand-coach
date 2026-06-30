@@ -144,6 +144,40 @@ export interface DecisionTriggerView {
   confidence: number;
 }
 
+/**
+ * One customer's headline gap/trigger in a multi-avatar Analyse set — the
+ * side-by-side row the panel shows beneath the focus customer's full read. Every
+ * field is null until that customer is actually scored (Trust Gap pillar scores
+ * live in the Diagnose stage); a number is NEVER invented to fill the column.
+ */
+export interface GapAvatarSummary {
+  avatarId: string;
+  avatarName: string;
+  /** Overall Trust Gap /100 for this customer; null when not yet scored. */
+  overall: number | null;
+  /** This customer's weakest pillar (their biggest opportunity); null when unscored. */
+  primaryGap: TrustPillar | null;
+  /** This customer's dominant Decision Trigger; null when none was derived. */
+  triggerType: DecisionTriggerType | null;
+}
+
+/**
+ * The gap + trigger read the Analyse panel renders. The single-avatar path
+ * carries just the focus read; a multi-avatar SET additionally attaches
+ * `perAvatar` — each selected customer's own headline gap/trigger — with the
+ * FOCUS customer's full read as the headline (`trustGap` / `decisionTrigger`).
+ * The gap is a number, so there is no honest aggregate across customers; the
+ * focus is the representative, never another customer's gap shown as the focus's.
+ */
+export interface GapTriggerBundle {
+  /** The focus customer's Trust Gap (the headline). */
+  trustGap: TrustGapView;
+  /** The focus customer's dominant Decision Trigger (null until derived). */
+  decisionTrigger: DecisionTriggerView | null;
+  /** Per-customer breakdown — present only for a multi-avatar SET (length > 1). */
+  perAvatar?: GapAvatarSummary[];
+}
+
 // ── Decision Board (positioning moves) ────────────────────────────────────────
 
 /** One criterion's score for a positioning move, with the rationale. */

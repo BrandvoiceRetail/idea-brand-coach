@@ -119,6 +119,50 @@ describe('DecisionBoard', () => {
     expect(screen.queryByTestId('move-bestfit-move-a')).not.toBeInTheDocument();
   });
 
+  it('labels the moves with the focus customer when >1 customer is in the set', () => {
+    render(
+      <DecisionBoard
+        moves={MOVES}
+        onChooseMove={vi.fn()}
+        avatarCount={2}
+        movesAvatarName="Maya"
+        focusAvatarName="Maya"
+      />,
+    );
+    const ctx = screen.getByTestId('v4-decision-board-set-context');
+    expect(ctx).toHaveTextContent(/Moves for/i);
+    expect(ctx).toHaveTextContent('Maya');
+  });
+
+  it('flags stale moves when the focus switched after generating', () => {
+    render(
+      <DecisionBoard
+        moves={MOVES}
+        onChooseMove={vi.fn()}
+        avatarCount={2}
+        movesAvatarName="Maya"
+        focusAvatarName="Rico"
+        movesStale
+      />,
+    );
+    const ctx = screen.getByTestId('v4-decision-board-set-context');
+    expect(ctx).toHaveTextContent(/regenerate/i);
+    expect(ctx).toHaveTextContent('Rico');
+  });
+
+  it('hides the set-context label for a single-avatar set (byte-identical render)', () => {
+    render(
+      <DecisionBoard
+        moves={MOVES}
+        onChooseMove={vi.fn()}
+        avatarCount={1}
+        movesAvatarName="Maya"
+        focusAvatarName="Maya"
+      />,
+    );
+    expect(screen.queryByTestId('v4-decision-board-set-context')).not.toBeInTheDocument();
+  });
+
   it('leaks no Tier-C internals in its rendered copy', () => {
     const { container } = render(<DecisionBoard moves={MOVES} onChooseMove={vi.fn()} />);
     expect(findTierViolations(container.textContent ?? '')).toEqual([]);

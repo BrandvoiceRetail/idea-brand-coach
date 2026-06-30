@@ -45,8 +45,20 @@ function weakestPillar(scores: DiagnosticScores): string {
 
 export default function V4Diagnose(): JSX.Element {
   const navigate = useNavigate();
-  const { selectedAvatarId, isLoadingAvatars } = useAvatarContext();
+  const { selectedAvatarId, contextAvatarIds, avatars, isLoadingAvatars } = useAvatarContext();
   const { diagnosticService } = useServices();
+
+  // The diagnostic is scored for the FOCUS avatar (the engine saves to it); these
+  // drive avatar-aware recap labels + the in-flow scope banner + telemetry so the
+  // Diagnose surface reflects the active customer SET, not just an unnamed run.
+  const avatarCount = contextAvatarIds.length;
+  const isMultiAvatar = avatarCount > 1;
+  const focusAvatarName = avatars?.find((a) => a.id === selectedAvatarId)?.name ?? null;
+  const avatarEnvelope = {
+    avatar_id: selectedAvatarId ?? undefined,
+    avatar_count: avatarCount,
+    is_multi_avatar: isMultiAvatar,
+  };
 
   // "Re-run" drops the user straight into the diagnostic for this visit, past the recap.
   const [forceRun, setForceRun] = useState(false);
@@ -82,11 +94,20 @@ export default function V4Diagnose(): JSX.Element {
 
   useEffect(() => {
     if (resolving) return;
-    captureAlphaEvent('v4_diagnose_stage_viewed', { placeholder: false });
+    captureAlphaEvent('v4_diagnose_stage_viewed', {
+      placeholder: false,
+      avatar_id: selectedAvatarId ?? undefined,
+      avatar_count: avatarCount,
+      is_multi_avatar: isMultiAvatar,
+    });
     if (alreadyDiagnosed && !forceRun) {
-      captureAlphaEvent('v4_diagnose_already_done', {});
+      captureAlphaEvent('v4_diagnose_already_done', {
+        avatar_id: selectedAvatarId ?? undefined,
+        avatar_count: avatarCount,
+        is_multi_avatar: isMultiAvatar,
+      });
     }
-  }, [resolving, alreadyDiagnosed, forceRun]);
+  }, [resolving, alreadyDiagnosed, forceRun, selectedAvatarId, avatarCount, isMultiAvatar]);
 
   // Hold a calm placeholder while resolving rather than flashing either surface.
   if (resolving) {
@@ -107,11 +128,11 @@ export default function V4Diagnose(): JSX.Element {
     const gap = weakestPillar(scores);
 
     const goFix = (): void => {
-      captureAlphaEvent('v4_diagnose_skip_to_fix', {});
+      captureAlphaEvent('v4_diagnose_skip_to_fix', { ...avatarEnvelope });
       navigate(V4_ROUTES.FIX);
     };
     const rerun = (): void => {
-      captureAlphaEvent('v4_diagnose_rerun', {});
+      captureAlphaEvent('v4_diagnose_rerun', { ...avatarEnvelope });
       setForceRun(true);
     };
 
@@ -121,7 +142,11 @@ export default function V4Diagnose(): JSX.Element {
           <Stethoscope className="h-7 w-7 text-gold-warm" />
           <div>
             <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Diagnose</h1>
-            <p className="text-muted-foreground">You&apos;ve already found your Trust Gap</p>
+            <p className="text-muted-foreground">
+              {focusAvatarName
+                ? `You've already found your Trust Gap for ${focusAvatarName}`
+                : "You've already found your Trust Gap"}
+            </p>
           </div>
         </header>
 
@@ -141,6 +166,12 @@ export default function V4Diagnose(): JSX.Element {
               No need to start over. Pick up where the diagnosis left off and turn it into the one
               change that closes the gap.
             </p>
+            {isMultiAvatar && focusAvatarName && (
+              <p className="text-xs text-muted-foreground" data-testid="v4-diagnose-set-note">
+                This score is for {focusAvatarName}, your focus customer — {avatarCount} customers are
+                in your analysis set. Switch customer to diagnose another.
+              </p>
+            )}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Button
                 type="button"
@@ -169,6 +200,22 @@ export default function V4Diagnose(): JSX.Element {
     );
   }
 
-  // First-time / re-running user → the Recognition-first diagnostic.
+  // First-time / re-running user → the Recognition-first diagnostic. In multi-avatar
+  // mode, name the customer being diagnosed so the run is never an unlabeled blur
+  // (the engine saves the result to the focus avatar).
+  if (isMultiAvatar && focusAvatarName) {
+    return (
+      <div className="space-y-3">
+        <div
+          className="mx-auto w-full max-w-[640px] rounded-lg border border-gold-warm/30 bg-gold-warm/10 px-4 py-2 text-sm text-foreground"
+          data-testid="v4-diagnose-set-context"
+        >
+          Diagnosing <span className="font-semibold">{focusAvatarName}</span> — your focus customer
+          of {avatarCount}. Switch customer to diagnose another.
+        </div>
+        <ProblemSolverDiagnostic showRecognition embedded />
+      </div>
+    );
+  }
   return <ProblemSolverDiagnostic showRecognition embedded />;
 }

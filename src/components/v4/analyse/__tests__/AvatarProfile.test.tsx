@@ -83,3 +83,19 @@ describe('AvatarProfile — restate, edit, confirm', () => {
     expect(screen.getByTestId('avatar-incomplete-hint')).toBeInTheDocument();
   });
 });
+
+describe('AvatarProfile — multi-avatar set context', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('shows a set-context header naming the focus customer when >1 customer is in the set', () => {
+    render(<AvatarProfile {...baseProps} focusAvatarName="Maya" avatarCount={3} />);
+    const header = screen.getByTestId('v4-avatar-set-context');
+    expect(header).toHaveTextContent('Maya');
+    expect(header).toHaveTextContent(/3 customers in analysis/i);
+  });
+
+  it('hides the set-context header for a single-avatar set (byte-identical render)', () => {
+    render(<AvatarProfile {...baseProps} focusAvatarName="Maya" avatarCount={1} />);
+    expect(screen.queryByTestId('v4-avatar-set-context')).not.toBeInTheDocument();
+  });
+});

@@ -54,6 +54,26 @@ export interface DecisionBoardProps {
   onRetry?: () => void;
   /** The move already selected (highlights its card). */
   selectedMoveId?: string | null;
+  /**
+   * Display name of the customer the current moves were generated FOR. Moves are an
+   * expensive generate over the ONE confirmed (focus) customer — never fanned out to
+   * N — so the board labels them with this customer; the user switches focus (the
+   * customer menu) to generate moves for another. null until moves are generated.
+   */
+  movesAvatarName?: string | null;
+  /** Display name of the CURRENT focus customer (for the staleness note). */
+  focusAvatarName?: string | null;
+  /**
+   * How many customers are in the active analysis SET. The set-context label only
+   * shows when > 1; at <= 1 the single-avatar render is byte-identical.
+   */
+  avatarCount?: number;
+  /**
+   * True when the shown moves were generated for a customer other than the current
+   * focus (focus switched after generating) — surfaces an honest "regenerate" note
+   * instead of silently mislabelling the moves.
+   */
+  movesStale?: boolean;
 }
 
 /**
@@ -116,6 +136,10 @@ export function DecisionBoard({
   error = null,
   onRetry,
   selectedMoveId = null,
+  movesAvatarName = null,
+  focusAvatarName = null,
+  avatarCount = 1,
+  movesStale = false,
 }: DecisionBoardProps): JSX.Element {
   const [compare, setCompare] = useState(false);
   const shownRef = useRef(false);
@@ -172,6 +196,29 @@ export function DecisionBoard({
           Each move is a distinctive angle to test. The scores are shown in full — the call is
           yours.
         </p>
+
+        {/* Set-context label — moves are generated for ONE focus customer (never
+            fanned out to N), so when the set has >1 customer the board names whose
+            moves these are and flags when the focus has since switched (stale). */}
+        {avatarCount > 1 && (hasMoves || movesAvatarName) && (
+          <p className="text-xs" data-testid="v4-decision-board-set-context">
+            {movesStale ? (
+              <span className="font-medium text-gold-warm">
+                These moves are for {movesAvatarName ?? 'another customer'} — not your current
+                focus{focusAvatarName ? `, ${focusAvatarName}` : ''}. Regenerate to score moves
+                for {focusAvatarName ?? 'this customer'}.
+              </span>
+            ) : (
+              <span className="text-muted-foreground">
+                Moves for{' '}
+                <span className="font-semibold text-foreground">
+                  {movesAvatarName ?? focusAvatarName}
+                </span>{' '}
+                · switch the customer menu to generate moves for another.
+              </span>
+            )}
+          </p>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-4">
