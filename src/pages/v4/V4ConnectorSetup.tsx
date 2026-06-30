@@ -148,8 +148,10 @@ function StepCard({ n, step }: { n: number; step: AddConnectorStep }): JSX.Eleme
         {n}
       </span>
       <div className="min-w-0 space-y-1">
-        <h3 className="text-sm font-semibold text-foreground">{step.title}</h3>
-        <p className="text-sm text-muted-foreground">{step.body}</p>
+        {/* text-background (the v4-chrome light ink) — text-foreground here is the
+            same dark as the bg-foreground panels, so the title was invisible. */}
+        <h3 className="text-sm font-semibold text-background">{step.title}</h3>
+        <p className="text-sm text-background/70">{step.body}</p>
       </div>
     </li>
   );

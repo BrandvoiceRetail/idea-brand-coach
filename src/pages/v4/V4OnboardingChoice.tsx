@@ -56,7 +56,9 @@ export default function V4OnboardingChoice(): JSX.Element {
   };
 
   return (
-    <div className="space-y-6">
+    // Vertically centre the short onboarding content on desktop so it isn't a card
+    // marooned at the top of a tall empty surface; mobile keeps natural top flow.
+    <div className="space-y-6 md:flex md:min-h-[68vh] md:flex-col md:justify-center">
       <header className="space-y-2">
         <span className="inline-flex items-center gap-2 rounded-full bg-gold-light px-3 py-1 text-xs font-semibold text-gold-warm">
           <Sparkles className="h-3.5 w-3.5" />

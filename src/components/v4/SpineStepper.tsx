@@ -49,7 +49,9 @@ export function SpineStepper(): JSX.Element {
                 >
                   {isDone ? <Check className="h-3 w-3" /> : i + 1}
                 </span>
-                {stage.label}
+                {/* Labels hidden on phones so all 5 beats fit at 375px without
+                    truncation; the bottom nav carries the labelled stages there. */}
+                <span className="hidden sm:inline">{stage.label}</span>
               </NavLink>
               {i < V4_SPINE.length - 1 && (
                 <span aria-hidden className="px-0.5 text-sm text-background/30">

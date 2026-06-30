@@ -444,7 +444,7 @@ export default function V4Fix(): JSX.Element {
                   data-testid="v4-fix-trial-banner"
                 >
                   <span className="text-foreground">
-                    Free trial: {pieceCount} of {FREE_TRIAL_PIECE_LIMIT} funnel piece. Iterate on it freely —
+                    Free trial: {FREE_TRIAL_PIECE_LIMIT} funnel piece to iterate on freely —
                     become a member to map and monitor your whole funnel.
                   </span>
                   <Button
