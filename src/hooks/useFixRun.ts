@@ -191,13 +191,16 @@ export function useFixRun(): FixRunHook {
 
     // Multi-avatar funnel analysis: when >1 customer is in the set, fetch the
     // weakest-link rollup across the set; single-avatar uses the unchanged path.
-    const piecesPromise =
-      contextAvatarIds.length > 1
-        ? service.getFunnelPiecesForSet(contextAvatarIds, avatarNames)
-        : service.getFunnelPieces(selectedAvatarId);
+    const isMulti = contextAvatarIds.length > 1;
+    const piecesPromise = isMulti
+      ? service.getFunnelPiecesForSet(contextAvatarIds, avatarNames)
+      : service.getFunnelPieces(selectedAvatarId);
+    const driftPromise = isMulti
+      ? service.getDriftForSet(contextAvatarIds)
+      : service.getDrift(selectedAvatarId);
     const [piecesRes, driftRes] = await Promise.all([
       piecesPromise,
-      service.getDrift(selectedAvatarId),
+      driftPromise,
       refreshTests(selectedAvatarId),
     ]);
 

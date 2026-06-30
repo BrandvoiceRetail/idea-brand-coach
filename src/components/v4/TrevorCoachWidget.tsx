@@ -98,16 +98,17 @@ export function TrevorCoachWidget(): JSX.Element {
   const [dragging, setDragging] = useState(false);
   const dragRef = useRef<{ startX: number; left0: number } | null>(null);
 
-  const { selectedAvatarId } = useAvatarContext();
+  const { selectedAvatarId, contextAvatarIds } = useAvatarContext();
   const avatarId = selectedAvatarId ?? undefined;
 
   // Session is auto-created by useChatSessions (autoCreate defaults true); useChat
   // loads + persists messages against it and runs the consultant edge function.
-  const { currentSessionId } = useChatSessions({ chatbotType: CHATBOT, avatarId });
+  const { currentSessionId } = useChatSessions({ chatbotType: CHATBOT, avatarId, avatarIds: contextAvatarIds });
   const { messages, sendMessage, isSending } = useChat({
     chatbotType: CHATBOT,
     sessionId: currentSessionId,
     avatarId,
+    avatarIds: contextAvatarIds,
   });
 
   // Reuse the in-app document pipeline for "Add files" (upload + status polling).

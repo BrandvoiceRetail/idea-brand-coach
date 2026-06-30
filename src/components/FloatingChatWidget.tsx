@@ -42,7 +42,7 @@ export function FloatingChatWidget({
 }: FloatingChatWidgetProps) {
   const { user } = useAuth();
   // Scope the chat to the current avatar (bleed firewall §2.1/§2.2).
-  const { currentAvatar } = useAvatarContext();
+  const { currentAvatar, contextAvatarIds } = useAvatarContext();
   const avatarId = currentAvatar?.id;
   const [isExpanded, setIsExpanded] = useState(false);
   const [isFullSize, setIsFullSize] = useState(false);
@@ -56,13 +56,14 @@ export function FloatingChatWidget({
     currentSessionId,
     isCreating,
     createNewChat,
-  } = useChatSessions({ chatbotType: 'idea-framework-consultant', avatarId });
+  } = useChatSessions({ chatbotType: 'idea-framework-consultant', avatarId, avatarIds: contextAvatarIds });
 
   // Chat hook - uses same session system as consultant page
   const { messages, sendMessage, isSending } = useChat({
     chatbotType: 'idea-framework-consultant',
     sessionId: currentSessionId,
     avatarId,
+    avatarIds: contextAvatarIds,
   });
 
   // System KB state (always enabled)
