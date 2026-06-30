@@ -51,7 +51,7 @@ import { V4_ROUTES } from '@/config/v4';
 import { FUNNEL_JOBS, METRIC_META, type MetricKey } from '@/config/v4Funnel';
 import { getTouchpoint, getStages } from '@/config/touchpointTaxonomy';
 import { DEFAULT_BRAND_TAGS } from '@/hooks/useFunnelTracker';
-import type { DataResult, FixLeak, MetricRange, PieceMetrics } from '@/types/v4Fix';
+import type { DataResult, FixLeak, FunnelPiece, MetricRange, PieceMetrics } from '@/types/v4Fix';
 import { captureAlphaEvent, type AlphaEventProps } from '@/lib/posthogClient';
 
 /** The Loop-3 sub-views this page switches between. */
@@ -81,6 +81,26 @@ function stageLabelFor(stageId: string): string {
 function parseBaseline(raw: string): number {
   const n = Number(raw.replace(/[^0-9.-]/g, ''));
   return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * The coach's suggested change for a piece — seeds "What will you change & why?"
+ * so the owner starts from the coach's read of this piece, not a blank box (or a
+ * placeholder). Status-aware, names the job metric, and never invents a number.
+ */
+function coachSuggestionFor(piece: FunnelPiece, label: string): string {
+  const metricLabel = METRIC_META[FUNNEL_JOBS[piece.stage].primaryMetrics[0]].label;
+  switch (piece.status) {
+    case 'doing_job':
+      return `${label} is doing its job — keep it as the control and test the leaks elsewhere.`;
+    case 'off_brand':
+      return `Rewrite ${label} so it sounds on-brand and carries the promise from the step before — expect ${metricLabel} to lift.`;
+    case 'missing':
+      return `Create ${label} so this step of the journey isn't a dead end, then put ${metricLabel} into a test.`;
+    case 'leaking':
+    default:
+      return `Rewrite ${label} to carry the promise from the step before so the message stays continuous — expect ${metricLabel} to lift.`;
+  }
 }
 
 export default function V4Fix(): JSX.Element {
@@ -191,10 +211,13 @@ export default function V4Fix(): JSX.Element {
   }, [hasAvatar, loadKey, load]);
 
   // Reset the fix form whenever the piece under fix changes (default the metric
-  // to that stage's primary job metric).
+  // to that stage's primary job metric). Pre-fill "what will you change?" with the
+  // coach's suggestion for THIS piece so the owner starts from the coach's read,
+  // not a blank box — they can edit it before generating the rewrite.
   useEffect(() => {
     if (!selectedPiece) return;
-    setHypothesis('');
+    const label = getTouchpoint(selectedPiece.touchpointId)?.label ?? selectedPiece.touchpointId;
+    setHypothesis(coachSuggestionFor(selectedPiece, label));
     setBaseline('');
     setMetric(FUNNEL_JOBS[selectedPiece.stage].primaryMetrics[0]);
   }, [selectedPiece]);
