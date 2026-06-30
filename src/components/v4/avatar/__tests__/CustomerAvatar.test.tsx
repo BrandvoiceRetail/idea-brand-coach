@@ -88,7 +88,7 @@ describe('summarizeAvatarSet', () => {
   const maya = mk('maya', 'Maya');
   const rico = mk('rico', 'Rico');
   it('summarises empty / single / multi sets', () => {
-    expect(summarizeAvatarSet([maya, rico], [])).toMatchObject({ count: 0, label: 'Select a customer' });
+    expect(summarizeAvatarSet([maya, rico], [])).toMatchObject({ count: 0, label: 'Select an avatar' });
     expect(summarizeAvatarSet([maya, rico], ['maya'])).toMatchObject({ count: 1, label: 'Maya', focusName: 'Maya' });
     expect(summarizeAvatarSet([maya, rico], ['maya', 'rico'])).toMatchObject({ count: 2, label: 'Maya +1' });
   });
@@ -106,7 +106,7 @@ describe('CustomerAvatarChip — trigger', () => {
     const trigger = screen.getByTestId('customer-avatar-chip');
     expect(trigger).toHaveTextContent('MA');
     expect(trigger).toHaveTextContent('Maya');
-    expect(trigger).toHaveAttribute('aria-label', 'Switch customer — currently Maya');
+    expect(trigger).toHaveAttribute('aria-label', 'Switch avatar — currently Maya');
   });
 
   it('full: multi-select shows "+N" label + count in the aria-label', () => {
@@ -116,7 +116,7 @@ describe('CustomerAvatarChip — trigger', () => {
     renderEl(<CustomerAvatarChip variant="full" />);
     const trigger = screen.getByTestId('customer-avatar-chip');
     expect(trigger).toHaveTextContent('Maya +1');
-    expect(trigger.getAttribute('aria-label')).toContain('2 customers');
+    expect(trigger.getAttribute('aria-label')).toContain('2 avatars');
   });
 
   it('compact: initials only, no label text', () => {
@@ -190,8 +190,8 @@ describe('CustomerAvatarMenu — multi-select + create', () => {
     renderEl(<CustomerAvatarChip variant="full" />);
 
     await user.click(screen.getByTestId('customer-avatar-chip'));
-    await user.click(await screen.findByText('New customer'));
-    const input = await screen.findByLabelText('New customer name');
+    await user.click(await screen.findByText('New avatar'));
+    const input = await screen.findByLabelText('New avatar name');
     await user.type(input, 'Nomad{Enter}');
 
     expect(createAvatarMock).toHaveBeenCalledWith({ name: 'Nomad' });

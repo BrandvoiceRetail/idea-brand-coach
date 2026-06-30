@@ -60,7 +60,7 @@ describe('DefendChecklist', () => {
     ];
     render(<DefendChecklist items={buildChecklist(1, false)} perAvatar={perAvatar} />);
     const strip = screen.getByTestId('v4-defend-per-avatar');
-    expect(strip).toHaveTextContent('Where each customer stands');
+    expect(strip).toHaveTextContent('Where each avatar stands');
     expect(screen.getByTestId('v4-defend-per-avatar-av2')).toHaveTextContent('1 drifted');
     expect(findTierViolations(strip.textContent ?? '')).toEqual([]);
   });

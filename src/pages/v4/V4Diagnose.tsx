@@ -168,8 +168,8 @@ export default function V4Diagnose(): JSX.Element {
             </p>
             {isMultiAvatar && focusAvatarName && (
               <p className="text-xs text-muted-foreground" data-testid="v4-diagnose-set-note">
-                This score is for {focusAvatarName}, your focus customer — {avatarCount} customers are
-                in your analysis set. Switch customer to diagnose another.
+                This score is for {focusAvatarName}, your focus avatar — {avatarCount} avatars are
+                in your analysis set. Switch avatar to diagnose another.
               </p>
             )}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -210,8 +210,8 @@ export default function V4Diagnose(): JSX.Element {
           className="mx-auto w-full max-w-[640px] rounded-lg border border-gold-warm/30 bg-gold-warm/10 px-4 py-2 text-sm text-foreground"
           data-testid="v4-diagnose-set-context"
         >
-          Diagnosing <span className="font-semibold">{focusAvatarName}</span> — your focus customer
-          of {avatarCount}. Switch customer to diagnose another.
+          Diagnosing <span className="font-semibold">{focusAvatarName}</span> — your focus avatar
+          of {avatarCount}. Switch avatar to diagnose another.
         </div>
         <ProblemSolverDiagnostic showRecognition embedded />
       </div>

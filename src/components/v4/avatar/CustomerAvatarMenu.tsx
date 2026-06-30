@@ -85,7 +85,7 @@ export function summarizeAvatarSet(
   const selected = contextAvatarIds
     .map((id) => list.find((a) => a.id === id))
     .filter((a): a is Avatar => Boolean(a));
-  if (selected.length === 0) return { label: 'Select a customer', focusName: '', count: 0 };
+  if (selected.length === 0) return { label: 'Select an avatar', focusName: '', count: 0 };
   const focusName = selected[0].name;
   if (selected.length === 1) return { label: focusName, focusName, count: 1 };
   return { label: `${focusName} +${selected.length - 1}`, focusName, count: selected.length };
@@ -256,7 +256,7 @@ export function CustomerAvatarMenu({
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent side={side} align={align} className="w-72" data-testid="customer-avatar-menu">
         <DropdownMenuLabel className="flex items-center justify-between gap-2 text-xs font-normal text-muted-foreground">
-          <span>Customers in funnel analysis</span>
+          <span>Avatars in funnel analysis</span>
           {selectedCount > 1 && (
             <span className="rounded-full bg-gold-warm/15 px-1.5 py-0.5 text-[10px] font-semibold text-gold-warm">
               {selectedCount} selected
@@ -270,8 +270,8 @@ export function CustomerAvatarMenu({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
-              placeholder="Search customers…"
-              aria-label="Search customers"
+              placeholder="Search avatars…"
+              aria-label="Search avatars"
               className="h-8"
             />
           </div>
@@ -284,7 +284,7 @@ export function CustomerAvatarMenu({
           </div>
         ) : filtered.length === 0 ? (
           <DropdownMenuItem disabled className="text-sm text-muted-foreground">
-            {customers.length === 0 ? 'No customers yet' : 'No customers match'}
+            {customers.length === 0 ? 'No avatars yet' : 'No avatars match'}
           </DropdownMenuItem>
         ) : (
           filtered.map((a) => {
@@ -421,8 +421,8 @@ export function CustomerAvatarMenu({
               if (draft.trim()) void commitCreate();
               else cancelEdit();
             }}
-            placeholder="New customer name…"
-            aria-label="New customer name"
+            placeholder="New avatar name…"
+            aria-label="New avatar name"
             className="mx-1 my-0.5 h-8"
           />
         ) : (
@@ -434,7 +434,7 @@ export function CustomerAvatarMenu({
             className="cursor-pointer gap-2 text-gold-warm focus:text-gold-warm"
           >
             <Plus className="h-4 w-4" />
-            <span>New customer</span>
+            <span>New avatar</span>
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
@@ -450,7 +450,7 @@ export function CustomerAvatarMenu({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
           <AlertDialogDescription>
-            Deleting this customer removes its portrait and all associated assessments. This cannot
+            Deleting this avatar removes its portrait and all associated assessments. This cannot
             be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -463,7 +463,7 @@ export function CustomerAvatarMenu({
               setDeleteTarget(null);
             }}
           >
-            Delete customer
+            Delete avatar
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

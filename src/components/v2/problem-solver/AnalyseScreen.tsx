@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ArrowRight, Loader2, CheckCircle2, Circle, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAvatarContext } from '@/contexts/AvatarContext';
 import { captureAlphaEvent } from '@/lib/posthogClient';
 import type { TrustGapInputScores } from '@/lib/trustGap';
 import { PS_COLORS } from './theme';
@@ -53,6 +54,7 @@ export function AnalyseScreen({
   onContinue,
   existingReport,
 }: AnalyseScreenProps): JSX.Element {
+  const { selectedAvatarId } = useAvatarContext();
   const [status, setStatus] = useState<RunStatus>(existingReport ? 'done' : 'idle');
   const [activeStep, setActiveStep] = useState(0);
   const startedRef = useRef(false);
@@ -70,7 +72,7 @@ export function AnalyseScreen({
 
     try {
       const { data, error } = await supabase.functions.invoke('run-forensic-analysis', {
-        body: { asin, self_report_scores: selfReport },
+        body: { asin, self_report_scores: selfReport, avatar_id: selectedAvatarId ?? null },
       });
 
       if (error || (data && typeof data === 'object' && (data as { ok?: boolean }).ok === false)) {

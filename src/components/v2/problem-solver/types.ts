@@ -11,6 +11,19 @@
 
 import type { TrustGapDimension, TrustGapInputScores } from '@/lib/trustGap';
 
+/**
+ * run-forensic-analysis request body (client → edge fn). The edge fn does NOT
+ * persist the diagnostic (the client does, already avatar-scoped); `avatar_id`
+ * is ADDITIVE + OPTIONAL — sent for server-side observability/forward-readiness
+ * only. An absent/null `avatar_id` behaves exactly as before.
+ */
+export interface ForensicRequestBody {
+  asin: string;
+  self_report_scores: TrustGapInputScores;
+  /** Focus avatar at run time (uuid) — observability only; null when none selected. */
+  avatar_id?: string | null;
+}
+
 /** Forensic pillar scores: each pillar 0-25, overall 0-100 (derived from the corpus). */
 export interface ForensicScores {
   insight: number;

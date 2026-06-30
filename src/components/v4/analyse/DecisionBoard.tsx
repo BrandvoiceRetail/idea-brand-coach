@@ -204,9 +204,9 @@ export function DecisionBoard({
           <p className="text-xs" data-testid="v4-decision-board-set-context">
             {movesStale ? (
               <span className="font-medium text-gold-warm">
-                These moves are for {movesAvatarName ?? 'another customer'} — not your current
+                These moves are for {movesAvatarName ?? 'another avatar'} — not your current
                 focus{focusAvatarName ? `, ${focusAvatarName}` : ''}. Regenerate to score moves
-                for {focusAvatarName ?? 'this customer'}.
+                for {focusAvatarName ?? 'this avatar'}.
               </span>
             ) : (
               <span className="text-muted-foreground">
@@ -214,7 +214,7 @@ export function DecisionBoard({
                 <span className="font-semibold text-foreground">
                   {movesAvatarName ?? focusAvatarName}
                 </span>{' '}
-                · switch the customer menu to generate moves for another.
+                · switch the avatar menu to generate moves for another.
               </span>
             )}
           </p>

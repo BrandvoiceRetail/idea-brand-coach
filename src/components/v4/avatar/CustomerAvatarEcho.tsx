@@ -18,8 +18,8 @@ export function CustomerAvatarEcho(): JSX.Element | null {
   const initials = avatarInitials(focusName || null);
   const ariaLabel =
     count > 1
-      ? `Funnel seen as ${count} customers, focus ${focusName} — switch customer`
-      : `Seeing the funnel as ${label} — switch customer`;
+      ? `Funnel seen as ${count} avatars, focus ${focusName} — switch avatar`
+      : `Seeing the funnel as ${label} — switch avatar`;
 
   const trigger = (
     <button

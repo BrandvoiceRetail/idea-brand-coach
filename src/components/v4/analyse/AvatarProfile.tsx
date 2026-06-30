@@ -106,9 +106,9 @@ function SetContextHeader({
     >
       Viewing{' '}
       <span className="font-semibold text-foreground">
-        {focusAvatarName ?? 'your focus customer'}
+        {focusAvatarName ?? 'your focus avatar'}
       </span>{' '}
-      · {avatarCount} customers in analysis — switch via the customer menu.
+      · {avatarCount} avatars in analysis — switch via the avatar menu.
     </div>
   );
 }

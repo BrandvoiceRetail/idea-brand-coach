@@ -45,7 +45,7 @@ export interface DefendPerAvatarStripProps {
 
 export function DefendPerAvatarStrip({
   perAvatar,
-  caption = 'How it lands per customer',
+  caption = 'How it lands per avatar',
 }: DefendPerAvatarStripProps): JSX.Element | null {
   if (perAvatar.length <= 1) return null;
   return (

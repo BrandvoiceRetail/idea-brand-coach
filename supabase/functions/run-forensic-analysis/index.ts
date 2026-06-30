@@ -48,6 +48,8 @@ const CLAUDE_API_URL = "https://api.anthropic.com/v1/messages";
 const SONNET_MODEL = "claude-sonnet-4-6";
 
 const ASIN_PATTERN = /^[A-Z0-9]{10}$/i;
+/** Shape guard for the optional, observability-only avatar_id (a uuid). */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Trust Gap evidence caps — mirror SupabaseProductDataService. */
 const TRUST_GAP_MAX_REVIEWS = 12;
@@ -96,6 +98,8 @@ interface CustomerProfile {
 interface ForensicRequest {
   asin?: unknown;
   self_report_scores?: unknown;
+  /** Optional focus-avatar uuid — observability/forward-readiness only; never persisted here. */
+  avatar_id?: unknown;
 }
 
 /** A listing row in the shared TrustGapEvidence shape. */
@@ -541,6 +545,13 @@ serve(async (req) => {
     }
     const asin = asinRaw.toUpperCase();
     const selfReport = parseSelfReport(body?.self_report_scores);
+    // ADDITIVE + OPTIONAL: focus avatar at run time. Shape-only validation (a
+    // uuid-shaped string, else null — malformed is ignored). Used ONLY for
+    // server-side observability below; never persisted, never alters scoring or
+    // the response. A uuid carries no PII, so it is safe to log.
+    const avatarId = typeof body?.avatar_id === "string" && UUID_PATTERN.test(body.avatar_id)
+      ? body.avatar_id
+      : null;
 
     // Service-role client for the internal import + the scoped read-back.
     const admin = createClient(supabaseUrl, serviceRoleKey);
@@ -677,7 +688,7 @@ serve(async (req) => {
     }
 
     console.log(
-      `[run-forensic-analysis] ok asin=${asin} reviews=${reviewCount} thin=${thinCorpus} gap=${primaryGap} emailed=${emailed} notes=${notes.length}`,
+      `[run-forensic-analysis] ok asin=${asin} avatar=${avatarId ?? "none"} reviews=${reviewCount} thin=${thinCorpus} gap=${primaryGap} emailed=${emailed} notes=${notes.length}`,
     );
 
     return jsonResponse({

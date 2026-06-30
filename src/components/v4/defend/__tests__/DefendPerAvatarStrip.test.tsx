@@ -45,10 +45,10 @@ describe('DefendPerAvatarStrip', () => {
 
   it('honours a custom caption and leaks no Tier-C vocabulary', () => {
     render(
-      <DefendPerAvatarStrip perAvatar={[holding, drifted]} caption="Where each customer stands" />,
+      <DefendPerAvatarStrip perAvatar={[holding, drifted]} caption="Where each avatar stands" />,
     );
     const strip = screen.getByTestId('v4-defend-per-avatar');
-    expect(strip).toHaveTextContent('Where each customer stands');
+    expect(strip).toHaveTextContent('Where each avatar stands');
     expect(findTierViolations(strip.textContent ?? '')).toEqual([]);
   });
 });

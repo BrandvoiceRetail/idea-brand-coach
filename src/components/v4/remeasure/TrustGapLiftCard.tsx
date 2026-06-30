@@ -200,7 +200,7 @@ export function TrustGapLiftCard({
           data-testid="v4-lift-per-avatar"
         >
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Each customer&apos;s lift
+            Each avatar&apos;s lift
           </p>
           <ul className="flex flex-wrap gap-2">
             {lift.perAvatar.map((pa) => (

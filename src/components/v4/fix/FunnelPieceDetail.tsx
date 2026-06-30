@@ -220,7 +220,7 @@ export function FunnelPieceDetail({
           data-testid="funnel-piece-per-avatar"
         >
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            How it lands per customer
+            How it lands per avatar
           </p>
           <ul className="flex flex-wrap gap-2">
             {piece.perAvatar.map((pv) => (

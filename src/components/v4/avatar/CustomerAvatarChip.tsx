@@ -23,8 +23,8 @@ export function CustomerAvatarChip({ variant = 'full' }: CustomerAvatarChipProps
   const initials = avatarInitials(focusName || null);
   const ariaLabel =
     count > 1
-      ? `Switch customer — ${count} customers in the funnel analysis, focus ${focusName}`
-      : `Switch customer — currently ${label}`;
+      ? `Switch avatar — ${count} avatars in the funnel analysis, focus ${focusName}`
+      : `Switch avatar — currently ${label}`;
 
   const trigger = (
     <button

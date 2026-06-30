@@ -91,11 +91,11 @@ export default function V4Defend(): JSX.Element {
     }
   }, [hasAvatar, loadKey, load]);
 
-  // A set export is deferred — the workbook banks the FOCUS customer only. Show an
-  // honest scope note when Defend covers >1 customer; never imply a per-customer set.
+  // A set export is deferred — the workbook banks the FOCUS avatar only. Show an
+  // honest scope note when Defend covers >1 avatar; never imply a per-avatar set.
   const isMulti = (status?.perAvatar?.length ?? 0) > 1;
   const focusOnlyNote = isMulti
-    ? `This banks your focus customer${avatarName ? `, ${avatarName}` : ''} for now — per-customer workbooks are coming.`
+    ? `This banks your focus avatar${avatarName ? `, ${avatarName}` : ''} for now — per-avatar workbooks are coming.`
     : null;
 
   const handleExport = (): void => {

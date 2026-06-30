@@ -159,7 +159,7 @@ export function DefendChecklist({
           );
         })}
       </ul>
-      <DefendPerAvatarStrip perAvatar={perAvatar} caption="Where each customer stands" />
+      <DefendPerAvatarStrip perAvatar={perAvatar} caption="Where each avatar stands" />
     </Shell>
   );
 }

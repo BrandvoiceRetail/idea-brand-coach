@@ -91,7 +91,7 @@ describe('AvatarProfile — multi-avatar set context', () => {
     render(<AvatarProfile {...baseProps} focusAvatarName="Maya" avatarCount={3} />);
     const header = screen.getByTestId('v4-avatar-set-context');
     expect(header).toHaveTextContent('Maya');
-    expect(header).toHaveTextContent(/3 customers in analysis/i);
+    expect(header).toHaveTextContent(/3 avatars in analysis/i);
   });
 
   it('hides the set-context header for a single-avatar set (byte-identical render)', () => {
