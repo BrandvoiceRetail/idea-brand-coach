@@ -294,7 +294,8 @@ export default function V5Alpha(): JSX.Element {
   }, [express]);
 
   useEffect(() => {
-    if (phase !== 'building' || paused) return;
+    if (phase !== 'building') return;
+    if (paused && !skipAll) return; // skip overrides a pause
     if (shownBeats >= BEAT_ORDER.length) return;
     if (!beats[shownBeats]) return; // that stage has not really computed yet
     if (express || skipAll) {
@@ -515,7 +516,11 @@ export default function V5Alpha(): JSX.Element {
           coSignDisabled={coSigning}
           paused={paused}
           onTogglePause={() => setPaused((p) => !p)}
-          onSkip={() => setSkipAll(true)}
+          onSkip={() => {
+            setSkipAll(true);
+            setPaused(false);
+          }}
+          skipArmed={skipAll}
           reducedMotion={reducedMotion}
           onNext={revealNext}
         />

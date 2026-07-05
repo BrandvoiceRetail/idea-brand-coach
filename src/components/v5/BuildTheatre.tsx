@@ -31,6 +31,8 @@ export interface BuildTheatreProps {
   paused: boolean;
   onTogglePause: () => void;
   onSkip: () => void;
+  /** Skip has been pressed: pacing is over, beats reveal the moment they compute. */
+  skipArmed: boolean;
   reducedMotion: boolean;
   onNext: () => void;
 }
@@ -50,6 +52,7 @@ export function BuildTheatre({
   paused,
   onTogglePause,
   onSkip,
+  skipArmed,
   reducedMotion,
   onNext,
 }: BuildTheatreProps): JSX.Element {
@@ -94,7 +97,9 @@ export function BuildTheatre({
       {waitingOnEngine && (
         <div className="mb-6 flex items-center gap-2.5 text-sm text-muted-foreground" role="status">
           <Loader2 className="h-4 w-4 animate-spin text-gold-warm" />
-          Still reading your reviews. The next part appears the moment it is ready.
+          {skipArmed
+            ? 'Skipping ahead. I am still reading your reviews, each part appears the moment it is ready.'
+            : 'Still reading your reviews. The next part appears the moment it is ready.'}
         </div>
       )}
 
@@ -113,7 +118,7 @@ export function BuildTheatre({
       {/* Co-sign */}
       {showCoSign && <CoSignPanel read={coSignRead} onAnswer={onCoSign} disabled={coSignDisabled} />}
 
-      {!runError && !showCoSign && (
+      {!runError && !showCoSign && !skipArmed && (
         <StageControls
           paused={paused}
           onTogglePause={onTogglePause}
