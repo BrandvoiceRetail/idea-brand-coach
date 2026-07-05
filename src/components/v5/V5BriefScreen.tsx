@@ -20,6 +20,10 @@ export interface V5BriefScreenProps {
   error: string | null;
   /** The engine's honest "I still need…" demand (null = none). */
   needsInput: NeedsInputItem[] | null;
+  /** Skill-10 Component A — context paragraph addressed to the designer (null = omit). */
+  designerContext: string | null;
+  /** Skill-10 Component D — the do-this-first placement instruction (null = omit). */
+  placement: string | null;
   onConfirmClaim: (claim: ClaimGateItem, index: number) => void;
   onExport: () => void;
   onRetry: () => void;
@@ -33,6 +37,8 @@ export function V5BriefScreen({
   isLoading,
   error,
   needsInput,
+  designerContext,
+  placement,
   onConfirmClaim,
   onExport,
   onRetry,
@@ -70,15 +76,33 @@ export function V5BriefScreen({
           </Button>
         </GlassPanel>
       ) : (
-        <MoveBriefClaimGate
-          brief={brief}
-          claims={claims}
-          onConfirmClaim={onConfirmClaim}
-          onExport={onExport}
-          isLoading={isLoading}
-          error={error}
-          onRetry={onRetry}
-        />
+        <>
+          {brief && !isLoading && !error && designerContext && (
+            <GlassPanel className="mb-5 p-6">
+              <div className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-gold-warm">
+                For your designer
+              </div>
+              <p className="text-sm leading-relaxed text-foreground/85">{designerContext}</p>
+            </GlassPanel>
+          )}
+          <MoveBriefClaimGate
+            brief={brief}
+            claims={claims}
+            onConfirmClaim={onConfirmClaim}
+            onExport={onExport}
+            isLoading={isLoading}
+            error={error}
+            onRetry={onRetry}
+          />
+          {brief && !isLoading && !error && placement && (
+            <GlassPanel className="mt-5 p-6">
+              <div className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-gold-warm">
+                Where to start
+              </div>
+              <p className="text-sm leading-relaxed text-foreground/85">{placement}</p>
+            </GlassPanel>
+          )}
+        </>
       )}
 
       <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">

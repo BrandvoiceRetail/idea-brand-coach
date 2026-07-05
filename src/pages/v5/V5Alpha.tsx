@@ -33,7 +33,7 @@ import { CorpusFetch } from '@/components/v5/CorpusFetch';
 import { BuildTheatre } from '@/components/v5/BuildTheatre';
 import { ResultsScreen } from '@/components/v5/ResultsScreen';
 import { V5BriefScreen } from '@/components/v5/V5BriefScreen';
-import { briefToText } from '@/components/v5/briefExport';
+import { briefToText, composeDesignerFrames } from '@/components/v5/briefExport';
 import { SaveNext } from '@/components/v5/SaveNext';
 import { ColdStart } from '@/components/v5/ColdStart';
 import { GlassEyebrow } from '@/components/v2/problem-solver/glass';
@@ -41,6 +41,7 @@ import { BEAT_ORDER, buildBeat, buildCoSignRead, type StageContents } from '@/co
 import {
   isForensicReport,
   mapTrigger,
+  normalizeProfile,
   type V5DecisionTrigger,
   type V5ForensicReport,
 } from '@/components/v5/forensicReport';
@@ -409,9 +410,22 @@ export default function V5Alpha(): JSX.Element {
     );
   }, []);
 
+  // Skill-10 frames (Component A context + Component D placement) — composed
+  // deterministically from the diagnostic; null (and omitted) on pasted-voice
+  // runs that carry no forensic report.
+  const designerFrames = useMemo(
+    () =>
+      composeDesignerFrames(report ? normalizeProfile(report.customer_profile) : null, trigger),
+    [report, trigger],
+  );
+
   const handleExportBrief = useCallback((): void => {
     if (!brief) return;
-    const text = briefToText({ ...brief, claimGate: claims }, listingTitle ?? asin ?? 'your listing');
+    const text = briefToText(
+      { ...brief, claimGate: claims },
+      listingTitle ?? asin ?? 'your listing',
+      designerFrames,
+    );
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -419,7 +433,7 @@ export default function V5Alpha(): JSX.Element {
     a.download = 'design-brief.txt';
     a.click();
     URL.revokeObjectURL(url);
-  }, [brief, claims, listingTitle, asin]);
+  }, [brief, claims, listingTitle, asin, designerFrames]);
 
   // ── Save & next ──────────────────────────────────────────────────────────────
   const goSave = useCallback(async (): Promise<void> => {
@@ -564,6 +578,8 @@ export default function V5Alpha(): JSX.Element {
           isLoading={briefLoading}
           error={briefError}
           needsInput={briefNeedsInput}
+          designerContext={designerFrames.context}
+          placement={designerFrames.placement}
           onConfirmClaim={handleConfirmClaim}
           onExport={handleExportBrief}
           onRetry={() => void loadBrief()}
