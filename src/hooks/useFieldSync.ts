@@ -4,7 +4,7 @@
  * Provides type-safe field persistence with background sync to Supabase
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { getFieldSyncService, DEFAULT_FIELD_SYNC_CONFIG } from '@/lib/sync/FieldSyncService';
@@ -156,8 +156,15 @@ export function useFieldSync<T>({
   serialize = defaultSerialize,
   deserialize
 }: UseFieldSyncConfig<T>): UseFieldSyncReturn<T> {
-  // Create deserialize function with defaultValue bound if not provided
-  const deserializeFn = deserialize || createDefaultDeserialize(defaultValue);
+  // Create deserialize function with defaultValue bound if not provided.
+  // MEMOIZED: a fresh function identity here churns loadInitialValue's useCallback,
+  // whose mount effect then re-runs on every render — an infinite fetch loop for any
+  // consumer without a custom deserialize (observed: V4ContextStore hammering
+  // user_knowledge_base ~18 req/s for every fresh session).
+  const deserializeFn = useMemo(
+    () => deserialize || createDefaultDeserialize(defaultValue),
+    [deserialize, defaultValue],
+  );
   const [value, setValue] = useState<T>(defaultValue);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('synced');
   const [isLoading, setIsLoading] = useState<boolean>(true);

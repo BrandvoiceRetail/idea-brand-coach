@@ -71,6 +71,7 @@ import V4Fix from "./pages/v4/V4Fix";
 import V4Remeasure from "./pages/v4/V4Remeasure";
 import V4Defend from "./pages/v4/V4Defend";
 import V4Tools from "./pages/v4/V4Tools";
+import V5Alpha from "./pages/v5/V5Alpha";
 import { V4_ROUTES } from "@/config/v4";
 // Initialise analytics before the React tree mounts so the auth listener can
 // identify the user as soon as a session arrives. No-op when no key is set.
@@ -193,6 +194,12 @@ const App = () => {
                 {/* /v4/tools — standalone trust-signals tool registry (own dark theme,
                     intentionally outside V4Layout so it reads as a public trust page). */}
                 <Route path="/v4/tools" element={<V4Tools />} />
+
+                {/* /v5 — nav-less Avatar 2.0 build theatre alpha. PUBLIC route:
+                    the page creates an anonymous Supabase session on demand and
+                    converts it at the save step, so it must NOT be wrapped in
+                    RequireAuth. */}
+                <Route path="/v5" element={<ErrorBoundary><V5Alpha /></ErrorBoundary>} />
 
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
