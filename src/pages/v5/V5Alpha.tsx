@@ -419,21 +419,58 @@ export default function V5Alpha(): JSX.Element {
     [report, trigger],
   );
 
+  // One composed brief text feeds every share path (download, copy, share sheet)
+  // so the designer always receives the same complete document.
+  const shareText = useMemo(
+    () =>
+      brief
+        ? briefToText({ ...brief, claimGate: claims }, listingTitle ?? asin ?? 'your listing', designerFrames)
+        : null,
+    [brief, claims, listingTitle, asin, designerFrames],
+  );
+
   const handleExportBrief = useCallback((): void => {
-    if (!brief) return;
-    const text = briefToText(
-      { ...brief, claimGate: claims },
-      listingTitle ?? asin ?? 'your listing',
-      designerFrames,
-    );
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    if (!shareText) return;
+    const blob = new Blob([shareText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'design-brief.txt';
     a.click();
     URL.revokeObjectURL(url);
-  }, [brief, claims, listingTitle, asin, designerFrames]);
+    captureAlphaEvent('v5_brief_shared', { method: 'download' });
+  }, [shareText]);
+
+  const handleCopyBrief = useCallback(async (): Promise<void> => {
+    if (!shareText) return;
+    try {
+      await navigator.clipboard.writeText(shareText);
+      toast.success('Brief copied. Paste it straight to your designer or VA.');
+      captureAlphaEvent('v5_brief_shared', { method: 'copy' });
+    } catch (e) {
+      console.error('[V5Alpha] copy brief failed:', e);
+      toast.error('Could not copy. Use Export instead.');
+    }
+  }, [shareText]);
+
+  // Native share sheet (mobile). Null when the browser has no share support so
+  // the button never renders as a dead end.
+  const handleNativeShare = useMemo(() => {
+    if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return null;
+    return async (): Promise<void> => {
+      if (!shareText) return;
+      try {
+        await navigator.share({ title: 'Design brief', text: shareText });
+        captureAlphaEvent('v5_brief_shared', { method: 'native' });
+      } catch (e) {
+        // AbortError = the user closed the sheet; not an error worth surfacing.
+        if (e instanceof Error && e.name !== 'AbortError') {
+          console.error('[V5Alpha] native share failed:', e);
+          toast.error('Sharing failed. Copy the brief instead.');
+        }
+      }
+    };
+  }, [shareText]);
 
   // ── Save & next ──────────────────────────────────────────────────────────────
   const goSave = useCallback(async (): Promise<void> => {
@@ -582,6 +619,8 @@ export default function V5Alpha(): JSX.Element {
           placement={designerFrames.placement}
           onConfirmClaim={handleConfirmClaim}
           onExport={handleExportBrief}
+          onCopy={() => void handleCopyBrief()}
+          onNativeShare={handleNativeShare ? () => void handleNativeShare() : null}
           onRetry={() => void loadBrief()}
           onContinue={() => void goSave()}
           onBack={() => setPhase(report ? 'results' : 'building')}

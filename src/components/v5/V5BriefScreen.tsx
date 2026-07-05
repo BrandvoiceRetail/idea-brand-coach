@@ -26,6 +26,10 @@ export interface V5BriefScreenProps {
   placement: string | null;
   onConfirmClaim: (claim: ClaimGateItem, index: number) => void;
   onExport: () => void;
+  /** Copies the full brief text so it pastes straight into an email or message. */
+  onCopy: () => void;
+  /** Opens the native share sheet; null when the browser has no share support. */
+  onNativeShare: (() => void) | null;
   onRetry: () => void;
   onContinue: () => void;
   onBack: () => void;
@@ -41,6 +45,8 @@ export function V5BriefScreen({
   placement,
   onConfirmClaim,
   onExport,
+  onCopy,
+  onNativeShare,
   onRetry,
   onContinue,
   onBack,
@@ -101,6 +107,28 @@ export function V5BriefScreen({
               </div>
               <p className="text-sm leading-relaxed text-foreground/85">{placement}</p>
             </GlassPanel>
+          )}
+          {brief && !isLoading && !error && (
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 rounded-xl px-5 font-semibold"
+                onClick={onCopy}
+              >
+                ⧉ Copy for your designer
+              </Button>
+              {onNativeShare && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 rounded-xl px-5 font-semibold"
+                  onClick={onNativeShare}
+                >
+                  Share →
+                </Button>
+              )}
+            </div>
           )}
         </>
       )}

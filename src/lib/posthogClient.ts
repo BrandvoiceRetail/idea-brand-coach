@@ -249,6 +249,7 @@ export type AlphaEventName =
   | 'v5_cosign_confirmed'
   | 'v5_results_viewed'
   | 'v5_brief_viewed'
+  | 'v5_brief_shared'
   | 'v5_saved'
   | 'v5_coldstart_shown'
   | 'v5_express_run';
