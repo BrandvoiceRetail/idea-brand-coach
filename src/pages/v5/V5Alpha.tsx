@@ -512,11 +512,15 @@ export default function V5Alpha(): JSX.Element {
     }
   }, [productService]);
 
-  const handleSaveEmail = useCallback(async (email: string): Promise<void> => {
+  // Converts the anonymous session into a real account in one step: the
+  // password applies immediately, the email goes out for confirmation. With
+  // both set the account works from any device (email-only conversions left
+  // the user with no way back in except a password reset).
+  const handleSaveEmail = useCallback(async (email: string, password: string): Promise<void> => {
     setIsSaving(true);
     setSaveError(null);
     try {
-      const { error } = await supabase.auth.updateUser({ email });
+      const { error } = await supabase.auth.updateUser({ email, password });
       if (error) {
         setSaveError(error.message);
         captureAlphaEvent('v5_saved', { ok: false });
@@ -659,7 +663,8 @@ export default function V5Alpha(): JSX.Element {
           saved={saved}
           saveError={saveError}
           isSaving={isSaving}
-          onSaveEmail={(email) => void handleSaveEmail(email)}
+          onSaveEmail={(email, password) => void handleSaveEmail(email, password)}
+          onBack={() => setPhase('brief')}
           otherProducts={otherProducts}
           onExpressRun={handleExpressRun}
           onStartOver={() => {

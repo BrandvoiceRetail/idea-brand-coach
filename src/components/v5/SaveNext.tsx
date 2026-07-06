@@ -15,18 +15,22 @@ import type { ImportedProduct } from '@/services/interfaces/IProductDataService'
 import { V5Stage } from './V5Chrome';
 
 export interface SaveNextProps {
-  /** True when the session is anonymous (show the email save ask). */
+  /** True when the session is anonymous (show the sign-up save ask). */
   isAnonymous: boolean;
   /** True after the confirmation email went out. */
   saved: boolean;
   saveError: string | null;
   isSaving: boolean;
-  onSaveEmail: (email: string) => void;
+  onSaveEmail: (email: string, password: string) => void;
   /** The seller's other imported listings (current one excluded). */
   otherProducts: ImportedProduct[];
   onExpressRun: (asin: string, title: string | null) => void;
   onStartOver: () => void;
+  /** Back to the brief screen (the step before this one). */
+  onBack: () => void;
 }
+
+const PASSWORD_MIN_LENGTH = 8;
 
 export function SaveNext({
   isAnonymous,
@@ -37,9 +41,13 @@ export function SaveNext({
   otherProducts,
   onExpressRun,
   onStartOver,
+  onBack,
 }: SaveNextProps): JSX.Element {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const passwordLooksValid = password.length >= PASSWORD_MIN_LENGTH;
+  const canSave = emailLooksValid && passwordLooksValid && !isSaving;
 
   // Honest stakes: "saved" may only be claimed once it is durable. An anonymous
   // session lives and dies with this browser, so say exactly that until the
@@ -55,7 +63,7 @@ export function SaveNext({
         </h1>
         <p className="mt-2 text-[15px] text-muted-foreground">
           {atRisk
-            ? 'Clear your cookies or switch devices and it is gone. Your email below keeps it safe.'
+            ? 'Clear your cookies or switch devices and it is gone. Your free account below keeps it safe.'
             : 'One fix, one score, one brief, waiting for you whenever you need it.'}
         </p>
       </div>
@@ -68,31 +76,42 @@ export function SaveNext({
         {atRisk ? (
           <>
             <div className="mb-3.5 text-[15px] font-extrabold text-foreground">
-              Give me your email and I will keep your profile, score and brief safe. That is your
-              free account, no password.
+              Create your free account and I will keep your profile, score and brief safe. Sign in
+              from any device, nothing to redo.
             </div>
-            <div className="flex flex-col gap-2.5 sm:flex-row">
+            <div className="flex flex-col gap-2.5">
               <input
                 type="email"
-                className="flex-1 rounded-xl border border-border bg-foreground/[0.04] px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-gold-warm/50"
+                className="rounded-xl border border-border bg-foreground/[0.04] px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-gold-warm/50"
                 placeholder="you@yourbrand.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && emailLooksValid) onSaveEmail(email.trim());
-                }}
                 aria-label="Your email address"
                 disabled={isSaving}
               />
-              <Button
-                type="button"
-                variant="brand"
-                className="min-h-11 rounded-xl font-extrabold"
-                disabled={!emailLooksValid || isSaving}
-                onClick={() => onSaveEmail(email.trim())}
-              >
-                {isSaving ? 'Saving…' : 'Save my work →'}
-              </Button>
+              <div className="flex flex-col gap-2.5 sm:flex-row">
+                <input
+                  type="password"
+                  className="flex-1 rounded-xl border border-border bg-foreground/[0.04] px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-gold-warm/50"
+                  placeholder={`Choose a password (${PASSWORD_MIN_LENGTH}+ characters)`}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && canSave) onSaveEmail(email.trim(), password);
+                  }}
+                  aria-label="Choose a password"
+                  disabled={isSaving}
+                />
+                <Button
+                  type="button"
+                  variant="brand"
+                  className="min-h-11 rounded-xl font-extrabold"
+                  disabled={!canSave}
+                  onClick={() => onSaveEmail(email.trim(), password)}
+                >
+                  {isSaving ? 'Saving…' : 'Save my work →'}
+                </Button>
+              </div>
             </div>
             {saveError && <p className="mt-2 text-sm text-destructive">{saveError}</p>}
             <p className="mt-2.5 text-xs text-muted-foreground">
@@ -102,7 +121,7 @@ export function SaveNext({
         ) : (
           <p className="text-sm leading-relaxed text-foreground/85">
             {saved
-              ? 'Check your inbox to confirm. Your work is saved to your account.'
+              ? 'Check your inbox to confirm your email. Then sign in from any device with your email and password.'
               : 'Your work is saved to your account. Come back any time; nothing to redo.'}
           </p>
         )}
@@ -151,7 +170,10 @@ export function SaveNext({
         </p>
       </GlassPanel>
 
-      <div className="text-center">
+      <div className="flex flex-wrap items-center justify-center gap-2.5">
+        <Button type="button" variant="ghost" className="rounded-xl text-muted-foreground" onClick={onBack}>
+          ← Back to my brief
+        </Button>
         <Button type="button" variant="ghost" className="rounded-xl text-muted-foreground" onClick={onStartOver}>
           ↺ Read another listing
         </Button>
