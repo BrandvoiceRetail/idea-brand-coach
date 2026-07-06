@@ -198,8 +198,24 @@ export default function V5Alpha(): JSX.Element {
         setListingTitle(item.title ?? null);
         setFetchStep(1);
 
-        const reviews = await productService.getReviewsForAsinAsString(runAsin);
-        const count = reviews ? reviews.split('\n').filter(Boolean).length : 0;
+        let reviews = await productService.getReviewsForAsinAsString(runAsin);
+        let count = reviews ? reviews.split('\n').filter(Boolean).length : 0;
+
+        // Amazon intermittently serves the scraper a review-less page variant
+        // (live runs of the same ASIN alternate 8 reviews / 0 reviews). One
+        // silent re-import usually gets through; only then concede cold start.
+        if (count === 0) {
+          captureAlphaEvent('v5_corpus_retry', { express: isExpress });
+          const retried = await productService.importProducts([runAsin]);
+          const retryItem = retried.results.find(
+            (r) => r.asin?.toUpperCase() === runAsin.toUpperCase(),
+          );
+          if (retryItem?.ok) {
+            reviews = await productService.getReviewsForAsinAsString(runAsin);
+            count = reviews ? reviews.split('\n').filter(Boolean).length : 0;
+          }
+        }
+
         setReviewsString(reviews);
         setReviewCount(count);
         captureAlphaEvent('v5_corpus_ready', { review_count: count, express: isExpress });

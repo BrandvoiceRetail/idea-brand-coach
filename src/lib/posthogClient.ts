@@ -245,6 +245,7 @@ export type AlphaEventName =
   | 'v5_entry_viewed'
   | 'v5_run_started'
   | 'v5_corpus_ready'
+  | 'v5_corpus_retry'
   | 'v5_stage_revealed'
   | 'v5_cosign_confirmed'
   | 'v5_results_viewed'
