@@ -1,653 +1,1161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
 <title>IDEA Brand Coach™: Find the Trust Gap costing you sales</title>
-<meta name="description" content="There's a gap between what your brand says and what your customer's brain can trust at the moment of purchase. It has a name, a score, and a fix. The IDEA Brand Coach finds it, from your own customers' words, through 35 years of commercial brand practice and the published neuroscience of buying decisions." />
-<meta name="author" content="IDEA Brand Consultancy" />
-<meta property="og:title" content="IDEA Brand Coach™: Find the Trust Gap costing you sales" />
-<meta property="og:description" content="A conversion problem solver for e-commerce brands. Find the one thing stopping your customer from buying, and the one change that fixes it." />
-<meta property="og:type" content="website" />
+<meta name="description" content="You have the data. You don't have the diagnosis. The IDEA Brand Coach finds the one thing stopping your Amazon listing from converting, and gives you the brief to fix it."/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --font:"Helvetica Neue",Helvetica,Arial,sans-serif;
-    --blk:#0B0B0B; --wht:#FFFFFF; --wrm:#F3F2EE;
-    --gld:#D89B0D; --gld-lt:#F6E8BF;
-    --i:#D89B0D; --d:#54B657; --e:#3BA0D1; --a:#F08A00;
-    --ink:#1c1c1c; --mut:#5f5d57; --line:rgba(11,11,11,.12);
-    --grn:#2e7d32;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{font-family:var(--font);background:var(--wrm);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+/* ── TOKENS ─────────────────────────────────────────────────────────────── */
+:root{
+  --blk:#0B0B0B;
+  --ink:#F5F4F0;
+  --ink-dim:rgba(245,244,240,.82);
+  --ink-faint:rgba(245,244,240,.52);
+  --ink-ghost:rgba(245,244,240,.28);
+  --gld:#D4960A;
+  --gld-lt:#FEF5DC;
+  --gld-mid:#E7A412;
+  --grn:#7FCB82;
+  --hair:rgba(245,244,240,.10);
+  --hair-2:rgba(245,244,240,.18);
+  --glass:linear-gradient(155deg,rgba(32,32,35,.68),rgba(11,11,13,.48));
+  --glass-strong:linear-gradient(155deg,rgba(44,44,48,.82),rgba(11,11,13,.60));
+  --radius:18px;
+  --radius-sm:12px;
+  --radius-lg:26px;
+  --maxw:1040px;
+  --f-body:'Inter',system-ui,sans-serif;
+  /* IDEA pillar accents */
+  --i:#E6B23A; --d:#6FC872; --e:#5BB6DF; --a:#F0A23A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--f-body);
+  background:var(--blk);
+  color:var(--ink);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  text-wrap:pretty;
+}
 
-  /* NAV */
-  nav{background:var(--blk);display:flex;align-items:center;justify-content:space-between;padding:0 34px;height:74px;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(255,255,255,.08)}
-  .logo{display:flex;flex-direction:column}
-  .logo-idea{font-size:24px;font-weight:900;letter-spacing:-.5px;color:var(--wht);line-height:1}
-  .logo-idea .tm{font-size:10px;vertical-align:super;font-weight:700;margin-left:1px}
-  .logo-rule{height:2px;background:var(--wht);margin:3px 0 4px}
-  .logo-sub{font-size:7px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--wht)}
-  .nav-links{display:flex;align-items:center;gap:26px}
-  .nav-links a{color:rgba(255,255,255,.7);font-size:13px;font-weight:700;letter-spacing:.3px;text-decoration:none;transition:color .15s}
-  .nav-links a:hover{color:var(--wht)}
-  .nav-cta{background:var(--gld);color:var(--blk)!important;padding:9px 16px;border-radius:4px;font-weight:800}
-  .nav-cta:hover{background:#e8ac28}
-  @media(max-width:760px){.nav-links a.hide-sm{display:none}}
+/* ambient gold glow */
+body::before{
+  content:"";position:fixed;inset:-20vmax;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(38vmax 38vmax at 12% 0%,rgba(212,150,10,.09),transparent 60%),
+    radial-gradient(44vmax 44vmax at 90% 18%,rgba(212,150,10,.055),transparent 62%),
+    radial-gradient(50vmax 50vmax at 75% 98%,rgba(180,200,230,.035),transparent 62%);
+  filter:saturate(115%);
+}
 
-  /* LAYOUT */
-  .wrap{max-width:980px;margin:0 auto;padding:0 24px}
-  section{padding:66px 0}
-  .eyebrow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--gld);margin-bottom:18px}
-  h2{font-size:clamp(26px,3.6vw,38px);font-weight:900;letter-spacing:-1px;line-height:1.06;margin-bottom:10px;color:var(--blk)}
-  .sec-lede{color:var(--mut);font-size:16px;max-width:640px;margin-bottom:34px}
+/* ── LAYOUT ─────────────────────────────────────────────────────────────── */
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+section{padding:56px 0}
 
-  /* BUTTONS */
-  .btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--font);font-size:15px;font-weight:800;padding:14px 24px;border-radius:5px;border:none;cursor:pointer;text-decoration:none;transition:background .15s,transform .05s,border-color .15s}
-  .btn-primary{background:var(--gld);color:var(--blk)}
-  .btn-primary:hover{background:#e8ac28}
-  .btn-primary:active{transform:translateY(1px)}
-  .btn-ghost{background:transparent;color:var(--blk);border:1.5px solid var(--line)}
-  .btn-ghost:hover{border-color:var(--blk)}
-  .btn-row{display:flex;gap:14px;flex-wrap:wrap}
+/* ── TYPOGRAPHY ─────────────────────────────────────────────────────────── */
+h1,h2,h3,h4{font-family:var(--f-body);font-weight:800;letter-spacing:-.025em;line-height:1.06;color:var(--ink);text-wrap:balance}
+h1{font-size:clamp(1.9rem,4vw,2.9rem)}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem)}
+h3{font-size:clamp(1.1rem,2vw,1.4rem);font-weight:700}
+h4{font-size:1rem;font-weight:700}
 
-  /* STATUS PILLS */
-  .pill{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:999px;vertical-align:middle;white-space:nowrap}
-  .pill .pd{width:6px;height:6px;border-radius:50%;background:currentColor}
-  .pill.live{background:rgba(84,182,87,.16);color:var(--grn);border:1px solid rgba(84,182,87,.4)}
-  .pill.soon{background:rgba(11,11,11,.05);color:var(--mut);border:1px solid var(--line)}
-  .dim-band .pill.live{background:rgba(84,182,87,.2);color:#9ed99f;border-color:rgba(84,182,87,.45)}
-  .dim-band .pill.soon{background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.15)}
+.eyebrow{
+  display:inline-block;font-size:.68rem;font-weight:700;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--gld);
+  margin-bottom:14px;
+}
+.sec-lede{
+  font-size:1.02rem;color:var(--ink-dim);max-width:640px;
+  margin-bottom:32px;line-height:1.7;
+}
 
-  /* HERO */
-  .hero{padding-top:74px;padding-bottom:30px;text-align:center}
-  .hero h1{font-size:clamp(34px,5.6vw,60px);font-weight:900;letter-spacing:-1.8px;line-height:1.01;color:var(--blk);max-width:840px;margin:0 auto 22px}
-  .hero h1 .accent{color:var(--gld)}
-  .hero .lede{font-size:clamp(16px,2.2vw,20px);color:var(--mut);max-width:660px;margin:0 auto 12px;font-weight:500}
-  .hero .promise{font-size:15px;font-weight:800;color:var(--blk);max-width:640px;margin:0 auto 26px}
-  .hero .promise b{color:var(--gld)}
-  .hero .btn-row{justify-content:center;margin-bottom:14px}
-  .hero .micro{font-size:12.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mut)}
+/* ── GLASS ───────────────────────────────────────────────────────────────── */
+.glass{
+  position:relative;overflow:hidden;
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(24px) saturate(150%) contrast(1.03);
+  backdrop-filter:blur(24px) saturate(150%) contrast(1.03);
+  border:1px solid var(--hair);
+  box-shadow:0 16px 48px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(0,0,0,.35);
+  border-radius:var(--radius);
+}
+.glass-strong{
+  position:relative;overflow:hidden;
+  background:var(--glass-strong);
+  -webkit-backdrop-filter:blur(36px) saturate(165%) contrast(1.05);
+  backdrop-filter:blur(36px) saturate(165%) contrast(1.05);
+  border:1px solid var(--hair-2);
+  box-shadow:0 24px 64px rgba(0,0,0,.62),0 0 36px rgba(212,150,10,.05),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.42);
+  border-radius:var(--radius-lg);
+}
+.sheen::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.06) 14%,transparent 30%);
+  mix-blend-mode:screen;
+}
 
-  /* GAP VISUAL */
-  .gapviz{max-width:880px;margin:46px auto 0;display:grid;grid-template-columns:1fr 92px 1fr;align-items:stretch;gap:0;text-align:left}
-  .gapcol{background:var(--wht);border:1px solid var(--line);padding:24px 22px}
-  .gapcol.left{border-radius:10px 0 0 10px;border-right:none}
-  .gapcol.right{border-radius:0 10px 10px 0;border-left:none;background:var(--blk);color:var(--wht);border-color:var(--blk)}
-  .gapcol .tag{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px}
-  .gapcol.left .tag{color:var(--mut)}
-  .gapcol.right .tag{color:var(--gld)}
-  .gapcol ul{list-style:none;display:flex;flex-direction:column;gap:10px}
-  .gapcol li{font-size:14px;font-weight:600;display:flex;gap:9px;align-items:flex-start;line-height:1.35}
-  .gapcol li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;margin-top:6px}
-  .gapcol.left li::before{background:var(--mut);opacity:.5}
-  .gapcol.right li::before{background:var(--gld)}
-  .gapcol.right li{color:rgba(255,255,255,.82)}
-  .gapmid{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--gld-lt);position:relative}
-  .gapmid .lbl{font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--blk);writing-mode:vertical-rl;transform:rotate(180deg)}
-  .gapmid::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 7px,rgba(216,155,13,.18) 7px,rgba(216,155,13,.18) 9px)}
-  .gapcap{text-align:center;font-size:13px;color:var(--mut);margin-top:16px;font-weight:600}
-  @media(max-width:760px){
-    .gapviz{grid-template-columns:1fr;gap:0}
-    .gapcol.left{border-radius:10px 10px 0 0;border-right:1px solid var(--line);border-bottom:none}
-    .gapcol.right{border-radius:0 0 10px 10px;border-left:1px solid var(--blk)}
-    .gapmid{flex-direction:row;padding:8px}
-    .gapmid .lbl{writing-mode:horizontal-tb;transform:none}
-  }
+/* ── BUTTONS ─────────────────────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:.45em;
+  font-family:var(--f-body);font-size:.96rem;font-weight:600;
+  padding:.82em 1.5em;border-radius:999px;border:1px solid transparent;
+  cursor:pointer;text-decoration:none;
+  transition:transform .15s cubic-bezier(.22,.8,.3,1),box-shadow .2s;
+}
+.btn:active{transform:translateY(1px) scale(.985)}
+.btn-primary{
+  background:linear-gradient(135deg,#E7A412,#B97D06);color:#1a1206;
+  box-shadow:0 10px 28px rgba(212,150,10,.34),inset 0 1px 0 rgba(254,245,220,.5);
+}
+.btn-primary:hover{box-shadow:0 16px 40px rgba(212,150,10,.5);transform:translateY(-1px)}
+.btn-ghost{
+  background:rgba(245,244,240,.06);color:var(--ink);border-color:var(--hair-2);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+.btn-ghost:hover{background:rgba(245,244,240,.12)}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 
-  /* RECOGNITION DEMO */
-  .recog{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
-  .recog .copy h2{margin-bottom:14px}
-  .recog .copy p{font-size:16px;color:var(--mut);margin-bottom:14px}
-  .recog .copy p b{color:var(--blk)}
-  .metric-card{background:var(--blk);border-radius:12px;padding:26px;box-shadow:0 24px 60px rgba(11,11,11,.20)}
-  .metric-card .mh{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:18px}
-  .mrow{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-  .mrow:last-of-type{border-bottom:none}
-  .mrow .k{font-size:14px;color:rgba(255,255,255,.7);font-weight:600}
-  .mrow .v{font-size:22px;font-weight:900;letter-spacing:-.5px}
-  .v.bad{color:#ff6b6b} .v.mut{color:rgba(255,255,255,.55)} .v.ok{color:var(--d)}
-  .metric-note{margin-top:18px;font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.62);border-left:3px solid var(--gld);padding-left:14px}
-  @media(max-width:760px){.recog{grid-template-columns:1fr;gap:28px}}
+/* ── PILLS ───────────────────────────────────────────────────────────────── */
+.pill{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 10px;border-radius:999px;white-space:nowrap;
+}
+.pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
+.pill-live{background:rgba(127,203,130,.14);color:var(--grn);border:1px solid rgba(127,203,130,.3)}
+.pill-soon{background:rgba(245,244,240,.06);color:var(--ink-faint);border:1px solid var(--hair)}
+.pill-gold{background:rgba(212,150,10,.14);color:var(--gld);border:1px solid rgba(212,150,10,.3)}
 
-  /* CREDENTIAL */
-  .cred-band{background:var(--blk);color:var(--wht)}
-  .cred-band .eyebrow{color:var(--gld)}
-  .cred-band h2{color:var(--wht)}
-  .cred-band .sec-lede{color:rgba(255,255,255,.66)}
-  .cred-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:6px}
-  .cred-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:24px}
-  .cred-card .big{font-size:34px;font-weight:900;letter-spacing:-1px;color:var(--gld);line-height:1;margin-bottom:8px}
-  .cred-card h3{font-size:16px;font-weight:800;margin-bottom:8px;color:var(--wht)}
-  .cred-card p{font-size:14px;color:rgba(255,255,255,.66);line-height:1.55}
-  .cred-card .names{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px}
-  .cred-card .names span{font-size:11px;font-weight:700;letter-spacing:.3px;color:var(--gld-lt);background:rgba(216,155,13,.12);border:1px solid rgba(216,155,13,.3);padding:3px 9px;border-radius:4px}
-  .cred-foot{margin-top:24px;font-size:15px;color:rgba(255,255,255,.8);text-align:center;font-weight:600;max-width:680px;margin-left:auto;margin-right:auto}
-  .cred-foot b{color:var(--gld)}
-  @media(max-width:760px){.cred-grid{grid-template-columns:1fr}}
+/* ── NAV ─────────────────────────────────────────────────────────────────── */
+nav{
+  position:sticky;top:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:12px 28px;
+  background:rgba(11,11,13,.60);
+  -webkit-backdrop-filter:blur(22px) saturate(150%);
+  backdrop-filter:blur(22px) saturate(150%);
+  border-bottom:1px solid var(--hair);
+}
+.logo{display:flex;flex-direction:column;line-height:1;text-decoration:none}
+.logo-name{
+  font-family:var(--f-body);font-size:1.3rem;font-weight:700;
+  color:var(--ink);letter-spacing:-.02em;
+}
+.logo-name sup{font-size:.45em;vertical-align:super;margin-left:1px;font-weight:400}
+.logo-rule{height:2px;width:36px;background:var(--gld);margin:4px 0;border-radius:2px}
+.logo-sub{font-size:.48rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint)}
+.nav-links{display:flex;align-items:center;gap:22px}
+.nav-links a{
+  color:var(--ink-faint);font-size:.84rem;font-weight:600;
+  text-decoration:none;transition:color .14s;
+}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{
+  padding:.58em 1.15em;border-radius:999px;
+  background:linear-gradient(135deg,#E7A412,#B97D06);
+  color:#1a1206 !important;
+  box-shadow:0 8px 20px rgba(212,150,10,.3),inset 0 1px 0 rgba(254,245,220,.5);
+}
+.nav-login{
+  padding:.5em 1.05em;border-radius:999px;
+  border:1px solid var(--gld);
+  color:var(--gld) !important;
+  transition:background .14s,color .14s;
+}
+.nav-login:hover{background:var(--gld);color:#1a1206 !important}
+@media(max-width:720px){.nav-links a.hide-sm{display:none}}
 
-  /* OUTCOME CARDS */
-  .outcomes{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-  .oc{background:var(--wht);border:1px solid var(--line);border-radius:10px;padding:24px;position:relative}
-  .oc .step{font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gld);margin-bottom:10px}
-  .oc h3{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-bottom:8px}
-  .oc p{font-size:14.5px;color:var(--mut);line-height:1.55}
-  .oc.lead{border:2px solid var(--gld);background:linear-gradient(180deg,#fffdf6,#fff)}
-  @media(max-width:760px){.outcomes{grid-template-columns:1fr}}
+/* ── HERO ────────────────────────────────────────────────────────────────── */
+.hero{
+  overflow:hidden;
+  position:relative;
+}
+.hero-wrap{
+  display:grid;
+  grid-template-columns:0.94fr 1.06fr;
+  gap:64px;
+  align-items:center;
+  padding-top:0;padding-bottom:0;
+}
+/* ambient glow behind hero */
+.hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(60vmax 60vmax at 30% 40%,rgba(212,150,10,.07),transparent 55%);
+}
+.hero-copy{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:64px 0;
+  max-width:560px;
+}
+.hero-copy .eyebrow{display:block;margin-bottom:18px}
+.hero-copy h1{margin-bottom:22px;line-height:1.04}
+.hero-copy h1 .serif{
+  color:var(--gld);
+  font-weight:800;
+}
+.hero-lede{font-size:1.06rem;color:var(--ink-dim);margin-bottom:14px;line-height:1.68}
+.hero-lede-2{font-size:.96rem;color:var(--ink-faint);margin-bottom:28px;line-height:1.65}
+.hero-micro{
+  display:flex;gap:18px;flex-wrap:wrap;
+  font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-faint);margin-top:16px;
+}
+.hero-micro span{display:flex;align-items:center;gap:5px}
+.hero-micro span::before{
+  content:"";width:4px;height:4px;border-radius:50%;background:var(--gld);flex:none;
+}
 
-  /* IDEA DIMENSIONS */
-  .dim-band{background:var(--blk);color:var(--wht)}
-  .dim-band .eyebrow{color:var(--gld)}
-  .dim-band h2{color:var(--wht)}
-  .dim-band .sec-lede{color:rgba(255,255,255,.62)}
-  .dims{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .dim{border-radius:8px;padding:20px;background:rgba(255,255,255,.04);border-top:4px solid}
-  .dim .ltr{font-size:30px;font-weight:900;letter-spacing:-1px;line-height:1}
-  .dim .nm{font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin:8px 0 8px}
-  .dim p{font-size:13px;color:rgba(255,255,255,.66);line-height:1.5}
-  .dim.i{border-color:var(--i)} .dim.i .ltr{color:var(--i)}
-  .dim.d{border-color:var(--d)} .dim.d .ltr{color:var(--d)}
-  .dim.e{border-color:var(--e)} .dim.e .ltr{color:var(--e)}
-  .dim.a{border-color:var(--a)} .dim.a .ltr{color:var(--a)}
+/* ── GAP GRAPHIC (HERO RIGHT) ───────────────────────────────────────────── */
+.gap-graphic{
+  position:relative;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  padding:40px 0;
+  width:100%;
+}
+.gap-viz{
+  display:grid;
+  grid-template-columns:1fr 84px 1fr;
+  width:100%;
+  max-width:640px;
+  align-items:stretch;
+}
+.gap-col{
+  display:flex;flex-direction:column;justify-content:flex-start;
+  padding:36px 22px;
+  border-radius:0;
+}
+.gap-col.left{
+  border-radius:var(--radius) 0 0 var(--radius);
+  background:rgba(245,244,240,.04);
+  border:1px solid var(--hair);
+  border-right:none;
+}
+.gap-col.right{
+  border-radius:0 var(--radius) var(--radius) 0;
+  background:rgba(212,150,10,.06);
+  border:1px solid rgba(212,150,10,.18);
+  border-left:none;
+}
+.gap-mid{
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#F4B73E,#D4960A);
+}
+.gap-col-tag{
+  font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  margin-bottom:22px;
+}
+.left .gap-col-tag{color:var(--ink-faint)}
+.right .gap-col-tag{color:var(--gld)}
+.gap-col ul{list-style:none;display:flex;flex-direction:column;gap:16px}
+.gap-col li{
+  font-size:.92rem;font-weight:500;color:var(--ink-dim);
+  display:flex;gap:10px;align-items:flex-start;line-height:1.45;
+}
+.gap-col li::before{
+  content:"";flex:none;width:6px;height:6px;border-radius:50%;margin-top:7px;
+}
+.left li::before{background:var(--ink-ghost)}
+.right li::before{background:var(--gld);box-shadow:0 0 6px rgba(212,150,10,.6)}
 
-  /* DECISION TRIGGERS */
-  .triggers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
-  .trg{background:var(--wht);border:1px solid var(--line);border-radius:8px;padding:20px}
-  .trg .anchor{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gld);margin-bottom:9px}
-  .trg h4{font-size:17px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px}
-  .trg p{font-size:13.5px;color:var(--mut);line-height:1.5}
-  .trg.hot{border:2px solid var(--e)}
-  .trg.hot .anchor{color:var(--e)}
-  .trg .common{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--e);background:rgba(59,160,209,.1);padding:2px 7px;border-radius:3px;margin-top:9px}
-  .trg-note{text-align:center;margin-top:28px;font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--blk)}
-  .trg-note span{color:var(--gld)}
-  @media(max-width:760px){.triggers{grid-template-columns:1fr}}
+@media(max-width:860px){
+  .hero-wrap{grid-template-columns:1fr;gap:0}
+  .hero-copy{padding:48px 0 24px;max-width:none}
+  .gap-graphic{padding:0 0 48px}
+  .gap-viz{max-width:100%;height:auto}
+}
 
-  /* BRAND DEFENCE LOOP */
-  .loop-band{background:var(--wrm)}
-  .loop{display:flex;align-items:stretch;gap:0;margin-top:10px;flex-wrap:wrap}
-  .lstep{flex:1;min-width:150px;background:var(--wht);border:1px solid var(--line);padding:20px 18px;position:relative}
-  .lstep:not(:last-child){border-right:none}
-  .lstep:first-child{border-radius:10px 0 0 10px}
-  .lstep:last-child{border-radius:0 10px 10px 0}
-  .lstep .ln{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--blk);color:var(--wht);font-weight:900;font-size:13px;margin-bottom:12px}
-  .lstep h4{font-size:15px;font-weight:800;letter-spacing:-.2px;margin-bottom:6px}
-  .lstep p{font-size:13px;color:var(--mut);line-height:1.45}
-  .lstep .pill{margin-top:11px}
-  @media(max-width:880px){
-    .loop{flex-direction:column}
-    .lstep{border-right:1px solid var(--line)!important}
-    .lstep:first-child{border-radius:10px 10px 0 0}
-    .lstep:last-child{border-radius:0 0 10px 10px}
-    .lstep:not(:last-child){border-bottom:none}
-  }
+/* ── PROBLEM SECTION ─────────────────────────────────────────────────────── */
+.problem-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.problem-copy h2{margin-bottom:16px}
+.problem-copy p{font-size:1rem;color:var(--ink-dim);line-height:1.7;margin-bottom:14px}
+.problem-copy p strong{color:var(--ink)}
+.metric-card{padding:30px}
+.metric-tag{
+  font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:18px;
+}
+.mrow{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:12px 0;border-bottom:1px solid var(--hair);
+}
+.mrow:last-of-type{border-bottom:none}
+.mrow .mk{font-size:.88rem;color:var(--ink-dim)}
+.mrow .mv{font-size:1.45rem;font-weight:700;font-family:var(--f-body)}
+.mv.bad{color:#FF7B72}.mv.muted{color:var(--ink-faint)}.mv.ok{color:var(--grn)}
+.metric-note{
+  margin-top:18px;font-size:.84rem;color:var(--ink-dim);line-height:1.6;
+  border-left:2px solid var(--gld);padding-left:14px;
+}
+.metric-note strong{color:var(--gld)}
+@media(max-width:760px){.problem-grid{grid-template-columns:1fr;gap:28px}}
 
-  /* SURFACES */
-  .surf-band{background:var(--blk);color:var(--wht)}
-  .surf-band .eyebrow{color:var(--gld)}
-  .surf-band h2{color:var(--wht)}
-  .surf-band .sec-lede{color:rgba(255,255,255,.62)}
-  .surfaces{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  .surf{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:26px;display:flex;flex-direction:column}
-  .surf .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .surf h3{font-size:20px;font-weight:800;letter-spacing:-.4px;color:var(--wht)}
-  .surf p{font-size:14.5px;color:rgba(255,255,255,.7);line-height:1.55;margin-bottom:18px;flex:1}
-  .surf .demo{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px 16px;margin-bottom:18px}
-  .surf .demo .q{font-size:13.5px;color:var(--gld-lt);font-weight:700;margin-bottom:8px}
-  .surf .demo .a{font-size:13.5px;color:rgba(255,255,255,.82);line-height:1.5}
-  .surf .btn{align-self:flex-start}
-  .url-card{margin-top:18px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .url-card code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px;color:#fff;letter-spacing:.2px}
-  .copy-btn{background:var(--gld);color:var(--blk);font-family:var(--font);font-size:13px;font-weight:800;padding:9px 16px;border:none;border-radius:4px;cursor:pointer;transition:background .15s}
-  .copy-btn:hover{background:#e8ac28}
-  .copy-btn.copied{background:var(--d);color:var(--wht)}
-  @media(max-width:760px){.surfaces{grid-template-columns:1fr}}
+/* ── CREDENTIALS ─────────────────────────────────────────────────────────── */
+.cred-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.cred-card{padding:28px}
+.cred-stat{
+  font-size:2.4rem;font-weight:800;color:var(--gld);line-height:1;margin-bottom:12px;letter-spacing:-.04em;
+}
+.cred-card h3{font-size:1rem;font-weight:700;margin-bottom:10px}
+.cred-card p{font-size:.9rem;color:var(--ink-dim);line-height:1.65}
+.cred-card p em{color:var(--ink-dim)}
 
-  /* FAQ */
-  .faq{display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
-  details.qa{border-bottom:1px solid var(--line);padding:6px 0}
-  details.qa summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;font-size:15px;font-weight:700;color:var(--blk)}
-  details.qa summary::-webkit-details-marker{display:none}
-  details.qa summary .mk{flex:none;font-size:18px;font-weight:800;color:var(--gld);transition:transform .15s}
-  details.qa[open] summary .mk{transform:rotate(45deg)}
-  details.qa .ans{font-size:14px;color:var(--mut);line-height:1.55;padding:0 0 14px}
-  details.qa .ans .pill{margin-bottom:8px}
-  @media(max-width:760px){.faq{grid-template-columns:1fr}}
+/* proof panel */
+.proof-panel{
+  margin-top:18px;
+  padding:28px 32px;
+  background:linear-gradient(135deg,rgba(212,150,10,.12),rgba(183,125,6,.06));
+  border:1px solid rgba(212,150,10,.28);
+  border-radius:var(--radius);
+  display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;
+}
+.proof-stat{text-align:center;flex:none}
+.proof-stat .big{
+  font-size:3rem;font-weight:800;color:var(--gld);line-height:1;
+  display:block;letter-spacing:-.04em;
+}
+.proof-stat .label{
+  font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gld);display:block;margin-top:4px;
+}
+.proof-quote blockquote{
+  font-size:.96rem;color:var(--ink);line-height:1.65;margin-bottom:12px;
+}
+.proof-quote cite{
+  font-size:.78rem;font-weight:600;color:var(--ink-faint);font-style:normal;
+}
+@media(max-width:900px){
+  .cred-grid{grid-template-columns:1fr}
+  .proof-panel{grid-template-columns:1fr;gap:18px}
+}
 
-  /* CLOSER */
-  .closer{background:var(--gld-lt);text-align:center}
-  .closer h2{max-width:760px;margin:0 auto 12px}
-  .closer p{font-size:17px;color:var(--ink);max-width:600px;margin:0 auto 26px;font-weight:600}
-  .closer .btn-row{justify-content:center}
+/* ── TESTIMONIAL STRIP ───────────────────────────────────────────────────── */
+.testi-strip{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px;
+}
+.testi{padding:24px}
+.testi-stars{color:var(--gld);font-size:.9rem;letter-spacing:2px;margin-bottom:14px}
+.testi-body{font-size:.86rem;color:var(--ink-dim);line-height:1.6;margin-bottom:14px}
+.testi-body em{color:var(--ink);font-style:normal;font-weight:600}
+.testi-name{font-size:.78rem;font-weight:700;color:var(--ink);display:block}
+.testi-co{font-size:.72rem;color:var(--ink-faint)}
+@media(max-width:760px){.testi-strip{grid-template-columns:1fr}}
 
-  /* GLOSSARY */
-  .gloss-band{background:var(--blk);color:var(--wht)}
-  .gloss-band .eyebrow{color:var(--gld)}
-  .gloss-band h2{color:var(--wht)}
-  .gloss-band .sec-lede{color:rgba(255,255,255,.62)}
-  .gcat{margin-top:26px}
-  .gcat-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-  .gcat-head h3{font-size:17px;font-weight:800;color:var(--wht);letter-spacing:-.3px}
-  .gcat-head .cnt{font-size:12px;font-weight:700;color:rgba(255,255,255,.45)}
-  .gtable{width:100%;border-collapse:collapse;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
-  .gtable td{padding:11px 16px;border-top:1px solid rgba(255,255,255,.07);vertical-align:top;font-size:13.5px}
-  .gtable tr:first-child td{border-top:none}
-  .gtable .tn{color:var(--gld-lt);font-size:14px;font-weight:700;width:36%;padding-right:18px;line-height:1.3}
-  .gtable .td-desc{color:rgba(255,255,255,.72);line-height:1.45}
-  .gtable .td-st{width:1%;text-align:right;white-space:nowrap}
-  .gloss-foot{margin-top:24px;font-size:13px;color:rgba(255,255,255,.5);text-align:center;line-height:1.6}
-  .gloss-foot code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:rgba(255,255,255,.07);color:var(--gld-lt);padding:2px 7px;border-radius:3px;font-size:12px}
-  @media(max-width:680px){
-    .gtable,.gtable tbody,.gtable tr,.gtable td{display:block;width:auto}
-    .gtable td{border-top:none;padding:4px 16px}
-    .gtable .tn{padding-top:14px}
-    .gtable .td-st{text-align:left;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07)}
-  }
+/* ── TITAN STRIP (secondary, supporting layer) ──────────────────────────── */
+.titan-label{
+  display:flex;align-items:center;gap:10px;
+  margin-top:36px;margin-bottom:14px;
+}
+.titan-label::before,.titan-label::after{
+  content:"";flex:1;height:1px;background:var(--hair);
+}
+.titan-label span{
+  font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-faint);white-space:nowrap;
+}
+.titan-strip{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:14px;
+}
+.titan-testi{
+  padding:18px 20px;
+  background:rgba(245,244,240,.025);
+  border:1px solid var(--hair);
+  border-radius:var(--radius-sm);
+}
+.titan-testi-stars{color:var(--gld);font-size:.78rem;letter-spacing:1.5px;margin-bottom:10px}
+.titan-testi-body{font-size:.8rem;color:var(--ink);line-height:1.55;margin-bottom:10px}
+.titan-testi-name{font-size:.74rem;font-weight:700;color:var(--ink);display:block}
+.titan-testi-co{font-size:.68rem;color:var(--ink-dim)}
+@media(max-width:760px){.titan-strip{grid-template-columns:1fr}}
 
-  /* FOOTER */
-  footer{background:var(--blk);color:rgba(255,255,255,.55);padding:38px 34px;text-align:center;font-size:12.5px;border-top:1px solid rgba(255,255,255,.08)}
-  footer .fl{color:var(--wht);font-weight:800;font-size:14px}
-  footer a{color:var(--gld);text-decoration:none}
-  footer .fnav{margin:14px 0;display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
-  footer .fnav a{color:rgba(255,255,255,.7);font-weight:700}
+/* ── WHAT YOU GET ────────────────────────────────────────────────────────── */
+.outputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.out-card{padding:26px}
+.out-tag{font-size:.58rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gld);margin-bottom:10px}
+.out-card h3{font-size:1.1rem;font-weight:700;margin-bottom:8px}
+.out-card p{font-size:.9rem;color:var(--ink-dim);line-height:1.6}
+.out-card.lead{
+  border:1px solid rgba(212,150,10,.42);
+  box-shadow:0 16px 48px rgba(0,0,0,.55),0 0 44px rgba(212,150,10,.1),inset 0 1px 0 rgba(255,255,255,.2);
+}
+@media(max-width:760px){.outputs{grid-template-columns:1fr}}
 
-  @media(max-width:760px){
-    nav{padding:0 20px}
-    section{padding:48px 0}
-    .nav-links{gap:14px}
-  }
+/* ── SAMPLE OUTPUT ───────────────────────────────────────────────────────── */
+.sample-wrap{
+  margin-top:36px;
+  background:rgba(0,0,0,.4);
+  border:1px solid var(--hair-2);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.sample-header{
+  padding:12px 20px;border-bottom:1px solid var(--hair);
+  display:flex;align-items:center;gap:10px;
+}
+.sample-header .badge{
+  font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 10px;border-radius:999px;
+  background:rgba(212,150,10,.12);color:var(--gld);border:1px solid rgba(212,150,10,.28);
+}
+.sample-header .brand{font-size:.8rem;font-weight:600;color:var(--ink-faint)}
+.sample-body{padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.sample-score-area{}
+.sample-score-num{
+  font-size:3.5rem;font-weight:800;line-height:1;color:var(--gld);letter-spacing:-.04em;
+}
+.sample-score-label{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px;display:block;margin-top:2px}
+.sample-pillars{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.s-prow{display:flex;align-items:center;gap:8px}
+.s-prow .pn{font-size:.72rem;font-weight:600;color:var(--ink-dim);width:76px;flex:none}
+.s-track{flex:1;height:4px;background:rgba(245,244,240,.1);border-radius:2px;overflow:hidden}
+.s-fill{height:100%;border-radius:2px}
+.s-fill.ok{background:var(--grn)}.s-fill.warn{background:var(--gld)}.s-fill.bad{background:#FF7B72}
+.s-val{font-size:.72rem;font-weight:700;color:var(--ink-faint);width:26px;text-align:right;flex:none}
+.sample-right{}
+.sample-trigger-tag{font-size:.58rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gld);margin-bottom:6px}
+.sample-trigger-name{font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:10px}
+.sample-trigger-desc{font-size:.84rem;color:var(--ink-dim);line-height:1.55;margin-bottom:14px}
+.sample-review{
+  background:rgba(245,244,240,.04);border:1px solid var(--hair);
+  border-radius:var(--radius-sm);padding:12px 14px;
+  font-size:.8rem;color:var(--ink-dim);line-height:1.5;
+  margin-bottom:12px;
+}
+.sample-review strong{color:var(--ink-faint);font-style:normal;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:5px}
+.sample-brief{font-size:.8rem;color:var(--ink);line-height:1.5}
+.sample-brief strong{color:var(--gld);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px}
+.sample-disclaimer{
+  padding:10px 24px;border-top:1px solid var(--hair);
+  font-size:.68rem;color:var(--ink-faint);
+}
+@media(max-width:660px){.sample-body{grid-template-columns:1fr}}
+
+/* ── IDEA FRAMEWORK ──────────────────────────────────────────────────────── */
+.dims{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.dim{padding:22px;border-top:3px solid;position:relative}
+.dim-letter{font-size:2.2rem;font-weight:800;line-height:1;letter-spacing:-.03em}
+.dim-name{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin:10px 0 8px;color:var(--ink)}
+.dim p{font-size:.84rem;color:var(--ink-dim);line-height:1.55}
+.dim.i{border-color:var(--i)}.dim.i .dim-letter{color:var(--i)}
+.dim.d{border-color:var(--d)}.dim.d .dim-letter{color:var(--d)}
+.dim.e{border-color:var(--e)}.dim.e .dim-letter{color:var(--e)}
+.dim.a{border-color:var(--a)}.dim.a .dim-letter{color:var(--a)}
+.dim-testi{margin-top:14px;padding-top:14px;border-top:1px solid var(--hair);font-size:.78rem;color:var(--ink-faint);line-height:1.5}
+.dim-testi cite{font-size:.7rem;font-style:normal;font-weight:600;color:var(--ink-ghost);display:block;margin-top:5px}
+@media(max-width:720px){.dims{grid-template-columns:1fr 1fr}}
+
+/* ── TRIGGERS ────────────────────────────────────────────────────────────── */
+.triggers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.trg{padding:22px}
+.trg-anchor{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gld);margin-bottom:8px}
+.trg h4{font-size:1.05rem;font-weight:700;margin-bottom:6px}
+.trg p{font-size:.86rem;color:var(--ink-dim);line-height:1.55}
+.trg.hot{
+  border:1px solid rgba(212,150,10,.46);
+  box-shadow:0 16px 48px rgba(0,0,0,.55),0 0 36px rgba(212,150,10,.1),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.trg-common{
+  display:inline-block;font-size:.58rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--gld);background:rgba(212,150,10,.1);padding:3px 8px;border-radius:5px;margin-top:10px;
+}
+.trg-testi{margin-top:32px;padding:24px 28px}
+.trg-testi blockquote{
+  font-size:.95rem;color:var(--ink);line-height:1.65;margin-bottom:12px;
+}
+.trg-testi cite{font-size:.78rem;font-style:normal;font-weight:600;color:var(--ink-faint)}
+@media(max-width:720px){.triggers{grid-template-columns:1fr}}
+
+/* ── LOOP ────────────────────────────────────────────────────────────────── */
+.loop{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px}
+.lstep{padding:24px 20px}
+.lstep-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,#E7A412,#B97D06);
+  color:#1a1206;font-weight:700;font-size:.95rem;
+  margin-bottom:14px;box-shadow:0 6px 16px rgba(212,150,10,.35);
+}
+.lstep h4{font-size:1rem;font-weight:700;margin-bottom:6px}
+.lstep p{font-size:.86rem;color:var(--ink-dim);line-height:1.5}
+.lstep .pill{margin-top:12px}
+@media(max-width:660px){.loop{grid-template-columns:1fr}}
+
+/* ── DIAGNOSTIC CTA ──────────────────────────────────────────────────────── */
+.diag-section{background:rgba(212,150,10,.04);border-top:1px solid rgba(212,150,10,.12);border-bottom:1px solid rgba(212,150,10,.12)}
+.diag-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.diag-copy h2{margin-bottom:14px}
+.diag-copy p{font-size:1rem;color:var(--ink-dim);line-height:1.7;margin-bottom:22px}
+.diag-demo{padding:24px}
+.demo-q{font-size:.84rem;color:var(--gld-lt);font-weight:600;margin-bottom:10px}
+.demo-a{display:flex;flex-direction:column;gap:6px}
+.demo-row{display:flex;justify-content:space-between;align-items:center;font-size:.84rem}
+.demo-row .dk{color:var(--ink-dim)}
+.demo-row .dv{font-weight:700;color:var(--ink)}
+.dv.gold{color:var(--gld)}
+.demo-sep{height:1px;background:var(--hair);margin:4px 0}
+.demo-brief{
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--hair);
+  font-size:.82rem;color:var(--ink-dim);line-height:1.5;
+}
+.demo-brief strong{color:var(--gld);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:4px}
+@media(max-width:760px){.diag-inner{grid-template-columns:1fr;gap:28px}}
+
+/* ── CLAUDE CONNECTOR ────────────────────────────────────────────────────── */
+.connector-card{padding:32px}
+.connector-demo{
+  background:rgba(0,0,0,.35);border:1px solid var(--hair);
+  border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:22px;
+}
+.connector-demo .cq{font-size:.84rem;color:var(--gld-lt);font-weight:600;margin-bottom:8px}
+.connector-demo .ca{font-size:.84rem;color:var(--ink-dim);line-height:1.5}
+.connector-demo .ca strong{color:var(--gld)}
+.url-row{
+  background:rgba(0,0,0,.4);border:1px solid var(--hair);
+  border-radius:var(--radius-sm);padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin-bottom:14px;
+}
+.url-row code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;color:var(--ink)}
+.copy-btn{
+  font-family:var(--f-body);font-size:.76rem;font-weight:600;
+  padding:7px 14px;border:none;border-radius:999px;cursor:pointer;
+  background:linear-gradient(135deg,#E7A412,#B97D06);color:#1a1206;
+  transition:box-shadow .15s;
+}
+.copy-btn:hover{box-shadow:0 8px 18px rgba(212,150,10,.4)}
+.copy-btn.copied{background:var(--grn);color:#0b1a0c}
+
+/* ── FAQ ─────────────────────────────────────────────────────────────────── */
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+details.qa{border-bottom:1px solid var(--hair);padding:3px 0}
+details.qa summary{
+  list-style:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 0;font-size:.94rem;font-weight:600;color:var(--ink);
+}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary .mk{flex:none;font-size:1.2rem;font-weight:700;color:var(--gld);transition:transform .15s}
+details.qa[open] summary .mk{transform:rotate(45deg)}
+details.qa .ans{font-size:.86rem;color:var(--ink-dim);line-height:1.6;padding:0 0 16px}
+@media(max-width:720px){.faq{grid-template-columns:1fr}}
+
+/* ── CLOSER ──────────────────────────────────────────────────────────────── */
+.closer-card{padding:56px 40px;text-align:center}
+.closer-card h2{
+  font-size:clamp(1.5rem,3.5vw,2.2rem);
+  max-width:22ch;margin:0 auto 14px;color:var(--ink);font-weight:800;
+}
+.closer-card p{font-size:1.04rem;color:var(--ink-dim);max-width:48ch;margin:0 auto 28px;line-height:1.65}
+.closer-sub{font-size:.78rem;color:var(--ink-faint);margin-top:12px}
+
+/* ── WHAT'S INCLUDED ─────────────────────────────────────────────────────── */
+.included{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.inc{padding:26px}
+.inc h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
+.inc p{font-size:.9rem;color:var(--ink-dim);line-height:1.6}
+@media(max-width:720px){.included{grid-template-columns:1fr}}
+
+/* ── FOOTER ──────────────────────────────────────────────────────────────── */
+footer{
+  padding:44px 28px;text-align:center;
+  font-size:.76rem;color:var(--ink-faint);
+  border-top:1px solid var(--hair);
+}
+.footer-brand{
+  font-family:var(--f-body);font-weight:700;font-size:.95rem;
+  color:var(--ink);margin-bottom:14px;
+}
+.footer-nav{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.footer-nav a{color:var(--ink-faint);font-weight:600;text-decoration:none}
+.footer-nav a:hover{color:var(--ink)}
+
+/* ── STICKY BAR ──────────────────────────────────────────────────────────── */
+.sticky-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  padding:11px 24px;
+  background:rgba(11,11,13,.88);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border-top:1px solid rgba(212,150,10,.28);
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  transform:translateY(100%);transition:transform .28s ease;
+}
+.sticky-bar.visible{transform:translateY(0)}
+.sticky-bar .note{font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
+.sticky-bar .btn-primary{padding:.65em 1.3em;font-size:.9rem}
+
+/* ── UTILITIES ───────────────────────────────────────────────────────────── */
+.cred-foot{text-align:center;margin-top:24px;font-size:.96rem;color:var(--ink-dim);font-weight:500;max-width:680px;margin-left:auto;margin-right:auto}
+.cred-foot strong{color:var(--gld)}
+@media(prefers-reduced-motion:reduce){*{transition:none !important;scroll-behavior:auto !important}}
+:focus-visible{outline:2px solid var(--gld);outline-offset:3px;border-radius:6px}
 </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
-  <div class="logo">
-    <div class="logo-idea">IDEA<span class="tm">&trade;</span></div>
+  <a href="#top" class="logo">
+    <span class="logo-name">IDEA<sup>™</sup></span>
     <div class="logo-rule"></div>
-    <div class="logo-sub">Strategic Brand Creation</div>
-  </div>
+    <span class="logo-sub">Strategic Brand Creation</span>
+  </a>
   <div class="nav-links">
     <a href="#problem" class="hide-sm">The problem</a>
     <a href="#framework" class="hide-sm">The framework</a>
     <a href="#tools" class="hide-sm">Tools</a>
-    <a href="https://ideabrandcoach.icodemybusiness.com/auth">Log in</a>
-    <a href="#start" class="nav-cta">Find your Trust Gap</a>
+    <a href="/auth" id="authBtn" class="nav-login">Log in</a>
+    <a href="/diagnostic" class="nav-cta">Run the free diagnostic</a>
   </div>
 </nav>
 
-<!-- HERO -->
-<header class="hero wrap">
-  <span class="eyebrow">For e-commerce brands losing sales they can't explain</span>
-  <h1>There's a gap between what your brand says and what your customer's brain can <span class="accent">trust</span>.</h1>
-  <p class="lede">Your conversion rate is below what your ad spend should produce. You know something is broken, you just can't see what, or which change would move the number.</p>
-  <p class="promise">That gap has a name: the <b>Trust Gap&trade;</b>. It has a score. And it has one fix.</p>
-  <div class="btn-row">
-    <a href="#start" class="btn btn-primary">Find your Trust Gap &rarr;</a>
-    <a href="#how" class="btn btn-ghost">See how it works</a>
+<!-- ═══ HERO ═══════════════════════════════════════════════════════════════ -->
+<header class="hero" id="top">
+  <div class="wrap hero-wrap">
+  <div class="hero-copy">
+    <span class="eyebrow">For Amazon sellers losing sales they can't explain</span>
+    <h1>You have the data.<br>You don't have the <span class="serif">diagnosis.</span></h1>
+    <p class="hero-lede">Your conversion rate says something is wrong. Your data can't tell you what. You've run a ChatGPT prompt and got a thousand words of output that could describe any brand in your category. Well organised. Completely generic. No closer to knowing what to actually change on your listing.</p>
+    <p class="hero-lede-2">The IDEA Brand Coach is Trevor Bradford's 35 years in the creative industries and 15 years in ecommerce, encoded and available on demand. The same diagnostic framework he applies with clients, running 24 hours a day, for every Amazon seller who needs it.</p>
+    <div class="btn-row">
+      <a href="/diagnostic" class="btn btn-primary">Run the free diagnostic →</a>
+    </div>
+    <div class="hero-micro">
+      <span>6 questions</span>
+      <span>Instant score</span>
+      <span>Free</span>
+      <span>No account needed</span>
+    </div>
   </div>
-  <p class="micro">Free diagnostic &middot; ~10 minutes</p>
 
-  <!-- GAP VISUAL: the recognition moment -->
-  <div class="gapviz">
-    <div class="gapcol left">
-      <div class="tag">What your brand says</div>
-      <ul>
-        <li>Specs, features, bullet points</li>
-        <li>Price and value comparisons</li>
-        <li>"Premium quality materials"</li>
-        <li>Speaking to the rational brain</li>
-      </ul>
-    </div>
-    <div class="gapmid"><span class="lbl">Trust Gap</span></div>
-    <div class="gapcol right">
-      <div class="tag">What their brain is checking</div>
-      <ul>
-        <li>Does this brand understand me?</li>
-        <li>Have people like me been burned before?</li>
-        <li>Do I feel safe enough to commit?</li>
-        <li>Running from the emotional brain</li>
-      </ul>
+  <div class="gap-graphic">
+    <div class="gap-viz">
+      <div class="gap-col left glass">
+        <div class="gap-col-tag">What your brand says</div>
+        <ul>
+          <li>Specs, features, bullet points</li>
+          <li>Price and value comparisons</li>
+          <li>"Premium quality materials"</li>
+          <li>Star rating and review count</li>
+          <li>Speaking to the rational brain</li>
+        </ul>
+      </div>
+      <div class="gap-mid">
+        <svg viewBox="0 0 60 280" width="60" height="280" style="display:block">
+          <text
+            x="30" y="140"
+            transform="rotate(-90 30 140)"
+            text-anchor="middle"
+            font-family="Inter, system-ui, sans-serif"
+            font-weight="800"
+            font-size="26"
+            letter-spacing="1"
+            fill="#1a1206"
+            style="text-transform:uppercase"
+          >TRUST GAP<tspan font-size="14" font-weight="800" dy="-2" dx="4">™</tspan></text>
+        </svg>
+      </div>
+      <div class="gap-col right glass">
+        <div class="gap-col-tag">What their brain is checking</div>
+        <ul>
+          <li>Does this brand understand me?</li>
+          <li>Have people like me been burned before?</li>
+          <li>Do I feel safe enough to&nbsp;commit?</li>
+          <li>Is this a brand I'd be proud to own?</li>
+          <li>Running on the emotional brain</li>
+        </ul>
+      </div>
     </div>
   </div>
-  <p class="gapcap">95% of purchase decisions happen below conscious awareness. The gap is where the sale is lost.</p>
+  </div>
 </header>
 
-<!-- THE PROBLEM / RECOGNITION -->
+<!-- ═══ PROBLEM ═════════════════════════════════════════════════════════════ -->
 <section id="problem">
-  <div class="wrap recog">
-    <div class="copy">
-      <span class="eyebrow">The moment you know something's wrong</span>
-      <h2>You're not short on information. You're short on interpretation.</h2>
-      <p>You've tried agencies, strategy documents that went nowhere. You've tried AI tools, well-organised generic output describing your category, not your brand.</p>
-      <p>Nobody has told you what any of it <b>means</b> about the one specific thing stopping your specific customer from buying.</p>
-      <p>You're not shopping for brand strategy. You're looking for the answer to a single question: <b>what is the one thing I need to fix first?</b></p>
-    </div>
-    <div class="metric-card">
-      <div class="mh">Your listing, this week</div>
-      <div class="mrow"><span class="k">Conversion rate</span><span class="v bad">1.8%</span></div>
-      <div class="mrow"><span class="k">Category average</span><span class="v mut">3.1%</span></div>
-      <div class="mrow"><span class="k">What ad spend should produce</span><span class="v mut">higher</span></div>
-      <div class="mrow"><span class="k">What's actually broken</span><span class="v bad">?</span></div>
-      <p class="metric-note">The number tells you there's a problem. It doesn't tell you which part of your customer's brain decided not to buy, or what to change. That's the question this answers.</p>
-    </div>
-  </div>
-</section>
-
-<!-- THE CREDENTIAL -->
-<section class="cred-band">
   <div class="wrap">
-    <span class="eyebrow">Why you can trust this answer</span>
-    <h2>Not a better ChatGPT.<br>A framework AI doesn't have.</h2>
-    <p class="sec-lede">A custom GPT reads what your customers <em>say</em>. The IDEA Brand Coach reads what their language <em>reveals</em> about the emotional state they're in when they decide to buy, through an interpretive framework that took decades to build.</p>
-    <div class="cred-grid">
-      <div class="cred-card">
-        <div class="big">35 years</div>
-        <h3>Commercial brand practice</h3>
-        <p>Hundreds of real brands, real conversion problems, real customers who almost bought and didn't. The patterns behind the Trust Gap and the Decision Trigger were discovered in commercial work, across categories, over decades, not theorised.</p>
+    <div class="problem-grid">
+      <div class="problem-copy">
+        <span class="eyebrow">The moment every Amazon seller knows</span>
+        <h2>You're not short on information.<br>You're short on insight.</h2>
+        <p>You've paid an agency for a strategy document that described your market. You've run a ChatGPT prompt and got a thousand words of output that could apply to any brand in your category. You've read it. You've filed it. <strong>Your conversion rate hasn't moved.</strong></p>
+        <p>Nobody has told you what any of it means about the one specific thing your specific customer's brain is checking before they decide not to buy.</p>
+        <p>You are not looking for another framework. You are looking for the answer to one question: <strong>what do I change on my listing this week?</strong></p>
       </div>
-      <div class="cred-card">
-        <div class="big">Published</div>
-        <h3>Neuroscience of decision-making</h3>
-        <p>The peer-reviewed research that explains <em>why</em> those patterns work, how the buying decision is actually made in the brain, below conscious awareness.</p>
-        <div class="names"><span>Gerald Zaltman</span><span>Jill Bolte Taylor</span><span>Daniel Kahneman</span><span>Robert Cialdini</span><span>Richard Shotton</span></div>
+      <div class="metric-card glass-strong sheen">
+        <div class="metric-tag">Your listing, this week</div>
+        <div class="mrow"><span class="mk">Conversion rate</span><span class="mv bad">1.8%</span></div>
+        <div class="mrow"><span class="mk">Category average</span><span class="mv muted">3.1%</span></div>
+        <div class="mrow"><span class="mk">What ad spend should produce</span><span class="mv muted">higher</span></div>
+        <div class="mrow"><span class="mk">What's actually broken</span><span class="mv bad">?</span></div>
+        <p class="metric-note">The number tells you there's a problem. It doesn't tell you which part of your customer's brain decided not to buy. <strong>That's the question this answers.</strong></p>
       </div>
     </div>
-    <p class="cred-foot">The practice identified the patterns. The science explains why they're true. <b>That combination doesn't exist anywhere else in this market.</b></p>
   </div>
 </section>
 
-<!-- WHAT YOU GET (outcome cards) -->
+<!-- ═══ CREDENTIALS ══════════════════════════════════════════════════════════ -->
+<section id="credentials">
+  <div class="wrap">
+    <span class="eyebrow">Why this answer is different from every other answer you've been given</span>
+    <h2>AI gives you generic answers.<br>IDEA Brand Coach gives you my judgement,<br>built from a career working with top-tier brands.<br>On demand.</h2>
+    <p class="sec-lede">A custom GPT reads what your customers say. The IDEA Brand Coach reads what their language reveals about the emotional state they're in when they decide to buy. That is a judgement call no prompt can replicate, regardless of how you prompt it.</p>
+
+    <div class="cred-grid">
+      <div class="cred-card glass sheen">
+        <div class="cred-stat">35 years</div>
+        <h3>Agency founder, top-tier brands, including Amazon</h3>
+        <p>Trevor Bradford spent 35 years founding and running agencies whose clients included some of the world's top-tier brands, including a board-level role at a publicly listed UK PLC. For over a decade, he has also built his own e-commerce brands as a seller competing on Amazon.</p>
+        <p style="margin-top:12px">Across hundreds of brands and thousands of projects, one problem kept surfacing: good products failing to convert because the brand wasn't building enough trust at the moment of decision. The Trust Gap and the Decision Trigger were built to solve it.</p>
+      </div>
+      <div class="cred-card glass sheen">
+        <div class="cred-stat">Published</div>
+        <h3>What the brain actually does at the moment of purchase</h3>
+        <p>The framework is built on the published science of how buying decisions are made in the brain, below conscious awareness. Harvard researchers, neuroanatomists, behavioural psychologists. Not opinion. Not best practice. The mechanisms that govern trust, attention, and choice at the moment someone is about to click Buy.</p>
+        <p style="margin-top:12px"><span style="color:var(--ink-dim)">What Captures The Heart Goes In The Cart</span> by Trevor Bradford is where that science meets 35 years in the creative industries and 15 years in ecommerce.</p>
+      </div>
+      <div class="cred-card glass sheen">
+        <div class="cred-stat">24 / 7</div>
+        <h3>35 years of expertise, available on demand</h3>
+        <p>The IDEA Brand Coach was built by Trevor to do exactly one thing: make the commercial instincts and diagnostic frameworks he has applied across hundreds of brands available to every Amazon seller and DTC founder, at the moment they need them, not when they can afford a consultant.</p>
+        <p style="margin-top:12px">This is not a generic AI tool given a prompt. It is Trevor's specific methodology, encoded. The same questions he asks. The same framework he applies. The same prescription at the end. Without the waiting list.</p>
+      </div>
+    </div>
+
+    <!-- PROOF PANEL: Resha Hovde -->
+    <div class="proof-panel">
+      <div class="proof-stat">
+        <span class="big">2×</span>
+        <span class="label">conversion rate</span>
+      </div>
+      <div class="proof-quote">
+        <blockquote>"Trevor delivered a strategic creative brief that gave our team immediate clarity and direction. Within weeks of implementing his recommendations, we doubled the conversion rate on a listing that had been significantly underperforming."</blockquote>
+        <cite>Resha Hovde, Co-Founder &amp; CEO, Bold I'Land Provisions</cite>
+      </div>
+    </div>
+
+    <p class="cred-foot" style="margin-top:24px">The practice identified the patterns. The science explains why they're true.<br><strong>That combination doesn't exist anywhere else in this market.</strong></p>
+
+    <!-- Supporting testimonials -->
+    <div class="testi-strip">
+      <div class="testi glass sheen">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-body">Before having Trevor work on my project, I spent several months watching him analyse and advise on at least 50 different products. What stood out wasn't just his insight: it was the <span style="color:var(--ink-dim)">direct impact</span> his recommendations had on increasing the value of those businesses. You could literally see the lift.</p>
+        <span class="testi-name">Martyn Williams, Owner</span>
+        <span class="testi-co">Kailash Herbals / Intuition Supplements</span>
+      </div>
+      <div class="testi glass sheen">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-body">Most branding consultants seem to be either graphic designers or marketers who understand branding at a surface level but not a deep fundamental level. Trevor helped us take our brand concept and, starting with the motivations of the target market we seek to serve, turned it into an IDEA Framework strategy we can build our business around long term.</p>
+        <span class="testi-name">Michael Hancox, Founder</span>
+        <span class="testi-co">OmaOmaOma! Montessori Toys</span>
+      </div>
+      <div class="testi glass sheen">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-body">Collaborating with Trevor has been an outstanding journey in expanding my practice into the digital space. His expertise in guiding me to build a compelling online educational offer has been invaluable. His insightful direction and dedication have truly enhanced my ability to share my knowledge with a wider audience.</p>
+        <span class="testi-name">Dr George Ross, MChiro, DC, PgCert, LRCC</span>
+        <span class="testi-co">Chiropractic practitioner</span>
+      </div>
+    </div>
+
+    <!-- Titan Network testimonials: secondary, supporting layer -->
+    <div class="titan-label"><span>Trusted inside Titan Network</span></div>
+    <div class="titan-strip">
+      <div class="titan-testi">
+        <div class="titan-testi-stars">★★★★★</div>
+        <p class="titan-testi-body">He's built some of the most impactful brand training inside Titan, including his IDEA Framework, which has completely shifted the way our members approach branding. In our weekly huddles and conversion work parties, he analyses listings in real time and helps members create brands that convert through trust and alignment.</p>
+        <span class="titan-testi-name">Athena Severi, Co-Founder</span>
+        <span class="titan-testi-co">Titan Network</span>
+      </div>
+      <div class="titan-testi">
+        <div class="titan-testi-stars">★★★★★</div>
+        <p class="titan-testi-body">Trevor Bradford has been a pillar of the Titan Network since day one. As the creator of our brand training programme and masterclasses, his IDEA Framework brings together emotional insight, strategic clarity, and practical tools in a way that few others can. It's not just theory: it's actionable, effective, and deeply human.</p>
+        <span class="titan-testi-name">Dan Ashburn, Co-Founder</span>
+        <span class="titan-testi-co">Titan Network</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ WHAT YOU GET ══════════════════════════════════════════════════════════ -->
 <section id="how">
   <div class="wrap">
-    <span class="eyebrow">What the diagnostic gives you</span>
-    <h2>The fix leads. The score supports it.</h2>
+    <span class="eyebrow">What comes back</span>
+    <h2>One fix. One score. One brief you can hand off today.</h2>
     <p class="sec-lede">A score without a fix is a number on a page. The IDEA Brand Coach keeps the one change you need in front of the number that justifies it.</p>
-    <div class="outcomes">
-      <div class="oc lead">
-        <div class="step">The fix</div>
-        <h3>Your Decision Trigger&trade;</h3>
-        <p>The single most powerful lever for your brand right now, the one change that closes the gap. One trigger, one action, one brief. No menu, no fifty recommendations.</p>
+    <div class="outputs">
+      <div class="out-card out lead glass-strong sheen">
+        <div class="out-tag">The fix</div>
+        <h3>Your Decision Trigger™</h3>
+        <p>The single most powerful lever for your brand right now: the one change that closes the gap. One trigger, one action, one brief. No menu, no fifty recommendations.</p>
       </div>
-      <div class="oc">
-        <div class="step">The score</div>
-        <h3>Your Trust Gap&trade; Score</h3>
-        <p>Out of 100, across four pillars, Insight, Distinctive, Empathetic, Authentic. It doesn't rank how good your brand is; it shows where the gap is widest, and therefore what to address first.</p>
+      <div class="out-card glass sheen">
+        <div class="out-tag">The score</div>
+        <h3>Your Trust Gap™ Score</h3>
+        <p>Out of 100, across four pillars: Insight, Distinctive, Empathetic, Authentic. It shows where the gap is widest, and therefore what to address first.</p>
       </div>
-      <div class="oc">
-        <div class="step">The proof</div>
+      <div class="out-card glass sheen">
+        <div class="out-tag">The proof</div>
         <h3>Your customers' own words</h3>
         <p>The verbatim review evidence the diagnosis is built on, particularly three-star reviews, where customers are most articulate about what almost stopped them buying.</p>
       </div>
-      <div class="oc">
-        <div class="step">The action</div>
+      <div class="out-card glass sheen">
+        <div class="out-tag">The action</div>
         <h3>A design brief you can hand off</h3>
-        <p>The placement instruction translated into a specific image brief, copy brief, and CTA direction, something a designer or VA can act on without further interpretation.</p>
+        <p>A specific image brief, copy brief, and CTA direction: something a designer or VA can act on without further interpretation.</p>
+      </div>
+    </div>
+
+    <!-- SAMPLE OUTPUT -->
+    <div class="sample-wrap">
+      <div class="sample-header">
+        <span class="badge">Example output</span>
+        <span class="brand">Fictional brand: NovaBark Pet Supplements</span>
+      </div>
+      <div class="sample-body">
+        <div class="sample-score-area">
+          <div class="sample-score-num">58</div>
+          <span class="sample-score-label">Trust Gap Score / 100</span>
+          <div class="sample-pillars">
+            <div class="s-prow"><span class="pn">Insight</span><div class="s-track"><div class="s-fill warn" style="width:66%"></div></div><span class="s-val">66</span></div>
+            <div class="s-prow"><span class="pn">Distinctive</span><div class="s-track"><div class="s-fill ok" style="width:72%"></div></div><span class="s-val">72</span></div>
+            <div class="s-prow"><span class="pn">Empathetic</span><div class="s-track"><div class="s-fill bad" style="width:41%"></div></div><span class="s-val">41</span></div>
+            <div class="s-prow"><span class="pn">Authentic</span><div class="s-track"><div class="s-fill warn" style="width:55%"></div></div><span class="s-val">55</span></div>
+          </div>
+        </div>
+        <div class="sample-right">
+          <div class="sample-trigger-tag">Primary Decision Trigger</div>
+          <div class="sample-trigger-name">Recognition</div>
+          <p class="sample-trigger-desc">Your customers can see what you sell. They don't yet feel that you understand their specific situation as a pet owner.</p>
+          <div class="sample-review">
+            <strong>3-star review evidence</strong>
+            "The product seems fine but I couldn't tell if it was made for dogs like mine. The packaging looks generic, could be any supplement brand. Ended up just going with something I'd seen recommended in my dog owner group."
+          </div>
+          <div class="sample-brief">
+            <strong>First change</strong>
+            Packaging design: redesign the front-facing label to signal which dog this is for, breed size, age, or coat type, so the product reads as made for their specific dog, not a generic supplement. Pair with a second image (Amazon's image 2 or 3) showing the product in use with a dog, where lifestyle content is permitted. Keep the main image compliant: product only, white background.
+          </div>
+        </div>
+      </div>
+      <div class="sample-disclaimer">Example only. Your diagnostic is built from your own customers' language.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DIAGNOSTIC CTA ════════════════════════════════════════════════════════ -->
+<section id="start" class="diag-section">
+  <div class="wrap">
+    <div class="diag-inner">
+      <div class="diag-copy">
+        <span class="eyebrow">Run the free diagnostic</span>
+        <h2>Six questions. The one thing to change on your listing.</h2>
+        <p>Answer six questions about your brand, your category, and your customers. Get back your Trust Gap Score, your primary Decision Trigger, and the one-line brief that tells you what to change first. Free. No account. No email.</p>
+        <p style="font-size:.92rem;color:var(--gld);font-weight:600;margin-bottom:22px">Most people tell us it's the first time in months they've known exactly what to do next.</p>
+        <div class="btn-row">
+          <a href="/diagnostic" class="btn btn-primary">Run the free diagnostic, takes 3 minutes →</a>
+        </div>
+        <div class="hero-micro" style="margin-top:14px">
+          <span>Free</span>
+          <span>No account</span>
+          <span>No email</span>
+          <span>Instant result</span>
+        </div>
+      </div>
+      <div class="diag-demo glass-strong sheen">
+        <div class="demo-q">Where is my brand losing the sale?</div>
+        <div class="demo-a">
+          <div class="demo-row"><span class="dk">Trust Gap Score</span><span class="dv">58 / 100</span></div>
+          <div class="demo-sep"></div>
+          <div class="demo-row"><span class="dk">Widest gap</span><span class="dv">Empathetic (41)</span></div>
+          <div class="demo-row"><span class="dk">Primary trigger</span><span class="dv gold">Recognition</span></div>
+          <div class="demo-sep"></div>
+          <div class="demo-brief">
+            <strong>What that means</strong>
+            Your customers can see what you sell. They don't yet feel that you understand their specific situation.
+          </div>
+          <div class="demo-brief" style="margin-top:10px">
+            <strong>First change</strong>
+            Your main image and headline copy.
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- IDEA FRAMEWORK -->
-<section class="dim-band" id="framework">
+<!-- ═══ IDEA FRAMEWORK ═══════════════════════════════════════════════════════ -->
+<section id="framework">
   <div class="wrap">
     <span class="eyebrow">The framework behind the score</span>
     <h2>IDEA</h2>
-    <p class="sec-lede">At the moment of purchase, your customer's brain is running four checks simultaneously. All four must be satisfied for trust to be established. These are the four dimensions of the IDEA Framework, drawn from Trevor Bradford's book <em>What Captures the Heart Goes in the Cart</em>. The Trust Gap Score measures how well your brand is meeting all four. Where the score falls short is where the sale is being lost.</p>
+    <p class="sec-lede">At the moment your customer is about to click Buy, their brain is running four checks simultaneously. All four must pass. If any one of them fails, the sale is lost, not because your product isn't good enough, but because your brand hasn't answered the right question.</p>
     <div class="dims">
-      <div class="dim i"><div class="ltr">I</div><div class="nm">Insight</div><p>A deep read of <em>why</em> your customers really buy, the emotional drivers under the demographics. Without it, your brand addresses the rational decision while the real one happens somewhere else entirely.</p></div>
-      <div class="dim d"><div class="ltr">D</div><div class="nm">Distinctive</div><p>Standing for something, not just standing out. Features are irrelevant until identity is established, and identity is established by the brand, not the product.</p></div>
-      <div class="dim e"><div class="ltr">E</div><div class="nm">Empathetic</div><p>Mirroring what the customer actually feels, safety, belonging, validation. Specs don't reach this state. Recognition does.</p></div>
-      <div class="dim a"><div class="ltr">A</div><div class="nm">Authentic</div><p>Values and promises kept in actions, not words. A brand that claims what it stands for without demonstrating it loses this buyer before the product is ever considered.</p></div>
+      <div class="dim i glass sheen">
+        <div class="dim-letter">I</div>
+        <div class="dim-name">Insight</div>
+        <p>A deep read of <span style="color:var(--ink-dim)">why</span> your customers really buy: the emotional drivers under the demographics.<br>Without it, your brand addresses the rational decision while the real one happens somewhere else entirely.</p>
+      </div>
+      <div class="dim d glass sheen">
+        <div class="dim-letter">D</div>
+        <div class="dim-name">Distinctive</div>
+        <p>Standing for something, not just standing out. Features are irrelevant until identity is established, and identity is established by the brand, not the product.</p>
+      </div>
+      <div class="dim e glass sheen">
+        <div class="dim-letter">E</div>
+        <div class="dim-name">Empathetic</div>
+        <p>Mirroring what the customer actually feels: safety, belonging, the sense that this brand understands their specific situation. No product feature reaches this state. Only the brand does. This is the pillar most commonly failing on Amazon listings.</p>
+      </div>
+      <div class="dim a glass sheen">
+        <div class="dim-letter">A</div>
+        <div class="dim-name">Authentic</div>
+        <p>Values and promises kept in actions, not words. A brand that claims what it stands for without demonstrating it loses this buyer before the product is ever considered.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- DECISION TRIGGERS -->
+<!-- ═══ DECISION TRIGGERS ════════════════════════════════════════════════════ -->
 <section id="triggers">
   <div class="wrap">
-    <span class="eyebrow">The fix, named</span>
-    <h2>Six ways a brand loses the sale. Yours is losing it one way right now.</h2>
-    <p class="sec-lede">The Decision Trigger is a prescription, not a recommendation. The engine identifies the one that's firing for your brand, from your own customers' language, and anchors it to a brand that already gets it right.</p>
+    <span class="eyebrow">Six reasons a sale is lost. Yours is being lost for one of them.</span>
+    <h2>The Decision Trigger™</h2>
+    <p class="sec-lede">A prescription, not a recommendation. The diagnostic reads your customers' own language, particularly your three-star reviews, where buyers are most articulate about what almost stopped them, and identifies the one trigger firing against your brand right now.</p>
     <div class="triggers">
-      <div class="trg hot">
-        <div class="anchor">Anchor &middot; Dove</div>
+      <div class="trg hot glass-strong sheen">
+        <div class="trg-anchor">Most commonly fired on Amazon listings</div>
         <h4>Recognition</h4>
-        <p>The brand isn't mirroring the customer's emotional reality, so they never feel understood enough to engage.</p>
-        <span class="common">Most commonly fired</span>
+        <p>The brand isn't mirroring the customer's emotional reality. The customer can see what the product does. They can't see that the brand understands their specific situation.</p>
+        <span class="trg-common">Anchor example: Dove</span>
       </div>
-      <div class="trg">
-        <div class="anchor">Anchor &middot; Harvard Medical</div>
+      <div class="trg glass sheen">
+        <div class="trg-anchor">Anchor example: Harvard Medical</div>
         <h4>Permission</h4>
         <p>The brand hasn't shown enough authority for the customer to trust its claims.</p>
       </div>
-      <div class="trg">
-        <div class="anchor">Anchor &middot; Apple</div>
+      <div class="trg glass sheen">
+        <div class="trg-anchor">Anchor example: Apple</div>
         <h4>Identity</h4>
         <p>The customer is buying who they want to be, and needs the brand to stand for something.</p>
       </div>
-      <div class="trg">
-        <div class="anchor">Anchor &middot; Patagonia</div>
+      <div class="trg glass sheen">
+        <div class="trg-anchor">Anchor example: Patagonia</div>
         <h4>Belonging</h4>
         <p>The customer is deciding whether the brand deserves to be part of their life. Values must precede product.</p>
       </div>
-      <div class="trg">
-        <div class="anchor">Anchor &middot; Amazon's Choice</div>
+      <div class="trg glass sheen">
+        <div class="trg-anchor">Anchor example: Amazon's Choice</div>
         <h4>Momentum</h4>
         <p>The customer has been researching and is ready. Social-proof volume is the final lever.</p>
       </div>
-      <div class="trg">
-        <div class="anchor">Anchor &middot; FOMO signal</div>
+      <div class="trg glass sheen">
+        <div class="trg-anchor">Anchor example: FOMO signal</div>
         <h4>Fear-of-Loss</h4>
         <p>The customer is moved by the cost of waiting. Frame the cost of inaction, not the benefit of buying.</p>
       </div>
     </div>
-    <p class="trg-note">One trigger. One action. One brief. <span>No menu.</span></p>
+    <div class="trg-testi glass sheen">
+      <blockquote>"Before having Trevor work on my project, I spent several months watching him analyse and advise on at least 50 different products. What stood out wasn't just his insight: it was the direct impact his recommendations had on increasing the value of those businesses. You could literally see the lift."</blockquote>
+      <cite>Martyn Williams, Owner, Kailash Herbals / Intuition Supplements</cite>
+    </div>
   </div>
 </section>
 
-<!-- BRAND DEFENCE LOOP -->
-<section class="loop-band" id="loop">
+<!-- ═══ LOOP ══════════════════════════════════════════════════════════════════ -->
+<section id="loop">
   <div class="wrap">
     <span class="eyebrow">Not a one-time audit</span>
     <h2>A continuous conversion intelligence system.</h2>
-    <p class="sec-lede">Markets change, competitors move, customer language evolves. Finding the gap once is the start, defending against it is the product. The first three steps are live today; the re-measurement loop is what we're building toward.</p>
+    <p class="sec-lede">Markets change, competitors move, customer language evolves. Finding the gap once is the start. Defending against it is the product.</p>
     <div class="loop">
-      <div class="lstep"><div class="ln">1</div><h4>Diagnose</h4><p>Score the Trust Gap across the four pillars from your listing and reviews.</p><span class="pill live"><span class="pd"></span>Available</span></div>
-      <div class="lstep"><div class="ln">2</div><h4>Analyse</h4><p>Identify the dominant buyer state and the one Decision Trigger firing right now.</p><span class="pill live"><span class="pd"></span>Available</span></div>
-      <div class="lstep"><div class="ln">3</div><h4>Fix</h4><p>Get the design brief, image, copy, CTA, ready to hand to a designer or VA.</p><span class="pill live"><span class="pd"></span>Available</span></div>
-      <div class="lstep"><div class="ln">4</div><h4>Re-measure</h4><p>Watch the gap close as conversion data comes back in after the change ships.</p><span class="pill soon"><span class="pd"></span>Roadmap</span></div>
-      <div class="lstep"><div class="ln">5</div><h4>Defend</h4><p>Know when competitors start to close the gap back, and move first.</p><span class="pill soon"><span class="pd"></span>Roadmap</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- SURFACES -->
-<section class="surf-band" id="start">
-  <div class="wrap">
-    <span class="eyebrow">No new app to learn</span>
-    <h2>Two ways to find your Trust Gap</h2>
-    <p class="sec-lede">Start free on the web in ten minutes, or run the full coach inside Claude, with the complete book-grounded library and toolset behind it.</p>
-    <div class="surfaces">
-      <div class="surf">
-        <div class="sh"><h3>The free diagnostic</h3><span class="pill live"><span class="pd"></span>Available</span></div>
-        <p>Answer a short, evidence-based diagnostic and get your Trust Gap Score and your primary Decision Trigger &mdash; free with a quick sign-in.</p>
-        <div class="demo">
-          <div class="q">Where is my brand losing the sale?</div>
-          <div class="a">Trust Gap 58/100 &middot; widest pillar: Empathetic &middot; primary trigger: <strong>Recognition</strong>, your customers don't feel understood yet.</div>
-        </div>
-        <a href="https://ideabrandcoach.icodemybusiness.com/v3/diagnostic" class="btn btn-primary">Start the diagnostic &rarr;</a>
+      <div class="lstep glass sheen">
+        <div class="lstep-num">1</div>
+        <h4>Analyse</h4>
+        <p>Read your customers' language and reviews to identify the dominant buyer state and the one Decision Trigger firing right now.</p>
+        <span class="pill pill-live"><span class="dot"></span>Available</span>
       </div>
-      <div class="surf">
-        <div class="sh"><h3>The coach in Claude</h3><span class="pill live"><span class="pd"></span>Available</span></div>
-        <p>Add the IDEA Brand Coach to Claude as a custom connector, Desktop, web, or Code. The full diagnostic, avatar, and output engine, conversational and always a click away.</p>
-        <div class="demo">
-          <div class="q">Build my customer avatar and draft the fix.</div>
-          <div class="a">Reads your reviews &rarr; forensic avatar &rarr; Trust Gap &rarr; Decision Trigger &rarr; design brief, grounded in your own evidence, never invented.</div>
-        </div>
-        <div class="url-card">
-          <code id="mcpUrl">https://ideabrandcoach.icodemybusiness.com/mcp</code>
-          <button class="copy-btn" id="copyUrlBtn" onclick="copyUrl()">Copy URL</button>
-        </div>
-        <a href="https://ideabrandcoach.icodemybusiness.com/onboard.html" class="btn btn-ghost" style="margin-top:14px;color:#fff;border-color:rgba(255,255,255,.25)">Connector setup steps &rarr;</a>
+      <div class="lstep glass sheen">
+        <div class="lstep-num">2</div>
+        <h4>Diagnose</h4>
+        <p>Score the Trust Gap across the four pillars from what the analysis reveals.</p>
+        <span class="pill pill-live"><span class="dot"></span>Available</span>
+      </div>
+      <div class="lstep glass sheen">
+        <div class="lstep-num">3</div>
+        <h4>Fix</h4>
+        <p>Get the design brief: image, copy, CTA, ready to hand to a designer or VA.</p>
+        <span class="pill pill-live"><span class="dot"></span>Available</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FAQ -->
+<!-- ═══ FAQ ═══════════════════════════════════════════════════════════════════ -->
 <section id="faq">
   <div class="wrap">
     <span class="eyebrow">Straight answers</span>
     <h2>Questions, answered honestly</h2>
-    <div class="faq">
+    <div class="faq" style="margin-top:28px">
       <div>
-        <details class="qa"><summary>Is this a brand strategy tool? <span class="mk">+</span></summary>
-          <div class="ans">No. It's a conversion problem solver. It produces brand-strategy outputs, positioning, a Brand Canvas, but only as a consequence of the diagnostic, never as the destination. The front-end promise is finding the one thing stopping the sale.</div>
+        <details class="qa"><summary>Is it free? <span class="mk">+</span></summary>
+          <div class="ans">The diagnostic is free. No account, no email, no payment required. You run the six questions and get your full result immediately. When we add saved reports and re-measurement, those will be paid features. The diagnostic that tells you what to fix first is always free.</div>
         </details>
         <details class="qa"><summary>What do I actually get back? <span class="mk">+</span></summary>
-          <div class="ans"><span class="pill live"><span class="pd"></span>Available</span><br>A Trust Gap Score out of 100 across four pillars, your primary Decision Trigger, the verbatim review evidence behind it, and a design brief (image + copy + CTA) you can hand off.</div>
+          <div class="ans"><span class="pill pill-live" style="margin-bottom:8px;display:inline-flex"><span class="dot"></span>Available</span><br>A Trust Gap Score out of 100 across four pillars, your primary Decision Trigger, the verbatim review evidence behind it, and a design brief (image, copy, CTA) you can hand off today.</div>
+        </details>
+        <details class="qa"><summary>Which brands is this designed for? <span class="mk">+</span></summary>
+          <div class="ans">Built primarily for Amazon sellers and DTC founders with an existing product listing and at least some customer reviews. The diagnostic draws on your review language to identify the trigger, so the more reviews you have, the more precise the result. It works for any physical product category. It is not designed for B2B or SaaS.</div>
         </details>
         <details class="qa"><summary>How is this different from asking ChatGPT? <span class="mk">+</span></summary>
-          <div class="ans">ChatGPT reads what customers say. This reads what their language reveals about the emotional state they're in when they buy, through a framework (Four Buyer States, Trust Gap, Decision Trigger) that no general AI has, regardless of prompt.</div>
+          <div class="ans">ChatGPT reads what customers say. This reads what their language reveals about the emotional state they're in when they buy, through a framework (the Trust Gap, the Decision Trigger, the four buyer states) that no general AI has, regardless of how you prompt it.</div>
         </details>
       </div>
       <div>
+        <details class="qa"><summary>Do I need an account to try it? <span class="mk">+</span></summary>
+          <div class="ans"><span class="pill pill-live" style="margin-bottom:8px;display:inline-flex"><span class="dot"></span>Available</span><br>No. The free diagnostic starts without one. You only sign in when you want to save and revisit your results.</div>
+        </details>
         <details class="qa"><summary>What if my product has very few reviews? <span class="mk">+</span></summary>
-          <div class="ans"><span class="pill soon"><span class="pd"></span>Roadmap</span><br>With under ~50 reviews the classification is less certain. A competitor-corpus supplement, reading the category's review language alongside yours, is on the roadmap to make new brands first-class.</div>
+          <div class="ans"><span class="pill pill-soon" style="margin-bottom:8px;display:inline-flex"><span class="dot"></span>Roadmap</span><br>With under around 50 reviews the classification is less certain. A competitor-corpus supplement, reading the category's review language alongside yours, is on the roadmap to make new brands first-class.</div>
         </details>
         <details class="qa"><summary>Will it re-measure after I ship the fix? <span class="mk">+</span></summary>
-          <div class="ans"><span class="pill soon"><span class="pd"></span>Roadmap</span><br>The Brand Defence loop, re-measure and defend, is what we're building toward. Today the coach takes you through Diagnose &rarr; Analyse &rarr; Fix.</div>
+          <div class="ans"><span class="pill pill-soon" style="margin-bottom:8px;display:inline-flex"><span class="dot"></span>Roadmap</span><br>The Brand Defence loop, re-measure and defend, is what we're building toward. Today the coach takes you through Analyse, Diagnose, Fix.</div>
         </details>
-        <details class="qa"><summary>Do I need an account to try it? <span class="mk">+</span></summary>
-          <div class="ans"><span class="pill live"><span class="pd"></span>Available</span><br>No. The free web diagnostic and the Claude connector both start without one. You only sign in when you want to save and revisit your work.</div>
+        <details class="qa"><summary>Is this a brand strategy tool? <span class="mk">+</span></summary>
+          <div class="ans">No. It's a conversion problem solver. It finds the one thing stopping the sale and gives you a brief to fix it.</div>
         </details>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CLOSER -->
-<section class="closer">
+<!-- ═══ CLAUDE CONNECTOR ═════════════════════════════════════════════════════ -->
+<section id="claude-coach">
   <div class="wrap">
-    <h2>Customers don't buy the best product. They buy the brand that feels right.</h2>
-    <p>There's a science to that, and a fix for the gap that's costing you the sale.</p>
-    <div class="btn-row">
-      <a href="#start" class="btn btn-primary">Find your Trust Gap &rarr;</a>
-      <a href="https://ideabrandcoach.icodemybusiness.com/onboard.html" class="btn btn-ghost">Add the coach to Claude</a>
+    <span class="eyebrow">Already using Claude? Run the full coach in your sidebar.</span>
+    <h2>The complete IDEA Brand Coach,<br>permanently in your Claude sidebar.</h2>
+    <p class="sec-lede">If you already use Claude, install the IDEA Brand Coach as a connector. It adds the full diagnostic, customer avatar engine, and output library directly to your Claude sidebar: every tool on this page, in a conversation, one click away whenever you need it.</p>
+    <div class="connector-card glass sheen" style="max-width:580px">
+      <div class="connector-demo">
+        <div class="cq">Build my customer avatar and draft the fix.</div>
+        <div class="ca">Reads your reviews → forensic avatar → Trust Gap → Decision Trigger → design brief, grounded in your own evidence, <strong>never invented.</strong></div>
+      </div>
+      <div class="url-row">
+        <code id="mcpUrl">https://ideabrandcoach.icodemybusiness.com/mcp</code>
+        <button class="copy-btn" id="copyBtn" onclick="copyUrl()">Copy URL</button>
+      </div>
+      <a href="/v4/connect" class="btn btn-ghost" style="font-size:.86rem">Connector setup steps →</a>
     </div>
   </div>
 </section>
 
-<!-- TOOL GLOSSARY -->
-<section class="gloss-band" id="tools">
+<!-- ═══ WHAT'S INCLUDED ═══════════════════════════════════════════════════════ -->
+<section id="tools">
   <div class="wrap">
-    <span class="eyebrow">Everything it does, in one place</span>
-    <h2>What the coach can actually do</h2>
-    <p class="sec-lede">The IDEA Brand Coach plugs straight into Claude, so you work with it in a normal conversation, with nothing to install. Everything below is live and working today, the full set of jobs it can do for your brand.</p>
-
-    <div class="gcat">
-      <div class="gcat-head"><h3>Diagnose the Trust Gap</h3><span class="cnt">the core loop</span></div>
-      <table class="gtable"><tbody>
-        <tr><td class="tn">Score your Trust Gap</td><td class="td-desc">Score the Trust Gap across the four IDEA pillars.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Diagnose from your evidence</td><td class="td-desc">Evidence-grounded diagnostic leg, binds your reviews before interpreting.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Read your reviews and listing</td><td class="td-desc">Parse and persist your reviews and listing snapshot as diagnostic input.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Show what I still need</td><td class="td-desc">Show which inputs are filled and what the coach still needs to ask.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Capture your answers</td><td class="td-desc">Route your answers into the brand context, never invented.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-      </tbody></table>
+    <span class="eyebrow">What's included</span>
+    <h2>Everything the coach does for your brand</h2>
+    <p class="sec-lede">All live today inside the Claude connector. Nothing to install. You work with it in a normal conversation.</p>
+    <div class="included">
+      <div class="inc glass sheen">
+        <h3>Diagnose the Trust Gap</h3>
+        <p>Score across the four IDEA pillars, grounded in your own reviews and listing evidence.</p>
+      </div>
+      <div class="inc glass sheen">
+        <h3>Build a forensic customer avatar</h3>
+        <p>Vocabulary, job map, emotional triggers, and objections, built stage by stage from real customer language.</p>
+      </div>
+      <div class="inc glass sheen">
+        <h3>Produce the fix and the brief</h3>
+        <p>A positioning statement, a complete creative brief (image, copy, CTA), creative concepts, and a 90-day rollout plan. Ready to hand to a designer or VA.</p>
+      </div>
+      <div class="inc glass sheen">
+        <h3>Track your brand funnel</h3>
+        <p>Map every touchpoint, audit assets against your avatar, and check drafts against brand canon before they ship.</p>
+      </div>
     </div>
-
-    <div class="gcat">
-      <div class="gcat-head"><h3>Build the customer avatar (Avatar 2.0)</h3><span class="cnt">forensic portrait</span></div>
-      <table class="gtable"><tbody>
-        <tr><td class="tn">Build the avatar, stage by stage</td><td class="td-desc">Run a forensic stage, vocabulary &rarr; job map &rarr; triggers &rarr; objections, or the full pipeline.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Create and open avatars</td><td class="td-desc">Create, list, and open customer avatars for your brand.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Switch or pin an avatar</td><td class="td-desc">Switch the working avatar or pin the primary one for audits.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Track avatar progress</td><td class="td-desc">Track S1-S4 build progress (draft / built / approved).</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-      </tbody></table>
-    </div>
-
-    <div class="gcat">
-      <div class="gcat-head"><h3>Produce the fix &amp; the outputs</h3><span class="cnt">the deliverables</span></div>
-      <table class="gtable"><tbody>
-        <tr><td class="tn">Reveal your brand Signature</td><td class="td-desc">Reveal the brand Signature, the line that captures the heart.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Build your Brand Canvas</td><td class="td-desc">Synthesise the Brand Canvas from the diagnostic (a consequence, not the goal).</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Write the Export Brief</td><td class="td-desc">The Export Brief, image, copy, CTA, with a fabrication gate on unconfirmed claims.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Generate creative concepts</td><td class="td-desc">Generate on-brief creative concepts for the fix.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Map your assets to the pillars</td><td class="td-desc">Cross-map your assets against the four IDEA pillars.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Investment plan and 90-day rollout</td><td class="td-desc">Tiered investment matrix + 90-day rollout from your business facts.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Export the gold workbook</td><td class="td-desc">Render the gold .xlsx workbook from your persisted work, no regeneration.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-      </tbody></table>
-    </div>
-
-    <div class="gcat">
-      <div class="gcat-head"><h3>Track the brand funnel</h3><span class="cnt">assets across the journey</span></div>
-      <table class="gtable"><tbody>
-        <tr><td class="tn">See your funnel inventory</td><td class="td-desc">See every brand asset tracked across the customer funnel.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Add or update a touchpoint</td><td class="td-desc">Add or update a touchpoint in the funnel inventory.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Audit one asset</td><td class="td-desc">Audit a single asset against the avatar and brand strategy.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Run a funnel coverage audit</td><td class="td-desc">Run and read the per-avatar funnel coverage audit.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-      </tbody></table>
-    </div>
-
-    <div class="gcat">
-      <div class="gcat-head"><h3>Asset ledger &amp; history</h3><span class="cnt">system of record</span></div>
-      <table class="gtable"><tbody>
-        <tr><td class="tn">Log assets and their status</td><td class="td-desc">Log an asset and drive its approval status. Identity-gated.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Record a brand-canon check</td><td class="td-desc">Record a verdict against brand canon on an asset.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Browse assets and their history</td><td class="td-desc">Read the asset ledger and its append-only change log.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Pre-publish brand check</td><td class="td-desc">Check a draft against the publish filter before it ships.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-      </tbody></table>
-    </div>
-
-    <div class="gcat">
-      <div class="gcat-head"><h3>Your sessions &amp; feedback</h3><span class="cnt">history + a line to the team</span></div>
-      <table class="gtable"><tbody>
-        <tr><td class="tn">Your past coaching sessions</td><td class="td-desc">Index your own coach threads, per avatar. Private, RLS-scoped.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Reopen a session transcript</td><td class="td-desc">Reopen one thread's full transcript by session.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Send the team feedback</td><td class="td-desc">Send a note to the team, no login required.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-        <tr><td class="tn">Check the coach is online</td><td class="td-desc">Confirms the coach is online and set up correctly.</td><td class="td-st"><span class="pill live"><span class="pd"></span>Available</span></td></tr>
-      </tbody></table>
-    </div>
-
-    <div class="gcat">
-      <div class="gcat-head"><h3>Coming next</h3><span class="cnt">on the roadmap</span></div>
-      <table class="gtable"><tbody>
-        <tr><td class="tn">Brand Defence loop</td><td class="td-desc">Re-measure conversion after a fix ships, and defend the gap as competitors move.</td><td class="td-st"><span class="pill soon"><span class="pd"></span>Roadmap</span></td></tr>
-        <tr><td class="tn">Competitor corpus</td><td class="td-desc">Supplement thin review sets with the category's language, for new brands.</td><td class="td-st"><span class="pill soon"><span class="pd"></span>Roadmap</span></td></tr>
-        <tr><td class="tn">Market Watch</td><td class="td-desc">Ongoing monitoring of how customer and competitor language is shifting.</td><td class="td-st"><span class="pill soon"><span class="pd"></span>Roadmap</span></td></tr>
-        <tr><td class="tn">Knowledge &amp; test ledger reads</td><td class="td-desc">Cross-server brand-canon and test-history reads (pending the write-auth decision).</td><td class="td-st"><span class="pill soon"><span class="pd"></span>Roadmap</span></td></tr>
-      </tbody></table>
-    </div>
-
-    <p class="gloss-foot">
-      Add to Claude Code: <code>claude mcp add --transport http idea-brand-coach https://ideabrandcoach.icodemybusiness.com/mcp</code><br>
-      Status checked on 24 June 2026. Items marked Roadmap are planned, not yet live.
-    </p>
   </div>
 </section>
 
+<!-- ═══ CLOSER ════════════════════════════════════════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="closer-card glass-strong sheen">
+      <h2>Your conversion rate won't change because you found better data. It will change because you found the right diagnosis.</h2>
+      <p>Six questions. One score. The one change that matters. Free.</p>
+      <div class="btn-row" style="justify-content:center">
+        <a href="/diagnostic" class="btn btn-primary">Run the free diagnostic, takes 3 minutes →</a>
+      </div>
+      <p class="closer-sub">No account needed &middot; No email &middot; Instant result</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═════════════════════════════════════════════════════════════════ -->
 <footer>
-  <div class="fl">IDEA&trade; Brand Coach</div>
-  <div class="fnav">
+  <div class="footer-brand">IDEA™ Brand Coach</div>
+  <div class="footer-nav">
     <a href="#problem">The problem</a>
     <a href="#framework">The framework</a>
     <a href="#tools">Tools</a>
-    <a href="https://ideabrandcoach.icodemybusiness.com/onboard.html">Add to Claude</a>
+    <a href="/diagnostic">Run the diagnostic</a>
   </div>
-  <p>Strategic Brand Creation &middot; <a href="https://ideabrandconsultancy.com">ideabrandconsultancy.com</a></p>
-  <p style="margin-top:6px;opacity:.7">Built on <em>What Captures the Heart Goes in the Cart</em> by Trevor Bradford &middot; IDEA Brand Consultancy &middot; Brandvoice Retail Ltd</p>
+  <p>Strategic Brand Creation &middot; <a href="https://ideabrandconsultancy.com" style="color:var(--gld);text-decoration:none">ideabrandconsultancy.com</a></p>
+  <p style="margin-top:6px;opacity:.6">Built on What Captures the Heart Goes in the Cart by Trevor Bradford &middot; IDEA Brand Consultancy &middot; Brandvoice Retail Ltd</p>
 </footer>
 
+<!-- STICKY BAR -->
+<div class="sticky-bar" id="stickyBar">
+  <span class="note">6 questions &middot; Free &middot; Instant result</span>
+  <a href="/diagnostic" class="btn btn-primary">Run the free diagnostic →</a>
+</div>
+
 <script>
-  function copyUrl(){
-    const btn = document.getElementById("copyUrlBtn");
-    const url = document.getElementById("mcpUrl").textContent.trim();
-    const done = () => { btn.textContent = "Copied ✓"; btn.classList.add("copied"); setTimeout(()=>{btn.textContent="Copy URL";btn.classList.remove("copied");},2200); };
-    if (navigator.clipboard && window.isSecureContext){
-      navigator.clipboard.writeText(url).then(done).catch(()=>{ btn.textContent="Press Ctrl+C"; });
-    } else { btn.textContent="Press Ctrl+C"; }
+function copyUrl(){
+  const btn=document.getElementById('copyBtn');
+  const url=document.getElementById('mcpUrl').textContent.trim();
+  const done=()=>{btn.textContent='Copied ✓';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy URL';btn.classList.remove('copied')},2200)};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(url).then(done).catch(()=>{btn.textContent='Press Ctrl+C'})}
+  else{btn.textContent='Press Ctrl+C'}
+}
+(function(){
+  var bar=document.getElementById('stickyBar');
+  var hero=document.querySelector('.hero');
+  if(!bar||!hero)return;
+  function check(){
+    if(hero.getBoundingClientRect().bottom<0){bar.classList.add('visible')}
+    else{bar.classList.remove('visible')}
   }
+  window.addEventListener('scroll',check,{passive:true});
+  check();
+})();
+/* Auth-aware nav button: this page is same-origin with the SPA, so it can read
+   the Supabase session from localStorage. Logged in → "Go to Dashboard" (/v4,
+   the authed home per VersionGate); otherwise → "Log in" (/auth). */
+(function(){
+  var btn=document.getElementById('authBtn');
+  if(!btn)return;
+  var loggedIn=false;
+  try{
+    var raw=localStorage.getItem('sb-ecdrxtbclxfpkknasmrw-auth-token');
+    if(raw){
+      var s=JSON.parse(raw);
+      var sess=(s&&s.currentSession)?s.currentSession:s;
+      var token=sess&&sess.access_token;
+      var exp=sess&&sess.expires_at; /* unix seconds */
+      var refresh=sess&&sess.refresh_token;
+      /* logged in if we hold an unexpired access token, or a refresh token the
+         app can exchange (autoRefreshToken) — /v4 is auth-gated, so a truly dead
+         session safely bounces to /auth on click. */
+      if(token&&((exp&&exp*1000>Date.now())||refresh))loggedIn=true;
+    }
+  }catch(e){/* malformed/absent session → treat as logged out */}
+  if(loggedIn){btn.textContent='Go to Dashboard';btn.setAttribute('href','/v4');}
+})();
 </script>
 </body>
 </html>
