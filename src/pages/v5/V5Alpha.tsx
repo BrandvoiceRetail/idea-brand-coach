@@ -429,6 +429,13 @@ export default function V5Alpha(): JSX.Element {
     [brief, claims, listingTitle, asin, designerFrames],
   );
 
+  // Soft save nudge at the peak-value moment (they just extracted the brief).
+  // A nudge, never a wall: only for anonymous unsaved sessions, and only as a
+  // toast description under the success message.
+  const saveNudge = isAnonymous && !saved
+    ? 'Want this waiting for you next time? Save it with your email at the end.'
+    : undefined;
+
   const handleExportBrief = useCallback((): void => {
     if (!shareText) return;
     const blob = new Blob([shareText], { type: 'text/plain;charset=utf-8' });
@@ -438,20 +445,23 @@ export default function V5Alpha(): JSX.Element {
     a.download = 'design-brief.txt';
     a.click();
     URL.revokeObjectURL(url);
+    toast.success('Brief downloaded.', { description: saveNudge });
     captureAlphaEvent('v5_brief_shared', { method: 'download' });
-  }, [shareText]);
+  }, [shareText, saveNudge]);
 
   const handleCopyBrief = useCallback(async (): Promise<void> => {
     if (!shareText) return;
     try {
       await navigator.clipboard.writeText(shareText);
-      toast.success('Brief copied. Paste it straight to your designer or VA.');
+      toast.success('Brief copied. Paste it straight to your designer or VA.', {
+        description: saveNudge,
+      });
       captureAlphaEvent('v5_brief_shared', { method: 'copy' });
     } catch (e) {
       console.error('[V5Alpha] copy brief failed:', e);
       toast.error('Could not copy. Use Export instead.');
     }
-  }, [shareText]);
+  }, [shareText, saveNudge]);
 
   // Native share sheet (mobile). Null when the browser has no share support so
   // the button never renders as a dead end.

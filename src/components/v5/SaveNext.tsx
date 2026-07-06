@@ -41,15 +41,22 @@ export function SaveNext({
   const [email, setEmail] = useState('');
   const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
+  // Honest stakes: "saved" may only be claimed once it is durable. An anonymous
+  // session lives and dies with this browser, so say exactly that until the
+  // email converts it into a real account.
+  const atRisk = isAnonymous && !saved;
+
   return (
     <V5Stage wide>
       <div className="mb-7 text-center">
         <GlassEyebrow>Your brief is ready</GlassEyebrow>
         <h1 className="font-display text-3xl font-extrabold text-foreground">
-          Saved. It&apos;s yours to keep.
+          {atRisk ? 'Right now it only lives in this browser.' : 'Saved. It’s yours to keep.'}
         </h1>
         <p className="mt-2 text-[15px] text-muted-foreground">
-          One fix, one score, one brief, waiting for you whenever you need it.
+          {atRisk
+            ? 'Clear your cookies or switch devices and it is gone. Your email below keeps it safe.'
+            : 'One fix, one score, one brief, waiting for you whenever you need it.'}
         </p>
       </div>
 
@@ -58,10 +65,11 @@ export function SaveNext({
         <div className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.1em] text-gold-warm">
           Keep your brief
         </div>
-        {isAnonymous && !saved ? (
+        {atRisk ? (
           <>
             <div className="mb-3.5 text-[15px] font-extrabold text-foreground">
-              Save it and build your next one, free.
+              Give me your email and I will keep your profile, score and brief safe. That is your
+              free account, no password.
             </div>
             <div className="flex flex-col gap-2.5 sm:flex-row">
               <input
@@ -88,14 +96,13 @@ export function SaveNext({
             </div>
             {saveError && <p className="mt-2 text-sm text-destructive">{saveError}</p>}
             <p className="mt-2.5 text-xs text-muted-foreground">
-              I&apos;ll keep your profile, score and brief here, so your next visit picks up where
-              you left off.
+              Save it and build your next one, free. Your next visit picks up where you left off.
             </p>
           </>
         ) : (
           <p className="text-sm leading-relaxed text-foreground/85">
             {saved
-              ? 'Check your inbox to confirm. Your work is saved here.'
+              ? 'Check your inbox to confirm. Your work is saved to your account.'
               : 'Your work is saved to your account. Come back any time; nothing to redo.'}
           </p>
         )}
