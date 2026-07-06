@@ -5,10 +5,20 @@
  * mockup's dark liquid glass) regardless of the app-wide theme toggle by
  * scoping the `.dark` token block to this subtree.
  */
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
-/** Fixed slim brand bar (logo mark + name) — the only chrome on /v5. */
+/**
+ * Fixed slim brand bar (logo mark + name) — the only chrome on /v5, plus the
+ * one auth control: signed-in accounts get their email + log out; anonymous
+ * and signed-out visitors get a sign in / sign up link that returns to /v5.
+ */
 export function V5TopBar(): JSX.Element {
+  const { user, signOut } = useAuth();
+  const isRealAccount = !!user && user.is_anonymous !== true;
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex h-[58px] items-center border-b border-border bg-background/70 px-6 backdrop-blur-md">
       <div className="flex items-center gap-2.5">
@@ -19,6 +29,35 @@ export function V5TopBar(): JSX.Element {
           IDEA <span className="text-gold-warm">Brand Coach</span>
         </span>
       </div>
+      {isRealAccount ? (
+        <div className="ml-auto flex items-center gap-3">
+          <span className="hidden max-w-[220px] truncate text-xs text-muted-foreground sm:block">
+            {user.email}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="rounded-lg text-xs font-bold text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              // Full reload back to the entry screen so no run state survives
+              // the account switch.
+              void signOut().then(() => window.location.assign('/v5'));
+            }}
+          >
+            Log out
+          </Button>
+        </div>
+      ) : (
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="ml-auto rounded-lg text-xs font-bold text-muted-foreground hover:text-foreground"
+        >
+          <Link to="/auth?redirect=/v5">Sign in / Sign up</Link>
+        </Button>
+      )}
     </header>
   );
 }
