@@ -136,7 +136,33 @@ export class SupabaseProductDataService implements IProductDataService {
   }
 
   async getAllReviewsAsString(max: number = REVIEWS_STRING_MAX): Promise<string> {
-    const reviews = await this.getAllReviews();
+    return this.reviewsToString(await this.getAllReviews(), max);
+  }
+
+  /**
+   * Reviews for ONE listing only (every imported variant row of the asin), in
+   * the same capped string shape as getAllReviewsAsString. The /v5 build
+   * theatre uses this so an account with several imported products never
+   * blends corpora across listings.
+   */
+  async getReviewsForAsinAsString(asin: string, max: number = REVIEWS_STRING_MAX): Promise<string> {
+    const products = await this.getProducts();
+    const matching = products.filter((p) => p.asin.toUpperCase() === asin.toUpperCase());
+    if (matching.length === 0) return '';
+
+    const { data, error } = await supabase
+      .from('user_product_reviews')
+      .select('*')
+      .in('product_id', matching.map((p) => p.id))
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const reviews = this.dedupeReviews((data ?? []).map((row) => this.mapReview(row)));
+    return this.reviewsToString(reviews, max);
+  }
+
+  private reviewsToString(reviews: ProductReview[], max: number): string {
     const cap = Math.min(max, REVIEWS_STRING_MAX);
 
     const lines: string[] = [];

@@ -127,6 +127,18 @@ export interface IProductDataService {
   getAllReviewsAsString(max?: number): Promise<string>;
 
   /**
+   * Same formatted review block, but scoped to ONE listing (every imported
+   * variant row of the given asin). Empty string when the asin has no
+   * imported product. Used by the /v5 build theatre so accounts with several
+   * imported products never blend corpora across listings.
+   *
+   * @param asin - The listing's ASIN (case-insensitive)
+   * @param max - Optional cap on the number of reviews (defaults to 40)
+   * @returns Promise resolving to the formatted review block
+   */
+  getReviewsForAsinAsString(asin: string, max?: number): Promise<string>;
+
+  /**
    * Build a compact product-context block for the coach chat from the given
    * products, optionally embedding a capped sample of verbatim customer
    * reviews (deduped, max 10) so the coach can reference real customer language.

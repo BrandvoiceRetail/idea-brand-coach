@@ -198,7 +198,7 @@ export default function V5Alpha(): JSX.Element {
         setListingTitle(item.title ?? null);
         setFetchStep(1);
 
-        const reviews = await productService.getAllReviewsAsString();
+        const reviews = await productService.getReviewsForAsinAsString(runAsin);
         const count = reviews ? reviews.split('\n').filter(Boolean).length : 0;
         setReviewsString(reviews);
         setReviewCount(count);
