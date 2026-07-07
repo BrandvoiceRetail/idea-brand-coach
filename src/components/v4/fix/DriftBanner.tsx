@@ -67,10 +67,10 @@ export function DriftBanner({ driftItems, onRecheck }: DriftBannerProps): JSX.El
       <AlertTriangle className="h-4 w-4 text-gold-warm" aria-hidden="true" />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <AlertTitle className="text-foreground">Your Signature changed</AlertTitle>
+          <AlertTitle className="text-foreground">Your positioning changed</AlertTitle>
           <AlertDescription className="text-muted-foreground">
             {count} {noun} {count === 1 ? 'was' : 'were'} built against an older
-            Signature and may no longer match. Re-check {count === 1 ? 'it' : 'them'}{' '}
+            positioning and may no longer match. Re-check {count === 1 ? 'it' : 'them'}{' '}
             to see what needs a refresh.
           </AlertDescription>
         </div>

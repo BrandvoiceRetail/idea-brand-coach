@@ -303,7 +303,7 @@ export function FixTestPanel({
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-semibold text-foreground">A / B — variant to test</h3>
             <span className="text-[0.65rem] text-muted-foreground">
-              grounded in Signature + avatar · claim-gated
+              grounded in your positioning + avatar · claim-gated
             </span>
           </div>
 

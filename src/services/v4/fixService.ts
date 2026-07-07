@@ -645,7 +645,7 @@ export class FixService {
       if (!chosen) return errResult(null, 'The chosen option is not in the option set.');
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return errResult(null, 'You must be signed in to save your Signature.');
+      if (!user) return errResult(null, 'You must be signed in to save your positioning.');
 
       const { data, error } = await supabase
         .from('signatures')
@@ -660,10 +660,10 @@ export class FixService {
         })
         .select('id')
         .single();
-      if (error) return errResult(error, 'Could not save your Signature.');
+      if (error) return errResult(error, 'Could not save your positioning.');
       return { status: 'ok', data: { signatureId: data.id } };
     } catch (e) {
-      return errResult(e, 'Could not save your Signature.');
+      return errResult(e, 'Could not save your positioning.');
     }
   }
 

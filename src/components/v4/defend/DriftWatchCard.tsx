@@ -62,7 +62,7 @@ function Shell({ children }: { children: React.ReactNode }): JSX.Element {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <ShieldCheck className="h-4 w-4 text-idea-d" />
-          Signature drift watch
+          Positioning drift watch
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">{children}</CardContent>
@@ -134,7 +134,7 @@ export function DriftWatchCard({
           <div className="min-w-0">
             <p className="font-medium text-foreground">Nothing to defend yet.</p>
             <p className="text-muted-foreground">
-              Work a fix first — align an asset to your Signature — and I&apos;ll
+              Work a fix first — align an asset to your positioning — and I&apos;ll
               watch it for drift.
             </p>
           </div>
@@ -156,7 +156,7 @@ export function DriftWatchCard({
           <div className="min-w-0">
             <p className="font-medium text-foreground">Holding steady.</p>
             <p className="text-muted-foreground">
-              Every aligned asset still matches your current Signature. Nothing has
+              Every aligned asset still matches your current positioning. Nothing has
               drifted back open.
             </p>
           </div>
@@ -175,7 +175,7 @@ export function DriftWatchCard({
       >
         <p className="flex items-center gap-2 font-medium text-foreground">
           <AlertTriangle className="h-4 w-4 text-gold-warm" aria-hidden="true" />
-          {count} {noun} drifted from your Signature
+          {count} {noun} drifted from your positioning
         </p>
         <ul className="space-y-1.5">
           {(watch?.items ?? []).map((item) => (
