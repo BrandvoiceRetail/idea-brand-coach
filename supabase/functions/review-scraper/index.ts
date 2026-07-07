@@ -236,7 +236,9 @@ serve(async (req) => {
         Deno.env.get('SUPABASE_ANON_KEY') ?? '',
         { global: { headers: { Authorization: authHeader } } },
       );
-      const { data: { user }, error: authError } = await authClient.auth.getUser();
+      // Pass the bearer explicitly: argless getUser() reads the (absent) local
+      // session on supabase-js 2.39.x instead of the global Authorization header.
+      const { data: { user }, error: authError } = await authClient.auth.getUser(bearer);
       if (authError || !user) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401,
