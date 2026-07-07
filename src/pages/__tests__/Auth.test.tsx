@@ -298,7 +298,7 @@ describe('Auth', () => {
     
     expect(screen.getByText('Account Management')).toBeInTheDocument();
     expect(screen.getByText(/You are already signed in as test@example.com/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Go to Dashboard/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Continue to your listings/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sign Out/i })).toBeInTheDocument();
   });
 
@@ -425,7 +425,7 @@ describe('Auth', () => {
     expect(mockUpdatePassword).not.toHaveBeenCalled();
   });
 
-  it('routes "Go to Dashboard" to the version-aware app root, not /v1', async () => {
+  it('routes "Continue to your listings" to the version-aware app root, not /v1', async () => {
     vi.mocked(useAuth).mockReturnValue({
       ...baseAuth(),
       user: { id: '123', email: 'test@example.com' },
@@ -433,7 +433,7 @@ describe('Auth', () => {
 
     render(<Auth />, { wrapper });
 
-    fireEvent.click(screen.getByRole('button', { name: /Go to Dashboard/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continue to your listings/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 });
