@@ -60,25 +60,23 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * Choose the review set for a listing: Firecrawl's structured-JSON extraction
- * PRIMARY (rides the same scrape request; resilient to Amazon's shifting
- * markup — the hook regexes silently returned zero on some layouts, e.g. the
- * 2026-07-06 Graham listings), with the hook-parsed reviews as the no-LLM
- * fallback. Mirrors review-scraper's strategy order so both fns behave alike.
+ * Choose the review set for a listing: whichever strategy extracted MORE.
+ * Firecrawl's structured-JSON extraction (rides the same scrape request)
+ * covers the layouts where the hook regexes silently return zero (the
+ * 2026-07-06 Graham listings); the hook parser still wins on classic layouts
+ * where it reads all ~8 embedded reviews to the LLM extractor's ~5.
  */
 function chooseReviews(jsonReviews: JsonReview[], hookReviews: ParsedReview[], asin: string): ParsedReview[] {
   const fromJson = reviewsFromJson(jsonReviews, `https://www.amazon.com/dp/${asin}`);
-  if (fromJson.length > 0) {
-    return fromJson.map((r) => ({
-      reviewerName: r.reviewerName,
-      rating: r.rating,
-      title: r.title,
-      body: r.body,
-      date: r.date,
-      verified: r.verified,
-    }));
-  }
-  return hookReviews;
+  if (fromJson.length <= hookReviews.length) return hookReviews;
+  return fromJson.map((r) => ({
+    reviewerName: r.reviewerName,
+    rating: r.rating,
+    title: r.title,
+    body: r.body,
+    date: r.date,
+    verified: r.verified,
+  }));
 }
 
 /**
