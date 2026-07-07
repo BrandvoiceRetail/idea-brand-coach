@@ -28,6 +28,7 @@ import type { ClaimGateItem } from '@/types/v4Analyse';
 import type { ImportedProduct } from '@/services/interfaces/IProductDataService';
 import { Loader2 } from 'lucide-react';
 import { V5Stage, V5TopBar } from '@/components/v5/V5Chrome';
+import { V5Home } from '@/components/v5/V5Home';
 import { EntryScreen } from '@/components/v5/EntryScreen';
 import { CorpusFetch } from '@/components/v5/CorpusFetch';
 import { BuildTheatre } from '@/components/v5/BuildTheatre';
@@ -48,6 +49,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 type Phase =
+  | 'home'
   | 'entry'
   | 'fetching'
   | 'building'
@@ -103,6 +105,14 @@ export default function V5Alpha(): JSX.Element {
 
   const [products, setProducts] = useState<ImportedProduct[]>([]);
   const [isAnonymous, setIsAnonymous] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  // The initial session/products load has resolved (so the home-vs-entry
+  // decision below can run against real values, not the defaults).
+  const [sessionSettled, setSessionSettled] = useState(false);
+  // The returning-user home decision is made ONCE on first load; later returns
+  // to 'entry' (e.g. "Read another listing") are deliberate and must not bounce
+  // the user back to home.
+  const homeDecidedRef = useRef(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -128,14 +138,22 @@ export default function V5Alpha(): JSX.Element {
     captureAlphaEvent('v5_entry_viewed', {});
     let cancelled = false;
     void (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session || cancelled) return;
-      setIsAnonymous(session.user.is_anonymous === true);
       try {
-        const stored = await productService.getProducts();
-        if (!cancelled) setProducts(stored);
-      } catch (err) {
-        console.error('[V5Alpha] product prefill failed:', err);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (session) {
+          setIsAnonymous(session.user.is_anonymous === true);
+          setUserEmail(session.user.email ?? null);
+          try {
+            const stored = await productService.getProducts();
+            if (!cancelled) setProducts(stored);
+          } catch (err) {
+            console.error('[V5Alpha] product prefill failed:', err);
+          }
+        }
+      } finally {
+        // Whatever the outcome, the home-vs-entry decision can now run.
+        if (!cancelled) setSessionSettled(true);
       }
     })();
     return () => {
@@ -144,6 +162,22 @@ export default function V5Alpha(): JSX.Element {
     // Mount-only: prefill + the entry event fire once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Returning-user home decision (runs once, on first settle) ───────────────
+  // A signed-in (non-anonymous) account with ≥1 imported listing lands on
+  // V5Home instead of the blank paste screen. Anonymous sessions and accounts
+  // with zero products stay on the entry screen (the anon-first funnel is
+  // untouched). Guarded so later returns to 'entry' never bounce back to home.
+  useEffect(() => {
+    if (homeDecidedRef.current) return;
+    if (!sessionSettled) return;
+    if (phase !== 'entry') return;
+    homeDecidedRef.current = true;
+    if (!isAnonymous && products.length >= 1) {
+      captureAlphaEvent('v5_home_viewed', { listing_count: products.length });
+      setPhase('home');
+    }
+  }, [sessionSettled, phase, isAnonymous, products]);
 
   // ── Per-run reset ────────────────────────────────────────────────────────────
   const resetRunState = useCallback((): void => {
@@ -546,6 +580,16 @@ export default function V5Alpha(): JSX.Element {
     [startRun],
   );
 
+  // Re-open a listing from the returning-user home — the same express run,
+  // tagged with its own home-origin event.
+  const handleHomeReopen = useCallback(
+    (nextAsin: string, title: string | null): void => {
+      captureAlphaEvent('v5_home_reopen', {});
+      handleExpressRun(nextAsin, title);
+    },
+    [handleExpressRun],
+  );
+
   // ── Retry the build with the same corpus ────────────────────────────────────
   const retryBuild = useCallback((): void => {
     if (!reviewsString) return;
@@ -559,6 +603,15 @@ export default function V5Alpha(): JSX.Element {
   return (
     <div className="dark min-h-screen bg-background text-foreground">
       <V5TopBar />
+
+      {phase === 'home' && (
+        <V5Home
+          email={userEmail}
+          products={products}
+          onNewListing={() => setPhase('entry')}
+          onReopen={handleHomeReopen}
+        />
+      )}
 
       {phase === 'entry' && (
         <EntryScreen

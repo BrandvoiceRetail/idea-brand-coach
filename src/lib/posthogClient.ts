@@ -253,7 +253,12 @@ export type AlphaEventName =
   | 'v5_brief_shared'
   | 'v5_saved'
   | 'v5_coldstart_shown'
-  | 'v5_express_run';
+  | 'v5_express_run'
+  // Returning-user home (V5Home) — the signed-in landing that lists the
+  // listings a seller has already analysed. Home viewed + re-open one in
+  // express. Counts / booleans / IDs only, never the ASIN value or PII.
+  | 'v5_home_viewed'
+  | 'v5_home_reopen';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;
