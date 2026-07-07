@@ -19,13 +19,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { V4_ROUTES } from '@/config/v4';
 import { captureAlphaEvent, type AlphaEventProps } from '@/lib/posthogClient';
+import { MCP_URL, MCP_ADD_COMMAND } from '@/config/urls';
 
-/** Verbatim from onboard.html — the remote MCP server URL the user pastes. */
-const MCP_URL = 'https://ideabrandcoach.icodemybusiness.com/mcp';
-
-/** Verbatim Claude Code variant. */
-const CLAUDE_CODE_LINE =
-  'claude mcp add --transport http idea-brand-coach https://ideabrandcoach.icodemybusiness.com/mcp';
+/** Claude Code one-liner — MCP_URL + command come from the single source (src/config/urls). */
+const CLAUDE_CODE_LINE = MCP_ADD_COMMAND;
 
 /** Honest framing reused near the prompts — Brand Coach never fetches data itself. */
 const WINDSOR_HONESTY =

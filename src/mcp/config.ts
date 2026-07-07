@@ -177,7 +177,7 @@ export function loadConfig(): HostConfig {
     slackBotToken: env('SLACK_BOT_TOKEN'),
     // Fallback is the known #idea-brand-coach channel id (private; bot must be invited).
     slackFeedbackChannelId: env('SLACK_FEEDBACK_CHANNEL_ID') ?? 'C0B9YT9TQ6T',
-    mcpPublicUrl: env('MCP_PUBLIC_URL') ?? 'https://ideabrandcoach.icodemybusiness.com/mcp',
+    mcpPublicUrl: env('MCP_PUBLIC_URL') ?? 'https://ideabrandcoach.com/mcp',
     oauthRequireAuth: (env('MCP_OAUTH_REQUIRE_AUTH') ?? 'false').toLowerCase() === 'true',
     oauthScope: env('MCP_OAUTH_SCOPE') ?? 'email',
   };
