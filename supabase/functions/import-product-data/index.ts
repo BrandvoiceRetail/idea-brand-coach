@@ -25,7 +25,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-import { isLikelyRealListing, parseAmazonProduct, type ParsedAmazonProduct } from "./parse-amazon.ts";
+import { isLikelyRealListing, parseAmazonProduct, type ParsedAmazonProduct, type ParsedReview } from "./parse-amazon.ts";
+import { reviewsFromJson, scrapeAmazonPage, type JsonReview } from "../_shared/amazonReviews.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,7 +35,6 @@ const corsHeaders = {
 
 const MAX_ASINS = 5;
 const ASIN_PATTERN = /^[A-Z0-9]{10}$/i;
-const FIRECRAWL_SCRAPE_URL = "https://api.firecrawl.dev/v2/scrape";
 const INTER_ASIN_DELAY_MS = 2000;
 
 interface ImportResultItem {
@@ -48,14 +48,6 @@ interface ImportResultItem {
   error?: string;
 }
 
-interface FirecrawlScrapeResponse {
-  success?: boolean;
-  data?: {
-    markdown?: string;
-    html?: string;
-  };
-}
-
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -67,42 +59,26 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Scrape a single /dp/ page via Firecrawl v2. Returns markdown+html or null. */
-async function scrapeDpPage(
-  asin: string,
-  firecrawlApiKey: string,
-): Promise<{ markdown: string; html: string } | null> {
-  const response = await fetch(FIRECRAWL_SCRAPE_URL, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${firecrawlApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      url: `https://www.amazon.com/dp/${asin}`,
-      formats: ["markdown", "html"],
-      actions: [{ type: "wait", milliseconds: 3000 }],
-      onlyMainContent: false,
-      timeout: 30000,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`[import-product-data] Firecrawl error (${response.status}) for ${asin}:`, errorText);
-    return null;
+/**
+ * Choose the review set for a listing: Firecrawl's structured-JSON extraction
+ * PRIMARY (rides the same scrape request; resilient to Amazon's shifting
+ * markup — the hook regexes silently returned zero on some layouts, e.g. the
+ * 2026-07-06 Graham listings), with the hook-parsed reviews as the no-LLM
+ * fallback. Mirrors review-scraper's strategy order so both fns behave alike.
+ */
+function chooseReviews(jsonReviews: JsonReview[], hookReviews: ParsedReview[], asin: string): ParsedReview[] {
+  const fromJson = reviewsFromJson(jsonReviews, `https://www.amazon.com/dp/${asin}`);
+  if (fromJson.length > 0) {
+    return fromJson.map((r) => ({
+      reviewerName: r.reviewerName,
+      rating: r.rating,
+      title: r.title,
+      body: r.body,
+      date: r.date,
+      verified: r.verified,
+    }));
   }
-
-  const payload = await response.json() as FirecrawlScrapeResponse;
-  const markdown = payload.data?.markdown;
-  const html = payload.data?.html;
-
-  if (!markdown || !html) {
-    console.error(`[import-product-data] Missing markdown/html for ${asin}`);
-    return null;
-  }
-
-  return { markdown, html };
+  return hookReviews;
 }
 
 /**
@@ -243,11 +219,12 @@ serve(async (req) => {
     }
 
     try {
-      const scraped = await scrapeDpPage(asin, firecrawlApiKey);
-      if (!scraped) {
-        results.push({ asin, ok: false, error: 'Failed to scrape listing' });
-        continue;
-      }
+      // One Firecrawl request carries markdown + html + the structured review
+      // extraction (throws on failure; caught per-ASIN below).
+      const scraped = await scrapeAmazonPage(`https://www.amazon.com/dp/${asin}`, firecrawlApiKey, {
+        jsonReviews: true,
+        timeoutMs: 30000,
+      });
 
       const parsed = parseAmazonProduct(scraped.markdown, scraped.html, asin);
       if (!parsed.success || !parsed.data) {
@@ -255,11 +232,16 @@ serve(async (req) => {
         continue;
       }
 
+      const product: ParsedAmazonProduct = {
+        ...parsed.data,
+        reviews: chooseReviews(scraped.jsonReviews, parsed.data.reviews, asin),
+      };
+
       // Amazon serves its error/dog page with HTTP 200, so a nonexistent ASIN
       // would otherwise persist as a garbage product and pollute the Trust Gap
       // evidence and coach context. Reject before any write.
-      if (!isLikelyRealListing(parsed.data)) {
-        console.error(`[import-product-data] rejected non-listing page | asin=${asin} | title="${(parsed.data.title ?? '').slice(0, 120)}"`);
+      if (!isLikelyRealListing(product)) {
+        console.error(`[import-product-data] rejected non-listing page | asin=${asin} | title="${(product.title ?? '').slice(0, 120)}"`);
         results.push({ asin, ok: false, error: 'No Amazon listing found for this ASIN. Double-check it and try again.' });
         continue;
       }
@@ -268,16 +250,16 @@ serve(async (req) => {
         supabaseClient,
         userId,
         asin,
-        parsed.data,
+        product,
       );
 
       results.push({
         asin,
         ok: true,
         productId,
-        title: parsed.data.title,
-        rating: parsed.data.rating,
-        reviewCount: parsed.data.reviewCount,
+        title: product.title,
+        rating: product.rating,
+        reviewCount: product.reviewCount,
         reviewsSaved,
       });
     } catch (error) {
