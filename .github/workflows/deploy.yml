@@ -1,0 +1,99 @@
+name: Deploy to prod (Lightsail)
+
+# Push to `main` -> a self-hosted GitHub Actions runner ON the Lightsail box builds
+# from main's tip and deploys in place. The runner polls GitHub OUTBOUND over HTTPS,
+# so the box's port-22 firewall is a non-issue (no inbound SSH needed). Because it
+# ALWAYS builds from main, the "built from a stale branch and rsync --delete clobbered
+# prod" failure mode is structurally impossible.
+#
+# One-time box setup + pre-flight reconciliation: docs/CICD_SELF_HOSTED_RUNNER.md
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}          # manual re-deploy / rollback (pick an older SHA)
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false      # never interrupt a deploy mid-flight; queue instead
+
+permissions:
+  contents: read
+
+env:
+  SERVE_DIR: /opt/ideabrandcoach
+  MCP_COMPOSE_DIR: /home/ubuntu/brand-coach-mcp
+  # Box-side file holding the VITE_* build vars (gitignored secrets — NEVER in the repo).
+  BUILD_ENV_FILE: /home/ubuntu/ibc-deploy/.env.production
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, lightsail]
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2         # previous commit too, for MCP-change detection
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Provide build env (VITE_*)
+        run: |
+          if [ ! -f "$BUILD_ENV_FILE" ]; then
+            echo "::error::Missing $BUILD_ENV_FILE on the box (the VITE_* build vars)."
+            echo "See docs/CICD_SELF_HOSTED_RUNNER.md step 4."
+            exit 1
+          fi
+          cp "$BUILD_ENV_FILE" .env.production.local
+
+      - name: Build frontend
+        run: |
+          npm run build
+          cp dist/index.html dist/404.html    # SPA fallback for BrowserRouter deep links
+
+      - name: Deploy frontend
+        run: |
+          # Build came from main's tip, so --delete is safe (no stale-local clobber).
+          # dist/ now INCLUDES landing.html + onboard.html + onboard-assets (from public/),
+          # so they are deployed here too — no more separate manual push. Confirm the repo
+          # is the source of truth for them (see docs pre-flight) before enabling --delete.
+          rsync -a --delete --exclude='.git' dist/ "$SERVE_DIR/"
+          echo "Frontend deployed: $(cd dist/assets && ls index-*.js | head -1)"
+
+      - name: Deploy MCP gateway (only if its inputs changed)
+        run: |
+          BEFORE='${{ github.event.before }}'
+          if [ -z "$BEFORE" ] || ! git rev-parse -q --verify "$BEFORE^{commit}" >/dev/null 2>&1; then
+            CHANGED="ALL"                      # first run / force-push / manual dispatch
+          else
+            CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}")
+          fi
+          if [ "$CHANGED" = "ALL" ] || echo "$CHANGED" | grep -qE '^(src/mcp/|deploy/mcp/|scripts/build-mcp\.mjs|tsconfig\.mcp\.json)'; then
+            echo "MCP inputs changed -> typecheck + rebuild + redeploy"
+            npm run typecheck:mcp
+            npm run mcp:build:docker           # bundle -> docker build brand-coach-mcp:latest
+            ( cd "$MCP_COMPOSE_DIR" && docker compose up -d --force-recreate )
+            sleep 4
+            curl -fsS http://127.0.0.1:8787/healthz && echo "  MCP healthy"
+          else
+            echo "No MCP changes -> skipping container rebuild"
+          fi
+
+      - name: Smoke check (live matches this build)
+        run: |
+          set -e
+          # '/' serves landing.html (Caddy front-door rewrite), so probe an APP route
+          # whose SPA fallback returns index.html referencing the hashed bundle.
+          served=$(curl -fsS https://ideabrandcoach.com/welcome | grep -oE 'assets/index-[A-Za-z0-9_-]+\.js' | head -1)
+          built="assets/$(cd dist/assets && ls index-*.js | head -1)"
+          echo "served=$served  built=$built"
+          [ -n "$served" ] && [ "$served" = "$built" ] || { echo "::error::served bundle != built bundle"; exit 1; }
+          curl -fsS -o /dev/null -w "MCP /healthz -> HTTP %{http_code}\n" http://127.0.0.1:8787/healthz
+          echo "✅ ideabrandcoach.com is serving this commit"
