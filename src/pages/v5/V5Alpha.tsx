@@ -556,6 +556,33 @@ export default function V5Alpha(): JSX.Element {
     try {
       const { error } = await supabase.auth.updateUser({ email, password });
       if (error) {
+        // The email already belongs to a real account. With the password they
+        // just typed, sign them into it and carry this anonymous run across
+        // (reparent-anon-run verifies both identities server-side) — instead
+        // of dead-ending on "already registered" (task #31).
+        const emailTaken = /already|registered|exists/i.test(error.message);
+        if (emailTaken) {
+          const { data: { session: anonSession } } = await supabase.auth.getSession();
+          const anonToken = anonSession?.user?.is_anonymous ? anonSession.access_token : null;
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+          if (!signInError && anonToken) {
+            const { error: reparentError } = await supabase.functions.invoke('reparent-anon-run', {
+              body: { anonToken },
+            });
+            if (reparentError) console.error('[V5Alpha] carry-over failed:', reparentError);
+            setIsAnonymous(false);
+            setSaved(true);
+            captureAlphaEvent('v5_saved', { ok: true, mergedIntoExisting: true });
+            return;
+          }
+          setSaveError(
+            signInError
+              ? "That email already has an account, but this password did not match it. Enter that account's password and I'll attach this run to it."
+              : error.message,
+          );
+          captureAlphaEvent('v5_saved', { ok: false });
+          return;
+        }
         setSaveError(error.message);
         captureAlphaEvent('v5_saved', { ok: false });
         return;
