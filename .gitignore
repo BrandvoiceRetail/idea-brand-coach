@@ -5,6 +5,9 @@
 *.png
 # ...but track committed onboarding page assets (real connector-setup screenshots)
 !public/onboard-assets/*.png
+# ...and the official brand marks (favicon source, apple-touch icon, social share card)
+!public/apple-touch-icon.png
+!public/idea-social-card.png
 
 # Logs
 logs

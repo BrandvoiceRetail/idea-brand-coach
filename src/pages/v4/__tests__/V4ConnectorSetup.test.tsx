@@ -43,7 +43,7 @@ describe('V4ConnectorSetup', () => {
     expect(screen.getByTestId('connector-steps')).toBeInTheDocument();
     expect(screen.getByTestId('windsor-steps')).toBeInTheDocument();
     expect(screen.getByTestId('mcp-url')).toHaveTextContent(
-      'https://ideabrandcoach.icodemybusiness.com/mcp',
+      'https://ideabrandcoach.com/mcp',
     );
     // Single casual onboarding prompt (replaces the old two-case walls of text).
     expect(screen.getByTestId('onboard-prompt')).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('V4ConnectorSetup', () => {
     fireEvent.click(screen.getByTestId('mcp-url-copy'));
     await waitFor(() =>
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        'https://ideabrandcoach.icodemybusiness.com/mcp',
+        'https://ideabrandcoach.com/mcp',
       ),
     );
     expect(captureAlphaEvent).toHaveBeenCalledWith('v4_connector_url_copied', { target: 'mcp_url' });

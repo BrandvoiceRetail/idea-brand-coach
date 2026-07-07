@@ -21,6 +21,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno&deno-std=0.168.0';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getServiceClient, getAuthedUserId, jsonResponse } from '../_shared/edge-auth.ts';
+import { APP_URL } from '../_shared/appUrl.ts';
 
 type Tier = 'starter' | 'professional' | 'premium' | 'founding';
 
@@ -30,8 +31,6 @@ const PRICE_ENV: Record<Tier, string> = {
   premium: 'STRIPE_PRICE_PREMIUM',
   founding: 'STRIPE_PRICE_FOUNDING',
 };
-
-const DEFAULT_APP_URL = 'https://ideabrandcoach.icodemybusiness.com';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -85,7 +84,7 @@ serve(async (req) => {
     const setupPrice = Deno.env.get('STRIPE_PRICE_SETUP');
     if (setupPrice) lineItems.push({ price: setupPrice, quantity: 1 });
 
-    const appUrl = Deno.env.get('APP_URL') ?? DEFAULT_APP_URL;
+    const appUrl = APP_URL;
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

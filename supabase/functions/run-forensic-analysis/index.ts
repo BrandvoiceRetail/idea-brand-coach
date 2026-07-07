@@ -36,6 +36,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { createRateLimiter } from "../_shared/rateLimit.ts";
+import { APP_URL } from "../_shared/appUrl.ts";
 
 // This endpoint is expensive (1 Firecrawl scrape + ~3 Sonnet calls per run), so
 // throttle per user. Best-effort per-isolate limiter; overridable via env.
@@ -69,7 +70,7 @@ const DIM_LABELS: Record<Dim, string> = {
 // ── Forensic report email (best-effort; sends only when RESEND_API_KEY is set) ──
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FORENSIC_FROM_EMAIL = Deno.env.get("LEAD_FROM_EMAIL") ?? "Trevor <noreply@app.ideabrandconsultancy.com>";
-const FORENSIC_CTA_URL = Deno.env.get("LEAD_CTA_URL") ?? "https://ideabrandcoach.icodemybusiness.com";
+const FORENSIC_CTA_URL = APP_URL;
 const NAVY = "#1A3557";
 const GOLD = "#C9A84C";
 

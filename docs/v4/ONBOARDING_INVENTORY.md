@@ -21,9 +21,9 @@ hex `:root` vars). Reusable **content/copy** for the in-app ConnectorSetup scree
   2. Connectors → **+** → **Add custom connector** (may live under "Customize").
   3. Paste the URL, name it **IDEA Brand Coach**, click **Add** (no login required).
   4. "You're connected" — the toolset appears in any chat.
-- **MCP server URL:** `https://ideabrandcoach.icodemybusiness.com/mcp` (with a copy
+- **MCP server URL:** `https://ideabrandcoach.com/mcp` (with a copy
   button; the page's `copyUrl()` is the copy-to-clipboard precedent).
-- **Claude Code variant:** `claude mcp add --transport http idea-brand-coach https://ideabrandcoach.icodemybusiness.com/mcp`
+- **Claude Code variant:** `claude mcp add --transport http idea-brand-coach https://ideabrandcoach.com/mcp`
 - **Then:** "open a new chat, run the `onboard` prompt, pick **Simple Diagnostic** or
   **Full Contextual Upload**."
 - **Windsor section (analytics):** add the **Windsor.ai** connector in Claude
@@ -124,10 +124,10 @@ Copy/clipboard: register all new PostHog event names in `src/lib/posthogClient.t
 
 ## 4. Exact copy / prompts to use (grounded in onboard.html)
 
-**MCP server URL** (verbatim): `https://ideabrandcoach.icodemybusiness.com/mcp`
+**MCP server URL** (verbatim): `https://ideabrandcoach.com/mcp`
 
 **Claude Code line** (verbatim):
-`claude mcp add --transport http idea-brand-coach https://ideabrandcoach.icodemybusiness.com/mcp`
+`claude mcp add --transport http idea-brand-coach https://ideabrandcoach.com/mcp`
 
 **Two-case prepared prompts** (draft — pasteable into a fresh Claude/ChatGPT chat
 with the Brand Coach connector enabled):
