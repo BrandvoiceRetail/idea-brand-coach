@@ -46,7 +46,7 @@ describe('SignatureReveal → Moment 1 feedback trigger', () => {
     render(<SignatureReveal messages={[]} fieldValues={{}} />);
 
     // open the Signature dialog (lands on the mocked 'options' stage)
-    fireEvent.click(screen.getByRole('button', { name: /reveal signature/i }));
+    fireEvent.click(screen.getByRole('button', { name: /reveal positioning/i }));
     // feedback prompt not shown yet
     expect(screen.queryByText(/did the score feel right/i)).not.toBeInTheDocument();
 
@@ -55,7 +55,7 @@ describe('SignatureReveal → Moment 1 feedback trigger', () => {
 
     // the self-contained feedback modal is now open with its three prompts
     expect(screen.getByText(/did the score feel right/i)).toBeInTheDocument();
-    expect(screen.getByText(/did the signature feel right/i)).toBeInTheDocument();
+    expect(screen.getByText(/did the positioning feel right/i)).toBeInTheDocument();
     expect(screen.getByText(/what'?s off/i)).toBeInTheDocument();
   });
 });

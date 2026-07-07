@@ -245,7 +245,7 @@ export function FunnelTracker(): JSX.Element {
   if (!user || !selectedAvatarId) {
     return (
       <div className="mx-auto max-w-3xl p-10 text-center">
-        <p className="text-muted-foreground">Map your funnel against a customer avatar — upload your touchpoints and the coach audits each against your avatar + Signature.</p>
+        <p className="text-muted-foreground">Map your funnel against a customer avatar — upload your touchpoints and the coach audits each against your avatar + positioning.</p>
         {user ? (
           <Button asChild variant="coach" className="mt-4"><Link to="/v2/coach">Create an avatar</Link></Button>
         ) : (
@@ -295,7 +295,7 @@ export function FunnelTracker(): JSX.Element {
       )}
       {staleCount > 0 && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#D89B0D] bg-[#FBF1D6] px-4 py-2.5 text-sm text-[#7a5a07]">
-          <span>{staleCount} touchpoint{staleCount === 1 ? '' : 's'} drifted since your Signature changed.</span>
+          <span>{staleCount} touchpoint{staleCount === 1 ? '' : 's'} drifted since your positioning changed.</span>
           <Button size="sm" variant="coach" onClick={() => void reauditAll()} disabled={loading}>Re-audit all</Button>
         </div>
       )}
