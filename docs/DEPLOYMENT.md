@@ -11,6 +11,35 @@ The site is served by **Caddy `file_server` on the mango Lightsail box**
 org level** (the old `deploy-pages.yml` failed on every run because
 `configure-pages` can't create a Pages site), so Pages is not the deploy path.
 
+## Serving the branded apex `ideabrandcoach.com`
+
+`ideabrandcoach.com` is registered by **Trevor** at Easyspace (DNS via 34SP:
+`ns.34sp.com` / `ns2.34sp.com`); the working app runs on Matthew's
+`ideabrandcoach.icodemybusiness.com` (Lightsail `54.243.53.44`). To serve the app at
+the apex:
+
+1. **Trevor (DNS at Easyspace/34SP):** add `A  @  → 54.243.53.44` and
+   `A  www → 54.243.53.44` (the apex can't be a CNAME). The root currently returns a
+   404 "Build incomplete" placeholder, so this is non-destructive.
+2. **On the box, once DNS resolves** (`dig +short ideabrandcoach.com` == `54.243.53.44`):
+   add the two hostnames to the EXISTING vhost's address line in `/opt/mango/Caddyfile`
+   (single-file bind-mount — edit in place to preserve the inode). Back it up first:
+   `cp /opt/mango/Caddyfile /opt/mango/Caddyfile.bak.apex`. Change
+   `ideabrandcoach.icodemybusiness.com {` to
+   `ideabrandcoach.icodemybusiness.com, ideabrandcoach.com, www.ideabrandcoach.com {`.
+   Reusing the same block guarantees identical behaviour (SPA rewrite, `/assets/*`
+   immutable + `@spa_html` no-cache, `/mcp*` proxy) with **zero drift**. Reload:
+   `docker exec mango-caddy-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`.
+   Caddy auto-issues Let's Encrypt certs for the new hostnames on first hit (needs the
+   step-1 DNS live, else the HTTP-01 challenge fails — so apply this AFTER DNS propagates).
+3. **Verify:** `curl -sI https://ideabrandcoach.com/welcome` → `200`, and the served
+   `index-*.js` hash matches `dist/`. Optional `www`→apex canonicalisation: instead of
+   adding `www` to the shared line, give it its own block —
+   `www.ideabrandcoach.com { redir https://ideabrandcoach.com{uri} permanent }`.
+4. **App metadata:** once live at the apex, switch the `og:image` / `twitter:image`
+   absolute URLs in `index.html` from `ideabrandcoach.icodemybusiness.com` to
+   `ideabrandcoach.com`.
+
 ## Source of truth: `main` (both the SPA AND the MCP gateway)
 
 As of **2026-06-28, `main` is the single source for both deployables** — the Vite

@@ -1,6 +1,6 @@
 # Deploy — Brand-Coach MCP gateway
 
-Make `https://ideabrandcoach.icodemybusiness.com/mcp` live by running the gateway on
+Make `https://ideabrandcoach.com/mcp` live by running the gateway on
 the **mango Lightsail box** (`54.243.53.44`) bound to `127.0.0.1:8787`, and adding a
 **Caddy path route** to the existing `ideabrandcoach.icodemybusiness.com` vhost. No new
 DNS, no new subdomain — the domain's TLS cert already exists.
@@ -103,7 +103,7 @@ sudo systemctl reload caddy     # or: caddy reload --config /etc/caddy/Caddyfile
 
 ```bash
 # initialize handshake over the public URL — expect a JSON-RPC result, NOT 405
-curl -s -X POST https://ideabrandcoach.icodemybusiness.com/mcp \
+curl -s -X POST https://ideabrandcoach.com/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}'
@@ -112,11 +112,11 @@ curl -s -X POST https://ideabrandcoach.icodemybusiness.com/mcp \
 
 ## E. Connect from Claude
 
-- **Claude Code:** `claude mcp add --transport http brand-coach https://ideabrandcoach.icodemybusiness.com/mcp`
+- **Claude Code:** `claude mcp add --transport http brand-coach https://ideabrandcoach.com/mcp`
 - **Claude Desktop / claude.ai:** Settings → Connectors → Add custom connector →
-  `https://ideabrandcoach.icodemybusiness.com/mcp`
+  `https://ideabrandcoach.com/mcp`
 - Then start a new chat and run the **`onboard`** prompt.
-- Power-user fallback (stdio-only setups): `npx mcp-remote https://ideabrandcoach.icodemybusiness.com/mcp`
+- Power-user fallback (stdio-only setups): `npx mcp-remote https://ideabrandcoach.com/mcp`
 
 ---
 

@@ -20,7 +20,7 @@ export function publicOrigin(config: HostConfig): string {
   try {
     return new URL(config.mcpPublicUrl).origin;
   } catch {
-    return 'https://ideabrandcoach.icodemybusiness.com';
+    return 'https://ideabrandcoach.com';
   }
 }
 
