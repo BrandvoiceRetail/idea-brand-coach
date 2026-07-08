@@ -2,6 +2,19 @@
 -- Stores versioned instruction blocks for MCP coach grounding and edge function prompts
 -- Supports per-instruction versioning with exactly one published version per instruction_id
 
+-- Admin gate (Matthew's ruling, 2026-07-08): a real profiles.is_admin column,
+-- not a hardcoded email list inside RLS. Seeded below from the same emails as
+-- src/config/admin.ts (the build-time UI allowlist) so the two gates agree.
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin boolean NOT NULL DEFAULT false;
+
+UPDATE public.profiles SET is_admin = true
+WHERE email IN (
+  'matthew@arisegroup.ai',
+  'matthew@icodemybusiness.com',
+  'trevor.bradford@brandvoice.co.uk',
+  'trevor@brandvoice.co.uk'
+);
+
 CREATE TABLE IF NOT EXISTS public.coach_instructions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   instruction_id text NOT NULL, -- Stable key like 'build_avatar_stage.s3', 'generate_listing_image_brief', 'global.tier_a_terminology'
@@ -39,19 +52,20 @@ CREATE POLICY "Published instructions are public to authenticated users"
     AND auth.uid() IS NOT NULL
   );
 
--- Write: admin-only for now (needs decision on admin-gate mechanism)
--- Temporary: only specific users can write (will be replaced with proper admin check)
+-- Write: admins only, via profiles.is_admin (Matthew's ruling, 2026-07-08).
 CREATE POLICY "Admin users can manage instructions"
   ON public.coach_instructions
   FOR ALL
   USING (
-    auth.uid() IN (
-      -- Placeholder: replace with actual admin check mechanism
-      -- This needs to be resolved per Matthew's decision on admin-gate
-      SELECT id FROM public.profiles WHERE email IN (
-        'trevor@brandvoice.co.uk',
-        'matthew@arisegroup.ai'
-      )
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() AND p.is_admin
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() AND p.is_admin
     )
   );
 

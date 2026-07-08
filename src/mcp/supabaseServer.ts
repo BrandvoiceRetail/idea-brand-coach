@@ -36,7 +36,13 @@ export function getServiceRoleSupabase(): SupabaseClient {
       auth: { persistSession: false, autoRefreshToken: false },
     });
   } else {
-    // Fall back to anon client if service role key not available
+    // Fall back to anon client if service role key not available. Loud on
+    // purpose: with the anon client, RLS blocks coach_instructions reads and
+    // the substrate silently no-ops (deploy env must set the key — see
+    // deploy/mcp/.env.example).
+    console.warn(
+      '[supabaseServer] SUPABASE_SERVICE_ROLE_KEY not set — falling back to the anon client; coach_instructions reads will be RLS-blocked (fail-open to inline prompts).',
+    );
     cachedServiceRole = getServerSupabase();
   }
 
