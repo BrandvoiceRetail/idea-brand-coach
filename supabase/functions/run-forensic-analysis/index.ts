@@ -58,7 +58,7 @@ const TRUST_GAP_REVIEW_BODY_MAX = 300;
 /** Below this review count the corpus is thin; UI must show a confidence caveat. */
 const THIN_CORPUS_THRESHOLD = 5;
 /** Data fresher than this (ms) is reused without re-scraping. */
-const FRESHNESS_WINDOW_MS = 3600000; // 1 hour
+const FRESHNESS_WINDOW_MS = Number(Deno.env.get("FRESHNESS_WINDOW_MS") ?? "3600000"); // 1 hour default
 
 type Dim = "insight" | "distinctive" | "empathetic" | "authentic";
 const DIMS: Dim[] = ["insight", "distinctive", "empathetic", "authentic"];
@@ -186,26 +186,42 @@ function formatTrustGapReview(rating: number | null, body: string): string {
 }
 
 /**
- * Check if we have fresh product data for this user/asin pair.
- * Returns true if data exists and was scraped within the freshness window.
+ * Check if we have fresh product data with usable reviews for this user/asin pair.
+ * Returns true only if:
+ * 1. Data exists and was scraped within the freshness window
+ * 2. Reviews are actually present (non-zero count)
+ *
+ * This prevents using stale data OR fresh data with failed review imports.
  */
 async function hasRecentData(
   admin: ReturnType<typeof createClient>,
   userId: string,
   asin: string,
 ): Promise<boolean> {
-  const { data: products } = await admin
+  // Get product with scraped_at
+  const { data: product } = await admin
     .from("user_products")
-    .select("scraped_at")
+    .select("id, scraped_at")
     .eq("user_id", userId)
     .eq("asin", asin)
     .single();
 
-  if (!products || !products.scraped_at) return false;
+  if (!product || !product.scraped_at) return false;
 
-  const scrapedAt = new Date(products.scraped_at).getTime();
+  // Check freshness
+  const scrapedAt = new Date(product.scraped_at).getTime();
   const now = Date.now();
-  return (now - scrapedAt) < FRESHNESS_WINDOW_MS;
+  const isFresh = (now - scrapedAt) < FRESHNESS_WINDOW_MS;
+
+  if (!isFresh) return false;
+
+  // Also verify reviews exist (count > 0) before treating cache as usable
+  const { count } = await admin
+    .from("user_product_reviews")
+    .select("*", { count: "exact", head: true })
+    .eq("product_id", product.id);
+
+  return (count ?? 0) > 0;
 }
 
 /**
