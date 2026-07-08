@@ -251,7 +251,7 @@ async function main(): Promise<void> {
   const answeredSlots = new Set<number>();
 
   // 2) Wire the in-memory MCP server + client (real EdgeFnClient + real IV-OS client).
-  const built = createServer(cfg);
+  const built = await createServer(cfg);
   const server: McpServer = built.server;
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'rehearsal', version: '0.0.0' });

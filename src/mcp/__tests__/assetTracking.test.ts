@@ -23,7 +23,7 @@ const cfg: HostConfig = {
 const authed: Identity = { userId: 'user-1', token: 'tok', authenticated: true };
 
 async function connectedClient() {
-  const { server } = createServer(cfg);
+  const { server } = await createServer(cfg);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
