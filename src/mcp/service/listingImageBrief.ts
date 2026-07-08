@@ -259,6 +259,7 @@ export function buildListingImageBrief(input: ListingImageBriefInput): ListingIm
     claim_gate:
       'Before including any guarantee or specific claim (e.g. "lifetime warranty", a clinical percentage), flag it to the user and ask them to confirm they offer/can substantiate it. Only include it once confirmed.',
     never_contain: [
+      'IMPORTANT: This list governs the ARTIFACT TEXT only (the brief/image copy handed to the designer). Your spoken report to the user MUST still name Trust Gap™, Decision Trigger™, and the buyer mood-state explicitly.',
       'Framework terminology: IDEA, Trust Gap, Decision Trigger, buyer state, CAPTURE.',
       'Buyer-state names: Assessor, Protector, Expresser, Connector.',
       'Academic/engine internals: neuroanatomy, System 1/2, S1-S4, confidence scores.',
