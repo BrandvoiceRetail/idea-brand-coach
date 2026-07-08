@@ -6,7 +6,7 @@
  * provides RLS-scoped read access to fetch the latest trigger for brief generation.
  */
 
-import { getUserSupabase } from '../../integrations/supabase/client.js';
+import { getUserSupabase } from '../supabaseUser.js';
 
 export interface DecisionTriggerRow {
   id: string;
@@ -52,8 +52,11 @@ export async function getLatestDecisionTrigger(
 
     if (avatarError) {
       console.error('[decisionTriggerStore] Error fetching avatar trigger:', avatarError);
-      // Don't throw - fall through to brand-level check
-    } else if (avatarTrigger) {
+      // Surface the error instead of silently falling through
+      throw avatarError;
+    }
+
+    if (avatarTrigger) {
       return avatarTrigger as DecisionTriggerRow;
     }
   }
@@ -69,7 +72,7 @@ export async function getLatestDecisionTrigger(
 
   if (brandError) {
     console.error('[decisionTriggerStore] Error fetching brand trigger:', brandError);
-    return null;
+    throw brandError;
   }
 
   return brandTrigger as DecisionTriggerRow | null;

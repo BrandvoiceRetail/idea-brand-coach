@@ -109,8 +109,8 @@ function canvasNeedsInput(): NeedsInputItem[] {
     {
       slot: 1,
       question:
-        'Create a Brand Canvas (generate_canvas) for the fullest positioning, or identify a Decision Trigger (identify_decision_trigger), or generate a Signature (generate_signature) first. The Export Brief needs at least one positioning root.',
-      why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas, Decision Trigger, or Signature.',
+        'Create a Brand Canvas (generate_canvas) for the fullest positioning, or identify a Decision Trigger (identify_decision_trigger), or generate positioning (generate_signature) first. The Export Brief needs at least one positioning root.',
+      why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas, Decision Trigger, or positioning statement.',
     },
   ];
 }
@@ -182,11 +182,18 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
   // 1. The brief root priority: Brand Canvas > Decision Trigger > Signature.
   //    Canvas is the fullest positioning; trigger is weaker but evidence-derived;
   //    signature is the fallback. Only ask when NO positioning source exists.
-  const [canvasRow, signatureRow, decisionTriggerRow] = await Promise.all([
+  const [canvasRow, signatureRow] = await Promise.all([
     deps.getCurrentArtifact('brand_canvas', avatarId),
     deps.getCurrentArtifact('signature', avatarId),
-    deps.getLatestDecisionTrigger(avatarId),
   ]);
+
+  // Only fetch decision trigger if canvas doesn't exist - conditional to avoid regressing
+  // existing canvas-root and signature-root briefs
+  let decisionTriggerRow = null;
+  if (!canvasRow) {
+    decisionTriggerRow = await deps.getLatestDecisionTrigger(avatarId);
+  }
+
   if (!canvasRow && !decisionTriggerRow && !signatureRow) {
     return { status: 'needs_input', needs_input: canvasNeedsInput(), reason: 'no_canvas' };
   }

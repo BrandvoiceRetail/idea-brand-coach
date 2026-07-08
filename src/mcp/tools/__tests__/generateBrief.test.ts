@@ -2,8 +2,8 @@
  * Tests for generate_brief tool with Decision Trigger support
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { runGenerateBrief, type GenerateBriefDeps } from '../generateBrief';
-import type { DecisionTriggerRow } from '../../service/decisionTriggerStore';
+import { runGenerateBrief, type GenerateBriefDeps } from '../generateBrief.js';
+import type { DecisionTriggerRow } from '../../service/decisionTriggerStore.js';
 
 describe('generateBrief with Decision Trigger', () => {
   let deps: GenerateBriefDeps;
@@ -95,10 +95,12 @@ describe('generateBrief with Decision Trigger', () => {
 
       const result = await runGenerateBrief('avatar-1', deps);
 
+      // When Canvas exists, trigger is not fetched (conditional fetch optimization)
+      expect(deps.getLatestDecisionTrigger).not.toHaveBeenCalled();
       expect(deps.edgeFn.invoke).toHaveBeenCalledWith('export-brief', expect.objectContaining({
         canvas: mockCanvasRow.content,
         signature: mockSignatureRow.content,
-        trigger: mockDecisionTrigger.content,
+        trigger: null,  // Should be null when canvas exists
       }));
       expect(result.status).toBe('persisted');
     });

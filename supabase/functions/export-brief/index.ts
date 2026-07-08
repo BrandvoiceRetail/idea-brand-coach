@@ -265,8 +265,8 @@ serve(async (req) => {
         JSON.stringify({
           needs_input: [{
             slot: 1,
-            question: 'Create a Brand Canvas (generate_canvas), identify a Decision Trigger (identify_decision_trigger), or generate a Signature (generate_signature) first, then run the Export Brief.',
-            why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas, Decision Trigger, or Signature.',
+            question: 'Create a Brand Canvas (generate_canvas), identify a Decision Trigger (identify_decision_trigger), or generate positioning (generate_signature) first, then run the Export Brief.',
+            why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas, Decision Trigger, or positioning statement.',
           }],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

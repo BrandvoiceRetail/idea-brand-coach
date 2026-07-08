@@ -290,6 +290,7 @@ describe('runGenerateBrief', () => {
       getCurrentArtifact: over.getCurrentArtifact ?? makeGetCurrent(new Map([['brand_canvas', CANVAS_REPLY]])),
       saveArtifact: over.saveArtifact ?? (makeSaveStub([]) as GenerateBriefDeps['saveArtifact']),
       edgeFn: over.edgeFn ?? stubEdgeFn({ 'export-brief': cleanBrief }),
+      getLatestDecisionTrigger: over.getLatestDecisionTrigger ?? (async () => null),
     };
   }
 
@@ -432,6 +433,7 @@ describe('runGenerateBrief — transient retry (R2)', () => {
       saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'],
       edgeFn: edge,
       sleep: noSleep,
+      getLatestDecisionTrigger: async () => null,
     });
     expect(res.status).toBe('persisted');
     expect(count()).toBe(2);
@@ -448,6 +450,7 @@ describe('runGenerateBrief — transient retry (R2)', () => {
       saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'],
       edgeFn: edge,
       sleep: noSleep,
+      getLatestDecisionTrigger: async () => null,
     });
     expect(res.status).toBe('needs_input');
     if (res.status !== 'needs_input') return;
