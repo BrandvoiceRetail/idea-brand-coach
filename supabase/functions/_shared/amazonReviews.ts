@@ -14,6 +14,14 @@
  * stays portable and unit-reviewable.
  */
 
+/** Default Amazon marketplace for ASIN-only imports (US). */
+export const DEFAULT_MARKETPLACE_HOST = 'amazon.com';
+
+/** Build an Amazon DP URL from ASIN and optional marketplace host. */
+export function buildAmazonDpUrl(asin: string, marketplaceHost = DEFAULT_MARKETPLACE_HOST): string {
+  return `https://www.${marketplaceHost}/dp/${asin}`;
+}
+
 /** A review as extracted by Firecrawl's structured-JSON format. */
 export interface JsonReview {
   reviewer?: string;

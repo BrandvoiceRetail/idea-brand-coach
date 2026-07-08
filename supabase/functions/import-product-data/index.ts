@@ -2,7 +2,7 @@
  * import-product-data — Amazon listing importer.
  *
  * Sellers import one or more Amazon listings by ASIN. For each ASIN this function
- * scrapes `https://www.amazon.com/dp/{asin}` ONCE via Firecrawl v2, parses the
+ * scrapes the Amazon DP page ONCE via Firecrawl v2, parses the
  * listing fields AND the ~8 embedded reviews (modern review hooks — see
  * `parse-amazon.ts`), and persists them to `user_products` + `user_product_reviews`
  * under the caller's own (RLS-scoped) session.
@@ -26,7 +26,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { isLikelyRealListing, parseAmazonProduct, type ParsedAmazonProduct, type ParsedReview } from "./parse-amazon.ts";
-import { reviewsFromJson, scrapeAmazonPage, type JsonReview } from "../_shared/amazonReviews.ts";
+import { buildAmazonDpUrl, reviewsFromJson, scrapeAmazonPage, type JsonReview } from "../_shared/amazonReviews.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -67,7 +67,7 @@ function delay(ms: number): Promise<void> {
  * where it reads all ~8 embedded reviews to the LLM extractor's ~5.
  */
 function chooseReviews(jsonReviews: JsonReview[], hookReviews: ParsedReview[], asin: string): ParsedReview[] {
-  const fromJson = reviewsFromJson(jsonReviews, `https://www.amazon.com/dp/${asin}`);
+  const fromJson = reviewsFromJson(jsonReviews, buildAmazonDpUrl(asin));
   if (fromJson.length <= hookReviews.length) return hookReviews;
   return fromJson.map((r) => ({
     reviewerName: r.reviewerName,
@@ -103,7 +103,7 @@ async function persistProduct(
         bullets: product.bullets,
         description: product.description || null,
         images: product.images,
-        source_url: `https://www.amazon.com/dp/${asin}`,
+        source_url: buildAmazonDpUrl(asin),
         status: 'completed',
         scraped_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -139,7 +139,7 @@ async function persistProduct(
       body: review.body,
       review_date: review.date || null,
       verified_purchase: review.verified,
-      source_url: `https://www.amazon.com/dp/${asin}`,
+      source_url: buildAmazonDpUrl(asin),
     }));
 
     const { error: insertError } = await supabaseClient
@@ -219,7 +219,7 @@ serve(async (req) => {
     try {
       // One Firecrawl request carries markdown + html + the structured review
       // extraction (throws on failure; caught per-ASIN below).
-      const scraped = await scrapeAmazonPage(`https://www.amazon.com/dp/${asin}`, firecrawlApiKey, {
+      const scraped = await scrapeAmazonPage(buildAmazonDpUrl(asin), firecrawlApiKey, {
         jsonReviews: true,
         timeoutMs: 30000,
       });
