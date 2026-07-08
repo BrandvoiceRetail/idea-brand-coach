@@ -39,7 +39,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const STAGE_REFS = ['s1_vocab', 's2_jobmap', 's3_triggers', 's4_objections', 'signature', 'canvas'];
+const STAGE_REFS = ['s1_vocab', 's2_jobmap', 's3_triggers', 's4_objections', 'signature', 'canvas', 'decision_trigger'];
 
 interface ConfirmedClaim {
   claim?: string;
@@ -206,10 +206,19 @@ Hero image intent and Bullet 1 angle by trigger:
 If Stage 3 names no single dominant trigger, infer it from the weakest pillar (Empathetic to Recognition, Distinctive to Identity, Authentic to Belonging; Insight maps to Permission, which never leads, so lead with the next strongest evidence-backed trigger) and note which you used in the title_formula brief.
 </trigger-brief-direction>
 
+<decision-trigger-root>
+When the DECISION TRIGGER is supplied as the positioning root (no Brand Canvas or Signature present):
+- This is a PARTIAL root containing only the emotional lever and verbatim evidence phrases, not full voice/positioning language
+- Use the trigger's dominant_type, brand_anchor (brand-free line, NOT raw internal names), evidence_phrases (verbatim), placement_instruction, and why_this_trigger
+- The brief will be more emotionally focused but less brand-articulated than a Canvas or Signature root
+- For elements that would normally cite canvas positioning, adapt using the trigger's emotional angle and evidence
+- Use stage_ref "decision_trigger" for any element that draws from this root
+</decision-trigger-root>
+
 <output-contract>
 Respond with ONLY a JSON object, no preamble and no code fences:
 {"title_formula":{"brief":"...","example_output":"...","claims_used":["..."]},"bullets":[{"element":"...","brief":"...","example_output":"...","stage_ref":"s3_triggers","claims_used":["..."]}],"image_brief":[{"slot":"Hero","intent":"...","brief":"..."}],"ppc_keywords":{"tier_a":["..."],"tier_b":["..."],"tier_c":["..."]}}
-bullets MUST have exactly 5 entries; image_brief MUST have exactly 7 entries; each ppc tier at least one. stage_ref must be one of: s1_vocab, s2_jobmap, s3_triggers, s4_objections, signature, canvas. No markdown inside any string. No trailing commentary outside the JSON.
+bullets MUST have exactly 5 entries; image_brief MUST have exactly 7 entries; each ppc tier at least one. stage_ref must be one of: s1_vocab, s2_jobmap, s3_triggers, s4_objections, signature, canvas, decision_trigger. No markdown inside any string. No trailing commentary outside the JSON.
 </output-contract>`;
 }
 
@@ -245,28 +254,35 @@ serve(async (req) => {
     const body = await req.json();
     const canvas = body?.canvas ?? null;
     const signature = body?.signature ?? null;
+    const trigger = body?.trigger ?? null;
     const confirmedClaims: ConfirmedClaim[] = Array.isArray(body?.confirmed_claims) ? body.confirmed_claims : [];
 
-    // The brief is written against the brand positioning. Prefer the Brand Canvas; degrade
-    // to the chosen Signature when no canvas exists yet (so the owner gets a shippable brief
-    // today instead of canvas homework). Only ask when NEITHER positioning source exists.
-    if (canvas == null && signature == null) {
+    // The brief is written against the brand positioning. Priority: Canvas > Decision Trigger > Signature.
+    // Canvas is the fullest positioning; trigger is weaker but evidence-derived; signature is the fallback.
+    // Only ask when NO positioning source exists.
+    if (canvas == null && trigger == null && signature == null) {
       return new Response(
         JSON.stringify({
           needs_input: [{
             slot: 1,
-            question: 'Create a Signature (generate_signature) or compile the Brand Canvas (generate_canvas) first, then run the Export Brief.',
-            why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning and voice — held in the Brand Canvas, or in the Signature when no canvas exists yet.',
+            question: 'Create a Brand Canvas (generate_canvas), identify a Decision Trigger (identify_decision_trigger), or generate a Signature (generate_signature) first, then run the Export Brief.',
+            why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas, Decision Trigger, or Signature.',
           }],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Root positioning block: the canvas if present, else the Signature acting as the canvas.
-    const canvasBlock = canvas != null
-      ? formatArtifact('BRAND CANVAS (the source of truth for voice and positioning)', canvas)
-      : formatArtifact('SIGNATURE (your positioning + voice — no Brand Canvas exists yet, so treat this as the canvas; for any bullet that would cite the canvas, use stage_ref "signature")', signature);
+    // Root positioning block: canvas if present, else trigger, else signature.
+    let canvasBlock: string;
+    if (canvas != null) {
+      canvasBlock = formatArtifact('BRAND CANVAS (the source of truth for voice and positioning)', canvas);
+    } else if (trigger != null) {
+      // Decision trigger is a partial root with only emotional lever + evidence, no full voice/positioning
+      canvasBlock = formatArtifact('DECISION TRIGGER (partial positioning root — emotional lever and evidence phrases only; use stage_ref "decision_trigger" for elements citing this)', trigger);
+    } else {
+      canvasBlock = formatArtifact('SIGNATURE (your positioning + voice — no Canvas or Trigger exists yet, so treat this as the canvas; for any bullet that would cite the canvas, use stage_ref "signature")', signature);
+    }
     const s1Block = formatArtifact('STAGE 1 VOCABULARY CLUSTERS', body?.s1 ?? body?.prior?.s1);
     const s3Block = formatArtifact('STAGE 3 DECISION TRIGGERS (for PPC tier A and bullet 1)', body?.s3 ?? body?.prior?.s3);
     const s4Block = formatArtifact('STAGE 4 OBJECTIONS (for risk reversal and bullet 2)', body?.s4 ?? body?.prior?.s4);
@@ -370,14 +386,16 @@ serve(async (req) => {
       throw new Error('Export Brief output was incomplete (expected 5 bullets, 7 image slots, 3 keyword tiers).');
     }
 
-    // Root ref is the canvas, or the Signature when degrading. S3/S4 grounding present
-    // -> evidence; root-only synthesis -> inference.
+    // Root ref priority: canvas > trigger > signature. S3/S4 grounding present -> evidence;
+    // Decision trigger alone is evidence-derived so should arguably be 'evidence' not 'inference'.
+    const rootRef = canvas != null ? 'brand_canvas' : trigger != null ? 'decision_trigger' : 'signature';
     const evidenceRefs: Array<{ kind: string; ref: string }> = [
-      { kind: 'artifact', ref: canvas != null ? 'brand_canvas' : 'signature' },
+      { kind: 'artifact', ref: rootRef },
     ];
     if (body?.s3 ?? body?.prior?.s3) evidenceRefs.push({ kind: 'artifact', ref: 'avatar_s3_triggers' });
     if (body?.s4 ?? body?.prior?.s4) evidenceRefs.push({ kind: 'artifact', ref: 'avatar_s4_objections' });
-    const grounding = evidenceRefs.length > 1 ? 'evidence' : 'inference';
+    // Decision trigger contains verbatim evidence, so trigger-only should be 'evidence'
+    const grounding = (evidenceRefs.length > 1 || trigger != null) ? 'evidence' : 'inference';
 
     const result = {
       title_formula: titleFormula,
