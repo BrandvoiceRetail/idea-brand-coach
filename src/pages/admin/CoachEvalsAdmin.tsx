@@ -32,6 +32,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import EvalBench from './EvalBench';
 import CriteriaStudio from './CriteriaStudio';
+import CoachInstructionsStudio from './CoachInstructionsStudio';
 import McpTelemetry from './McpTelemetry';
 
 const BRAND_BLUE = '#111111';
@@ -104,6 +105,7 @@ export default function CoachEvalsAdmin() {
           <TabsTrigger value="guardrails">Guardrails &amp; flags</TabsTrigger>
           <TabsTrigger value="bench">Eval bench</TabsTrigger>
           <TabsTrigger value="criteria">Criteria studio</TabsTrigger>
+          <TabsTrigger value="instructions">Coach instructions</TabsTrigger>
           <TabsTrigger value="telemetry">MCP telemetry</TabsTrigger>
         </TabsList>
 
@@ -279,6 +281,11 @@ export default function CoachEvalsAdmin() {
         {/* ── Non-technical criteria authoring ── */}
         <TabsContent value="criteria" className="mt-6">
           <CriteriaStudio />
+        </TabsContent>
+
+        {/* ── Runtime-editable coach instructions (Phase B substrate) ── */}
+        <TabsContent value="instructions" className="mt-6">
+          <CoachInstructionsStudio />
         </TabsContent>
 
         <TabsContent value="telemetry" className="mt-6">
