@@ -57,6 +57,8 @@ const TRUST_GAP_MAX_REVIEWS = 12;
 const TRUST_GAP_REVIEW_BODY_MAX = 300;
 /** Below this review count the corpus is thin; UI must show a confidence caveat. */
 const THIN_CORPUS_THRESHOLD = 5;
+/** Data fresher than this (ms) is reused without re-scraping. */
+const FRESHNESS_WINDOW_MS = 3600000; // 1 hour
 
 type Dim = "insight" | "distinctive" | "empathetic" | "authentic";
 const DIMS: Dim[] = ["insight", "distinctive", "empathetic", "authentic"];
@@ -181,6 +183,29 @@ function extractFirstObject(text: string): string | null {
 /** Format a review row as a "★{rating} — {body}" line, body capped. */
 function formatTrustGapReview(rating: number | null, body: string): string {
   return `★${rating ?? 0} — ${body.slice(0, TRUST_GAP_REVIEW_BODY_MAX)}`;
+}
+
+/**
+ * Check if we have fresh product data for this user/asin pair.
+ * Returns true if data exists and was scraped within the freshness window.
+ */
+async function hasRecentData(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  asin: string,
+): Promise<boolean> {
+  const { data: products } = await admin
+    .from("user_products")
+    .select("scraped_at")
+    .eq("user_id", userId)
+    .eq("asin", asin)
+    .single();
+
+  if (!products || !products.scraped_at) return false;
+
+  const scrapedAt = new Date(products.scraped_at).getTime();
+  const now = Date.now();
+  return (now - scrapedAt) < FRESHNESS_WINDOW_MS;
 }
 
 /**
@@ -557,25 +582,32 @@ serve(async (req) => {
     // Service-role client for the internal import + the scoped read-back.
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
-    // ── Step 1: import-product-data (internal, forwarding the user's bearer so the
-    //    fn persists under THIS user via its own RLS-scoped client). ──
-    const importRes = await fetch(`${supabaseUrl}/functions/v1/import-product-data`, {
-      method: "POST",
-      headers: { Authorization: authHeader, "Content-Type": "application/json" },
-      body: JSON.stringify({ asins: [asin] }),
-    });
-    if (!importRes.ok) {
-      const detail = await importRes.text();
-      console.error("[run-forensic-analysis] import-product-data failed", importRes.status, detail.slice(0, 300));
-      return jsonResponse({ ok: false, error: "Could not import this listing. Please try again." }, 502);
-    }
-    const importJson = (await importRes.json()) as { results?: Array<{ asin: string; ok: boolean; error?: string }> };
-    const importItem = importJson.results?.find((r) => r.asin?.toUpperCase() === asin);
-    if (!importItem || !importItem.ok) {
-      return jsonResponse(
-        { ok: false, error: importItem?.error ?? "No Amazon listing found for this ASIN. Double-check it and try again." },
-        422,
-      );
+    // ── Step 1: Check for recent data first, only import if stale or missing. ──
+    const hasFreshData = await hasRecentData(admin, userId, asin);
+
+    if (!hasFreshData) {
+      // Data is stale or missing, call import-product-data to refresh
+      const importRes = await fetch(`${supabaseUrl}/functions/v1/import-product-data`, {
+        method: "POST",
+        headers: { Authorization: authHeader, "Content-Type": "application/json" },
+        body: JSON.stringify({ asins: [asin] }),
+      });
+      if (!importRes.ok) {
+        const detail = await importRes.text();
+        console.error("[run-forensic-analysis] import-product-data failed", importRes.status, detail.slice(0, 300));
+        return jsonResponse({ ok: false, error: "Could not import this listing. Please try again." }, 502);
+      }
+      const importJson = (await importRes.json()) as { results?: Array<{ asin: string; ok: boolean; error?: string }> };
+      const importItem = importJson.results?.find((r) => r.asin?.toUpperCase() === asin);
+      if (!importItem || !importItem.ok) {
+        return jsonResponse(
+          { ok: false, error: importItem?.error ?? "No Amazon listing found for this ASIN. Double-check it and try again." },
+          422,
+        );
+      }
+      console.log(`[run-forensic-analysis] fresh scrape for asin=${asin}`);
+    } else {
+      console.log(`[run-forensic-analysis] reusing cached data for asin=${asin}`);
     }
 
     // ── Step 2: read back + build TrustGapEvidence (scoped to user + asin). ──
