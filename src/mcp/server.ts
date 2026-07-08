@@ -17,7 +17,7 @@ import {
 import type { LedgerClient } from './ivos/capabilities.js';
 import { NativeLedgerClient } from './service/nativeLedger.js';
 import { composeCoachPreamble, tier1GroundingPreamble } from './service/coachInstructions.js';
-import { getServerSupabase } from './supabaseServer.js';
+import { getServerSupabase, getServiceRoleSupabase } from './supabaseServer.js';
 import { registerOnboard } from './tools/onboard.js';
 import { instrumentToolLatency } from './instrument.js';
 import { registerStructuredFallback } from './structuredFallback.js';
@@ -113,7 +113,8 @@ export async function createServer(
   // Fetch and append coach_instructions if enabled
   if (process.env.COACH_INSTRUCTIONS_ENABLED === 'true') {
     try {
-      const supabase = getServerSupabase();
+      // Use service-role client for coach_instructions (bypasses RLS during init)
+      const supabase = getServiceRoleSupabase();
       const coachPreamble = await composeCoachPreamble(supabase, 'preamble');
       const tier1Preamble = await tier1GroundingPreamble(supabase);
 

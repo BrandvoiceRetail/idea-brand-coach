@@ -9,6 +9,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { loadConfig } from './config.js';
 
 let cached: SupabaseClient | null = null;
+let cachedServiceRole: SupabaseClient | null = null;
 
 export function getServerSupabase(): SupabaseClient {
   if (cached) return cached;
@@ -19,7 +20,35 @@ export function getServerSupabase(): SupabaseClient {
   return cached;
 }
 
+/**
+ * Server-side Supabase client with service role key for elevated operations.
+ * Used for reading coach_instructions during server initialization (no user context).
+ * Falls back to anon-key client if service role key not available.
+ */
+export function getServiceRoleSupabase(): SupabaseClient {
+  if (cachedServiceRole) return cachedServiceRole;
+
+  const { supabaseUrl } = loadConfig();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (serviceRoleKey) {
+    cachedServiceRole = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  } else {
+    // Fall back to anon client if service role key not available
+    cachedServiceRole = getServerSupabase();
+  }
+
+  return cachedServiceRole;
+}
+
 /** Test seam. */
 export function __setServerSupabase(client: SupabaseClient | null): void {
   cached = client;
+}
+
+/** Test seam for service role client. */
+export function __setServiceRoleSupabase(client: SupabaseClient | null): void {
+  cachedServiceRole = client;
 }

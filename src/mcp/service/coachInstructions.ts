@@ -196,7 +196,7 @@ export async function fetchInstructionForId(
 
 /**
  * Tier-1 grounding preamble for MCP tools.
- * This is what was referenced but not implemented in appSkills.ts:304
+ * Returns tier-A terminology instructions to be prepended to the coach system prompt.
  */
 export async function tier1GroundingPreamble(supabase: SupabaseClient): Promise<string> {
   // Fetch the global tier-a terminology instruction
