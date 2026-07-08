@@ -16,6 +16,8 @@ import {
 } from './config.js';
 import type { LedgerClient } from './ivos/capabilities.js';
 import { NativeLedgerClient } from './service/nativeLedger.js';
+import { composeCoachPreamble, tier1GroundingPreamble } from './service/coachInstructions.js';
+import { getServerSupabase } from './supabaseServer.js';
 import { registerOnboard } from './tools/onboard.js';
 import { instrumentToolLatency } from './instrument.js';
 import { registerStructuredFallback } from './structuredFallback.js';
@@ -100,14 +102,37 @@ export interface BuiltServer {
   edgeFn: EdgeFnClient;
 }
 
-export function createServer(
+export async function createServer(
   config: HostConfig = loadConfig(),
   edgeFn?: EdgeFnClient,
   ledgerClient?: LedgerClient,
-): BuiltServer {
+): Promise<BuiltServer> {
+  // Compose instructions: base SERVER_INSTRUCTIONS + coach_instructions from DB
+  let composedInstructions = SERVER_INSTRUCTIONS;
+
+  // Fetch and append coach_instructions if enabled
+  if (process.env.COACH_INSTRUCTIONS_ENABLED === 'true') {
+    try {
+      const supabase = getServerSupabase();
+      const coachPreamble = await composeCoachPreamble(supabase, 'preamble');
+      const tier1Preamble = await tier1GroundingPreamble(supabase);
+
+      if (coachPreamble || tier1Preamble) {
+        composedInstructions = [
+          SERVER_INSTRUCTIONS,
+          tier1Preamble,
+          coachPreamble,
+        ].filter(Boolean).join('\n\n');
+      }
+    } catch (err) {
+      // Fail open: use base instructions if coach_instructions fetch fails
+      console.error('Failed to fetch coach_instructions, using base instructions:', err);
+    }
+  }
+
   const server = new McpServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
-    { instructions: assertServerInstructions(SERVER_INSTRUCTIONS) },
+    { instructions: assertServerInstructions(composedInstructions) },
   );
 
   // Time every tool uniformly (emits mcp_tool_latency per call). Must run before the

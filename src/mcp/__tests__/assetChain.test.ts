@@ -42,7 +42,7 @@ const degradingIvos = {
 } as unknown as Parameters<typeof registerDraftAssetTool>[2];
 
 async function connectedClient(edgeFn?: EdgeFnClient) {
-  const { server } = createServer(cfg, edgeFn);
+  const { server } = await createServer(cfg, edgeFn);
   // draft_asset is off the default Alpha surface (Trevor 2026-06-25); register it directly
   // for the module's chain tests (same wrapped registerTool).
   if (edgeFn) registerDraftAssetTool(server, edgeFn, degradingIvos);
