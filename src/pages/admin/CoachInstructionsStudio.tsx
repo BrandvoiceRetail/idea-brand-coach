@@ -133,8 +133,8 @@ export default function CoachInstructionsStudio() {
       setDraftBody('');
       setDraftWhenToUse('');
       setSelectedInstruction(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create instruction');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create instruction');
     }
   };
 
@@ -159,8 +159,8 @@ export default function CoachInstructionsStudio() {
       const updated = instructions.map(i => i.id === data.id ? data : i);
       setInstructions(updated);
       setSelectedInstruction(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update draft');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update draft');
     }
   };
 
@@ -192,8 +192,8 @@ export default function CoachInstructionsStudio() {
       const updated = instructions.map(i => i.id === data.id ? data : i);
       setInstructions(updated);
       setSelectedInstruction(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to publish instruction');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to publish instruction');
     }
   };
 
@@ -214,8 +214,8 @@ export default function CoachInstructionsStudio() {
       const updated = instructions.map(i => i.id === data.id ? data : i);
       setInstructions(updated);
       setSelectedInstruction(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to archive instruction');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to archive instruction');
     }
   };
 
