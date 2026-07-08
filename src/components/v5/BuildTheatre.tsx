@@ -67,27 +67,48 @@ export function BuildTheatre({
         <GlassEyebrow>Building your customer, from their own words</GlassEyebrow>
       </div>
 
-      {/* Progress rail */}
-      <div className="mb-9 flex border-b border-foreground/[0.08]" role="list" aria-label="Build progress">
-        {RAIL.map((label, i) => {
-          const done = i < railActive;
-          const active = i === railActive;
-          return (
-            <div
-              key={label}
-              role="listitem"
-              className={`flex-1 border-b-2 pb-3 text-center text-[10px] font-extrabold uppercase tracking-wide transition-colors sm:text-[11px] ${
-                active
-                  ? 'border-gold-warm text-gold-warm'
-                  : done
-                    ? 'border-foreground/15 text-foreground/45'
-                    : 'border-transparent text-foreground/20'
-              }`}
-            >
-              {label}
-            </div>
-          );
-        })}
+      {/* Progress rail — a filling gold track + per-stage states, not just a
+          faint underline (Trevor: "very low key, I almost missed it"). */}
+      <div className="mb-9" role="list" aria-label="Build progress">
+        <div className="mb-1.5 text-right text-[10px] font-semibold uppercase tracking-wide text-foreground/40">
+          Step {Math.min(railActive + 1, RAIL.length)} of {RAIL.length}
+        </div>
+        <div className="flex">
+          {RAIL.map((label, i) => {
+            const done = i < railActive;
+            const active = i === railActive;
+            return (
+              <div
+                key={label}
+                role="listitem"
+                aria-current={active ? 'step' : undefined}
+                className={`flex-1 pb-2.5 text-center text-[10px] font-extrabold uppercase tracking-wide transition-colors sm:text-[11px] ${
+                  active ? 'text-gold-warm' : done ? 'text-foreground/55' : 'text-foreground/25'
+                }`}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  {done && <span aria-hidden="true" className="text-gold-warm/80">✓</span>}
+                  {active && (
+                    <span
+                      aria-hidden="true"
+                      className={`inline-block h-1.5 w-1.5 rounded-full bg-gold-warm ${reducedMotion ? '' : 'animate-pulse'}`}
+                    />
+                  )}
+                  {label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        {/* The track: fills gold as the build advances. */}
+        <div className="h-[3px] overflow-hidden rounded-full bg-foreground/[0.08]">
+          <div
+            className={`h-full rounded-full bg-gradient-to-r from-gold-warm/70 to-gold-warm ${
+              reducedMotion ? '' : 'transition-[width] duration-700 ease-out'
+            }`}
+            style={{ width: `${((showCoSign ? RAIL.length : railActive + 0.5) / RAIL.length) * 100}%` }}
+          />
+        </div>
       </div>
 
       {/* Revealed beats */}
