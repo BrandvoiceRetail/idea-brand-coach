@@ -36,6 +36,7 @@ import {
   getCurrentArtifact as getCurrentArtifactLive,
   saveArtifact as saveArtifactLive,
 } from '../service/artifactStore.js';
+import { getLatestDecisionTrigger as getLatestDecisionTriggerLive } from '../service/decisionTriggerStore.js';
 import { scanBrief, detectBriefClaims, type ConfirmedClaim, type ClaimViolation } from '../service/claimGate.js';
 import { gateWrite } from './writeAuth.js';
 import { requireOwnedAvatar } from '../service/avatarOwnership.js';
@@ -54,6 +55,7 @@ export interface GenerateBriefDeps {
   resolve: typeof resolveSlots;
   getCurrentArtifact: typeof getCurrentArtifactLive;
   saveArtifact: typeof saveArtifactLive;
+  getLatestDecisionTrigger: typeof getLatestDecisionTriggerLive;
   edgeFn: EdgeFnClient;
   /** Sleep seam so retry-backoff tests don't wait on real time. */
   sleep?: (ms: number) => Promise<void>;
@@ -66,6 +68,7 @@ function withDefaults(deps?: Partial<GenerateBriefDeps>): GenerateBriefDeps {
     resolve: deps?.resolve ?? resolveSlots,
     getCurrentArtifact: deps?.getCurrentArtifact ?? getCurrentArtifactLive,
     saveArtifact: deps?.saveArtifact ?? saveArtifactLive,
+    getLatestDecisionTrigger: deps?.getLatestDecisionTrigger ?? getLatestDecisionTriggerLive,
     edgeFn: deps?.edgeFn ?? new EdgeFnClient(),
     sleep: deps?.sleep ?? defaultSleep,
   };
@@ -100,14 +103,14 @@ const inputSchema = {
   avatar_id: z.string().optional().describe('Avatar scope; omit for the brand-level chain.'),
 };
 
-/** needs_input demand when NEITHER a Signature nor a Brand Canvas exists (the brief root). */
+/** needs_input demand when no positioning root exists (canvas, trigger, or signature). */
 function canvasNeedsInput(): NeedsInputItem[] {
   return [
     {
       slot: 1,
       question:
-        'Create a Signature first (generate_signature) — or, for the fuller back-end articulation, a Brand Canvas (generate_canvas). The Export Brief is written against your positioning and voice.',
-      why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Signature, or the Brand Canvas when one exists.',
+        'Create a Brand Canvas (generate_canvas) for the fullest positioning, or identify a Decision Trigger (identify_decision_trigger), or generate a Signature (generate_signature) first. The Export Brief needs at least one positioning root.',
+      why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas, Decision Trigger, or Signature.',
     },
   ];
 }
@@ -176,14 +179,15 @@ export type GenerateBriefResult =
  * persist. Exported so the test can drive it with stubs without the MCP transport.
  */
 export async function runGenerateBrief(avatarId: string | null, deps: GenerateBriefDeps): Promise<GenerateBriefResult> {
-  // 1. The brief root: a Brand Canvas, OR — degrade — a chosen Signature, so the owner gets
-  //    a shippable brief today instead of canvas homework (the #1 P1 conversion-fix failure).
-  //    Only ask when NEITHER positioning source exists.
-  const [canvasRow, signatureRow] = await Promise.all([
+  // 1. The brief root priority: Brand Canvas > Decision Trigger > Signature.
+  //    Canvas is the fullest positioning; trigger is weaker but evidence-derived;
+  //    signature is the fallback. Only ask when NO positioning source exists.
+  const [canvasRow, signatureRow, decisionTriggerRow] = await Promise.all([
     deps.getCurrentArtifact('brand_canvas', avatarId),
     deps.getCurrentArtifact('signature', avatarId),
+    deps.getLatestDecisionTrigger(avatarId),
   ]);
-  if (!canvasRow && !signatureRow) {
+  if (!canvasRow && !decisionTriggerRow && !signatureRow) {
     return { status: 'needs_input', needs_input: canvasNeedsInput(), reason: 'no_canvas' };
   }
 
@@ -201,11 +205,12 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
     deps.getCurrentArtifact('avatar_s4_objections', avatarId),
   ]);
 
-  // 4. Invoke the engine verbatim, passing the confirmed-claims allowlist (bounded retry
-  //    on transient transport failure; needs_input / claim-gate blocks are not retried).
+  // 4. Invoke the engine verbatim, passing the confirmed-claims allowlist and trigger
+  //    (bounded retry on transient transport failure; needs_input / claim-gate blocks are not retried).
   const res = await invokeWithRetry(deps, 'export-brief', {
     canvas: canvasRow?.content ?? null,
     signature: signatureRow?.content ?? null,
+    trigger: decisionTriggerRow?.content ?? null,
     s1: s1?.content ?? null,
     s3: s3?.content ?? null,
     s4: s4?.content ?? null,
@@ -227,7 +232,7 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
   const grounding: Grounding = (res.data.grounding === 'inference' ? 'inference' : 'evidence') as Grounding;
   const evidenceRefs: EvidenceRef[] = Array.isArray(res.data.evidence_refs)
     ? (res.data.evidence_refs as EvidenceRef[])
-    : [{ kind: 'artifact', ref: canvasRow ? 'brand_canvas' : 'signature' }];
+    : [{ kind: 'artifact', ref: canvasRow ? 'brand_canvas' : decisionTriggerRow ? 'decision_trigger' : 'signature' }];
   const candidate = { ...res.data, grounding, evidence_refs: evidenceRefs };
   const parsed = exportBriefContract.outputSchema.safeParse(candidate);
   if (!parsed.success) {
