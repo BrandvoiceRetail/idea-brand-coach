@@ -103,14 +103,14 @@ const inputSchema = {
   avatar_id: z.string().optional().describe('Avatar scope; omit for the brand-level chain.'),
 };
 
-/** needs_input demand when no positioning root exists (canvas, trigger, or signature). */
+/** needs_input demand when no positioning root exists (canvas or trigger). */
 function canvasNeedsInput(): NeedsInputItem[] {
   return [
     {
       slot: 1,
       question:
-        'Create a Brand Canvas (generate_canvas) for the fullest positioning, or identify a Decision Trigger (identify_decision_trigger), or generate positioning (generate_signature) first. The Export Brief needs at least one positioning root.',
-      why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas, Decision Trigger, or positioning statement.',
+        'Create a Brand Canvas (generate_canvas) for the fullest positioning, or identify a Decision Trigger (identify_decision_trigger) first. The Export Brief needs a positioning root.',
+      why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas or the Decision Trigger.',
     },
   ];
 }
@@ -179,22 +179,20 @@ export type GenerateBriefResult =
  * persist. Exported so the test can drive it with stubs without the MCP transport.
  */
 export async function runGenerateBrief(avatarId: string | null, deps: GenerateBriefDeps): Promise<GenerateBriefResult> {
-  // 1. The brief root priority: Brand Canvas > Decision Trigger > Signature.
-  //    Canvas is the fullest positioning; trigger is weaker but evidence-derived;
-  //    signature is the fallback. Only ask when NO positioning source exists.
-  const [canvasRow, signatureRow] = await Promise.all([
-    deps.getCurrentArtifact('brand_canvas', avatarId),
-    deps.getCurrentArtifact('signature', avatarId),
-  ]);
+  // 1. The brief root priority: Brand Canvas > Decision Trigger. Signature is
+  //    NOT a root (dropped from the chain per Matthew, 2026-07-08 — "drop
+  //    Signature from alpha"): with neither Canvas nor Trigger we ask honestly
+  //    rather than fall back to a legacy signature row.
+  const canvasRow = await deps.getCurrentArtifact('brand_canvas', avatarId);
 
-  // Only fetch decision trigger if canvas doesn't exist - conditional to avoid regressing
-  // existing canvas-root and signature-root briefs
+  // Only fetch the decision trigger when no Canvas exists — conditional to
+  // avoid adding a read to every canvas-root brief.
   let decisionTriggerRow = null;
   if (!canvasRow) {
     decisionTriggerRow = await deps.getLatestDecisionTrigger(avatarId);
   }
 
-  if (!canvasRow && !decisionTriggerRow && !signatureRow) {
+  if (!canvasRow && !decisionTriggerRow) {
     return { status: 'needs_input', needs_input: canvasNeedsInput(), reason: 'no_canvas' };
   }
 
@@ -216,7 +214,6 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
   //    (bounded retry on transient transport failure; needs_input / claim-gate blocks are not retried).
   const res = await invokeWithRetry(deps, 'export-brief', {
     canvas: canvasRow?.content ?? null,
-    signature: signatureRow?.content ?? null,
     trigger: decisionTriggerRow?.content ?? null,
     s1: s1?.content ?? null,
     s3: s3?.content ?? null,
@@ -239,7 +236,7 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
   const grounding: Grounding = (res.data.grounding === 'inference' ? 'inference' : 'evidence') as Grounding;
   const evidenceRefs: EvidenceRef[] = Array.isArray(res.data.evidence_refs)
     ? (res.data.evidence_refs as EvidenceRef[])
-    : [{ kind: 'artifact', ref: canvasRow ? 'brand_canvas' : decisionTriggerRow ? 'decision_trigger' : 'signature' }];
+    : [{ kind: 'artifact', ref: canvasRow ? 'brand_canvas' : 'decision_trigger' }];
   const candidate = { ...res.data, grounding, evidence_refs: evidenceRefs };
   const parsed = exportBriefContract.outputSchema.safeParse(candidate);
   if (!parsed.success) {

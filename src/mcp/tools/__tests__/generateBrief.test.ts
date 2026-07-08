@@ -13,11 +13,6 @@ describe('generateBrief with Decision Trigger', () => {
     content: { brand_name: 'TestBrand', positioning: 'test' },
   };
 
-  const mockSignatureRow = {
-    id: 'sig-456',
-    content: { signature_text: 'Test signature' },
-  };
-
   const mockDecisionTrigger: DecisionTriggerRow = {
     id: 'trigger-789',
     user_id: 'user-1',
@@ -84,10 +79,9 @@ describe('generateBrief with Decision Trigger', () => {
   });
 
   describe('Positioning root precedence', () => {
-    it('should prefer Canvas over Decision Trigger and Signature', async () => {
+    it('should prefer Canvas over Decision Trigger', async () => {
       deps.getCurrentArtifact = vi.fn()
         .mockResolvedValueOnce(mockCanvasRow) // canvas
-        .mockResolvedValueOnce(mockSignatureRow) // signature
         .mockResolvedValueOnce(null) // s1
         .mockResolvedValueOnce(null) // s3
         .mockResolvedValueOnce(null); // s4
@@ -99,7 +93,6 @@ describe('generateBrief with Decision Trigger', () => {
       expect(deps.getLatestDecisionTrigger).not.toHaveBeenCalled();
       expect(deps.edgeFn.invoke).toHaveBeenCalledWith('export-brief', expect.objectContaining({
         canvas: mockCanvasRow.content,
-        signature: mockSignatureRow.content,
         trigger: null,  // Should be null when canvas exists
       }));
       expect(result.status).toBe('persisted');
@@ -108,7 +101,6 @@ describe('generateBrief with Decision Trigger', () => {
     it('should use Decision Trigger when no Canvas exists', async () => {
       deps.getCurrentArtifact = vi.fn()
         .mockResolvedValueOnce(null) // no canvas
-        .mockResolvedValueOnce(mockSignatureRow) // signature
         .mockResolvedValueOnce(null) // s1
         .mockResolvedValueOnce(null) // s3
         .mockResolvedValueOnce(null); // s4
@@ -128,39 +120,27 @@ describe('generateBrief with Decision Trigger', () => {
 
       expect(deps.edgeFn.invoke).toHaveBeenCalledWith('export-brief', expect.objectContaining({
         canvas: null,
-        signature: mockSignatureRow.content,
         trigger: mockDecisionTrigger.content,
       }));
       expect(result.status).toBe('persisted');
     });
 
-    it('should use Signature when no Canvas or Trigger exists', async () => {
+    it('does not send a signature field and never fetches the signature artifact (dropped from the root chain)', async () => {
       deps.getCurrentArtifact = vi.fn()
         .mockResolvedValueOnce(null) // no canvas
-        .mockResolvedValueOnce(mockSignatureRow) // signature
         .mockResolvedValueOnce(null) // s1
         .mockResolvedValueOnce(null) // s3
         .mockResolvedValueOnce(null); // s4
-      deps.getLatestDecisionTrigger = vi.fn().mockResolvedValue(null); // no trigger
+      deps.getLatestDecisionTrigger = vi.fn().mockResolvedValue(mockDecisionTrigger);
 
-      // Update mock response to reflect signature as root
-      const signatureResponse = {
-        ...mockExportBriefResponse,
-        data: {
-          ...mockExportBriefResponse.data,
-          evidence_refs: [{ kind: 'artifact', ref: 'signature' }],
-        },
-      };
-      deps.edgeFn.invoke = vi.fn().mockResolvedValue(signatureResponse);
+      await runGenerateBrief('avatar-1', deps);
 
-      const result = await runGenerateBrief('avatar-1', deps);
-
-      expect(deps.edgeFn.invoke).toHaveBeenCalledWith('export-brief', expect.objectContaining({
-        canvas: null,
-        signature: mockSignatureRow.content,
-        trigger: null,
-      }));
-      expect(result.status).toBe('persisted');
+      // Signature is no longer a positioning root (Matthew, 2026-07-08):
+      // the artifact is never fetched and the engine body carries no signature key.
+      const artifactKinds = (deps.getCurrentArtifact as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0]);
+      expect(artifactKinds).not.toContain('signature');
+      const body = (deps.edgeFn.invoke as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
+      expect('signature' in body).toBe(false);
     });
 
     it('should return needs_input when no positioning root exists', async () => {
@@ -188,7 +168,6 @@ describe('generateBrief with Decision Trigger', () => {
     it('should set decision_trigger as root ref when trigger is the positioning source', async () => {
       deps.getCurrentArtifact = vi.fn()
         .mockResolvedValueOnce(null) // no canvas
-        .mockResolvedValueOnce(null) // no signature
         .mockResolvedValueOnce(null) // s1
         .mockResolvedValueOnce(null) // s3
         .mockResolvedValueOnce(null); // s4

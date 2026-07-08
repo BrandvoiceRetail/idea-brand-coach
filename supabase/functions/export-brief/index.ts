@@ -253,35 +253,32 @@ serve(async (req) => {
 
     const body = await req.json();
     const canvas = body?.canvas ?? null;
-    const signature = body?.signature ?? null;
     const trigger = body?.trigger ?? null;
     const confirmedClaims: ConfirmedClaim[] = Array.isArray(body?.confirmed_claims) ? body.confirmed_claims : [];
 
-    // The brief is written against the brand positioning. Priority: Canvas > Decision Trigger > Signature.
-    // Canvas is the fullest positioning; trigger is weaker but evidence-derived; signature is the fallback.
-    // Only ask when NO positioning source exists.
-    if (canvas == null && trigger == null && signature == null) {
+    // The brief is written against the brand positioning. Priority: Canvas > Decision Trigger.
+    // Signature is NOT a root (dropped from the chain per Matthew, 2026-07-08): with neither
+    // Canvas nor Trigger we ask honestly rather than lean on a legacy signature row.
+    if (canvas == null && trigger == null) {
       return new Response(
         JSON.stringify({
           needs_input: [{
             slot: 1,
-            question: 'Create a Brand Canvas (generate_canvas), identify a Decision Trigger (identify_decision_trigger), or generate positioning (generate_signature) first, then run the Export Brief.',
-            why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas, Decision Trigger, or positioning statement.',
+            question: 'Create a Brand Canvas (generate_canvas) or identify a Decision Trigger (identify_decision_trigger) first, then run the Export Brief.',
+            why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas or the Decision Trigger.',
           }],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Root positioning block: canvas if present, else trigger, else signature.
+    // Root positioning block: canvas if present, else trigger.
     let canvasBlock: string;
     if (canvas != null) {
       canvasBlock = formatArtifact('BRAND CANVAS (the source of truth for voice and positioning)', canvas);
-    } else if (trigger != null) {
+    } else {
       // Decision trigger is a partial root with only emotional lever + evidence, no full voice/positioning
       canvasBlock = formatArtifact('DECISION TRIGGER (partial positioning root — emotional lever and evidence phrases only; use stage_ref "decision_trigger" for elements citing this)', trigger);
-    } else {
-      canvasBlock = formatArtifact('SIGNATURE (your positioning + voice — no Canvas or Trigger exists yet, so treat this as the canvas; for any bullet that would cite the canvas, use stage_ref "signature")', signature);
     }
     const s1Block = formatArtifact('STAGE 1 VOCABULARY CLUSTERS', body?.s1 ?? body?.prior?.s1);
     const s3Block = formatArtifact('STAGE 3 DECISION TRIGGERS (for PPC tier A and bullet 1)', body?.s3 ?? body?.prior?.s3);
@@ -386,9 +383,8 @@ serve(async (req) => {
       throw new Error('Export Brief output was incomplete (expected 5 bullets, 7 image slots, 3 keyword tiers).');
     }
 
-    // Root ref priority: canvas > trigger > signature. S3/S4 grounding present -> evidence;
-    // Decision trigger alone is evidence-derived so should arguably be 'evidence' not 'inference'.
-    const rootRef = canvas != null ? 'brand_canvas' : trigger != null ? 'decision_trigger' : 'signature';
+    // Root ref priority: canvas > trigger (signature is no longer a root).
+    const rootRef = canvas != null ? 'brand_canvas' : 'decision_trigger';
     const evidenceRefs: Array<{ kind: string; ref: string }> = [
       { kind: 'artifact', ref: rootRef },
     ];
