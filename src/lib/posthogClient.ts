@@ -238,7 +238,27 @@ export type AlphaEventName =
   | 'v4_defend_loop_restarted'
   | 'v4_defend_drift_watch_viewed'
   | 'v4_defend_checklist_viewed'
-  | 'v4_defend_competitor_teaser_viewed';
+  | 'v4_defend_competitor_teaser_viewed'
+  // /v5 alpha — the Avatar 2.0 build theatre (ASIN → live build → co-sign →
+  // Trust Gap + Decision Trigger → design brief → save). Counts / booleans /
+  // slugs only — never review text, listing copy, the ASIN value, or PII.
+  | 'v5_entry_viewed'
+  | 'v5_run_started'
+  | 'v5_corpus_ready'
+  | 'v5_corpus_retry'
+  | 'v5_stage_revealed'
+  | 'v5_cosign_confirmed'
+  | 'v5_results_viewed'
+  | 'v5_brief_viewed'
+  | 'v5_brief_shared'
+  | 'v5_saved'
+  | 'v5_coldstart_shown'
+  | 'v5_express_run'
+  // Returning-user home (V5Home) — the signed-in landing that lists the
+  // listings a seller has already analysed. Home viewed + re-open one in
+  // express. Counts / booleans / IDs only, never the ASIN value or PII.
+  | 'v5_home_viewed'
+  | 'v5_home_reopen';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

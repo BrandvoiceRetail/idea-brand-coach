@@ -146,7 +146,8 @@ describe('AssetDetailTabs', () => {
     );
     const strip = screen.getByTestId('v4-grounded-strip');
     expect(strip).toHaveTextContent(/Grounded in/i);
-    expect(strip).toHaveTextContent(/Signature/);
+    expect(strip).toHaveTextContent(/Positioning/);
+    expect(strip).not.toHaveTextContent(/Signature/);
     expect(strip).toHaveTextContent(/may drift/i);
   });
 

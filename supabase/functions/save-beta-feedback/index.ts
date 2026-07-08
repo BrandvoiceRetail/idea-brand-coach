@@ -39,17 +39,22 @@ serve(async (req) => {
     const isQuickFeedback = 'quickFeedback' in requestData
 
     if (isQuickFeedback) {
-      // Handle quick feedback from the widget
-      const { quickFeedback, pageUrl, feedbackType, timestamp } = requestData
+      // Handle quick feedback from the widget. Anonymous testers may attach an
+      // optional contact email + an explicit email-marketing opt-in.
+      const { quickFeedback, pageUrl, feedbackType, timestamp, email, emailOptIn } = requestData
+      const contactEmail = typeof email === 'string' && email.trim().length > 0 ? email.trim().slice(0, 320) : null
 
       // MF-5: no PII/content in logs — shape only.
-      console.log('Saving quick beta feedback:', { feedbackType, hasUser: !!authedUserId })
+      console.log('Saving quick beta feedback:', { feedbackType, hasUser: !!authedUserId, hasEmail: !!contactEmail })
 
       // Store quick feedback in step_comments field with special formatting
       const { error } = await supabase
         .from('beta_feedback')
         .insert({
           user_id: authedUserId,
+          contact_email: contactEmail,
+          // Consent only means something when given alongside an email.
+          email_opt_in: contactEmail ? emailOptIn === true : null,
           step_comments: [{
             stepId: `widget-${feedbackType}`,
             pageUrl: pageUrl,

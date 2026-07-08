@@ -297,7 +297,7 @@ function CopyForm(props: {
         <Textarea id="gen-copyprompt" value={props.prompt} onChange={(e) => props.setPrompt(e.target.value)} rows={3}
           placeholder={props.isEmail ? 'e.g. welcome new buyers and set up the first use' : 'e.g. lead with the protection promise'} />
       </div>
-      <p className="text-[11px] text-muted-foreground">Grounded in your avatar + Signature. Review before publishing.</p>
+      <p className="text-[11px] text-muted-foreground">Grounded in your avatar + positioning. Review before publishing.</p>
     </>
   );
 }

@@ -1049,7 +1049,7 @@ footer{
         <code id="mcpUrl">https://ideabrandcoach.com/mcp</code>
         <button class="copy-btn" id="copyBtn" onclick="copyUrl()">Copy URL</button>
       </div>
-      <a href="/v4/connect" class="btn btn-ghost" style="font-size:.86rem">Connector setup steps →</a>
+      <a href="/v5" class="btn btn-ghost" style="font-size:.86rem">Connector setup steps →</a>
     </div>
   </div>
 </section>
@@ -1134,8 +1134,8 @@ function copyUrl(){
   check();
 })();
 /* Auth-aware nav button: this page is same-origin with the SPA, so it can read
-   the Supabase session from localStorage. Logged in → "Go to Dashboard" (/v4,
-   the authed home per VersionGate); otherwise → "Log in" (/auth). */
+   the Supabase session from localStorage. Logged in → the /v5 build surface
+   (the canonical logged-in home, 2026-07-06); otherwise → "Log in" (/auth). */
 (function(){
   var btn=document.getElementById('authBtn');
   if(!btn)return;
@@ -1149,12 +1149,12 @@ function copyUrl(){
       var exp=sess&&sess.expires_at; /* unix seconds */
       var refresh=sess&&sess.refresh_token;
       /* logged in if we hold an unexpired access token, or a refresh token the
-         app can exchange (autoRefreshToken) — /v4 is auth-gated, so a truly dead
-         session safely bounces to /auth on click. */
+         app can exchange (autoRefreshToken). /v5 is public (anon-first), so a
+         truly dead session still lands somewhere useful on click. */
       if(token&&((exp&&exp*1000>Date.now())||refresh))loggedIn=true;
     }
   }catch(e){/* malformed/absent session → treat as logged out */}
-  if(loggedIn){btn.textContent='Go to Dashboard';btn.setAttribute('href','/v4');}
+  if(loggedIn){btn.textContent='Go to my brief';btn.setAttribute('href','/v5');}
 })();
 </script>
 </body>

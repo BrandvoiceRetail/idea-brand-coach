@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useVersionContext } from '@/contexts/VersionContext';
 import { V2_ROUTES } from '@/config/routes';
-import { isV4Forced, V4_ROUTES, hasSeenV4Onboarding } from '@/config/v4';
+import { isV4Forced } from '@/config/v4';
 
 function getUserFirstName(user: { email?: string } | null): string {
   if (!user) return '';
@@ -28,13 +28,9 @@ export function VersionGate(): JSX.Element | null {
     // (in-app routes are login-gated by RequireAuth); authed first-run users get
     // the post-signup onboarding CHOICE, returning users go straight to /v4.
     if (forceV4) {
-      if (!user) {
-        navigate('/welcome', { replace: true });
-      } else {
-        navigate(hasSeenV4Onboarding() ? V4_ROUTES.ROOT : V4_ROUTES.CHOICE, {
-          replace: true,
-        });
-      }
+      // /v5 is the canonical logged-in surface (2026-07-06). Guests still see
+      // the public landing; a signed-in user lands straight on the v5 flow.
+      navigate(user ? '/v5' : '/welcome', { replace: true });
       return;
     }
 

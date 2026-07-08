@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { ROUTES } from '@/config/routes';
 import { isV4Forced } from '@/config/v4';
+import { supabase } from '@/integrations/supabase/client';
 
 const emailSchema = z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password must be less than 100 characters');
@@ -115,10 +116,31 @@ export default function Auth() {
     if (!isEmailValid || !isPasswordValid) return;
 
     setIsLoading(true);
+
+    // If the visitor arrived on an ANONYMOUS session (a guest /v5 run), keep
+    // its token: signing in replaces the session, and without this the run's
+    // data stays stranded under the anon user (task #31). After sign-in the
+    // reparent-anon-run edge fn verifies both identities and moves the rows.
+    let anonToken: string | null = null;
+    try {
+      const { data: { session: preSession } } = await supabase.auth.getSession();
+      if (preSession?.user?.is_anonymous) anonToken = preSession.access_token;
+    } catch { /* no session to carry */ }
+
     const { error } = await signIn(email, password);
 
     if (!error) {
       setIsLoading(false);
+
+      if (anonToken) {
+        // Background carry-over; the app resurfaces the moved rows on load.
+        supabase.functions.invoke('reparent-anon-run', { body: { anonToken } })
+          .then(({ data, error: reparentError }) => {
+            if (reparentError) console.error('❌ Auth: anon run carry-over failed:', reparentError);
+            else console.log('✅ Auth: anon run carried into account:', data?.moved);
+          })
+          .catch((e) => console.error('❌ Auth: anon run carry-over failed:', e));
+      }
 
       // Navigate first
       navigate(redirectUrl);
@@ -348,8 +370,12 @@ export default function Auth() {
     );
   }
 
-  // Show account management if user is already logged in
-  if (user) {
+  // Show account management if user is already logged in. An ANONYMOUS
+  // session (minted by a guest /v5 run) must NOT count — it has no email and
+  // no credentials, so this branch would be a dead end ("signed in as <blank>"
+  // with no way to reach the sign-in form). Anon visitors fall through to the
+  // real form; signing in replaces the anon session and honours ?redirect=.
+  if (user && !(user as { is_anonymous?: boolean }).is_anonymous) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
@@ -362,7 +388,7 @@ export default function Auth() {
               onClick={() => navigate(ROUTES.APP_ROOT)}
               className="w-full"
             >
-              Go to Dashboard
+              Continue to your listings
             </Button>
             <Button 
               onClick={signOut} 

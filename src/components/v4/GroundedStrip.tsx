@@ -19,12 +19,22 @@ import { AlertTriangle, Check, Lock } from 'lucide-react';
 
 /** One brand field that may (or may not) power an output. */
 export interface GroundedField {
-  /** Everyday brand-field label (Tier-A), e.g. "Signature", "Avatar", "Positioning". */
+  /** Everyday brand-field label (Tier-A), e.g. "Avatar", "Positioning". */
   label: string;
   /** Whether the field was present/usable for this output. */
   present: boolean;
   /** Shown when not present — what's missing / why the output may drift. */
   note?: string;
+}
+
+/**
+ * "Signature" is not part of Trevor's system taxonomy (IDEA-APP-SKILLS-001; his
+ * 2026-07-06 walkthrough: "drop it before it gets too embedded"). Field labels
+ * can arrive from backend payloads, so normalise at the display boundary — the
+ * word must never render regardless of what the data layer still calls it.
+ */
+function displayLabel(label: string): string {
+  return label === 'Signature' ? 'Positioning' : label;
 }
 
 export interface GroundedStripProps {
@@ -48,7 +58,7 @@ export function GroundedStrip({ fields, className }: GroundedStripProps): JSX.El
       <div className={root} data-testid="v4-grounded-strip" data-grounded="empty">
         <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         <span>
-          Not grounded in any brand fields yet — add your Signature and avatar so this output is
+          Not grounded in any brand fields yet — add your positioning and avatar so this output is
           built from your real brand.
         </span>
       </div>
@@ -65,18 +75,18 @@ export function GroundedStrip({ fields, className }: GroundedStripProps): JSX.El
         <span
           key={field.label}
           className="flex items-center gap-1"
-          data-testid={`v4-grounded-field-${field.label.toLowerCase().replace(/\s+/g, '-')}`}
+          data-testid={`v4-grounded-field-${displayLabel(field.label).toLowerCase().replace(/\s+/g, '-')}`}
         >
           {field.present ? (
             <>
               <Check className="h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden="true" />
-              <span>{field.label}</span>
+              <span>{displayLabel(field.label)}</span>
             </>
           ) : (
             <span className="flex items-center gap-1 font-medium text-gold-warm">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>
-                {field.label}
+                {displayLabel(field.label)}
                 {field.note ? ` — ${field.note}` : ' — missing, output may drift'}
               </span>
             </span>
