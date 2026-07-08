@@ -37,6 +37,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createRateLimiter } from "../_shared/rateLimit.ts";
 import { APP_URL } from "../_shared/appUrl.ts";
+import { shouldSkipScrape } from "../_shared/forensicFreshness.ts";
 
 // This endpoint is expensive (1 Firecrawl scrape + ~3 Sonnet calls per run), so
 // throttle per user. Best-effort per-isolate limiter; overridable via env.
@@ -58,7 +59,9 @@ const TRUST_GAP_REVIEW_BODY_MAX = 300;
 /** Below this review count the corpus is thin; UI must show a confidence caveat. */
 const THIN_CORPUS_THRESHOLD = 5;
 /** Data fresher than this (ms) is reused without re-scraping. */
-const FRESHNESS_WINDOW_MS = Number(Deno.env.get("FRESHNESS_WINDOW_MS") ?? "3600000"); // 1 hour default
+// 7 days (Matthew, 2026-07-08) — aligned with review-scraper's 7d cache TTL so
+// freshness semantics match across the scrape cluster. Env-overridable.
+const FRESHNESS_WINDOW_MS = Number(Deno.env.get("FRESHNESS_WINDOW_MS") ?? "604800000");
 
 type Dim = "insight" | "distinctive" | "empathetic" | "authentic";
 const DIMS: Dim[] = ["insight", "distinctive", "empathetic", "authentic"];
@@ -208,20 +211,19 @@ async function hasRecentData(
 
   if (!product || !product.scraped_at) return false;
 
-  // Check freshness
-  const scrapedAt = new Date(product.scraped_at).getTime();
-  const now = Date.now();
-  const isFresh = (now - scrapedAt) < FRESHNESS_WINDOW_MS;
-
-  if (!isFresh) return false;
-
-  // Also verify reviews exist (count > 0) before treating cache as usable
+  // Reviews must actually exist before the cache counts as usable — a fresh
+  // scraped_at with zero stored reviews means import stored the listing but
+  // the review insert failed; on any doubt we scrape.
   const { count } = await admin
     .from("user_product_reviews")
     .select("*", { count: "exact", head: true })
     .eq("product_id", product.id);
 
-  return (count ?? 0) > 0;
+  // The decision itself is the unit-tested pure predicate (forensicFreshness).
+  return shouldSkipScrape(
+    { scraped_at: product.scraped_at, review_count: count ?? 0 },
+    FRESHNESS_WINDOW_MS,
+  );
 }
 
 /**
