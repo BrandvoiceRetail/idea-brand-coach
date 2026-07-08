@@ -26,6 +26,7 @@ export const stageRefSchema = z.enum([
   's4_objections',
   'signature',
   'canvas',
+  'decision_trigger',
 ]);
 export type StageRef = z.infer<typeof stageRefSchema>;
 
