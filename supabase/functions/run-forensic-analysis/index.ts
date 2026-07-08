@@ -37,6 +37,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createRateLimiter } from "../_shared/rateLimit.ts";
 import { APP_URL } from "../_shared/appUrl.ts";
+import { shouldSkipScrape } from "../_shared/forensicFreshness.ts";
 
 // This endpoint is expensive (1 Firecrawl scrape + ~3 Sonnet calls per run), so
 // throttle per user. Best-effort per-isolate limiter; overridable via env.
@@ -57,6 +58,10 @@ const TRUST_GAP_MAX_REVIEWS = 12;
 const TRUST_GAP_REVIEW_BODY_MAX = 300;
 /** Below this review count the corpus is thin; UI must show a confidence caveat. */
 const THIN_CORPUS_THRESHOLD = 5;
+/** Data fresher than this (ms) is reused without re-scraping. */
+// 7 days (Matthew, 2026-07-08) — aligned with review-scraper's 7d cache TTL so
+// freshness semantics match across the scrape cluster. Env-overridable.
+const FRESHNESS_WINDOW_MS = Number(Deno.env.get("FRESHNESS_WINDOW_MS") ?? "604800000");
 
 type Dim = "insight" | "distinctive" | "empathetic" | "authentic";
 const DIMS: Dim[] = ["insight", "distinctive", "empathetic", "authentic"];
@@ -181,6 +186,44 @@ function extractFirstObject(text: string): string | null {
 /** Format a review row as a "★{rating} — {body}" line, body capped. */
 function formatTrustGapReview(rating: number | null, body: string): string {
   return `★${rating ?? 0} — ${body.slice(0, TRUST_GAP_REVIEW_BODY_MAX)}`;
+}
+
+/**
+ * Check if we have fresh product data with usable reviews for this user/asin pair.
+ * Returns true only if:
+ * 1. Data exists and was scraped within the freshness window
+ * 2. Reviews are actually present (non-zero count)
+ *
+ * This prevents using stale data OR fresh data with failed review imports.
+ */
+async function hasRecentData(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  asin: string,
+): Promise<boolean> {
+  // Get product with scraped_at
+  const { data: product } = await admin
+    .from("user_products")
+    .select("id, scraped_at")
+    .eq("user_id", userId)
+    .eq("asin", asin)
+    .single();
+
+  if (!product || !product.scraped_at) return false;
+
+  // Reviews must actually exist before the cache counts as usable — a fresh
+  // scraped_at with zero stored reviews means import stored the listing but
+  // the review insert failed; on any doubt we scrape.
+  const { count } = await admin
+    .from("user_product_reviews")
+    .select("*", { count: "exact", head: true })
+    .eq("product_id", product.id);
+
+  // The decision itself is the unit-tested pure predicate (forensicFreshness).
+  return shouldSkipScrape(
+    { scraped_at: product.scraped_at, review_count: count ?? 0 },
+    FRESHNESS_WINDOW_MS,
+  );
 }
 
 /**
@@ -557,25 +600,32 @@ serve(async (req) => {
     // Service-role client for the internal import + the scoped read-back.
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
-    // ── Step 1: import-product-data (internal, forwarding the user's bearer so the
-    //    fn persists under THIS user via its own RLS-scoped client). ──
-    const importRes = await fetch(`${supabaseUrl}/functions/v1/import-product-data`, {
-      method: "POST",
-      headers: { Authorization: authHeader, "Content-Type": "application/json" },
-      body: JSON.stringify({ asins: [asin] }),
-    });
-    if (!importRes.ok) {
-      const detail = await importRes.text();
-      console.error("[run-forensic-analysis] import-product-data failed", importRes.status, detail.slice(0, 300));
-      return jsonResponse({ ok: false, error: "Could not import this listing. Please try again." }, 502);
-    }
-    const importJson = (await importRes.json()) as { results?: Array<{ asin: string; ok: boolean; error?: string }> };
-    const importItem = importJson.results?.find((r) => r.asin?.toUpperCase() === asin);
-    if (!importItem || !importItem.ok) {
-      return jsonResponse(
-        { ok: false, error: importItem?.error ?? "No Amazon listing found for this ASIN. Double-check it and try again." },
-        422,
-      );
+    // ── Step 1: Check for recent data first, only import if stale or missing. ──
+    const hasFreshData = await hasRecentData(admin, userId, asin);
+
+    if (!hasFreshData) {
+      // Data is stale or missing, call import-product-data to refresh
+      const importRes = await fetch(`${supabaseUrl}/functions/v1/import-product-data`, {
+        method: "POST",
+        headers: { Authorization: authHeader, "Content-Type": "application/json" },
+        body: JSON.stringify({ asins: [asin] }),
+      });
+      if (!importRes.ok) {
+        const detail = await importRes.text();
+        console.error("[run-forensic-analysis] import-product-data failed", importRes.status, detail.slice(0, 300));
+        return jsonResponse({ ok: false, error: "Could not import this listing. Please try again." }, 502);
+      }
+      const importJson = (await importRes.json()) as { results?: Array<{ asin: string; ok: boolean; error?: string }> };
+      const importItem = importJson.results?.find((r) => r.asin?.toUpperCase() === asin);
+      if (!importItem || !importItem.ok) {
+        return jsonResponse(
+          { ok: false, error: importItem?.error ?? "No Amazon listing found for this ASIN. Double-check it and try again." },
+          422,
+        );
+      }
+      console.log(`[run-forensic-analysis] fresh scrape for asin=${asin}`);
+    } else {
+      console.log(`[run-forensic-analysis] reusing cached data for asin=${asin}`);
     }
 
     // ── Step 2: read back + build TrustGapEvidence (scoped to user + asin). ──
