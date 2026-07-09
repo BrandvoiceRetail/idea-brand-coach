@@ -694,7 +694,7 @@ export default function V5Alpha(): JSX.Element {
             setSkipAll(true);
             setPaused(false);
           }}
-          skipArmed={skipAll}
+          skipArmed={skipAll || express}
           reducedMotion={reducedMotion}
           onNext={revealNext}
         />
