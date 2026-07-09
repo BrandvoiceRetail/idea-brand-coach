@@ -17,6 +17,8 @@
 
 import posthog from 'posthog-js';
 
+import { hasAnalyticsConsent, onConsentChange } from './consent';
+
 /** Every Alpha funnel + error event, snake_case, grouped by journey. */
 export type AlphaEventName =
   | 'beta_welcome_viewed'
@@ -250,17 +252,55 @@ let isInitialized = false;
 /**
  * Initialise PostHog once. No-op (and logs nothing) when the key is unset so
  * the app works without analytics configured.
+ *
+ * CONSENT-GATED (GDPR/ePrivacy): refuses to start without a stored analytics
+ * opt-in — before the visitor decides, no PostHog cookies exist and no events
+ * leave the browser. Wire-up happens via bindAnalyticsToConsent() in App.tsx.
  */
 export function initPostHog(): void {
   const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
-  if (!key || isInitialized) return;
+  if (!key || isInitialized || !hasAnalyticsConsent()) return;
 
   posthog.init(key, {
-    api_host: (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://us.i.posthog.com',
+    // EU host pinned as the CODE default — a worktree build missing .env must
+    // never silently ship US ingestion (GDPR transfer record says EU).
+    api_host: (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://eu.i.posthog.com',
     // Exception autocapture — the Alpha error-monitoring surface (no Sentry).
     capture_exceptions: true,
   });
   isInitialized = true;
+}
+
+/**
+ * Bind analytics to the consent store: start PostHog if consent is already
+ * granted, start/opt-in on a later grant, and opt out + drop identity when
+ * consent is withdrawn. Call once at app boot (replaces a bare initPostHog()).
+ */
+export function bindAnalyticsToConsent(): void {
+  initPostHog();
+  onConsentChange((state) => {
+    if (state.analytics === 'granted') {
+      if (isInitialized) {
+        try {
+          posthog.opt_in_capturing();
+        } catch (err) {
+          console.warn('[posthogClient] opt-in failed:', err);
+        }
+      } else {
+        initPostHog();
+      }
+    } else if (isInitialized) {
+      try {
+        // Stop capture and drop the device's identity/super-properties so a
+        // withdrawal behaves like erasure on this device (Art. 7(3) — as easy
+        // to withdraw as to give).
+        posthog.opt_out_capturing();
+        posthog.reset();
+      } catch (err) {
+        console.warn('[posthogClient] opt-out failed:', err);
+      }
+    }
+  });
 }
 
 export function isPostHogEnabled(): boolean {

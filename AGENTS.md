@@ -49,6 +49,10 @@ doing it by hand. 90% accuracy per manual step compounds to ~59% over five steps
   prefill), and the MCP-app panels. A field captured but never resurfaced is a bug even when nothing
   throws. Full principle, the data register, and the per-field checklist:
   [`docs/architecture/STORE_AND_RESURFACE.md`](docs/architecture/STORE_AND_RESURFACE.md).
+- **Register every new user-data table in `supabase/functions/_shared/gdprData.ts`** (GDPR
+  export/erasure registry) and redeploy the `gdpr-export`/`gdpr-delete-account` fns in the same
+  change — an unlisted table breaks the right to erasure. Compliance home:
+  [`docs/compliance/GDPR_COMPLIANCE.md`](docs/compliance/GDPR_COMPLIANCE.md).
 - Use the Supabase client from `src/integrations/supabase/client.ts`; type queries with the generated
   `src/integrations/supabase/types.ts` (auto-generated — never hand-edit).
 - Handle Supabase errors gracefully: log details to console, surface a `sonner` toast with a clear,

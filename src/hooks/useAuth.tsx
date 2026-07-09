@@ -15,7 +15,7 @@ interface AuthContextType {
   // needsConfirmation is true when sign-up succeeded but no session was issued
   // (live project has email confirmation ON) — the caller must NOT navigate into
   // the app; it should prompt the user to confirm their email first.
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: unknown; needsConfirmation?: boolean }>;
+  signUp: (email: string, password: string, fullName?: string, policyAcceptance?: { version: string }) => Promise<{ error: unknown; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -87,12 +87,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, policyAcceptance?: { version: string }) => {
     if (!authService) {
       throw new Error('Auth service not available');
     }
     try {
-      const { session, error } = await authService.signUp(email, password, fullName);
+      const { session, error } = await authService.signUp(email, password, fullName, policyAcceptance);
 
       if (error) {
         toast({
@@ -172,7 +172,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           k === 'idea-context-avatar-ids' ||
           k === 'betaProgress' ||
           k === 'betaTesterInfo' ||
-          k === 'diagnosticData'
+          k === 'diagnosticData' ||
+          // PII bucket (name/email/company from the diagnostic form) — GDPR
+          // data-separation audit flagged it surviving sign-out on shared devices.
+          k === 'diagnosticUserData' ||
+          k.startsWith('idea-brand-coach:') ||
+          k.startsWith('idea.v4.context.')
         );
         keysToRemove.forEach(k => localStorage.removeItem(k));
       } catch {

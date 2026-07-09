@@ -45,6 +45,8 @@ others — not a deployable function.
 | diagnostic-interpretation-evidence | Evidence-grounded Trust Gap interpretation + derive |
 | export-brief | Compiles the listing/image/PPC Export Brief |
 | submit-diagnostic-lead | Lead-magnet capture (anonymous) |
+| gdpr-export | GDPR Art. 15/20 — full JSON export of the caller's data (authed; verify_jwt pinned) |
+| gdpr-delete-account | GDPR Art. 17 — erases storage + all user tables + auth user, logs to gdpr_requests (authed; verify_jwt pinned) |
 | get-funnel-piece-metrics | Reads campaign_metrics per funnel piece (RLS-scoped) |
 | save-beta-comment | Persists beta comments |
 | save-beta-feedback | Persists beta/widget feedback |
@@ -71,6 +73,11 @@ token). Per-function flags live in `../config.toml`.
 
 - Secrets via Supabase function env (`Deno.env.get`), never committed.
 - Changing auth flows or RLS-affecting behavior requires asking first (root Boundaries).
+- **Every new user-data table goes into `_shared/gdprData.ts`** (the GDPR
+  export/erasure registry) in the same PR, and both `gdpr-export` and
+  `gdpr-delete-account` get redeployed — an unlisted table means incomplete
+  exports and rows that survive account deletion. See
+  [`docs/compliance/GDPR_COMPLIANCE.md`](../../docs/compliance/GDPR_COMPLIANCE.md).
 - **A function that captures user input must write it where a resolver/reader can resurface it**
   (store-and-resurface, [`docs/architecture/STORE_AND_RESURFACE.md`](../../docs/architecture/STORE_AND_RESURFACE.md)).
   `import-product-data` writes `user_products`/`user_product_reviews`, which the MCP context resolver
