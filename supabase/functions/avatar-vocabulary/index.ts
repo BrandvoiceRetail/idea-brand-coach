@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { getServiceClient, getAuthedUserId } from "../_shared/edge-auth.ts";
-import { meterAndDebit } from "../_shared/meter.ts";
 
 /**
  * avatar-vocabulary  (Avatar 2.0 — Stage 1: Vocabulary Forensics)
@@ -200,7 +198,8 @@ Every term in "customer_words" MUST be a verbatim, word-for-word substring of th
 </frequency-band-rule>
 
 <voice-rules>
-- "why_it_matters" is a concise strategic read (one or two sentences).
+- "why_it_matters" is a concise strategic read (one or two sentences) phrased as "WHAT THIS SUGGESTS" — use inference language like "suggests", "appears", "may indicate", "likely".
+- Pattern claims (dominant/strongest/primary) require supporting counts. If claiming a pattern dominates, include frequency context.
 - NEVER use asterisks, markdown, bold, or headings inside any string value.
 - NEVER use em dashes. Use full stops or commas.
 - Use UK English spelling.
@@ -209,7 +208,7 @@ Every term in "customer_words" MUST be a verbatim, word-for-word substring of th
 
 <few-shot-example>
 For premium trading card binders, real review vocabulary clustered like this (illustrative shape only, do not copy these words unless they appear in the supplied reviews):
-{"cluster":"Protection / damage anxiety","customer_words":["scratch","slip out","dinged corners"],"frequency_signal":"Very high","why_it_matters":"Loss aversion is the dominant emotion. Lead with certainty, not features."}
+{"cluster":"Protection / damage anxiety","customer_words":["scratch","slip out","dinged corners"],"frequency_signal":"Very high","why_it_matters":"This suggests loss aversion may be the dominant emotional driver. Leading with certainty appears more important than features."}
 </few-shot-example>
 
 <output-contract>
@@ -301,9 +300,6 @@ serve(async (req) => {
 
     const data = await response.json();
     const rawText = data?.content?.[0]?.text ?? '';
-    // Meter the real token usage for this paid op (records always; debits; never throws).
-    const meterUserId = await getAuthedUserId(req);
-    if (meterUserId) await meterAndDebit(getServiceClient(), { userId: meterUserId, op: 'avatar_vocabulary', model: SONNET_MODEL, usage: data.usage });
     const clusters = parseClusters(rawText);
 
     // Post-parse grounding enforcement: every customer_words term must be a literal

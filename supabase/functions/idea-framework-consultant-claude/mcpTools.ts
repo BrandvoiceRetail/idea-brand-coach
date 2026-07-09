@@ -199,7 +199,7 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
   {
     name: "build_avatar_stage",
     description:
-      "Run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 triggers, s4 objections) or the full s1\u2192s5 pipeline against the user's resolved customer reviews, and persist the result as an artifact. Call this once the user has shared real review/customer evidence and wants their avatar built out; it WRITES (persists an RLS-scoped artifact per stage) and requires an authenticated Supabase caller. Grounded in the IDEA framework book \"What Captures the Heart Goes in the Cart\" \u2014 Avatar 2.0 forensic method (book skill: framework/01-customer/00-avatar-2.0); apply that method's stage definitions and do not invent guidance beyond it. Generative/forensic: only call with inputs the user explicitly provided (their reviews/avatar scope); never infer, default, or fabricate the inputs \u2014 if the reviews context is missing it returns needs_input, so ask the user for it rather than guessing. The s5 Signature auto-feed is operator-gated: leave allow_signature false unless the user has explicitly signed off that the review vocabulary is the customer's words, not the founder's.",
+      "Run one Avatar 2.0 forensic stage (s1 vocabulary, s2 desired state, s3 triggers, s4 objections) or the full s1\u2192s5 pipeline against the user's resolved customer reviews, and persist the result as an artifact. Call this once the user has shared real review/customer evidence and wants their avatar built out; it WRITES (persists an RLS-scoped artifact per stage) and requires an authenticated Supabase caller. Grounded in the IDEA framework book \"What Captures the Heart Goes in the Cart\" \u2014 Avatar 2.0 forensic method (book skill: framework/01-customer/00-avatar-2.0); apply that method's stage definitions and do not invent guidance beyond it. Generative/forensic: only call with inputs the user explicitly provided (their reviews/avatar scope); never infer, default, or fabricate the inputs \u2014 if the reviews context is missing it returns needs_input, so ask the user for it rather than guessing. The s5 Signature auto-feed is operator-gated: leave allow_signature false unless the user has explicitly signed off that the review vocabulary is the customer's words, not the founder's.",
     input_schema: {
       "type": "object",
       "properties": {
@@ -212,7 +212,7 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
             "s4",
             "pipeline"
           ],
-          "description": "Which to run: a single forensic stage 's1' (vocabulary), 's2' (job map), 's3' (triggers), 's4' (objections), or 'pipeline' for the full S1\u2192S5 chain. Only pass what the user asked for."
+          "description": "Which to run: a single forensic stage 's1' (vocabulary), 's2' (desired state), 's3' (triggers), 's4' (objections), or 'pipeline' for the full S1\u2192S5 chain. Only pass what the user asked for."
         },
         "avatar_id": {
           "type": "string",

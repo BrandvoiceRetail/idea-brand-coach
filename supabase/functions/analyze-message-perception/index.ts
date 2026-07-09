@@ -64,7 +64,7 @@ interface Forensics {
 // "cannot judge this dimension" line used when that forensic is absent (never invented).
 const DIM_GAP_NOTE: Record<DimensionKey, string> = {
   vocabulary_fit: 'No S1 vocabulary forensic on file - this avatar\'s words cannot be matched.',
-  job_resonance: 'No S2 job-map forensic on file - this avatar\'s jobs cannot be matched.',
+  job_resonance: 'No S2 desired-state forensic on file - this avatar\'s desired changes cannot be matched.',
   trigger_hit: 'No S3 decision-trigger forensic on file - the buying moment cannot be confirmed.',
   objection_handling: 'No S4 objections forensic on file - this avatar\'s hesitations cannot be checked.',
 };
@@ -74,7 +74,7 @@ const DIM_GAP_NOTE: Record<DimensionKey, string> = {
 // is would be a fabrication).
 const DIM_GAP_NOTE_UNEVIDENCED: Record<DimensionKey, string> = {
   vocabulary_fit: 'Could not match the message to this avatar\'s S1 vocabulary - no clear word overlap.',
-  job_resonance: 'Could not tie the message to this avatar\'s S2 jobs - no clear job match.',
+  job_resonance: 'Could not tie the message to this avatar\'s S2 desired changes - no clear match.',
   trigger_hit: 'Could not confirm the message lands on this avatar\'s S3 decision trigger.',
   objection_handling: 'Could not confirm the message addresses this avatar\'s S4 objections.',
 };
@@ -141,7 +141,7 @@ You are the perception engine behind the IDEA Brand Coach multi-avatar messaging
 <the-four-dimensions>
 Score the message on four dimensions, each judged ONLY from the matching forensic block:
 1. vocabulary_fit - does the message use words this avatar actually uses or would recognise? Judge ONLY from the S1 vocabulary forensic.
-2. job_resonance - does the message hit this avatar's functional AND emotional jobs-to-be-done? Judge ONLY from the S2 job map.
+2. job_resonance - does the message hit this avatar's functional AND emotional desired changes? Judge ONLY from the S2 desired state mapping.
 3. trigger_hit - does the message land on or near this avatar's named Decision Trigger - the buying moment? Judge ONLY from the S3 decision trigger.
 4. objection_handling - does the message pre-empt this avatar's known objections, stay silent on them, or accidentally PROVOKE one? Judge ONLY from the S4 objections.
 </the-four-dimensions>

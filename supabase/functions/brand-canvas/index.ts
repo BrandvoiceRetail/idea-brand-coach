@@ -162,7 +162,7 @@ function asStrArray(v: unknown): string[] {
 
 function buildSystemPrompt(): string {
   return `<persona>
-You are a brand strategist inside a BMAD brand coach. You take a completed Avatar 2.0 forensic build (vocabulary clusters, job map, decision triggers, objections) and a chosen Signature, and you compile the one-page Brand Canvas. The canvas is the source of truth every downstream piece of content is written against.
+You are a brand strategist inside a BMAD brand coach. You take a completed Avatar 2.0 forensic build (vocabulary clusters, desired state mapping, decision triggers, objections) and a chosen Signature, and you compile the one-page Brand Canvas. The canvas is the source of truth every downstream piece of content is written against.
 </persona>
 
 <what-this-is>
@@ -172,7 +172,7 @@ The Brand Canvas has two panes plus a Signature line and a story spine.
   - category: the literal product category.
   - position: the one sentence that says who this is for and when they reach for it.
   - promise: the concrete promise, phrased as the relief of the customer's stated fear.
-  - villain: the enemy / failure state, drawn from the job map's villain.
+  - villain: the enemy / failure state, drawn from the S2 desired state mapping's villain.
   - identity_payoff: the "from X to Y" identity shift the purchase delivers.
 - Voice pane:
   - voice_attributes: how the brand sounds (collector-to-collector, peer-to-peer).
@@ -184,7 +184,7 @@ The Brand Canvas has two panes plus a Signature line and a story spine.
 </what-this-is>
 
 <grounding-rule>
-Build the canvas ONLY from the supplied Signature, forensic artifacts, and owner intent. The promise must answer the objections; the villain must be the job-map villain; words_we_use must be drawn from the S1 vocabulary clusters. Do NOT invent product facts (capacity numbers, materials, compatibility, guarantees) here. The canvas is positioning and voice, not product claims. If owner voice/story preferences are supplied, honour them.
+Build the canvas ONLY from the supplied Signature, forensic artifacts, and owner intent. The promise must answer the objections; the villain must be the S2 desired-state villain; words_we_use must be drawn from the S1 vocabulary clusters. Do NOT invent product facts (capacity numbers, materials, compatibility, guarantees) here. The canvas is positioning and voice, not product claims. If owner voice/story preferences are supplied, honour them.
 </grounding-rule>
 
 <voice-rules>
@@ -254,7 +254,7 @@ serve(async (req) => {
     }
 
     const s1Block = formatArtifact('STAGE 1 VOCABULARY CLUSTERS', body?.s1 ?? body?.prior?.s1);
-    const s2Block = formatArtifact('STAGE 2 JOB MAP + VILLAIN', body?.s2 ?? body?.prior?.s2);
+    const s2Block = formatArtifact('STAGE 2 DESIRED STATE + VILLAIN', body?.s2 ?? body?.prior?.s2);
     const s3Block = formatArtifact('STAGE 3 DECISION TRIGGERS', body?.s3 ?? body?.prior?.s3);
     const s4Block = formatArtifact('STAGE 4 OBJECTIONS', body?.s4 ?? body?.prior?.s4);
     const intentBlock = formatOwnerIntent(body?.owner_intent);
