@@ -41,6 +41,7 @@ import { GlassEyebrow } from '@/components/v2/problem-solver/glass';
 import { BEAT_ORDER, buildBeat, buildCoSignRead, type StageContents } from '@/components/v5/beatModel';
 import {
   isForensicReport,
+  isV5RunSnapshot,
   mapTrigger,
   normalizeProfile,
   type V5DecisionTrigger,
@@ -452,6 +453,20 @@ export default function V5Alpha(): JSX.Element {
           claim_count: res.data.claimGate.length,
           bullet_count: res.data.bullets.length,
         });
+        // Persist the completed run per-listing (latest only) so the brief is
+        // instantly available on any future visit — no engine re-run.
+        if (asin && report) {
+          productService
+            .saveLastRun(asin, {
+              report,
+              trigger: trigger ?? null,
+              brief: res.data,
+              claims: res.data.claimGate,
+              listingTitle: listingTitle ?? null,
+              finishedAt: new Date().toISOString(),
+            })
+            .catch((err) => console.error('[V5Alpha] last_run persist failed:', err));
+        }
       } else if (res.status === 'needs_input') {
         setBriefNeedsInput(res.needs_input);
       } else {
@@ -460,7 +475,7 @@ export default function V5Alpha(): JSX.Element {
     } finally {
       setBriefLoading(false);
     }
-  }, [avatarId]);
+  }, [avatarId, asin, report, trigger, listingTitle, productService]);
 
   const goBrief = useCallback((): void => {
     setPhase('brief');
@@ -630,6 +645,27 @@ export default function V5Alpha(): JSX.Element {
     [handleExpressRun],
   );
 
+  // Open the listing's LAST completed run instantly from its persisted
+  // snapshot (user_products.last_run) — no engine re-run. "Open brief" must
+  // actually open the brief (Matthew, 2026-07-08); Rebuild is the express run.
+  const handleOpenBrief = useCallback(
+    (product: ImportedProduct): void => {
+      if (!isV5RunSnapshot(product.lastRun)) return;
+      const snap = product.lastRun;
+      resetRunState();
+      setExpress(false);
+      setAsin(product.asin);
+      setListingTitle(snap.listingTitle ?? product.title ?? null);
+      setReport(snap.report);
+      setTrigger(snap.trigger ?? undefined);
+      setBrief(snap.brief as BriefSlots);
+      setClaims(snap.claims as ClaimGateItem[]);
+      captureAlphaEvent('v5_brief_reopened', {});
+      setPhase('brief');
+    },
+    [resetRunState],
+  );
+
   // ── Retry the build with the same corpus ────────────────────────────────────
   const retryBuild = useCallback((): void => {
     if (!reviewsString) return;
@@ -650,6 +686,7 @@ export default function V5Alpha(): JSX.Element {
           products={products}
           onNewListing={() => setPhase('entry')}
           onReopen={handleHomeReopen}
+          onOpenBrief={handleOpenBrief}
         />
       )}
 

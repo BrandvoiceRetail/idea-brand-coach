@@ -268,6 +268,7 @@ export type Database = {
           beta_tester_id: string | null
           contact_email: string | null
           created_at: string
+          email_opt_in: boolean | null
           id: string
           improvements: string | null
           issues: string | null
@@ -284,6 +285,7 @@ export type Database = {
           beta_tester_id?: string | null
           contact_email?: string | null
           created_at?: string
+          email_opt_in?: boolean | null
           id?: string
           improvements?: string | null
           issues?: string | null
@@ -300,6 +302,7 @@ export type Database = {
           beta_tester_id?: string | null
           contact_email?: string | null
           created_at?: string
+          email_opt_in?: boolean | null
           id?: string
           improvements?: string | null
           issues?: string | null
@@ -1255,6 +1258,59 @@ export type Database = {
           },
         ]
       }
+      coach_instructions: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          input_keys: string[] | null
+          instruction_id: string
+          published_at: string | null
+          status: string
+          surface: string
+          updated_at: string
+          version: number
+          when_to_use: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          input_keys?: string[] | null
+          instruction_id: string
+          published_at?: string | null
+          status?: string
+          surface: string
+          updated_at?: string
+          version?: number
+          when_to_use?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          input_keys?: string[] | null
+          instruction_id?: string
+          published_at?: string | null
+          status?: string
+          surface?: string
+          updated_at?: string
+          version?: number
+          when_to_use?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_instructions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competitor_asin_cache: {
         Row: {
           cache_key: string
@@ -1914,6 +1970,33 @@ export type Database = {
         }
         Relationships: []
       }
+      gdpr_requests: {
+        Row: {
+          created_at: string
+          detail: Json
+          id: string
+          request_type: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          request_type: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          request_type?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       idea_framework_submissions: {
         Row: {
           buyer_intent: string | null
@@ -2064,6 +2147,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          is_admin: boolean
           latest_diagnostic_data: Json | null
           latest_diagnostic_score: number | null
           updated_at: string
@@ -2077,6 +2161,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          is_admin?: boolean
           latest_diagnostic_data?: Json | null
           latest_diagnostic_score?: number | null
           updated_at?: string
@@ -2090,6 +2175,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          is_admin?: boolean
           latest_diagnostic_data?: Json | null
           latest_diagnostic_score?: number | null
           updated_at?: string
@@ -2393,6 +2479,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_consents: {
+        Row: {
+          consent_type: string
+          created_at: string
+          granted: boolean
+          id: string
+          policy_version: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          consent_type: string
+          created_at?: string
+          granted: boolean
+          id?: string
+          policy_version: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          consent_type?: string
+          created_at?: string
+          granted?: boolean
+          id?: string
+          policy_version?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_diagnostic_results: {
         Row: {
@@ -2700,6 +2816,8 @@ export type Database = {
           description: string | null
           id: string
           images: Json
+          last_run: Json | null
+          last_run_at: string | null
           price: number | null
           rating: number | null
           review_count: number
@@ -2717,6 +2835,8 @@ export type Database = {
           description?: string | null
           id?: string
           images?: Json
+          last_run?: Json | null
+          last_run_at?: string | null
           price?: number | null
           rating?: number | null
           review_count?: number
@@ -2734,6 +2854,8 @@ export type Database = {
           description?: string | null
           id?: string
           images?: Json
+          last_run?: Json | null
+          last_run_at?: string | null
           price?: number | null
           rating?: number | null
           review_count?: number
@@ -2997,6 +3119,10 @@ export type Database = {
         }[]
       }
       refresh_scrape_job: { Args: { p_job: string }; Returns: undefined }
+      reparent_anon_user_data: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
       save_artifact_atomic:
         | {
             Args: {

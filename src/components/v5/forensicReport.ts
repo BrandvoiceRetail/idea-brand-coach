@@ -137,3 +137,30 @@ export function findingText(report: V5ForensicReport): string | null {
   );
   return primary?.brand_read ?? dims.find((d) => d.brand_read)?.brand_read ?? null;
 }
+
+/**
+ * The persisted outcome of one completed v5 run, stored per-listing on
+ * user_products.last_run (latest only, overwritten each run) so the brief is
+ * instantly available whenever the customer returns — no engine re-run.
+ */
+export interface V5RunSnapshot {
+  report: V5ForensicReport;
+  trigger: V5DecisionTrigger | null;
+  brief: unknown; // BriefSlots — typed at the read site to avoid a v4-type dependency here
+  claims: unknown[]; // ClaimGateItem[]
+  listingTitle: string | null;
+  finishedAt: string;
+}
+
+/** Conservative shape guard for a stored last_run payload. */
+export function isV5RunSnapshot(data: unknown): data is V5RunSnapshot {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return (
+    isForensicReport(d.report) &&
+    !!d.brief &&
+    typeof d.brief === 'object' &&
+    Array.isArray(d.claims) &&
+    typeof d.finishedAt === 'string'
+  );
+}

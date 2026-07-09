@@ -249,6 +249,22 @@ export class SupabaseProductDataService implements IProductDataService {
    * Map a `user_products` row to an {@link ImportedProduct}, normalizing the
    * jsonb `bullets` and `images` columns.
    */
+  /**
+   * Persist the latest completed v5 run for a listing (overwrites the
+   * previous snapshot — latest only, by design). Fire-and-forget safe:
+   * throws only on a real write error.
+   */
+  async saveLastRun(asin: string, snapshot: Record<string, unknown>): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase
+      .from('user_products')
+      .update({ last_run: snapshot as never, last_run_at: new Date().toISOString() })
+      .eq('user_id', user.id)
+      .eq('asin', asin);
+    if (error) throw error;
+  }
+
   private mapProduct(row: {
     id: string;
     asin: string;
@@ -260,6 +276,8 @@ export class SupabaseProductDataService implements IProductDataService {
     description: string | null;
     images: unknown;
     scraped_at: string;
+    last_run?: unknown;
+    last_run_at?: string | null;
   }): ImportedProduct {
     return {
       id: row.id,
@@ -272,6 +290,8 @@ export class SupabaseProductDataService implements IProductDataService {
       description: row.description,
       images: this.normalizeImages(row.images),
       scrapedAt: row.scraped_at,
+      lastRun: row.last_run ?? null,
+      lastRunAt: row.last_run_at ?? null,
     };
   }
 

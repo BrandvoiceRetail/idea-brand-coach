@@ -258,7 +258,9 @@ export type AlphaEventName =
   // listings a seller has already analysed. Home viewed + re-open one in
   // express. Counts / booleans / IDs only, never the ASIN value or PII.
   | 'v5_home_viewed'
-  | 'v5_home_reopen';
+  | 'v5_home_reopen'
+  // Persisted last-run brief opened instantly from the home screen (no re-run).
+  | 'v5_brief_reopened';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;

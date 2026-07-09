@@ -6,15 +6,15 @@
  * "analyse a new listing" path, and lists the listings they have already
  * analysed so they can re-open one in express (same compute, instant reveals).
  *
- * Honest framing: the per-listing outputs (customer profile, brief, score) are
- * brand-level and rebuilt on each run, so this is "the listings you have
- * analysed", NOT "your saved briefs". Re-open rebuilds the customer and brief.
- * The only per-listing facts shown here are the listing's own imported product
- * data (review count, rating) — cheap, already loaded, never a stored artifact.
+ * A listing whose last completed run is persisted (user_products.last_run)
+ * opens its brief INSTANTLY — "Open brief" means open, not rebuild (Matthew,
+ * 2026-07-08). Rebuild is the secondary action. Listings analysed before
+ * snapshots existed only offer Rebuild.
  */
 import { Button } from '@/components/ui/button';
 import { GlassEyebrow, GlassPanel } from '@/components/v2/problem-solver/glass';
 import type { ImportedProduct } from '@/services/interfaces/IProductDataService';
+import { isV5RunSnapshot } from './forensicReport';
 import { V5Stage } from './V5Chrome';
 
 export interface V5HomeProps {
@@ -24,8 +24,10 @@ export interface V5HomeProps {
   products: ImportedProduct[];
   /** Start a fresh paste-an-ASIN read (returns to the entry screen). */
   onNewListing: () => void;
-  /** Re-open a listing in express (same compute, instant reveals). */
+  /** Rebuild a listing in express (same compute, instant reveals). */
   onReopen: (asin: string, title: string | null) => void;
+  /** Open a listing's persisted last brief instantly (no engine re-run). */
+  onOpenBrief: (product: ImportedProduct) => void;
 }
 
 /** Derive a friendly first name from an email local-part; null when we can't. */
@@ -92,8 +94,8 @@ export function V5Home({ email, products, onNewListing, onReopen }: V5HomeProps)
             The listings you&apos;ve analysed
           </div>
           <p className="mb-3.5 text-[13px] leading-relaxed text-muted-foreground">
-            Re-open one to rebuild the customer and the brief. Your positioning is rebuilt fresh on
-            each read, so this is your listings, not a stored file.
+            Open a listing&apos;s latest brief instantly, or rebuild it for a fresh read of the
+            reviews.
           </p>
           <div className="space-y-2">
             {products.map((product) => (
@@ -109,15 +111,40 @@ export function V5Home({ email, products, onNewListing, onReopen }: V5HomeProps)
                     {listingMeta(product)}
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="brand"
-                  size="sm"
-                  className="shrink-0 rounded-lg font-bold"
-                  onClick={() => onReopen(product.asin, product.title || null)}
-                >
-                  Re-open →
-                </Button>
+                <div className="flex shrink-0 items-center gap-2">
+                  {isV5RunSnapshot(product.lastRun) ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="brand"
+                        size="sm"
+                        className="rounded-lg font-bold"
+                        onClick={() => onOpenBrief(product)}
+                      >
+                        Design Brief →
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-lg text-muted-foreground"
+                        onClick={() => onReopen(product.asin, product.title || null)}
+                      >
+                        Rebuild
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="brand"
+                      size="sm"
+                      className="rounded-lg font-bold"
+                      onClick={() => onReopen(product.asin, product.title || null)}
+                    >
+                      Rebuild →
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

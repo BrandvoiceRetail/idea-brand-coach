@@ -34,6 +34,14 @@ export interface ImportedProduct {
   description: string | null;
   images: ProductImage[];
   scrapedAt: string;
+  /**
+   * Latest completed v5 run for this listing (report + trigger + brief),
+   * persisted so the brief reopens instantly on any later visit. Shape is
+   * owned by the v5 surface (see V5RunSnapshot); the service layer treats
+   * it as opaque JSON. Null until a run completes.
+   */
+  lastRun: unknown | null;
+  lastRunAt: string | null;
 }
 
 /**
