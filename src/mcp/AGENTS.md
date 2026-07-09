@@ -140,6 +140,7 @@ asserts the advertised tool set + handler behavior end-to-end.
 | `contracts/` | Output-engine artifact contracts (single source of truth) — local AGENTS.md |
 | `service/workbook/` | Workbook assemblers + gold-workbook export engine — local AGENTS.md |
 | `evals/` | MCP evals suite — compares skill/tool configurations + scores coach value (`npm run evals`); feeds the `/admin/coach-evals` dashboard — see `evals/README.md` |
+| `evals/image/` | **Output-quality tier** — scores the IMAGE deliverables an E2E session produces (our MCP + Higgsfield in one chat) against a rubric, grounded in the opted-in customer corpus (`evals:image:mcpjam` to drive + assert the pipeline; `evals:image` to vision-judge the produced images) — see `evals/image/README.md` |
 | `skills/` | Skill grounding: `skillLoader` (book corpus) + `appSkills` (App Skill Architecture, IDEA-APP-SKILLS-001) |
 
 ## Guardrails
