@@ -223,13 +223,43 @@ describe('Auth', () => {
     fireEvent.change(screen.getByLabelText(/Password/i), {
       target: { value: 'password123' }
     });
+    // GDPR: signup requires accepting the privacy policy
+    await userEvent.click(screen.getByRole('checkbox', { name: /I agree to the/i }));
 
     const signUpButton = screen.getByRole('button', { name: /Let's get started!/i });
     fireEvent.click(signUpButton);
 
     await waitFor(() => {
-      expect(mockSignUp).toHaveBeenCalledWith('test@example.com', 'password123', 'Test User');
+      expect(mockSignUp).toHaveBeenCalledWith('test@example.com', 'password123', 'Test User', {
+        version: expect.any(String),
+      });
     });
+  });
+
+  it('does NOT call signUp when the privacy policy box is unchecked (GDPR gate)', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      loading: false,
+      signIn: mockSignIn,
+      signUp: mockSignUp,
+      signOut: mockSignOut,
+      resetPassword: mockResetPassword,
+      signInWithGoogle: mockSignInWithGoogle,
+    } as any);
+
+    render(<Auth />, { wrapper });
+
+    await userEvent.click(screen.getByRole('tab', { name: /Sign Up/i }));
+    fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: 'Test User' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Let's get started!/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Please agree to the Privacy Policy/i)).toBeInTheDocument();
+    });
+    expect(mockSignUp).not.toHaveBeenCalled();
   });
 
   it('should show reset password form when forgot password is clicked', () => {
@@ -362,6 +392,7 @@ describe('Auth', () => {
     fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: 'Test User' } });
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'new@example.com' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
+    await userEvent.click(screen.getByRole('checkbox', { name: /I agree to the/i }));
     fireEvent.click(screen.getByRole('button', { name: /Let's get started!/i }));
 
     await waitFor(() => {
@@ -381,6 +412,7 @@ describe('Auth', () => {
     fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: 'Test User' } });
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'new@example.com' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
+    await userEvent.click(screen.getByRole('checkbox', { name: /I agree to the/i }));
     fireEvent.click(screen.getByRole('button', { name: /Let's get started!/i }));
 
     await waitFor(() => {

@@ -1,22 +1,25 @@
 /**
  * SettingsPage — the Settings hub. Sections live as tabs; the active section is
  * reflected in the URL (`/settings/:section`) so each is deep-linkable.
- * Currently: Integrations (Figma) and Account.
+ * Currently: Integrations (Figma), Account, and Privacy & Data (GDPR rights).
  */
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { FigmaConnectCard } from '@/components/integrations/FigmaConnectCard';
 import { AccountSettings } from '@/components/settings/AccountSettings';
+import { PrivacySettings } from '@/components/settings/PrivacySettings';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
-type Section = 'integrations' | 'account';
+type Section = 'integrations' | 'account' | 'privacy';
 
 export default function SettingsPage(): JSX.Element {
   const navigate = useNavigate();
   const { section } = useParams<{ section?: string }>();
   const figmaEnabled = useFeatureFlag('FIGMA_INTEGRATION', false);
 
-  const valid = new Set<Section>(figmaEnabled ? ['integrations', 'account'] : ['account']);
+  const valid = new Set<Section>(
+    figmaEnabled ? ['integrations', 'account', 'privacy'] : ['account', 'privacy'],
+  );
   const fallback: Section = figmaEnabled ? 'integrations' : 'account';
   const active: Section = valid.has(section as Section) ? (section as Section) : fallback;
 
@@ -31,6 +34,7 @@ export default function SettingsPage(): JSX.Element {
         <TabsList>
           {figmaEnabled && <TabsTrigger value="integrations">Integrations</TabsTrigger>}
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="privacy">Privacy &amp; Data</TabsTrigger>
         </TabsList>
         {figmaEnabled && (
           <TabsContent value="integrations" className="mt-6">
@@ -39,6 +43,9 @@ export default function SettingsPage(): JSX.Element {
         )}
         <TabsContent value="account" className="mt-6">
           <AccountSettings />
+        </TabsContent>
+        <TabsContent value="privacy" className="mt-6">
+          <PrivacySettings />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,4 +1,4 @@
-import { initPostHog } from "@/lib/posthogClient";
+import { bindAnalyticsToConsent } from "@/lib/posthogClient";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +19,7 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 import { AuthGate } from "@/components/AuthGate";
 import { RequireAuth } from "@/components/RequireAuth";
 import { BetaFeedbackWidget } from "@/components/BetaFeedbackWidget";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES, V1_ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
@@ -58,6 +59,7 @@ import { AdminGate } from "@/components/AdminGate";
 import FocusSurface from "./pages/FocusSurface";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
 import SettingsPage from "./pages/SettingsPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FigmaCallback from "./pages/FigmaCallback";
 import OAuthConsent from "./pages/OAuthConsent";
 import { V4ContextProvider } from "@/contexts/V4ContextStore";
@@ -72,9 +74,10 @@ import V4Remeasure from "./pages/v4/V4Remeasure";
 import V4Defend from "./pages/v4/V4Defend";
 import V5Alpha from "./pages/v5/V5Alpha";
 import { V4_ROUTES } from "@/config/v4";
-// Initialise analytics before the React tree mounts so the auth listener can
-// identify the user as soon as a session arrives. No-op when no key is set.
-initPostHog();
+// Bind analytics to the consent store before the React tree mounts so the auth
+// listener can identify the user as soon as a session arrives. PostHog starts
+// ONLY with a stored analytics opt-in (GDPR); no key set is still a safe no-op.
+bindAnalyticsToConsent();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +113,7 @@ const App = () => {
                       <ScrollToTop />
                       <OnboardingTour autoStart={true} />
                       <BetaFeedbackWidget />
+                      <ConsentBanner />
 
                     <Routes>
                 <Route path="/" element={<VersionGate />} />
@@ -117,6 +121,9 @@ const App = () => {
                 <Route path="/welcome" element={<Landing />} />
 
                 <Route path="/auth" element={<Auth />} />
+
+                {/* Public privacy notice (GDPR Art. 13/14) — reachable signed-out. */}
+                <Route path="/privacy" element={<PrivacyPolicy />} />
 
                 {/* OAuth 2.1 consent (MCP connector authorization). PUBLIC route — the
                     page self-handles auth, bouncing to /auth with a return param that

@@ -7,9 +7,12 @@ import { User, Session } from '@supabase/supabase-js';
 
 export interface IAuthService {
   /**
-   * Sign up a new user with email and password
+   * Sign up a new user with email and password.
+   * `policyAcceptance` stamps the agreed privacy-notice version into the auth
+   * user's metadata (GDPR Art. 7(1) demonstrability) — the signup form requires
+   * it, so callers should always pass the current version.
    */
-  signUp(email: string, password: string, fullName?: string): Promise<{
+  signUp(email: string, password: string, fullName?: string, policyAcceptance?: { version: string }): Promise<{
     user: User | null;
     session: Session | null;
     error: Error | null;

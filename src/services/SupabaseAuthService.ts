@@ -11,7 +11,8 @@ export class SupabaseAuthService implements IAuthService {
   async signUp(
     email: string,
     password: string,
-    fullName?: string
+    fullName?: string,
+    policyAcceptance?: { version: string }
   ): Promise<{ user: User | null; session: Session | null; error: Error | null }> {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -19,6 +20,15 @@ export class SupabaseAuthService implements IAuthService {
       options: {
         data: {
           full_name: fullName || '',
+          // GDPR Art. 7(1): stamp WHICH privacy-notice version was agreed and
+          // when into the auth record itself — survives the email-confirmation
+          // window where no session exists yet to write a user_consents row.
+          ...(policyAcceptance
+            ? {
+                accepted_policies_version: policyAcceptance.version,
+                accepted_policies_at: new Date().toISOString(),
+              }
+            : {}),
         },
         emailRedirectTo: `${window.location.origin}/`,
       },
