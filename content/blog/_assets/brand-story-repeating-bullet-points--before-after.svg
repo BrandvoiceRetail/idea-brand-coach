@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Three restated bullet claims lose shoppers by beat two; five sequential beats keep them scrolling.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="64" font-size="32" font-weight="600">The same module, two different structures</text>
+
+  <!-- Before panel: red -->
+  <rect x="48" y="120" width="500" height="420" rx="16" fill="#CC4F42" fill-opacity="0.16" stroke="#CC4F42" stroke-width="2"/>
+  <text x="78" y="170" font-size="26" font-weight="600" fill="#CC4F42">Before: 3 beats, 1 claim</text>
+  <text x="78" y="228" font-size="20" class="dim">Beat 1: durable fabric</text>
+  <text x="78" y="262" font-size="20" class="dim">Beat 2: durable fabric,</text>
+  <text x="78" y="288" font-size="20" class="dim">reworded</text>
+  <text x="78" y="322" font-size="20" class="dim">Beat 3: durable fabric,</text>
+  <text x="78" y="348" font-size="20" class="dim">reworded again</text>
+  <text x="78" y="400" font-size="18" class="faint">Shoppers bounce at beat two.</text>
+
+  <!-- After panel: gold highlight -->
+  <rect x="652" y="120" width="500" height="420" rx="16" fill="#BD860E" fill-opacity="0.2" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="682" y="170" font-size="26" font-weight="600" fill="#BD860E">After: 5 beats build</text>
+  <text x="682" y="222" font-size="19" class="dim">1. Hook, no bullet repeat</text>
+  <text x="682" y="252" font-size="19" class="dim">2. Use-case in action</text>
+  <text x="682" y="282" font-size="19" class="dim">3. Material proof, once</text>
+  <text x="682" y="312" font-size="19" class="dim">4. Founder credibility</text>
+  <text x="682" y="342" font-size="19" class="dim">5. Next action</text>
+  <text x="682" y="390" font-size="18" class="faint">Shoppers reach beat five.</text>
+
+  <!-- connector -->
+  <path d="M 548 330 L 652 330" class="hair anim-flow"/>
+  <path d="M 634 320 L 652 330 L 634 340" class="hair"/>
+
+  <text x="600" y="610" font-size="20" text-anchor="middle" class="faint">generate_aplus_content_plan rebuilds the module as sequence, not a fourth bullet block.</text>
+</svg>

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Building, measuring, and fixing a retention sequence is one working session, not three separate guesses</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="32" font-weight="600">One working session, start to finish</text>
+  <text x="48" y="90" font-size="20" class="dim">Build the sequence, measure it, then fix the actual drop-off</text>
+
+  <!-- step 1: input -->
+  <rect x="50" y="270" width="190" height="120" rx="10" fill="rgba(62,143,196,.2)" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="145" y="325" font-size="19" text-anchor="middle">New customer,</text>
+  <text x="145" y="351" font-size="19" text-anchor="middle">no sequence</text>
+
+  <line x1="240" y1="330" x2="280" y2="330" class="hair anim-flow"/>
+
+  <!-- step 2: tool -->
+  <rect x="280" y="260" width="220" height="140" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2"/>
+  <text x="390" y="310" font-size="19" text-anchor="middle" class="tool">create_email</text>
+  <text x="390" y="332" font-size="19" text-anchor="middle" class="tool">_sequence</text>
+  <text x="390" y="358" font-size="17" text-anchor="middle" class="faint">5-step series live</text>
+
+  <line x1="500" y1="330" x2="540" y2="330" class="hair anim-flow"/>
+
+  <!-- step 3: tool -->
+  <rect x="540" y="260" width="230" height="140" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2"/>
+  <text x="655" y="310" font-size="19" text-anchor="middle" class="tool">get_sequence</text>
+  <text x="655" y="332" font-size="19" text-anchor="middle" class="tool">_performance</text>
+  <text x="655" y="358" font-size="17" text-anchor="middle" class="faint">drop-off step found</text>
+
+  <line x1="770" y1="330" x2="810" y2="330" class="hair anim-flow"/>
+
+  <!-- step 4: tool -->
+  <rect x="810" y="260" width="220" height="140" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2"/>
+  <text x="920" y="305" font-size="18" text-anchor="middle" class="tool">identify_decision</text>
+  <text x="920" y="328" font-size="18" text-anchor="middle" class="tool">_trigger</text>
+  <text x="920" y="354" font-size="17" text-anchor="middle" class="faint">missing lever named</text>
+
+  <line x1="1030" y1="330" x2="1070" y2="330" class="hair anim-flow"/>
+
+  <!-- step 5: output, green -->
+  <rect x="1070" y="270" width="110" height="120" rx="10" fill="rgba(62,152,71,.22)" stroke="#3E9847" stroke-width="2"/>
+  <text x="1125" y="320" font-size="18" text-anchor="middle">Second</text>
+  <text x="1125" y="344" font-size="18" text-anchor="middle">order</text>
+
+  <text x="50" y="470" font-size="20" class="faint">Skip the middle two steps and a rewrite is just a guess in different words.</text>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A relevance-matched image spikes CTR then plateaus back to baseline — a trigger-matched image holds the gain instead.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="30" font-weight="700">CTR over four weeks</text>
+
+  <!-- axis -->
+  <line x1="90" y1="560" x2="1130" y2="560" class="hair"/>
+  <line x1="90" y1="120" x2="90" y2="560" class="hair"/>
+  <text x="90" y="590" font-size="20" class="faint">wk 1</text>
+  <text x="350" y="590" font-size="20" class="faint">wk 2</text>
+  <text x="610" y="590" font-size="20" class="faint">wk 3</text>
+  <text x="870" y="590" font-size="20" class="faint">wk 4</text>
+
+  <!-- relevance-only line: spike then plateau back to baseline, red -->
+  <polyline points="90,480 250,220 350,470 610,475 870,478 1120,480" fill="none" stroke="#CC4F42" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="250" cy="220" r="7" fill="#CC4F42"/>
+  <text x="250" y="195" text-anchor="middle" font-size="18" fill="#CC4F42">novelty spike</text>
+  <text x="480" y="510" text-anchor="middle" font-size="18" fill="#CC4F42">plateau, back to baseline</text>
+
+  <!-- trigger-matched line: spike then holds, gold -->
+  <polyline points="90,480 250,220 350,240 610,245 870,248 1120,250" fill="none" stroke="#BD860E" stroke-width="3" stroke-linecap="round" class="anim-breathe"/>
+  <circle cx="1120" cy="250" r="7" fill="#BD860E"/>
+  <text x="1000" y="220" text-anchor="middle" font-size="18" fill="#BD860E">fear_of_loss trigger holds</text>
+
+  <rect x="770" y="380" width="300" height="52" rx="26" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="920" y="414" text-anchor="middle" font-size="16" class="tool" fill="#BD860E">identify_decision_trigger</text>
+</svg>

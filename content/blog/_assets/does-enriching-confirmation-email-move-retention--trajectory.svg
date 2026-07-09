@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A confirmation email ab test shows a real click-through lift after the founder note — not a guess based on vibes.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="30" font-weight="700">Confirmation email click-through, before and after</text>
+
+  <line x1="90" y1="560" x2="1130" y2="560" class="hair"/>
+  <line x1="90" y1="120" x2="90" y2="560" class="hair"/>
+  <text x="90" y="590" font-size="20" class="faint">wk 1</text>
+  <text x="350" y="590" font-size="20" class="faint">wk 2</text>
+  <text x="610" y="590" font-size="20" class="faint">wk 3</text>
+  <text x="870" y="590" font-size="20" class="faint">wk 4</text>
+
+  <polyline points="90,470 350,468 610,255 870,235 1120,225" fill="none" stroke="#BD860E" stroke-width="3" stroke-linecap="round" class="anim-breathe"/>
+  <circle cx="610" cy="255" r="7" fill="#BD860E"/>
+  <circle cx="1120" cy="225" r="7" fill="#BD860E"/>
+  <text x="1000" y="200" text-anchor="middle" font-size="18" fill="#BD860E">click-through holds higher</text>
+
+  <line x1="610" y1="120" x2="610" y2="560" stroke="rgba(245,244,240,.3)" stroke-width="2" stroke-dasharray="6 8"/>
+  <text x="610" y="150" text-anchor="middle" font-size="17" class="faint">founder note + use-case tip added</text>
+
+  <rect x="130" y="380" width="330" height="50" rx="25" fill="none" stroke="rgba(245,244,240,.3)" stroke-width="2"/>
+  <text x="295" y="412" text-anchor="middle" font-size="16" class="faint">receipt-only baseline, flat</text>
+
+  <rect x="750" y="380" width="330" height="52" rx="26" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="915" y="414" text-anchor="middle" font-size="16" class="tool" fill="#BD860E">compute_trust_gap_lift: Empathetic +</text>
+</svg>

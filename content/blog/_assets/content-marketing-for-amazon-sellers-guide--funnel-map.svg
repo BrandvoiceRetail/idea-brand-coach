@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">SEO content and founder social both live in Awareness — traffic and views can climb while brand recall stays at zero.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="72" font-size="20" class="faint" letter-spacing="1">THE 5-STAGE FUNNEL</text>
+
+  <line x1="48" y1="325" x2="1152" y2="325" class="hair anim-flow" />
+
+  <!-- Awareness (highlight, wider to hold two chips) -->
+  <rect x="48" y="256" width="260" height="138" rx="8" fill="#BD860E" fill-opacity="0.22" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="178" y="292" text-anchor="middle" font-size="24">Awareness</text>
+  <rect x="70" y="306" width="100" height="30" rx="6" fill="#BD860E" fill-opacity="0.16" stroke="#BD860E" stroke-width="2"/>
+  <text x="120" y="326" text-anchor="middle" font-size="16" class="tool">seo_content</text>
+  <rect x="186" y="306" width="100" height="30" rx="6" fill="#BD860E" fill-opacity="0.16" stroke="#BD860E" stroke-width="2"/>
+  <text x="236" y="326" text-anchor="middle" font-size="16" class="tool">founder_social</text>
+
+  <!-- Consideration -->
+  <rect x="359" y="280" width="170" height="90" rx="8" fill="#3E8FC4" fill-opacity="0.2" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="444" y="332" text-anchor="middle" font-size="22">Consideration</text>
+
+  <!-- Purchase decision -->
+  <rect x="580" y="280" width="170" height="90" rx="8" fill="#3E8FC4" fill-opacity="0.2" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="665" y="332" text-anchor="middle" font-size="22">Purchase</text>
+
+  <!-- Retention -->
+  <rect x="801" y="280" width="170" height="90" rx="8" fill="#3E8FC4" fill-opacity="0.2" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="886" y="332" text-anchor="middle" font-size="24">Retention</text>
+
+  <!-- Advocacy -->
+  <rect x="1022" y="280" width="130" height="90" rx="8" fill="#3E8FC4" fill-opacity="0.2" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="1087" y="332" text-anchor="middle" font-size="22">Advocacy</text>
+
+  <!-- leak marker -->
+  <line x1="178" y1="394" x2="178" y2="450" stroke="#CC4F42" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="178,450 168,468 188,468" fill="#CC4F42" fill-opacity="0.35" stroke="#CC4F42" stroke-width="2"/>
+  <text x="178" y="510" text-anchor="middle" font-size="20" class="dim">
+    <tspan x="178" dy="0">Traffic and views climb.</tspan>
+    <tspan x="178" dy="26">Branded search and</tspan>
+    <tspan x="178" dy="26">engagement stay flat.</tspan>
+  </text>
+</svg>

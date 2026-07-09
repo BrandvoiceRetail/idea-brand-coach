@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Advocacy has two moments that matter for a camp chair; only one has a review touchpoint covering it</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <line x1="80" y1="337" x2="1120" y2="337" class="hair"/>
+
+  <circle cx="330" cy="337" r="14" fill="#3E9847"/>
+  <text x="330" y="270" font-size="24" text-anchor="middle" class="dim">Delivery</text>
+  <rect x="220" y="380" width="220" height="80" rx="10" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2"/>
+  <text x="330" y="415" font-size="18" text-anchor="middle" class="tool">review_request_flow</text>
+  <text x="330" y="440" font-size="18" text-anchor="middle" class="faint">one email, covered</text>
+
+  <circle cx="870" cy="337" r="14" fill="#CC4F42"/>
+  <text x="870" y="270" font-size="24" text-anchor="middle" class="dim">First real trip</text>
+  <rect x="760" y="380" width="220" height="80" rx="10" fill="#CC4F42" fill-opacity="0.18" stroke="#CC4F42" stroke-width="2" stroke-dasharray="6 6" class="anim-breathe"/>
+  <text x="870" y="415" font-size="18" text-anchor="middle" class="dim">no touchpoint</text>
+  <text x="870" y="440" font-size="18" text-anchor="middle" class="faint">zero coverage</text>
+
+  <rect x="330" y="60" width="540" height="48" rx="24" fill="#BD860E" fill-opacity="0.2" stroke="#BD860E" stroke-width="2"/>
+  <text x="600" y="90" font-size="20" text-anchor="middle" font-weight="600" class="tool">get_funnel_coverage</text>
+</svg>

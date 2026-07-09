@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Marcus's reviews already speak momentum — the listing copy still leads with a spec number instead.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="72" font-size="30" font-weight="700">The trigger was already sitting in the reviews</text>
+  <text x="48" y="102" font-size="20" class="dim">identify_decision_trigger names momentum before a word of copy gets touched.</text>
+
+  <!-- 6 chips, one row -->
+  <g font-size="22">
+    <rect x="48" y="220" width="168" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="132" y="268" text-anchor="middle" class="faint">permission</text>
+
+    <rect x="240" y="220" width="168" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="324" y="268" text-anchor="middle" class="faint">recognition</text>
+
+    <rect x="432" y="220" width="168" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="516" y="268" text-anchor="middle" class="faint">identity</text>
+
+    <rect x="624" y="220" width="168" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="708" y="268" text-anchor="middle" class="faint">belonging</text>
+
+    <!-- highlight: momentum -->
+    <rect x="816" y="214" width="172" height="96" rx="12" fill="rgba(189,134,14,.22)" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+    <text x="902" y="268" text-anchor="middle" fill="#F5F4F0" font-weight="700">momentum</text>
+
+    <rect x="1010" y="220" width="150" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="1085" y="264" text-anchor="middle" class="faint" font-size="18">fear_of_loss</text>
+  </g>
+
+  <!-- annotation callout -->
+  <line x1="902" y1="310" x2="902" y2="360" class="hair" stroke="#BD860E"/>
+  <text x="902" y="392" text-anchor="middle" font-size="22" fill="#BD860E" font-weight="600">"finally nailed it," said 19 ways</text>
+
+  <text x="48" y="480" font-size="20" class="dim">"Finally nailed brisket" and "hosted with confidence" are momentum, word for word.</text>
+  <text x="48" y="512" font-size="20" class="dim">The title and main image still lead with temperature accuracy, not the feeling.</text>
+</svg>

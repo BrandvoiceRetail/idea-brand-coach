@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Retention and Advocacy hold four advocacy touchpoints — usually only one of them is actually leaking</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="70" font-size="32" font-weight="600">Where advocacy actually lives</text>
+  <text x="48" y="100" font-size="20" class="dim">Five funnel stages — the fix is almost always in one of the last two</text>
+
+  <!-- stage strip -->
+  <line x1="90" y1="330" x2="1110" y2="330" class="hair"/>
+
+  <!-- Awareness -->
+  <rect x="70" y="290" width="150" height="80" rx="8" fill="rgba(62,143,196,.2)" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="145" y="335" font-size="20" text-anchor="middle">Awareness</text>
+
+  <!-- Consideration -->
+  <rect x="250" y="290" width="170" height="80" rx="8" fill="rgba(62,143,196,.2)" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="335" y="335" font-size="20" text-anchor="middle">Consideration</text>
+
+  <!-- Purchase -->
+  <rect x="450" y="290" width="150" height="80" rx="8" fill="rgba(62,143,196,.2)" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="525" y="335" font-size="20" text-anchor="middle">Purchase</text>
+
+  <!-- Retention (highlight, gold) -->
+  <rect x="630" y="270" width="220" height="120" rx="10" fill="rgba(189,134,14,.22)" stroke="#BD860E" stroke-width="3"/>
+  <text x="740" y="322" font-size="22" text-anchor="middle" font-weight="600">Retention</text>
+  <text x="740" y="348" font-size="18" text-anchor="middle" class="faint">packaging, insert card</text>
+
+  <!-- Advocacy (highlight, gold) -->
+  <rect x="880" y="270" width="220" height="120" rx="10" fill="rgba(189,134,14,.22)" stroke="#BD860E" stroke-width="3"/>
+  <text x="990" y="322" font-size="22" text-anchor="middle" font-weight="600">Advocacy</text>
+  <text x="990" y="348" font-size="18" text-anchor="middle" class="faint">referral, loyalty</text>
+
+  <!-- red leak marker -->
+  <circle cx="990" cy="255" r="10" fill="#CC4F42"/>
+  <text x="990" y="222" font-size="20" fill="#CC4F42" text-anchor="middle">one leaks, not the product</text>
+
+  <!-- annotation callout -->
+  <text x="630" y="450" font-size="20" class="faint">Packaging, insert card, referral, and loyalty are four separate touchpoints.</text>
+  <text x="630" y="476" font-size="20" class="faint">Run the audit before redesigning all four at once.</text>
+</svg>

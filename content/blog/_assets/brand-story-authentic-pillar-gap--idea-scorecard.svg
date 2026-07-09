@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Three IDEA pillars score fine. Authentic collapses because the Brand Story reads like stock copy.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="600" y="64" text-anchor="middle" font-size="32" font-weight="700">Three Pillars Score Fine. Authentic Collapses.</text>
+  <text x="600" y="96" text-anchor="middle" font-size="20" class="faint">Same specs. Same real feature. The story reads like anyone's.</text>
+
+  <!-- Insight-Driven -->
+  <text x="90" y="182" font-size="24">Insight-Driven</text>
+  <rect x="330" y="160" width="740" height="34" rx="17" fill="rgba(245,244,240,.08)" class="hair"/>
+  <rect x="330" y="160" width="620" height="34" rx="17" fill="rgba(62,143,196,.28)" stroke="#3E8FC4" stroke-width="2"/>
+
+  <!-- Distinctive -->
+  <text x="90" y="282" font-size="24">Distinctive</text>
+  <rect x="330" y="260" width="740" height="34" rx="17" fill="rgba(245,244,240,.08)" class="hair"/>
+  <rect x="330" y="260" width="590" height="34" rx="17" fill="rgba(62,143,196,.28)" stroke="#3E8FC4" stroke-width="2"/>
+
+  <!-- Empathetic -->
+  <text x="90" y="382" font-size="24">Empathetic</text>
+  <rect x="330" y="360" width="740" height="34" rx="17" fill="rgba(245,244,240,.08)" class="hair"/>
+  <rect x="330" y="360" width="560" height="34" rx="17" fill="rgba(62,143,196,.28)" stroke="#3E8FC4" stroke-width="2"/>
+
+  <!-- Authentic -->
+  <text x="90" y="482" font-size="24" font-weight="600">Authentic</text>
+  <rect x="330" y="460" width="740" height="34" rx="17" fill="rgba(245,244,240,.08)" class="hair"/>
+  <rect x="330" y="460" width="200" height="34" rx="17" fill="rgba(204,79,66,.32)" stroke="#CC4F42" stroke-width="2" class="anim-breathe"/>
+  <text x="560" y="482" font-size="20" class="dim">the gap &#8212; reads like stock copy</text>
+
+  <text x="600" y="580" text-anchor="middle" font-size="20" class="faint">A collapsed Authentic pillar is a story problem. A discount can't touch it.</text>
+</svg>

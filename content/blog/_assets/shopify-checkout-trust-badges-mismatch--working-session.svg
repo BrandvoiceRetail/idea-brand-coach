@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Two checkouts, one brand — the trust proof that works on Amazon never reached the Shopify checkout</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="30" font-weight="700">One brand, two checkouts</text>
+  <text x="48" y="92" font-size="20" class="faint">Same proof should show up in both places.</text>
+
+  <!-- step 1 -->
+  <rect x="48" y="180" width="320" height="170" rx="16" fill="rgba(62,143,196,.18)" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="208" y="220" text-anchor="middle" font-size="22" font-weight="700">Amazon checkout</text>
+  <text x="208" y="252" text-anchor="middle" font-size="18" class="dim">Certifications, return window,</text>
+  <text x="208" y="276" text-anchor="middle" font-size="18" class="dim">review counts — earned proof</text>
+  <rect x="88" y="298" width="240" height="34" rx="17" fill="none" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="208" y="321" text-anchor="middle" font-size="18" class="tool" fill="#3E8FC4">audit_asset</text>
+
+  <!-- arrow 1 -->
+  <line x1="368" y1="265" x2="452" y2="265" stroke="rgba(245,244,240,.4)" stroke-width="2" class="anim-flow"/>
+  <polygon points="452,265 440,258 440,272" fill="rgba(245,244,240,.4)"/>
+
+  <!-- step 2 -->
+  <rect x="460" y="180" width="320" height="170" rx="16" fill="rgba(204,79,66,.16)" stroke="#CC4F42" stroke-width="2"/>
+  <text x="620" y="220" text-anchor="middle" font-size="22" font-weight="700">Shopify checkout</text>
+  <text x="620" y="252" text-anchor="middle" font-size="18" class="dim">Generic theme-default badge —</text>
+  <text x="620" y="276" text-anchor="middle" font-size="18" class="dim">Authentic pillar drops here</text>
+  <rect x="500" y="298" width="240" height="34" rx="17" fill="none" stroke="#CC4F42" stroke-width="2"/>
+  <text x="620" y="321" text-anchor="middle" font-size="18" class="tool" fill="#CC4F42">run_trust_gap</text>
+
+  <!-- arrow 2 -->
+  <line x1="780" y1="265" x2="864" y2="265" stroke="rgba(245,244,240,.4)" stroke-width="2" class="anim-flow"/>
+  <polygon points="864,265 852,258 852,272" fill="rgba(245,244,240,.4)"/>
+
+  <!-- step 3, gold highlight -->
+  <rect x="872" y="170" width="280" height="190" rx="16" fill="rgba(189,134,14,.22)" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="1012" y="212" text-anchor="middle" font-size="21" font-weight="700">Same proof,</text>
+  <text x="1012" y="238" text-anchor="middle" font-size="21" font-weight="700">ported to checkout</text>
+  <text x="1012" y="264" text-anchor="middle" font-size="18" class="dim">Near payment, shipping,</text>
+  <text x="1012" y="286" text-anchor="middle" font-size="18" class="dim">and order summary</text>
+  <rect x="887" y="298" width="250" height="50" rx="20" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="1012" y="317" text-anchor="middle" font-size="18" class="tool" fill="#BD860E">generate_storefront_</text>
+  <text x="1012" y="337" text-anchor="middle" font-size="18" class="tool" fill="#BD860E">messaging_plan</text>
+
+  <text x="48" y="430" font-size="22" class="dim">The fix isn't a new trust claim &#8212; it's the claim you already earned,</text>
+  <text x="48" y="462" font-size="22" class="dim">shown at the second point where a Shopify buyer is still deciding.</text>
+</svg>

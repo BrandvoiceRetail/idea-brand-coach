@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A vague mood word cannot be designed to, but a named customer objection can.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="64" font-size="32" font-weight="600">From a mood word to a buildable brief</text>
+
+  <!-- Step 1: input, vague mood -->
+  <rect x="48" y="260" width="220" height="150" rx="14" fill="#CC4F42" fill-opacity="0.18" stroke="#CC4F42" stroke-width="2"/>
+  <text x="158" y="325" font-size="23" text-anchor="middle" class="dim">"Make it feel</text>
+  <text x="158" y="355" font-size="23" text-anchor="middle" class="dim">premium"</text>
+
+  <!-- connector 1 -->
+  <path d="M 268 335 L 326 335" class="hair anim-flow"/>
+  <path d="M 310 326 L 326 335 L 310 344" class="hair"/>
+
+  <!-- Step 2: coach tool -->
+  <rect x="336" y="260" width="220" height="150" rx="14" fill="#BD860E" fill-opacity="0.2" stroke="#BD860E" stroke-width="2"/>
+  <text x="446" y="330" font-size="22" text-anchor="middle" class="tool" fill="#F5F4F0">generate_brief</text>
+  <text x="446" y="362" font-size="18" text-anchor="middle" class="faint">grounds it in the avatar</text>
+
+  <!-- connector 2 -->
+  <path d="M 556 335 L 614 335" class="hair anim-flow"/>
+  <path d="M 598 326 L 614 335 L 598 344" class="hair"/>
+
+  <!-- Step 3: named objection -->
+  <rect x="624" y="260" width="220" height="150" rx="14" fill="#3E8FC4" fill-opacity="0.2" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="734" y="322" font-size="20" text-anchor="middle" class="dim">"Won't irritate</text>
+  <text x="734" y="352" font-size="20" text-anchor="middle" class="dim">skin like drugstore</text>
+  <text x="734" y="382" font-size="20" text-anchor="middle" class="dim">stuff did"</text>
+
+  <!-- connector 3 -->
+  <path d="M 844 335 L 902 335" class="hair anim-flow"/>
+  <path d="M 886 326 L 902 335 L 886 344" class="hair"/>
+
+  <!-- Step 4: highlight, first-round approval -->
+  <rect x="912" y="230" width="220" height="210" rx="14" fill="#3E9847" fill-opacity="0.2" stroke="#3E9847" stroke-width="2" class="anim-breathe"/>
+  <text x="1022" y="310" font-size="22" text-anchor="middle" font-weight="600" fill="#3E9847">Approved</text>
+  <text x="1022" y="340" font-size="22" text-anchor="middle" font-weight="600" fill="#3E9847">round one</text>
+  <text x="1022" y="372" font-size="17" text-anchor="middle" class="faint">No guessing game.</text>
+  <text x="1022" y="394" font-size="17" text-anchor="middle" class="faint">One scope question.</text>
+
+  <text x="600" y="610" font-size="20" text-anchor="middle" class="faint">Four rounds on a mood word. One round once the objection was named.</text>
+</svg>

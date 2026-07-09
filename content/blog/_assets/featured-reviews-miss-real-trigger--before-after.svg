@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Rosa's featured carousel proved durability — her avatar work says parents buy for guilt-free screen-time relief.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="66" font-size="30" font-weight="700">Best review vs. right review</text>
+  <text x="48" y="96" font-size="20" class="dim">audit_asset checks what worry a featured review actually answers.</text>
+
+  <!-- BEFORE -->
+  <rect x="48" y="150" width="500" height="390" rx="14" fill="#CC4F42" fill-opacity="0.14" stroke="#CC4F42" stroke-width="2"/>
+  <text x="78" y="196" font-size="20" fill="#CC4F42" font-weight="700">BEFORE — five 5-star durability quotes</text>
+  <text x="78" y="250" font-size="19" class="dim">
+    <tspan x="78" dy="0">"Survived being thrown</tspan>
+    <tspan x="78" dy="26">across the room."</tspan>
+  </text>
+  <line x1="78" y1="300" x2="518" y2="300" class="hair"/>
+  <text x="78" y="340" font-size="19" fill="#CC4F42">Answers: will this last?</text>
+  <text x="78" y="500" font-size="18" fill="#CC4F42">Not the worry parents actually hold.</text>
+
+  <!-- connector + tool chip -->
+  <line x1="548" y1="325" x2="572" y2="325" class="hair"/>
+  <rect x="572" y="290" width="150" height="70" rx="10" fill="rgba(189,134,14,.16)" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="647" y="317" text-anchor="middle" class="tool" font-size="14">audit_asset</text>
+  <text x="647" y="338" text-anchor="middle" class="faint" font-size="13">vs. the avatar</text>
+  <line x1="722" y1="325" x2="746" y2="325" class="hair anim-flow"/>
+  <polygon points="746,325 736,319 736,331" fill="rgba(245,244,240,.4)"/>
+
+  <!-- AFTER -->
+  <rect x="746" y="150" width="406" height="390" rx="14" fill="#3E9847" fill-opacity="0.16" stroke="#3E9847" stroke-width="2"/>
+  <text x="776" y="196" font-size="20" fill="#3E9847" font-weight="700">AFTER — relevance, not polish</text>
+  <text x="776" y="250" font-size="19" class="dim">
+    <tspan x="776" dy="0">"My son asked to build</tspan>
+    <tspan x="776" dy="26">instead of the iPad."</tspan>
+  </text>
+  <text x="776" y="440" font-size="18" fill="#3E9847">Answers: will this get my kid</text>
+  <text x="776" y="465" font-size="18" fill="#3E9847">off the tablet without a fight?</text>
+
+  <text x="48" y="630" font-size="18" class="faint">Same five-star review pool. Different question, matched to the avatar's actual trigger.</text>
+</svg>

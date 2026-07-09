@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Protecting the reaction beat instead of cutting to a tidy product shot is the whole fix.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="60" font-size="32" font-weight="600">Same unboxing, one missing beat</text>
+
+  <rect x="60" y="110" width="520" height="440" rx="12" fill="#CC4F42" fill-opacity="0.12" stroke="#CC4F42" stroke-width="2"/>
+  <text x="320" y="150" text-anchor="middle" font-size="24" fill="#CC4F42" font-weight="600">Before</text>
+  <rect x="90" y="180" width="460" height="60" rx="8" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="320" y="216" text-anchor="middle" font-size="18" class="faint">Box &#8594; opening &#8594; first bite</text>
+  <rect x="90" y="260" width="460" height="60" rx="8" fill="#CC4F42" fill-opacity="0.22" stroke="#CC4F42" stroke-width="2"/>
+  <text x="320" y="296" text-anchor="middle" font-size="18" fill="#CC4F42">reaction &#8594; cut away</text>
+  <rect x="90" y="340" width="460" height="60" rx="8" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="320" y="376" text-anchor="middle" font-size="18" class="faint">tidy product shot (the ending nobody stays for)</text>
+  <text x="320" y="500" text-anchor="middle" font-size="18" class="dim">2s average watch time on a 22s clip</text>
+
+  <rect x="620" y="110" width="520" height="440" rx="12" fill="#3E9847" fill-opacity="0.12" stroke="#3E9847" stroke-width="2"/>
+  <text x="880" y="150" text-anchor="middle" font-size="24" fill="#3E9847" font-weight="600">After</text>
+  <rect x="650" y="180" width="460" height="60" rx="8" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="880" y="216" text-anchor="middle" font-size="18" class="faint">Box &#8594; opening &#8594; first bite</text>
+  <rect x="650" y="260" width="460" height="60" rx="8" fill="#3E9847" fill-opacity="0.28" stroke="#3E9847" stroke-width="2"/>
+  <text x="880" y="296" text-anchor="middle" font-size="18" fill="#3E9847" font-weight="600">reaction held 11&#8211;16s, do not cut</text>
+  <rect x="650" y="340" width="460" height="60" rx="8" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="880" y="376" text-anchor="middle" font-size="18" class="faint">spoken hook over the reaction, then product</text>
+  <text x="880" y="500" text-anchor="middle" font-size="18" class="dim">the payoff, protected in the storyboard</text>
+</svg>

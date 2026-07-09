@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Fear of loss is the trigger a delayed shipment turns on — not a shipping-speed problem.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="66" font-size="32" font-weight="600">identify_decision_trigger: day five of a slow shipment</text>
+  <text x="60" y="96" font-size="20" class="dim">Six candidates. One explains the anxiety — the other five are quiet here.</text>
+
+  <rect x="60" y="150" width="240" height="140" rx="10" fill="#BD860E" fill-opacity="0.22" stroke="#E7A412" stroke-width="2" class="anim-breathe"/>
+  <text x="180" y="215" text-anchor="middle" font-size="24" fill="#BD860E" font-weight="600">Fear of Loss</text>
+  <text x="180" y="248" text-anchor="middle" font-size="16" class="faint">the operative lever</text>
+
+  <rect x="340" y="165" width="180" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="430" y="225" text-anchor="middle" font-size="20" class="faint">Permission</text>
+
+  <rect x="560" y="165" width="180" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="650" y="225" text-anchor="middle" font-size="20" class="faint">Recognition</text>
+
+  <rect x="780" y="165" width="180" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="870" y="225" text-anchor="middle" font-size="20" class="faint">Identity</text>
+
+  <rect x="340" y="300" width="180" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="430" y="360" text-anchor="middle" font-size="20" class="faint">Belonging</text>
+
+  <rect x="560" y="300" width="380" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="750" y="360" text-anchor="middle" font-size="20" class="faint">Momentum — not the real lever here</text>
+
+  <text x="60" y="480" font-size="20" class="dim">Silence on day five reads as "the order might not be coming," not as slow freight.</text>
+  <text x="60" y="520" font-size="18" class="faint">add_email_step fires a proactive delay notice before the anxiety peaks.</text>
+</svg>

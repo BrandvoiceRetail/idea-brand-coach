@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Paid social ad fatigue is a spent decision trigger, not stale creative — recognition wore out, permission is what the colder audience needs</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="64" font-size="30" font-weight="700">Six decision triggers. This audience shifted.</text>
+  <text x="48" y="96" font-size="20" class="faint">Paid social ad fatigue is the wrong trigger for the newer, colder wave.</text>
+
+  <!-- row 1 -->
+  <rect x="80" y="180" width="320" height="110" rx="12" fill="rgba(204,79,66,.16)" stroke="#CC4F42" stroke-width="2"/>
+  <text x="240" y="234" text-anchor="middle" font-size="24">recognition</text>
+  <text x="240" y="264" text-anchor="middle" font-size="18" class="dim">exhausted on this wave</text>
+
+  <rect x="440" y="180" width="320" height="110" rx="12" fill="rgba(245,244,240,.05)" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="600" y="242" text-anchor="middle" font-size="24" class="faint">identity</text>
+
+  <rect x="800" y="180" width="320" height="110" rx="12" fill="rgba(245,244,240,.05)" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="960" y="242" text-anchor="middle" font-size="24" class="faint">belonging</text>
+
+  <!-- row 2 -->
+  <rect x="80" y="340" width="320" height="110" rx="12" fill="rgba(245,244,240,.05)" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="240" y="402" text-anchor="middle" font-size="24" class="faint">momentum</text>
+
+  <rect x="440" y="340" width="320" height="110" rx="12" fill="rgba(245,244,240,.05)" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="600" y="402" text-anchor="middle" font-size="24" class="faint">fear of loss</text>
+
+  <rect x="800" y="340" width="320" height="110" rx="12" fill="rgba(189,134,14,.22)" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="960" y="394" text-anchor="middle" font-size="24" font-weight="600">permission</text>
+  <text x="960" y="424" text-anchor="middle" font-size="18" class="dim">what the cold wave needs</text>
+
+  <text x="600" y="570" text-anchor="middle" font-size="20" class="dim">A new edit of "you already know" still fails &#8212; this wave needs "it's okay to try."</text>
+</svg>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Reusing an About-page video wholesale skips the plan. Scoping it to email two with a storyboard is the fix.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="56" font-size="30" font-weight="600">From About-page video to email two, scoped</text>
+
+  <!-- step 1 -->
+  <rect x="60" y="140" width="230" height="120" rx="14" fill="#3E8FC4" fill-opacity=".18" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="175" y="185" text-anchor="middle" font-size="18" fill="#3E8FC4" font-weight="600">About-page video</text>
+  <text x="175" y="212" text-anchor="middle" font-size="15" class="faint">long, slow, webpage-paced</text>
+
+  <line x1="290" y1="200" x2="345" y2="200" class="hair anim-flow"/>
+
+  <!-- step 2 -->
+  <rect x="350" y="140" width="270" height="120" rx="14" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <rect x="380" y="164" width="210" height="34" rx="17" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="485" y="187" text-anchor="middle" font-size="15" class="tool" fill="#BD860E">generate_video_storyboard</text>
+  <text x="485" y="230" text-anchor="middle" font-size="15" class="faint">brand_story, scoped to email 2</text>
+
+  <line x1="620" y1="200" x2="675" y2="200" class="hair anim-flow"/>
+
+  <!-- step 3 -->
+  <rect x="680" y="140" width="200" height="120" rx="14" fill="#3E9847" fill-opacity=".18" stroke="#3E9847" stroke-width="2"/>
+  <text x="780" y="192" text-anchor="middle" font-size="18" fill="#3E9847" font-weight="600">Higgsfield</text>
+  <text x="780" y="218" text-anchor="middle" font-size="15" class="faint">renders the plan</text>
+
+  <line x1="880" y1="200" x2="935" y2="200" class="hair anim-flow"/>
+
+  <!-- step 4 -->
+  <rect x="940" y="140" width="200" height="120" rx="14" fill="#BD860E" fill-opacity=".22" stroke="#E7A412" stroke-width="2" class="anim-breathe"/>
+  <text x="1040" y="185" text-anchor="middle" font-size="17" fill="#BD860E" font-weight="600">add_email_step</text>
+  <text x="1040" y="212" text-anchor="middle" font-size="15" class="faint">placed in Email 2</text>
+
+  <text x="60" y="340" font-size="19" class="dim">Same founder, same story — an inbox has three seconds, a webpage has more.</text>
+</svg>

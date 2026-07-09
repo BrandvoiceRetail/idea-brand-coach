@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Reorder rate sits flat until the replenishment sequence launches, then climbs toward the real consumption window.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="30" font-weight="700">Reorder rate before and after the sequence exists</text>
+
+  <line x1="90" y1="560" x2="1130" y2="560" class="hair"/>
+  <line x1="90" y1="120" x2="90" y2="560" class="hair"/>
+  <text x="90" y="592" font-size="20" class="faint">wk 1</text>
+  <text x="350" y="592" font-size="20" class="faint">wk 4</text>
+  <text x="610" y="592" font-size="20" class="faint">wk 8</text>
+  <text x="870" y="592" font-size="20" class="faint">wk 12</text>
+
+  <!-- before: flat, silence, red -->
+  <polyline points="90,470 250,468 350,470" fill="none" stroke="#CC4F42" stroke-width="3" stroke-linecap="round"/>
+  <text x="200" y="440" text-anchor="middle" font-size="18" fill="#CC4F42">silence (no reminder sent)</text>
+
+  <!-- after: sequence launches at wk4, climbs, gold -->
+  <polyline points="350,470 500,380 610,300 870,255 1120,235" fill="none" stroke="#BD860E" stroke-width="3" stroke-linecap="round" class="anim-breathe"/>
+  <circle cx="350" cy="470" r="7" fill="#BD860E"/>
+  <text x="430" y="330" font-size="18" fill="#BD860E">sequence launched here</text>
+
+  <rect x="770" y="130" width="300" height="52" rx="26" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="920" y="164" text-anchor="middle" font-size="16" class="tool" fill="#BD860E">create_email_sequence</text>
+</svg>

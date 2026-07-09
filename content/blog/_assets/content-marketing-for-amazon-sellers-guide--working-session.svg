@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Content marketing gets diagnosed the same way a listing does: name the missing pillar or trigger before rewriting anything.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="20" class="faint" letter-spacing="1">THE WORKING SESSION</text>
+
+  <!-- Step 1: input -->
+  <rect x="48" y="290" width="210" height="110" rx="10" class="hair"/>
+  <text x="153" y="335" text-anchor="middle" font-size="20" class="dim">Content that gets</text>
+  <text x="153" y="361" text-anchor="middle" font-size="20" class="dim">traffic or views</text>
+
+  <line x1="258" y1="345" x2="330" y2="345" class="hair anim-flow"/>
+
+  <!-- Step 2: tool (highlight) -->
+  <rect x="330" y="270" width="240" height="150" rx="10" fill="#BD860E" fill-opacity="0.2" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="450" y="315" text-anchor="middle" font-size="18" class="tool">run_trust_gap</text>
+  <text x="450" y="345" text-anchor="middle" font-size="18" class="tool">identify_decision_trigger</text>
+  <text x="450" y="385" text-anchor="middle" font-size="16" class="faint">names the gap first</text>
+
+  <line x1="570" y1="345" x2="642" y2="345" class="hair anim-flow"/>
+
+  <!-- Step 3: output -->
+  <rect x="642" y="290" width="230" height="110" rx="10" fill="#3E8FC4" fill-opacity="0.18" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="757" y="335" text-anchor="middle" font-size="20" class="dim">Rewrite around the</text>
+  <text x="757" y="361" text-anchor="middle" font-size="20" class="dim">named pillar/trigger</text>
+
+  <line x1="872" y1="345" x2="944" y2="345" class="hair anim-flow"/>
+
+  <!-- Step 4: result -->
+  <rect x="944" y="290" width="208" height="110" rx="10" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2"/>
+  <text x="1048" y="330" text-anchor="middle" font-size="18" class="dim">Branded search or</text>
+  <text x="1048" y="356" text-anchor="middle" font-size="18" class="dim">engagement lifts</text>
+  <text x="1048" y="380" text-anchor="middle" font-size="16" class="faint">measured, not assumed</text>
+
+  <text x="600" y="470" text-anchor="middle" font-size="18" class="faint">Same structure ships either finding: rewrite the same words, or ship them for the first time in a script.</text>
+</svg>

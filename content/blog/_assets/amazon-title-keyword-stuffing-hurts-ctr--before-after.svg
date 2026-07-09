@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A keyword-stuffed Amazon title reads as noise — the real title formula says one claim first.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <rect x="48" y="90" width="504" height="495" rx="10" fill="#CC4F42" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="80" y="140" font-size="22" fill="#CC4F42" letter-spacing="1">BEFORE — KEYWORD STUFFED</text>
+  <rect x="90" y="190" width="420" height="160" rx="8" fill="#CC4F42" fill-opacity="0.16" stroke="#CC4F42" stroke-width="2"/>
+  <text x="300" y="230" text-anchor="middle" font-size="17" class="dim">
+    <tspan x="300" dy="0">"BrandX Dog Chew Puppy Chew</tspan>
+    <tspan x="300" dy="26">Large Breed Chew Natural Dog</tspan>
+    <tspan x="300" dy="26">Treat Long Lasting Chew Toy</tspan>
+    <tspan x="300" dy="26">Dental Chew Beef Tendon..."</tspan>
+  </text>
+  <text x="300" y="500" text-anchor="middle" font-size="18" class="dim">
+    <tspan x="300" dy="0">Nine keyword variants.</tspan>
+    <tspan x="300" dy="24">Zero claims in half a second.</tspan>
+  </text>
+
+  <line x1="574" y1="337" x2="626" y2="337" stroke="rgba(245,244,240,.5)" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="626,337 612,328 612,346" fill="rgba(245,244,240,.5)"/>
+
+  <rect x="648" y="90" width="504" height="495" rx="10" fill="#3E9847" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="680" y="140" font-size="22" fill="#3E9847" letter-spacing="1">AFTER — ONE CLAIM FIRST</text>
+  <rect x="690" y="190" width="420" height="160" rx="8" fill="#BD860E" fill-opacity="0.2" stroke="#BD860E" stroke-width="2"/>
+  <text x="900" y="235" text-anchor="middle" font-size="18" class="dim">
+    <tspan x="900" dy="0">"BrandX Beef Tendon Dog</tspan>
+    <tspan x="900" dy="26">Chew — Single-Piece,</tspan>
+    <tspan x="900" dy="26">No Rawhide Backing"</tspan>
+  </text>
+  <text x="900" y="405" text-anchor="middle" font-size="16" class="faint">first 80 characters</text>
+  <text x="900" y="500" text-anchor="middle" font-size="18" class="dim">
+    <tspan x="900" dy="0">Brand, one real keyword,</tspan>
+    <tspan x="900" dy="24">the actual difference — said once, clearly.</tspan>
+  </text>
+</svg>

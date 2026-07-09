@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A working session turns review evidence into a script-ready founder video brief</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="600" y="72" text-anchor="middle" font-size="30" font-weight="600">From blank page to script-ready brief</text>
+
+  <line x1="150" y1="340" x2="1050" y2="340" class="hair anim-flow"/>
+
+  <rect x="48" y="285" width="230" height="110" rx="12" fill="#3E8FC4" fill-opacity="0.18" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="163" y="330" text-anchor="middle" font-size="20" font-weight="600">Real reviews</text>
+  <text x="163" y="358" text-anchor="middle" font-size="18" class="dim">fear of re-injury</text>
+
+  <rect x="318" y="285" width="230" height="110" rx="12" fill="#BD860E" fill-opacity="0.18" stroke="#BD860E" stroke-width="2"/>
+  <text x="433" y="330" text-anchor="middle" font-size="18" class="tool">build_avatar_stage</text>
+  <text x="433" y="358" text-anchor="middle" font-size="18" class="dim">S3: the trigger</text>
+
+  <rect x="588" y="285" width="230" height="110" rx="12" fill="#BD860E" fill-opacity="0.18" stroke="#BD860E" stroke-width="2"/>
+  <text x="703" y="330" text-anchor="middle" font-size="18" class="tool">generate_brief</text>
+  <text x="703" y="358" text-anchor="middle" font-size="18" class="dim">the videographer spine</text>
+
+  <rect x="858" y="285" width="230" height="110" rx="12" fill="#3E9847" fill-opacity="0.2" stroke="#3E9847" stroke-width="2" class="anim-breathe"/>
+  <text x="973" y="330" text-anchor="middle" font-size="20" font-weight="700">Shoot day</text>
+  <text x="973" y="358" text-anchor="middle" font-size="18" class="dim">opens on the real fear</text>
+</svg>

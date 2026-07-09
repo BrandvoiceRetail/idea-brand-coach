@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A proof moment is the only thing separating a diary clip from a video worth pushing</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="600" y="80" text-anchor="middle" font-size="30" font-weight="600">Same footage. One added shape.</text>
+
+  <rect x="48" y="140" width="504" height="420" rx="14" fill="#CC4F42" fill-opacity="0.16" stroke="#CC4F42" stroke-width="2"/>
+  <text x="300" y="190" text-anchor="middle" font-size="20" letter-spacing="1" class="faint">BEFORE</text>
+  <text x="300" y="250" text-anchor="middle" font-size="26" font-weight="700">Loose diary clip</text>
+  <text x="300" y="300" text-anchor="middle" font-size="20" class="dim">No arc. No proof moment.</text>
+  <text x="300" y="335" text-anchor="middle" font-size="20" class="dim">340 views, barely pushed.</text>
+
+  <rect x="624" y="140" width="504" height="420" rx="14" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2" class="anim-breathe"/>
+  <text x="876" y="190" text-anchor="middle" font-size="20" letter-spacing="1" class="faint">AFTER</text>
+  <text x="876" y="250" text-anchor="middle" font-size="26" font-weight="700">Proof-moment story</text>
+  <text x="876" y="300" text-anchor="middle" font-size="20" class="dim">Risk, then decision,</text>
+  <text x="876" y="335" text-anchor="middle" font-size="20" class="dim">then the moment it cured right.</text>
+
+  <rect x="430" y="290" width="340" height="80" rx="10" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="600" y="322" text-anchor="middle" font-size="18" class="dim">the one changed thing:</text>
+  <text x="600" y="350" text-anchor="middle" font-size="18" font-weight="600">a beginning, middle, end</text>
+</svg>

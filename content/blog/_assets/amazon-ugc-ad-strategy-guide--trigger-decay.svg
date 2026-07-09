@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">The trigger that made an ad work in week one often isn't the trigger the audience needs by week four</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="72" font-size="32" font-weight="700">Six decision triggers. One is operative right now.</text>
+  <text x="48" y="106" font-size="22" class="dim">Ad fatigue is usually this wave of the audience needing a different one.</text>
+
+  <!-- 6 chips, one row -->
+  <g font-size="24">
+    <rect x="48" y="220" width="168" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="132" y="268" text-anchor="middle" class="faint">recognition</text>
+
+    <rect x="240" y="220" width="168" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="324" y="268" text-anchor="middle" class="faint">identity</text>
+
+    <rect x="432" y="220" width="168" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="516" y="268" text-anchor="middle" class="faint">belonging</text>
+
+    <rect x="624" y="220" width="168" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="708" y="268" text-anchor="middle" class="faint">momentum</text>
+
+    <rect x="816" y="220" width="168" height="84" rx="12" class="hair" fill="rgba(245,244,240,.06)"/>
+    <text x="900" y="264" text-anchor="middle" class="faint" font-size="21">fear_of_loss</text>
+
+    <!-- highlight: permission -->
+    <rect x="1004" y="214" width="172" height="96" rx="12" fill="rgba(189,134,14,.22)" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+    <text x="1090" y="268" text-anchor="middle" fill="#F5F4F0" font-weight="700">permission</text>
+  </g>
+
+  <!-- one annotation callout -->
+  <line x1="1090" y1="310" x2="1090" y2="360" class="hair" stroke="#BD860E"/>
+  <text x="1090" y="392" text-anchor="middle" font-size="22" fill="#BD860E" font-weight="600">the trigger this cold wave needs</text>
+
+  <text x="48" y="480" font-size="22" class="dim">Run `identify_decision_trigger` before refreshing any creative &#8212;</text>
+  <text x="48" y="512" font-size="22" class="dim">a new edit of the wrong argument still fails with the new audience.</text>
+
+</svg>

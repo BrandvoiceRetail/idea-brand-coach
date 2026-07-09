@@ -1,17 +1,22 @@
 ---
-title: Reviews and Referrals Covered. Loyalty Is the Gap
-description: Reviews and referrals are covered, but loyalty_community is a total blank. get_funnel_coverage finds the gap costing a snack brand repeat revenue.
+title: Funnel Audit Loyalty Gap: A Snack Brand Blind Spot
+description: A funnel audit loyalty check finds a total blank where a snack brand assumed it was covered. get_funnel_coverage exposes the gap costing repeat revenue.
 date: 2026-07-04
 category: Funnel
 funnel: loyalty_community
 tools: get_funnel_coverage, run_funnel_audit
 keywords: loyalty community amazon brand, advocacy funnel coverage gap, snack brand repeat customers, retention touchpoint amazon, funnel audit loyalty
 slug: loyalty-community-blind-spot-snack-brand
+cluster: packaging-advocacy
+role: supporting
+primary_keyword: funnel audit loyalty
+secondary_keywords: loyalty community amazon brand, advocacy funnel coverage gap, snack brand repeat customers
+updated: 2026-07-09
 ---
 
-## The number that looks wrong
+## The funnel audit loyalty check Dev almost skipped
 
-Dev sells a specialty-snack line - a small batch of flavored nut mixes with a genuinely loyal following. His `review_request_flow` is dialed in; review volume climbs steadily. His `referral_program` is live and generating a trickle of new customers every month. On paper, Dev feels like he's covered the advocacy side of his funnel. Repeat purchase revenue, though, has been flat for two quarters, and he can't figure out why - everything he's supposed to have built is built.
+A funnel audit loyalty check is the fastest way an Amazon brand owner can tell "feels covered" from "is covered," and it's exactly what a specialty-snack founder we'll call Dev almost skipped. Dev sells a small batch of flavored nut mixes with a genuinely loyal following. His `review_request_flow` is dialed in; review volume climbs steadily. His `referral_program` is live and generating a trickle of new customers every month. On paper, Dev feels like he's covered the advocacy side of his funnel. Repeat purchase revenue, though, has been flat for two quarters, and he can't figure out why: everything he's supposed to have built is built.
 
 ## Why the usual fix fails
 
@@ -28,6 +33,8 @@ The way to check this isn't gut feel about what "feels handled" - it's running `
 For Dev's funnel, the coverage map came back exactly as suspected on two positions and blank on a third: `loyalty_community` had zero coverage. Not underperforming - absent. No welcome-back messaging, no repeat-buyer perk, no touchpoint of any kind aimed at someone who's already purchased and might purchase again.
 
 *What the coach said:* "Reviews turn buyers into public proof. Referrals turn buyers into recruiters. Neither one gives a repeat buyer a reason to come back themselves. You've built two doors and left the third one off the building."
+
+![A funnel audit loyalty check across Dev's advocacy stage shows two touchpoints covered and one, loyalty_community, at zero](/blog/assets/loyalty-community-blind-spot-snack-brand--coverage-gap.svg "get_funnel_coverage finds the blank position. run_funnel_audit tells you how much it costs.")
 
 ## The working session
 
@@ -47,8 +54,26 @@ Once a `loyalty_community` touchpoint goes live, the metric to watch is repeat-p
 
 Keep review volume and referral signups on their own separate dashboards throughout. If the new touchpoint works, repeat-purchase rate should move on its own line without borrowing credit from - or getting blamed on - the two channels that were already running fine before this gap was found.
 
+## FAQ
+
+### What is a funnel audit loyalty check?
+
+It's running `get_funnel_coverage` across the whole Advocacy stage, review_request_flow, referral_program, ugc_repost_permissions, loyalty_community, position by position, to confirm a touchpoint actually exists rather than assuming "advocacy" is one job you've already handled.
+
+### Why did referrals and reviews being covered still leave repeat revenue flat?
+
+Because reviews and referrals do different jobs than loyalty_community. Reviews turn buyers into public proof; referrals turn buyers into recruiters. Neither one gives an existing repeat buyer a reason to come back on their own, which is the specific job a funnel audit loyalty check can reveal is missing.
+
+### How do I know which advocacy gap costs the most?
+
+Run `run_funnel_audit` against your real avatar data after `get_funnel_coverage` flags a blank position. It ranks the gap against your highest-LTV segment, so you're not guessing whether an empty loyalty_community position matters more than tuning referral incentives further.
+
+### Do I need a full loyalty platform to close a coverage gap like this?
+
+No. The audit's job is to confirm the gap exists and size it, not to prescribe a platform. A simple repeat-buyer perk tied to reorder cadence can close a `loyalty_community` gap that a full community feature would over-solve.
+
 ## The next action
 
-If your advocacy metrics look "covered" but repeat revenue is flat anyway, don't tune the levers you already have. Run `get_funnel_coverage` across the whole stage and check for a position that's simply empty. The free [diagnostic](/diagnostic) is a fast way to see where your funnel's weakest link sits if you haven't mapped positions yet.
+If your advocacy metrics look "covered" but repeat revenue is flat anyway, don't tune the levers you already have. Run a funnel audit loyalty check with `get_funnel_coverage` across the whole stage and confirm whether a position is simply empty. The free [diagnostic](/diagnostic) is a fast way to see where your funnel's weakest link sits if you haven't mapped positions yet.
 
-For the same routing problem showing up in a different advocacy position, see [Your Best Customer Videos Are Sitting in a Folder](/blog/permissioned-ugc-sitting-unused-candle-brand/). If your About page has quietly been asked to cover for gaps like this one, [Your About Page Is Trying to Do the Whole Funnel's Job](/blog/storefront-about-carrying-whole-funnel/) is worth a read. And for a case where the fix everyone reaches for turns out to be the wrong touchpoint entirely, see [You're About to Fix the Wrong Part of Your Storefront](/blog/fixing-wrong-touchpoint-storefront/).
+The same coverage gap shows up in different shapes across the rest of the [brand advocacy funnel](/blog/amazon-brand-advocacy-funnel-guide/): an insert card [stuck offering nothing but a flat discount](/blog/insert-card-just-discount-coupon/), a QR code insert card [collecting scans that never turn into a list](/blog/insert-card-qr-code-not-converting/), and packaging spend nobody has [actually checked against what customers say in reviews](/blog/do-reviews-mention-unboxing-experience/). If a rebrand happened after your packaging shipped, [see what a stale insert card costs you](/blog/rebrand-broke-unboxing-card-copy/), and if unboxing itself is in question, [one founder's real test of whether it moves repeat purchase](/blog/does-unboxing-experience-affect-repeat-purchase/) is worth running before you build anything new, alongside [turning that same unboxing moment into paid creative instead of a guess](/blog/unboxing-video-ad-plan-kitchen-gadget/). A funnel audit loyalty check takes an afternoon; guessing at "covered" costs you a quarter.

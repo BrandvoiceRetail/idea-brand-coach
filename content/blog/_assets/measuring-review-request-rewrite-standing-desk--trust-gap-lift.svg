@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A review count climbing eleven proves nothing on its own; a Trust Gap snapshot before and after the rewrite isolates the pillar that actually moved</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="30" font-weight="700">compute_trust_gap_lift: before vs. after the rewrite</text>
+  <text x="48" y="90" font-size="20" class="dim">Same review count line either way. Only one pillar shows a real lift.</text>
+
+  <!-- axis -->
+  <line x1="120" y1="480" x2="1152" y2="480" class="hair"/>
+  <line x1="120" y1="160" x2="120" y2="480" class="hair"/>
+  <text x="120" y="510" font-size="18" class="faint">wk 1</text>
+  <text x="540" y="510" font-size="18" class="faint" text-anchor="middle">wk 4 — email rewritten</text>
+  <text x="1000" y="510" font-size="18" class="faint">wk 8</text>
+
+  <!-- rewrite marker -->
+  <line x1="540" y1="160" x2="540" y2="480" class="hair" stroke="#BD860E" stroke-dasharray="6 6"/>
+
+  <!-- raw review count: keeps rising regardless, tells you nothing on its own -->
+  <polyline points="120,440 250,428 380,420 510,410 640,398 770,388 900,378 1030,368" fill="none" stroke="#3E8FC4" stroke-width="2" stroke-linecap="round"/>
+  <text x="770" y="372" font-size="18" fill="#3E8FC4">raw review count (rises anyway)</text>
+
+  <!-- Insight-Driven pillar: barely moves -->
+  <polyline points="120,300 380,296 640,292 900,288 1030,286" fill="none" stroke="rgba(245,244,240,.4)" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6"/>
+  <text x="770" y="278" font-size="18" class="faint">Insight-Driven (barely moves)</text>
+
+  <!-- Empathetic pillar score: flat before, real lift after -->
+  <polyline points="120,340 250,344 380,338 510,342" fill="none" stroke="#BD860E" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6"/>
+  <polyline points="510,342 640,280 770,230 900,196 1030,182" fill="none" stroke="#BD860E" stroke-width="2" stroke-linecap="round" class="anim-flow"/>
+  <text x="770" y="214" font-size="18" fill="#BD860E" font-weight="600">Empathetic pillar score</text>
+  <text x="900" y="168" font-size="18" fill="#BD860E">lift confirmed</text>
+
+  <text x="48" y="600" font-size="18" class="faint">Illustrative scores. The count moved the whole time — the lift only shows up on the pillar you actually changed.</text>
+</svg>

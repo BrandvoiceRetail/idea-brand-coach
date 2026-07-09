@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Generic five star reviews answer no objection until the request asks a sharper question</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <rect x="48" y="120" width="500" height="472" rx="12" fill="#CC4F42" fill-opacity="0.16" stroke="#CC4F42" stroke-width="2"/>
+  <text x="76" y="164" font-size="26" font-weight="600" class="dim">BEFORE: "How do you like it?"</text>
+  <text x="76" y="232" font-size="22">&#8220;Works great.&#8221;</text>
+  <text x="76" y="272" font-size="22">&#8220;Happy with this kettle.&#8221;</text>
+  <text x="76" y="312" font-size="22">&#8220;Fast shipping, would buy again.&#8221;</text>
+  <text x="76" y="380" font-size="18" class="faint">200 reviews. None answer boil time,</text>
+  <text x="76" y="404" font-size="18" class="faint">auto-shutoff, or the pour.</text>
+
+  <rect x="652" y="120" width="500" height="472" rx="12" fill="#3E9847" fill-opacity="0.16" stroke="#3E9847" stroke-width="2"/>
+  <text x="680" y="164" font-size="26" font-weight="600" class="dim">AFTER: name the real moment</text>
+  <text x="680" y="232" font-size="22">&#8220;Boils fast for a work morning.&#8221;</text>
+  <text x="680" y="272" font-size="22">&#8220;Shuts off on its own, no burnt smell.&#8221;</text>
+  <text x="680" y="312" font-size="22">&#8220;Pours clean, no drip.&#8221;</text>
+  <text x="680" y="380" font-size="18" class="faint">Same 200 customers. Now the proof</text>
+  <text x="680" y="404" font-size="18" class="faint">answers the objection buyers have.</text>
+
+  <line x1="562" y1="356" x2="638" y2="356" stroke="#BD860E" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="638,344 662,356 638,368" fill="#BD860E"/>
+
+  <rect x="330" y="52" width="540" height="48" rx="24" fill="#BD860E" fill-opacity="0.2" stroke="#BD860E" stroke-width="2"/>
+  <text x="600" y="82" font-size="20" text-anchor="middle" font-weight="600">One question changed. Same 200 reviewers.</text>
+</svg>

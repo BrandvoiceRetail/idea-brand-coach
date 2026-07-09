@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">The same insert card reads as gift language to three SKUs and self-purchase language to a fourth</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="70" font-size="32" font-weight="600">One card, two buyers</text>
+  <text x="48" y="100" font-size="20" class="dim">audit_asset scoped to the SKU's own avatar, not the brand's</text>
+
+  <!-- Before panel: red, gift framing on self-purchase SKU -->
+  <rect x="70" y="150" width="480" height="380" rx="12" fill="rgba(204,79,66,.16)" stroke="#CC4F42" stroke-width="2"/>
+  <text x="310" y="200" font-size="24" text-anchor="middle" font-weight="600">Thin chain (before)</text>
+  <text x="310" y="240" font-size="18" text-anchor="middle" class="faint">buyer: self-purchase</text>
+  <text x="310" y="320" font-size="20" text-anchor="middle" fill="#CC4F42">"the perfect gift,</text>
+  <text x="310" y="348" font-size="20" text-anchor="middle" fill="#CC4F42">ready to give"</text>
+  <text x="310" y="400" font-size="18" text-anchor="middle" class="faint">scan rate: 1.8%</text>
+
+  <!-- After panel: green, self-purchase framing -->
+  <rect x="650" y="150" width="480" height="380" rx="12" fill="rgba(62,152,71,.18)" stroke="#3E9847" stroke-width="2"/>
+  <text x="890" y="200" font-size="24" text-anchor="middle" font-weight="600">Thin chain (after)</text>
+  <text x="890" y="240" font-size="18" text-anchor="middle" class="faint">same buyer, right ask</text>
+  <text x="890" y="320" font-size="20" text-anchor="middle" fill="#3E9847">"you picked this for you —</text>
+  <text x="890" y="348" font-size="20" text-anchor="middle" fill="#3E9847">show us how you wear it"</text>
+  <text x="890" y="400" font-size="18" text-anchor="middle" class="faint">refine_creative_plan: one component</text>
+
+  <!-- connector -->
+  <line x1="560" y1="330" x2="640" y2="330" stroke="#BD860E" stroke-width="3" class="anim-flow"/>
+
+  <text x="70" y="580" font-size="20" class="faint">The other three SKU cards stay exactly as they are. Nothing else was broken.</text>
+</svg>

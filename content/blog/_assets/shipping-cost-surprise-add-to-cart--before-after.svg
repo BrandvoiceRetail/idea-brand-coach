@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Shipping cost cart abandonment isn't the number — it's the silence before it. Say it early and the cart holds.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <rect x="48" y="90" width="504" height="495" rx="10" fill="#CC4F42" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="80" y="140" font-size="22" fill="#CC4F42" letter-spacing="1">BEFORE — NO SETUP</text>
+  <rect x="90" y="185" width="420" height="90" rx="8" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="300" y="220" text-anchor="middle" font-size="18" class="faint">Bullets + A+ content</text>
+  <text x="300" y="248" text-anchor="middle" font-size="16" class="faint">no shipping mentioned</text>
+  <line x1="300" y1="275" x2="300" y2="325" class="hair" stroke-dasharray="6 10"/>
+  <rect x="90" y="330" width="420" height="90" rx="8" fill="#CC4F42" fill-opacity="0.2" stroke="#CC4F42" stroke-width="2" class="anim-breathe"/>
+  <text x="300" y="365" text-anchor="middle" font-size="18" fill="#CC4F42">shipping estimate appears</text>
+  <text x="300" y="393" text-anchor="middle" font-size="16" class="dim">— a surprise, cold</text>
+  <text x="300" y="470" text-anchor="middle" font-size="18" class="dim">Cart abandoned, ambushed by the total.</text>
+
+  <line x1="574" y1="337" x2="626" y2="337" stroke="rgba(245,244,240,.5)" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="626,337 612,328 612,346" fill="rgba(245,244,240,.5)"/>
+
+  <rect x="648" y="90" width="504" height="495" rx="10" fill="#3E9847" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="680" y="140" font-size="22" fill="#3E9847" letter-spacing="1">AFTER — SET UP EARLY</text>
+  <rect x="690" y="185" width="420" height="90" rx="8" fill="#BD860E" fill-opacity="0.22" stroke="#BD860E" stroke-width="2"/>
+  <text x="900" y="220" text-anchor="middle" font-size="18" fill="#BD860E">Bullets + A+ content</text>
+  <text x="900" y="248" text-anchor="middle" font-size="16" fill="#BD860E">heavy item, real range named</text>
+  <line x1="900" y1="275" x2="900" y2="325" class="hair" stroke-dasharray="6 10"/>
+  <rect x="690" y="330" width="420" height="90" rx="8" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="900" y="365" text-anchor="middle" font-size="18" class="dim">same shipping estimate appears</text>
+  <text x="900" y="393" text-anchor="middle" font-size="16" class="faint">— expected, not a shock</text>
+  <text x="900" y="470" text-anchor="middle" font-size="18" fill="#3E9847">Cart holds. Permission, given first.</text>
+</svg>

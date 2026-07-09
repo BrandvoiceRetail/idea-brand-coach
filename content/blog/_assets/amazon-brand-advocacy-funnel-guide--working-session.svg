@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Run the funnel audit before redesigning packaging, insert cards, referral, or loyalty</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="70" font-size="32" font-weight="600">The audit-first sequence</text>
+  <text x="48" y="100" font-size="20" class="dim">Find the weak touchpoint before you fix any of them</text>
+
+  <!-- step 1: input -->
+  <rect x="50" y="260" width="215" height="120" rx="10" fill="rgba(62,143,196,.2)" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="157" y="315" font-size="20" text-anchor="middle">Repeat purchase</text>
+  <text x="157" y="341" font-size="20" text-anchor="middle">isn't moving</text>
+
+  <!-- connector 1 -->
+  <line x1="265" y1="320" x2="315" y2="320" class="hair anim-flow"/>
+
+  <!-- step 2: tool -->
+  <rect x="315" y="245" width="215" height="150" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2"/>
+  <text x="422" y="300" font-size="20" text-anchor="middle" class="tool">run_funnel</text>
+  <text x="422" y="324" font-size="20" text-anchor="middle" class="tool">_audit</text>
+  <text x="422" y="352" font-size="17" text-anchor="middle" class="faint">weakest touchpoint named</text>
+
+  <!-- connector 2 -->
+  <line x1="530" y1="320" x2="580" y2="320" class="hair anim-flow"/>
+
+  <!-- step 3: tool -->
+  <rect x="580" y="245" width="215" height="150" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2"/>
+  <text x="687" y="310" font-size="20" text-anchor="middle" class="tool">audit_asset</text>
+  <text x="687" y="336" font-size="17" text-anchor="middle" class="faint">checked vs. avatar + trigger</text>
+
+  <!-- connector 3 -->
+  <line x1="795" y1="320" x2="845" y2="320" class="hair anim-flow"/>
+
+  <!-- step 4: output, green -->
+  <rect x="845" y="260" width="215" height="120" rx="10" fill="rgba(62,152,71,.22)" stroke="#3E9847" stroke-width="2"/>
+  <text x="952" y="315" font-size="20" text-anchor="middle">One touchpoint,</text>
+  <text x="952" y="341" font-size="20" text-anchor="middle">fixed and measured</text>
+
+  <text x="50" y="460" font-size="20" class="faint">Skip the audit and you're redesigning packaging when the leak was the referral timing.</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Same insert card, before and after propagation — the old tagline replaced everywhere.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="66" font-size="32" font-weight="600">refine_creative_plan: positioning-propagation mode</text>
+  <text x="60" y="96" font-size="20" class="dim">One card. One line that either propagated everywhere, or didn't.</text>
+
+  <rect x="60" y="140" width="500" height="360" rx="14" fill="#CC4F42" fill-opacity="0.14" stroke="#CC4F42" stroke-width="2"/>
+  <text x="310" y="185" text-anchor="middle" font-size="22" fill="#CC4F42" font-weight="600">Before — insert card</text>
+  <rect x="110" y="230" width="400" height="180" rx="8" fill="rgba(245,244,240,.06)" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="310" y="310" text-anchor="middle" font-size="20" class="dim">"Soft on skin,</text>
+  <text x="310" y="340" text-anchor="middle" font-size="20" class="dim">soft on the planet"</text>
+  <text x="310" y="450" text-anchor="middle" font-size="17" fill="#CC4F42">the old signature line, still shipping</text>
+
+  <rect x="640" y="140" width="500" height="360" rx="14" fill="#3E9847" fill-opacity="0.14" stroke="#3E9847" stroke-width="2" class="anim-breathe"/>
+  <text x="890" y="185" text-anchor="middle" font-size="22" fill="#3E9847" font-weight="600">After — insert card</text>
+  <rect x="690" y="230" width="400" height="180" rx="8" fill="rgba(245,244,240,.06)" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="890" y="300" text-anchor="middle" font-size="19" class="dim">"Made for the skin</text>
+  <text x="890" y="330" text-anchor="middle" font-size="19" class="dim">that can't say what's wrong"</text>
+  <text x="890" y="450" text-anchor="middle" font-size="17" fill="#3E9847">the new line, cascaded from the listing</text>
+
+  <text x="60" y="545" font-size="18" class="faint">Same card. Same box. The line is the only thing that changed — everywhere at once.</text>
+</svg>

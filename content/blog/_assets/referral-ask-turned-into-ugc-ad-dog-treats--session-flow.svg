@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A referral email asking people to share a transaction goes unshared; the same belonging trigger, scripted, becomes a UGC ad worth passing on.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="600" y="66" text-anchor="middle" font-size="30" font-weight="600">From a flat referral email to a UGC ad worth sharing</text>
+
+  <!-- Step 1: input -->
+  <rect x="40" y="160" width="230" height="170" rx="16" fill="#3E8FC4" fill-opacity="0.18" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="155" y="230" text-anchor="middle" font-size="20" font-weight="600">Referral email</text>
+  <text x="155" y="258" text-anchor="middle" font-size="18" class="dim">22% opens,</text>
+  <text x="155" y="282" text-anchor="middle" font-size="18" class="dim">almost no forwards</text>
+
+  <path d="M280 245 L360 245" class="hair anim-flow" marker-end="url(#arrow)"/>
+
+  <!-- Step 2: tool chip -->
+  <rect x="370" y="160" width="230" height="170" rx="16" fill="#BD860E" fill-opacity="0.16" stroke="#BD860E" stroke-width="2"/>
+  <text x="485" y="222" text-anchor="middle" font-size="18" class="tool">build_avatar_stage</text>
+  <text x="485" y="256" text-anchor="middle" font-size="18" class="dim">S3 trigger:</text>
+  <text x="485" y="282" text-anchor="middle" font-size="20" font-weight="700">belonging</text>
+
+  <path d="M610 245 L690 245" class="hair anim-flow" marker-end="url(#arrow)"/>
+
+  <!-- Step 3: tool chip -->
+  <rect x="700" y="160" width="230" height="170" rx="16" fill="#BD860E" fill-opacity="0.16" stroke="#BD860E" stroke-width="2"/>
+  <text x="815" y="222" text-anchor="middle" font-size="18" class="tool">generate_ugc_ad_plan</text>
+  <text x="815" y="256" text-anchor="middle" font-size="18" class="dim">skeptic-flip</text>
+  <text x="815" y="282" text-anchor="middle" font-size="18" class="dim">hook script</text>
+
+  <path d="M940 245 L1020 245" class="hair anim-flow" marker-end="url(#arrow)"/>
+
+  <!-- Step 4: output -->
+  <rect x="1020" y="160" width="150" height="170" rx="16" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2"/>
+  <text x="1095" y="222" text-anchor="middle" font-size="18" font-weight="600">Higgsfield</text>
+  <text x="1095" y="248" text-anchor="middle" font-size="16" class="dim">renders</text>
+  <text x="1095" y="272" text-anchor="middle" font-size="16" class="dim">shareable</text>
+  <text x="1095" y="296" text-anchor="middle" font-size="16" class="dim">UGC ad</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="rgba(245,244,240,.4)"/>
+    </marker>
+  </defs>
+
+  <text x="600" y="420" text-anchor="middle" font-size="20" class="dim">The email asks people to share a transaction. Nobody shares a transaction.</text>
+  <text x="600" y="450" text-anchor="middle" font-size="20" class="dim">The script asks them to share the one thing that finally worked.</text>
+</svg>

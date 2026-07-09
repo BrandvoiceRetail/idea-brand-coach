@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">One claim checked against reality splits into two accurate lines — before it ships, not after a complaint.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <rect x="48" y="270" width="220" height="130" rx="10" fill="#3E8FC4" fill-opacity="0.18" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="158" y="325" text-anchor="middle" font-size="18" class="dim">One bold claim</text>
+  <text x="158" y="350" text-anchor="middle" font-size="16" class="faint">"hassle-free, no questions"</text>
+
+  <line x1="278" y1="335" x2="326" y2="335" class="hair anim-flow"/>
+  <polygon points="326,335 312,326 312,344" fill="rgba(245,244,240,.5)"/>
+
+  <rect x="336" y="260" width="260" height="150" rx="10" fill="#BD860E" fill-opacity="0.2" stroke="#E7A412" stroke-width="2" class="anim-breathe"/>
+  <text x="466" y="320" text-anchor="middle" font-size="20" fill="#BD860E" class="tool">publish_filter_check</text>
+  <text x="466" y="350" text-anchor="middle" font-size="15" class="dim">flags the market it fails</text>
+
+  <line x1="606" y1="335" x2="654" y2="335" class="hair anim-flow"/>
+  <polygon points="654,335 640,326 640,344" fill="rgba(245,244,240,.5)"/>
+
+  <rect x="664" y="260" width="230" height="150" rx="10" fill="#BD860E" fill-opacity="0.14" stroke="#BD860E" stroke-width="2"/>
+  <text x="779" y="320" text-anchor="middle" font-size="20" fill="#BD860E" class="tool">audit_asset</text>
+  <text x="779" y="350" text-anchor="middle" font-size="15" class="dim">maps the honest split</text>
+
+  <line x1="904" y1="335" x2="952" y2="335" class="hair anim-flow"/>
+  <polygon points="952,335 938,326 938,344" fill="rgba(245,244,240,.5)"/>
+
+  <rect x="962" y="255" width="190" height="160" rx="10" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2"/>
+  <text x="1057" y="310" text-anchor="middle" font-size="18" fill="#3E9847">Two true lines</text>
+  <text x="1057" y="336" text-anchor="middle" font-size="15" class="dim">domestic</text>
+  <text x="1057" y="360" text-anchor="middle" font-size="15" class="dim">international</text>
+
+  <text x="60" y="480" font-size="20" class="dim">Checked first is the fast path — not the one that bounces back as a complaint.</text>
+</svg>

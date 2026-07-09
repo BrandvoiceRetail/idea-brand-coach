@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Check the claim before you brief the designer — the panel can't be honest if the date isn't</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="30" font-weight="600">The claim gets checked before the panel gets built</text>
+  <text x="48" y="90" font-size="20" class="dim">One cutoff date, audited twice, before a designer touches it once.</text>
+
+  <!-- step 1: input -->
+  <rect x="48" y="260" width="200" height="120" rx="10" fill="rgba(204,79,66,.18)" stroke="#CC4F42" stroke-width="2"/>
+  <text x="148" y="310" font-size="18" text-anchor="middle">"Dec 18th" cutoff</text>
+  <text x="148" y="336" font-size="16" text-anchor="middle" fill="#CC4F42">unverified this year</text>
+
+  <line x1="248" y1="320" x2="326" y2="320" class="hair anim-flow"/>
+
+  <!-- step 2 -->
+  <rect x="326" y="255" width="210" height="130" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2"/>
+  <text x="431" y="305" font-size="19" text-anchor="middle" class="tool">audit_asset</text>
+  <text x="431" y="330" font-size="15" text-anchor="middle" class="faint">real turnaround, 3 days short</text>
+
+  <line x1="536" y1="320" x2="614" y2="320" class="hair anim-flow"/>
+
+  <!-- step 3 -->
+  <rect x="614" y="255" width="230" height="130" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2"/>
+  <text x="729" y="305" font-size="16" text-anchor="middle" class="tool">publish_filter_check</text>
+  <text x="729" y="330" font-size="15" text-anchor="middle" class="faint">clears the corrected date</text>
+
+  <line x1="844" y1="320" x2="922" y2="320" class="hair anim-flow"/>
+
+  <!-- step 4: output -->
+  <rect x="922" y="255" width="230" height="130" rx="10" fill="rgba(62,152,71,.2)" stroke="#3E9847" stroke-width="2" class="anim-breathe"/>
+  <text x="1037" y="305" font-size="15" text-anchor="middle" class="tool">generate_aplus_content_plan</text>
+  <text x="1037" y="330" font-size="15" text-anchor="middle" fill="#3E9847">one honest beat, mobile-first</text>
+
+  <text x="48" y="450" font-size="18" class="faint">Skip the audit and the panel can be beautifully composed and still be wrong.</text>
+</svg>

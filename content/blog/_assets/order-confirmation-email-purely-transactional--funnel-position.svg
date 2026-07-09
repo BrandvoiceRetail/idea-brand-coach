@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Order confirmation fires at peak momentum with near-total open rate — most brands spend that on a tracking link.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="30" font-weight="600">The first retention email, not the third</text>
+  <text x="48" y="90" font-size="20" class="dim">Welcome series arrives day 3. Confirmation arrives at checkout, while momentum is highest.</text>
+
+  <line x1="90" y1="330" x2="1110" y2="330" class="hair"/>
+
+  <rect x="70" y="300" width="260" height="70" rx="8" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="200" y="342" text-anchor="middle" font-size="19" class="faint">Checkout completes</text>
+
+  <line x1="330" y1="335" x2="370" y2="335" class="hair anim-flow"/>
+
+  <rect x="370" y="270" width="330" height="130" rx="10" fill="#BD860E" fill-opacity="0.22" stroke="#E7A412" stroke-width="3" class="anim-breathe"/>
+  <text x="535" y="320" text-anchor="middle" font-size="24" font-weight="600" fill="#BD860E">Order confirmation</text>
+  <text x="535" y="350" text-anchor="middle" font-size="17" class="faint">near-100% open, momentum is live</text>
+  <text x="535" y="378" text-anchor="middle" font-size="16" fill="#CC4F42">currently: order number + ETA only</text>
+
+  <line x1="700" y1="335" x2="740" y2="335" class="hair"/>
+
+  <rect x="740" y="300" width="360" height="70" rx="8" fill="rgba(62,143,196,.16)" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="920" y="332" text-anchor="middle" font-size="18" class="dim">Welcome series</text>
+  <text x="920" y="356" text-anchor="middle" font-size="15" class="faint">day 3 — the moment has already cooled</text>
+
+  <text x="70" y="480" font-size="20" class="dim">identify_decision_trigger names the live lever: momentum, not permission.</text>
+  <text x="70" y="516" font-size="18" class="faint">add_email_step reinforces the decision while it's still warm — no upsell, no second ask.</text>
+</svg>

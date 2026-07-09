@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A bullet written in the formulator's vocabulary reads as accurate but distant; the same fact stated in the customer's own words reads as relief.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <!-- BEFORE panel -->
+  <rect x="48" y="90" width="504" height="495" rx="10" fill="#CC4F42" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="80" y="140" font-size="22" fill="#CC4F42" letter-spacing="1">BEFORE — FORMULATOR'S WORDS</text>
+
+  <rect x="110" y="200" width="380" height="150" rx="8" fill="#CC4F42" fill-opacity="0.18" stroke="#CC4F42" stroke-width="2"/>
+  <text x="300" y="255" text-anchor="middle" font-size="22">"Bioavailable magnesium</text>
+  <text x="300" y="285" text-anchor="middle" font-size="22">glycinate chelate"</text>
+
+  <text x="300" y="410" text-anchor="middle" font-size="18" class="dim">
+    <tspan x="300" dy="0">Accurate. Nobody in the</tspan>
+    <tspan x="300" dy="24">reviews says it.</tspan>
+  </text>
+
+  <!-- arrow between panels -->
+  <line x1="574" y1="337" x2="626" y2="337" stroke="rgba(245,244,240,.5)" stroke-width="2" stroke-linecap="round" class="anim-flow"/>
+  <polygon points="626,337 612,328 612,346" fill="rgba(245,244,240,.5)"/>
+
+  <!-- AFTER panel -->
+  <rect x="648" y="90" width="504" height="495" rx="10" fill="#3E9847" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="680" y="140" font-size="22" fill="#3E9847" letter-spacing="1">AFTER — CUSTOMER'S WORDS</text>
+
+  <rect x="710" y="200" width="380" height="150" rx="8" fill="#BD860E" fill-opacity="0.22" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="900" y="245" text-anchor="middle" font-size="20">"The gentle form that</text>
+  <text x="900" y="273" text-anchor="middle" font-size="20">won't upset your stomach</text>
+  <text x="900" y="301" text-anchor="middle" font-size="20">like other magnesium can"</text>
+
+  <rect x="770" y="400" width="260" height="52" rx="26" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="900" y="434" text-anchor="middle" font-size="16" class="tool" fill="#BD860E">build_avatar_stage · S1</text>
+
+  <text x="900" y="500" text-anchor="middle" font-size="18" class="dim">
+    <tspan x="900" dy="0">Same fact, same claim.</tspan>
+    <tspan x="900" dy="24">Words a buyer already uses.</tspan>
+  </text>
+</svg>

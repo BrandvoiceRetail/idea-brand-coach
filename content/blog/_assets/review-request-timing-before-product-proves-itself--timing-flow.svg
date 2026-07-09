@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Retiming the review ask from a shipping clock to the moment the product actually proved itself</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <rect x="40" y="270" width="210" height="130" rx="14" fill="#CC4F42" fill-opacity="0.16" stroke="#CC4F42" stroke-width="2"/>
+  <text x="60" y="318" font-size="20" class="dim">Ask fires day 3</text>
+  <text x="60" y="344" font-size="18" class="faint">on a shipping clock</text>
+
+  <line x1="250" y1="335" x2="298" y2="335" stroke="#BD860E" stroke-width="3" stroke-linecap="round" class="anim-flow"/>
+  <polygon points="298,325 320,335 298,345" fill="#BD860E"/>
+
+  <rect x="320" y="280" width="230" height="110" rx="14" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="336" y="322" font-size="20" class="tool">build_avatar_stage</text>
+  <text x="336" y="348" font-size="18" class="faint">maps the job-completion window</text>
+
+  <line x1="550" y1="335" x2="598" y2="335" stroke="#BD860E" stroke-width="3" stroke-linecap="round" class="anim-flow"/>
+  <polygon points="598,325 620,335 598,345" fill="#BD860E"/>
+
+  <rect x="620" y="280" width="230" height="110" rx="14" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="636" y="322" font-size="20" class="tool">run_funnel_audit</text>
+  <text x="636" y="348" font-size="18" class="faint">confirms the clock is wrong</text>
+
+  <line x1="850" y1="335" x2="898" y2="335" stroke="#BD860E" stroke-width="3" stroke-linecap="round" class="anim-flow"/>
+  <polygon points="898,325 920,335 898,345" fill="#BD860E"/>
+
+  <rect x="920" y="270" width="240" height="130" rx="14" fill="#3E9847" fill-opacity="0.16" stroke="#3E9847" stroke-width="2"/>
+  <text x="936" y="318" font-size="20" class="dim">Ask retimed to day 14</text>
+  <text x="936" y="344" font-size="18" class="faint">the job is actually done</text>
+</svg>

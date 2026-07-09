@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Recognition is the trigger this detailing brand's UGC folder needs — not the best-lit clip.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="66" font-size="32" font-weight="600">identify_decision_trigger: 40 clips, one lever</text>
+  <text x="60" y="96" font-size="20" class="dim">Sorted by what the customer says, not by lighting or camera quality.</text>
+
+  <rect x="60" y="150" width="240" height="140" rx="10" fill="#BD860E" fill-opacity="0.22" stroke="#E7A412" stroke-width="2" class="anim-breathe"/>
+  <text x="180" y="210" text-anchor="middle" font-size="24" fill="#BD860E" font-weight="600">Recognition</text>
+  <text x="180" y="240" text-anchor="middle" font-size="16" class="faint">11 of 40 clips</text>
+  <text x="180" y="264" text-anchor="middle" font-size="16" class="faint">the operative lever</text>
+
+  <rect x="340" y="165" width="160" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="420" y="225" text-anchor="middle" font-size="20" class="faint">Identity</text>
+
+  <rect x="540" y="165" width="160" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="620" y="225" text-anchor="middle" font-size="20" class="faint">Belonging</text>
+
+  <rect x="740" y="165" width="160" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="820" y="225" text-anchor="middle" font-size="20" class="faint">Momentum</text>
+
+  <rect x="940" y="165" width="200" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="1040" y="225" text-anchor="middle" font-size="18" class="faint">Fear of Loss</text>
+
+  <rect x="340" y="300" width="360" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="520" y="345" text-anchor="middle" font-size="20" class="faint">Permission</text>
+  <text x="520" y="375" text-anchor="middle" font-size="16" class="faint">29 clips scored here or elsewhere — good testimonials, wrong lever</text>
+
+  <text x="60" y="480" font-size="20" class="dim">"So easy to use" and "smells great" satisfy. They don't make a stranger notice.</text>
+  <text x="60" y="520" font-size="18" class="faint">Repost queue rebuilt around recognition-scored clips, ring light or not.</text>
+</svg>

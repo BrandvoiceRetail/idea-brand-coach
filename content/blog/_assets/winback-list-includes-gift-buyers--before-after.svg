@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Splitting gift buyers out of the winback list is what moves the reorder rate, not another rewrite.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <rect x="48" y="90" width="504" height="495" rx="10" fill="#CC4F42" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="80" y="140" font-size="22" fill="#CC4F42" letter-spacing="1">BEFORE — ONE BLENDED LIST</text>
+  <rect x="110" y="190" width="380" height="90" rx="8" fill="#3E8FC4" fill-opacity="0.16" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="300" y="242" text-anchor="middle" font-size="20" class="dim">hobbyist + gift-buyer, same segment</text>
+  <rect x="110" y="310" width="380" height="90" rx="8" fill="#CC4F42" fill-opacity="0.18" stroke="#CC4F42" stroke-width="2" class="anim-breathe"/>
+  <text x="300" y="362" text-anchor="middle" font-size="24" fill="#CC4F42" font-weight="600">4% reorder, flat</text>
+  <text x="300" y="550" text-anchor="middle" font-size="18" class="dim">Two rewrites. Same number both times.</text>
+
+  <line x1="574" y1="337" x2="626" y2="337" stroke="rgba(245,244,240,.5)" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="626,337 612,328 612,346" fill="rgba(245,244,240,.5)"/>
+
+  <rect x="648" y="90" width="504" height="495" rx="10" fill="#BD860E" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="680" y="140" font-size="22" fill="#BD860E" letter-spacing="1">AFTER — SPLIT BY JOB</text>
+  <rect x="710" y="190" width="380" height="90" rx="8" fill="#3E9847" fill-opacity="0.2" stroke="#3E9847" stroke-width="2"/>
+  <text x="900" y="228" text-anchor="middle" font-size="20" fill="#3E9847" font-weight="600">Hobbyist: seasonal winback</text>
+  <text x="900" y="256" text-anchor="middle" font-size="17" class="faint">~12-15% reorder</text>
+  <rect x="710" y="310" width="380" height="90" rx="8" fill="rgba(245,244,240,.08)" stroke="rgba(245,244,240,.3)" stroke-width="2"/>
+  <text x="900" y="348" text-anchor="middle" font-size="20" class="dim">Gift-buyer: referral ask instead</text>
+  <text x="900" y="376" text-anchor="middle" font-size="17" class="faint">never was a reorder candidate</text>
+  <text x="900" y="500" text-anchor="middle" font-size="18" class="dim">
+    <tspan x="900" dy="0">build_avatar_stage found the job map</tspan>
+    <tspan x="900" dy="24">the blended list was hiding.</tspan>
+  </text>
+</svg>

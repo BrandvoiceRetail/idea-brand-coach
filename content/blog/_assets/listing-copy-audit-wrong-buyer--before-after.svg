@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">An amazon listing copy audit found bullet three still written for last year's gift-giver, not this year's self-care buyer</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="66" font-size="30" font-weight="700">Same bullet three. Audited against who's buying today.</text>
+  <text x="48" y="96" font-size="20" class="dim">audit_asset checks copy against the current avatar, not the founder's memory of it.</text>
+
+  <!-- BEFORE panel -->
+  <rect x="48" y="150" width="460" height="390" rx="14" fill="#CC4F42" fill-opacity="0.14" stroke="#CC4F42" stroke-width="2"/>
+  <text x="78" y="196" font-size="20" fill="#CC4F42" font-weight="700">BEFORE</text>
+  <text x="78" y="240" font-size="24" font-weight="600">Bullet Three</text>
+  <text x="78" y="284" font-size="20" class="dim">
+    <tspan x="78" dy="0">"The perfect gift for</tspan>
+    <tspan x="78" dy="28">the skincare lover</tspan>
+    <tspan x="78" dy="28">in your life"</tspan>
+  </text>
+  <text x="78" y="500" font-size="18" fill="#CC4F42">Written for: last year's gift-giver</text>
+
+  <!-- connector + tool chip -->
+  <line x1="508" y1="325" x2="530" y2="325" class="hair"/>
+  <rect x="530" y="294" width="140" height="62" rx="10" fill="rgba(189,134,14,.16)" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="600" y="332" text-anchor="middle" class="tool" font-size="16">audit_asset</text>
+  <line x1="670" y1="325" x2="692" y2="325" class="hair"/>
+  <polygon points="692,325 682,319 682,331" fill="rgba(245,244,240,.4)"/>
+
+  <!-- AFTER panel -->
+  <rect x="692" y="150" width="460" height="390" rx="14" fill="#3E9847" fill-opacity="0.16" stroke="#3E9847" stroke-width="2"/>
+  <text x="722" y="196" font-size="20" fill="#3E9847" font-weight="700">AFTER</text>
+  <text x="722" y="240" font-size="24" font-weight="600">Bullet Three</text>
+  <text x="722" y="284" font-size="20" class="dim">
+    <tspan x="722" dy="0">"Five minutes,</tspan>
+    <tspan x="722" dy="28">just for your</tspan>
+    <tspan x="722" dy="28">own routine"</tspan>
+  </text>
+  <text x="722" y="500" font-size="18" fill="#3E9847">Written for: today's self-care buyer</text>
+
+  <text x="48" y="630" font-size="18" class="faint">Bullets one and two already matched the current buyer — only bullet three had drifted.</text>
+</svg>

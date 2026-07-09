@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Marco's About page scores fine — run_funnel_audit finds the real leak in the retention-stage packaging and unboxing touchpoint</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="70" font-size="32" font-weight="600">Where Marco's leak actually sits</text>
+  <text x="48" y="100" font-size="22" class="dim">The five-stage funnel, with the suspected and the real weak link marked</text>
+
+  <line x1="90" y1="330" x2="1110" y2="330" class="hair"/>
+
+  <rect x="70" y="280" width="180" height="100" rx="10" class="hair"/>
+  <text x="160" y="335" font-size="22" text-anchor="middle" class="dim">Awareness</text>
+
+  <rect x="290" y="260" width="220" height="140" rx="10" fill="#BD860E" fill-opacity="0.18" stroke="#BD860E" stroke-width="3"/>
+  <text x="400" y="310" font-size="24" text-anchor="middle" font-weight="600">Consideration</text>
+  <text x="400" y="340" font-size="18" text-anchor="middle" class="dim">About page</text>
+  <text x="400" y="365" font-size="17" text-anchor="middle" class="dim">scores fine</text>
+
+  <rect x="550" y="280" width="180" height="100" rx="10" class="hair"/>
+  <text x="640" y="335" font-size="22" text-anchor="middle" class="dim">Purchase</text>
+
+  <rect x="770" y="250" width="220" height="150" rx="10" fill="#CC4F42" fill-opacity="0.22" stroke="#CC4F42" stroke-width="3" class="anim-breathe"/>
+  <text x="880" y="300" font-size="24" text-anchor="middle" font-weight="600">Retention</text>
+  <text x="880" y="330" font-size="18" text-anchor="middle" class="dim">Packaging + unboxing</text>
+  <text x="880" y="360" font-size="17" text-anchor="middle" class="dim">the actual leak</text>
+
+  <rect x="1030" y="280" width="130" height="100" rx="10" class="hair"/>
+  <text x="1095" y="335" font-size="20" text-anchor="middle" class="dim">Advocacy</text>
+
+  <path d="M 400 400 C 400 470, 880 470, 880 402" class="hair anim-flow"/>
+
+  <text x="48" y="480" font-size="19" class="faint">A week rewriting Consideration would have left this Retention leak untouched.</text>
+</svg>

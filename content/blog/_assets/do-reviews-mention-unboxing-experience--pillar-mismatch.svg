@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Nate assumed unboxing proved the Empathetic pillar; the evidence pointed at Insight-Driven instead</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="70" font-size="32" font-weight="600">Assumed pillar vs. actual pillar</text>
+  <text x="48" y="100" font-size="20" class="dim">6% of reviews mention unboxing at all</text>
+
+  <!-- Before panel: assumed, red -->
+  <rect x="70" y="150" width="480" height="360" rx="12" fill="rgba(204,79,66,.16)" stroke="#CC4F42" stroke-width="2"/>
+  <text x="310" y="200" font-size="24" text-anchor="middle" font-weight="600">Assumed</text>
+  <text x="310" y="330" font-size="26" text-anchor="middle" fill="#CC4F42" font-weight="600">Empathetic</text>
+  <text x="310" y="360" font-size="18" text-anchor="middle" class="faint">"the felt moment" story</text>
+
+  <!-- After panel: actual, green -->
+  <rect x="650" y="150" width="480" height="360" rx="12" fill="rgba(62,152,71,.18)" stroke="#3E9847" stroke-width="2"/>
+  <text x="890" y="200" font-size="24" text-anchor="middle" font-weight="600">Actual (evidence)</text>
+  <text x="890" y="330" font-size="26" text-anchor="middle" fill="#3E9847" font-weight="600">Insight-Driven</text>
+  <text x="890" y="360" font-size="18" text-anchor="middle" class="faint">proof the product works</text>
+
+  <!-- connecting arrow, gold, tool chip -->
+  <line x1="560" y1="330" x2="640" y2="330" stroke="#BD860E" stroke-width="3" class="anim-flow"/>
+  <text x="600" y="300" font-size="16" text-anchor="middle" class="tool" fill="#BD860E">ingest_evidence</text>
+  <text x="600" y="470" font-size="16" text-anchor="middle" class="tool" fill="#BD860E">run_trust_gap</text>
+
+  <text x="70" y="560" font-size="20" class="faint">The box gets the credit. The product is doing the actual work.</text>
+</svg>

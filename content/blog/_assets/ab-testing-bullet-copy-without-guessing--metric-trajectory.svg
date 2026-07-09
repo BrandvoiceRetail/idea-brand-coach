@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A locked design_test window turned a jagged CVR line into a lift you can actually attribute to the bullet change</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="30" font-weight="700">An amazon listing copy ab test replaces the guessing</text>
+  <text x="48" y="90" font-size="20" class="dim">design_test locks the hypothesis; compute_trust_gap_lift measures the real delta.</text>
+
+  <!-- axis -->
+  <line x1="120" y1="480" x2="1152" y2="480" class="hair"/>
+  <line x1="120" y1="160" x2="120" y2="480" class="hair"/>
+  <text x="120" y="510" font-size="18" class="faint">wk 1</text>
+  <text x="330" y="510" font-size="18" class="faint">wk 3</text>
+  <text x="540" y="510" font-size="18" class="faint" text-anchor="middle">wk 5 — test starts</text>
+  <text x="750" y="510" font-size="18" class="faint" text-anchor="middle">wk 6 — window ends</text>
+  <text x="1000" y="510" font-size="18" class="faint">wk 8</text>
+
+  <!-- test window marker -->
+  <line x1="540" y1="160" x2="540" y2="480" class="hair" stroke="#BD860E" stroke-dasharray="6 6"/>
+  <line x1="750" y1="160" x2="750" y2="480" class="hair" stroke="#BD860E" stroke-dasharray="6 6"/>
+
+  <!-- general fitness traffic: flat blue line -->
+  <polyline points="120,400 225,392 330,404 435,398 540,396 645,394 750,398 855,396 960,394 1065,392" fill="none" stroke="#3E8FC4" stroke-width="2" stroke-linecap="round"/>
+  <text x="1065" y="378" font-size="18" fill="#3E8FC4">general fitness search</text>
+
+  <!-- PT-adjacent traffic: jagged, uncontrolled pre-test, then a real lift once the window is locked -->
+  <polyline points="120,420 225,340 330,410 435,320 540,380" fill="none" stroke="#BD860E" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6"/>
+  <polyline points="540,380 645,300 750,270 855,260 960,256 1065,254" fill="none" stroke="#BD860E" stroke-width="2" stroke-linecap="round" class="anim-flow"/>
+  <text x="1065" y="238" font-size="18" fill="#BD860E" font-weight="600">PT-adjacent traffic (real lift once locked)</text>
+
+  <text x="150" y="200" font-size="18" fill="rgba(245,244,240,.78)">4 gut-feel rewrites — no clean read</text>
+
+  <text x="48" y="600" font-size="18" class="faint">Illustrative CVR. Same segment, jagged before the test, a real lift only once the window was fixed.</text>
+</svg>

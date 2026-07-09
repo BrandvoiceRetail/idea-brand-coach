@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Amazon's own trust infrastructure hides what your bullets are missing until the same copy lands on Shopify.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="64" font-size="32" font-weight="600">Same bullets, two different conversion rates</text>
+
+  <!-- Amazon panel: green, ambient trust present -->
+  <rect x="48" y="120" width="500" height="420" rx="16" fill="#3E9847" fill-opacity="0.16" stroke="#3E9847" stroke-width="2"/>
+  <text x="78" y="170" font-size="26" font-weight="600" fill="#3E9847">Amazon: 11% CVR</text>
+  <text x="78" y="225" font-size="21" class="dim">Bullets sell the product.</text>
+  <text x="78" y="255" font-size="21" class="dim">Amazon covers trust:</text>
+  <text x="78" y="290" font-size="19" class="faint">Prime, A-to-z Guarantee,</text>
+  <text x="78" y="314" font-size="19" class="faint">reviews, familiar checkout.</text>
+
+  <!-- Shopify panel: red, trust gap exposed -->
+  <rect x="652" y="120" width="500" height="420" rx="16" fill="#CC4F42" fill-opacity="0.16" stroke="#CC4F42" stroke-width="2" class="anim-breathe"/>
+  <text x="682" y="170" font-size="26" font-weight="600" fill="#CC4F42">Shopify: under 2% CVR</text>
+  <text x="682" y="225" font-size="21" class="dim">Same bullets. No return</text>
+  <text x="682" y="255" font-size="21" class="dim">policy, no shipping cost,</text>
+  <text x="682" y="285" font-size="21" class="dim">no proof the brand is real.</text>
+  <text x="682" y="330" font-size="19" class="faint">Nothing covers the gap</text>
+  <text x="682" y="354" font-size="19" class="faint">Amazon used to cover.</text>
+
+  <!-- connector -->
+  <path d="M 548 330 L 652 330" class="hair anim-flow"/>
+  <path d="M 634 320 L 652 330 L 634 340" class="hair"/>
+
+  <text x="600" y="610" font-size="20" text-anchor="middle" class="faint">The product didn't change. The platform's invisible trust work disappeared.</text>
+</svg>

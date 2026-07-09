@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">The same reviews, moved next to the buy box — proof reaches the decision instead of arriving after it's already made</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="60" font-size="32" font-weight="600">Before: great reviews, wrong spot</text>
+  <text x="60" y="90" class="dim" font-size="20">Buy box first. Proof arrives after most shoppers stop scrolling.</text>
+
+  <rect x="60" y="130" width="330" height="70" rx="10" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2"/>
+  <text x="225" y="173" text-anchor="middle" font-size="20">Buy box</text>
+
+  <rect x="60" y="220" width="330" height="70" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="225" y="263" text-anchor="middle" font-size="18" class="faint">Bullets + A+</text>
+
+  <rect x="60" y="310" width="330" height="90" rx="10" fill="#CC4F42" fill-opacity="0.2" stroke="#CC4F42" stroke-width="2"/>
+  <text x="225" y="350" text-anchor="middle" font-size="18" fill="#CC4F42">Reviews</text>
+  <text x="225" y="374" text-anchor="middle" font-size="16" fill="#CC4F42">below the fold, unseen</text>
+
+  <line x1="470" y1="120" x2="470" y2="490" class="hair"/>
+
+  <text x="900" y="60" font-size="32" font-weight="600" fill="#3E9847">After: proof at the decision point</text>
+  <text x="900" y="90" class="dim" font-size="20">Same reviews, moved next to the buy box.</text>
+
+  <rect x="570" y="130" width="330" height="70" rx="10" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2"/>
+  <text x="735" y="173" text-anchor="middle" font-size="20">Buy box</text>
+
+  <rect x="570" y="215" width="330" height="90" rx="10" fill="#3E9847" fill-opacity="0.22" stroke="#3E9847" stroke-width="2" class="anim-breathe"/>
+  <text x="735" y="255" text-anchor="middle" font-size="18" fill="#3E9847" font-weight="600">Reviews, buy-box-adjacent</text>
+  <text x="735" y="279" text-anchor="middle" font-size="16" class="faint">recognition trigger, front and center</text>
+
+  <rect x="570" y="320" width="330" height="70" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="735" y="363" text-anchor="middle" font-size="18" class="faint">Bullets + A+</text>
+
+  <text x="60" y="460" font-size="20" class="dim">Same proof both sides. Only the sequence changed.</text>
+</svg>

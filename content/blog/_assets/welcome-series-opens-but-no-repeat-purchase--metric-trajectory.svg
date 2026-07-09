@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Opens hold steady across all five welcome steps. Clicks fall off a cliff at step three, and that's the whole problem.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="30" font-weight="700">Engagement by welcome-series step</text>
+
+  <line x1="90" y1="560" x2="1130" y2="560" class="hair"/>
+  <line x1="90" y1="120" x2="90" y2="560" class="hair"/>
+  <text x="90" y="592" font-size="20" class="faint">step 1</text>
+  <text x="290" y="592" font-size="20" class="faint">step 2</text>
+  <text x="490" y="592" font-size="20" class="faint">step 3</text>
+  <text x="690" y="592" font-size="20" class="faint">step 4</text>
+  <text x="890" y="592" font-size="20" class="faint">step 5</text>
+
+  <!-- opens: steady, blue -->
+  <polyline points="90,220 290,225 490,230 690,235 890,232" fill="none" stroke="#3E8FC4" stroke-width="3" stroke-linecap="round"/>
+  <text x="960" y="228" font-size="18" fill="#3E8FC4">opens (steady)</text>
+
+  <!-- clicks: cliff at step 3, gold before, red after -->
+  <polyline points="90,290 290,300 490,300" fill="none" stroke="#BD860E" stroke-width="3" stroke-linecap="round"/>
+  <polyline points="490,300 690,480 890,485" fill="none" stroke="#CC4F42" stroke-width="3" stroke-linecap="round" class="anim-breathe"/>
+  <circle cx="490" cy="300" r="7" fill="#CC4F42"/>
+  <text x="960" y="490" font-size="18" fill="#CC4F42">clicks (cliff)</text>
+
+  <text x="450" y="270" text-anchor="middle" font-size="18" fill="#CC4F42">step 3: the drop</text>
+
+  <rect x="770" y="60" width="300" height="46" rx="23" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="920" y="90" text-anchor="middle" font-size="16" class="tool" fill="#BD860E">get_sequence_performance</text>
+</svg>

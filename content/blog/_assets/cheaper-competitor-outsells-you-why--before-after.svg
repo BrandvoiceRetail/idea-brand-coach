@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Specific beats better-built until your own listing copy gets just as specific about who it fits.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="64" font-size="32" font-weight="600">Same organizer, two different bullet claims</text>
+
+  <!-- Before panel: red, generic -->
+  <rect x="48" y="120" width="500" height="420" rx="16" fill="#CC4F42" fill-opacity="0.16" stroke="#CC4F42" stroke-width="2"/>
+  <text x="78" y="170" font-size="26" font-weight="600" fill="#CC4F42">Your listing (before)</text>
+  <text x="78" y="230" font-size="22" class="dim">"Fits most walls"</text>
+  <text x="78" y="270" font-size="22" class="dim">"Works in most garages"</text>
+  <text x="78" y="310" font-size="22" class="dim">"Holds most tools"</text>
+  <text x="78" y="370" font-size="18" class="faint">Better built. Zero specific</text>
+  <text x="78" y="394" font-size="18" class="faint">buyer situation named.</text>
+
+  <!-- After panel: gold highlight, the fix -->
+  <rect x="652" y="120" width="500" height="420" rx="16" fill="#BD860E" fill-opacity="0.2" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="682" y="170" font-size="26" font-weight="600" fill="#BD860E">Rewritten listing (after)</text>
+  <text x="682" y="230" font-size="22" class="dim">"Fits 16-inch stud</text>
+  <text x="682" y="260" font-size="22" class="dim">spacing garage walls"</text>
+  <text x="682" y="320" font-size="18" class="faint">Same build quality. One named,</text>
+  <text x="682" y="344" font-size="18" class="faint">specific wall layout replaces</text>
+  <text x="682" y="368" font-size="18" class="faint">three vague "most" claims.</text>
+
+  <!-- connector between panels -->
+  <path d="M 548 330 L 652 330" class="hair anim-flow"/>
+  <path d="M 634 320 L 652 330 L 634 340" class="hair"/>
+
+  <text x="600" y="610" font-size="20" text-anchor="middle" class="faint">The competitor's product was worse. Its listing named a situation shoppers recognized first.</text>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Review requests are healthy. Referral, UGC repost, and loyalty are complete blanks in the Advocacy stage</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="70" font-size="32" font-weight="600">get_funnel_coverage on the Advocacy stage</text>
+  <text x="48" y="100" font-size="20" class="dim">4.7 stars and 34% repeat rate come from one touchpoint, not four</text>
+
+  <line x1="90" y1="330" x2="1110" y2="330" class="hair"/>
+
+  <!-- review_request_flow: healthy, green -->
+  <rect x="70" y="270" width="250" height="120" rx="10" fill="rgba(62,152,71,.2)" stroke="#3E9847" stroke-width="2" class="anim-breathe"/>
+  <text x="195" y="325" font-size="19" text-anchor="middle" font-weight="600">review_request_flow</text>
+  <text x="195" y="351" font-size="16" text-anchor="middle" class="faint">live and healthy</text>
+
+  <!-- referral_program: missing, red -->
+  <rect x="350" y="270" width="230" height="120" rx="10" fill="rgba(204,79,66,.18)" stroke="#CC4F42" stroke-width="3"/>
+  <text x="465" y="320" font-size="19" text-anchor="middle" font-weight="600" fill="#CC4F42">referral_program</text>
+  <text x="465" y="346" font-size="16" text-anchor="middle" class="faint">complete blank</text>
+
+  <!-- ugc_repost_permissions: faint -->
+  <rect x="610" y="280" width="240" height="100" rx="10" fill="rgba(245,244,240,.06)" stroke="rgba(245,244,240,.28)" stroke-width="2"/>
+  <text x="730" y="325" font-size="17" text-anchor="middle" class="faint">ugc_repost_permissions</text>
+  <text x="730" y="349" font-size="15" text-anchor="middle" class="faint">not built</text>
+
+  <!-- loyalty_community: faint -->
+  <rect x="880" y="280" width="230" height="100" rx="10" fill="rgba(245,244,240,.06)" stroke="rgba(245,244,240,.28)" stroke-width="2"/>
+  <text x="995" y="325" font-size="17" text-anchor="middle" class="faint">loyalty_community</text>
+  <text x="995" y="349" font-size="15" text-anchor="middle" class="faint">not built</text>
+
+  <text x="70" y="460" font-size="20" class="faint">A coverage gap, not a performance gap: nothing here is weak, three things aren't there at all.</text>
+</svg>

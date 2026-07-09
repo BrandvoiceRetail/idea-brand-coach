@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Diagnose which pillar is thin before touching a badge, banner, or policy line</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="70" font-size="32" font-weight="600">The diagnose-then-fix sequence</text>
+  <text x="48" y="100" font-size="20" class="dim">One friction fix at a time, in order</text>
+
+  <!-- step 1: input -->
+  <rect x="60" y="260" width="230" height="120" rx="10" fill="rgba(62,143,196,.2)" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="175" y="315" font-size="20" text-anchor="middle">Cart adds up,</text>
+  <text x="175" y="341" font-size="20" text-anchor="middle">purchases don't</text>
+
+  <!-- connector 1 -->
+  <line x1="290" y1="320" x2="345" y2="320" class="hair anim-flow"/>
+
+  <!-- step 2: tool -->
+  <rect x="345" y="250" width="220" height="140" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2"/>
+  <text x="455" y="305" font-size="22" text-anchor="middle" class="tool">run_trust_gap</text>
+  <text x="455" y="335" font-size="18" text-anchor="middle" class="faint">weakest pillar named</text>
+
+  <!-- connector 2 -->
+  <line x1="565" y1="320" x2="620" y2="320" class="hair anim-flow"/>
+
+  <!-- step 3: tool -->
+  <rect x="620" y="250" width="240" height="140" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2"/>
+  <text x="740" y="298" font-size="20" text-anchor="middle" class="tool">identify_decision</text>
+  <text x="740" y="322" font-size="20" text-anchor="middle" class="tool">_trigger</text>
+  <text x="740" y="348" font-size="18" text-anchor="middle" class="faint">the lever, named</text>
+
+  <!-- connector 3 -->
+  <line x1="860" y1="320" x2="915" y2="320" class="hair anim-flow"/>
+
+  <!-- step 4: output, green -->
+  <rect x="915" y="260" width="230" height="120" rx="10" fill="rgba(62,152,71,.22)" stroke="#3E9847" stroke-width="2"/>
+  <text x="1030" y="315" font-size="20" text-anchor="middle">One fix, tested</text>
+  <text x="1030" y="341" font-size="20" text-anchor="middle" class="tool">design_test</text>
+
+  <text x="60" y="460" font-size="20" class="faint">Skip a step and you're guessing which of five friction points is the real one.</text>
+</svg>

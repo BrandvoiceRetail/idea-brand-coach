@@ -1,0 +1,1049 @@
+{
+  "clusters": [
+    {
+      "id": "main-image-ctr",
+      "name": "Main image & search CTR",
+      "primary_keyword": "why is my amazon ctr low",
+      "secondary_keywords": [
+        "amazon main image not getting clicks",
+        "amazon search query performance ctr",
+        "low click through rate amazon listing",
+        "amazon impressions high clicks low",
+        "amazon main image best practices",
+        "amazon thumbnail ctr diagnosis"
+      ],
+      "pillar_slug": "amazon-ctr-low-guide",
+      "pillar_title": "Why Is My Amazon CTR Low? The Full Diagnosis Guide",
+      "pillar_description": "Amazon CTR stuck low despite good impressions? Diagnose the real cause across image, title, variant, and pricing signals \u2014 then fix it with a real test plan.",
+      "pillar_brief": "Pillar guide for the Main image & search CTR cluster; links out to every supporting post and targets the head term 'why is my amazon ctr low'.",
+      "keyword_alternates": [],
+      "members": [
+        {
+          "slug": "amazon-ctr-spike-didnt-last",
+          "primary_keyword": "amazon ctr plateau",
+          "secondary_keywords": [
+            "amazon main image test results",
+            "amazon title decision trigger",
+            "ctr spike then drop amazon"
+          ]
+        },
+        {
+          "slug": "amazon-main-image-blends-into-competitors",
+          "primary_keyword": "stand out amazon search results",
+          "secondary_keywords": [
+            "amazon product differentiation",
+            "supplement amazon main image",
+            "amazon category sameness"
+          ]
+        },
+        {
+          "slug": "amazon-main-image-mobile-thumbnail-test",
+          "primary_keyword": "amazon mobile thumbnail size",
+          "secondary_keywords": [
+            "amazon main image mobile test",
+            "amazon image resolution ctr",
+            "baby carrier amazon listing"
+          ]
+        },
+        {
+          "slug": "amazon-main-image-price-tier-mismatch",
+          "primary_keyword": "amazon premium product photography",
+          "secondary_keywords": [
+            "price tier mismatch amazon",
+            "amazon image signals price",
+            "coffee kit amazon listing"
+          ]
+        },
+        {
+          "slug": "amazon-main-image-wrong-variant-clicks",
+          "primary_keyword": "amazon variant image mismatch",
+          "secondary_keywords": [
+            "amazon color variant ctr",
+            "wrong product image showing amazon",
+            "amazon search grid image"
+          ]
+        },
+        {
+          "slug": "amazon-title-keyword-stuffing-hurts-ctr",
+          "primary_keyword": "keyword stuffing amazon title",
+          "secondary_keywords": [
+            "amazon title formula",
+            "amazon title character limit",
+            "dog toy amazon listing"
+          ]
+        },
+        {
+          "slug": "main-image-impressions-no-clicks",
+          "primary_keyword": "amazon main image ctr",
+          "secondary_keywords": [
+            "low click through rate amazon",
+            "amazon search query performance",
+            "high impressions flat ctr amazon"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "listing-copy-conversion",
+      "name": "Listing copy & conversion",
+      "primary_keyword": "amazon bullet points not converting",
+      "secondary_keywords": [
+        "amazon listing copy that converts",
+        "why isn't my amazon listing converting",
+        "amazon bullet point rewrite",
+        "amazon vs shopify product copy",
+        "listing copy audit"
+      ],
+      "pillar_slug": "amazon-bullet-points-not-converting-guide",
+      "pillar_title": "Amazon Bullet Points Not Converting? Full Diagnosis",
+      "pillar_description": "Traffic is fine, sales aren't: here is how to diagnose which pillar your bullets are missing, rewrite around the real buyer, and prove the change worked.",
+      "pillar_brief": "Pillar guide for the Listing copy & conversion cluster; links out to every supporting post and targets the head term 'amazon bullet points not converting'.",
+      "keyword_alternates": [],
+      "members": [
+        {
+          "slug": "ab-testing-bullet-copy-without-guessing",
+          "primary_keyword": "amazon listing copy ab test",
+          "secondary_keywords": [
+            "amazon bullet point testing",
+            "design test hypothesis amazon",
+            "measuring bullet copy changes"
+          ]
+        },
+        {
+          "slug": "bullet-one-sounds-like-competitors",
+          "primary_keyword": "amazon listing differentiation",
+          "secondary_keywords": [
+            "positioning moves amazon",
+            "bullet one sounds like competitor",
+            "coffee brand listing copy"
+          ]
+        },
+        {
+          "slug": "bullet-points-wrong-customer-words",
+          "primary_keyword": "amazon bullet point copywriting",
+          "secondary_keywords": [
+            "customer vocabulary avatar",
+            "supplement listing copy",
+            "bullets don't sound like customer"
+          ]
+        },
+        {
+          "slug": "cheaper-competitor-outsells-you-why",
+          "primary_keyword": "why competitor outsells me amazon",
+          "secondary_keywords": [
+            "competitor listing analysis",
+            "amazon listing copy gap"
+          ]
+        },
+        {
+          "slug": "copy-pasted-amazon-copy-to-shopify",
+          "primary_keyword": "amazon copy vs shopify copy",
+          "secondary_keywords": [
+            "shopify product page conversion",
+            "amazon bullets failing on shopify",
+            "insulated bottle pdp"
+          ]
+        },
+        {
+          "slug": "feature-dump-no-decision-trigger",
+          "primary_keyword": "amazon feature dump copy",
+          "secondary_keywords": [
+            "decision trigger amazon listing",
+            "why shoppers dont buy today",
+            "listing has every spec no reason to buy"
+          ]
+        },
+        {
+          "slug": "listing-copy-audit-wrong-buyer",
+          "primary_keyword": "amazon listing copy audit",
+          "secondary_keywords": [
+            "listing talking to wrong buyer",
+            "beauty product listing review"
+          ]
+        },
+        {
+          "slug": "main-image-ctr-spike-cvr-drop",
+          "primary_keyword": "why cvr dropped after new main image",
+          "secondary_keywords": [
+            "amazon ctr cvr mismatch",
+            "amazon listing copy fix"
+          ]
+        },
+        {
+          "slug": "recurring-review-complaint-listing-blind-spot",
+          "primary_keyword": "fix listing from reviews",
+          "secondary_keywords": [
+            "amazon reviews reveal objections",
+            "baby product amazon listing",
+            "recurring 3 star review complaint"
+          ]
+        },
+        {
+          "slug": "three-copy-directions-one-listing",
+          "primary_keyword": "choosing amazon copy direction",
+          "secondary_keywords": [
+            "amazon listing copy concepts",
+            "home office product listing",
+            "three bullet copy directions"
+          ]
+        },
+        {
+          "slug": "trust-gap-empathetic-pillar-pet-listing",
+          "primary_keyword": "empathetic pillar listing copy",
+          "secondary_keywords": [
+            "amazon trust gap score",
+            "pet supplement conversion",
+            "idea framework empathetic pillar"
+          ]
+        },
+        {
+          "slug": "vague-designer-notes-pdp-redesign",
+          "primary_keyword": "shopify pdp redesign",
+          "secondary_keywords": [
+            "product page design brief",
+            "make it feel premium brief",
+            "beard care shopify page"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aplus-brand-story",
+      "name": "A+ content & brand story",
+      "primary_keyword": "amazon brand story not converting",
+      "secondary_keywords": [
+        "amazon a+ content brand story module",
+        "amazon storefront about page ideas",
+        "distinctive brand line amazon",
+        "brand story missing objection"
+      ],
+      "pillar_slug": "amazon-brand-story-not-converting-guide",
+      "pillar_title": "Amazon Brand Story Not Converting? Full Fix Guide",
+      "pillar_description": "An A+ Brand Story that restates your bullets, opens with founding history, or skips your buyer's real fear isn't earning trust. Here is how to fix each gap.",
+      "pillar_brief": "Pillar guide for the A+ content & brand story cluster; links out to every supporting post and targets the head term 'amazon brand story not converting'.",
+      "keyword_alternates": [],
+      "members": [
+        {
+          "slug": "brand-story-audit-missed-objection",
+          "primary_keyword": "amazon brand story objections",
+          "secondary_keywords": [
+            "amazon a+ audit",
+            "hypoallergenic jewelry listing",
+            "brand story skips objection"
+          ]
+        },
+        {
+          "slug": "brand-story-authentic-pillar-gap",
+          "primary_keyword": "amazon brand story generic",
+          "secondary_keywords": [
+            "skincare brand story amazon",
+            "trust gap score amazon",
+            "authentic pillar trust gap"
+          ]
+        },
+        {
+          "slug": "brand-story-missing-felt-moment-image",
+          "primary_keyword": "amazon lifestyle image gallery",
+          "secondary_keywords": [
+            "felt moment product photo",
+            "weighted blanket amazon listing",
+            "brand story missing lifestyle photo"
+          ]
+        },
+        {
+          "slug": "brand-story-opens-with-company-history",
+          "primary_keyword": "amazon brand story hook",
+          "secondary_keywords": [
+            "distinctive brand line amazon",
+            "gardening brand story",
+            "brand story founded in year intro"
+          ]
+        },
+        {
+          "slug": "brand-story-repeating-bullet-points",
+          "primary_keyword": "amazon brand story module",
+          "secondary_keywords": [
+            "amazon a+ brand story",
+            "aplus content beats",
+            "brand story repeats bullet points"
+          ]
+        },
+        {
+          "slug": "brand-story-wrong-cyclist-audience",
+          "primary_keyword": "amazon brand story audience mismatch",
+          "secondary_keywords": [
+            "avatar triggers amazon",
+            "cycling accessory listing",
+            "brand story wrong audience"
+          ]
+        },
+        {
+          "slug": "fixing-wrong-touchpoint-storefront",
+          "primary_keyword": "storefront about page audit",
+          "secondary_keywords": [
+            "weakest link funnel amazon",
+            "travel brand amazon storefront"
+          ]
+        },
+        {
+          "slug": "storefront-about-carrying-whole-funnel",
+          "primary_keyword": "storefront touchpoint audit",
+          "secondary_keywords": [
+            "amazon funnel coverage gaps",
+            "tech accessory brand storefront",
+            "about page doing whole funnel's job"
+          ]
+        },
+        {
+          "slug": "storefront-about-founder-story-no-job-map",
+          "primary_keyword": "customer job to be done",
+          "secondary_keywords": [
+            "amazon storefront about page",
+            "planner brand storefront",
+            "about page tells founder story not customer job"
+          ]
+        },
+        {
+          "slug": "storefront-about-no-unifying-message",
+          "primary_keyword": "amazon storefront about page",
+          "secondary_keywords": [
+            "brand tagline system",
+            "embroidery kit storefront",
+            "storefront about page no unifying message"
+          ]
+        },
+        {
+          "slug": "storefront-about-nothing-memorable",
+          "primary_keyword": "memorable brand tagline",
+          "secondary_keywords": [
+            "amazon storefront distinctive line",
+            "cleaning brand amazon",
+            "could shopper repeat your brand line"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reviews-as-evidence",
+      "name": "Reviews as evidence",
+      "primary_keyword": "amazon reviews not converting",
+      "secondary_keywords": [
+        "amazon review request flow",
+        "why 5 star reviews don't sell",
+        "reading between the lines of amazon reviews",
+        "review request timing"
+      ],
+      "pillar_slug": "amazon-reviews-not-converting-guide",
+      "pillar_title": "Amazon Reviews Not Converting? The Full Diagnosis",
+      "pillar_description": "A healthy star rating with flat conversion means your reviews aren't proving the right thing. Here is how to diagnose, curate, and request reviews that sell.",
+      "pillar_brief": "Pillar guide for the Reviews as evidence cluster; links out to every supporting post and targets the head term 'amazon reviews not converting'.",
+      "keyword_alternates": [],
+      "members": [
+        {
+          "slug": "featured-reviews-miss-real-trigger",
+          "primary_keyword": "amazon review curation",
+          "secondary_keywords": [
+            "featured reviews avatar match",
+            "kids toy amazon listing"
+          ]
+        },
+        {
+          "slug": "five-star-reviews-that-say-nothing",
+          "primary_keyword": "generic five star reviews",
+          "secondary_keywords": [
+            "amazon review request email",
+            "boost review quality amazon fba"
+          ]
+        },
+        {
+          "slug": "four-star-reviews-hidden-objections",
+          "primary_keyword": "4 star review objections",
+          "secondary_keywords": [
+            "amazon review mining",
+            "scalp massager reviews",
+            "reading only 1 star reviews"
+          ]
+        },
+        {
+          "slug": "good-star-rating-flat-conversion",
+          "primary_keyword": "high rating low conversion amazon",
+          "secondary_keywords": [
+            "dash cam amazon listing",
+            "insight driven pillar reviews"
+          ]
+        },
+        {
+          "slug": "measuring-review-request-rewrite-standing-desk",
+          "primary_keyword": "measuring review request impact",
+          "secondary_keywords": [
+            "standing desk amazon reviews",
+            "trust gap lift",
+            "idea framework pillars"
+          ]
+        },
+        {
+          "slug": "review-highlights-wrong-vocabulary",
+          "primary_keyword": "amazon review highlights",
+          "secondary_keywords": [
+            "yoga mat amazon listing",
+            "s1 vocabulary customer language",
+            "review highlights wrong vocabulary"
+          ]
+        },
+        {
+          "slug": "review-request-coverage-gap-outdoor-brand",
+          "primary_keyword": "review request flow gaps",
+          "secondary_keywords": [
+            "funnel coverage amazon reviews",
+            "outdoor brand review strategy",
+            "amazon advocacy funnel audit"
+          ]
+        },
+        {
+          "slug": "review-request-email-asking-wrong-question",
+          "primary_keyword": "review request email questions",
+          "secondary_keywords": [
+            "decision trigger amazon reviews",
+            "coffee subscription reviews",
+            "improve review quality"
+          ]
+        },
+        {
+          "slug": "review-request-timing-before-product-proves-itself",
+          "primary_keyword": "when to ask for amazon reviews",
+          "secondary_keywords": [
+            "review request timing baby products",
+            "post purchase email timing",
+            "asking for reviews too early"
+          ]
+        },
+        {
+          "slug": "reviews-reveal-unused-decision-trigger",
+          "primary_keyword": "amazon review momentum trigger",
+          "secondary_keywords": [
+            "decision trigger social proof",
+            "bbq thermometer listing",
+            "reviews already contain the hook"
+          ]
+        },
+        {
+          "slug": "weakest-link-review-requests-not-the-product",
+          "primary_keyword": "weakest link amazon funnel",
+          "secondary_keywords": [
+            "momentum decision trigger",
+            "resistance band brand reviews",
+            "per avatar funnel audit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "trust-urgency-checkout-friction",
+      "name": "Trust, urgency & checkout friction",
+      "primary_keyword": "amazon add to cart but no purchase",
+      "secondary_keywords": [
+        "amazon trust badges not working",
+        "fake urgency amazon listing",
+        "amazon shipping and returns trust",
+        "amazon cart abandonment reasons"
+      ],
+      "pillar_slug": "amazon-add-to-cart-no-purchase-guide",
+      "pillar_title": "Amazon Add to Cart But No Purchase? Full Guide",
+      "pillar_description": "Shoppers add to cart and vanish: diagnose whether trust badges, urgency messaging, shipping terms, or the variant selector is the real leak, then fix it.",
+      "pillar_brief": "Pillar guide for the Trust, urgency & checkout friction cluster; links out to every supporting post and targets the head term 'amazon add to cart but no purchase'.",
+      "keyword_alternates": [],
+      "members": [
+        {
+          "slug": "aplus-urgency-panel-wont-get-flagged",
+          "primary_keyword": "aplus content urgency panel",
+          "secondary_keywords": [
+            "claim gated aplus content",
+            "craft brand seasonal urgency"
+          ]
+        },
+        {
+          "slug": "decision-trigger-baby-product-trust-badges",
+          "primary_keyword": "baby product trust badges",
+          "secondary_keywords": [
+            "safety certification badge cvr",
+            "amazon baby listing trust",
+            "which trust badge reassures buyers"
+          ]
+        },
+        {
+          "slug": "does-urgency-messaging-lift-conversion",
+          "primary_keyword": "urgency messaging ab test",
+          "secondary_keywords": [
+            "measure urgency lift amazon",
+            "standing desk listing conversion"
+          ]
+        },
+        {
+          "slug": "fake-scarcity-killing-trust-score",
+          "primary_keyword": "amazon only 3 left banner",
+          "secondary_keywords": [
+            "fake scarcity amazon listing",
+            "urgency messaging trust",
+            "skincare listing conversion"
+          ]
+        },
+        {
+          "slug": "hassle-free-returns-claim-check",
+          "primary_keyword": "hassle free returns claim amazon",
+          "secondary_keywords": [
+            "international shipping returns policy",
+            "amazon claim compliance check"
+          ]
+        },
+        {
+          "slug": "invisible-return-policy-trust-gap",
+          "primary_keyword": "amazon return policy trust gap",
+          "secondary_keywords": [
+            "displayed returns policy amazon",
+            "cookware listing conversion",
+            "invisible return policy"
+          ]
+        },
+        {
+          "slug": "reviews-buried-not-near-buy-box",
+          "primary_keyword": "displayed reviews buy box",
+          "secondary_keywords": [
+            "amazon social proof placement",
+            "pet brand trust signals",
+            "reviews buried on listing"
+          ]
+        },
+        {
+          "slug": "shipping-cost-surprise-add-to-cart",
+          "primary_keyword": "shipping cost cart abandonment",
+          "secondary_keywords": [
+            "amazon shipping returns trust",
+            "tool storage listing conversion",
+            "decision trigger shipping policy"
+          ]
+        },
+        {
+          "slug": "shopify-checkout-trust-badges-mismatch",
+          "primary_keyword": "shopify checkout trust badges",
+          "secondary_keywords": [
+            "amazon vs shopify trust signals",
+            "dtc checkout conversion candles"
+          ]
+        },
+        {
+          "slug": "subscribe-and-save-messaging-test",
+          "primary_keyword": "subscribe and save amazon test",
+          "secondary_keywords": [
+            "amazon buy box messaging test",
+            "haircare brand conversion test"
+          ]
+        },
+        {
+          "slug": "trust-badge-claim-gets-listing-flagged",
+          "primary_keyword": "trust badge overclaiming",
+          "secondary_keywords": [
+            "amazon listing claim compliance",
+            "insulated bottle listing trust"
+          ]
+        },
+        {
+          "slug": "trust-badges-not-lifting-conversion-rate",
+          "primary_keyword": "amazon trust badges cvr",
+          "secondary_keywords": [
+            "amazon choice badge conversion",
+            "social proof amazon listing"
+          ]
+        },
+        {
+          "slug": "urgency-banner-tanking-trust-gap-score",
+          "primary_keyword": "amazon countdown timer listing",
+          "secondary_keywords": [
+            "urgency banner trust gap",
+            "home gym listing conversion",
+            "idea framework urgency messaging"
+          ]
+        },
+        {
+          "slug": "variation-selector-cart-abandonment",
+          "primary_keyword": "amazon variation selector abandonment",
+          "secondary_keywords": [
+            "add to cart drop off toys",
+            "decision trigger product variants",
+            "toy listing conversion"
+          ]
+        },
+        {
+          "slug": "which-trust-element-to-test-first",
+          "primary_keyword": "ab test trust badges amazon",
+          "secondary_keywords": [
+            "design test amazon listing",
+            "trust gap lift measurement",
+            "amazon split test social proof"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paid-social-ugc-ads",
+      "name": "Paid social & UGC ads",
+      "primary_keyword": "amazon brand ugc ad strategy",
+      "secondary_keywords": [
+        "ugc ad script for amazon brand",
+        "paid social creative testing",
+        "influencer seeding brief",
+        "reposting customer ugc as ads"
+      ],
+      "pillar_slug": "amazon-ugc-ad-strategy-guide",
+      "pillar_title": "Amazon Brand UGC Ad Strategy: The Complete Guide",
+      "pillar_description": "A working amazon brand ugc ad strategy diagnoses fatigue, hooks, and reposting before it touches a new concept. Here is the full framework, tool by tool.",
+      "pillar_brief": "Pillar guide for the Paid social & UGC ads cluster; links out to every supporting post and targets the head term 'amazon brand ugc ad strategy'.",
+      "keyword_alternates": [],
+      "members": [
+        {
+          "slug": "influencer-ugc-generic-love-this-content",
+          "primary_keyword": "influencer seeding generic content",
+          "secondary_keywords": [
+            "ugc ad script brief",
+            "micro influencer brief template",
+            "scalp serum influencer campaign"
+          ]
+        },
+        {
+          "slug": "influencer-ugc-missing-skeptic-flip",
+          "primary_keyword": "ugc ad skeptic flip",
+          "secondary_keywords": [
+            "influencer ad feels fake",
+            "ugc ad script structure",
+            "bike light influencer campaign"
+          ]
+        },
+        {
+          "slug": "influencer-unboxing-video-missing-reaction-moment",
+          "primary_keyword": "influencer unboxing video structure",
+          "secondary_keywords": [
+            "ugc pet brand content",
+            "dog treat influencer campaign",
+            "video storyboard ugc"
+          ]
+        },
+        {
+          "slug": "paid-social-ad-fatigue-new-trigger-angle",
+          "primary_keyword": "paid social ad fatigue",
+          "secondary_keywords": [
+            "meta ads ctr drop",
+            "refresh ad creative",
+            "decision trigger ad hook"
+          ]
+        },
+        {
+          "slug": "paid-social-hook-mismatched-audience",
+          "primary_keyword": "paid social hook mismatch",
+          "secondary_keywords": [
+            "ugc ad script fitness",
+            "decision trigger fitness ads",
+            "ad ctr low engagement"
+          ]
+        },
+        {
+          "slug": "paid-social-identity-vs-belonging-trigger-test",
+          "primary_keyword": "decision trigger identity belonging",
+          "secondary_keywords": [
+            "candle brand ad copy",
+            "ad trigger ab test",
+            "ugc ad hook variants"
+          ]
+        },
+        {
+          "slug": "paid-social-testing-three-creative-concepts-blind",
+          "primary_keyword": "ad creative testing plan",
+          "secondary_keywords": [
+            "meta ads split test",
+            "ugc ad concept testing",
+            "dog harness ad campaign"
+          ]
+        },
+        {
+          "slug": "paid-social-video-outperforms-static-image",
+          "primary_keyword": "video ad vs image ad",
+          "secondary_keywords": [
+            "social feed video ctr",
+            "higgsfield video storyboard"
+          ]
+        },
+        {
+          "slug": "permissioned-ugc-sitting-unused-candle-brand",
+          "primary_keyword": "permissioned ugc unused",
+          "secondary_keywords": [
+            "ugc repost strategy amazon",
+            "deploy customer video across funnel",
+            "home fragrance brand ugc"
+          ]
+        },
+        {
+          "slug": "turning-a-fan-video-into-a-paid-ugc-ad",
+          "primary_keyword": "repost customer ugc as ad",
+          "secondary_keywords": [
+            "customer video permission ad",
+            "higgsfield ugc ad script",
+            "craft brand ugc marketing"
+          ]
+        },
+        {
+          "slug": "which-customer-video-to-repost-detailing-brand",
+          "primary_keyword": "which ugc to repost",
+          "secondary_keywords": [
+            "ugc selection criteria amazon",
+            "recognition trigger marketing",
+            "car detailing brand ugc"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "organic-founder-content",
+      "name": "Organic & founder content",
+      "primary_keyword": "content marketing for amazon sellers",
+      "secondary_keywords": [
+        "seo content strategy for amazon brand",
+        "founder personal brand for ecommerce",
+        "founder video content amazon brand",
+        "does blog content help amazon sales"
+      ],
+      "pillar_slug": "content-marketing-for-amazon-sellers-guide",
+      "pillar_title": "Content Marketing for Amazon Sellers: What Works",
+      "pillar_description": "SEO roundups, LinkedIn posts, and founder TikToks can all get real traffic and zero recall. Here is how to diagnose the gap and make content build actual trust.",
+      "pillar_brief": "Pillar guide for the Organic & founder content cluster; links out to every supporting post and targets the head term 'content marketing for amazon sellers'.",
+      "keyword_alternates": [],
+      "members": [
+        {
+          "slug": "founder-behind-the-brand-video-no-reach",
+          "primary_keyword": "behind the brand video tiktok",
+          "secondary_keywords": [
+            "founder story video content",
+            "brand story storyboard",
+            "small brand tiktok reach"
+          ]
+        },
+        {
+          "slug": "founder-linkedin-posts-no-engagement",
+          "primary_keyword": "linkedin posts for amazon brand",
+          "secondary_keywords": [
+            "founder social media engagement",
+            "founder personal brand content",
+            "decision trigger social post"
+          ]
+        },
+        {
+          "slug": "founder-video-no-decision-trigger",
+          "primary_keyword": "founder video decision trigger",
+          "secondary_keywords": [
+            "founder content amazon",
+            "candle brand founder story",
+            "founder script for video ad"
+          ]
+        },
+        {
+          "slug": "seo-content-investment-worth-it-test",
+          "primary_keyword": "seo content roi test",
+          "secondary_keywords": [
+            "content marketing vs paid ads",
+            "small brand content strategy",
+            "amazon seller seo investment"
+          ]
+        },
+        {
+          "slug": "seo-content-traffic-without-trust",
+          "primary_keyword": "blog traffic no conversions",
+          "secondary_keywords": [
+            "seo content brand trust",
+            "amazon seller content marketing",
+            "supplement seo strategy"
+          ]
+        },
+        {
+          "slug": "seo-roundup-content-no-decision-trigger",
+          "primary_keyword": "best of roundup content conversion",
+          "secondary_keywords": [
+            "baby carrier seo content",
+            "comparison post low ctr",
+            "decision trigger blog content"
+          ]
+        },
+        {
+          "slug": "what-to-say-in-founder-content",
+          "primary_keyword": "founder content amazon script",
+          "secondary_keywords": [
+            "founder video brief",
+            "running brand founder story",
+            "what to say in founder video"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "retention-email-post-purchase",
+      "name": "Retention & post-purchase email",
+      "primary_keyword": "post purchase email strategy for amazon sellers",
+      "secondary_keywords": [
+        "amazon welcome email sequence",
+        "winback email for lapsed customers",
+        "order confirmation email retention",
+        "customer support brand voice"
+      ],
+      "pillar_slug": "post-purchase-email-strategy-amazon-sellers",
+      "pillar_title": "Post Purchase Email Strategy for Amazon Sellers",
+      "pillar_description": "Welcome series, winback, confirmation, and support replies are all retention moments most brands waste. Here is how to structure each one around a real trigger.",
+      "pillar_brief": "Pillar guide for the Retention & post-purchase email cluster; links out to every supporting post and targets the head term 'post purchase email strategy for amazon sellers'.",
+      "keyword_alternates": [],
+      "members": [
+        {
+          "slug": "add-brand-story-video-welcome-series",
+          "primary_keyword": "brand story video welcome email",
+          "secondary_keywords": [
+            "video in email sequence amazon brand",
+            "founder story video higgsfield"
+          ]
+        },
+        {
+          "slug": "build-first-replenishment-email-sequence",
+          "primary_keyword": "replenishment email sequence amazon",
+          "secondary_keywords": [
+            "consumable product reorder reminder",
+            "winback email supplements",
+            "subscribe and save alternative email"
+          ]
+        },
+        {
+          "slug": "does-enriching-confirmation-email-move-retention",
+          "primary_keyword": "confirmation email ab test",
+          "secondary_keywords": [
+            "measure email sequence change",
+            "before after email test amazon brand",
+            "trust gap lift email"
+          ]
+        },
+        {
+          "slug": "how-many-emails-welcome-series-amazon-brand",
+          "primary_keyword": "how many emails in welcome sequence",
+          "secondary_keywords": [
+            "welcome email series amazon brand",
+            "first email to new customer",
+            "welcome series structure"
+          ]
+        },
+        {
+          "slug": "order-confirmation-email-purely-transactional",
+          "primary_keyword": "order confirmation email retention",
+          "secondary_keywords": [
+            "transactional email brand moment",
+            "first email after purchase amazon"
+          ]
+        },
+        {
+          "slug": "proactive-shipping-delay-message-prevents-refunds",
+          "primary_keyword": "shipping delay email amazon brand",
+          "secondary_keywords": [
+            "prevent refund requests",
+            "proactive customer communication",
+            "where is my order ticket reduction"
+          ]
+        },
+        {
+          "slug": "support-replies-sound-like-a-call-center",
+          "primary_keyword": "customer support brand voice amazon",
+          "secondary_keywords": [
+            "support templates sound generic",
+            "authentic pillar trust gap"
+          ]
+        },
+        {
+          "slug": "welcome-email-missing-decision-trigger",
+          "primary_keyword": "why welcome emails don't convert",
+          "secondary_keywords": [
+            "welcome email copy amazon brand",
+            "decision trigger email marketing",
+            "email hook psychology"
+          ]
+        },
+        {
+          "slug": "welcome-series-opens-but-no-repeat-purchase",
+          "primary_keyword": "welcome email open rate no sales",
+          "secondary_keywords": [
+            "email sequence performance amazon",
+            "why customers don't reorder",
+            "sequence drop off diagnosis"
+          ]
+        },
+        {
+          "slug": "welcome-series-two-different-buyers-same-product",
+          "primary_keyword": "welcome series multiple customer types",
+          "secondary_keywords": [
+            "segment email flow amazon",
+            "avatar based email marketing",
+            "one size fits all welcome email"
+          ]
+        },
+        {
+          "slug": "winback-emails-opened-not-reordering",
+          "primary_keyword": "winback email not converting",
+          "secondary_keywords": [
+            "lapsed customer email sequence",
+            "reorder email amazon brand",
+            "fear of loss email copy"
+          ]
+        },
+        {
+          "slug": "winback-list-includes-gift-buyers",
+          "primary_keyword": "winback email wrong audience",
+          "secondary_keywords": [
+            "gift buyer vs repeat customer",
+            "segment lapsed customers amazon"
+          ]
+        },
+        {
+          "slug": "winback-video-reminding-lapsed-customers-why",
+          "primary_keyword": "winback video email",
+          "secondary_keywords": [
+            "lapsed customer reactivation video",
+            "brand story video reactivation",
+            "amazon brand video higgsfield"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "packaging-advocacy",
+      "name": "Packaging, retention & advocacy",
+      "primary_keyword": "amazon brand advocacy funnel",
+      "secondary_keywords": [
+        "unboxing experience roi",
+        "insert card ideas amazon brand",
+        "referral program for amazon sellers",
+        "building a customer loyalty community"
+      ],
+      "pillar_slug": "amazon-brand-advocacy-funnel-guide",
+      "pillar_title": "Amazon Brand Advocacy Funnel: Packaging to Loyalty",
+      "pillar_description": "Unboxing, insert cards, referral programs, and loyalty communities are one funnel: turning a buyer into an advocate. Here is where yours is leaking.",
+      "pillar_brief": "Pillar guide for the Packaging, retention & advocacy cluster; links out to every supporting post and targets the head term 'amazon brand advocacy funnel'.",
+      "keyword_alternates": [],
+      "members": [
+        {
+          "slug": "do-reviews-mention-unboxing-experience",
+          "primary_keyword": "packaging investment worth it",
+          "secondary_keywords": [
+            "do customers care about unboxing",
+            "review mining amazon packaging",
+            "unboxing reviews evidence"
+          ]
+        },
+        {
+          "slug": "does-unboxing-experience-affect-repeat-purchase",
+          "primary_keyword": "does packaging affect repeat purchase",
+          "secondary_keywords": [
+            "unboxing experience amazon brand",
+            "funnel audit weakest link",
+            "packaging roi ecommerce"
+          ]
+        },
+        {
+          "slug": "does-your-brand-need-a-loyalty-community",
+          "primary_keyword": "should i build a brand community",
+          "secondary_keywords": [
+            "loyalty community amazon brand",
+            "recognition vs belonging trigger",
+            "parent community toy brand"
+          ]
+        },
+        {
+          "slug": "insert-card-just-discount-coupon",
+          "primary_keyword": "insert card design amazon",
+          "secondary_keywords": [
+            "discount card vs review card",
+            "decision trigger packaging insert",
+            "designer brief insert card"
+          ]
+        },
+        {
+          "slug": "insert-card-qr-code-not-converting",
+          "primary_keyword": "qr code insert card not converting",
+          "secondary_keywords": [
+            "email signup from packaging insert",
+            "funnel coverage gap amazon"
+          ]
+        },
+        {
+          "slug": "loyalty-community-blind-spot-snack-brand",
+          "primary_keyword": "funnel audit loyalty",
+          "secondary_keywords": [
+            "loyalty community amazon brand",
+            "advocacy funnel coverage gap",
+            "snack brand repeat customers"
+          ]
+        },
+        {
+          "slug": "one-insert-card-underperforms-for-one-avatar",
+          "primary_keyword": "insert card underperforming one sku",
+          "secondary_keywords": [
+            "audit packaging asset against avatar",
+            "surgical creative edit amazon",
+            "one size fits all insert card"
+          ]
+        },
+        {
+          "slug": "rebrand-broke-unboxing-card-copy",
+          "primary_keyword": "rebrand insert card",
+          "secondary_keywords": [
+            "update brand tagline across packaging",
+            "positioning change creative plan",
+            "brand refresh unboxing card"
+          ]
+        },
+        {
+          "slug": "referral-ask-turned-into-ugc-ad-dog-treats",
+          "primary_keyword": "referral program ugc ad",
+          "secondary_keywords": [
+            "higgsfield ugc video referral",
+            "dog treat brand advocacy",
+            "referral hook script"
+          ]
+        },
+        {
+          "slug": "referral-program-missing-from-skincare-funnel",
+          "primary_keyword": "referral program amazon skincare",
+          "secondary_keywords": [
+            "advocacy funnel coverage gap",
+            "identity trigger referral",
+            "amazon referral program ideas"
+          ]
+        },
+        {
+          "slug": "referral-program-underperforming-protein-brand",
+          "primary_keyword": "referral program low redemption",
+          "secondary_keywords": [
+            "momentum trigger referral timing",
+            "protein brand word of mouth",
+            "sports nutrition referral"
+          ]
+        },
+        {
+          "slug": "unboxing-video-ad-plan-kitchen-gadget",
+          "primary_keyword": "unboxing video ad amazon brand",
+          "secondary_keywords": [
+            "ugc unboxing ad plan",
+            "higgsfield unboxing video",
+            "social ad unboxing storyboard"
+          ]
+        },
+        {
+          "slug": "what-your-loyalty-community-is-actually-for",
+          "primary_keyword": "loyalty community strategy amazon",
+          "secondary_keywords": [
+            "avoid discount only community",
+            "headphone brand community",
+            "job map loyalty program"
+          ]
+        }
+      ]
+    }
+  ]
+}

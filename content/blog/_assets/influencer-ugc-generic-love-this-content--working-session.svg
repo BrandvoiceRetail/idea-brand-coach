@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">One tool turns a blank seeding brief into three trigger-angled hooks a creator can actually use.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="66" font-size="32" font-weight="600">From "love this" to a real script</text>
+  <text x="60" y="96" font-size="20" class="dim">No brief means the creator improvises the safest, blandest read of the product.</text>
+
+  <rect x="60" y="220" width="240" height="140" rx="10" fill="#CC4F42" fill-opacity="0.18" stroke="#CC4F42" stroke-width="2"/>
+  <text x="180" y="280" text-anchor="middle" font-size="22" fill="#CC4F42" font-weight="600">No brief</text>
+  <text x="180" y="312" text-anchor="middle" font-size="16" class="faint">"obsessed with this stuff"</text>
+  <text x="180" y="336" text-anchor="middle" font-size="16" class="faint">x10 identical clips</text>
+
+  <line x1="300" y1="290" x2="440" y2="290" class="hair"/>
+  <polygon points="440,290 428,282 428,298" fill="rgba(245,244,240,.5)"/>
+
+  <rect x="440" y="215" width="320" height="150" rx="10" fill="#BD860E" fill-opacity="0.22" stroke="#E7A412" stroke-width="2"/>
+  <text x="600" y="270" text-anchor="middle" font-size="20" fill="#BD860E" class="tool" font-weight="600">generate_ugc_ad_plan</text>
+  <text x="600" y="302" text-anchor="middle" font-size="16" class="faint">avatar-cast, claim-gated,</text>
+  <text x="600" y="324" text-anchor="middle" font-size="16" class="faint">skeptic-flip built in</text>
+
+  <line x1="760" y1="290" x2="900" y2="290" class="hair"/>
+  <polygon points="900,290 888,282 888,298" fill="rgba(245,244,240,.5)"/>
+
+  <rect x="900" y="215" width="240" height="150" rx="10" fill="#3E9847" fill-opacity="0.2" stroke="#3E9847" stroke-width="2"/>
+  <text x="1020" y="265" text-anchor="middle" font-size="20" fill="#3E9847" font-weight="600">3 hook variants</text>
+  <text x="1020" y="295" text-anchor="middle" font-size="16" class="faint">one body, three</text>
+  <text x="1020" y="317" text-anchor="middle" font-size="16" class="faint">trigger-angled openings</text>
+
+  <text x="60" y="460" font-size="18" class="faint">Track engagement by hook variant, not the blended average across all ten clips.</text>
+</svg>

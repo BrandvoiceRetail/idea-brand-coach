@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">One welcome flow served two buyers with opposite fears. Branching by trigger serves both.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="56" font-size="30" font-weight="600">Before</text>
+  <text x="640" y="56" font-size="30" font-weight="600">After</text>
+
+  <!-- BEFORE: one flow, two mismatched buyers -->
+  <rect x="60" y="90" width="480" height="140" rx="10" fill="#CC4F42" fill-opacity=".18" stroke="#CC4F42" stroke-width="2"/>
+  <text x="300" y="130" text-anchor="middle" font-size="22" fill="#CC4F42" font-weight="600">One Welcome Series</text>
+  <text x="300" y="160" text-anchor="middle" font-size="17" class="faint">New puppy owner (fear_of_loss)</text>
+  <text x="300" y="184" text-anchor="middle" font-size="17" class="faint">Veteran owner (permission)</text>
+  <text x="300" y="210" text-anchor="middle" font-size="16" fill="#CC4F42">same email, opposite fears</text>
+
+  <text x="300" y="270" text-anchor="middle" font-size="18" class="dim">Replies split: relieved vs. annoyed</text>
+
+  <!-- AFTER: two branched flows -->
+  <rect x="640" y="90" width="230" height="140" rx="10" fill="#3E8FC4" fill-opacity=".2" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="755" y="130" text-anchor="middle" font-size="20" fill="#3E8FC4" font-weight="600">New Puppy Flow</text>
+  <text x="755" y="160" text-anchor="middle" font-size="17" class="faint">trigger:</text>
+  <text x="755" y="185" text-anchor="middle" font-size="18" fill="#3E8FC4">fear_of_loss</text>
+
+  <rect x="890" y="90" width="230" height="140" rx="10" fill="#3E9847" fill-opacity=".2" stroke="#3E9847" stroke-width="2" class="anim-breathe"/>
+  <text x="1005" y="130" text-anchor="middle" font-size="20" fill="#3E9847" font-weight="600">Veteran Flow</text>
+  <text x="1005" y="160" text-anchor="middle" font-size="17" class="faint">trigger:</text>
+  <text x="1005" y="185" text-anchor="middle" font-size="18" fill="#3E9847">permission</text>
+
+  <text x="880" y="270" text-anchor="middle" font-size="18" class="dim">Same product. Two sequences. Never the same email.</text>
+
+  <rect x="480" y="450" width="300" height="52" rx="26" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="630" y="484" text-anchor="middle" font-size="16" class="tool" fill="#BD860E">build_avatar_stage</text>
+</svg>

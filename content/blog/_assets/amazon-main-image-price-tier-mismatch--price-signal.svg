@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A main image that reads cheap repels the $68 buyer and attracts the $20 buyer — matching the photo to the price fixes both at once.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <!-- BEFORE panel -->
+  <rect x="48" y="90" width="504" height="495" rx="10" fill="#CC4F42" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="80" y="140" font-size="22" fill="#CC4F42" letter-spacing="1">BEFORE — IMAGE READS CHEAP</text>
+
+  <rect x="110" y="190" width="280" height="180" rx="8" fill="#CC4F42" fill-opacity="0.18" stroke="#CC4F42" stroke-width="2"/>
+  <text x="250" y="288" text-anchor="middle" font-size="24">Flat, over-lit photo</text>
+
+  <text x="250" y="410" text-anchor="middle" font-size="30" fill="#CC4F42" font-weight="700">$68 price tag</text>
+  <text x="250" y="450" text-anchor="middle" font-size="18" class="dim">
+    <tspan x="250" dy="0">Premium buyers scroll past.</tspan>
+    <tspan x="250" dy="24">Bargain buyers click, then bounce</tspan>
+    <tspan x="250" dy="24">at the price.</tspan>
+  </text>
+
+  <!-- arrow between panels -->
+  <line x1="574" y1="337" x2="626" y2="337" stroke="rgba(245,244,240,.5)" stroke-width="2" stroke-linecap="round" class="anim-flow"/>
+  <polygon points="626,337 612,328 612,346" fill="rgba(245,244,240,.5)"/>
+
+  <!-- AFTER panel -->
+  <rect x="648" y="90" width="504" height="495" rx="10" fill="#3E9847" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="680" y="140" font-size="22" fill="#3E9847" letter-spacing="1">AFTER — IMAGE READS $68</text>
+
+  <rect x="710" y="190" width="280" height="180" rx="8" fill="#BD860E" fill-opacity="0.22" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="850" y="288" text-anchor="middle" font-size="24">Material cues: steel, weight,</text>
+  <text x="850" y="312" text-anchor="middle" font-size="20" class="dim">precision framing</text>
+
+  <rect x="770" y="400" width="260" height="52" rx="26" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="900" y="434" text-anchor="middle" font-size="17" class="tool" fill="#BD860E">generate_main_image_title_plan</text>
+
+  <text x="900" y="500" text-anchor="middle" font-size="18" class="dim">
+    <tspan x="900" dy="0">Photo and price now say</tspan>
+    <tspan x="900" dy="24">the same number.</tspan>
+  </text>
+</svg>

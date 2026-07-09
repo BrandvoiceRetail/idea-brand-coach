@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">The Brand Story was written for identity and momentum. The real buyer is converting on fear of loss.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="60" font-size="32" font-weight="600">identify_decision_trigger: six candidates, one buyer</text>
+  <text x="60" y="90" class="dim" font-size="20">The story was written for a sport cyclist. The traffic is a commuter.</text>
+
+  <rect x="60" y="150" width="170" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="145" y="210" text-anchor="middle" font-size="18" class="faint">Permission</text>
+
+  <rect x="250" y="150" width="170" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="335" y="210" text-anchor="middle" font-size="18" class="faint">Recognition</text>
+
+  <rect x="440" y="150" width="170" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="525" y="200" text-anchor="middle" font-size="18" class="faint">Identity</text>
+  <text x="525" y="222" text-anchor="middle" font-size="14" class="faint">(story's target)</text>
+
+  <rect x="630" y="150" width="170" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="715" y="210" text-anchor="middle" font-size="18" class="faint">Belonging</text>
+
+  <rect x="820" y="150" width="170" height="110" rx="10" fill="none" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="905" y="200" text-anchor="middle" font-size="18" class="faint">Momentum</text>
+  <text x="905" y="222" text-anchor="middle" font-size="14" class="faint">(story's target)</text>
+
+  <rect x="60" y="310" width="360" height="150" rx="10" fill="#BD860E" fill-opacity="0.22" stroke="#E7A412" stroke-width="2" class="anim-breathe"/>
+  <text x="240" y="375" text-anchor="middle" font-size="26" fill="#BD860E" font-weight="600">Fear of Loss</text>
+  <text x="240" y="405" text-anchor="middle" font-size="17" class="faint">the near-miss, the dropped phone</text>
+  <text x="240" y="428" text-anchor="middle" font-size="17" class="faint">the real buyer's actual trigger</text>
+
+  <text x="60" y="530" font-size="20" class="dim">Search terms say commute and pothole. The copy says race day and gear ratios.</text>
+  <text x="60" y="565" class="tool faint" font-size="18">build_avatar_stage → S3 finds the trigger the page never addresses.</text>
+</svg>

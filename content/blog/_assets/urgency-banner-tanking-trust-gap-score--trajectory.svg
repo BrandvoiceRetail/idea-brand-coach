@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">CVR slid for three straight weeks after the countdown timer went live — a bleed, not a crash</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="32" font-weight="600">A slow bleed, not a crash</text>
+  <text x="48" y="90" class="dim" font-size="20">CVR after the countdown timer went live, illustrative weekly trend</text>
+
+  <!-- axes -->
+  <line x1="120" y1="540" x2="1120" y2="540" class="hair"/>
+  <line x1="120" y1="160" x2="120" y2="540" class="hair"/>
+  <text x="120" y="565" font-size="18" class="faint">wk 1</text>
+  <text x="370" y="565" font-size="18" class="faint">wk 2</text>
+  <text x="620" y="565" font-size="18" class="faint">wk 3</text>
+  <text x="870" y="565" font-size="18" class="faint">wk 4</text>
+  <text x="1080" y="565" font-size="18" class="faint">now</text>
+
+  <!-- CVR line, gold, sloping down after the timer launches at wk1 -->
+  <polyline points="120,220 370,240 620,320 870,400 1120,460" fill="none" stroke="#BD860E" stroke-width="3" stroke-linecap="round" class="anim-flow"/>
+
+  <!-- launch marker -->
+  <circle cx="120" cy="220" r="9" fill="#CC4F42"/>
+  <text x="145" y="215" font-size="18" fill="#CC4F42">countdown timer added here</text>
+
+  <text x="620" y="120" font-size="20" text-anchor="middle" class="dim">Half a point down, three weeks running, no sign of correcting</text>
+</svg>

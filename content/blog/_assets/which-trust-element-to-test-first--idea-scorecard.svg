@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Only the freshness badge idea targets the pillar that's actually weak on this listing</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="60" font-size="32" font-weight="600">run_trust_gap: three ideas, one weak pillar</text>
+  <text x="48" y="90" class="dim" font-size="20">Rank the idea, not by favorite, by which pillar it actually fixes.</text>
+
+  <text x="48" y="150" font-size="22" fill="#CC4F42" font-weight="600">Insight-Driven</text>
+  <rect x="290" y="130" width="600" height="30" rx="4" fill="#CC4F42" fill-opacity="0.22" stroke="#CC4F42" stroke-width="2" class="anim-breathe"/>
+  <rect x="290" y="130" width="150" height="30" rx="4" fill="#CC4F42"/>
+  <text x="910" y="152" font-size="18" fill="#CC4F42">only the roast-date badge answers this</text>
+
+  <text x="48" y="230" font-size="22">Distinctive</text>
+  <rect x="290" y="210" width="600" height="30" rx="4" fill="#3E9847" fill-opacity="0.2" stroke="#3E9847" stroke-width="2"/>
+  <rect x="290" y="210" width="480" height="30" rx="4" fill="#3E9847"/>
+
+  <text x="48" y="310" font-size="22">Empathetic</text>
+  <rect x="290" y="290" width="600" height="30" rx="4" fill="#3E9847" fill-opacity="0.2" stroke="#3E9847" stroke-width="2"/>
+  <rect x="290" y="290" width="510" height="30" rx="4" fill="#3E9847"/>
+
+  <text x="48" y="390" font-size="22">Authentic</text>
+  <rect x="290" y="370" width="600" height="30" rx="4" fill="#3E9847" fill-opacity="0.2" stroke="#3E9847" stroke-width="2"/>
+  <rect x="290" y="370" width="470" height="30" rx="4" fill="#3E9847"/>
+
+  <text x="48" y="470" font-size="20" class="dim">Review-count callout and UGC thumbnail are both fine ideas. Neither fixes recency.</text>
+  <text x="48" y="505" class="tool faint" font-size="18">design_test: freshness badge first, one variable, one fixed window.</text>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">A discount-tier loyalty community races to the bottom on price; rebuilt around peer support and early access, it answers the job customers actually asked for.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="600" y="64" text-anchor="middle" font-size="30" font-weight="600">Marcus's community, before and after the evidence</text>
+
+  <!-- Before panel -->
+  <rect x="60" y="110" width="500" height="480" rx="20" fill="#CC4F42" fill-opacity="0.12" stroke="#CC4F42" stroke-width="2"/>
+  <text x="310" y="160" text-anchor="middle" font-size="24" font-weight="700" fill="#F5F4F0">Before: discount tier</text>
+  <text x="310" y="220" text-anchor="middle" font-size="19" class="dim">Percent-off rewards for</text>
+  <text x="310" y="248" text-anchor="middle" font-size="19" class="dim">repeat purchases and referrals</text>
+  <text x="310" y="308" text-anchor="middle" font-size="19" class="dim">Attracts price-sensitive members</text>
+  <text x="310" y="336" text-anchor="middle" font-size="19" class="dim">who churn for a better deal</text>
+  <text x="310" y="396" text-anchor="middle" font-size="19" class="dim">Does nothing for pairing,</text>
+  <text x="310" y="424" text-anchor="middle" font-size="19" class="dim">fit, or firmware confusion</text>
+  <text x="310" y="500" text-anchor="middle" font-size="18" fill="#CC4F42" font-weight="600">the template, not the job</text>
+
+  <line x1="562" y1="350" x2="638" y2="350" stroke="rgba(245,244,240,.5)" stroke-width="2" stroke-linecap="round" class="anim-flow"/>
+  <polygon points="638,350 624,341 624,359" fill="rgba(245,244,240,.5)"/>
+
+  <!-- After panel -->
+  <rect x="640" y="110" width="500" height="480" rx="20" fill="#3E9847" fill-opacity="0.14" stroke="#3E9847" stroke-width="2"/>
+  <text x="890" y="160" text-anchor="middle" font-size="24" font-weight="700" fill="#F5F4F0">After: support + early access</text>
+  <text x="890" y="220" text-anchor="middle" font-size="19" class="dim">Peer troubleshooting threads</text>
+  <text x="890" y="248" text-anchor="middle" font-size="19" class="dim">for pairing and fit questions</text>
+  <text x="890" y="308" text-anchor="middle" font-size="19" class="dim">Early access to new firmware</text>
+  <text x="890" y="336" text-anchor="middle" font-size="19" class="dim">and models before release</text>
+  <text x="890" y="396" text-anchor="middle" font-size="19" class="dim">Recognition badges for being</text>
+  <text x="890" y="424" text-anchor="middle" font-size="19" class="dim">useful and early, not discounted</text>
+  <text x="890" y="500" text-anchor="middle" font-size="18" fill="#3E9847" font-weight="600">the job, confirmed by evidence</text>
+
+  <text x="600" y="640" text-anchor="middle" font-size="18" class="faint tool">ingest_evidence + build_avatar_stage (S2 job map) drove the redesign</text>
+</svg>

@@ -1,14 +1,19 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# Default: everyone welcome.
 User-agent: *
 Allow: /
+
+# AI answer engines — explicitly allowed. Our audience increasingly finds
+# brand-diagnosis answers through AI chat; do not fence these out.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://ideabrandcoach.com/sitemap.xml

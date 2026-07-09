@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">One Amazon storefront about page speaking with three disconnected voices, unified into a single promise</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <rect x="48" y="90" width="504" height="495" rx="10" fill="#CC4F42" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="80" y="140" font-size="22" fill="#CC4F42" letter-spacing="1">BEFORE — THREE VOICES</text>
+  <rect x="90" y="180" width="424" height="70" rx="8" fill="#3E8FC4" fill-opacity="0.18" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="110" y="222" font-size="20" class="dim">Hero: "effortless"</text>
+  <rect x="90" y="270" width="424" height="70" rx="8" fill="#CC4F42" fill-opacity="0.2" stroke="#CC4F42" stroke-width="2"/>
+  <text x="110" y="312" font-size="20" fill="#CC4F42">About: "slow craft"</text>
+  <rect x="90" y="360" width="424" height="70" rx="8" fill="#3E8FC4" fill-opacity="0.18" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="110" y="402" font-size="20" class="dim">Tiles: stitch names</text>
+  <text x="110" y="470" font-size="19" class="faint">No line connects them — a shopper reconciles the mismatch alone.</text>
+
+  <line x1="574" y1="337" x2="626" y2="337" stroke="rgba(245,244,240,.5)" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="626,337 612,328 612,346" fill="rgba(245,244,240,.5)"/>
+
+  <rect x="648" y="90" width="504" height="495" rx="10" fill="#3E9847" fill-opacity="0.08" stroke="rgba(245,244,240,.16)" stroke-width="2"/>
+  <text x="680" y="140" font-size="22" fill="#3E9847" letter-spacing="1">AFTER — ONE PROMISE</text>
+  <rect x="800" y="185" width="200" height="70" rx="8" fill="#BD860E" fill-opacity="0.22" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="900" y="227" text-anchor="middle" font-size="20" fill="#BD860E">Promise: ease</text>
+  <line x1="900" y1="255" x2="900" y2="295" class="hair"/>
+  <line x1="740" y1="295" x2="1060" y2="295" class="hair"/>
+  <line x1="740" y1="295" x2="740" y2="330" class="hair"/>
+  <line x1="900" y1="295" x2="900" y2="330" class="hair"/>
+  <line x1="1060" y1="295" x2="1060" y2="330" class="hair"/>
+  <rect x="680" y="330" width="120" height="60" rx="6" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2"/>
+  <text x="740" y="366" text-anchor="middle" font-size="17" class="dim">Hero</text>
+  <rect x="840" y="330" width="120" height="60" rx="6" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2"/>
+  <text x="900" y="366" text-anchor="middle" font-size="17" class="dim">About</text>
+  <rect x="1000" y="330" width="120" height="60" rx="6" fill="#3E9847" fill-opacity="0.18" stroke="#3E9847" stroke-width="2"/>
+  <text x="1060" y="366" text-anchor="middle" font-size="17" class="dim">Tiles</text>
+  <text x="900" y="470" text-anchor="middle" font-size="19" class="dim">Same promise, three expressions of it.</text>
+</svg>

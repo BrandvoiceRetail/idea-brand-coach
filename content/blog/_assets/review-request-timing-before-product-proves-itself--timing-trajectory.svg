@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">The review ask fires on day 3, before the product has actually proven itself around day 14</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <line x1="120" y1="560" x2="1120" y2="560" class="hair"/>
+  <line x1="120" y1="140" x2="120" y2="560" class="hair"/>
+  <text x="120" y="600" font-size="20" class="faint">Delivery day</text>
+  <text x="1000" y="600" font-size="20" class="faint">Day 14+</text>
+
+  <path d="M120,536 C 420,520 700,320 1080,168" fill="none" stroke="#3E8FC4" stroke-width="3" stroke-linecap="round"/>
+  <text x="560" y="300" font-size="20" class="dim">the parent's real experience with the carrier</text>
+
+  <circle cx="270" cy="522" r="10" fill="#CC4F42"/>
+  <text x="180" y="480" font-size="22">Day 3: request fires here</text>
+  <text x="180" y="504" font-size="18" class="faint">only the box is "proven"</text>
+
+  <circle cx="950" cy="196" r="10" fill="#3E9847"/>
+  <text x="700" y="150" font-size="22">Day 14: the real moment</text>
+  <text x="700" y="174" font-size="18" class="faint">back and baby both proven, ask here instead</text>
+</svg>

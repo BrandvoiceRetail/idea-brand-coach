@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Recognition is the lever a founder audience responds to, not identity</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="600" y="90" text-anchor="middle" font-size="32" font-weight="600">Six triggers. Your audience only stops for one.</text>
+
+  <rect x="48" y="170" width="340" height="110" rx="12" class="hair"/>
+  <text x="218" y="232" text-anchor="middle" font-size="24" class="faint">Permission</text>
+
+  <rect x="424" y="170" width="340" height="110" rx="12" fill="#BD860E" fill-opacity="0.2" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="594" y="232" text-anchor="middle" font-size="26" font-weight="700">Recognition</text>
+
+  <rect x="800" y="170" width="340" height="110" rx="12" class="hair"/>
+  <text x="970" y="232" text-anchor="middle" font-size="24" class="faint">Identity</text>
+
+  <rect x="48" y="340" width="340" height="110" rx="12" class="hair"/>
+  <text x="218" y="402" text-anchor="middle" font-size="24" class="faint">Belonging</text>
+
+  <rect x="424" y="340" width="340" height="110" rx="12" class="hair"/>
+  <text x="594" y="402" text-anchor="middle" font-size="24" class="faint">Momentum</text>
+
+  <rect x="800" y="340" width="340" height="110" rx="12" class="hair"/>
+  <text x="970" y="402" text-anchor="middle" font-size="24" class="faint">Fear of Loss</text>
+
+  <text x="600" y="500" text-anchor="middle" font-size="20" class="dim">A founder audience stops scrolling for a moment they recognize, not a moment meant to impress them.</text>
+</svg>

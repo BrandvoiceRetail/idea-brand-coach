@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">The scalp massager's real objection sat in 4-star reviews the whole time — the 1-star folder had zero hits.</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="66" font-size="32" font-weight="600">Same review pool, a different question</text>
+  <text x="48" y="96" font-size="20" class="dim">ingest_evidence checks every star level — not just the folder Dev watched each morning.</text>
+
+  <!-- step 1: input -->
+  <rect x="48" y="280" width="300" height="140" rx="10" fill="rgba(62,143,196,.2)" stroke="#3E8FC4" stroke-width="2"/>
+  <text x="198" y="340" font-size="21" text-anchor="middle">Full review set,</text>
+  <text x="198" y="368" font-size="21" text-anchor="middle">all star levels</text>
+
+  <!-- connector 1 -->
+  <line x1="348" y1="350" x2="398" y2="350" class="hair anim-flow"/>
+  <polygon points="398,350 388,344 388,356" fill="rgba(245,244,240,.4)"/>
+
+  <!-- step 2: tool, highlight -->
+  <rect x="398" y="265" width="300" height="170" rx="10" fill="rgba(189,134,14,.2)" stroke="#BD860E" stroke-width="2" class="anim-breathe"/>
+  <text x="548" y="345" font-size="22" text-anchor="middle" class="tool">ingest_evidence</text>
+  <text x="548" y="372" font-size="17" text-anchor="middle" class="faint">objection pattern, any star level</text>
+
+  <!-- connector 2 -->
+  <line x1="698" y1="350" x2="748" y2="350" class="hair anim-flow"/>
+  <polygon points="748,350 738,344 738,356" fill="rgba(245,244,240,.4)"/>
+
+  <!-- step 3: output -->
+  <rect x="748" y="280" width="404" height="140" rx="10" fill="rgba(62,152,71,.22)" stroke="#3E9847" stroke-width="2"/>
+  <text x="950" y="330" font-size="20" text-anchor="middle">"wish it were quieter"</text>
+  <text x="950" y="358" font-size="18" text-anchor="middle" class="faint">19x in 4-star reviews, 0x in 1-star</text>
+
+  <text x="48" y="500" font-size="18" class="faint">Dev's 1-star folder: zero hits. His four-star folder: the objection, said nineteen times.</text>
+</svg>

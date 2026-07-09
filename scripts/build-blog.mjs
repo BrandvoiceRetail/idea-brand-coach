@@ -2,16 +2,24 @@
 /**
  * build-blog.mjs — content/blog/*.md → public/blog/<slug>/index.html
  * + public/blog/index.html (listing) + public/sitemap.xml
+ * + public/llms.txt / public/llms-full.txt (AI-engine discoverability)
+ * + copies content/blog/_assets/** → public/blog/assets/** (diagrams, images)
  *
  * Zero dependencies by design (Layer-3 deterministic build step; runs on the
  * CI runner and locally with plain node). Renders the constrained markdown
  * subset the content brief allows: #–#### headings, paragraphs, **bold**,
- * *italic*, `code`, [links](url), -/1. lists, > blockquotes, ``` fences, ---.
+ * *italic*, `code`, [links](url), -/1. lists, > blockquotes, ``` fences, ---,
+ * and block images ![alt](/blog/assets/... "optional caption") → <figure>.
  *
  * Frontmatter (simple `key: value` strings between --- fences):
  *   title, description, date (YYYY-MM-DD), category, funnel, tools
  *   (comma-separated coach tool names), keywords, slug (optional — defaults
- *   to the filename without extension).
+ *   to the filename without extension), updated (optional YYYY-MM-DD).
+ *
+ * SEO structures emitted per post (see content/_specs/SEO_PLAYBOOK.md):
+ *   Article + BreadcrumbList JSON-LD always; FAQPage JSON-LD when the post
+ *   has an "## FAQ" section of "### question" / answer pairs; author byline
+ *   (E-E-A-T); reading time; related-posts block for crawl depth.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,6 +27,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'content', 'blog');
+const ASSETS_SRC = path.join(SRC, '_assets');
 const OUT = path.join(ROOT, 'public', 'blog');
 const BASE = 'https://ideabrandcoach.com';
 
@@ -37,6 +46,7 @@ function parseFrontmatter(raw, file) {
     if (!meta[req]) throw new Error(`${file}: frontmatter missing "${req}"`);
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(meta.date)) throw new Error(`${file}: date must be YYYY-MM-DD`);
+  if (meta.updated && !/^\d{4}-\d{2}-\d{2}$/.test(meta.updated)) throw new Error(`${file}: updated must be YYYY-MM-DD`);
   return { meta, body: m[2] };
 }
 
@@ -53,6 +63,10 @@ function inline(s) {
   return out;
 }
 
+// Block image → semantic figure. Animated SVGs (CSS/SMIL inside the file)
+// still play inside <img>, which keeps the page script-free.
+const IMG_RE = /^!\[([^\]]*)\]\((\/blog\/assets\/[^\s)"]+)(?:\s+"([^"]*)")?\)\s*$/;
+
 function renderMarkdown(md) {
   const lines = md.split(/\r?\n/);
   const html = [];
@@ -67,6 +81,13 @@ function renderMarkdown(md) {
       while (i < lines.length && !lines[i].startsWith('```')) buf.push(lines[i++]);
       i++; // closing fence
       html.push(`<pre><code>${escapeHtml(buf.join('\n'))}</code></pre>`);
+      continue;
+    }
+    const img = line.match(IMG_RE);
+    if (img) {
+      const [, alt, src, caption] = img;
+      html.push(`<figure><img src="${src}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async"/>${caption ? `<figcaption>${inline(caption)}</figcaption>` : ''}</figure>`);
+      i++;
       continue;
     }
     const h = line.match(/^(#{1,4})\s+(.*)$/);
@@ -100,13 +121,30 @@ function renderMarkdown(md) {
     i++;
     while (i < lines.length && lines[i].trim() && !isListItem(lines[i]) &&
            !lines[i].startsWith('#') && !lines[i].startsWith('>') &&
-           !lines[i].startsWith('```') && !/^---+\s*$/.test(lines[i])) {
+           !lines[i].startsWith('```') && !/^---+\s*$/.test(lines[i]) && !IMG_RE.test(lines[i])) {
       buf.push(lines[i++]);
     }
     html.push(`<p>${inline(buf.join(' '))}</p>`);
   }
   return html.join('\n');
 }
+
+/* ── FAQ extraction: "## FAQ" section with "### question" + answer paras ── */
+function extractFaq(body) {
+  const m = body.match(/^## FAQ\s*$([\s\S]*?)(?=^## |\s*$(?![\s\S]))/m);
+  if (!m) return [];
+  const faqs = [];
+  const re = /^### (.+)$\n([\s\S]*?)(?=^### |\s*$(?![\s\S]))/gm;
+  let q;
+  while ((q = re.exec(m[1])) !== null) {
+    const answer = q[2].trim().replace(/\s+/g, ' ');
+    if (q[1].trim() && answer) faqs.push({ q: q[1].trim(), a: answer });
+  }
+  return faqs;
+}
+
+const words = (s) => s.split(/\s+/).filter(Boolean).length;
+const readMins = (body) => Math.max(1, Math.round(words(body) / 200));
 
 /* ── shared chrome (landing.html design tokens) ──────────────────────────── */
 const CSS = `
@@ -140,9 +178,16 @@ article code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em;b
 article pre{background:var(--glass);border:1px solid var(--hair);border-radius:var(--radius-sm);padding:16px;overflow-x:auto;margin:0 0 18px}
 article pre code{background:none;border:none;padding:0;color:var(--ink-dim)}
 article hr{border:none;border-top:1px solid var(--hair-2);margin:32px 0}
+article figure{margin:26px 0;background:var(--glass);border:1px solid var(--hair);border-radius:var(--radius);padding:18px}
+article figure img{display:block;width:100%;height:auto;border-radius:var(--radius-sm)}
+article figcaption{margin-top:10px;font-size:.82rem;color:var(--ink-faint);text-align:center}
 .eyebrow{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gld);margin-top:34px}
 .post-meta{font-size:.82rem;color:var(--ink-faint);margin-bottom:26px}
 .chip{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.06em;padding:3px 10px;border:1px solid var(--hair-2);border-radius:999px;color:var(--ink-dim);margin-right:6px}
+.byline{display:flex;gap:14px;align-items:center;background:var(--glass);border:1px solid var(--hair);border-radius:var(--radius);padding:16px 18px;margin:36px 0 8px}
+.byline .avatar{flex:none;width:44px;height:44px;border-radius:50%;background:var(--gld);color:#1a1206;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1.05rem}
+.byline p{margin:0;font-size:.85rem;color:var(--ink-dim)}
+.byline strong{color:var(--ink)}
 .cta-box{background:var(--glass);border:1px solid var(--hair-2);border-radius:var(--radius);padding:26px;margin:40px 0}
 .cta-box h3{margin-top:0}
 .btn{display:inline-block;background:var(--gld);color:#1a1206;font-weight:700;text-decoration:none;padding:12px 20px;border-radius:999px;margin-top:12px}
@@ -150,9 +195,12 @@ article hr{border:none;border-top:1px solid var(--hair-2);margin:32px 0}
 .card:hover{border-color:var(--gld)}
 .card h3{margin:6px 0 8px;color:var(--ink)}
 .card p{color:var(--ink-dim);font-size:.92rem;margin:0}
+.related{margin-top:34px}
+.related h2{font-size:1.15rem}
 footer{border-top:1px solid var(--hair);margin-top:70px;padding:36px 24px;text-align:center;color:var(--ink-faint);font-size:.85rem}
 footer a{color:var(--gld);text-decoration:none}
 main{padding:14px 0 40px}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
 `;
 
 const NAV = `<nav>
@@ -175,7 +223,14 @@ const CTA = `<div class="cta-box">
   <a class="btn" href="/diagnostic">Run the free diagnostic →</a>
 </div>`;
 
+const BYLINE = `<div class="byline">
+  <div class="avatar">TB</div>
+  <p><strong>The IDEA Brand Coach team</strong>, built with Trevor Bradford — brand consultant and author of <em>What Captures the Heart Goes in the Cart</em>. The IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic) comes from twenty years of brand work, now applied to Amazon-first ecommerce brands.</p>
+</div>`;
+
 function pageShell({ title, description, canonical, body, jsonLd }) {
+  const ld = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : [])
+    .map((o) => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join('\n');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -192,7 +247,7 @@ function pageShell({ title, description, canonical, body, jsonLd }) {
 <meta property="og:image" content="${BASE}/idea-social-card.png"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <link rel="stylesheet" href="/fonts/inter.css"/>
-${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
+${ld}
 <style>${CSS}</style>
 </head>
 <body>
@@ -206,6 +261,19 @@ ${FOOTER}
 }
 
 /* ── build ───────────────────────────────────────────────────────────────── */
+function copyAssets() {
+  if (!fs.existsSync(ASSETS_SRC)) return 0;
+  const dst = path.join(OUT, 'assets');
+  fs.mkdirSync(dst, { recursive: true });
+  let n = 0;
+  for (const f of fs.readdirSync(ASSETS_SRC)) {
+    if (f.startsWith('.')) continue;
+    fs.copyFileSync(path.join(ASSETS_SRC, f), path.join(dst, f));
+    n++;
+  }
+  return n;
+}
+
 function build() {
   if (!fs.existsSync(SRC)) {
     console.log(`build-blog: no ${path.relative(ROOT, SRC)} directory — nothing to do.`);
@@ -225,28 +293,85 @@ function build() {
 
   fs.rmSync(OUT, { recursive: true, force: true });
   fs.mkdirSync(OUT, { recursive: true });
+  const nAssets = copyAssets();
+
+  const byCategory = new Map();
+  const sorted = [...posts].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug.localeCompare(b.slug)));
+  for (const p of sorted) {
+    if (!byCategory.has(p.category)) byCategory.set(p.category, []);
+    byCategory.get(p.category).push(p);
+  }
 
   for (const post of posts) {
     const canonical = `${BASE}/blog/${post.slug}/`;
-    const jsonLd = JSON.stringify({
+    const faqs = extractFaq(post.body);
+    const jsonLd = [{
       '@context': 'https://schema.org',
       '@type': 'Article',
       headline: post.title,
       description: post.description,
       datePublished: post.date,
-      author: { '@type': 'Organization', name: 'IDEA Brand Coach' },
-      publisher: { '@type': 'Organization', name: 'IDEA Brand Consultancy' },
+      ...(post.updated ? { dateModified: post.updated } : {}),
+      author: { '@type': 'Organization', name: 'IDEA Brand Coach', url: BASE },
+      publisher: {
+        '@type': 'Organization',
+        name: 'IDEA Brand Consultancy',
+        url: BASE,
+        logo: { '@type': 'ImageObject', url: `${BASE}/apple-touch-icon.png` },
+        sameAs: ['https://ideabrandconsultancy.com'],
+      },
       mainEntityOfPage: canonical,
-    });
+    }, {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${BASE}/` },
+        { '@type': 'ListItem', position: 2, name: 'Blog', item: `${BASE}/blog/` },
+        { '@type': 'ListItem', position: 3, name: post.title, item: canonical },
+      ],
+    }];
+    if (faqs.length) {
+      jsonLd.push({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((f) => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
+      });
+    }
     const chips = [post.category, post.funnel].filter(Boolean)
       .map((c) => `<span class="chip">${escapeHtml(c)}</span>`).join('');
+    // Reverse-silo "Keep reading": supporting posts surface their cluster's
+    // pillar first, then cluster siblings; pillars surface newest members;
+    // posts without cluster metadata fall back to category siblings.
+    const clusterMates = post.cluster ? posts.filter((p) => p.cluster === post.cluster && p.slug !== post.slug) : [];
+    let sibs;
+    if (post.role === 'supporting' && clusterMates.length) {
+      const pillar = clusterMates.find((p) => p.role === 'pillar');
+      const others = clusterMates.filter((p) => p.role !== 'pillar').slice(0, pillar ? 2 : 3);
+      sibs = [...(pillar ? [pillar] : []), ...others];
+    } else if (post.role === 'pillar' && clusterMates.length) {
+      sibs = clusterMates.slice(0, 3);
+    } else {
+      sibs = (byCategory.get(post.category) || []).filter((p) => p.slug !== post.slug).slice(0, 3);
+    }
+    const related = sibs.length ? `<div class="related">
+<h2>Keep reading</h2>
+${sibs.map((p) => `<a class="card" href="/blog/${p.slug}/">${p.role === 'pillar' ? '<span class="chip">The complete guide</span>' : ''}<h3>${inline(p.title)}</h3><p>${inline(p.description)}</p></a>`).join('\n')}
+</div>` : '';
+    const dateLine = post.updated && post.updated !== post.date
+      ? `${post.date} &middot; updated ${post.updated}` : post.date;
     const body = `<span class="eyebrow">IDEA Brand Coach — Blog</span>
 <article>
 <h1>${inline(post.title)}</h1>
-<div class="post-meta">${post.date} &nbsp; ${chips}</div>
+<div class="post-meta">${dateLine} &nbsp; ${readMins(post.body)} min read &nbsp; ${chips}</div>
 ${renderMarkdown(post.body)}
+${BYLINE}
 ${CTA}
 </article>
+${related}
 <p style="margin-top:8px"><a href="/blog/" style="color:var(--gld-mid);text-decoration:none">← All articles</a></p>`;
     const dir = path.join(OUT, post.slug);
     fs.mkdirSync(dir, { recursive: true });
@@ -255,22 +380,25 @@ ${CTA}
   }
 
   // Listing page — newest first, grouped by category
-  const sorted = [...posts].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug.localeCompare(b.slug)));
-  const byCategory = new Map();
-  for (const p of sorted) {
-    if (!byCategory.has(p.category)) byCategory.set(p.category, []);
-    byCategory.get(p.category).push(p);
-  }
   const sections = [...byCategory.entries()].map(([cat, list]) => `
-<h2>${escapeHtml(cat)}</h2>
+<h2 id="${cat.toLowerCase()}">${escapeHtml(cat)}</h2>
 ${list.map((p) => `<a class="card" href="/blog/${p.slug}/">
   <span class="chip">${escapeHtml(p.funnel || p.category)}</span><span class="chip">${p.date}</span>
   <h3>${inline(p.title)}</h3>
   <p>${inline(p.description)}</p>
 </a>`).join('\n')}`).join('\n');
+  const pillars = sorted.filter((p) => p.role === 'pillar');
+  const guides = pillars.length ? `
+<h2 id="guides">Start here: the guides</h2>
+${pillars.map((p) => `<a class="card" href="/blog/${p.slug}/">
+  <span class="chip">The complete guide</span>
+  <h3>${inline(p.title)}</h3>
+  <p>${inline(p.description)}</p>
+</a>`).join('\n')}` : '';
   const indexBody = `<span class="eyebrow">The conversion playbook</span>
 <h1>Brand Coach Blog</h1>
 <p style="color:var(--ink-dim);max-width:56ch">Real working sessions: how Amazon-first brand owners use the IDEA Brand Coach to find the trust gap, fix the funnel piece that's leaking, and ship creative that converts.</p>
+${guides}
 ${sections}
 ${CTA}`;
   fs.writeFileSync(path.join(OUT, 'index.html'), pageShell({
@@ -278,13 +406,20 @@ ${CTA}`;
     description: 'Working sessions and playbooks: diagnose low CVR/CTR, close the trust gap, and direct high-converting creative with the IDEA Brand Coach.',
     canonical: `${BASE}/blog/`,
     body: indexBody,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'IDEA Brand Coach Blog',
+      url: `${BASE}/blog/`,
+      description: 'Conversion playbooks for Amazon-first brand owners.',
+    },
   }));
 
   // sitemap.xml — landing + blog + posts
   const urls = [
     { loc: `${BASE}/`, lastmod: sorted[0]?.date },
     { loc: `${BASE}/blog/`, lastmod: sorted[0]?.date },
-    ...sorted.map((p) => ({ loc: `${BASE}/blog/${p.slug}/`, lastmod: p.date })),
+    ...sorted.map((p) => ({ loc: `${BASE}/blog/${p.slug}/`, lastmod: p.updated || p.date })),
   ];
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -293,7 +428,34 @@ ${urls.map((u) => `  <url><loc>${u.loc}</loc>${u.lastmod ? `<lastmod>${u.lastmod
 `;
   fs.writeFileSync(path.join(ROOT, 'public', 'sitemap.xml'), sitemap);
 
-  console.log(`build-blog: ${posts.length} posts → public/blog/ (+ index, sitemap.xml)`);
+  // llms.txt — the AI-engine front door (llmstxt.org convention): what the
+  // product is, then every post as a markdown link with its description.
+  const llmsIndex = `# IDEA Brand Coach
+
+> AI brand coach for Amazon-first ecommerce brand owners. It diagnoses why a
+> listing or funnel isn't converting (the Trust Gap across the IDEA framework:
+> Insight-Driven, Distinctive, Empathetic, Authentic) and directs the fix —
+> from the free 6-question diagnostic at ${BASE}/diagnostic to creative plans
+> executed on Higgsfield. Built on "What Captures the Heart Goes in the Cart"
+> by Trevor Bradford.
+
+## Guides (pillar pages)
+
+${sorted.filter((p) => p.role === 'pillar').map((p) => `- [${p.title}](${BASE}/blog/${p.slug}/): ${p.description}`).join('\n') || '- (none yet)'}
+
+## Blog
+
+${sorted.filter((p) => p.role !== 'pillar').map((p) => `- [${p.title}](${BASE}/blog/${p.slug}/): ${p.description}`).join('\n')}
+`;
+  fs.writeFileSync(path.join(ROOT, 'public', 'llms.txt'), llmsIndex);
+
+  // llms-full.txt — full post text for AI engines that read one file.
+  const llmsFull = sorted.map((p) =>
+    `# ${p.title}\nURL: ${BASE}/blog/${p.slug}/\nPublished: ${p.date}${p.updated ? ` (updated ${p.updated})` : ''}\nCategory: ${p.category}\n\n${p.body.trim()}`
+  ).join('\n\n---\n\n');
+  fs.writeFileSync(path.join(ROOT, 'public', 'llms-full.txt'), llmsFull);
+
+  console.log(`build-blog: ${posts.length} posts → public/blog/ (+ index, sitemap.xml, llms.txt, llms-full.txt, ${nAssets} assets)`);
 }
 
 build();

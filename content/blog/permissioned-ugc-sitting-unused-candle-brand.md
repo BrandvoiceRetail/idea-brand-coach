@@ -1,17 +1,22 @@
 ---
-title: Your Best Customer Videos Are Sitting in a Folder
-description: A candle brand collects permissioned UGC diligently, but it never leaves the folder. get_funnel_coverage finds where it should actually run.
+title: Permissioned UGC Unused? A Candle Brand's 90 Clips
+description: Permissioned ugc unused in a folder? A candle brand collects diligently, but get_funnel_coverage finds exactly where that footage should actually run.
 date: 2026-06-29
+updated: 2026-07-09
 category: Funnel
 funnel: ugc_repost_permissions
 tools: get_funnel_coverage, run_funnel_audit
 keywords: permissioned ugc unused, ugc repost strategy amazon, funnel coverage candle brand, deploy customer video across funnel, home fragrance brand ugc
 slug: permissioned-ugc-sitting-unused-candle-brand
+cluster: paid-social-ugc-ads
+role: supporting
+primary_keyword: permissioned ugc unused
+secondary_keywords: ugc repost strategy amazon, deploy customer video across funnel, home fragrance brand ugc
 ---
 
-## The number that looks wrong
+## Permissioned UGC Unused: The Number That Looks Wrong
 
-Priya runs a home-fragrance brand - hand-poured candles, a tidy little scent line, a customer base that films unboxings without being asked. She's been diligent about the unglamorous part: getting written permission, tagging clips by scent, filing everything in a shared drive labeled by month. Say the drive holds ninety usable clips by now.
+Permissioned UGC unused in a shared drive is one of the most common, and most fixable, gaps an Amazon brand owner can have: real customer proof, properly cleared, sitting exactly where it can't help a single shopper decide. Priya found this out running a home-fragrance brand - hand-poured candles, a tidy little scent line, a customer base that films unboxings without being asked. She's been diligent about the unglamorous part: getting written permission, tagging clips by scent, filing everything in a shared drive labeled by month. Say the drive holds ninety usable clips by now.
 
 Here's the number that doesn't add up. Her main image is still a studio shot. Her storefront About page is still a paragraph of brand copy with no faces in it. Her paid social is still running the same three static product images from launch. Ninety pieces of real customer proof exist, and not one of them has left the folder.
 
@@ -30,6 +35,10 @@ The question worth asking isn't "how do I get more UGC" - it's "where in my funn
 Run against Priya's funnel, the coverage map showed `amazon_main_image`, `brand_store_about`, and `paid_social_creative` all still running studio-only content, with zero permissioned-UGC presence in any of them - despite ninety clips sitting one folder over.
 
 *What the coach said:* "You don't have a content problem. You have a routing problem. The proof exists. It's just never been told where to go."
+
+This is the shape a real ugc repost strategy amazon sellers can act on takes: not "make more," but "find the blank position and deploy customer video across funnel gaps that already exist."
+
+![Ninety permissioned clips exist. Three funnel positions have zero UGC presence — that's the gap, not a content shortage](/blog/assets/permissioned-ugc-sitting-unused-candle-brand--funnel-position.svg "The proof already exists. It just needs a position to run in.")
 
 ## The working session
 
@@ -51,8 +60,26 @@ Where an existing clip needs reframing for a different placement - a vertical ph
 
 After routing clips into the main-image and paid-social gaps, watch `amazon_main_image` CTR and paid social CTR separately, each against its own prior baseline - not against each other, since they're different traffic and different intent. Give it two to three weeks before drawing a conclusion; a single spike or dip in either channel doesn't confirm the routing worked.
 
+## FAQ
+
+### Why does permissioned UGC sit unused even after a brand asks for it correctly?
+
+Because collecting and filing a clip feels like progress, and it is, but it's the collection step, not the deployment step. Most brands never run a check like `get_funnel_coverage` to see which specific funnel positions are blank, so the footage waits for a routing decision nobody's made yet.
+
+### What's the fastest way to find where unused UGC should go?
+
+Run `get_funnel_coverage` against your funnel positions to see which ones are running studio-only content with zero UGC presence. Then run `run_funnel_audit` against your actual customer avatar to rank which of those blank positions matters most to fill first.
+
+### Is more UGC the fix if what I have isn't converting?
+
+Usually not. If you already have permissioned ugc unused in a drive, collecting a second wave on top of an unused first wave doesn't fix a routing problem, it just makes the folder bigger. Fix where the existing clips run before asking for more.
+
+### Can I reuse a vertical UGC clip in a square listing image slot?
+
+Yes. Use `reframe` on the real, permissioned clip rather than commissioning a new shoot. The customer's actual room and actual product stay intact; only the aspect ratio changes for the placement it needs to run in.
+
 ## The next action
 
-If you're sitting on a UGC library that never leaves the drive, don't shoot more. Run `get_funnel_coverage` to see exactly which positions in your funnel are still running studio-only content, and start with the one closest to the purchase decision. The free [diagnostic](/diagnostic) is a faster first look if you haven't mapped your funnel positions yet at all.
+If you're sitting on a UGC library that never leaves the drive, don't shoot more. Run `get_funnel_coverage` to see exactly which positions in your funnel are still running studio-only content despite permissioned ugc unused one folder over, and start with the one closest to the purchase decision. The free [diagnostic](/diagnostic) is a faster first look if you haven't mapped your funnel positions yet at all.
 
-If your advocacy stage has a similar blind spot one stage further down, [Reviews and Referrals Covered. Loyalty Is the Gap](/blog/loyalty-community-blind-spot-snack-brand/) covers the same pattern in the loyalty position. For a case where the gap sits earlier, in referral messaging entirely, see [The Referral Touchpoint Missing From Your Skincare Funnel](/blog/referral-program-missing-from-skincare-funnel/). And if referrals are running but still underperforming rather than absent, [Why Your Protein Brand's Referral Program Underperforms](/blog/referral-program-underperforming-protein-brand/) walks through that diagnosis.
+For the fuller framework this permissioned ugc unused problem sits inside, see [the ground-up guide to Amazon brand UGC ad strategy](/blog/amazon-ugc-ad-strategy-guide/). The same routing discipline applies before you shoot anything new: check whether [a winning ad is fading for a reason no fresh footage will fix](/blog/paid-social-ad-fatigue-new-trigger-angle/), whether [the hook you're running was ever built for this audience](/blog/paid-social-hook-mismatched-audience/), and whether [three untested concepts are quietly splitting a budget too thin to read](/blog/paid-social-testing-three-creative-concepts-blind/). And if your influencer seeding looks like [ten identical clips all saying the same generic thing](/blog/influencer-ugc-generic-love-this-content/), that's the collection-side version of the exact problem permissioned UGC unused in a drive creates on the deployment side.

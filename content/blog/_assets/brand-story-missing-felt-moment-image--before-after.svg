@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Four product-on-white photos answer "what is this." None answer "what does this feel like."</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="60" y="60" font-size="32" font-weight="600">Before: four crops, one question answered</text>
+  <text x="60" y="90" class="dim" font-size="20">"What is this" x4. Nothing answers what it feels like at 11pm.</text>
+
+  <rect x="60" y="130" width="150" height="150" rx="10" fill="#CC4F42" fill-opacity="0.2" stroke="#CC4F42" stroke-width="2"/>
+  <text x="135" y="215" text-anchor="middle" font-size="18" class="dim">product</text>
+  <text x="135" y="240" text-anchor="middle" font-size="18" class="dim">on white</text>
+
+  <rect x="230" y="130" width="150" height="150" rx="10" fill="#CC4F42" fill-opacity="0.2" stroke="#CC4F42" stroke-width="2"/>
+  <text x="305" y="215" text-anchor="middle" font-size="18" class="dim">texture</text>
+  <text x="305" y="240" text-anchor="middle" font-size="18" class="dim">detail</text>
+
+  <rect x="400" y="130" width="150" height="150" rx="10" fill="#CC4F42" fill-opacity="0.2" stroke="#CC4F42" stroke-width="2"/>
+  <text x="475" y="215" text-anchor="middle" font-size="18" class="dim">size</text>
+  <text x="475" y="240" text-anchor="middle" font-size="18" class="dim">reference</text>
+
+  <rect x="570" y="130" width="150" height="150" rx="10" fill="#CC4F42" fill-opacity="0.2" stroke="#CC4F42" stroke-width="2"/>
+  <text x="645" y="215" text-anchor="middle" font-size="18" class="dim">packaging</text>
+
+  <line x1="850" y1="120" x2="850" y2="490" class="hair"/>
+
+  <text x="900" y="60" font-size="32" font-weight="600" fill="#3E9847">After: the felt-moment slot</text>
+  <text x="900" y="90" class="dim" font-size="20">One shot answers "what happens to me."</text>
+
+  <rect x="900" y="130" width="240" height="220" rx="10" fill="#BD860E" fill-opacity="0.22" stroke="#E7A412" stroke-width="2" class="anim-breathe"/>
+  <text x="1020" y="220" text-anchor="middle" font-size="20" fill="#BD860E" font-weight="600">felt moment</text>
+  <text x="1020" y="250" text-anchor="middle" font-size="16" class="faint">eyes closed, real bedroom</text>
+  <text x="1020" y="275" text-anchor="middle" font-size="16" class="faint">under real weight</text>
+
+  <text x="60" y="440" font-size="20" class="dim">Four accurate photos. Zero feelings. That's the whole gap.</text>
+  <text x="60" y="480" font-size="18" class="faint">generate_listing_image_brief specs the missing slot before you shoot a fifth product photo.</text>
+</svg>

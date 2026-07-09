@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t">
+  <title id="t">Three concepts splitting one thin budget produce noise; one funded concept in a real ad creative testing plan produces a signal</title>
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #F5F4F0; }
+    .dim { fill: rgba(245,244,240,.78); } .faint { fill: rgba(245,244,240,.5); }
+    .hair { stroke: rgba(245,244,240,.16); stroke-width: 2; fill: none; }
+    .tool { font-family: ui-monospace, Menlo, monospace; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    @keyframes breathe { 50% { opacity: .75; } }
+    .anim-flow { stroke-dasharray: 12 12; animation: flow 3.5s linear infinite; }
+    .anim-breathe { animation: breathe 4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <text x="48" y="58" font-size="30" font-weight="700">Split budget vs. one funded test</text>
+
+  <!-- axis -->
+  <line x1="90" y1="560" x2="1130" y2="560" class="hair"/>
+  <line x1="90" y1="130" x2="90" y2="560" class="hair"/>
+  <text x="90" y="590" font-size="20" class="faint">day 1</text>
+  <text x="600" y="590" font-size="20" class="faint">day 7</text>
+  <text x="1090" y="590" font-size="20" class="faint">day 14</text>
+
+  <!-- baseline -->
+  <line x1="90" y1="420" x2="1130" y2="420" stroke="rgba(245,244,240,.16)" stroke-width="2" stroke-dasharray="6 6"/>
+  <text x="1120" y="412" text-anchor="end" font-size="18" class="faint">baseline CTR</text>
+
+  <!-- three-concepts noise, red, jittery, unreadable -->
+  <polyline points="90,410 180,340 270,460 360,380 450,430 540,360 630,440 720,400 810,350 900,430 990,390 1080,415 1130,405" fill="none" stroke="#CC4F42" stroke-width="3" stroke-linecap="round"/>
+  <text x="220" y="300" font-size="18" fill="#CC4F42">3 concepts, $20/day each &#8212; unreadable</text>
+
+  <!-- one funded concept, gold, clean rise -->
+  <polyline points="90,415 270,400 450,340 630,290 810,255 990,225 1130,205" fill="none" stroke="#BD860E" stroke-width="3" stroke-linecap="round" class="anim-breathe"/>
+  <circle cx="1130" cy="205" r="7" fill="#BD860E"/>
+  <text x="900" y="185" font-size="18" fill="#BD860E">1 concept, full budget &#8212; clear signal</text>
+
+  <rect x="820" y="470" width="290" height="52" rx="26" fill="none" stroke="#BD860E" stroke-width="2"/>
+  <text x="965" y="504" text-anchor="middle" font-size="18" class="tool" fill="#BD860E">design_test</text>
+</svg>
