@@ -1,0 +1,1260 @@
+[
+  {
+    "slug": "trust-gap-teardown-eco-sponges",
+    "subject": "Why 4.8 Stars Didn't Fix Your CVR",
+    "week": 1,
+    "send": "a",
+    "theme": "teardown",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "run_trust_gap"
+    ],
+    "angle": "A composite kitchen founder (compostable dish sponges) has 4.8 stars but a flat 4% CVR; running run_trust_gap shows the gap sits in Empathetic, not Authentic — the copy sells the material, not the mess it solves — so the fix is rewriting the opening line around that moment, not adding more proof."
+  },
+  {
+    "slug": "reviews-arent-trust-myth",
+    "subject": "More Reviews Won't Close Your Trust Gap",
+    "week": 1,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "displayed_reviews",
+    "tools": [
+      "identify_decision_trigger"
+    ],
+    "angle": "A pet-supplement founder keeps buying review software believing volume builds trust; identify_decision_trigger shows their buyer needs permission (a vet-backed reason to trust a new brand), not more stars, so the action is surfacing the one credibility line that grants permission instead of chasing review count."
+  },
+  {
+    "slug": "avatar-before-listing-copy",
+    "subject": "Write the Avatar Before You Write the Listing",
+    "week": 2,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "build_avatar_stage"
+    ],
+    "angle": "A baby-carrier founder rewrote their bullets four times with no lift because they skipped straight to copy; build_avatar_stage forces the S1 vocabulary through S4 objections sequence first, so the action is running all four stages before touching the listing again."
+  },
+  {
+    "slug": "know-your-customer-checklist",
+    "subject": "The 4-Question Check Before You Publish",
+    "week": 2,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "seo_content",
+    "tools": [
+      "create_avatar",
+      "update_avatar"
+    ],
+    "angle": "A coffee-subscription founder publishes blog content from instinct alone; the checklist is four questions from create_avatar/update_avatar — real vocabulary, real job, real trigger, real objection — that any piece must answer before it ships, or it's guessing dressed as strategy."
+  },
+  {
+    "slug": "main-image-ctr-teardown",
+    "subject": "Your Main Image Is Costing You the Click",
+    "week": 3,
+    "send": "a",
+    "theme": "teardown",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "generate_main_image_title_plan"
+    ],
+    "angle": "An outdoor camp-knife founder converts well once shoppers land but CTR sits under category average; generate_main_image_title_plan treats the image and title as one positioning statement, so the action is running a CTR split-test plan instead of another lifestyle photo swap."
+  },
+  {
+    "slug": "ctr-vs-cvr-metric-explainer",
+    "subject": "CTR and CVR Are Different Diagnoses",
+    "week": 3,
+    "send": "b",
+    "theme": "metric_deepdive",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "get_funnel_piece_metrics"
+    ],
+    "angle": "A beauty-serum founder treats one flat 'conversion' number as a single problem; get_funnel_piece_metrics splits it by funnel position, showing CTR (the image's job) and CVR (the listing's job) are separate diagnoses, so the action is pulling both apart before changing anything."
+  },
+  {
+    "slug": "ingest-real-reviews-by-asin",
+    "subject": "Stop Guessing What Reviews Actually Say",
+    "week": 4,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "displayed_reviews",
+    "tools": [
+      "ingest_evidence"
+    ],
+    "angle": "A dog-harness founder summarizes their own reviews from memory when pitching messaging; ingest_evidence parses the real reviews by ASIN into structured evidence, so the action is running it before the next messaging decision instead of trusting a skim."
+  },
+  {
+    "slug": "i-already-know-my-customer-myth",
+    "subject": "\"I Already Know My Customer\" Is the Trap",
+    "week": 4,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "shopify_pdp",
+    "tools": [
+      "build_avatar_stage"
+    ],
+    "angle": "A home-office desk-mat founder is confident in their customer picture because they built the product for themselves; build_avatar_stage's S3 triggers stage usually surfaces a buying reason the founder never considered, so the action is running the full stage even when you're sure."
+  },
+  {
+    "slug": "funnel-coverage-gap-checklist",
+    "subject": "Find the Funnel Position You Forgot",
+    "week": 5,
+    "send": "a",
+    "theme": "checklist",
+    "funnel": "cart_checkout_flow",
+    "tools": [
+      "list_funnel_inventory",
+      "get_funnel_coverage"
+    ],
+    "angle": "A garage tool-organizer founder has never mapped their funnel past the listing; list_funnel_inventory plus get_funnel_coverage produces a checklist of every canonical position live versus missing, and the action is filling the first gap it finds, usually cart_checkout_flow trust signals."
+  },
+  {
+    "slug": "welcome-series-gap-teardown",
+    "subject": "The Welcome Email You Never Wrote",
+    "week": 5,
+    "send": "b",
+    "theme": "teardown",
+    "funnel": "welcome_series",
+    "tools": [
+      "get_funnel_coverage"
+    ],
+    "angle": "A candle founder has a beautiful unboxing but silence for thirty days after; get_funnel_coverage flags welcome_series as empty, and the action is treating that blank space as a diagnosed gap, not a someday task."
+  },
+  {
+    "slug": "funnel-audit-weakest-link",
+    "subject": "Your Funnel Has One Weak Link. Find It.",
+    "week": 6,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "shipping_returns_policy",
+    "tools": [
+      "run_funnel_audit"
+    ],
+    "angle": "A protein-powder founder assumes ads are the problem because that's where the spend is; run_funnel_audit overlays the avatar against every touchpoint and often finds the real leak in shipping_returns_policy language, so the action is running the audit before cutting another ad budget."
+  },
+  {
+    "slug": "audit-surprise-weak-link-story",
+    "subject": "The Weak Link Wasn't Where We Looked",
+    "week": 6,
+    "send": "b",
+    "theme": "story",
+    "funnel": "brand_store_about",
+    "tools": [
+      "audit_asset"
+    ],
+    "angle": "A yoga-mat founder we'll call Priya was certain her ads were the problem; audit_asset run against her brand_store_about page instead found the real disconnect, and the lesson is auditing the asset the avatar actually visits before the one you assume matters."
+  },
+  {
+    "slug": "six-decision-triggers-explained",
+    "subject": "There Are Only Six Reasons Anyone Buys",
+    "week": 7,
+    "send": "a",
+    "theme": "metric_deepdive",
+    "funnel": "urgency_messaging",
+    "tools": [
+      "identify_decision_trigger"
+    ],
+    "angle": "A men's-grooming founder writes urgency copy that feels generic because it's aimed at no specific trigger; identify_decision_trigger names the one lever — permission, recognition, identity, belonging, momentum, or fear_of_loss — this purchase turns on, and the action is rewriting the urgency line around that single trigger, not all six."
+  },
+  {
+    "slug": "trigger-to-copy-checklist",
+    "subject": "From Trigger to Sentence: A Copy Checklist",
+    "week": 7,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "amazon_brand_story",
+    "tools": [
+      "identify_decision_trigger",
+      "generate_signature"
+    ],
+    "angle": "A tea founder has a trigger diagnosis sitting unused in a doc; the checklist runs identify_decision_trigger into generate_signature so the trigger becomes one distinctive line instead of an insight nobody applied."
+  },
+  {
+    "slug": "trust-gap-lift-before-after",
+    "subject": "Did the Rewrite Actually Work? Prove It.",
+    "week": 8,
+    "send": "a",
+    "theme": "metric_deepdive",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "compute_trust_gap_lift"
+    ],
+    "angle": "A baby-sleep-sack founder rewrote her listing and 'feels' like it's better; compute_trust_gap_lift gives the actual before/after delta on the pillar that was weak, and the action is checking that number before declaring the rewrite done."
+  },
+  {
+    "slug": "cookware-listing-rewrite-teardown",
+    "subject": "One Line Moved the Trust Gap 14 Points",
+    "week": 8,
+    "send": "b",
+    "theme": "teardown",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "compute_trust_gap_lift"
+    ],
+    "angle": "A cast-iron cookware founder changed one opening line, from a material claim to the first-use fear it removes; compute_trust_gap_lift showed the Empathetic pillar move, and the action is isolating one line at a time so you know which change earned the lift."
+  },
+  {
+    "slug": "new-year-funnel-reset-checklist",
+    "subject": "The New Year Reset Is an Audit, Not a Rebrand",
+    "week": 9,
+    "send": "a",
+    "theme": "seasonal",
+    "funnel": "shopify_pdp",
+    "tools": [
+      "run_funnel_audit"
+    ],
+    "angle": "A fitness resistance-band founder wants a 'fresh year' rebrand; run_funnel_audit usually finds the brand is fine and the shopify_pdp is the neglected link, so the January action is auditing what exists before designing anything new."
+  },
+  {
+    "slug": "fresh-year-fresh-brand-myth",
+    "subject": "You Don't Need a New Brand This January",
+    "week": 9,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "founder_content",
+    "tools": [
+      "generate_positioning_moves"
+    ],
+    "angle": "A skincare founder plans a January rebrand out of restlessness, not diagnosis; generate_positioning_moves works from the existing signature to find sharper moves within the current position, and the action is running that before touching a logo."
+  },
+  {
+    "slug": "distinctive-line-signature-tool",
+    "subject": "Every Brand Needs One Line That's Only Theirs",
+    "week": 10,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "brand_store_about",
+    "tools": [
+      "generate_signature"
+    ],
+    "angle": "A coffee-roastery founder's About page sounds like every other roastery's About page; generate_signature pulls the one distinctive line their brand actually owns, and the action is putting it above the fold before writing another paragraph of origin story."
+  },
+  {
+    "slug": "signature-rollout-checklist",
+    "subject": "One Line, Five Places: A Rollout Checklist",
+    "week": 10,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "packaging_unboxing",
+    "tools": [
+      "generate_signature",
+      "refine_creative_plan"
+    ],
+    "angle": "A macrame-kit founder has a great signature line living only on the homepage; the checklist uses refine_creative_plan to propagate it into packaging_unboxing and beyond, because a signature earns nothing sitting in one place."
+  },
+  {
+    "slug": "gallery-images-decorative-teardown",
+    "subject": "Your Gallery Images Look Nice and Say Nothing",
+    "week": 11,
+    "send": "a",
+    "theme": "teardown",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "generate_listing_image_brief"
+    ],
+    "angle": "A knife-sharpening founder has seven gallery images that are technically fine and persuasively empty; generate_listing_image_brief maps each slot to a specific job, including the photoreal felt-moment slot, and the action is checking which of your slots currently has no assigned job."
+  },
+  {
+    "slug": "felt-moment-slot-myth",
+    "subject": "The Lifestyle Photo Isn't Optional Anymore",
+    "week": 11,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "generate_listing_image_brief"
+    ],
+    "angle": "A baby-teething founder treats her one lifestyle photo as a nice-to-have if there's room left in the gallery; generate_listing_image_brief's dedicated felt-moment slot proves it isn't decorative — it's the only slot built to show the exhausted-parent relief the product actually sells — so the action is briefing that slot as mandatory."
+  },
+  {
+    "slug": "prettier-photo-fixes-ctr-myth",
+    "subject": "A Prettier Main Image Won't Fix Your CTR Alone",
+    "week": 12,
+    "send": "a",
+    "theme": "myth",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "generate_main_image_title_plan"
+    ],
+    "angle": "A backpack founder assumes a nicer main-image photo alone will lift CTR; generate_main_image_title_plan shows CTR moves when the image and title agree as ONE positioning statement, not when the photo gets prettier in isolation, and the action is checking whether your title's first 80 characters back up what the image promises."
+  },
+  {
+    "slug": "ctr-split-test-reading",
+    "subject": "How to Read a CTR Split Test Without Fooling Yourself",
+    "week": 12,
+    "send": "b",
+    "theme": "metric_deepdive",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "get_funnel_piece_metrics"
+    ],
+    "angle": "An electrolyte-supplement founder ended a split test after two days because one variant 'looked ahead'; get_funnel_piece_metrics shows the sample size a real CTR read needs, and the action is waiting for that threshold, not the leaderboard."
+  },
+  {
+    "slug": "aplus-content-disconnected-teardown",
+    "subject": "Your A+ Content Is Five Slides, Not One Story",
+    "week": 13,
+    "send": "a",
+    "theme": "teardown",
+    "funnel": "amazon_brand_story",
+    "tools": [
+      "generate_aplus_content_plan"
+    ],
+    "angle": "A pet-grooming founder's A+ module reads like five separate design requests stapled together; generate_aplus_content_plan builds it as one continuous 1472x3008 editorial composition across five addressable beats, and the action is checking whether your beats currently connect or just repeat."
+  },
+  {
+    "slug": "mobile-aplus-rules-checklist",
+    "subject": "The A+ Rules That Only Matter on Mobile",
+    "week": 13,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "shopify_pdp",
+    "tools": [
+      "generate_aplus_content_plan"
+    ],
+    "angle": "A home-office lamp founder designed A+ content on a desktop monitor and never checked it on a phone; the checklist from generate_aplus_content_plan's mobile rules catches the text that disappears and the beat order that stops making sense at that width."
+  },
+  {
+    "slug": "storefront-hero-tagline-system",
+    "subject": "Your Store Hero Is a Banner, Not a Brand",
+    "week": 14,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "brand_store_about",
+    "tools": [
+      "generate_storefront_messaging_plan"
+    ],
+    "angle": "An outdoor-cooler founder's 3000x600 hero is a discount banner where a brand statement should be; generate_storefront_messaging_plan builds the hero plus a signature-derived tagline system across job-mapped category tiles, and the action is auditing whether every tile currently earns its own headline."
+  },
+  {
+    "slug": "store-looked-like-catalog-story",
+    "subject": "The Store That Looked Like a Catalog",
+    "week": 14,
+    "send": "b",
+    "theme": "story",
+    "funnel": "founder_social",
+    "tools": [
+      "generate_storefront_messaging_plan"
+    ],
+    "angle": "A shampoo-bar founder we'll call Renee had a storefront that was technically complete and emotionally blank; generate_storefront_messaging_plan gave her own voice a place to live on the page, and the lesson is that a complete store and a branded one are not the same thing."
+  },
+  {
+    "slug": "storyboard-image-mode-spotlight",
+    "subject": "One Image Can Become One Video Job",
+    "week": 15,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "paid_social_creative",
+    "tools": [
+      "generate_video_storyboard"
+    ],
+    "angle": "A fitness-apparel founder assumes video ads need a full shot list before they can start; generate_video_storyboard's storyboard-image mode turns one multi-panel storyboard image into one video job, and the action is trying that mode before booking a shoot."
+  },
+  {
+    "slug": "video-ads-need-big-budget-myth",
+    "subject": "Video Ads Don't Need a Production Budget",
+    "week": 15,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "paid_social_creative",
+    "tools": [
+      "generate_video_storyboard"
+    ],
+    "angle": "A garage epoxy-kit founder has shelved video ads for a year waiting on budget; generate_video_storyboard's per-scene precision mode plans the shots first so spend goes toward one focused render, and the action is planning the scenes before pricing a shoot."
+  },
+  {
+    "slug": "ugc-ad-plan-trigger-hooks",
+    "subject": "Three Hooks, One Body: A UGC Ad Blueprint",
+    "week": 16,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "influencer_ugc",
+    "tools": [
+      "generate_ugc_ad_plan"
+    ],
+    "angle": "A baby-bottle founder briefs UGC creators with one generic hook and hopes; generate_ugc_ad_plan casts the persona from the customer avatar and writes three trigger-angled hooks over a single body, and the action is testing which trigger the audience responds to before scaling spend."
+  },
+  {
+    "slug": "ugc-disclosure-claim-checklist",
+    "subject": "What Your UGC Ad Can't Legally Claim",
+    "week": 16,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "influencer_ugc",
+    "tools": [
+      "generate_ugc_ad_plan"
+    ],
+    "angle": "A sleep-gummy founder's UGC script implies a health claim the label doesn't support; generate_ugc_ad_plan's claim-gated talking points and AI-presenter disclosure rails catch that before it airs, and the action is checking every spoken line against the checklist, not just the label copy."
+  },
+  {
+    "slug": "positioning-change-stale-assets-teardown",
+    "subject": "Your Positioning Changed. Your Assets Didn't.",
+    "week": 17,
+    "send": "a",
+    "theme": "teardown",
+    "funnel": "shopify_pdp",
+    "tools": [
+      "refine_creative_plan"
+    ],
+    "angle": "A coffee-grinder founder repositioned around durability three months ago but the PDP still leads with price; refine_creative_plan propagates a positioning change across every live plan at once, and the action is running the propagation instead of hunting down each stale asset by hand."
+  },
+  {
+    "slug": "wrong-tool-path-propagation-story",
+    "subject": "One Slot Needed a Fix. Everything Changed.",
+    "week": 17,
+    "send": "b",
+    "theme": "story",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "refine_creative_plan"
+    ],
+    "angle": "A pet-bed founder we'll call Alex asked refine_creative_plan to fix one gallery slot but selected full propagation, sending an unapproved positioning shift across every live asset; the lesson is picking the surgical-edit path for a single scene and reserving propagation for an actual, deliberate positioning change."
+  },
+  {
+    "slug": "coach-plans-higgsfield-renders-story",
+    "subject": "The Coach Writes the Brief. Higgsfield Renders It.",
+    "week": 18,
+    "send": "a",
+    "theme": "story",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "generate_listing_image_brief",
+      "generate_image"
+    ],
+    "angle": "A jade-roller founder assumed the AI tool would just 'make an image' from a vague prompt; the working session showed generate_listing_image_brief producing the plan and reference-kit discipline first, with Higgsfield's generate_image executing only after that brief existed, and the lesson is the brief is the product, not the render."
+  },
+  {
+    "slug": "reference-kit-discipline-checklist",
+    "subject": "Why Your AI Renders Keep Drifting Off-Brand",
+    "week": 18,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "paid_social_creative",
+    "tools": [
+      "generate_video_storyboard"
+    ],
+    "angle": "A camping-tent founder's renders show a slightly different product every time; the checklist is reference-kit discipline — a product sheet from the real photo, character sheets so the same face persists, edit-before-regenerate — and the action is building that kit before the next generate_video_storyboard handoff."
+  },
+  {
+    "slug": "campaign-metrics-before-judgment",
+    "subject": "The Number That Matters Isn't the Platform's",
+    "week": 19,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "paid_social_creative",
+    "tools": [
+      "create_campaign",
+      "get_campaign_metrics"
+    ],
+    "angle": "A home-office-chair founder eyeballs ad performance from the platform's own dashboard alone; create_campaign tied to get_campaign_metrics reports the number for the specific funnel position the campaign was meant to fix, and the action is reading that number before deciding to scale or kill it."
+  },
+  {
+    "slug": "content-performance-reading",
+    "subject": "Which Post Actually Moved the Needle?",
+    "week": 19,
+    "send": "b",
+    "theme": "metric_deepdive",
+    "funnel": "organic_social_profile",
+    "tools": [
+      "ingest_content_performance"
+    ],
+    "angle": "An embroidery-kit founder posts consistently but can't say which post did anything; ingest_content_performance ties organic posts back to funnel movement, and the action is running it monthly instead of judging by likes."
+  },
+  {
+    "slug": "experiment-lift-explained",
+    "subject": "\"It Felt Better\" Isn't a Lift Number",
+    "week": 20,
+    "send": "a",
+    "theme": "metric_deepdive",
+    "funnel": "trust_badges_social_proof",
+    "tools": [
+      "get_experiment_lift"
+    ],
+    "angle": "A beard-oil founder added a trust badge and is sure it helped; get_experiment_lift computes the actual lift from the test, not the vibe, and the action is running the number before repeating the badge everywhere else."
+  },
+  {
+    "slug": "test-won-vanity-lost-trust-teardown",
+    "subject": "The Test That Won and Still Hurt the Brand",
+    "week": 20,
+    "send": "b",
+    "theme": "teardown",
+    "funnel": "cart_checkout_flow",
+    "tools": [
+      "design_test",
+      "compute_trust_gap_lift"
+    ],
+    "angle": "A diaper-bag founder's urgency-timer test lifted add-to-carts but design_test paired with compute_trust_gap_lift showed the Authentic pillar dropped, and the action is checking trust gap alongside any conversion metric before calling a test a win."
+  },
+  {
+    "slug": "welcome-series-five-steps",
+    "subject": "The Five Emails a New Customer Actually Needs",
+    "week": 21,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "welcome_series",
+    "tools": [
+      "create_email_sequence"
+    ],
+    "angle": "A tea founder's welcome email is one discount blast; create_email_sequence's welcome=5 template builds the sequence that earns trust before it asks for a repeat purchase, and the action is running it before writing another one-off email."
+  },
+  {
+    "slug": "welcome-series-step-checklist",
+    "subject": "What Each of Your Five Welcome Emails Must Do",
+    "week": 21,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "order_confirmation_email",
+    "tools": [
+      "add_email_step"
+    ],
+    "angle": "A hammock founder has five welcome emails that all say roughly the same thing; add_email_step assigns each step its own job starting from order_confirmation_email, and the checklist is confirming no two steps are doing the same work."
+  },
+  {
+    "slug": "one-sequence-fits-every-moment-myth",
+    "subject": "One Email Sequence Doesn't Fit Every Moment",
+    "week": 22,
+    "send": "a",
+    "theme": "myth",
+    "funnel": "winback_replenishment",
+    "tools": [
+      "create_email_sequence"
+    ],
+    "angle": "A protein-powder founder runs the same generic flow for every trigger and wonders why abandoned-cart emails underperform; create_email_sequence's nurture=7 and abandoned_cart=3 templates exist because a stalled cart and a cooling lead are different psychological moments, and the action is matching sequence length to the moment."
+  },
+  {
+    "slug": "sequence-performance-reading",
+    "subject": "Which Email in the Sequence Is Actually Working?",
+    "week": 22,
+    "send": "b",
+    "theme": "metric_deepdive",
+    "funnel": "support_voice",
+    "tools": [
+      "get_sequence_performance"
+    ],
+    "angle": "A cat-litter-subscription founder can see the sequence's overall open rate but not which single email drives renewals; get_sequence_performance breaks it down step by step, and the action is cutting the one dead-weight step, not the whole sequence."
+  },
+  {
+    "slug": "unboxing-trust-moment-story",
+    "subject": "The Fifteen Seconds That Decide the Review",
+    "week": 23,
+    "send": "a",
+    "theme": "story",
+    "funnel": "packaging_unboxing",
+    "tools": [
+      "generate_ugc_ad_plan"
+    ],
+    "angle": "A coffee founder we'll call Dev didn't realize the unboxing moment was doing more trust-building than the listing ever could; generate_ugc_ad_plan's unboxing format turned that fifteen seconds into a scripted ad, and the lesson is treating your best real moment as an asset, not an accident."
+  },
+  {
+    "slug": "insert-card-checklist",
+    "subject": "What Belongs on the Insert Card (and What Doesn't)",
+    "week": 23,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "insert_cards",
+    "tools": [
+      "upsert_funnel_touchpoint"
+    ],
+    "angle": "A nursery-decor founder's insert card is a QR code and nothing else; upsert_funnel_touchpoint logs the card as a real funnel position with a job, and the checklist is one clear ask plus one trust line, nothing that competes with the unboxing moment itself."
+  },
+  {
+    "slug": "review-ask-timing-story",
+    "subject": "The Review Request That Finally Got Answered",
+    "week": 24,
+    "send": "a",
+    "theme": "story",
+    "funnel": "review_request_flow",
+    "tools": [
+      "create_email_sequence",
+      "ingest_evidence"
+    ],
+    "angle": "A yoga-block founder we'll call Priya asked for a review in the shipping-confirmation email and got silence for months; moving the ask to the moment create_email_sequence timed after the product had proven itself finally got responses, and ingest_evidence fed those real reviews into the next avatar update, closing the loop."
+  },
+  {
+    "slug": "asking-for-reviews-pushy-myth",
+    "subject": "Asking for a Review Isn't Pushy. Asking Wrong Is.",
+    "week": 24,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "ugc_repost_permissions",
+    "tools": [
+      "identify_decision_trigger"
+    ],
+    "angle": "A stationery-planner founder avoids asking for reviews because it feels like begging; identify_decision_trigger often shows the buyer's trigger is recognition or belonging, meaning an invitation to be featured lands as a favor, not a request, and the action is rewriting the ask around that trigger instead of dropping it."
+  },
+  {
+    "slug": "loyalty-community-from-repeat-data",
+    "subject": "Your Repeat Buyers Are Telling You Who to Build For",
+    "week": 25,
+    "send": "a",
+    "theme": "story",
+    "funnel": "loyalty_community",
+    "tools": [
+      "get_sequence_performance",
+      "run_funnel_audit"
+    ],
+    "angle": "A dog-treat-subscription founder we'll call Sam kept treating every buyer the same; get_sequence_performance surfaced the repeat-purchase segment, and run_funnel_audit showed loyalty_community was the only position still unclaimed, so the lesson is building the community around customers already proving they'll stay."
+  },
+  {
+    "slug": "full-funnel-audit-checklist",
+    "subject": "Which Funnel Positions Have You Actually Filled?",
+    "week": 26,
+    "send": "a",
+    "theme": "checklist",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "run_funnel_audit",
+      "get_funnel_coverage",
+      "compute_trust_gap_lift"
+    ],
+    "angle": "A camping-stove founder finishes six months of fixes but has never seen the whole map at once; run_funnel_audit plus get_funnel_coverage lays out every canonical position filled versus empty, and compute_trust_gap_lift confirms which fixes actually moved the score, so the action is running the full audit before planning the next quarter."
+  },
+  {
+    "slug": "teardown-listing-that-reads-like-a-manual",
+    "subject": "Your listing reads like a manual",
+    "week": 27,
+    "send": "a",
+    "theme": "teardown",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "run_trust_gap",
+      "generate_main_image_title_plan"
+    ],
+    "angle": "A cast-iron cookware founder's CVR stalled because her listing copy lists specs (thickness, weight) instead of the felt moment of searing a steak for guests; run_trust_gap flags Empathetic as the weakest pillar, and generate_main_image_title_plan rewrites the first 80 characters around that felt moment instead."
+  },
+  {
+    "slug": "the-ctr-number-nobody-explains",
+    "subject": "The CTR number nobody explains",
+    "week": 27,
+    "send": "b",
+    "theme": "metric_deepdive",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "get_funnel_piece_metrics",
+      "generate_main_image_title_plan"
+    ],
+    "angle": "A magnesium-gummy founder watches search CTR sit at 0.3% and blames the algorithm, but get_funnel_piece_metrics shows the main image hasn't changed in eight months while competitors refreshed twice; generate_main_image_title_plan is the fix, not a bigger ad budget."
+  },
+  {
+    "slug": "the-tool-that-reads-your-reviews-for-you",
+    "subject": "The tool that reads your reviews for you",
+    "week": 28,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "displayed_reviews",
+    "tools": [
+      "ingest_evidence",
+      "build_avatar_stage"
+    ],
+    "angle": "A dog-joint-chew founder has 400 reviews and no time to mine them; ingest_evidence parses the real review text by ASIN straight into the avatar, and build_avatar_stage turns the recurring phrase \"he's finally not limping on stairs\" into vocabulary the listing can borrow verbatim."
+  },
+  {
+    "slug": "more-brand-story-words-wont-save-you",
+    "subject": "Myth: more brand story = more trust",
+    "week": 28,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "amazon_brand_story",
+    "tools": [
+      "generate_signature",
+      "run_trust_gap"
+    ],
+    "angle": "A baby-carrier founder doubled the word count on her Amazon brand story hoping length would read as credibility, but run_trust_gap shows Distinctive is still the weak pillar; the fix is one sharp generate_signature line repeated, not more paragraphs."
+  },
+  {
+    "slug": "the-five-touchpoints-scaling-brands-forget",
+    "subject": "5 touchpoints you forgot when you scaled",
+    "week": 29,
+    "send": "a",
+    "theme": "checklist",
+    "funnel": "welcome_series",
+    "tools": [
+      "list_funnel_inventory",
+      "get_funnel_coverage"
+    ],
+    "angle": "A facial-oil founder added three new SKUs this quarter but never built a welcome series or insert cards for any of them; list_funnel_inventory plus get_funnel_coverage surfaces exactly which touchpoints are missing per SKU before another launch goes out uncovered."
+  },
+  {
+    "slug": "the-founder-video-that-finally-converted",
+    "subject": "The founder video that finally converted",
+    "week": 29,
+    "send": "b",
+    "theme": "story",
+    "funnel": "founder_social",
+    "tools": [
+      "identify_decision_trigger",
+      "generate_ugc_ad_plan"
+    ],
+    "angle": "A camping-hammock founder we'll call Dez posted a dozen founder-social videos with no lift, until identify_decision_trigger named belonging as the lever this purchase turns on and generate_ugc_ad_plan cast the hook around a solo trip, not a spec list."
+  },
+  {
+    "slug": "urgency-banners-are-not-a-trust-strategy",
+    "subject": "Urgency banners aren't a trust strategy",
+    "week": 30,
+    "send": "a",
+    "theme": "myth",
+    "funnel": "urgency_messaging",
+    "tools": [
+      "run_trust_gap",
+      "identify_decision_trigger"
+    ],
+    "angle": "A cold-brew founder added a low-stock banner to her urgency messaging hoping it would lift conversion, but run_trust_gap shows the real gap is Insight-Driven, and identify_decision_trigger names momentum, not fear_of_loss, as the lever this repeat-purchase category actually needs."
+  },
+  {
+    "slug": "the-checkout-page-nobody-audits",
+    "subject": "The checkout page nobody audits",
+    "week": 30,
+    "send": "b",
+    "theme": "teardown",
+    "funnel": "cart_checkout_flow",
+    "tools": [
+      "audit_asset",
+      "run_funnel_audit"
+    ],
+    "angle": "A resistance-band founder tears down every ad but never looks at his checkout confirmation copy; audit_asset run against just that one asset shows it's still written for a different avatar than the one run_funnel_audit says is buying now."
+  },
+  {
+    "slug": "what-a-conversion-lift-actually-means",
+    "subject": "What a conversion lift actually means",
+    "week": 31,
+    "send": "a",
+    "theme": "metric_deepdive",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "get_experiment_lift",
+      "compute_trust_gap_lift"
+    ],
+    "angle": "A standing-desk founder ran a main-image split test and got a lift she couldn't explain; get_experiment_lift ties the number to the specific creative change, and compute_trust_gap_lift shows it tracks a 6-point gain on the Empathetic pillar, not luck."
+  },
+  {
+    "slug": "one-asset-one-verdict",
+    "subject": "One asset, one verdict",
+    "week": 31,
+    "send": "b",
+    "theme": "tool_spotlight",
+    "funnel": "shopify_pdp",
+    "tools": [
+      "audit_asset"
+    ],
+    "angle": "A tool-organizer founder doesn't have time to re-run a full audit every time he tweaks one image; audit_asset scores just his Shopify PDP hero against the avatar in isolation, so it gets a pass or fail without waiting on a whole run_funnel_audit cycle."
+  },
+  {
+    "slug": "the-hobbyist-avatar-nobody-built",
+    "subject": "The hobbyist avatar nobody built",
+    "week": 32,
+    "send": "a",
+    "theme": "story",
+    "funnel": "influencer_ugc",
+    "tools": [
+      "build_avatar_stage",
+      "generate_ugc_ad_plan"
+    ],
+    "angle": "An embroidery-kit founder we'll call Priya kept getting comments on her influencer UGC like \"I thought this was for experts\"; build_avatar_stage's objections stage surfaced exactly that fear, and generate_ugc_ad_plan built the \"I thought X, but…\" skeptic-flip hook straight from it."
+  },
+  {
+    "slug": "the-unboxing-checklist-before-you-scale-ads",
+    "subject": "The unboxing checklist before you scale ads",
+    "week": 32,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "packaging_unboxing",
+    "tools": [
+      "upsert_funnel_touchpoint",
+      "get_funnel_coverage"
+    ],
+    "angle": "A soy-candle founder is about to triple ad spend without ever logging her unboxing moment as a tracked touchpoint; upsert_funnel_touchpoint gets it into the system so get_funnel_coverage can tell her if it's actually covering the Authentic pillar or just looking pretty."
+  },
+  {
+    "slug": "the-pdp-that-sells-ingredients-not-outcomes",
+    "subject": "Your PDP sells ingredients, not outcomes",
+    "week": 33,
+    "send": "a",
+    "theme": "teardown",
+    "funnel": "shopify_pdp",
+    "tools": [
+      "run_trust_gap",
+      "generate_aplus_content_plan"
+    ],
+    "angle": "A retinol-serum founder's Shopify PDP leads with percentages and pH levels; run_trust_gap flags Empathetic as the weak pillar because nothing addresses \"will this make my skin worse before better,\" and generate_aplus_content_plan rebuilds the page as one continuous editorial arc around that exact fear."
+  },
+  {
+    "slug": "five-stars-are-not-the-same-as-trust",
+    "subject": "5-star reviews aren't the same as trust",
+    "week": 33,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "review_request_flow",
+    "tools": [
+      "get_sequence_performance",
+      "create_email_sequence"
+    ],
+    "angle": "A freeze-dried-treat founder has a 4.8 rating and still can't scale ad spend profitably; get_sequence_performance shows her review-request flow fires after the emotional peak, and create_email_sequence rebuilds the ask around the right moment instead."
+  },
+  {
+    "slug": "refresh-the-ad-not-the-whole-campaign",
+    "subject": "Refresh the ad, not the whole campaign",
+    "week": 34,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "paid_social_creative",
+    "tools": [
+      "generate_video_storyboard",
+      "refine_creative_plan"
+    ],
+    "angle": "A portable-stove founder was about to reshoot an entire ad because CTR dropped, but refine_creative_plan lets him swap just the failing hook scene inside the existing generate_video_storyboard plan without touching the scenes that still convert."
+  },
+  {
+    "slug": "the-welcome-email-nobody-opens",
+    "subject": "The welcome email nobody opens",
+    "week": 34,
+    "send": "b",
+    "theme": "metric_deepdive",
+    "funnel": "welcome_series",
+    "tools": [
+      "get_sequence_performance"
+    ],
+    "angle": "A yoga-mat founder's welcome series has a 61% open rate on email one and 9% by email five; get_sequence_performance isolates exactly where the drop-off starts, usually the tell for a sequence that stopped talking to the buyer and started talking to the brand."
+  },
+  {
+    "slug": "the-pre-scale-funnel-checklist",
+    "subject": "The pre-scale funnel checklist",
+    "week": 35,
+    "send": "a",
+    "theme": "checklist",
+    "funnel": "trust_badges_social_proof",
+    "tools": [
+      "list_funnel_inventory",
+      "get_funnel_coverage"
+    ],
+    "angle": "A nonstick-pan founder is about to double ad spend on a listing she hasn't audited since launch; list_funnel_inventory plus get_funnel_coverage takes ten minutes and shows she's about to pour money into a funnel with a hole in trust badges and social proof."
+  },
+  {
+    "slug": "the-main-image-nobody-updated",
+    "subject": "Your main image never got updated",
+    "week": 35,
+    "send": "b",
+    "theme": "teardown",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "run_trust_gap",
+      "generate_main_image_title_plan"
+    ],
+    "angle": "A scalp-serum founder hasn't touched her main image since launch while three competitors now show the product mid-use; run_trust_gap ties the stalled CTR to a flat Distinctive score, and generate_main_image_title_plan pairs a new image concept with a title rewrite as one positioning statement."
+  },
+  {
+    "slug": "the-prime-day-ad-that-is-now-tired",
+    "subject": "That Prime Day ad? It's tired now",
+    "week": 36,
+    "send": "a",
+    "theme": "seasonal",
+    "funnel": "paid_social_creative",
+    "tools": [
+      "run_funnel_audit",
+      "refine_creative_plan"
+    ],
+    "angle": "A protein-bar founder is still running the same three Prime Day ad variants six weeks later while CTR quietly halves; run_funnel_audit flags creative fatigue as this month's weakest link, and refine_creative_plan swaps the hook and CTA scenes without rebuilding the storyboard from zero."
+  },
+  {
+    "slug": "know-which-creative-died-first",
+    "subject": "Know which creative died first",
+    "week": 36,
+    "send": "b",
+    "theme": "tool_spotlight",
+    "funnel": "paid_social_creative",
+    "tools": [
+      "ingest_content_performance",
+      "get_funnel_piece_metrics"
+    ],
+    "angle": "A packing-cube founder ran four Prime Day ad variants and only knows the blended ROAS; ingest_content_performance feeds the per-asset numbers in and get_funnel_piece_metrics shows which single creative's CTR cratered first, so the refresh budget goes to the actual dead asset."
+  },
+  {
+    "slug": "the-post-prime-day-review-window-you-missed",
+    "subject": "You missed the post-Prime-Day review window",
+    "week": 37,
+    "send": "a",
+    "theme": "seasonal",
+    "funnel": "review_request_flow",
+    "tools": [
+      "get_sequence_performance",
+      "add_email_step"
+    ],
+    "angle": "A loose-leaf-tea founder's Prime Day buyers are three weeks past delivery and her review-request flow never adjusted timing for the surge; get_sequence_performance shows the ask landed after the emotional high wore off, and add_email_step inserts an earlier touch tuned to when Prime Day buyers actually open the box."
+  },
+  {
+    "slug": "the-prime-day-discount-hangover-myth",
+    "subject": "The Prime Day discount hangover, debunked",
+    "week": 37,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "run_trust_gap"
+    ],
+    "angle": "A card-game founder assumes post-Prime-Day CVR dropped because the discount ended, but run_trust_gap on the same listing copy before and after shows the pillar scores didn't move; the buyers browsing now are a colder, less-triggered avatar the listing was never written for."
+  },
+  {
+    "slug": "the-surgical-edit-vs-the-reshoot",
+    "subject": "The surgical edit vs. the reshoot",
+    "week": 38,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "paid_social_creative",
+    "tools": [
+      "refine_creative_plan",
+      "design_test"
+    ],
+    "angle": "A raised-bed-planter founder's ad fatigue is real but a full reshoot is three weeks away; refine_creative_plan does the one-scene surgical edit today, and design_test turns the swap into a structured hypothesis to prove whether the fatigue was creative or seasonal."
+  },
+  {
+    "slug": "your-prime-day-buyers-are-going-quiet",
+    "subject": "Your Prime Day buyers are going quiet",
+    "week": 38,
+    "send": "b",
+    "theme": "seasonal",
+    "funnel": "winback_replenishment",
+    "tools": [
+      "create_email_sequence",
+      "get_sequence_performance"
+    ],
+    "angle": "A bike-light founder's Prime Day cohort is a month from typical replenishment silence with no winback sequence built for that spike of buyers; create_email_sequence stands it up now, and get_sequence_performance will show by week 44 if the timing caught them."
+  },
+  {
+    "slug": "start-holiday-creative-before-halloween",
+    "subject": "Start holiday creative before Halloween",
+    "week": 39,
+    "send": "a",
+    "theme": "seasonal",
+    "funnel": "amazon_main_image",
+    "tools": [
+      "generate_listing_image_brief",
+      "generate_main_image_title_plan"
+    ],
+    "angle": "A reed-diffuser founder is planning to brief her holiday main image in November like last year, when the render queue was three weeks deep; generate_listing_image_brief and generate_main_image_title_plan lock the image-SET and title positioning in September instead."
+  },
+  {
+    "slug": "the-gifting-season-coverage-check",
+    "subject": "The gifting-season coverage check",
+    "week": 39,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "list_funnel_inventory",
+      "get_funnel_coverage"
+    ],
+    "angle": "A wooden-toy founder has never checked whether her listing copy actually speaks to a gift-buyer versus the parent buying for their own kid; list_funnel_inventory plus get_funnel_coverage shows exactly where that \"buying for someone else\" moment is uncovered before Q4 traffic doubles."
+  },
+  {
+    "slug": "the-gift-buyer-is-a-different-avatar",
+    "subject": "Your gift buyer is a different avatar",
+    "week": 40,
+    "send": "a",
+    "theme": "seasonal",
+    "funnel": "founder_content",
+    "tools": [
+      "build_avatar_stage",
+      "update_avatar"
+    ],
+    "angle": "A phone-case founder built her only avatar from her usual self-purchasing customer, but Q4 traffic skews toward someone buying for a teenager they don't fully understand; a fresh build_avatar_stage job-map run and update_avatar keep both avatars live so October founder content speaks to the right one."
+  },
+  {
+    "slug": "the-line-that-finally-beat-the-clones",
+    "subject": "The line that finally beat the clones",
+    "week": 40,
+    "send": "b",
+    "theme": "story",
+    "funnel": "amazon_brand_story",
+    "tools": [
+      "generate_signature",
+      "generate_positioning_moves"
+    ],
+    "angle": "An air-fryer founder we'll call Renata was getting undercut by five near-identical listings until generate_signature produced one distinctive line about counter space, not capacity, and generate_positioning_moves mapped exactly where that line needed to land in her brand story before Q4 comparison-shopping hit."
+  },
+  {
+    "slug": "discount-deeper-is-not-a-q4-strategy",
+    "subject": "Myth: discount deeper for Q4",
+    "week": 41,
+    "send": "a",
+    "theme": "myth",
+    "funnel": "urgency_messaging",
+    "tools": [
+      "run_trust_gap",
+      "identify_decision_trigger"
+    ],
+    "angle": "A commuter-backpack founder is planning her biggest-ever discount to \"compete\" this Q4, but run_trust_gap shows the listing's real weak spot is Insight-Driven, and identify_decision_trigger names recognition, not fear_of_loss, as this category's actual lever going into gifting season."
+  },
+  {
+    "slug": "the-trust-badge-nobody-checked-since-launch",
+    "subject": "The trust badge nobody's checked since launch",
+    "week": 41,
+    "send": "b",
+    "theme": "seasonal",
+    "funnel": "trust_badges_social_proof",
+    "tools": [
+      "audit_asset",
+      "run_funnel_audit"
+    ],
+    "angle": "A minimalist-jewelry founder is about to face her highest-stakes traffic of the year on trust-badge copy she wrote at launch two years ago; audit_asset scores it fresh against this year's avatar and run_funnel_audit confirms whether it's still the weakest link before Q4 spend ramps."
+  },
+  {
+    "slug": "the-returns-policy-that-scares-off-gift-buyers",
+    "subject": "Your returns policy is scaring off gift-buyers",
+    "week": 42,
+    "send": "a",
+    "theme": "seasonal",
+    "funnel": "shipping_returns_policy",
+    "tools": [
+      "audit_asset",
+      "run_funnel_audit"
+    ],
+    "angle": "A beard-oil founder's shipping and returns copy was written for the guy buying it for himself, not the wife buying it as a gift six weeks before it's opened; audit_asset flags the gap and run_funnel_audit confirms it's the weakest link once gifting traffic starts."
+  },
+  {
+    "slug": "the-abandonment-spike-before-the-drop",
+    "subject": "The abandonment spike before the drop",
+    "week": 42,
+    "send": "b",
+    "theme": "metric_deepdive",
+    "funnel": "shipping_returns_policy",
+    "tools": [
+      "ingest_funnel_analytics",
+      "get_funnel_piece_metrics"
+    ],
+    "angle": "An insulated-bottle founder sees cart abandonment climb every November and assumes it's just Q4 browsing behavior; ingest_funnel_analytics feeds this year's data in and get_funnel_piece_metrics shows the spike starts the exact day her shipping cutoff date goes unclear — a fixable date, not a mood."
+  },
+  {
+    "slug": "the-checkout-page-still-says-summer",
+    "subject": "Your checkout page still says summer",
+    "week": 43,
+    "send": "a",
+    "theme": "seasonal",
+    "funnel": "cart_checkout_flow",
+    "tools": [
+      "audit_asset",
+      "refine_creative_plan"
+    ],
+    "angle": "A planner-brand founder never updated her checkout messaging for gift-wrap or delivery-by-Christmas language; audit_asset flags the mismatch against the current gifting avatar, and refine_creative_plan does the surgical copy swap without touching anything else in the funnel."
+  },
+  {
+    "slug": "run-the-audit-before-the-traffic-not-after",
+    "subject": "Run the audit before the traffic, not after",
+    "week": 43,
+    "send": "b",
+    "theme": "tool_spotlight",
+    "funnel": "trust_badges_social_proof",
+    "tools": [
+      "run_funnel_audit"
+    ],
+    "angle": "A bedroom-humidifier founder always finds her weakest link — usually trust badges — in the post-holiday debrief, three months too late; run_funnel_audit run now, before Black Friday traffic lands, surfaces the same weak link while there's still time to fix it."
+  },
+  {
+    "slug": "the-final-pre-black-friday-checklist",
+    "subject": "The final pre-Black-Friday checklist",
+    "week": 44,
+    "send": "a",
+    "theme": "checklist",
+    "funnel": "urgency_messaging",
+    "tools": [
+      "list_funnel_inventory",
+      "get_funnel_coverage",
+      "run_funnel_audit"
+    ],
+    "angle": "A kitchen-knife-set founder is one week from Black Friday with no single view of what's covered, weak, or missing; list_funnel_inventory plus get_funnel_coverage plus a fast run_funnel_audit pass is the last chance to catch a thin urgency-messaging block before the biggest traffic day of the year."
+  },
+  {
+    "slug": "the-unboxing-moment-becomes-a-gift-moment",
+    "subject": "Unboxing just became a gift moment",
+    "week": 44,
+    "send": "b",
+    "theme": "seasonal",
+    "funnel": "packaging_unboxing",
+    "tools": [
+      "audit_asset"
+    ],
+    "angle": "A ceramic-mug founder's unboxing was designed for a solo buyer opening their own order, but half of December's boxes get opened by someone who didn't pick the product; audit_asset run against that gift-recipient scenario shows whether the unboxing still lands the brand story cold."
+  },
+  {
+    "slug": "what-your-q4-campaigns-actually-earned",
+    "subject": "What your Q4 campaigns actually earned",
+    "week": 45,
+    "send": "a",
+    "theme": "metric_deepdive",
+    "funnel": "paid_social_creative",
+    "tools": [
+      "ingest_campaign_analytics",
+      "get_campaign_metrics"
+    ],
+    "angle": "A glass-meal-prep-container founder has six Q4 ad campaigns and one blended number in Seller Central; ingest_campaign_analytics pulls the real per-campaign spend and get_campaign_metrics splits it back out so she knows which campaign to keep running into January and which to kill."
+  },
+  {
+    "slug": "the-january-cohort-nobody-planned-for",
+    "subject": "The January cohort nobody planned for",
+    "week": 45,
+    "send": "b",
+    "theme": "story",
+    "funnel": "winback_replenishment",
+    "tools": [
+      "create_email_sequence",
+      "get_sequence_performance"
+    ],
+    "angle": "A prenatal-vitamin founder we'll call Fatima had a Q4 gift-buyer spike about to churn in January with no winback sequence built for a gift-recipient rather than the original buyer; create_email_sequence stands one up now, timed to when get_sequence_performance data says this cohort actually re-engages."
+  },
+  {
+    "slug": "the-trust-gap-score-a-year-later",
+    "subject": "Her Trust Gap score, a year later",
+    "week": 46,
+    "send": "a",
+    "theme": "story",
+    "funnel": "displayed_reviews",
+    "tools": [
+      "run_trust_gap",
+      "compute_trust_gap_lift"
+    ],
+    "angle": "A no-pull-harness founder we'll call Owen ran run_trust_gap in January at 41 on Empathetic and retested the same review-anchored listing in December; compute_trust_gap_lift shows the exact delta and which single fix — the felt-moment image, not the copy — earned most of it."
+  },
+  {
+    "slug": "how-many-of-your-tests-actually-won",
+    "subject": "How many of your tests actually won?",
+    "week": 46,
+    "send": "b",
+    "theme": "metric_deepdive",
+    "funnel": "shopify_pdp",
+    "tools": [
+      "get_experiment_lift",
+      "design_test"
+    ],
+    "angle": "An ergonomic-office-chair founder ran eight PDP design_test experiments this year and remembers roughly none of the outcomes; get_experiment_lift pulled across all eight gives her the real win rate, usually lower than felt memory and worth knowing before next year's test calendar."
+  },
+  {
+    "slug": "the-weak-link-that-never-moved-all-year",
+    "subject": "The weak link that never moved all year",
+    "week": 47,
+    "send": "a",
+    "theme": "metric_deepdive",
+    "funnel": "urgency_messaging",
+    "tools": [
+      "ingest_funnel_analytics",
+      "get_funnel_piece_metrics"
+    ],
+    "angle": "An electrolyte-powder founder assumed her funnel improved steadily through the year; ingest_funnel_analytics loaded across all twelve months and get_funnel_piece_metrics shows her urgency messaging scored the same in December as it did in January, untouched the whole time."
+  },
+  {
+    "slug": "the-listing-that-never-got-a-second-draft",
+    "subject": "The listing that never got a second draft",
+    "week": 47,
+    "send": "b",
+    "theme": "teardown",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "run_trust_gap",
+      "generate_brief"
+    ],
+    "angle": "A pet-grooming-clippers founder shipped her listing copy on launch day and never touched it again all year; run_trust_gap on the untouched copy still shows the same Insight-Driven gap it had in January, and generate_brief hands her VA the designer-ready fix to finally ship draft two."
+  },
+  {
+    "slug": "proof-before-you-plan-next-year",
+    "subject": "Proof before you plan next year",
+    "week": 48,
+    "send": "a",
+    "theme": "tool_spotlight",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "get_experiment_lift",
+      "compute_trust_gap_lift"
+    ],
+    "angle": "A pour-over-dripper founder is about to set next year's creative budget on gut feel; get_experiment_lift and compute_trust_gap_lift together show which listing-copy rewrite actually moved conversion this year, so next year's budget follows evidence, not memory."
+  },
+  {
+    "slug": "the-year-end-funnel-coverage-audit",
+    "subject": "The year-end funnel coverage audit",
+    "week": 48,
+    "send": "b",
+    "theme": "checklist",
+    "funnel": "insert_cards",
+    "tools": [
+      "list_funnel_inventory",
+      "get_funnel_coverage"
+    ],
+    "angle": "A baby-swaddle-blanket founder added a welcome series and an insert-card touchpoint mid-year but never re-ran coverage since; list_funnel_inventory plus get_funnel_coverage gives her one honest map of whether that insert-card piece is still live going into next year's planning."
+  },
+  {
+    "slug": "the-page-that-looked-fine-all-year",
+    "subject": "The page that looked fine all year",
+    "week": 49,
+    "send": "a",
+    "theme": "teardown",
+    "funnel": "shopify_pdp",
+    "tools": [
+      "run_trust_gap",
+      "audit_asset"
+    ],
+    "angle": "An insulated-cooler founder's Shopify PDP never threw an obvious red flag all year, so it never got audited; audit_asset run cold at year-end finds a stale Distinctive score that run_trust_gap confirms has been quietly capping CVR since spring."
+  },
+  {
+    "slug": "posting-more-is-not-a-growth-strategy",
+    "subject": "Myth: post more, grow more",
+    "week": 49,
+    "send": "b",
+    "theme": "myth",
+    "funnel": "founder_social",
+    "tools": [
+      "identify_decision_trigger"
+    ],
+    "angle": "A candle-making-kit founder tripled her founder-social posting cadence this year with flat follower-to-buyer conversion; identify_decision_trigger shows the content never named the actual lever — identity, not belonging — so more volume just repeated the same miss louder."
+  },
+  {
+    "slug": "the-three-tool-year-end-review",
+    "subject": "The 3-tool year-end review",
+    "week": 50,
+    "send": "a",
+    "theme": "checklist",
+    "funnel": "trust_badges_social_proof",
+    "tools": [
+      "list_funnel_inventory",
+      "get_funnel_coverage",
+      "run_funnel_audit"
+    ],
+    "angle": "A vitamin-C-serum founder wants one clean read on where the year leaves her funnel; list_funnel_inventory maps what exists, get_funnel_coverage flags the gaps, and run_funnel_audit ranks trust badges and social proof as the weakest link — in that order, ten minutes total."
+  },
+  {
+    "slug": "the-number-that-sets-next-years-budget",
+    "subject": "The number that sets next year's budget",
+    "week": 50,
+    "send": "b",
+    "theme": "tool_spotlight",
+    "funnel": "influencer_ugc",
+    "tools": [
+      "ingest_content_performance",
+      "get_campaign_metrics"
+    ],
+    "angle": "A portable-jump-starter founder is guessing at next year's ad budget from vibes; ingest_content_performance feeds this year's influencer-UGC numbers in, and get_campaign_metrics turns them into the one figure — cost per trust-gap point closed — worth basing next year's spend on."
+  },
+  {
+    "slug": "well-fix-it-in-january-is-a-trap",
+    "subject": "We'll fix it in January is a trap",
+    "week": 51,
+    "send": "a",
+    "theme": "myth",
+    "funnel": "urgency_messaging",
+    "tools": [
+      "run_trust_gap",
+      "identify_decision_trigger"
+    ],
+    "angle": "A cat-litter-subscription founder is telling herself the Q4 dip is temporary and January will sort itself out; run_trust_gap on the same listing shows the gap didn't open in Q4, it's been there since spring, and identify_decision_trigger confirms momentum — not urgency — is the lever that's been missing all along."
+  },
+  {
+    "slug": "one-founders-trust-gap-year-in-review",
+    "subject": "One founder's Trust Gap, year in review",
+    "week": 52,
+    "send": "a",
+    "theme": "story",
+    "funnel": "amazon_listing_copy",
+    "tools": [
+      "run_trust_gap",
+      "compute_trust_gap_lift",
+      "generate_positioning_moves"
+    ],
+    "angle": "A mineral-sunscreen founder we'll call Noor ran her first run_trust_gap in January at 38 on Distinctive and closes the year at 71 after four rounds of generate_positioning_moves; compute_trust_gap_lift lays the whole trajectory out as the one chart worth screenshotting before next year's plan starts."
+  }
+]

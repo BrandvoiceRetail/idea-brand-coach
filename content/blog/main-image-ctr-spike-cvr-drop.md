@@ -1,0 +1,58 @@
+---
+title: CTR Went Up, Conversions Went Down: The Listing Copy Fix
+description: A kitchen brand's new main image spiked CTR overnight, then CVR cratered. The coach traces it to a title-copy mismatch and rebuilds both as one promise.
+date: 2025-12-22
+category: Diagnose
+funnel: amazon_listing_copy
+tools: generate_main_image_title_plan, run_trust_gap
+keywords: amazon ctr cvr mismatch, main image title plan, amazon listing copy fix, why cvr dropped after new main image
+slug: main-image-ctr-spike-cvr-drop
+---
+
+## The number that looked like a win
+
+Maya sells an avocado tool — the kind with a slicer, a pitter, and a curved scoop that finally gets the last bit of flesh out of the shell. Two weeks ago she relaunched the main image: better lighting, a bolder color-block background, a title tweak that led with "5-in-1." Her morning dashboard told her it worked. Impressions were flat, but CTR jumped from 0.4% to 0.9%. She screenshotted it for her group chat.
+
+Then the CVR numbers came in behind it. Session-to-order conversion, which had been sitting around 11%, dropped to 6% over the same week. Sales barely moved. More people were clicking. Almost none of them were buying.
+
+This is the trap of judging a listing change by a single number. CTR going up looks like success because it's the metric you can see fastest. But CTR and CVR aren't independent — the image and title set an expectation, and the rest of the listing has to pay it off. When they diverge like this, in opposite directions, in the same week, that's not two problems. It's one problem showing up twice.
+
+## Why "just revert the image" doesn't fix it
+
+Maya's first instinct was to roll the image back. That would probably claw CTR back down to where it was, but it wouldn't tell her *why* the new image pulled in the wrong clicks, and it would throw away a genuinely better piece of creative. The image wasn't broken. It was making a promise the rest of the listing didn't keep.
+
+The usual fixes — swap the image again, try a different background color, tweak the bullet order — treat this as an aesthetics problem. It isn't. It's a positioning problem: the main image and title now say one thing, and the bullets underneath say another. Shoppers click on the promise, land on the page, and don't find it. That's not a CTR problem or a CVR problem. It's a mismatch between what the front door says and what's actually inside the house.
+
+## The diagnosis lens: one promise, not two messages
+
+The IDEA framework treats a listing as a single argument, not a stack of independent parts. When the main image, title, and bullets each make their own separate pitch, the buyer has to reconcile them mid-decision — and most won't bother. They'll bounce instead, which is exactly what Maya's numbers show.
+
+The fix isn't "better copy" in the abstract. It's rebuilding the image and title as one coordinated statement, then checking that the rest of the page actually delivers on it. That's a job for two tools working in sequence, not one.
+
+## The working session
+
+Maya opened a session with the coach and described the exact split: CTR up, CVR down, same week, no other changes.
+
+The coach started with `generate_main_image_title_plan`, treating the main image and title as a single positioning statement rather than two separate assets. The plan surfaced the actual mismatch: the new main image led with "5-in-1" and a bold "does everything" visual cue, but the title and the top bullet were still built around the original angle — mess-free pitting, nothing else. The image had quietly promised versatility. The listing was still selling convenience.
+
+> What the coach said: "Your image is now selling *range* — five tools in one. Your bullets are still selling *cleanup*. A shopper who clicks for range and lands on cleanup feels like they got the wrong listing. That's your CVR drop."
+
+That's the kind of gap a founder staring at her own listing every day won't catch. You know what you meant, so you read past the mismatch.
+
+With the plan rebuilt, image and title now both led with "5-in-1," and the top bullet was resequenced to open with the same claim before dropping into supporting detail. Maya still wanted to know whether this was actually the right diagnosis before she shipped it. A title-copy mismatch was her best read, but she wanted a second signal.
+
+So the coach ran `run_trust_gap` against the current listing to confirm which IDEA pillar the mismatch was actually breaking. The score came back weakest on Distinctive — not because the product lacked a real difference, but because the listing was making two different distinctive claims that canceled each other out instead of reinforcing one. That matched the working theory: this wasn't a trust problem or an empathy problem, it was a coherence problem, and the fix targeted the right thing.
+
+## What this looks like for a different listing
+
+The same pattern shows up anywhere a founder changes one visible asset without touching what it points to. A [main image that blends into a wall of competitors](/blog/amazon-main-image-blends-into-competitors/) has the opposite failure — nobody clicks at all — but the underlying discipline is identical: image, title, and bullets have to agree on what the listing is actually claiming before you test any of them. And a [CTR spike that fades back to baseline](/blog/amazon-ctr-spike-didnt-last/) is often the same coherence problem showing up on a delay instead of immediately.
+
+If Maya had run the diagnostic first — the free 6-question [trust gap diagnostic](/diagnostic) — she'd likely have seen the Distinctive gap before she ever touched the main image, instead of finding it after a week of confusing data.
+
+## What to measure after
+
+Don't just watch CTR and CVR separately. Watch them together, on the same weekly cadence, and specifically watch whether they move in the same direction after a change. If CTR and CVR diverge again after this fix ships, that's a signal the new claim still isn't landing consistently across the page — not a signal to abandon the "5-in-1" positioning. Give it at least one to two weeks of stable traffic before reading the result; a few days of data on a low-volume ASIN will look noisier than it is.
+
+## The one next action
+
+Before changing anything else on the listing, pull up your main image and your first bullet side by side and ask one question: are they making the same promise? If the answer is no, that's the fix — not a new photo, not a new headline, the same claim stated twice in two formats.
