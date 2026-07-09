@@ -52,7 +52,7 @@ function listingMeta(product: ImportedProduct): string {
   return parts.join(' · ');
 }
 
-export function V5Home({ email, products, onNewListing, onReopen }: V5HomeProps): JSX.Element {
+export function V5Home({ email, products, onNewListing, onReopen, onOpenBrief }: V5HomeProps): JSX.Element {
   const name = friendlyName(email);
 
   return (
