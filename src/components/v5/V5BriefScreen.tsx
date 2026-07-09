@@ -13,6 +13,19 @@ import type { ClaimGateItem } from '@/types/v4Analyse';
 import type { NeedsInputItem } from '@/types/forensicBuild';
 import { V5Stage } from './V5Chrome';
 
+/**
+ * The brief engine is shared with the Claude connector, where its needs_input
+ * copy legitimately names MCP tools (generate_canvas, identify_decision_trigger).
+ * Inside the app those ids are meaningless (Trevor, 2026-07-09: "How? The Try
+ * again button delivers the same result") - translate at the display boundary.
+ */
+function friendlyNeedsInput(text: string): string {
+  if (/generate_canvas|identify_decision_trigger|export brief/i.test(text)) {
+    return 'I could not anchor this brief to your Decision Trigger from the last run. Rebuild the listing (Home, then Rebuild) and the diagnostic will re-derive it; the brief follows automatically.';
+  }
+  return text;
+}
+
 export interface V5BriefScreenProps {
   brief: BriefSlots | null;
   claims: ClaimGateItem[];
@@ -72,8 +85,10 @@ export function V5BriefScreen({
           <ul className="mb-4 space-y-2.5">
             {needsInput.map((item) => (
               <li key={`${item.slot}-${item.question}`} className="text-sm leading-relaxed">
-                <span className="font-semibold text-foreground">{item.question}</span>
-                {item.why && <span className="block text-xs text-muted-foreground">{item.why}</span>}
+                <span className="font-semibold text-foreground">{friendlyNeedsInput(item.question)}</span>
+                {item.why && (
+                  <span className="block text-xs text-muted-foreground">{friendlyNeedsInput(item.why)}</span>
+                )}
               </li>
             ))}
           </ul>
