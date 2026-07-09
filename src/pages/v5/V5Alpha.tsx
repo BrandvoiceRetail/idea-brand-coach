@@ -478,6 +478,18 @@ export default function V5Alpha(): JSX.Element {
     }
   }, [avatarId, asin, report, trigger, listingTitle, reviewCount, productService]);
 
+  // A pasted-voice run has no live listing, so runDiagnostic() sends it straight
+  // to the brief phase without the goBrief() call that starts the engine on the
+  // scored path. Without this, the brief screen sits on the empty Decision Board
+  // placeholder forever, even though loadBrief() composes a brief from the pasted
+  // avatar alone. Scoped to the pasted path (no asin); the scored and reopen
+  // paths already carry their own brief.
+  useEffect(() => {
+    if (phase !== 'brief' || asin) return;
+    if (brief || briefLoading || briefError || briefNeedsInput) return;
+    void loadBrief();
+  }, [phase, asin, brief, briefLoading, briefError, briefNeedsInput, loadBrief]);
+
   const goBrief = useCallback((): void => {
     setPhase('brief');
     if (!brief && !briefLoading) void loadBrief();
