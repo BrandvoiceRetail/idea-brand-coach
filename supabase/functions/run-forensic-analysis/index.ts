@@ -58,6 +58,12 @@ const TRUST_GAP_MAX_REVIEWS = 12;
 const TRUST_GAP_REVIEW_BODY_MAX = 300;
 /** Below this review count the corpus is thin; UI must show a confidence caveat. */
 const THIN_CORPUS_THRESHOLD = 5;
+// The email's honesty note fires well above the scoring-blend bar: the app's
+// LowEvidenceBadge marks anything under 15 reviews provisional (Trevor,
+// 2026-07-09: "built from 5 reviews. Not enough to be trusted"), and the email
+// must tell the same story. Scoring/blending behaviour stays at 5 (methodology
+// changes are frozen pending discussion).
+const LOW_EVIDENCE_EMAIL_THRESHOLD = 15;
 /** Data fresher than this (ms) is reused without re-scraping. */
 // 7 days (Matthew, 2026-07-08) — aligned with review-scraper's 7d cache TTL so
 // freshness semantics match across the scrape cluster. Env-overridable.
@@ -735,7 +741,7 @@ serve(async (req) => {
         overall,
         primaryGap,
         reviewCount,
-        thinCorpus,
+        thinCorpus: reviewCount < LOW_EVIDENCE_EMAIL_THRESHOLD,
         listingTitle: evidence.listings[0]?.title,
         trigger: triggerForEmail,
       });
