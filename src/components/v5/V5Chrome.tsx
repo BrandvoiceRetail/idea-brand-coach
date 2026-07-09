@@ -22,9 +22,11 @@ export function V5TopBar(): JSX.Element {
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex h-[58px] items-center border-b border-border bg-background/70 px-6 backdrop-blur-md">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-gold-warm text-xs font-extrabold text-background">
-          IB
-        </div>
+        <img
+          src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+          alt="IDEA Brand Coach"
+          className="h-7 w-auto"
+        />
         <span className="text-sm font-semibold text-foreground">
           IDEA <span className="text-gold-warm">Brand Coach</span>
         </span>

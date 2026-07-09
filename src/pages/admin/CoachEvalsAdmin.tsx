@@ -75,8 +75,15 @@ export default function CoachEvalsAdmin() {
       {/* Header / hero */}
       <header className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={{ color: BRAND_GOLD }}>
-            <FlaskConical className="h-4 w-4" /> Internal · MCP Evals
+          <div className="flex items-center gap-3 mb-3">
+            <img
+              src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+              alt="IDEA Brand Coach"
+              className="h-10 w-auto"
+            />
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest" style={{ color: BRAND_GOLD }}>
+              <FlaskConical className="h-4 w-4" /> Internal · MCP Evals
+            </div>
           </div>
           <h1 className="mt-1 text-3xl font-extrabold tracking-tight" style={{ color: BRAND_BLUE }}>
             Brand Coach — Performance
