@@ -129,13 +129,13 @@ export function buildBeat(
         id, stage: 's2', railLabel: 'Trust signals', index,
         title: 'Identifying what builds trust',
         description: 'What they needed to believe before they could commit.',
-        evidenceLabel: 'What they are hiring this product to do',
+        evidenceLabel: 'The change they are likely seeking',
         evidence: rows
           .map((r) => ({ text: r.emotional_job || r.identity_job }))
           .filter((e) => e.text),
         reveals: villain
           ? `The villain in their story: ${villain}. Your listing earns trust by showing, plainly, that this villain has been dealt with.`
-          : 'Trust is built by answering the jobs below before any claim is made.',
+          : 'Trust is built by addressing the desired changes below before any claim is made.',
         panel: {
           label: 'Trust signals needed',
           heading: 'What builds confidence before purchase',
