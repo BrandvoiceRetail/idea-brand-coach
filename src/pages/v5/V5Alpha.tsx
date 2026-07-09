@@ -61,7 +61,10 @@ type Phase =
 
 /** Theatre pacing (presentation only — the compute is the hook's). */
 const FIRST_BEAT_DELAY_MS = 500;
-const BEAT_DELAY_MS = 2600;
+// Long enough for a beat's intra-choreography (staggered evidence → reveal
+// dwell → field typing, per Trevor's Dynamic Avatar 2.0 mock-up) to finish
+// before the next beat lands. Skip/pause controls remain the escape hatch.
+const BEAT_DELAY_MS = 7200;
 const POST_FETCH_PAUSE_MS = 900;
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));

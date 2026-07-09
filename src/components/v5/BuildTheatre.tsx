@@ -112,7 +112,9 @@ export function BuildTheatre({
       </div>
 
       {/* Revealed beats */}
-      {beats.slice(0, shownBeats).map((beat) => (beat ? <TheatreBeat key={beat.id} beat={beat} /> : null))}
+      {beats.slice(0, shownBeats).map((beat) =>
+        beat ? <TheatreBeat key={beat.id} beat={beat} instant={skipArmed || reducedMotion} /> : null,
+      )}
 
       {/* Honest engine-wait line (the next stage is genuinely still computing) */}
       {waitingOnEngine && (
