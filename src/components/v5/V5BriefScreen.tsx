@@ -8,6 +8,7 @@
 import { Button } from '@/components/ui/button';
 import { GlassEyebrow, GlassPanel } from '@/components/v2/problem-solver/glass';
 import { MoveBriefClaimGate } from '@/components/v4/analyse/MoveBriefClaimGate';
+import { LowEvidenceBadge } from './LowEvidenceBadge';
 import type { BriefSlots } from '@/types/v4Fix';
 import type { ClaimGateItem } from '@/types/v4Analyse';
 import type { NeedsInputItem } from '@/types/forensicBuild';
@@ -37,6 +38,8 @@ export interface V5BriefScreenProps {
   designerContext: string | null;
   /** Skill-10 Component D — the do-this-first placement instruction (null = omit). */
   placement: string | null;
+  /** Number of reviews used to build the avatar (null if unknown/pasted voice). */
+  reviewCount?: number | null;
   onConfirmClaim: (claim: ClaimGateItem, index: number) => void;
   onExport: () => void;
   /** Copies the full brief text so it pastes straight into an email or message. */
@@ -56,6 +59,7 @@ export function V5BriefScreen({
   needsInput,
   designerContext,
   placement,
+  reviewCount,
   onConfirmClaim,
   onExport,
   onCopy,
@@ -72,6 +76,11 @@ export function V5BriefScreen({
         <p className="mt-2 text-[15px] text-muted-foreground">
           One fix, one score, one brief you can hand off today, grounded in your reviews.
         </p>
+        {reviewCount != null && (
+          <div className="mt-3 flex justify-center">
+            <LowEvidenceBadge reviewCount={reviewCount} variant="compact" />
+          </div>
+        )}
       </div>
 
       {needsInput && needsInput.length > 0 ? (

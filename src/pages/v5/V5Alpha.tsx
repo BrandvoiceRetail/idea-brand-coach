@@ -464,6 +464,7 @@ export default function V5Alpha(): JSX.Element {
               claims: res.data.claimGate,
               listingTitle: listingTitle ?? null,
               finishedAt: new Date().toISOString(),
+              reviewCount: reviewCount ?? undefined,
             })
             .catch((err) => console.error('[V5Alpha] last_run persist failed:', err));
         }
@@ -475,7 +476,7 @@ export default function V5Alpha(): JSX.Element {
     } finally {
       setBriefLoading(false);
     }
-  }, [avatarId, asin, report, trigger, listingTitle, productService]);
+  }, [avatarId, asin, report, trigger, listingTitle, reviewCount, productService]);
 
   const goBrief = useCallback((): void => {
     setPhase('brief');
@@ -660,6 +661,7 @@ export default function V5Alpha(): JSX.Element {
       setTrigger(snap.trigger ?? undefined);
       setBrief(snap.brief as BriefSlots);
       setClaims(snap.claims as ClaimGateItem[]);
+      setReviewCount(snap.reviewCount ?? snap.report.reviews_analyzed ?? null);
       captureAlphaEvent('v5_brief_reopened', {});
       setPhase('brief');
     },
@@ -734,6 +736,7 @@ export default function V5Alpha(): JSX.Element {
           skipArmed={skipAll || express}
           reducedMotion={reducedMotion}
           onNext={revealNext}
+          reviewCount={reviewCount}
         />
       )}
 
@@ -777,6 +780,7 @@ export default function V5Alpha(): JSX.Element {
           needsInput={briefNeedsInput}
           designerContext={designerFrames.context}
           placement={designerFrames.placement}
+          reviewCount={reviewCount ?? report?.reviews_analyzed ?? null}
           onConfirmClaim={handleConfirmClaim}
           onExport={handleExportBrief}
           onCopy={() => void handleCopyBrief()}
