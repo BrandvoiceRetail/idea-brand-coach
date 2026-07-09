@@ -133,6 +133,16 @@ export default function V5Alpha(): JSX.Element {
     approve,
   } = useForensicAvatarBuild(avatarId);
 
+  // Expose the current phase to page-agnostic chrome (the beta feedback widget
+  // reports "/v5#results" instead of a bare "/v5" — Trevor's page-specificity
+  // ask, 2026-07-08). Dataset, not context: the widget lives outside this tree.
+  useEffect(() => {
+    document.body.dataset.v5Phase = phase;
+    return () => {
+      delete document.body.dataset.v5Phase;
+    };
+  }, [phase]);
+
   // ── Entry: prefill for returning users ──────────────────────────────────────
   useEffect(() => {
     captureAlphaEvent('v5_entry_viewed', {});

@@ -60,6 +60,12 @@ export function BetaFeedbackWidget({
     return null;
   }
 
+  // Screen-specific page reference: /v5 is one route with a phase state machine,
+  // so feedback from every screen used to arrive as a bare "/v5" (Trevor,
+  // 2026-07-08). V5Alpha stamps its phase on document.body; append it here.
+  const v5Phase = document.body.dataset.v5Phase;
+  const pagePath = v5Phase ? `${location.pathname}#${v5Phase}` : location.pathname;
+
   // Signed-out users can submit too (the edge fn accepts anonymous feedback);
   // a real (non-anonymous-session) account means we already know their email.
   const isIdentified = !!user && !(user as { is_anonymous?: boolean }).is_anonymous;
@@ -73,7 +79,7 @@ export function BetaFeedbackWidget({
     try {
       // Save the feedback with page context (no-op when not in a beta journey)
       await addComment(
-        `${location.pathname}-widget`,
+        `${pagePath}-widget`,
         feedbackWithType
       );
 
@@ -82,7 +88,7 @@ export function BetaFeedbackWidget({
       const { error } = await supabase.functions.invoke('save-beta-feedback', {
         body: {
           quickFeedback: feedbackWithType,
-          pageUrl: location.pathname,
+          pageUrl: pagePath,
           feedbackType,
           timestamp: new Date().toISOString(),
           ...(isIdentified
@@ -216,7 +222,7 @@ export function BetaFeedbackWidget({
               <div>
                 <CardTitle className="text-sm">Beta Feedback</CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  Quick feedback on {location.pathname}
+                  Quick feedback on {pagePath}
                 </p>
               </div>
             </div>

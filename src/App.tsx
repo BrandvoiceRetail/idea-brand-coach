@@ -127,7 +127,10 @@ const App = () => {
 
                 <Route path="/journey" element={<Navigate to="/v1/journey" replace />} />
 
-                <Route path="/diagnostic" element={<Navigate to="/v1/diagnostic" replace />} />
+                {/* Alpha: /v5 is the ONLY diagnostic surface (Trevor walked the old
+                    problem-solver flow via the landing CTAs, 2026-07-08). The legacy
+                    guest entries redirect; the pages stay in the tree for revert. */}
+                <Route path="/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 <Route path="/subscribe" element={<Navigate to="/v1/subscribe" replace />} />
 
@@ -164,13 +167,13 @@ const App = () => {
                     auth-gated forensic run → customer profile + Decision Trigger fix.
                     Login-gated in-app review flow — the public guest entry point is
                     /v1/diagnostic (FreeDiagnostic), which stays open. */}
-                <Route path="/v2/diagnostic" element={<RequireAuth><ErrorBoundary><ProblemSolverDiagnostic /></ErrorBoundary></RequireAuth>} />
+                <Route path="/v2/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 {/* Review route: the same flow with Movement 1 (Recognition) in front,
                     per Trevor's Revised Entry Experience Brief (IDEA-APP-ENTRY-001 v1.1).
                     Kept separate from /v2 so the live baseline is untouched while Trevor
                     reviews Movement 1 before Movements 2/3 are built. Login-gated. */}
-                <Route path="/v3/diagnostic" element={<RequireAuth><ErrorBoundary><ProblemSolverDiagnostic showRecognition /></ErrorBoundary></RequireAuth>} />
+                <Route path="/v3/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 {/* /v4 — the new "one and only" surface (app shell + spine + Loop 1).
                     Old routes stay mounted; VersionGate gates the entry behind
@@ -299,7 +302,7 @@ const App = () => {
                 {/* Consolidated (2026-06-29): /v1 uses the one diagnostic engine
                     (ProblemSolverDiagnostic + Recognition), gated like /v2,/v3 —
                     the divergent FreeDiagnostic questionnaire is retired. */}
-                <Route path="/v1/diagnostic" element={<RequireAuth><ProblemSolverDiagnostic showRecognition /></RequireAuth>} />
+                <Route path="/v1/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 <Route path="/v1/subscribe" element={<RequireAuth><PricingPaywall /></RequireAuth>} />
 
