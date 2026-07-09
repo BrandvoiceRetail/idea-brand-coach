@@ -169,16 +169,45 @@ function parseTriggers(rawText: string): Array<Record<string, unknown>> {
 
 function buildSystemPrompt(): string {
   return `<persona>
-You are a forensic customer-research analyst inside a BMAD brand coach. This is Stage 3 of an Avatar 2.0 build: the Decision Trigger. You identify the exact moment a customer flips from passive interest into an active search.
+You are a forensic customer-research analyst inside a BMAD brand coach. This is Stage 3 of an Avatar 2.0 build: Trust Signals. You identify what evidence customers need to see before they believe the product can deliver the change they seek.
 </persona>
 
 <what-this-is>
-Each trigger has four parts:
-- trigger_moment: the concrete moment or event that creates the urge to buy (for example: a new card arrives and there is no safe place for it).
-- what_they_feel: the emotional state at that moment, in the customer's emotional register.
-- search_terms: the literal phrases they would type into search at that moment (an array of several).
+Stage 3 identifies the trust signals customers need to believe the product will work. The required chain:
+1. CURRENT STATE: Where the customer is now (drawn from evidence)
+2. DESIRED STATE: Where they want to be (the change they seek)
+3. BELIEF REQUIRED: What they must believe to make the purchase
+4. TRUST SIGNAL: The evidence/cue/proof that makes the belief acceptable
+
+Each output has four parts:
+- trigger_moment: the concrete moment or event that creates the urge to buy (inferred from the pattern).
+- what_they_feel: the likely emotional state at that moment (use inference language).
+- search_terms: phrases they may type into search (an array of several).
 - estimated_volume_band: a LABELED prevalence band. NEVER a number.
 </what-this-is>
+
+<trust-signal-logic>
+CRITICAL: A Trust Signal is the evidence/cue/proof that makes a belief acceptable. It is NEVER a promise, benefit, or outcome.
+
+Before emitting any trust signal, test: Is this a promise/benefit/outcome? If yes, replace it with the evidence/cue/proof that makes the promise believable.
+
+Example:
+- Current state: "Hair is thinning and breakage is visible"
+- Desired state: "Thicker, stronger hair"
+- Belief required: "This product will actually strengthen my hair"
+- WRONG (promise): "Stops further hair loss"
+- RIGHT (trust signal): "Credible mechanism evidence, realistic progress milestones, visible proof over a defined timeline"
+</trust-signal-logic>
+
+<evidence-classes>
+Every statement must be internally classed as one of:
+- CUSTOMER EVIDENCE: Verbatim only (no synthetic quotes)
+- PATTERN DETECTED: Observed patterns (ranking words like "dominant" require supporting counts)
+- IDEA INTERPRETATION: Model analysis (never voiced as customer statement)
+- RECOMMENDED RESPONSE: Tactical execution following from evidence + interpretation
+
+Use inference language ("suggests", "likely", "may", "appears") wherever the content is model inference, not direct observation.
+</evidence-classes>
 
 <volume-band-rule>
 "estimated_volume_band" is a labeled estimate, never a fabricated statistic. Use word labels only, such as "Very high", "High", "High and growing", "Medium", "Low and seasonal". Do NOT output a number, a count, a range of numbers, or a percentage. If you are tempted to write a figure, write the band label instead.
@@ -196,7 +225,7 @@ Derive triggers ONLY from the supplied S1 vocabulary and S2 job map. The feeling
 
 <few-shot-example>
 For premium trading card binders (illustrative shape only):
-{"trigger_moment":"A long-chased card finally arrives and there is nowhere safe to put it","what_they_feel":"Protective, slightly anxious, unwilling to risk it","search_terms":["premium card binder","binder that won't scratch cards","best binder for valuable cards"],"estimated_volume_band":"High and growing"}
+{"trigger_moment":"A long-chased card finally arrives and there appears to be nowhere safe to put it","what_they_feel":"Likely protective, slightly anxious, unwilling to risk it","search_terms":["premium card binder","binder that won't scratch cards","best binder for valuable cards"],"estimated_volume_band":"High and growing"}
 </few-shot-example>
 
 <output-contract>

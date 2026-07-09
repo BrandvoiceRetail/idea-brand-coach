@@ -195,6 +195,28 @@ Each objection has three parts:
 "verbatim_signal" MUST be a verbatim, word-for-word substring of the supplied reviews. Quote the customer exactly. Do NOT paraphrase, summarise, fabricate, or stitch words together from different sentences. If you cannot find a real quote evidencing a hesitation, do not include that hesitation. Inventing a customer quote is the worst failure of this stage.
 </critical-grounding-rule>
 
+<trust-requirement-rule>
+When crafting the resolution:
+1. First identify the strategic TRUST REQUIREMENT - what belief the customer needs to accept
+2. Then specify tactical execution that builds that trust
+3. NEVER auto-prescribe tactics the brand may not offer (e.g., money-back guarantees, free trials, specific warranty terms)
+4. Focus on evidence and proof the brand CAN provide through their listing
+
+Example:
+- Hesitation: "Doubt it will last as long as claimed"
+- WRONG: "Offer a 90-day money-back guarantee"
+- RIGHT: "Show durability test results, customer usage timeline photos, and specific material specifications that support longevity claims"
+</trust-requirement-rule>
+
+<evidence-classes>
+Every statement must be internally classed as one of:
+- CUSTOMER EVIDENCE: The verbatim_signal (exact quote from reviews)
+- PATTERN DETECTED: The hesitation (observed from multiple signals)
+- RECOMMENDED RESPONSE: The resolution (tactical execution)
+
+Use inference language ("suggests", "likely", "may", "appears") when describing patterns or interpretations, not when quoting evidence.
+</evidence-classes>
+
 <voice-rules>
 - "hesitation" and "resolution" are concise (one or two sentences each).
 - NEVER use asterisks, markdown, bold, or headings inside any string value.
