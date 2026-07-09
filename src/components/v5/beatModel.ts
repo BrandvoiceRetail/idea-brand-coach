@@ -40,7 +40,9 @@ export interface TheatreBeatData {
   evidence?: Array<{ text: string; note?: string }>;
   /** Chip groups shown inside the evidence panel (vocabulary clusters). */
   chipGroups?: Array<{ heading: string; chips: string[]; note?: string }>;
-  /** The "What this reveals" interpretation — artifact text only. */
+  /** The interpretation label for this beat (e.g. "WHAT THIS SUGGESTS", "IDEA INTERPRETATION"). */
+  revealsLabel: string;
+  /** The interpretation text — artifact text only. */
   reveals: string;
   panel?: { label: string; heading: string; field: BeatField };
 }
@@ -87,6 +89,7 @@ export function buildBeat(
           chips: c.customer_words.slice(0, MAX_CHIPS),
           note: c.frequency_signal,
         })),
+        revealsLabel: 'What this suggests',
         reveals: clusters.map((c) => c.why_it_matters).filter(Boolean).slice(0, 2).join(' '),
         panel: {
           label: 'Customer vocabulary',
@@ -102,19 +105,20 @@ export function buildBeat(
       const first = triggers[0];
       return {
         id, stage: 's3', railLabel: 'Motivation', index,
-        title: 'Finding why they bought today',
-        description: 'Not who they are. What happened that sent them searching.',
-        evidenceLabel: 'The moments that sent them searching',
+        title: 'Reconstructing what may have sent them searching',
+        description: 'Not who they are. The likely moment the problem became active.',
+        evidenceLabel: 'Likely purchase triggers',
         evidence: triggers.map((t) => ({ text: t.trigger_moment })),
+        revealsLabel: 'Strategic interpretation',
         reveals: first.what_they_feel,
         panel: {
-          label: 'Purchase motivation',
-          heading: "Why they're buying today",
+          label: 'Likely purchase motivation',
+          heading: 'What may have made the problem urgent now',
           field: {
             kind: 'text',
             lines: [
-              { label: 'The moment', text: first.trigger_moment },
-              { label: 'What they feel', text: first.what_they_feel },
+              { label: 'Likely trigger', text: first.trigger_moment },
+              { label: 'Inferred emotional state', text: first.what_they_feel },
             ],
           },
         },
@@ -128,17 +132,18 @@ export function buildBeat(
       return {
         id, stage: 's2', railLabel: 'Trust signals', index,
         title: 'Identifying what builds trust',
-        description: 'What they needed to believe before they could commit.',
-        evidenceLabel: 'What they are hiring this product to do',
+        description: 'The questions the listing may need to resolve before purchase.',
+        evidenceLabel: 'The change they are seeking',
         evidence: rows
           .map((r) => ({ text: r.emotional_job || r.identity_job }))
           .filter((e) => e.text),
+        revealsLabel: 'IDEA interpretation',
         reveals: villain
           ? `The villain in their story: ${villain}. Your listing earns trust by showing, plainly, that this villain has been dealt with.`
-          : 'Trust is built by answering the jobs below before any claim is made.',
+          : 'Trust is built by answering the goals below before any claim is made.',
         panel: {
-          label: 'Trust signals needed',
-          heading: 'What builds confidence before purchase',
+          label: 'Likely trust signals needed',
+          heading: 'What the listing may need to establish',
           field: {
             kind: 'list',
             items: rows.map((r) => r.functional_job).filter(Boolean),
@@ -154,14 +159,15 @@ export function buildBeat(
       const first = objections[0];
       return {
         id, stage: 's4', railLabel: 'Objection', index,
-        title: 'Finding the last barrier',
-        description: 'The thing that almost stopped them buying.',
+        title: 'Identifying the likely decision barrier',
+        description: 'The unresolved concern most likely to create hesitation.',
         evidenceLabel: 'In their own words',
         evidence: objections.map((o) => ({ text: `"${o.verbatim_signal}"` })),
+        revealsLabel: 'What the evidence suggests',
         reveals: first.hesitation,
         panel: {
-          label: 'Top objection',
-          heading: 'What stops them buying',
+          label: 'Likely top objection',
+          heading: 'The concern most likely to create hesitation',
           field: {
             kind: 'quote',
             quote: first.verbatim_signal,

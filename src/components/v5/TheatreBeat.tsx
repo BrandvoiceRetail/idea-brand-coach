@@ -203,7 +203,7 @@ function FieldBody({
             >
               <p className="text-sm leading-relaxed text-foreground/75">
                 <span className="font-bold uppercase tracking-wide text-gold-warm">
-                  How to resolve it:
+                  Recommended response:
                 </span>{' '}
                 {field.resolution}
               </p>
@@ -292,7 +292,7 @@ export function TheatreBeat({
           </div>
           <div>
             <div className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-gold-warm">
-              What this reveals
+              {beat.revealsLabel}
             </div>
             <p className="text-sm leading-relaxed text-foreground/85">{beat.reveals}</p>
           </div>

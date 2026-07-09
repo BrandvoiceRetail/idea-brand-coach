@@ -28,7 +28,7 @@ export function CoSignPanel({ read, onAnswer, disabled = false }: CoSignPanelPro
         {read.buyingBecause && (
           <p>
             <span className="not-italic text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              Buying because:
+              Likely trigger:
             </span>{' '}
             {read.buyingBecause}
           </p>
@@ -36,7 +36,7 @@ export function CoSignPanel({ read, onAnswer, disabled = false }: CoSignPanelPro
         {read.stillAsking && (
           <p>
             <span className="not-italic text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              Still asking:
+              Unresolved question:
             </span>{' '}
             {read.stillAsking}
           </p>

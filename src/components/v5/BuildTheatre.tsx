@@ -64,7 +64,7 @@ export function BuildTheatre({
   return (
     <V5Stage wide>
       <div className="mb-1 text-center">
-        <GlassEyebrow>Building your customer, from their own words</GlassEyebrow>
+        <GlassEyebrow>Understanding your customer, starting with their own words</GlassEyebrow>
       </div>
 
       {/* Progress rail — a filling gold track + per-stage states, not just a

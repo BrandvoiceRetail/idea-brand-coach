@@ -145,18 +145,18 @@ export function ResultsScreen({ report, trigger, onSeeBrief }: ResultsScreenProp
           body={profile.how_they_talk}
         />
         <ProfileCard
-          label="Why they're buying today"
-          heading="Purchase motivation"
+          label="What may have made the problem urgent now"
+          heading="Likely purchase motivation"
           body={profile.why_buying_now}
         />
         <ProfileCard
-          label="What builds trust"
-          heading="Trust signals needed"
+          label="What the listing may need to establish"
+          heading="Likely trust signals needed"
           body={profile.what_builds_trust}
         />
         <ProfileCard
-          label="What stops them buying"
-          heading="Top objection"
+          label="The concern most likely to create hesitation"
+          heading="Likely top objection"
           body={profile.what_stops_them}
         />
       </div>
