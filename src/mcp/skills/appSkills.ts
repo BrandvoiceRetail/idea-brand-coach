@@ -94,6 +94,18 @@ const TOOL_APP_SKILLS: Record<string, string[]> = {
   generate_brief: ['10', '09'],
   // Listing image-set brief → design-brief generator + trigger + avatar + trust gap + listing analysis.
   generate_listing_image_brief: ['10', '09', '04', '06', '12'],
+  // Video storyboard plan → design-brief generator + trigger + avatar + trust gap.
+  generate_video_storyboard: ['10', '09', '04', '06'],
+  // A+ content plan → design-brief generator + trigger + avatar + listing analysis.
+  generate_aplus_content_plan: ['10', '09', '04', '12'],
+  // Main image + title pair → design-brief generator + listing analysis + trigger.
+  generate_main_image_title_plan: ['10', '12', '09'],
+  // Storefront messaging plan → design-brief generator + trigger + avatar.
+  generate_storefront_messaging_plan: ['10', '09', '04'],
+  // UGC ad plan → design-brief generator + trigger + avatar (persona cast + vocabulary).
+  generate_ugc_ad_plan: ['10', '09', '04'],
+  // Creative-plan refinement → the design-brief spec it must preserve while updating.
+  refine_creative_plan: ['10'],
   // Evidence-derived Trust Gap → the score skill, the framework lens, the commercial frame.
   assess_idea_dimensions: ['06', '01', '03'],
   // The single named Decision Trigger™ lever → the trigger skill + the score + the framework lens.
