@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getServiceClient, getAuthedUserId } from "../_shared/edge-auth.ts";
+import { meterAndDebit } from "../_shared/meter.ts";
 
 /**
  * avatar-jobmap  (Avatar 2.0 — Stage 2: Functional vs Emotional Job Map)
@@ -269,6 +271,9 @@ serve(async (req) => {
 
     const data = await response.json();
     const rawText = data?.content?.[0]?.text ?? '';
+    // Meter the real token usage for this paid op (records always; debits; never throws).
+    const meterUserId = await getAuthedUserId(req);
+    if (meterUserId) await meterAndDebit(getServiceClient(), { userId: meterUserId, op: 'avatar_jobmap', model: SONNET_MODEL, usage: data.usage });
     const jobMap = parseJobMap(rawText);
 
     const cleaned = jobMap
