@@ -29,8 +29,8 @@
 
   <!-- connecting arrow, gold, tool chip -->
   <line x1="560" y1="330" x2="640" y2="330" stroke="#BD860E" stroke-width="3" class="anim-flow"/>
-  <text x="600" y="300" font-size="16" text-anchor="middle" class="tool" fill="#BD860E">ingest_evidence</text>
-  <text x="600" y="470" font-size="16" text-anchor="middle" class="tool" fill="#BD860E">run_trust_gap</text>
+  <text x="600" y="300" font-size="18" text-anchor="middle" class="tool" fill="#BD860E">ingest_evidence</text>
+  <text x="600" y="470" font-size="18" text-anchor="middle" class="tool" fill="#BD860E">run_trust_gap</text>
 
   <text x="70" y="560" font-size="20" class="faint">The box gets the credit. The product is doing the actual work.</text>
 </svg>

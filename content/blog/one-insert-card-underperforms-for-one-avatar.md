@@ -62,7 +62,7 @@ Run `audit_asset` scoped to the customer avatar for the specific SKU in question
 
 ### What's a surgical creative edit and when should I use one?
 
-A surgical creative edit amazon sellers can ship fast changes one component (a headline, a CTA line) while leaving layout, QR placement, and everything else untouched. Use `refine_creative_plan` for this instead of a full redesign when only one SKU's asset is actually mismatched.
+A surgical creative edit amazon sellers can ship fast: it changes one component (a headline, a CTA line) while leaving layout, QR placement, and everything else untouched. Use `refine_creative_plan` for this instead of a full redesign when only one SKU's asset is actually mismatched.
 
 ### Is a one size fits all insert card ever the right call?
 

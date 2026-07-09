@@ -46,14 +46,14 @@ That last distinction matters more than it sounds. A measured lift on beard oil 
 
 ## What to measure after
 
-Going forward, the habit worth keeping is treating every "I improved this email" moment as a before/after comparison instead of a one-time edit. `get_sequence_performance` before rolling a change wider gives Owen the actual delta on the specific step that changed; `compute_trust_gap_lift` tells him whether the targeted pillar moved, not just whether some downstream number wobbled. That discipline is the same one worth applying everywhere in [a full post-purchase email strategy for Amazon sellers](/blog/post-purchase-email-strategy-amazon-sellers/), not just at the confirmation step. It's worth checking against [whether a welcome series that gets opens is actually driving repeat purchase](/blog/welcome-series-opens-but-no-repeat-purchase/) before assuming engagement equals retention, against [how many welcome emails your brand actually needs](/blog/how-many-emails-welcome-series-amazon-brand/) before guessing at a number, against [whether your welcome series is quietly serving two different buyer types](/blog/welcome-series-two-different-buyers-same-product/), and against [whether a welcome email is missing its own decision trigger](/blog/welcome-email-missing-decision-trigger/) before assuming a whole sequence needs a rewrite.
+Going forward, the habit worth keeping is treating every "I improved this email" moment as a before/after comparison instead of a one-time edit. `get_sequence_performance` before rolling a change wider gives Owen the actual delta on the specific step that changed; `compute_trust_gap_lift` tells him whether the targeted pillar moved, not just whether some downstream number wobbled. That discipline is the same one worth applying everywhere in [the broader post-purchase email strategy for Amazon sellers](/blog/post-purchase-email-strategy-amazon-sellers/), not just at the confirmation step. It's worth checking against [whether a welcome series that gets opens is actually driving repeat purchase](/blog/welcome-series-opens-but-no-repeat-purchase/) before assuming engagement equals retention, against [how many welcome emails your brand actually needs](/blog/how-many-emails-welcome-series-amazon-brand/) before guessing at a number, against [whether your welcome series is quietly serving two different buyer types](/blog/welcome-series-two-different-buyers-same-product/), and against [whether a welcome email is missing its own decision trigger](/blog/welcome-email-missing-decision-trigger/) before assuming a whole sequence needs a rewrite.
 
 If you haven't run a baseline check on your own funnel yet, the free [diagnostic](/diagnostic) is a fast starting point: six questions, no account required.
 
 ## FAQ
 
 ### How do I run a confirmation email ab test without a full testing platform?
-`get_sequence_performance` pulls the confirmation step's own before/after numbers (open rate, click-through, downstream welcome-series engagement) scoped to that one email, not the noisier top-line repeat-purchase number.
+`get_sequence_performance` pulls the confirmation step's own before/after numbers (open rate, click-through, downstream welcome-series engagement) scoped to that one email, not the noisier top-line repeat-purchase number. Hold three to four weeks of data on each side of the change before comparing.
 
 ### What's the right way to measure an email sequence change?
 Compare the changed step against its own prior baseline, isolated from seasonality and traffic-source shifts happening elsewhere in the funnel. A blended, funnel-wide metric will hide a real lift or fake one that isn't there.
@@ -62,7 +62,7 @@ Compare the changed step against its own prior baseline, isolated from seasonali
 Ship the change to one email, hold three to four weeks of before-data and after-data on that specific email, then compare. Don't roll the pattern to every SKU or every future email until that one comparison confirms it actually works.
 
 ### What does a trust gap lift on an email tell me that click-through doesn't?
-`compute_trust_gap_lift` checks whether the specific IDEA pillar the change targeted, Empathetic in Owen's case, actually moved, instead of asking you to guess whether the brand "feels" warmer now from click-through alone.
+`compute_trust_gap_lift` checks whether the specific IDEA pillar the change targeted, Empathetic in Owen's case, actually moved, instead of asking you to guess whether the brand "feels" warmer now from click-through alone. Click-through can rise for reasons that have nothing to do with the pillar you were trying to fix.
 
 ## The one next action
 

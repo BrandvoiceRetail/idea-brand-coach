@@ -57,7 +57,7 @@ If two honest copy rewrites in a row produce no lift, the audience is more likel
 A repeat customer used the product themselves and might run out or wear it out. A gift buyer bought it for someone else and completed their job the moment it shipped. Only the first is a real winback candidate. The second was never going to reorder.
 
 ### How do I segment lapsed customers on an Amazon or DTC list?
-Look for the signals `build_avatar_stage` surfaces from review language and order patterns: ship-to-a-different-address flags, gifting language in reviews ("my husband loved unwrapping this"), and seasonal-use cycles that separate hobbyist buyers from one-off gift purchases.
+Look for the signals `build_avatar_stage` surfaces from review language and order patterns: ship-to-a-different-address flags, gifting language in reviews ("my husband loved unwrapping this"), and seasonal-use cycles that separate hobbyist buyers from one-off gift purchases. Any one of those on its own is a hint; two or more together is usually enough to split the list.
 
 ### Should gift buyers get a winback email at all?
 No. Route them to a lighter-touch ask instead, like a referral or review request. Keeping them in a reorder-focused winback flow just drags down the blended metric and risks unsubscribes from a segment the message was never written for.

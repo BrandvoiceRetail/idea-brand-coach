@@ -16,7 +16,7 @@ updated: 2026-07-09
 
 ## Should I build a brand community? Nadia's number that looks wrong
 
-Should I build a brand community is the wrong question to answer by copying a competitor, and it's the exact trap a toy-brand founder we'll call Nadia almost fell into. Nadia sells educational building-block sets, the kind pitched at parents who want their kid doing something other than staring at a screen. A competitor two shelf-positions over just launched a "VIP Parents" Facebook group, a few thousand members, active-looking threads, the works. Nadia's instinct is to build the same thing, fast, before she falls further behind on the "community" front everyone in her category seems to be racing toward.
+Should I build a brand community is the wrong question to answer by copying a competitor, and it's the exact trap an Amazon toy-brand founder we'll call Nadia almost fell into. Nadia sells educational building-block sets, the kind pitched at parents who want their kid doing something other than staring at a screen. A competitor two shelf-positions over just launched a "VIP Parents" Facebook group, a few thousand members, active-looking threads, the works. Nadia's instinct is to build the same thing, fast, before she falls further behind on the "community" front everyone in her category seems to be racing toward.
 
 Here's the number that stopped her before she started: her own repeat-purchase rate isn't suffering from a lack of community. It's suffering from something else entirely - customers buy once, love the product, and simply don't come back because there's no obvious next reason to. A Facebook group solves an isolation problem. Nadia doesn't have an isolation problem. She hasn't actually checked what problem she has.
 

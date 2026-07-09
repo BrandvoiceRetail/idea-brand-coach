@@ -61,9 +61,9 @@ For triggers that need to be felt rather than read — identity especially — y
 Open on the felt problem: the "before" state the customer has probably forgotten. Cut to the product delivering the payoff. Introduce the discount, if at all, only at the end, once the feeling is back.
 
 ### How do I produce a brand story video reactivation without a full shoot?
-`generate_video_storyboard` can plan it in storyboard-image mode — one multi-panel image sequence that becomes a single Higgsfield render, instead of a multi-scene production.
+`generate_video_storyboard` can plan it in storyboard-image mode — one multi-panel image sequence that becomes a single Higgsfield render, instead of a multi-scene production. That keeps a reminder video small enough to actually ship rather than stalling as a bigger project.
 
 ### What does an Amazon brand video Higgsfield workflow need before it renders?
-Reference-kit discipline: the real product photos as the product-sheet reference, so what renders matches what the customer actually bought instead of a generic stock desk setup.
+Reference-kit discipline: the real product photos as the product-sheet reference, so what renders matches what the customer actually bought instead of a generic stock desk setup. Skipping this step is the fastest way to end up with a video that looks like a different brand's product.
 
 A winback video email is one instance of a wider pattern. [The complete post-purchase email strategy for Amazon sellers](/blog/post-purchase-email-strategy-amazon-sellers/) covers where video earns its place against text across the whole retention sequence, not just at winback. The same felt-versus-read gap shows up earlier in the lifecycle too: check whether [your welcome series should include a brand story video](/blog/add-brand-story-video-welcome-series/) before a customer ever lapses, and whether [your welcome emails are missing their own decision trigger](/blog/welcome-email-missing-decision-trigger/) in the first place. It's also worth confirming [your welcome series opens are actually turning into repeat purchases](/blog/welcome-series-opens-but-no-repeat-purchase/), and whether you've settled [how many welcome emails your brand actually needs](/blog/how-many-emails-welcome-series-amazon-brand/) before the winback stage even starts.

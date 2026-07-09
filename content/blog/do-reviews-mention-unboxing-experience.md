@@ -70,7 +70,7 @@ Run `run_trust_gap` after pulling the unboxing mentions with `ingest_evidence`. 
 
 ### What's the fastest way to check unboxing reviews as evidence?
 
-Pull your full review history with `ingest_evidence` rather than skimming for a few memorable quotes, then look at what share mentions the box unprompted and what they praise specifically about it.
+Pull your full review history with `ingest_evidence` rather than skimming for a few memorable quotes. Look at what share mentions the box unprompted and what they praise specifically about it.
 
 ## The one next action
 

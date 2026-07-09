@@ -59,7 +59,7 @@ Healthy opens rule out subject lines and send timing as the problem. The break u
 Only after `identify_decision_trigger` has ruled out a non-price lever. A bigger discount treats "won't reorder" as a price objection, which is a guess, and an expensive one if the real issue is a missing sense of urgency.
 
 ### What decision trigger works best in a reorder email for an Amazon brand?
-For consumables, fear_of_loss ("you're about to run out") usually beats generic urgency, because it points at a real, near-term consequence instead of a manufactured countdown.
+For consumables, fear_of_loss ("you're about to run out") usually beats generic urgency, because it points at a real, near-term consequence instead of a manufactured countdown. It works because the customer supplies the anxiety themselves; the email just names it.
 
 ### How do I know if fear of loss email copy is right for my product?
 Run `identify_decision_trigger` against the audience and the product's actual use cycle. If the item gets used up on a predictable schedule, running-out anxiety is typically the live lever — not a discount the customer never asked for.
