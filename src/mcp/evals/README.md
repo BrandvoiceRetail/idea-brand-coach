@@ -25,9 +25,11 @@ Plus **static guardrail checks** of the App Skill Architecture hard rules (no bu
 ## Run it
 
 ```bash
-npm run evals          # deterministic report → src/admin/coachEvals/report.generated.ts (incl. A1 live metrics)
-npm run evals:live     # GATED A2 — LLM-judged replay of the cases (needs ANTHROPIC_API_KEY)
-npm run evals:mcpjam   # export the cases as an mcpjam suite (optional external runner)
+npm run evals               # deterministic report → src/admin/coachEvals/report.generated.ts (incl. A1 live metrics)
+npm run evals:live          # GATED A2 — LLM-judged replay of the cases (needs ANTHROPIC_API_KEY)
+npm run evals:mcpjam        # export the cases as an mcpjam suite (optional external runner)
+npm run evals:image:mcpjam  # OUTPUT-QUALITY — emit the image E2E suite (our MCP + Higgsfield in one session)
+npm run evals:image         # OUTPUT-QUALITY — vision-judge the produced images vs the rubric (needs ANTHROPIC_API_KEY)
 npx vitest run src/mcp/__tests__/evals.test.ts src/mcp/__tests__/evalLive.test.ts   # engine + A2 tests
 ```
 
@@ -50,6 +52,7 @@ The runner writes a **typed `.ts` literal** (not `.json`) so the SPA type-checks
 | `live/` | A2 internals: `serverTools.ts` (boot), `replay.ts` (pure replay+score, injectable), `anthropic.ts` (fetch model+judge) |
 | `cases/` | curated eval cases for the admin Eval Bench (`types.ts` + `catalog.ts`, pure data) |
 | `mcpjam/` | mcpjam suite generator + runbook (`generate.ts`, `mcpjam-suite.generated.json`, `README.md`) |
+| `image/` | **output-quality tier** — scores the IMAGE deliverables the pipeline produces (our MCP + Higgsfield) against a rubric, grounded in the opted-in corpus — see [`image/README.md`](image/README.md) |
 | `run.ts` / `runLive.ts` | CLIs → the deterministic report (A1 baked in) / the gated A2 behavioural run |
 
 ## Extending
@@ -71,3 +74,20 @@ Two layers (mirrors the corpus replay-harness gating):
 - **A1 — server contract (runs now, no model).** `runLiveTier()` boots the real MCP server over `InMemoryTransport`, lists its advertised tools, and scores **tool availability**, **grounding reach**, and **guardrail-in-surface** (proves the buyer-state hard rule reaches the live model-facing tool descriptions). Deterministic → baked into the committed report by `npm run evals`.
 - **A2 — behavioural (implemented; gated, default OFF).** `npm run evals:live` replays each case's practice conversation through the coach — an Anthropic Messages-API **tool-use loop via `fetch`** (`live/anthropic.ts`, no SDK dep) over the live MCP tools — then scores **tool-call accuracy (F1/recall, deterministic)** + LLM-judged **skill-faithfulness / persona-adaptation / safety** + latency (`live/replay.ts`). Tool execution defaults to a synthetic stub (selection-only eval — no DB/auth). Gated on `ANTHROPIC_API_KEY`. `runBehaviouralJudge(caseId, depsOverride?)` is injectable — tests pass mock model+judge (no key). Model overrides: `ANTHROPIC_EVAL_MODEL` / `ANTHROPIC_JUDGE_MODEL`.
   - **mcpjam alternative:** `npm run evals:mcpjam` exports the same cases as an mcpjam suite — see [`mcpjam/README.md`](mcpjam/README.md).
+
+## Output-quality tier (image deliverables)
+
+The tiers above score the **coach** (tool selection + transcript behaviour). The **output-quality
+tier** (`image/`) scores the **deliverables the coach produces** — the actual image a shopper would
+see — for *how likely they are to help the seller solve their core problem*, grounded in the
+**opted-in customer corpus** (Infinity Vault, owner-certified). It runs a real session through
+**both connectors in one chat** — our creative-plan directors AND the Higgsfield `generate_image`
+tool — then a **vision judge** rules the produced image against a rubric with hard gates (Amazon
+policy / product fidelity / no fabricated claims).
+
+- `npm run evals:image:mcpjam` emits the MCPJam E2E suite (both connectors; a tool-call pass proves
+  an image was actually rendered).
+- `npm run evals:image` vision-judges the produced images against the rubric and emits a scorecard
+  (non-zero exit on any fail/missing, so CI can gate on deliverable quality).
+
+Full contract, the corpus opt-in, the rubric, and the produce-then-score flow: [`image/README.md`](image/README.md).
