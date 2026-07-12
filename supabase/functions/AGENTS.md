@@ -84,3 +84,10 @@ token). Per-function flags live in `../config.toml`.
   reads for slots #1/#3/#5/#6 — so a listing imported in the app surfaces in the connector coach.
   When you add a function that stores a new user field, confirm a read path exists (a resolver slot
   store, or an app/edge read) before considering it done; a write with no read is dead data.
+- **Cap any DB read that feeds an Anthropic/OpenAI prompt via a named constant in
+  `_shared/contextBudgets.ts`** — never a bare `.slice(0, N)` or `.substring(0, N)` inline. Use
+  `INTERNAL_PROMPT_*` naming for anything that only bounds this function's own LLM call (not
+  env-tunable — these are prompt-design decisions, code-review them). If the function's DB read
+  is genuinely unbounded and no cap exists yet, that's a gap this file's own edge functions have
+  had before (see the audit table) — add one rather than leaving it silent. Full rationale:
+  [`../../docs/architecture/ADR-CONTEXT-BUDGET-LEVER.md`](../../docs/architecture/ADR-CONTEXT-BUDGET-LEVER.md).

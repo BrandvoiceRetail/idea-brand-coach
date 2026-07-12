@@ -53,6 +53,19 @@ doing it by hand. 90% accuracy per manual step compounds to ~59% over five steps
   export/erasure registry) and redeploy the `gdpr-export`/`gdpr-delete-account` fns in the same
   change — an unlisted table breaks the right to erasure. Compliance home:
   [`docs/compliance/GDPR_COMPLIANCE.md`](docs/compliance/GDPR_COMPLIANCE.md).
+- **Cap data before it reaches an LLM prompt or an MCP tool response — never a bare inline
+  magic number.** Any new code that reads a collection (reviews, chat messages, KB entries,
+  asset history, anything that can grow) and feeds it into an Anthropic/OpenAI call or returns
+  it in an MCP tool's `content`/`structuredContent` needs a named constant from the shared
+  `contextBudgets.ts` for its runtime boundary (`supabase/functions/_shared/contextBudgets.ts`
+  for Deno edge functions; `src/mcp/service/contextBudgets.ts` for the Node MCP gateway — create
+  it if it doesn't exist yet). Name it `INTERNAL_PROMPT_*` if it only bounds an internal LLM
+  call, `MCP_RESPONSE_*` if it bounds something returned live to a calling agent's context (these
+  have different failure modes and different tuning rules — see the ADR), or `PER_ITEM_*` for a
+  single item's size regardless of destination. If a dial genuinely isn't warranted yet, at
+  minimum log the actual size/count so it's observable. Full rationale, naming convention, and
+  the audit that motivated this:
+  [`docs/architecture/ADR-CONTEXT-BUDGET-LEVER.md`](docs/architecture/ADR-CONTEXT-BUDGET-LEVER.md).
 - Use the Supabase client from `src/integrations/supabase/client.ts`; type queries with the generated
   `src/integrations/supabase/types.ts` (auto-generated — never hand-edit).
 - Handle Supabase errors gracefully: log details to console, surface a `sonner` toast with a clear,

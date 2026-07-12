@@ -168,4 +168,18 @@ asserts the advertised tool set + handler behavior end-to-end.
   (top-level input key NAMES only, sorted — schema, NOT values, so MF-5 holds), `authenticated`,
   `country`, `region`. Session anchors `mcp_session_authenticated` / `mcp_auth_challenge` carry
   `session_id` too. To add a signal, extend the wrapper — never instrument tools individually.
+- **Cap any DB read that lands in a tool's `content`/`structuredContent` via a named constant in
+  `service/contextBudgets.ts`** (create it the first time a tool here needs one — mirrors
+  `supabase/functions/_shared/contextBudgets.ts` on the Deno side, same naming convention, a
+  separate file because the two are separate bundle boundaries). Use `MCP_RESPONSE_*` naming —
+  these bound what lands directly in a LIVE calling agent's context, a different failure mode
+  from an internal edge-fn prompt (the end user feels it immediately: slower replies, faster
+  context exhaustion). Caller-supplied values are fine but MUST clamp to a hard ceiling constant.
+  A 2026-07-12 audit found several tools reading an unbounded collection with NO cap at all —
+  `get_coach_conversation` (a full chat transcript, the most severe finding),
+  `list_coach_conversations`, `get_asset_history`, and the review/product reads in
+  `contextResolver.ts` — none fixed yet; if you touch one of these, add the dial rather than
+  leaving it. If a dial genuinely isn't warranted, extend `instrument.ts`'s `emitToolLatency`
+  (the wrapper above) with a response-size field instead of adding nothing — see
+  [`../../docs/architecture/ADR-CONTEXT-BUDGET-LEVER.md`](../../docs/architecture/ADR-CONTEXT-BUDGET-LEVER.md).
 - Don't bind PROVISIONAL IV-OS tools until D5 lands.
