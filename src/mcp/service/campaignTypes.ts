@@ -60,6 +60,8 @@ export const METRIC_NAME_VALUES = [
   'return_rate',
   'units_sold',
   'subscribe_save',
+  // total (organic + paid) sales per period — enables TACoS = spend / total_sales at read time
+  'total_sales',
 ] as const;
 
 /** `campaign_metrics.funnel_stage` — channel purchase-funnel bands (nullable in the DB). */

@@ -59,6 +59,9 @@ describe('creativeAlignment (the shared positioning spine)', () => {
     expect(HIGGSFIELD_HANDOFF.video.toLowerCase()).toMatch(/chain|prior clip/);
     expect(HIGGSFIELD_HANDOFF.reference_discipline.toLowerCase()).toMatch(/real product photo/);
     expect(HIGGSFIELD_HANDOFF.reference_discipline.toLowerCase()).toMatch(/never .*imagination/);
+    // 3D product-model fidelity upgrade: generate_3d + the logo/text decal caveat
+    expect(HIGGSFIELD_HANDOFF.product_model.toLowerCase()).toContain('generate_3d');
+    expect(HIGGSFIELD_HANDOFF.product_model.toLowerCase()).toMatch(/smear|re-apply|decal/);
     expect(HIGGSFIELD_HANDOFF.preset_formats.toLowerCase()).toMatch(/ugc|unboxing/);
     expect(HIGGSFIELD_HANDOFF.edit_tools.toLowerCase()).toMatch(/reframe|upscale/);
   });

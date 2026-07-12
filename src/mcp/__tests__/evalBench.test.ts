@@ -4,7 +4,7 @@ import { EVAL_CASES, getEvalCase } from '../evals/cases/catalog.js';
 import { runLiveTier, liveTierStatus, contractMetrics } from '../evals/liveTier.js';
 import { listLiveTools } from '../evals/live/serverTools.js';
 
-const SKILL_RE = /^(0[1-9]|1[0-9]|20)$/;
+const SKILL_RE = /^(0[1-9]|1[0-9]|2[01])$/;
 
 describe('Eval Bench — curated case catalog', () => {
   it('has a diverse, well-formed set of cases', () => {

@@ -110,6 +110,8 @@ const TOOL_APP_SKILLS: Record<string, string[]> = {
   assess_idea_dimensions: ['06', '01', '03'],
   // The single named Decision Trigger™ lever → the trigger skill + the score + the framework lens.
   identify_decision_trigger: ['09', '06', '01'],
+  // PPC audit → the PPC-efficiency method + the Trust Gap it routes conversion problems into.
+  run_ppc_audit: ['21', '06', '12'],
   // Onboarding state + the warm single next step → the commercial frame, Trevor's voice, the lens.
   onboard_status: ['03', '02', '01'],
 };

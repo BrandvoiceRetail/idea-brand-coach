@@ -98,8 +98,9 @@ function toDetail(row: AssetRow): AssetDetail {
   };
 }
 
-/** Normalize a free-text content_type to the ledger's vocabulary (unknown → 'other'). */
-const CONTENT_TYPES = new Set(['blog', 'social', 'amazon', 'competitor', 'other']);
+/** Normalize a free-text content_type to the ledger's vocabulary (unknown → 'other').
+ *  'model' = a 3D product model (GLB) + its rendered stills, the fidelity reference kit. */
+const CONTENT_TYPES = new Set(['blog', 'social', 'amazon', 'competitor', 'model', 'other']);
 function normContentType(v: string): string {
   const t = (v ?? '').toLowerCase().trim();
   return CONTENT_TYPES.has(t) ? t : 'other';

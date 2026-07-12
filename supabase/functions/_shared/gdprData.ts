@@ -23,6 +23,7 @@ export const USER_ID_TABLES: string[] = [
   'scrape_job_items',     // → scrape_jobs
   'scrape_jobs',
   'avatar_build_state',
+  'ad_search_terms',      // per-seller Amazon Ads search-term rows (PPC audit)
   'beta_comments',        // user_id has NO FK — survives auth deletion without this
   'beta_feedback',        // user_id has NO FK — survives auth deletion without this
   'brand_asset_audits',

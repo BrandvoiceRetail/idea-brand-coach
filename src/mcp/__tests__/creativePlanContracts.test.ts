@@ -120,7 +120,7 @@ const STABLE_KEYS: Record<string, { args: Record<string, unknown>; keys: string[
   },
 };
 
-const HANDOFF_SUBKEYS = ['image', 'video', 'reference_discipline', 'edit_tools', 'job_loop', 'save_back'];
+const HANDOFF_SUBKEYS = ['image', 'video', 'reference_discipline', 'product_model', 'edit_tools', 'job_loop', 'save_back'];
 
 describe('creative-plan tools — structuredContent shape is locked', () => {
   for (const [tool, spec] of Object.entries(STABLE_KEYS)) {

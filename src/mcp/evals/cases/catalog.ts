@@ -595,6 +595,55 @@ export const EVAL_CASES: EvalCase[] = [
     },
     corpusRef: 'infinityvault-recognition',
   },
+
+  // ── PPC audit (optimizer + Trust-Gap on-ramp) ──────────────────────────────
+  // Locks tool SELECTION: a "run a PPC review / my ACOS is high" ask must reach run_ppc_audit,
+  // and a high-spend + low-conversion piece must route to the LISTING fix, not just a bid tweak.
+  {
+    id: 'infinityvault-ppc-audit',
+    title: 'InfinityVault — high ad spend, wants a PPC review',
+    persona: 'P1',
+    category: 'ppc',
+    description:
+      'A "my ACOS is out of control, review my PPC" ask must reach run_ppc_audit. The binder pulls clicks but converts poorly on the hero SKU — the audit should flag it as a listing/Trust-Gap problem (route to the fix), not just a bid cut.',
+    context: {
+      brand: 'InfinityVault',
+      product: 'Premium 216-card trading-card binder (ASIN B0CARD0001, $34)',
+      avatarId: 'avatar_B0CARD0001',
+      fields: [
+        { label: 'Symptom', value: 'ACOS climbing; ad spend up but sales flat on the hero SKU' },
+        { label: 'Data', value: 'Amazon Ads search-term report already ingested (ingest_search_terms)' },
+      ],
+    },
+    memory: [
+      { kind: 'brand-fact', note: 'Target ACOS is 30%; lifetime warranty confirmed.' },
+      { kind: 'history', note: 'The hero listing scored weak on the Empathetic pillar in the last Trust Gap.' },
+    ],
+    uploads: [
+      {
+        name: 'infinityvault-search-terms.txt',
+        kind: 'doc',
+        description: 'Amazon Ads search-term report excerpt (already ingested).',
+        content: '"trading card binder" 120 clicks / 3 orders / $48 spend · "card storage" 40 clicks / 0 orders / $16 spend',
+      },
+    ],
+    conversation: [
+      { role: 'user', text: 'My ACOS is out of control on the binder — review my PPC and tell me what to cut.' },
+      {
+        role: 'coach',
+        text: "Running your PPC audit off your own search-term data — I'll separate the true bid problems from the terms to negate, and flag any piece that's a listing problem in disguise (clicks are fine, conversion isn't) so you fix the listing instead of just cutting bids.",
+        tools: ['run_ppc_audit'],
+        skills: ['21', '06', '12'],
+      },
+    ],
+    expected: {
+      tools: ['run_ppc_audit'],
+      skills: ['21', '06', '12'],
+      oracle: ['artifact', 'skill-faithful'],
+      outcome: 'A PPC audit: per-piece ACOS + harvest/negate + RPC bid guidance, and the hero SKU routed to the Trust Gap as a conversion problem rather than a bid cut.',
+    },
+    corpusRef: 'infinityvault-recognition',
+  },
 ];
 
 export function getEvalCase(id: string): EvalCase | undefined {

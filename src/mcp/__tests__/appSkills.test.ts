@@ -30,23 +30,24 @@ function capture() {
 const nums = (skills: { number: string }[]) => skills.map((s) => s.number).sort();
 
 describe('appSkills — IDEA Brand Coach App Skill Architecture (IDEA-APP-SKILLS-001 v1.0)', () => {
-  it('loads exactly 20 skills across 4 tiers, each with a number, name, file and title', () => {
+  it('loads exactly 21 skills across 4 tiers, each with a number, name, file and title', () => {
     const skills = loadAppSkills();
-    expect(skills).toHaveLength(20);
+    expect(skills).toHaveLength(21);
     expect(skills.every((s) => /^\d{2}$/.test(s.number))).toBe(true);
     expect(skills.every((s) => s.name.length > 0)).toBe(true);
     expect(skills.every((s) => s.file.endsWith('.md'))).toBe(true);
     expect(skills.every((s) => s.title.length > 0)).toBe(true);
     expect(nums(skills)).toEqual([
       '01', '02', '03', '04', '05', '06', '07', '08', '09', '10',
-      '11', '12', '13', '14', '15', '16', '17', '18', '19', '20',
+      '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21',
     ]);
   });
 
   it('matches the spec tier membership', () => {
     expect(nums(appSkillsByTier(1))).toEqual(['01', '02', '03']);
     expect(nums(appSkillsByTier(2))).toEqual(['04', '05', '06', '07', '08']);
-    expect(nums(appSkillsByTier(3))).toEqual(['09', '10', '11', '12', '13', '14']);
+    // 21 (PPC Efficiency Audit) is the newest Tier-3 output-and-action skill
+    expect(nums(appSkillsByTier(3))).toEqual(['09', '10', '11', '12', '13', '14', '21']);
     expect(nums(appSkillsByTier(4))).toEqual(['15', '16', '17', '18', '19', '20']);
   });
 
@@ -54,7 +55,7 @@ describe('appSkills — IDEA Brand Coach App Skill Architecture (IDEA-APP-SKILLS
     const arch = appArchitecture();
     expect(arch).not.toBeNull();
     expect(arch?.docRef).toBe('IDEA-APP-SKILLS-001 v1.0');
-    expect(arch?.totals).toEqual({ skills: 20, tiers: 4 });
+    expect(arch?.totals).toEqual({ skills: 21, tiers: 4 });
     // the load-bearing hard rule: buyer-state names never surface to the user
     expect(arch?.hardRules.some((r) => /Assessor.*Protector.*Expresser.*Connector/i.test(r))).toBe(true);
   });

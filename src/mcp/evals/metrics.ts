@@ -54,10 +54,10 @@ function architectureChecks(source: ConfigDef['groundingSource']): { passed: num
     s.dependsOn.every((d) => skills.some((x) => x.number === d)),
   );
   const checks = [
-    arch?.totals.skills === 20 && arch?.totals.tiers === 4,
+    arch?.totals.skills === 21 && arch?.totals.tiers === 4,
     tier1AlwaysInContext().length === 3,
     JSON.stringify(internal) === JSON.stringify(INTERNAL_ONLY_EXPECTED),
-    JSON.stringify(tierSizes) === JSON.stringify([3, 5, 6, 6]),
+    JSON.stringify(tierSizes) === JSON.stringify([3, 5, 7, 6]), // Tier 3 gained Skill 21 (PPC audit)
     depsOk,
   ];
   return { passed: checks.filter(Boolean).length, total: checks.length };

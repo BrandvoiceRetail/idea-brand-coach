@@ -44,7 +44,7 @@ export const EVAL_REPORT: EvalReport = {
           "id": "tool-grounding-coverage",
           "label": "Tool grounding coverage",
           "description": "How many coach tools this config grounds in authored skills.",
-          "value": 0.8,
+          "value": 0.25,
           "display": "4 tools",
           "weight": 0.2,
           "detail": "build_avatar_stage, generate_concepts, run_diagnostic_evidence, run_trust_gap"
@@ -82,8 +82,8 @@ export const EVAL_REPORT: EvalReport = {
           "weight": 0.15
         }
       ],
-      "composite": 0.5985714285714286,
-      "grade": "C"
+      "composite": 0.4885714285714286,
+      "grade": "D"
     },
     {
       "id": "app-skills",
@@ -97,16 +97,16 @@ export const EVAL_REPORT: EvalReport = {
           "label": "Tool grounding coverage",
           "description": "How many coach tools this config grounds in authored skills.",
           "value": 1,
-          "display": "5 tools",
+          "display": "16 tools",
           "weight": 0.2,
-          "detail": "build_avatar_stage, generate_brief, generate_concepts, run_diagnostic_evidence, run_trust_gap"
+          "detail": "assess_idea_dimensions, build_avatar_stage, generate_aplus_content_plan, generate_brief, generate_concepts, generate_listing_image_brief, generate_main_image_title_plan, generate_storefront_messaging_plan, generate_ugc_ad_plan, generate_video_storyboard, identify_decision_trigger, onboard_status, refine_creative_plan, run_diagnostic_evidence, run_ppc_audit, run_trust_gap"
         },
         {
           "id": "grounding-density",
           "label": "Grounding density",
           "description": "Average number of grounding skills per grounded tool.",
-          "value": 0.43333333333333335,
-          "display": "2.6 skills/tool",
+          "value": 0.5,
+          "display": "3.0 skills/tool",
           "weight": 0.15
         },
         {
@@ -135,7 +135,7 @@ export const EVAL_REPORT: EvalReport = {
           "weight": 0.15
         }
       ],
-      "composite": 0.615,
+      "composite": 0.625,
       "grade": "C"
     },
     {
@@ -150,16 +150,16 @@ export const EVAL_REPORT: EvalReport = {
           "label": "Tool grounding coverage",
           "description": "How many coach tools this config grounds in authored skills.",
           "value": 1,
-          "display": "5 tools",
+          "display": "16 tools",
           "weight": 0.2,
-          "detail": "build_avatar_stage, generate_brief, generate_concepts, run_diagnostic_evidence, run_trust_gap"
+          "detail": "assess_idea_dimensions, build_avatar_stage, generate_aplus_content_plan, generate_brief, generate_concepts, generate_listing_image_brief, generate_main_image_title_plan, generate_storefront_messaging_plan, generate_ugc_ad_plan, generate_video_storyboard, identify_decision_trigger, onboard_status, refine_creative_plan, run_diagnostic_evidence, run_ppc_audit, run_trust_gap"
         },
         {
           "id": "grounding-density",
           "label": "Grounding density",
           "description": "Average number of grounding skills per grounded tool.",
           "value": 1,
-          "display": "20.8 skills/tool",
+          "display": "8.7 skills/tool",
           "weight": 0.15
         },
         {
@@ -298,7 +298,7 @@ export const EVAL_REPORT: EvalReport = {
       "label": "Brand-anchor correctness",
       "description": "Cases whose Decision Trigger maps to its fixed brand anchor (Recognition = Dove, never Lego).",
       "value": 1,
-      "display": "4 / 4",
+      "display": "5 / 5",
       "category": "grounding"
     },
     {
@@ -359,7 +359,7 @@ export const EVAL_REPORT: EvalReport = {
   "flags": [
     "The master-architecture header states '14 Alpha skills · 6 Beta skills' but the per-skill scope table yields 17 Alpha / 3 Beta (Beta = 11, 13, 14). This manifest follows the granular per-skill table. DISCREPANCY to confirm with Trevor.",
     "Corpus tool labels not yet skill-grounded (planned/aliased): design_test, draft_asset, generate_signature, publish_filter_check, run_conversation, search_user_kb.",
-    "App skills awaiting Trevor's detailed doc (content_fidelity ≠ full): 11, 12, 13, 14, 15, 16, 17, 18, 19, 20.",
+    "App skills awaiting Trevor's detailed doc (content_fidelity ≠ full): 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21.",
     "Live LLM tier is gated (BRAND_COACH_MCP_HOST=1 + ANTHROPIC_API_KEY). Deterministic core runs without it."
   ],
   "liveTier": {
@@ -370,17 +370,17 @@ export const EVAL_REPORT: EvalReport = {
         "id": "live-tool-availability",
         "label": "Tool availability",
         "description": "Corpus-exercised tools the live server actually advertises.",
-        "value": 0.8181818181818182,
-        "display": "9 / 11",
+        "value": 0.7272727272727273,
+        "display": "8 / 11",
         "weight": 0,
-        "detail": "Advertised tools: 43."
+        "detail": "Advertised tools: 81."
       },
       {
         "id": "live-grounding-reach",
         "label": "Grounding reach (live)",
         "description": "Grounded tools whose live description carries a skill-grounding citation.",
         "value": 1,
-        "display": "5 / 5",
+        "display": "16 / 16",
         "weight": 0
       },
       {
@@ -388,7 +388,7 @@ export const EVAL_REPORT: EvalReport = {
         "label": "Guardrail in tool surface (live)",
         "description": "Grounded tools whose live description carries the buyer-state internal-only rule.",
         "value": 1,
-        "display": "5 / 5",
+        "display": "16 / 16",
         "weight": 0,
         "detail": "Proves the App Skill Architecture hard rule reaches the model-facing tool surface."
       }

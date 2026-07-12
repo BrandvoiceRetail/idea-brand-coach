@@ -91,6 +91,8 @@ import { registerUpdateCampaignStatusTool } from './tools/updateCampaignStatus.j
 import { registerIngestCampaignAnalyticsTool } from './tools/ingestCampaignAnalytics.js';
 import { registerIngestFunnelAnalyticsTool } from './tools/ingestFunnelAnalytics.js';
 import { registerIngestContentPerformanceTool } from './tools/ingestContentPerformance.js';
+import { registerIngestSearchTermsTool } from './tools/ingestSearchTerms.js';
+import { registerRunPpcAuditTool } from './tools/runPpcAudit.js';
 import { registerGetCampaignMetricsTool } from './tools/getCampaignMetrics.js';
 import { registerGetFunnelPieceMetricsTool } from './tools/getFunnelPieceMetrics.js';
 import { registerCreateEmailSequenceTool } from './tools/createEmailSequence.js';
@@ -359,6 +361,15 @@ export async function createServer(
   registerIngestCampaignAnalyticsTool(server);
   registerIngestFunnelAnalyticsTool(server);
   registerIngestContentPerformanceTool(server);
+  // First-party PPC keyword data: the seller's own Amazon Ads search-term report rows
+  // (per-keyword impressions/clicks/spend/orders/sales) into ad_search_terms, host-pulled via
+  // Windsor amazon_ads. Feeds run_ppc_audit (harvest/negate + per-keyword ACOS). gateWrite-gated.
+  registerIngestSearchTermsTool(server);
+  // PPC audit — optimizer + Trust-Gap on-ramp. Reads the seller's ingested search-term data,
+  // aggregates to pieces, and runs the deterministic engine (RPC bid guidance, ACOS/TACoS,
+  // harvest/negate) — routing conversion-problem pieces to run_trust_gap, not a bid tweak.
+  // Pure host-side (like run_trust_gap); grounded in AdLabs' PPC method (Skill 21). Identity-gated.
+  registerRunPpcAuditTool(server);
   registerGetCampaignMetricsTool(server);
   // Per-piece read (decision #1): one funnel piece's (brand_asset's) latest-per-metric values
   // + derived cvr/aov — "did this piece do its job?". RLS-scoped; honest no_data.
