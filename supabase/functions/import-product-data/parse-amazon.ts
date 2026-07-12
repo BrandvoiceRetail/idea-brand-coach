@@ -14,8 +14,13 @@
  *   - reviewer:       <span class="a-profile-name">
  *   - date:           data-hook="review-date"
  *   - verified:       presence of data-hook="avp-badge"
- * A /dp/ page embeds ~8 reviews. The dedicated `/product-reviews/` pages are
- * login-walled (verified dead 2026-06-04) — do not rely on them.
+ * A plain /dp/ page load embeds a small preview (historically ~8 reviews). The
+ * caller (import-product-data) scrapes via `scrapeAmazonPage` in
+ * `_shared/amazonReviews.ts`, which clicks the ratings link before capture
+ * (2026-07-12) to expand more reviews into the DOM — the HTML this module parses
+ * may therefore contain well more than ~8 review blocks; no fixed count is
+ * assumed here. The dedicated `/product-reviews/` pages remain login-walled
+ * (verified dead 2026-06-04) — do not rely on them.
  *
  * TWIN FILE — keep in sync with `src/lib/parseAmazonProduct.ts`. This is a verbatim
  * duplicate because Deno edge functions bundle only the function's own folder +
@@ -365,7 +370,9 @@ function toHighResUrl(url: string): string {
 
 /**
  * Extract embedded reviews from /dp/ HTML using Amazon's modern review hooks.
- * Expect ~8 reviews per page.
+ * The caller's scrape click-expands the ratings widget before capture (see
+ * `_shared/amazonReviews.ts`), so this can find well more than the ~8 reviews
+ * a plain page load embeds — no fixed count assumed here.
  */
 function extractReviews(html: string): ParsedReview[] {
   const reviews: ParsedReview[] = [];

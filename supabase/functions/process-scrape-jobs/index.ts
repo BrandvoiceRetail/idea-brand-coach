@@ -58,7 +58,7 @@ async function scrapeOne(url: string, userId: string): Promise<{ reviews: Scrape
   const res = await fetch(`${SUPABASE_URL}/functions/v1/review-scraper`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY },
-    body: JSON.stringify({ urls: [url], user_id: userId, maxReviewsPerUrl: 20 }),
+    body: JSON.stringify({ urls: [url], user_id: userId, maxReviewsPerUrl: 50 }),
   });
   if (!res.ok) return { reviews: [], error: `review-scraper HTTP ${res.status}` };
   const data = await res.json().catch(() => ({}));

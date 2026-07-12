@@ -10,9 +10,24 @@
  * structured-JSON extraction is the PRIMARY strategy; the callers keep their
  * regex parsers as the no-LLM fallback.
  *
+ * REVIEW EXPANSION (2026-07-12): a plain /dp/ page load only embeds a small
+ * preview of reviews (historically ~8). Clicking the ratings link expands more
+ * reviews into the DOM in place, and — verified live — does NOT hit the
+ * /product-reviews/ login wall (that page requires auth even for a plain fetch;
+ * the click stays on /dp/ and never navigates there). `all: true` on the click
+ * action is load-bearing: without it, a page with no visible ratings link (e.g.
+ * zero reviews, or an unexpected layout) throws SCRAPE_ACTION_ERROR and the
+ * ENTIRE scrape is lost, including listing fields that have nothing to do with
+ * reviews. `all: true` makes a missing selector a no-op instead of a fatal
+ * error, confirmed live. Actual review count after expansion varies by listing
+ * and is no longer capped at ~8, but is still bounded by whatever Amazon's own
+ * review widget renders on /dp/ — not the full /product-reviews/ catalog.
+ *
  * No Deno globals here: the caller passes the Firecrawl key, so this module
  * stays portable and unit-reviewable.
  */
+
+import { PER_ITEM_REVIEW_BODY_CHARS } from './contextBudgets.ts';
 
 /** Default Amazon marketplace for ASIN-only imports (US). */
 export const DEFAULT_MARKETPLACE_HOST = 'amazon.com';
@@ -94,7 +109,7 @@ export function reviewsFromJson(jsonReviews: JsonReview[], sourceUrl: string): S
       reviewerName: r.reviewer?.trim() || 'Anonymous',
       rating: typeof r.rating === 'number' ? r.rating : 0,
       title: r.title?.trim() || '',
-      body: r.body!.trim().substring(0, 2000),
+      body: r.body!.trim().substring(0, PER_ITEM_REVIEW_BODY_CHARS),
       date: r.date?.trim() || '',
       verified: r.verified === true,
       source: sourceUrl,
@@ -145,7 +160,13 @@ export async function scrapeAmazonPage(
     body: JSON.stringify({
       url,
       formats,
-      actions: [{ type: 'wait', milliseconds: 3000 }],
+      actions: [
+        { type: 'wait', milliseconds: 3000 },
+        // Expand reviews into the DOM before capture (see module header). `all: true`
+        // makes this a no-op — not a fatal error — when the selector isn't present.
+        { type: 'click', selector: '#acrCustomerReviewLink', all: true },
+        { type: 'wait', milliseconds: 2000 },
+      ],
       onlyMainContent: false,
       timeout: timeoutMs,
     }),

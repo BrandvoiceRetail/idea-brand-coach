@@ -8,8 +8,11 @@ top-level `CLAUDE.md`).
 
 Sellers import one or more Amazon listings by ASIN. For each ASIN this function
 scrapes `https://www.amazon.com/dp/{asin}` ONCE via Firecrawl v2, parses the
-listing fields AND the ~8 embedded reviews, and persists them to `user_products` +
-`user_product_reviews` under the caller's own (RLS-scoped) session.
+listing fields AND the embedded reviews, and persists them to `user_products` +
+`user_product_reviews` under the caller's own (RLS-scoped) session. Since
+2026-07-12 the scrape click-expands the ratings widget before capture (see
+"Firecrawl requirement" below), so the review count is no longer capped at the
+historical ~8-review preview.
 
 Downstream, the imported data feeds: (a) Trust Gap interpretation evidence,
 (b) Signature reveal preloaded reviews, (c) coach chat product context.
@@ -46,13 +49,23 @@ it the function returns 500. The Firecrawl v2 call is:
 ```
 POST https://api.firecrawl.dev/v2/scrape
 { url: "https://www.amazon.com/dp/<asin>",
-  formats: ["markdown","html"],
-  actions: [{ type: "wait", milliseconds: 3000 }],
+  formats: ["markdown","html", { type: "json", ... }],  // structured review extraction
+  actions: [
+    { type: "wait", milliseconds: 3000 },
+    { type: "click", selector: "#acrCustomerReviewLink", all: true },  // expand reviews
+    { type: "wait", milliseconds: 2000 },
+  ],
   onlyMainContent: false, timeout: 30000 }
 ```
 
-ONE scrape per ASIN — the /dp/ page yields both the listing fields and the embedded
-reviews.
+Shared with `review-scraper` via `supabase/functions/_shared/amazonReviews.ts`
+(`scrapeAmazonPage`) — do not edit the request shape here without checking that
+module. The click's `all: true` is load-bearing: it makes a missing selector
+(e.g. a zero-review listing) a no-op instead of a fatal `SCRAPE_ACTION_ERROR`
+that would lose the entire scrape, not just the reviews.
+
+ONE scrape per ASIN — the /dp/ page yields both the listing fields and the
+(now click-expanded) embedded reviews.
 
 ## Gotchas (verified 2026-06-04)
 
@@ -67,9 +80,21 @@ reviews.
   - verified: presence of `data-hook="avp-badge"`
   Amazon wraps each body in collapsed/expanded "Brief/Full content visible, double
   tap…" teaser helper text; the parser strips those sentinels so they don't leak
-  into bodies. Expect ~8 reviews per page.
+  into bodies.
 - **`/product-reviews/` is login-walled (dead).** The dedicated review pages require
-  auth — do NOT fetch them. The /dp/ page is the single source of truth.
+  auth — do NOT fetch them. The /dp/ page is the single source of truth. Confirmed
+  live 2026-07-12: a direct fetch of `/product-reviews/{asin}` returns Amazon's
+  actual sign-in page, even via Firecrawl.
+- **Review count is no longer capped at ~8 (2026-07-12).** A plain /dp/ page load
+  only embeds a small preview. `scrapeAmazonPage` (`_shared/amazonReviews.ts`)
+  clicks the ratings link (`#acrCustomerReviewLink`, `all: true`) before capture,
+  which expands more reviews into the DOM without navigating to the login-walled
+  `/product-reviews/` page — confirmed live: no sign-in content, review count
+  materially higher than a plain load. `all: true` is required so a missing
+  selector (zero-review listings, layout variants) degrades to a no-op instead of
+  failing the whole scrape. Actual count still varies by listing and is bounded by
+  whatever Amazon's own review widget renders on /dp/, not the full
+  `/product-reviews/` catalog.
 
 ## How to test it
 
@@ -79,9 +104,11 @@ reviews.
 npx vitest run src/lib/__tests__/parseAmazonProduct.test.ts
 ```
 
-Fixtures are trimmed slices of a REAL Firecrawl response for `B0CJBQ7F5C`. Asserts
-title, rating 4.6, price 21.99, review count 143, 1–10 bullets, ≥5 reviews with
-non-empty bodies, and that teaser boilerplate never leaks.
+Fixtures are trimmed slices of a REAL Firecrawl response for `B0CJBQ7F5C`, captured
+BEFORE the 2026-07-12 click-expansion change — they still exercise the parser
+correctly (asserts title, rating 4.6, price 21.99, review count 143, 1–10 bullets,
+≥5 reviews with non-empty bodies, teaser boilerplate never leaks) but don't reflect
+a click-expanded page. Regenerate against a live capture to test that path.
 
 ### End-to-end (deployed) — curl with a user JWT
 
@@ -98,7 +125,9 @@ curl -i -X POST \
 
 Expect `200 { status: "ok", results: [{ asin: "B0CJBQ7F5C", ok: true, productId,
 title, rating: 4.6, reviewCount, reviewsSaved }] }`. Then confirm the rows exist in
-`user_products` (one) and `user_product_reviews` (~8) for your user.
+`user_products` (one) and `user_product_reviews` for your user — `reviewsSaved`
+should be well above the historical ~8-review ceiling now that the scrape
+click-expands the ratings widget before capture (2026-07-12).
 
 3. No `Authorization` header → expect `401 { error }`.
 4. `{"asins":["nope"]}` or more than 5 ASINs → expect `400 { error }`.

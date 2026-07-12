@@ -38,6 +38,10 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { createRateLimiter } from "../_shared/rateLimit.ts";
 import { APP_URL } from "../_shared/appUrl.ts";
 import { shouldSkipScrape } from "../_shared/forensicFreshness.ts";
+import {
+  INTERNAL_PROMPT_TRUST_GAP_REVIEW_ROWS,
+  INTERNAL_PROMPT_TRUST_GAP_REVIEW_BODY_CHARS,
+} from "../_shared/contextBudgets.ts";
 
 // This endpoint is expensive (1 Firecrawl scrape + ~3 Sonnet calls per run), so
 // throttle per user. Best-effort per-isolate limiter; overridable via env.
@@ -53,9 +57,11 @@ const ASIN_PATTERN = /^[A-Z0-9]{10}$/i;
 /** Shape guard for the optional, observability-only avatar_id (a uuid). */
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Trust Gap evidence caps — mirror SupabaseProductDataService. */
-const TRUST_GAP_MAX_REVIEWS = 12;
-const TRUST_GAP_REVIEW_BODY_MAX = 300;
+/** Trust Gap evidence caps — mirror SupabaseProductDataService. Sourced from the
+ *  shared context-budget lever (ADR-CONTEXT-BUDGET-LEVER) so this number has one
+ *  home, discoverable alongside every other LLM/MCP context cap in the app. */
+const TRUST_GAP_MAX_REVIEWS = INTERNAL_PROMPT_TRUST_GAP_REVIEW_ROWS;
+const TRUST_GAP_REVIEW_BODY_MAX = INTERNAL_PROMPT_TRUST_GAP_REVIEW_BODY_CHARS;
 /** Below this review count the corpus is thin; UI must show a confidence caveat. */
 const THIN_CORPUS_THRESHOLD = 5;
 // The email's honesty note fires well above the scoring-blend bar: the app's

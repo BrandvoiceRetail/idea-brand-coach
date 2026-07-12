@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getServiceClient, getAuthedUserId } from "../_shared/edge-auth.ts";
 import { meterAndDebit } from "../_shared/meter.ts";
 import { captureServerException } from "../_shared/posthog.ts";
+import { INTERNAL_PROMPT_SIGNATURE_REVIEW_CHARS } from "../_shared/contextBudgets.ts";
 
 /**
  * reveal-signature
@@ -175,7 +176,7 @@ serve(async (req) => {
     const hasReviews = reviewsText.length > 0;
 
     // Cap pasted reviews to keep the request within sane token limits.
-    const reviewsForPrompt = reviewsText.slice(0, 12000);
+    const reviewsForPrompt = reviewsText.slice(0, INTERNAL_PROMPT_SIGNATURE_REVIEW_CHARS);
 
     const userMessageParts: string[] = [];
     if (fieldsText) {

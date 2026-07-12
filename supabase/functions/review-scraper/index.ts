@@ -4,6 +4,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getCached, upsertCached, CACHE_TTL } from "../_shared/asinCache.ts";
 import { consumeScrapeQuota } from "../_shared/scrapeRateLimit.ts";
 import { reviewsFromJson, scrapeAmazonPage, type ScrapedReview } from "../_shared/amazonReviews.ts";
+import {
+  MCP_RESPONSE_REVIEW_SCRAPER_MAX_PER_URL_DEFAULT,
+  MCP_RESPONSE_REVIEW_SCRAPER_MAX_PER_URL_CEILING,
+  PER_ITEM_REVIEW_BODY_CHARS,
+} from "../_shared/contextBudgets.ts";
 
 const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
 
@@ -66,7 +71,7 @@ function parseAmazonReviews(markdown: string, html: string, sourceUrl: string): 
         reviewerName: nameMatch ? nameMatch[1].trim() : 'Anonymous',
         rating: ratingMatch ? parseFloat(ratingMatch[1]) : 0,
         title: titleMatch ? titleMatch[1].trim() : '',
-        body: bodyMatch ? bodyMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 2000) : '',
+        body: bodyMatch ? bodyMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, PER_ITEM_REVIEW_BODY_CHARS) : '',
         date: dateMatch ? dateMatch[1].trim() : '',
         verified: !!verifiedMatch,
         source: sourceUrl,
@@ -113,7 +118,7 @@ function parseReviewsFromMarkdown(markdown: string, sourceUrl: string): ScrapedR
     // Try to extract title from first line
     const lines = content.split('\n').filter((l) => l.trim().length > 0);
     const title = lines[0]?.length < 200 ? lines[0].trim() : '';
-    const body = lines.slice(title ? 1 : 0).join('\n').trim().substring(0, 2000);
+    const body = lines.slice(title ? 1 : 0).join('\n').trim().substring(0, PER_ITEM_REVIEW_BODY_CHARS);
 
     if (body.length > 10) {
       reviews.push({
@@ -145,7 +150,7 @@ function parseReviewsFromMarkdown(markdown: string, sourceUrl: string): ScrapedR
           reviewerName: 'Anonymous',
           rating: ratingInContent ? parseFloat(ratingInContent[1]) : 0,
           title,
-          body: content.substring(0, 2000),
+          body: content.substring(0, PER_ITEM_REVIEW_BODY_CHARS),
           date: '',
           verified: false,
           source: sourceUrl,
@@ -252,9 +257,18 @@ serve(async (req) => {
       throw new Error('Missing FIRECRAWL_API_KEY environment variable');
     }
 
-    const { urls, maxReviewsPerUrl: maxReviewsRaw = 20 } = body;
+    // Default raised 20→50 (2026-07-12): the click-through review expansion in
+    // scrapeAmazonPage (see _shared/amazonReviews.ts) now regularly extracts more
+    // than 20 reviews per listing, where previously the cap was rarely reached.
+    // This is an MCP_RESPONSE_* budget (ADR-CONTEXT-BUDGET-LEVER): it bounds what
+    // gets returned directly into a live calling agent's context, not just an
+    // internal prompt — see _shared/contextBudgets.ts.
+    const { urls, maxReviewsPerUrl: maxReviewsRaw = MCP_RESPONSE_REVIEW_SCRAPER_MAX_PER_URL_DEFAULT } = body;
     // Cap reviews-per-URL to bound response size (caller-controlled; Firecrawl bills per URL).
-    const maxReviewsPerUrl = Math.min(Math.max(1, Number(maxReviewsRaw) || 20), 50);
+    const maxReviewsPerUrl = Math.min(
+      Math.max(1, Number(maxReviewsRaw) || MCP_RESPONSE_REVIEW_SCRAPER_MAX_PER_URL_DEFAULT),
+      MCP_RESPONSE_REVIEW_SCRAPER_MAX_PER_URL_CEILING,
+    );
 
     if (!urls || !Array.isArray(urls) || urls.length === 0) {
       return new Response(

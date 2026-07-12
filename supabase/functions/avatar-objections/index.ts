@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { INTERNAL_PROMPT_AVATAR_CORPUS_CHARS } from "../_shared/contextBudgets.ts";
 
 /**
  * avatar-objections  (Avatar 2.0 — Stage 4: Hesitations & Objections)
@@ -261,7 +262,7 @@ serve(async (req) => {
       );
     }
 
-    const reviewsForPrompt = corpus.slice(0, 16000);
+    const reviewsForPrompt = corpus.slice(0, INTERNAL_PROMPT_AVATAR_CORPUS_CHARS);
     const parts: string[] = [
       `CUSTOMER REVIEWS (quote verbatim_signal word-for-word from here, prefer low-star and Q&A):\n\n${reviewsForPrompt}`,
     ];

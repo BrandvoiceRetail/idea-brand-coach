@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { INTERNAL_PROMPT_AVATAR_CORPUS_CHARS } from "../_shared/contextBudgets.ts";
 
 /**
  * avatar-vocabulary  (Avatar 2.0 — Stage 1: Vocabulary Forensics)
@@ -264,7 +265,7 @@ serve(async (req) => {
       );
     }
 
-    const reviewsForPrompt = corpus.slice(0, 16000);
+    const reviewsForPrompt = corpus.slice(0, INTERNAL_PROMPT_AVATAR_CORPUS_CHARS);
 
     const userMessage = `CUSTOMER REVIEWS (the only source of vocabulary — every term you cluster must appear verbatim here):\n\n${reviewsForPrompt}\n\nNow produce the emotion-clustered vocabulary forensics. Return ONLY the JSON object.`;
 

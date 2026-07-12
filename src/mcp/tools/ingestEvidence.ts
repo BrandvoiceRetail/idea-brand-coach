@@ -213,7 +213,7 @@ export function registerIngestEvidenceTool(server: McpServer, edge: EdgeFnClient
         } else {
           const scraped = await edge.invoke<ReviewScrapeResponse>('review-scraper', {
             urls: [built.url],
-            maxReviewsPerUrl: 20,
+            maxReviewsPerUrl: 50,
           });
           if (!scraped.ok) {
             notes.push(`asin-scrape failed (${scraped.note ?? 'unavailable'}) — paste reviews via reviews_text instead.`);

@@ -2,8 +2,10 @@
  * import-product-data — Amazon listing importer.
  *
  * Sellers import one or more Amazon listings by ASIN. For each ASIN this function
- * scrapes the Amazon DP page ONCE via Firecrawl v2, parses the
- * listing fields AND the ~8 embedded reviews (modern review hooks — see
+ * scrapes the Amazon DP page ONCE via Firecrawl v2 (via `scrapeAmazonPage` in
+ * `_shared/amazonReviews.ts`, which click-expands the ratings widget before
+ * capture — 2026-07-12, well past the historical ~8-review preview), parses the
+ * listing fields AND the embedded reviews (modern review hooks — see
  * `parse-amazon.ts`), and persists them to `user_products` + `user_product_reviews`
  * under the caller's own (RLS-scoped) session.
  *
@@ -63,8 +65,9 @@ function delay(ms: number): Promise<void> {
  * Choose the review set for a listing: whichever strategy extracted MORE.
  * Firecrawl's structured-JSON extraction (rides the same scrape request)
  * covers the layouts where the hook regexes silently return zero (the
- * 2026-07-06 Graham listings); the hook parser still wins on classic layouts
- * where it reads all ~8 embedded reviews to the LLM extractor's ~5.
+ * 2026-07-06 Graham listings); which strategy wins on a given listing now
+ * varies with the click-expanded review count (see `_shared/amazonReviews.ts`)
+ * rather than being predictable from a fixed ~8-vs-~5 baseline.
  */
 function chooseReviews(jsonReviews: JsonReview[], hookReviews: ParsedReview[], asin: string): ParsedReview[] {
   const fromJson = reviewsFromJson(jsonReviews, buildAmazonDpUrl(asin));

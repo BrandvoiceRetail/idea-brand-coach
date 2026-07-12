@@ -203,7 +203,7 @@ async function scrapeReviews(
             },
             body: JSON.stringify({
               urls: batchUrls,
-              maxReviewsPerUrl: 20,
+              maxReviewsPerUrl: 50,
             }),
           }
         );
