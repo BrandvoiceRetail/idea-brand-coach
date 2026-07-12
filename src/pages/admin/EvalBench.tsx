@@ -16,12 +16,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
-const BRAND_BLUE = '#1A3557';
-const BRAND_GOLD = '#C9A84C';
+const BRAND_BLUE = '#111111';
+const BRAND_GOLD = '#D4960A';
 
 function personaBadge(p: Persona) {
-  if (p === 'P1') return { label: 'P1 · Brand owner', cls: 'bg-[#1A3557] text-white' };
-  if (p === 'P2') return { label: 'P2 · Ops VA', cls: 'bg-[#C9A84C] text-[#1A3557]' };
+  if (p === 'P1') return { label: 'P1 · Brand owner', cls: 'bg-[#111111] text-white' };
+  if (p === 'P2') return { label: 'P2 · Ops VA', cls: 'bg-[#D4960A] text-[#111111]' };
   return { label: 'Edge · Safety', cls: 'bg-red-100 text-red-800 border border-red-300' };
 }
 
@@ -44,7 +44,7 @@ export default function EvalBench() {
             <button
               key={c.id}
               onClick={() => setActiveId(c.id)}
-              className={`w-full rounded-lg border p-3 text-left transition ${on ? 'border-[#C9A84C] bg-amber-50' : 'hover:bg-muted/50'}`}
+              className={`w-full rounded-lg border p-3 text-left transition ${on ? 'border-[#D4960A] bg-amber-50' : 'hover:bg-muted/50'}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-semibold" style={{ color: BRAND_BLUE }}>{c.title}</span>
@@ -117,7 +117,7 @@ export default function EvalBench() {
               {active.conversation.map((t, i) => (
                 <div key={i} className={t.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${t.role === 'user' ? 'rounded-br-sm bg-[#1A3557] text-white' : 'rounded-bl-sm border bg-white'}`}
+                    className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${t.role === 'user' ? 'rounded-br-sm bg-[#111111] text-white' : 'rounded-bl-sm border bg-white'}`}
                   >
                     <div className="mb-1 text-[10px] font-bold uppercase tracking-wide opacity-70">
                       {t.role === 'user' ? 'User' : 'Coach'}
@@ -146,7 +146,7 @@ export default function EvalBench() {
               <Expect label="Oracle" items={active.expected.oracle} />
               {active.expected.primaryTrigger && <Expect label="Primary trigger" items={[active.expected.primaryTrigger]} />}
             </div>
-            <p className="mt-3 rounded-lg border-l-4 p-3 text-sm" style={{ borderColor: BRAND_GOLD, background: '#FDF8EE' }}>
+            <p className="mt-3 rounded-lg border-l-4 p-3 text-sm" style={{ borderColor: BRAND_GOLD, background: '#FEF5DC' }}>
               <span className="font-semibold">Deliverable: </span>{active.expected.outcome}
             </p>
           </Section>

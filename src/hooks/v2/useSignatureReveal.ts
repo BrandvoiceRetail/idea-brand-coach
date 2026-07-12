@@ -116,7 +116,7 @@ export function useSignatureReveal(
         : [];
 
       if (returnedOptions.length === 0) {
-        throw new Error(data?.error || 'No Signature options were returned.');
+        throw new Error(data?.error || 'No positioning options were returned.');
       }
 
       const shownOptions = returnedOptions.slice(0, 4);
@@ -134,7 +134,7 @@ export function useSignatureReveal(
     } catch (err) {
       console.error('[useSignatureReveal] reveal failed:', err);
       captureAlphaEvent('llm_call_failed', { which_call: 'signature', error_type: 'invoke_error' });
-      setError('Trevor could not reveal your Signature right now. Please try again.');
+      setError('Trevor could not reveal your positioning right now. Please try again.');
       setStage('paste');
     }
   }, [reviews]);

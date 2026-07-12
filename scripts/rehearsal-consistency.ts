@@ -222,7 +222,7 @@ async function main(): Promise<void> {
   const avatarId = await resolveSameAvatar(rlsClient, signIn.user.id);
 
   // 3) Wire the in-memory MCP server + client (real EdgeFnClient + real IV-OS client).
-  const built = createServer(cfg);
+  const built = await createServer(cfg);
   const server: McpServer = built.server;
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'rehearsal-consistency', version: '0.0.0' });

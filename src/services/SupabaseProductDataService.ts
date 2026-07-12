@@ -136,7 +136,33 @@ export class SupabaseProductDataService implements IProductDataService {
   }
 
   async getAllReviewsAsString(max: number = REVIEWS_STRING_MAX): Promise<string> {
-    const reviews = await this.getAllReviews();
+    return this.reviewsToString(await this.getAllReviews(), max);
+  }
+
+  /**
+   * Reviews for ONE listing only (every imported variant row of the asin), in
+   * the same capped string shape as getAllReviewsAsString. The /v5 build
+   * theatre uses this so an account with several imported products never
+   * blends corpora across listings.
+   */
+  async getReviewsForAsinAsString(asin: string, max: number = REVIEWS_STRING_MAX): Promise<string> {
+    const products = await this.getProducts();
+    const matching = products.filter((p) => p.asin.toUpperCase() === asin.toUpperCase());
+    if (matching.length === 0) return '';
+
+    const { data, error } = await supabase
+      .from('user_product_reviews')
+      .select('*')
+      .in('product_id', matching.map((p) => p.id))
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const reviews = this.dedupeReviews((data ?? []).map((row) => this.mapReview(row)));
+    return this.reviewsToString(reviews, max);
+  }
+
+  private reviewsToString(reviews: ProductReview[], max: number): string {
     const cap = Math.min(max, REVIEWS_STRING_MAX);
 
     const lines: string[] = [];
@@ -223,6 +249,22 @@ export class SupabaseProductDataService implements IProductDataService {
    * Map a `user_products` row to an {@link ImportedProduct}, normalizing the
    * jsonb `bullets` and `images` columns.
    */
+  /**
+   * Persist the latest completed v5 run for a listing (overwrites the
+   * previous snapshot — latest only, by design). Fire-and-forget safe:
+   * throws only on a real write error.
+   */
+  async saveLastRun(asin: string, snapshot: Record<string, unknown>): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase
+      .from('user_products')
+      .update({ last_run: snapshot as never, last_run_at: new Date().toISOString() })
+      .eq('user_id', user.id)
+      .eq('asin', asin);
+    if (error) throw error;
+  }
+
   private mapProduct(row: {
     id: string;
     asin: string;
@@ -234,6 +276,8 @@ export class SupabaseProductDataService implements IProductDataService {
     description: string | null;
     images: unknown;
     scraped_at: string;
+    last_run?: unknown;
+    last_run_at?: string | null;
   }): ImportedProduct {
     return {
       id: row.id,
@@ -246,6 +290,8 @@ export class SupabaseProductDataService implements IProductDataService {
       description: row.description,
       images: this.normalizeImages(row.images),
       scrapedAt: row.scraped_at,
+      lastRun: row.last_run ?? null,
+      lastRunAt: row.last_run_at ?? null,
     };
   }
 

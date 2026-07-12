@@ -517,6 +517,30 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
       required: ['request_id', 'verdict'],
     },
   },
+  {
+    name: 'export_messaging_workbook',
+    description:
+      "Write tool: build the multi-AVATAR messaging-perception workbook — for the set of selected avatars and ONE planned strategic message, judge how EACH avatar perceives it across the four IDEA dimensions (vocabulary / jobs-to-be-done / decision trigger / objections), scored ONLY from that avatar's persisted Avatar 2.0 forensics (S1-S4), rolled up to a weakest-link set verdict, and exported as a gold .xlsx (one perception sheet per avatar + a Message×Avatar matrix + a Set-strategy sheet). Call ONLY on the user's explicit request to build the workbook. Pass avatar_ids = the avatar set the user actually selected (never invented; resolve names→ids via list_avatars if needed). Pass message only if the user states the planned message; otherwise omit it and the set's chosen Signature is used. NEVER invent an avatar's words/jobs/objections/trigger or the message — an avatar with no Avatar 2.0 built is reported honestly as 'not yet analysable', never guessed. Set upload:true so the user gets a download link. Every avatar_id must be owned and share one brand.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        avatar_ids: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'The selected avatar set (ids the user actually selected — never invented).',
+        },
+        message: {
+          type: 'string',
+          description: "Optional: the planned strategic message to test perception against. Omit to use the set's chosen Signature.",
+        },
+        upload: {
+          type: 'boolean',
+          description: 'Set true so the workbook is uploaded and a download link is returned to the user.',
+        },
+      },
+      required: ['avatar_ids'],
+    },
+  },
 ];
 
 /** Names of the MCP-backed tools (the registry registers a continue-entry per name). */

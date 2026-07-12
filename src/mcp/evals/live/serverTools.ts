@@ -17,10 +17,12 @@ export const STUB_CONFIG: HostConfig = {
   supabaseAnonKey: 'anon',
   slackBotToken: null,
   slackFeedbackChannelId: 'C0EVALS',
+  mcpPublicUrl: 'https://app.example.com/mcp',
+  oauthRequireAuth: false,
 };
 
 async function withClient<T>(fn: (client: Client) => Promise<T>): Promise<T> {
-  const { server } = createServer(STUB_CONFIG);
+  const { server } = await createServer(STUB_CONFIG);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'evals-live', version: '0.0.0' });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);

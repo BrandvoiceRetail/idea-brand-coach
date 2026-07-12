@@ -6,8 +6,8 @@ import { Sparkles, Quote } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { FocusItem } from './types';
 
-const BRAND_BLUE = '#1A3557';
-const BRAND_GOLD = '#C9A84C';
+const BRAND_BLUE = '#111111';
+const BRAND_GOLD = '#D4960A';
 
 export function FocusCard({ focus, position, total }: { focus: FocusItem; position: number; total: number }) {
   return (
@@ -28,7 +28,7 @@ export function FocusCard({ focus, position, total }: { focus: FocusItem; positi
 
       {focus.trigger && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Badge className="border bg-amber-50 text-[#1A3557]" style={{ borderColor: BRAND_GOLD }}>
+          <Badge className="border bg-amber-50 text-[#111111]" style={{ borderColor: BRAND_GOLD }}>
             Decision Trigger™ · {focus.trigger}
           </Badge>
           {focus.anchor && <span className="text-xs text-muted-foreground">like {focus.anchor}</span>}

@@ -6,6 +6,7 @@ import { createServer } from '../server.js';
 import type { HostConfig } from '../config.js';
 import { buildOnboardSurface, buildPathStub, buildOnboardPanelHtml, ONBOARD_UI_URI } from '../service/onboard.js';
 import { SERVER_INSTRUCTIONS } from '../config.js';
+import { findTierViolations } from '../terminologyGuard.js';
 
 const cfg: HostConfig = {
   port: 0,
@@ -15,11 +16,13 @@ const cfg: HostConfig = {
   supabaseAnonKey: 'anon',
   slackBotToken: null,
   slackFeedbackChannelId: 'C0B9YT9TQ6T',
+  mcpPublicUrl: 'https://app.example.com/mcp',
+  oauthRequireAuth: false,
 };
 
 /** Connect a client WITHOUT wrapping in runWithIdentity → caller is anonymous. */
 async function connectedClient() {
-  const { server } = createServer(cfg);
+  const { server } = await createServer(cfg);
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
   await Promise.all([server.connect(st), client.connect(ct)]);
@@ -100,7 +103,7 @@ describe('onboard front door (end-to-end, anonymous via in-memory transport)', (
 });
 
 describe('onboard interactive panel (MCP Apps / io.modelcontextprotocol/ui)', () => {
-  it('panel HTML is branded, inlines the ext-apps client, and calls onboard_choose', () => {
+  it('panel HTML is branded, inlines the ext-apps client, and sends the selection to the chat', () => {
     const html = buildOnboardPanelHtml();
     expect(html).toContain('IDEA Brand Coach');
     expect(html).toContain('What captures the heart goes in the cart');
@@ -116,7 +119,10 @@ describe('onboard interactive panel (MCP Apps / io.modelcontextprotocol/ui)', ()
     expect(html).toContain('ui/initialize');
     expect(html).toContain('ui/notifications/initialized');
     expect(html).toContain('tools/call');
-    expect(html).toContain('onboard_choose');
+    // the choice click sends the user's selection to the chat (sendMessage) so the coach
+    // continues onboarding — it no longer renders a server-tool stub inside the panel
+    expect(html).toContain('sendMessage');
+    expect(html).toContain('Walk me through the four parts of trust');
     // exactly one closing </script> (the wrapper) — the inlined bundle must not
     // contain a literal </script that would terminate the tag early
     expect((html.match(/<\/script>/gi) ?? []).length).toBe(1);
@@ -185,5 +191,45 @@ describe('onboarding posture guardrails (no invented inputs)', () => {
     const tg = tools.find((t) => t.name === 'run_trust_gap');
     expect(tg?.description).toMatch(/Only call AFTER the user has explicitly worked through all four/);
     expect(tg?.description).toMatch(/Never infer, default, or invent the four values/);
+  });
+});
+
+describe('SERVER_INSTRUCTIONS — onboarding + funnel-metrics (Windsor) workflow', () => {
+  it('directs the coach to call run_onboarding instead of pasting a prompt', () => {
+    // The onboarding workflow is owned by the run_onboarding tool's playbook; the server
+    // instructions just tell the coach to call it (when not onboarded / on request).
+    expect(SERVER_INSTRUCTIONS).toMatch(/ONBOARDING:/);
+    expect(SERVER_INSTRUCTIONS).toContain('run_onboarding');
+    expect(SERVER_INSTRUCTIONS).toMatch(/do[\s\S]{0,4}NOT make the user[\s\S]{0,4}paste a prompt/i);
+    // The host (not this server) reads Windsor; the instructions must say so.
+    expect(SERVER_INSTRUCTIONS).toMatch(/this server cannot read Windsor/i);
+    // The tools the coach is pointed at across onboarding + the experiment loop.
+    for (const tool of [
+      'upsert_funnel_touchpoint',
+      'get_connectors',
+      'ingest_campaign_analytics',
+      'ingest_funnel_analytics',
+      'get_funnel_piece_metrics',
+      'design_test',
+      'update_test_milestone',
+      'get_experiment_lift',
+    ]) {
+      expect(SERVER_INSTRUCTIONS).toContain(tool);
+    }
+    expect(SERVER_INSTRUCTIONS).toMatch(/source="windsor"/);
+    expect(SERVER_INSTRUCTIONS).toMatch(/journey_stage/);
+    expect(SERVER_INSTRUCTIONS).toMatch(/fractions 0–1/);
+    // Honesty bar: never fabricate.
+    expect(SERVER_INSTRUCTIONS).toMatch(/never fabricate/i);
+  });
+
+  it('leaks zero Tier-B/C internals in the onboarding section', () => {
+    // Scope to the onboarding section: the NARRATION guidance elsewhere legitimately names
+    // (to forbid) "neuroanatomical framing" etc., which the guard flags as a token.
+    const start = SERVER_INSTRUCTIONS.indexOf('ONBOARDING:');
+    const end = SERVER_INSTRUCTIONS.indexOf('Any user can send product feedback');
+    expect(start).toBeGreaterThan(-1);
+    const section = SERVER_INSTRUCTIONS.slice(start, end);
+    expect(findTierViolations(section)).toEqual([]);
   });
 });

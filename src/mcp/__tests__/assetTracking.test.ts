@@ -16,12 +16,14 @@ const cfg: HostConfig = {
   supabaseAnonKey: 'anon',
   slackBotToken: null,
   slackFeedbackChannelId: 'C0TEST',
+  mcpPublicUrl: 'https://app.example.com/mcp',
+  oauthRequireAuth: false,
 };
 
 const authed: Identity = { userId: 'user-1', token: 'tok', authenticated: true };
 
 async function connectedClient() {
-  const { server } = createServer(cfg);
+  const { server } = await createServer(cfg);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);

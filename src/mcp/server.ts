@@ -16,15 +16,21 @@ import {
 } from './config.js';
 import type { LedgerClient } from './ivos/capabilities.js';
 import { NativeLedgerClient } from './service/nativeLedger.js';
+import { composeCoachPreamble, tier1GroundingPreamble } from './service/coachInstructions.js';
+import { getServerSupabase, getServiceRoleSupabase } from './supabaseServer.js';
 import { registerOnboard } from './tools/onboard.js';
 import { instrumentToolLatency } from './instrument.js';
+import { registerStructuredFallback } from './structuredFallback.js';
+import { registerTerminologyGuard } from './terminologyGuard.js';
+import { registerForensicGuard } from './forensicGuard.js';
 import { registerHealthTool } from './tools/health.js';
 import { registerListAssetsTool } from './tools/listAssets.js';
 import { registerGetAssetTool } from './tools/getAsset.js';
 import { EdgeFnClient } from './edgeFn/client.js';
 import { registerGenerateConceptsTool } from './tools/generateConcepts.js';
+import { registerGeneratePositioningMovesTool } from './tools/generatePositioningMoves.js';
 import { registerPublishFilterCheckTool } from './tools/publishFilterCheck.js';
-import { registerDraftAssetTool } from './tools/draftAsset.js';
+// import { registerDraftAssetTool } from './tools/draftAsset.js'; // OFF Alpha surface (Trevor 2026-06-25); re-enable in Beta
 import { registerDesignTestTool } from './tools/designTest.js';
 import { registerRunTrustGapTool } from './tools/runTrustGap.js';
 import { registerGetAssetHistoryTool } from './tools/getAssetHistory.js';
@@ -35,14 +41,29 @@ import { registerGenerateSignatureTool } from './tools/generateSignature.js';
 import { registerPersistSignatureTool } from './tools/persistSignature.js';
 import { registerGetContextStatusTool } from './tools/getContextStatus.js';
 import { registerProvideContextTool } from './tools/provideContext.js';
+import { registerRememberTool } from './tools/remember.js';
+import { registerRecallTool } from './tools/recall.js';
 import { registerIngestEvidenceTool } from './tools/ingestEvidence.js';
+import { registerBulkIngestEvidenceTool, registerGetIngestJobTool } from './tools/bulkIngest.js';
 import { registerBuildAvatarStageTool } from './tools/buildAvatarStage.js';
 import { registerRunDiagnosticEvidenceTool } from './tools/runDiagnosticEvidence.js';
+import { registerAssessIdeaDimensionsTool } from './tools/assessIdeaDimensions.js';
+import { registerIdentifyDecisionTriggerTool } from './tools/identifyDecisionTrigger.js';
+import { registerComputeTrustGapLiftTool } from './tools/computeTrustGapLift.js';
 import { registerGenerateCanvasTool } from './tools/generateCanvas.js';
 import { registerGenerateBriefTool } from './tools/generateBrief.js';
+import { registerGenerateListingImageBriefTool } from './tools/generateListingImageBrief.js';
+import { registerGenerateListingImageTool } from './tools/generateListingImage.js';
+import { registerGenerateVideoStoryboardTool } from './tools/generateVideoStoryboard.js';
+import { registerGenerateAplusContentPlanTool } from './tools/generateAplusContentPlan.js';
+import { registerGenerateMainImageTitlePlanTool } from './tools/generateMainImageTitlePlan.js';
+import { registerGenerateStorefrontMessagingPlanTool } from './tools/generateStorefrontMessagingPlan.js';
+import { registerGenerateUgcAdPlanTool } from './tools/generateUgcAdPlan.js';
+import { registerRefineCreativePlanTool } from './tools/refineCreativePlan.js';
 import { registerGenerateAuditIdeaMapTool } from './tools/generateAuditIdeaMap.js';
 import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
+import { registerExportMessagingWorkbookTool } from './tools/exportMessagingWorkbook.js';
 import { registerListCoachConversationsTool } from './tools/listCoachConversations.js';
 import { registerGetCoachConversationTool } from './tools/getCoachConversation.js';
 import { registerGetFunnelAssetsTool } from './tools/getFunnelAssets.js';
@@ -51,6 +72,8 @@ import { registerGetFunnelCoverageTool } from './tools/getFunnelCoverage.js';
 import { registerSubmitFeedbackTool } from './tools/submitFeedback.js';
 import { FeedbackNotifier } from './slack/feedbackNotifier.js';
 import { registerCreateAvatarTool } from './tools/createAvatar.js';
+import { registerUpdateAvatarTool } from './tools/updateAvatar.js';
+import { registerDeleteAvatarTool } from './tools/deleteAvatar.js';
 import { registerListAvatarsTool } from './tools/listAvatars.js';
 import { registerGetAvatarTool } from './tools/getAvatar.js';
 import { registerSetCurrentAvatarTool } from './tools/setCurrentAvatar.js';
@@ -61,6 +84,23 @@ import { registerListFunnelInventoryTool } from './tools/listFunnelInventory.js'
 import { registerUpsertFunnelTouchpointTool } from './tools/upsertFunnelTouchpoint.js';
 import { registerRunFunnelAuditTool } from './tools/runFunnelAudit.js';
 import { registerGetFunnelAuditTool } from './tools/getFunnelAudit.js';
+import { registerCreateCampaignTool } from './tools/createCampaign.js';
+import { registerGetCampaignTool } from './tools/getCampaign.js';
+import { registerListCampaignsTool } from './tools/listCampaigns.js';
+import { registerUpdateCampaignStatusTool } from './tools/updateCampaignStatus.js';
+import { registerIngestCampaignAnalyticsTool } from './tools/ingestCampaignAnalytics.js';
+import { registerIngestFunnelAnalyticsTool } from './tools/ingestFunnelAnalytics.js';
+import { registerIngestContentPerformanceTool } from './tools/ingestContentPerformance.js';
+import { registerGetCampaignMetricsTool } from './tools/getCampaignMetrics.js';
+import { registerGetFunnelPieceMetricsTool } from './tools/getFunnelPieceMetrics.js';
+import { registerCreateEmailSequenceTool } from './tools/createEmailSequence.js';
+import { registerAddEmailStepTool } from './tools/addEmailStep.js';
+import { registerGetSequenceTemplateTool } from './tools/getSequenceTemplate.js';
+import { registerListSequencesTool } from './tools/listSequences.js';
+import { registerGetSequencePerformanceTool } from './tools/getSequencePerformance.js';
+import { registerUpdateTestMilestoneTool } from './tools/updateTestMilestone.js';
+import { registerGetExperimentLiftTool } from './tools/getExperimentLift.js';
+import { registerRunOnboardingTool } from './tools/runOnboarding.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -68,19 +108,59 @@ export interface BuiltServer {
   edgeFn: EdgeFnClient;
 }
 
-export function createServer(
+export async function createServer(
   config: HostConfig = loadConfig(),
   edgeFn?: EdgeFnClient,
   ledgerClient?: LedgerClient,
-): BuiltServer {
+): Promise<BuiltServer> {
+  // Compose instructions: base SERVER_INSTRUCTIONS + coach_instructions from DB
+  let composedInstructions = SERVER_INSTRUCTIONS;
+
+  // Fetch and append coach_instructions if enabled
+  if (process.env.COACH_INSTRUCTIONS_ENABLED === 'true') {
+    try {
+      // Use service-role client for coach_instructions (bypasses RLS during init)
+      const supabase = getServiceRoleSupabase();
+      const coachPreamble = await composeCoachPreamble(supabase, 'preamble');
+      const tier1Preamble = await tier1GroundingPreamble(supabase);
+
+      if (coachPreamble || tier1Preamble) {
+        composedInstructions = [
+          SERVER_INSTRUCTIONS,
+          tier1Preamble,
+          coachPreamble,
+        ].filter(Boolean).join('\n\n');
+      }
+    } catch (err) {
+      // Fail open: use base instructions if coach_instructions fetch fails
+      console.error('Failed to fetch coach_instructions, using base instructions:', err);
+    }
+  }
+
   const server = new McpServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
-    { instructions: assertServerInstructions(SERVER_INSTRUCTIONS) },
+    { instructions: assertServerInstructions(composedInstructions) },
   );
 
   // Time every tool uniformly (emits mcp_tool_latency per call). Must run before the
   // register*Tool() calls below so their handlers are wrapped.
   instrumentToolLatency(server);
+
+  // Mirror each tool's structuredContent into a text block so connectors that drop
+  // structuredContent (e.g. the claude.ai remote connector) still receive the payload —
+  // ids, records, transcripts — and aren't left with only a summary line. Same seam;
+  // must also run before the register*Tool() calls.
+  registerStructuredFallback(server);
+
+  // Terminology policy (IDEA-POLICY-TERM-001): detect + log any Tier-B/C engine internal
+  // (S1–S4 labels, buyer-state names, neuroanatomy) that leaks into a tool's user-facing
+  // output. Detection only — a leak is fixed at the source, never silently stripped here.
+  registerTerminologyGuard(server);
+
+  // Cost guardrail (Trevor 2026-06-25): cap how many heavy LLM forensic/generation calls one
+  // caller can make in a rolling window (~8 Sonnet calls each, no monetization gate yet).
+  // Refuses politely past the cap; env-tunable. Cheap deterministic tools pass through.
+  registerForensicGuard(server);
 
   const ivos = ledgerClient ?? new NativeLedgerClient();
   const edge = edgeFn ?? new EdgeFnClient(config);
@@ -106,8 +186,15 @@ export function createServer(
   // draft_asset and publish_filter_check AUTO-RECORD into the IV-OS ledger (opt-out
   // via record:false; never-fail on degraded writes).
   registerGenerateConceptsTool(server, edge);
+  // Positioning moves: generate 2–3 candidate moves (reusing the generate_concepts engine)
+  // and score each against the live Coach Criteria with a transparent, deterministic composite.
+  registerGeneratePositioningMovesTool(server, edge);
   registerPublishFilterCheckTool(server, ivos);
-  registerDraftAssetTool(server, edge, ivos);
+  // draft_asset is OFF the Alpha surface (Trevor 2026-06-25): it generates generic copy not
+  // keyed to the user's own review evidence or their named Decision Trigger — the "good
+  // enough" output the product exists to replace. Re-enable in Beta once it is
+  // trigger-/evidence-grounded. The tool module (tools/draftAsset.ts) is retained.
+  // registerDraftAssetTool(server, edge, ivos);
   registerDesignTestTool(server);
 
   // OWNED diagnostics (convenience): only the pure, gate-free wrap for now —
@@ -127,7 +214,11 @@ export function createServer(
   // All three are identity-gated (gateWrite) and never fabricate PRODUCT-TRUTH.
   registerGetContextStatusTool(server);
   registerProvideContextTool(server);
-  registerIngestEvidenceTool(server);
+  registerRememberTool(server);
+  registerRecallTool(server);
+  registerIngestEvidenceTool(server, edge);
+  registerBulkIngestEvidenceTool(server, edge);
+  registerGetIngestJobTool(server, edge);
 
   // Avatar 2.0 forensic engine: build_avatar_stage runs one forensic stage (s1
   // vocabulary -> s2 job map -> s3 triggers -> s4 objections) or the full S1->S5
@@ -144,8 +235,41 @@ export function createServer(
   // the Audit×IDEA cross-map (generate_audit_idea_map). Each validates against its
   // Phase-0 contract, carries grounding evidence|inference, and is gateWrite-gated.
   registerRunDiagnosticEvidenceTool(server);
+  // Keystone: derive the four IDEA scores FROM the user's evidence (no scores to type),
+  // then compute the Trust Gap via the same deterministic engine. Honesty floor; provisional.
+  registerAssessIdeaDimensionsTool(server);
+  // The named Decision Trigger™ (the hero output) — bound from the identify-decision-trigger
+  // engine so the connector can hand the seller the one lever to fix, not just diagnostics.
+  registerIdentifyDecisionTriggerTool(server);
+  // Re-measure: deterministic Trust Gap delta between two real diagnostic runs (the
+  // "watch the gap close" proof). Pure arithmetic — never fabricates a lift number.
+  registerComputeTrustGapLiftTool(server);
   registerGenerateCanvasTool(server);
   registerGenerateBriefTool(server);
+  // Amazon listing image-SET design brief (main + gallery), IDEA-grounded; the coach composes
+  // per-slot briefs + photoreal prompts. Knows Amazon image conventions; routes photoreal slots
+  // away from Canva layout-gen. Director only — never produces images or invents claims.
+  registerGenerateListingImageBriefTool(server);
+  // Brief-driven image executor: turns a slot's IMAGE_PROMPT + the real product photo into
+  // an actual image via Nano Banana Pro (Gemini 3 Pro Image) through gemini-image-generate.
+  registerGenerateListingImageTool(server, edge);
+  // Creative-plan directors (the Higgsfield <-> brand-coach bridge): positioning-aligned
+  // plans for every surface a shopper meets — video storyboard (scene architecture +
+  // storyboard-image/per-scene Higgsfield generate_video modes + UGC/unboxing preset
+  // routing), A+ content (5 addressable beats, one continuous editorial composition),
+  // the main-image+title search-grid pair, storefront messaging (hero/tagline/tiles),
+  // and script-level UGC ads (avatar-cast persona + trigger-angled hook variants +
+  // honesty rails). All share the positioning spine + propagation map (service/creativeAlignment)
+  // and degrade honestly on missing context (new users get a plan, not a wall).
+  // refine_creative_plan is the UPDATE path: component changes stay surgical (one scene,
+  // one job) and positioning changes propagate across every live plan. Directors only —
+  // deterministic, no LLM/edge calls; the host executes on the Higgsfield connector.
+  registerGenerateVideoStoryboardTool(server);
+  registerGenerateAplusContentPlanTool(server);
+  registerGenerateMainImageTitlePlanTool(server);
+  registerGenerateStorefrontMessagingPlanTool(server);
+  registerGenerateUgcAdPlanTool(server);
+  registerRefineCreativePlanTool(server);
   registerGenerateAuditIdeaMapTool(server);
 
   // Marketing-audit engine (Phase 5, manifest §2 sheet B): run_marketing_audit
@@ -165,6 +289,17 @@ export function createServer(
   // the optional Storage upload is never-fail (the local file is the deliverable).
   // gateWrite identity-gated.
   registerExportWorkbookTool(server);
+
+  // Output engine SET variant: export_messaging_workbook renders the multi-avatar
+  // messaging-perception workbook — for ONE planned message (param, else the set Signature),
+  // how each selected avatar perceives it across the four IDEA dimensions, judged ONLY from
+  // that avatar's persisted Avatar 2.0 forensics, rolled up to a weakest-link set verdict.
+  // Unlike export_workbook (pure read→render), this tool DOES the AI + persistence (so the
+  // assembler stays pure): per avatar it reuses an on-file messaging_perception for this
+  // message, else invokes the analyze-message-perception engine and persists the result; an
+  // avatar with no forensics is emitted honestly as "not yet analysable", never a guessed
+  // score. gateWrite identity-gated; every avatar_id must be owned (requireOwnedAvatar).
+  registerExportMessagingWorkbookTool(server);
 
   // Coach conversations (READ, per avatar): list_coach_conversations indexes the caller's
   // Brand-Coach chat threads — each annotated with its avatar (avatar_id + avatar_name;
@@ -192,6 +327,12 @@ export function createServer(
   // multi-select context set; pin primary; record forensic build state. Each mutating tool is
   // identity-gated + ownership-checked (requireOwnedAvatar) and drives the live brand_avatar_scope RPCs.
   registerCreateAvatarTool(server);
+  // update_avatar: enrich/edit an existing avatar in place (partial) so the coach fleshes out
+  // thin/placeholder avatars instead of creating duplicates. gateWrite + requireOwnedAvatar.
+  registerUpdateAvatarTool(server);
+  // delete_avatar: clear out placeholder avatars. GUARDED — refuses (returns dependent counts)
+  // when the avatar has funnel pieces/tests/diagnostics unless force=true. gateWrite + owned.
+  registerDeleteAvatarTool(server);
   registerListAvatarsTool(server);
   registerGetAvatarTool(server);
   registerSetCurrentAvatarTool(server);
@@ -204,6 +345,46 @@ export function createServer(
   registerUpsertFunnelTouchpointTool(server);
   registerRunFunnelAuditTool(server);
   registerGetFunnelAuditTool(server);
+
+  // Campaign CRUD (numeric-analytics model): create/get/list campaigns + flip lifecycle status.
+  // brand_id is resolved server-side (resolveBrandId); writes are gateWrite-gated, reads RLS-scoped.
+  registerCreateCampaignTool(server);
+  registerGetCampaignTool(server);
+  registerListCampaignsTool(server);
+  registerUpdateCampaignStatusTool(server);
+
+  // Numeric-analytics ingestion + read: parse the 3 workbook shapes into campaign_metrics
+  // (append-only, upserted on the natural key) and read them back (date_range + breakdown).
+  // Honest no_data throughout — the coach reasons over real numbers, never fabricates.
+  registerIngestCampaignAnalyticsTool(server);
+  registerIngestFunnelAnalyticsTool(server);
+  registerIngestContentPerformanceTool(server);
+  registerGetCampaignMetricsTool(server);
+  // Per-piece read (decision #1): one funnel piece's (brand_asset's) latest-per-metric values
+  // + derived cvr/aov — "did this piece do its job?". RLS-scoped; honest no_data.
+  registerGetFunnelPieceMetricsTool(server);
+  // Experiment-lifecycle write (Gap B): stamp ASSET_CREATED / ASSET_LIVE milestone dates
+  // on a split-test (brand_tests) — the dates that start the re-measure clock + the case
+  // study. gateWrite-gated, owner-scoped; asset_live also promotes a draft test to running.
+  registerUpdateTestMilestoneTool(server);
+  // Re-measure read (Gap B): the before/after lift for a split-test's metric on its funnel
+  // piece, windowed by its lifecycle dates over campaign_metrics (no snapshot table). Honest
+  // pending when not live / no post-live data; status_suggestion is advice the user confirms.
+  registerGetExperimentLiftTool(server);
+
+  // Onboarding director: the coach calls run_onboarding (instead of a pasted prompt) when the
+  // user hasn't onboarded yet or asks to (re-)onboard. Returns current state + the ordered
+  // playbook (create pieces → pull full Windsor history → ingest → Trust Gap) for the host to run.
+  registerRunOnboardingTool(server);
+
+  // Email sequences: brand-level sequence records + steps, prebuilt templates (welcome=5 /
+  // nurture=7 / abandoned_cart=3), and a deterministic performance read (step count + the linked
+  // campaign's email-channel metrics). Honest no_data — never fabricates opens/clicks.
+  registerCreateEmailSequenceTool(server);
+  registerAddEmailStepTool(server);
+  registerGetSequenceTemplateTool(server);
+  registerListSequencesTool(server);
+  registerGetSequencePerformanceTool(server);
 
   return { server, ivos, edgeFn: edge };
 }

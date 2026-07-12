@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { scanBrief, type ConfirmedClaim } from '../service/claimGate.js';
+import { scanBrief, detectClaims, detectBriefClaims, type ConfirmedClaim } from '../service/claimGate.js';
 import { runGenerateCanvas, registerGenerateCanvasTool, type GenerateCanvasDeps } from '../tools/generateCanvas.js';
 import { runGenerateBrief, registerGenerateBriefTool, type GenerateBriefDeps } from '../tools/generateBrief.js';
 import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
@@ -187,6 +187,41 @@ describe('claimGate.scanBrief', () => {
 });
 
 // ======================================================================================
+// claimGate.detectClaims — the broad compliance net (connector claim-gate, determination #4).
+// ======================================================================================
+describe('claimGate.detectClaims', () => {
+  it('flags warranty / guarantee / lifetime / money-back language (true positive)', () => {
+    const hits = detectClaims('Backed by a lifetime warranty and a money-back guarantee.').map((h) => h.toLowerCase());
+    expect(hits).toEqual(expect.arrayContaining(['lifetime', 'warranty', 'guarantee', 'money-back']));
+  });
+
+  it('flags health / medical signals (true positive); bare treats/cures do NOT trip', () => {
+    const hits = detectClaims('Clinically proven, dermatologist tested, FDA-cleared formula.').map((h) => h.toLowerCase());
+    expect(hits).toEqual(expect.arrayContaining(['clinically proven', 'fda', 'dermatologist tested']));
+    // Bare product nouns are intentionally NOT flagged (false-positive prone):
+    expect(detectClaims('Tasty dog treats; we cure the leather by hand.')).toEqual([]);
+  });
+
+  it('flags unverifiable superlatives, incl. #1 / no. 1 / number 1 (true positive)', () => {
+    const hits = detectClaims('The #1 best-selling, award-winning, doctor recommended binder.').map((h) => h.toLowerCase());
+    expect(hits).toEqual(expect.arrayContaining(['#1', 'best-selling', 'award-winning', 'doctor recommended']));
+    expect(detectClaims('Rated No. 1; the number 1 choice.').map((h) => h.toLowerCase())).toEqual(expect.arrayContaining(['no. 1', 'number 1']));
+  });
+
+  it('false-positive guard: benign copy and near-miss words do not trip', () => {
+    expect(detectClaims('A warranted concern about treatment plans, proudly organised.')).toEqual([]);
+    expect(detectClaims('Finally, one binder you are proud to flip through.')).toEqual([]);
+  });
+
+  it('detectBriefClaims surfaces compliance phrases, minus already-confirmed claims', () => {
+    const b = briefReply('Backed by a lifetime warranty.', []) as unknown as ExportBriefOutput;
+    expect(detectBriefClaims(b).map((h) => h.toLowerCase())).toEqual(expect.arrayContaining(['lifetime', 'warranty']));
+    // An owner-confirmed claim is not re-surfaced for confirmation:
+    expect(detectBriefClaims(b, [{ claim: 'lifetime warranty', source: 'owner' }])).toEqual([]);
+  });
+});
+
+// ======================================================================================
 // generate_canvas — chain resolution + persist + needs_input gate.
 // ======================================================================================
 describe('runGenerateCanvas', () => {
@@ -255,14 +290,51 @@ describe('runGenerateBrief', () => {
       getCurrentArtifact: over.getCurrentArtifact ?? makeGetCurrent(new Map([['brand_canvas', CANVAS_REPLY]])),
       saveArtifact: over.saveArtifact ?? (makeSaveStub([]) as GenerateBriefDeps['saveArtifact']),
       edgeFn: over.edgeFn ?? stubEdgeFn({ 'export-brief': cleanBrief }),
+      getLatestDecisionTrigger: over.getLatestDecisionTrigger ?? (async () => null),
     };
   }
 
-  it('returns needs_input when no Brand Canvas exists', async () => {
+  it('returns needs_input when NEITHER a Brand Canvas nor a Decision Trigger exists', async () => {
     const res = await runGenerateBrief(null, deps({ getCurrentArtifact: makeGetCurrent(new Map()) }));
     expect(res.status).toBe('needs_input');
     if (res.status !== 'needs_input') return;
     expect(res.reason).toBe('no_canvas');
+  });
+
+  it('a legacy Signature alone is NOT a root — returns needs_input (dropped from the chain, 2026-07-08)', async () => {
+    // Signature present, NO brand_canvas, NO decision trigger. The old
+    // degrade-to-signature path is retired: the brief asks honestly instead.
+    const sigOnly = makeGetCurrent(new Map<ArtifactKind, unknown>([
+      ['signature', { options: [{ option: 1, sentence: 'x' }], chosen_option: 1, grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }],
+    ]));
+    const res = await runGenerateBrief(null, deps({ getCurrentArtifact: sigOnly }));
+    expect(res.status).toBe('needs_input');
+    if (res.status !== 'needs_input') return;
+    expect(res.reason).toBe('no_canvas');
+  });
+
+  it('a Decision Trigger alone IS a root — persists the brief (kills the homework wall)', async () => {
+    const saved: Array<{ kind: ArtifactKind; content: unknown; opts: SaveArtifactOptions }> = [];
+    // Trigger present, NO brand_canvas — the alpha "shippable brief today" path.
+    const res = await runGenerateBrief(null, deps({
+      getCurrentArtifact: makeGetCurrent(new Map()),
+      getLatestDecisionTrigger: async () => ({
+        id: 't-1', user_id: 'u-1', session_id: 's-1', avatar_id: null,
+        content: {
+          dominant_type: 'Recognition',
+          brand_anchor: 'certainty their collection is safe',
+          evidence_phrases: ['finally feels safe'],
+          placement_instruction: 'Lead the hero with the recognition moment.',
+          why_this_trigger: 'Strongest lever in the reviews.',
+        },
+        generated_at: '2026-01-01T00:00:00Z', created_at: '2026-01-01T00:00:00Z',
+      }),
+      saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'],
+    }));
+    expect(res.status).toBe('persisted');
+    if (res.status !== 'persisted') return;
+    expect(saved).toHaveLength(1);
+    expect(saved[0].kind).toBe('export_brief');
   });
 
   it('returns needs_input when the product-claims slot (#6) is unconfirmed', async () => {
@@ -384,6 +456,7 @@ describe('runGenerateBrief — transient retry (R2)', () => {
       saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'],
       edgeFn: edge,
       sleep: noSleep,
+      getLatestDecisionTrigger: async () => null,
     });
     expect(res.status).toBe('persisted');
     expect(count()).toBe(2);
@@ -400,6 +473,7 @@ describe('runGenerateBrief — transient retry (R2)', () => {
       saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'],
       edgeFn: edge,
       sleep: noSleep,
+      getLatestDecisionTrigger: async () => null,
     });
     expect(res.status).toBe('needs_input');
     if (res.status !== 'needs_input') return;

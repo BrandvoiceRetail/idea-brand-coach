@@ -139,12 +139,12 @@ export function SignatureReveal({
             'gap-1.5 border-amber-400/60 text-amber-700 hover:bg-amber-50 hover:text-amber-800',
             triggerClassName,
           )}
-          title="Reveal your Signature"
-          aria-label="Reveal Signature"
+          title="Reveal your positioning"
+          aria-label="Reveal positioning"
         >
           <Sparkles className="h-4 w-4" />
           {/* Hide the label below sm so the chat sub-header fits a 375px viewport. */}
-          <span className="hidden sm:inline">Reveal Signature</span>
+          <span className="hidden sm:inline">Reveal positioning</span>
         </Button>
       </DialogTrigger>
 
@@ -155,7 +155,7 @@ export function SignatureReveal({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-amber-500" />
-                Reveal your Signature
+                Reveal your positioning
               </DialogTitle>
               <DialogDescription>
                 The one truth of what your customer is really buying. Paste their
@@ -178,7 +178,7 @@ export function SignatureReveal({
                 value={reviews}
                 onChange={(e) => setReviews(e.target.value)}
                 onPaste={handleReviewsPaste}
-                placeholder="Paste customer reviews here — yours and competitors'. The more raw, unprompted language, the sharper the Signature. (Optional, but reviews make it land harder.)"
+                placeholder="Paste customer reviews here — yours and competitors'. The more raw, unprompted language, the sharper the positioning. (Optional, but reviews make it land harder.)"
                 rows={8}
                 className="resize-y"
               />
@@ -196,7 +196,7 @@ export function SignatureReveal({
                   <span>
                     Without pasted reviews these will be INFORMED INFERENCE from your
                     conversation, not grounded in real customer evidence. Pasting reviews
-                    makes the Signature far stronger.
+                    makes the positioning far stronger.
                   </span>
                 </div>
               )}
@@ -209,7 +209,7 @@ export function SignatureReveal({
 
               <Button onClick={handleReveal} className="w-full gap-2">
                 <Sparkles className="h-4 w-4" />
-                Reveal Signature
+                Reveal positioning
               </Button>
             </div>
           </>
@@ -295,7 +295,7 @@ export function SignatureReveal({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-amber-500" />
-                Your Signature
+                Your positioning
               </DialogTitle>
             </DialogHeader>
 
@@ -332,8 +332,8 @@ export function SignatureReveal({
                 <>
                   <p className="text-sm text-muted-foreground">
                     {surprise === 'yes'
-                      ? 'That recognition is the whole point. That is your Signature.'
-                      : 'Good — then it is already true to you. Keep it close; it is your Signature.'}
+                      ? 'That recognition is the whole point. That is your positioning.'
+                      : 'Good — then it is already true to you. Keep it close; it is your positioning.'}
                   </p>
 
                   {/* Moment-1 feedback — opens after the surprise answer so the

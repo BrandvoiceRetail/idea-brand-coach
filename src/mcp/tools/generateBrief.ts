@@ -36,7 +36,8 @@ import {
   getCurrentArtifact as getCurrentArtifactLive,
   saveArtifact as saveArtifactLive,
 } from '../service/artifactStore.js';
-import { scanBrief, type ConfirmedClaim, type ClaimViolation } from '../service/claimGate.js';
+import { getLatestDecisionTrigger as getLatestDecisionTriggerLive } from '../service/decisionTriggerStore.js';
+import { scanBrief, detectBriefClaims, type ConfirmedClaim, type ClaimViolation } from '../service/claimGate.js';
 import { gateWrite } from './writeAuth.js';
 import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
@@ -54,6 +55,7 @@ export interface GenerateBriefDeps {
   resolve: typeof resolveSlots;
   getCurrentArtifact: typeof getCurrentArtifactLive;
   saveArtifact: typeof saveArtifactLive;
+  getLatestDecisionTrigger: typeof getLatestDecisionTriggerLive;
   edgeFn: EdgeFnClient;
   /** Sleep seam so retry-backoff tests don't wait on real time. */
   sleep?: (ms: number) => Promise<void>;
@@ -66,6 +68,7 @@ function withDefaults(deps?: Partial<GenerateBriefDeps>): GenerateBriefDeps {
     resolve: deps?.resolve ?? resolveSlots,
     getCurrentArtifact: deps?.getCurrentArtifact ?? getCurrentArtifactLive,
     saveArtifact: deps?.saveArtifact ?? saveArtifactLive,
+    getLatestDecisionTrigger: deps?.getLatestDecisionTrigger ?? getLatestDecisionTriggerLive,
     edgeFn: deps?.edgeFn ?? new EdgeFnClient(),
     sleep: deps?.sleep ?? defaultSleep,
   };
@@ -100,14 +103,14 @@ const inputSchema = {
   avatar_id: z.string().optional().describe('Avatar scope; omit for the brand-level chain.'),
 };
 
-/** needs_input demand for a missing Brand Canvas (the brief root). */
+/** needs_input demand when no positioning root exists (canvas or trigger). */
 function canvasNeedsInput(): NeedsInputItem[] {
   return [
     {
       slot: 1,
       question:
-        'Compile the Brand Canvas first (generate_canvas). The Export Brief is written against the canvas positioning and voice.',
-      why: 'The title formula, bullets, image brief, and PPC tiers all derive from the Brand Canvas.',
+        'Create a Brand Canvas (generate_canvas) for the fullest positioning, or identify a Decision Trigger (identify_decision_trigger) first. The Export Brief needs a positioning root.',
+      why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas or the Decision Trigger.',
     },
   ];
 }
@@ -167,7 +170,7 @@ function toConfirmedClaims(value: unknown, source: string): ConfirmedClaim[] {
 
 /** The discriminated result of a brief generation run. */
 export type GenerateBriefResult =
-  | { status: 'persisted'; artifactId: string; grounding: Grounding; content: ExportBriefOutput }
+  | { status: 'persisted'; artifactId: string; grounding: Grounding; content: ExportBriefOutput; needs_confirmation: string[] }
   | { status: 'needs_input'; needs_input: NeedsInputItem[]; reason: 'no_canvas' | 'claims_unconfirmed' | 'claim_violations' }
   | { status: 'failed'; note: string };
 
@@ -176,9 +179,20 @@ export type GenerateBriefResult =
  * persist. Exported so the test can drive it with stubs without the MCP transport.
  */
 export async function runGenerateBrief(avatarId: string | null, deps: GenerateBriefDeps): Promise<GenerateBriefResult> {
-  // 1. The canvas is the brief root — without it, ask.
+  // 1. The brief root priority: Brand Canvas > Decision Trigger. Signature is
+  //    NOT a root (dropped from the chain per Matthew, 2026-07-08 — "drop
+  //    Signature from alpha"): with neither Canvas nor Trigger we ask honestly
+  //    rather than fall back to a legacy signature row.
   const canvasRow = await deps.getCurrentArtifact('brand_canvas', avatarId);
+
+  // Only fetch the decision trigger when no Canvas exists — conditional to
+  // avoid adding a read to every canvas-root brief.
+  let decisionTriggerRow = null;
   if (!canvasRow) {
+    decisionTriggerRow = await deps.getLatestDecisionTrigger(avatarId);
+  }
+
+  if (!canvasRow && !decisionTriggerRow) {
     return { status: 'needs_input', needs_input: canvasNeedsInput(), reason: 'no_canvas' };
   }
 
@@ -196,10 +210,11 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
     deps.getCurrentArtifact('avatar_s4_objections', avatarId),
   ]);
 
-  // 4. Invoke the engine verbatim, passing the confirmed-claims allowlist (bounded retry
-  //    on transient transport failure; needs_input / claim-gate blocks are not retried).
+  // 4. Invoke the engine verbatim, passing the confirmed-claims allowlist and trigger
+  //    (bounded retry on transient transport failure; needs_input / claim-gate blocks are not retried).
   const res = await invokeWithRetry(deps, 'export-brief', {
-    canvas: canvasRow.content,
+    canvas: canvasRow?.content ?? null,
+    trigger: decisionTriggerRow?.content ?? null,
     s1: s1?.content ?? null,
     s3: s3?.content ?? null,
     s4: s4?.content ?? null,
@@ -221,7 +236,7 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
   const grounding: Grounding = (res.data.grounding === 'inference' ? 'inference' : 'evidence') as Grounding;
   const evidenceRefs: EvidenceRef[] = Array.isArray(res.data.evidence_refs)
     ? (res.data.evidence_refs as EvidenceRef[])
-    : [{ kind: 'artifact', ref: 'brand_canvas' }];
+    : [{ kind: 'artifact', ref: canvasRow ? 'brand_canvas' : 'decision_trigger' }];
   const candidate = { ...res.data, grounding, evidence_refs: evidenceRefs };
   const parsed = exportBriefContract.outputSchema.safeParse(candidate);
   if (!parsed.success) {
@@ -238,7 +253,7 @@ export async function runGenerateBrief(avatarId: string | null, deps: GenerateBr
   // 7. Persist (RLS-scoped, insert-then-supersede).
   try {
     const row = await deps.saveArtifact('export_brief', parsed.data, { grounding, evidenceRefs, avatarId });
-    return { status: 'persisted', artifactId: row.id, grounding, content: parsed.data };
+    return { status: 'persisted', artifactId: row.id, grounding, content: parsed.data, needs_confirmation: detectBriefClaims(parsed.data, confirmedClaims) };
   } catch (err) {
     return { status: 'failed', note: err instanceof Error ? err.message : 'persist failed' };
   }
@@ -251,7 +266,7 @@ export function registerGenerateBriefTool(server: McpServer, deps?: Partial<Gene
     {
       title: 'Generate the Export Brief',
       description:
-        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas + Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'),
+        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas — or, when no canvas exists yet, your chosen Signature (so the owner gets a shippable brief today, not canvas homework) — plus Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). CONNECTOR (conversational) mode: address the brief TO THE DESIGNER OR VA so the owner can paste-and-forward it without rewriting (not a note back to the owner); open with "Here is a brief you can send directly to your designer or VA. It does not require any additional explanation from you." — plain commercial language only, no framework terms or buyer-state names. If the owner asks for ONE component (image brief, a headline, a single bullet, or the placement line), produce ONLY that component — one component done precisely beats a full brief done approximately. A compliance net flags warranty/guarantee, health/medical, and unverifiable-superlative phrasing (returned as needs_confirmation in structuredContent) so the owner confirms each claim before forwarding. Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'),
       inputSchema,
     },
     async ({ avatar_id }) => {
@@ -277,7 +292,7 @@ export function registerGenerateBriefTool(server: McpServer, deps?: Partial<Gene
               text: `Export Brief persisted (artifact id ${result.artifactId}, grounding ${result.grounding}).`,
             },
           ],
-          structuredContent: { ok: true, artifact_id: result.artifactId, grounding: result.grounding, brief: result.content },
+          structuredContent: { ok: true, artifact_id: result.artifactId, grounding: result.grounding, brief: result.content, needs_confirmation: result.needs_confirmation },
         };
       }
 

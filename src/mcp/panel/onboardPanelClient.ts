@@ -18,20 +18,13 @@ import { App, applyDocumentTheme } from '@modelcontextprotocol/ext-apps';
 // package's re-exported `McpUiHostContext` type.
 type HostTheme = Parameters<typeof applyDocumentTheme>[0];
 
-interface ToolResult {
-  content?: Array<{ type: string; text?: string }>;
-}
-
-function renderResult(result: ToolResult): void {
-  const out = document.getElementById('out');
-  if (!out) return;
-  let text = '';
-  for (const block of result.content ?? []) {
-    if (block.type === 'text' && block.text) text += `${block.text}\n`;
-  }
-  out.style.display = 'block';
-  out.textContent = text.trim() || '(no content)';
-}
+/** Each path simply tells the chat what the user picked; the coach continues onboarding from there. */
+const CHOICE_MESSAGE: Record<string, string> = {
+  diagnostic:
+    "Let's start with the Simple Diagnostic. Walk me through the four parts of trust one at a time, beginning with my customer.",
+  upload:
+    "Let's do the Full Contextual Upload. I'll bring my listings, reviews, and brand materials so you can coach against my real business.",
+};
 
 function applyTheme(theme: HostTheme | undefined): void {
   try {
@@ -54,23 +47,28 @@ async function main(): Promise<void> {
   // Register notification handlers BEFORE connect so none are missed.
   app.onhostcontextchanged = (ctx) => applyTheme(ctx.theme);
 
-  // Wire the branded choice buttons → `onboard_choose` on the server, render its stub.
+  // Wire the branded choice buttons → tell the chat what was picked, then let the coach
+  // continue the onboarding. No stub is rendered in the panel; the conversation carries on.
   for (const btn of buttons) {
     btn.addEventListener('click', async () => {
-      const path = btn.getAttribute('data-path');
-      if (!path) return;
+      const path = btn.getAttribute('data-path') ?? '';
+      const message = CHOICE_MESSAGE[path];
+      if (!message) return;
       setDisabled(true);
-      setStatus('Routing…');
+      btn.classList.add('chosen');
+      setStatus('Starting…');
       try {
-        const result = (await app.callServerTool({
-          name: 'onboard_choose',
-          arguments: { path },
-        })) as ToolResult;
-        renderResult(result);
-        setStatus('Done. Pick again to compare.');
+        const result = await app.sendMessage({
+          role: 'user',
+          content: [{ type: 'text', text: message }],
+        });
+        if (result?.isError) throw new Error('the host declined the message');
+        setStatus("Sent to the chat. Let's keep going below.");
       } catch (err) {
-        setStatus(`Error: ${err instanceof Error ? err.message : 'call failed'}`);
-      } finally {
+        setStatus(
+          `Couldn't start automatically: ${err instanceof Error ? err.message : 'tell me which path in the chat'}`,
+        );
+        btn.classList.remove('chosen');
         setDisabled(false);
       }
     });
@@ -82,11 +80,11 @@ async function main(): Promise<void> {
     await app.connect();
     applyTheme(app.getHostContext()?.theme);
     setDisabled(false);
-    setStatus('Ready — choose a path.');
+    setStatus('Ready, choose a path.');
   } catch {
     // No host handshake (e.g. opened outside a host): keep the panel usable rather than dead.
     setDisabled(false);
-    setStatus('Ready — choose a path.');
+    setStatus('Ready, choose a path.');
   }
 }
 

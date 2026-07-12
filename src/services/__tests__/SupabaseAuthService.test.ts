@@ -42,6 +42,45 @@ describe('SupabaseAuthService', () => {
       });
     });
 
+    it('fails fast when the email is already registered (empty identities)', async () => {
+      // Supabase enumeration protection: existing email => no error, no session,
+      // and a fake user with an empty identities array.
+      vi.mocked(supabase.auth.signUp).mockResolvedValue({
+        data: {
+          user: { id: 'obfuscated', email: 'test@example.com', identities: [] } as any,
+          session: null,
+        },
+        error: null,
+      });
+
+      const result = await service.signUp('test@example.com', 'password123');
+
+      expect(result.user).toBeNull();
+      expect(result.session).toBeNull();
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error?.message).toBe(
+        'An account with this email already exists. Please sign in instead.'
+      );
+    });
+
+    it('treats a new signup with a populated identity as success (not already-registered)', async () => {
+      const mockUser = {
+        id: 'user-123',
+        email: 'new@example.com',
+        identities: [{ identity_id: 'id-1', provider: 'email' }],
+      };
+
+      vi.mocked(supabase.auth.signUp).mockResolvedValue({
+        data: { user: mockUser as any, session: null },
+        error: null,
+      });
+
+      const result = await service.signUp('new@example.com', 'password123', 'New User');
+
+      expect(result.user).toEqual(mockUser);
+      expect(result.error).toBeNull();
+    });
+
     it('should handle signup errors', async () => {
       const mockError = new Error('Email already exists');
 

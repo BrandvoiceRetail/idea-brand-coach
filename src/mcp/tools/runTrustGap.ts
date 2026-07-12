@@ -10,7 +10,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { groundingPreamble } from '../skills/skillLoader.js';
 import { appGroundingPreamble } from '../skills/appSkills.js';
-import { buildTrustGap } from '../../lib/trustGap.js';
+import { buildTrustGap, type TrustGapResult } from '../../lib/trustGap.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
 
@@ -30,6 +30,22 @@ const inputSchema = {
     ),
 };
 
+/**
+ * Deterministic, plain-language read of the computed scorecard — the mandated
+ * "score + plain explanation" artifact (connector working-session standard,
+ * determination #3). Derived ONLY from the scorecard numbers (no new calculation,
+ * no fabrication); names the IDEA pillar to close first in the owner's terms.
+ * Never exposes internal buyer-state names.
+ */
+function trustGapExplanation(result: TrustGapResult): string {
+  const gap = result.primaryGapMeta;
+  return (
+    `Your Trust Gap™ score is ${result.overall}/100. ` +
+    `Your weakest pillar is ${gap.label}. ${gap.measures} ` +
+    `That's where I'd start.`
+  );
+}
+
 export function registerRunTrustGapTool(server: McpServer): void {
   server.registerTool(
     'run_trust_gap',
@@ -48,17 +64,23 @@ export function registerRunTrustGapTool(server: McpServer): void {
         overall: overall ?? (insight + distinctive + empathetic + authentic) / 4,
       };
       const result = buildTrustGap(scores);
+      const explanation = trustGapExplanation(result);
       safeLog({ event: 'tool.run_trust_gap', caller: userTag(getIdentity()) });
-      // structuredContent stays BYTE-IDENTICAL to the in-app engine (Calculation
-      // Parity, Gen-3 lock). The avatar scope (avatar_id NULL = brand baseline,
-      // locked #5) is echoed in the human-readable text only — this tool never
-      // persists; the SPA save path owns avatar_id stamping.
+      // The scorecard fields stay BYTE-IDENTICAL to the in-app engine (Calculation
+      // Parity, Gen-3 lock); `explanation` is an ADDITIVE plain-language read derived
+      // deterministically from that same scorecard (no new calculation, no fabrication),
+      // so the host always holds the mandated "score + plain explanation" artifact even
+      // if its prose drifts. The avatar scope (avatar_id NULL = brand baseline, locked
+      // #5) is echoed in the human-readable text only — this tool never persists; the
+      // SPA save path owns avatar_id stamping.
       const text =
+        explanation +
+        '\n\n' +
         JSON.stringify(result, null, 2) +
         `\n\n(scope: avatar_id=${avatar_id ?? 'null (brand baseline)'})`;
       return {
         content: [{ type: 'text' as const, text }],
-        structuredContent: result as unknown as Record<string, unknown>,
+        structuredContent: { ...result, explanation } as unknown as Record<string, unknown>,
       };
     },
   );

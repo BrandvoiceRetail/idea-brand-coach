@@ -39,7 +39,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const STAGE_REFS = ['s1_vocab', 's2_jobmap', 's3_triggers', 's4_objections', 'signature', 'canvas'];
+const STAGE_REFS = ['s1_vocab', 's2_jobmap', 's3_triggers', 's4_objections', 'signature', 'canvas', 'decision_trigger'];
 
 interface ConfirmedClaim {
   claim?: string;
@@ -169,7 +169,7 @@ You are a senior Amazon listing strategist inside a BMAD brand coach. You take a
 </persona>
 
 <what-this-is>
-- title_formula: the title template plus a concrete example title. Lead with brand and hero feature.
+- title_formula: the title template plus a concrete example title. The example_output MUST open with the brand name as its literal first word(s) (Amazon SEO convention, and brand-name search is itself a trust signal for this owner's category), immediately followed by the hero feature. Never lead with a generic category phrase (e.g. "Hair Growth Serum for Men & Women...") with the brand name buried later or omitted.
 - bullets: EXACTLY 5 listing bullets, each with: element (the role, e.g. "BULLET 1 — Lead with Decision Trigger"), brief (the instruction), example_output (the concrete copy), stage_ref (which avatar/canvas stage drove it: one of s1_vocab, s2_jobmap, s3_triggers, s4_objections, signature, canvas), and claims_used (the product facts this bullet asserts, drawn ONLY from the confirmed claims).
   - Bullet 1 leads with the decision trigger (the moment the customer is in). stage_ref s3_triggers.
   - Bullet 2 names the villain. stage_ref s2_jobmap.
@@ -183,6 +183,7 @@ You are a senior Amazon listing strategist inside a BMAD brand coach. You take a
 <critical-fabrication-gate>
 PRODUCT-TRUTH and POLICY claims (capacity numbers, compatibility nouns like PSA slab, materials like archival-grade, and ANY guarantee, warranty, or return policy) may ONLY appear in the copy if they are in the CONFIRMED CLAIMS list supplied in the user message. This is the single worst failure of this stage: inventing a "30-DAY GUARANTEE" or a "Holds 432 Cards" or "PSA-slab compatible" that the owner has not confirmed is forbidden, both because it is a fabrication and because false guarantee/warranty phrasing is an Amazon Terms-of-Service hazard.
 - If a fact you want to use is NOT in the confirmed claims, DO NOT state it. Write the copy around the emotion and benefit instead.
+- When a confirmed claim names a specific branded, trademarked, or proprietary ingredient/material (e.g. "AnaGain™"), use that EXACT name, spelling, and trademark/registered symbol (™/®) verbatim wherever it appears in the copy. NEVER substitute a "more natural-sounding" generic, scientific, or botanical synonym (e.g. do not write "pea sprout" or "pea sprout extract" in place of a confirmed "AnaGain™") — the specific name is a searched, recognised term and a trust signal; smoothing it into a generic descriptor is a fabrication-adjacent failure, not a style choice.
 - For every element, list in claims_used the EXACT confirmed-claim text(s) that element relies on. If an element makes no product-truth claim, claims_used is an empty array.
 - Creative and emotional copy (decision-trigger leads, villain framing, identity framing, the feeling) is FREE and not gated. Only product facts and policies are gated.
 </critical-fabrication-gate>
@@ -194,10 +195,31 @@ PRODUCT-TRUTH and POLICY claims (capacity numbers, compatibility nouns like PSA 
 - No emojis. No invented review quotes.
 </voice-rules>
 
+<trigger-brief-direction>
+The DOMINANT Decision Trigger named in Stage 3 sets the emotional through-line of the brief. Use it to tune the HERO image intent and the angle of Bullet 1 (the decision-trigger lead). It does NOT change the fixed roles or stage_ref of Bullets 2 to 5, and it does NOT replace the title_formula rule (brand name first, then hero feature); carry the trigger as the emotional angle, not as a new headline.
+Hero image intent and Bullet 1 angle by trigger:
+- Recognition: hero mirrors the customer's emotional reality before the product, showing the struggle or the moment of recognition, not the product benefit. Bullet 1 acknowledges the failure state in the customer's own words.
+- Identity: hero signals cultural belonging and aspiration, the product shown in the context of who the customer wants to be. Bullet 1 is an identity signal.
+- Belonging: hero shows community and brand purpose (people, mission, story), not just product. Bullet 1 carries the brand's story or values.
+- Momentum: hero leads with social-proof volume ONLY when a real number is present in the confirmed inputs; never invent a review count. Bullet 1 frames the final-nudge, last-objection-removed angle.
+- Fear-of-Loss: hero communicates the cost of inaction (the before state, a time-sensitive outcome, or the consequence of delay). Bullet 1 frames the cost of waiting, not the benefit of buying. Never invent a customer quote; write around the emotion unless a real quote is in the supplied evidence.
+- Permission: a SUPPORTING trigger, NEVER the lead. If the prior points to Permission, lead Bullet 1 with the strongest evidence-backed trigger present in Stage 3 and let authority or credentials carry a later bullet, not the hero or Bullet 1.
+If Stage 3 names no single dominant trigger, infer it from the weakest pillar (Empathetic to Recognition, Distinctive to Identity, Authentic to Belonging; Insight maps to Permission, which never leads, so lead with the next strongest evidence-backed trigger) and note which you used in the title_formula brief.
+</trigger-brief-direction>
+
+<decision-trigger-root>
+When the DECISION TRIGGER is supplied as the positioning root (no Brand Canvas or Signature present):
+- This is a PARTIAL root containing only the emotional lever and verbatim evidence phrases, not full voice/positioning language
+- Use the trigger's dominant_type, brand_anchor (brand-free line, NOT raw internal names), evidence_phrases (verbatim), placement_instruction, and why_this_trigger
+- The brief will be more emotionally focused but less brand-articulated than a Canvas or Signature root
+- For elements that would normally cite canvas positioning, adapt using the trigger's emotional angle and evidence
+- Use stage_ref "decision_trigger" for any element that draws from this root
+</decision-trigger-root>
+
 <output-contract>
 Respond with ONLY a JSON object, no preamble and no code fences:
 {"title_formula":{"brief":"...","example_output":"...","claims_used":["..."]},"bullets":[{"element":"...","brief":"...","example_output":"...","stage_ref":"s3_triggers","claims_used":["..."]}],"image_brief":[{"slot":"Hero","intent":"...","brief":"..."}],"ppc_keywords":{"tier_a":["..."],"tier_b":["..."],"tier_c":["..."]}}
-bullets MUST have exactly 5 entries; image_brief MUST have exactly 7 entries; each ppc tier at least one. stage_ref must be one of: s1_vocab, s2_jobmap, s3_triggers, s4_objections, signature, canvas. No markdown inside any string. No trailing commentary outside the JSON.
+bullets MUST have exactly 5 entries; image_brief MUST have exactly 7 entries; each ppc tier at least one. stage_ref must be one of: s1_vocab, s2_jobmap, s3_triggers, s4_objections, signature, canvas, decision_trigger. No markdown inside any string. No trailing commentary outside the JSON.
 </output-contract>`;
 }
 
@@ -232,23 +254,33 @@ serve(async (req) => {
 
     const body = await req.json();
     const canvas = body?.canvas ?? null;
+    const trigger = body?.trigger ?? null;
     const confirmedClaims: ConfirmedClaim[] = Array.isArray(body?.confirmed_claims) ? body.confirmed_claims : [];
 
-    // The brief is written against the canvas; without it, ask.
-    if (canvas == null) {
+    // The brief is written against the brand positioning. Priority: Canvas > Decision Trigger.
+    // Signature is NOT a root (dropped from the chain per Matthew, 2026-07-08): with neither
+    // Canvas nor Trigger we ask honestly rather than lean on a legacy signature row.
+    if (canvas == null && trigger == null) {
       return new Response(
         JSON.stringify({
           needs_input: [{
             slot: 1,
-            question: 'Compile the Brand Canvas first (generate_canvas), then run the Export Brief. The brief is written against the canvas.',
-            why: 'The title formula, bullets, image brief, and PPC tiers all derive from the Brand Canvas positioning and voice.',
+            question: 'Create a Brand Canvas (generate_canvas) or identify a Decision Trigger (identify_decision_trigger) first, then run the Export Brief.',
+            why: 'The title formula, bullets, image brief, and PPC tiers all derive from your brand positioning — held in the Brand Canvas or the Decision Trigger.',
           }],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const canvasBlock = formatArtifact('BRAND CANVAS (the source of truth for voice and positioning)', canvas);
+    // Root positioning block: canvas if present, else trigger.
+    let canvasBlock: string;
+    if (canvas != null) {
+      canvasBlock = formatArtifact('BRAND CANVAS (the source of truth for voice and positioning)', canvas);
+    } else {
+      // Decision trigger is a partial root with only emotional lever + evidence, no full voice/positioning
+      canvasBlock = formatArtifact('DECISION TRIGGER (partial positioning root — emotional lever and evidence phrases only; use stage_ref "decision_trigger" for elements citing this)', trigger);
+    }
     const s1Block = formatArtifact('STAGE 1 VOCABULARY CLUSTERS', body?.s1 ?? body?.prior?.s1);
     const s3Block = formatArtifact('STAGE 3 DECISION TRIGGERS (for PPC tier A and bullet 1)', body?.s3 ?? body?.prior?.s3);
     const s4Block = formatArtifact('STAGE 4 OBJECTIONS (for risk reversal and bullet 2)', body?.s4 ?? body?.prior?.s4);
@@ -352,11 +384,15 @@ serve(async (req) => {
       throw new Error('Export Brief output was incomplete (expected 5 bullets, 7 image slots, 3 keyword tiers).');
     }
 
-    // S3/S4/canvas grounding present -> evidence; canvas-only synthesis -> inference.
-    const evidenceRefs: Array<{ kind: string; ref: string }> = [{ kind: 'artifact', ref: 'brand_canvas' }];
+    // Root ref priority: canvas > trigger (signature is no longer a root).
+    const rootRef = canvas != null ? 'brand_canvas' : 'decision_trigger';
+    const evidenceRefs: Array<{ kind: string; ref: string }> = [
+      { kind: 'artifact', ref: rootRef },
+    ];
     if (body?.s3 ?? body?.prior?.s3) evidenceRefs.push({ kind: 'artifact', ref: 'avatar_s3_triggers' });
     if (body?.s4 ?? body?.prior?.s4) evidenceRefs.push({ kind: 'artifact', ref: 'avatar_s4_objections' });
-    const grounding = evidenceRefs.length > 1 ? 'evidence' : 'inference';
+    // Decision trigger contains verbatim evidence, so trigger-only should be 'evidence'
+    const grounding = (evidenceRefs.length > 1 || trigger != null) ? 'evidence' : 'inference';
 
     const result = {
       title_formula: titleFormula,

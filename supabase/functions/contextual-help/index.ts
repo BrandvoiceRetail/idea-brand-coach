@@ -74,8 +74,8 @@ ${context ? `Context: ${context}` : ''}
 
 Provide specific, actionable guidance that helps the user answer this question effectively. Include concrete next steps they can take.`;
 
-    console.log('Sending request with:', { question, category, context });
-    console.log('Full user prompt:', userPrompt);
+    // MF-5: never log the question/context/prompt (user content) — shape only.
+    console.log('Sending request with:', { category, questionLength: question?.length ?? 0 });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

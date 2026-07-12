@@ -36,6 +36,13 @@ export interface StoreAnswerOptions {
   avatarId?: string | null;
   /** Own-product id; when present, EVIDENCE review answers go to user_product_reviews. */
   productId?: string | null;
+  /**
+   * Provenance of the value. `stated` (default) = the owner asserted it → resolves
+   * `filled-stated`. `inferred` = the coach derived it from context → resolves
+   * `filled-inferred` (lower confidence, surfaced for confirmation). Only affects
+   * OWNER-INTENT writes (field_source manual vs ai); other classes are always owner-stated.
+   */
+  source?: 'stated' | 'inferred';
 }
 
 /** Result of a write-back: which store, the new row id, and the resolved class. */
@@ -227,7 +234,9 @@ async function writeOwnerIntent(
       avatar_id: opts.avatarId,
       field_id: fieldId,
       field_value: fieldValue,
-      field_source: 'manual',
+      // `manual` (owner stated it) resolves filled-stated; `ai` (coach inferred it) resolves
+      // filled-inferred, so a remembered inference surfaces for confirmation, not as fact.
+      field_source: opts.source === 'inferred' ? 'ai' : 'manual',
       is_locked: false,
     })
     .select('id')

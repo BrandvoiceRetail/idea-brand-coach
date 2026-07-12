@@ -21,8 +21,11 @@
     "evals": "tsx src/mcp/evals/run.ts",
     "evals:live": "tsx src/mcp/evals/runLive.ts",
     "evals:mcpjam": "tsx src/mcp/evals/mcpjam/generate.ts",
+    "evals:image:mcpjam": "tsx src/mcp/evals/image/mcpjamImage.ts",
+    "evals:image": "tsx src/mcp/evals/image/runImage.ts",
     "evals:harvest": "tsx src/mcp/evals/runHarvest.ts",
     "build:panel": "node scripts/build-onboard-panel.mjs",
+    "build:tool-registry": "node -e \"require('esbuild').buildSync({entryPoints:['scripts/build-tool-registry.ts'],bundle:false,platform:'node',format:'esm',outfile:'scripts/.tool-registry.mjs'})\" && node scripts/.tool-registry.mjs && node -e \"require('fs').rmSync('scripts/.tool-registry.mjs')\"",
     "mcp:bundle": "node scripts/build-mcp.mjs",
     "mcp:build:docker": "npm run mcp:bundle && docker build -f deploy/mcp/Dockerfile -t brand-coach-mcp:latest ."
   },

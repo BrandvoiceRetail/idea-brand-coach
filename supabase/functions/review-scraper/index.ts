@@ -1,8 +1,24 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getCached, upsertCached, CACHE_TTL } from "../_shared/asinCache.ts";
+import { consumeScrapeQuota } from "../_shared/scrapeRateLimit.ts";
+import { reviewsFromJson, scrapeAmazonPage, type ScrapedReview } from "../_shared/amazonReviews.ts";
 
 const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+
+// Fetch guardrails (env-tunable without redeploy via `supabase secrets set`). These gate
+// only cache MISSES (real Firecrawl fetches); cache hits are always served, uncounted.
+//  - REVIEW_SCRAPE_ENABLED=false   → hard kill-switch (DB-independent), serves cache only.
+//  - SCRAPE_USER_DAILY_MAX         → per-user/day fetch cap (catalog-sized + retry headroom).
+//  - SCRAPE_GLOBAL_DAILY_MAX       → global/day budget ceiling (× ~5 Firecrawl credits/fetch).
+//  - SCRAPE_GLOBAL_WINDOW_MAX      → global fetches per 60s (burst / concurrency ceiling).
+const SCRAPE_ENABLED = (Deno.env.get('REVIEW_SCRAPE_ENABLED') ?? 'true').toLowerCase() !== 'false';
+const QUOTA_CAPS = {
+  userDailyMax: Number(Deno.env.get('SCRAPE_USER_DAILY_MAX')) || 250,
+  globalDailyMax: Number(Deno.env.get('SCRAPE_GLOBAL_DAILY_MAX')) || 2000,
+  globalWindowMax: Number(Deno.env.get('SCRAPE_GLOBAL_WINDOW_MAX')) || 30,
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,76 +27,10 @@ const corsHeaders = {
 
 const RATE_LIMIT_MS = 2000;
 
-interface ScrapedReview {
-  reviewerName: string;
-  rating: number;
-  title: string;
-  body: string;
-  date: string;
-  verified: boolean;
-  source: string;
-}
-
 interface ScrapeResult {
   url: string;
   reviews: ScrapedReview[];
   error?: string;
-}
-
-interface FirecrawlResponse {
-  success: boolean;
-  data?: {
-    markdown: string;
-    html: string;
-  };
-  creditsUsed?: number;
-}
-
-/**
- * Scrape a single URL using the Firecrawl API.
- * Adapted from firecrawl-amazon.ts patterns.
- */
-async function scrapeUrl(url: string): Promise<{ markdown: string; html: string } | null> {
-  try {
-    const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${firecrawlApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown", "html"],
-        actions: [
-          { type: "wait", milliseconds: 3000 },
-        ],
-        onlyMainContent: false,
-        timeout: 30000,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Firecrawl API error (${response.status}):`, errorText);
-      return null;
-    }
-
-    const data: FirecrawlResponse = await response.json();
-    const responseData = data.data;
-
-    if (!responseData?.markdown) {
-      console.error("Missing markdown in Firecrawl response for:", url);
-      return null;
-    }
-
-    return {
-      markdown: responseData.markdown,
-      html: responseData.html || '',
-    };
-  } catch (error) {
-    console.error("Firecrawl scrape error for", url, ":", error);
-    return null;
-  }
 }
 
 /**
@@ -214,34 +164,97 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Only allow scraping of public http(s) URLs. Rejects non-http schemes and
+ * private / loopback / link-local / metadata hosts (defense-in-depth against SSRF/abuse).
+ */
+function isPublicHttpUrl(raw: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+  // URL.hostname brackets IPv6 literals ([::1]); strip them before matching.
+  const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (host === 'localhost' || host.endsWith('.local')) return false;
+  // Reject ALL IPv6 literals — no legitimate scrape target is a bare IPv6 address. Covers
+  // ::1, ::, fe80::/10 (link-local), fc00::/7 (ULA), and ::ffff:<ipv4> metadata-mapped
+  // forms (e.g. ::ffff:169.254.169.254), closing the IPv4-mapped SSRF bypass.
+  if (host.includes(':')) return false;
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const a = parseInt(m[1]);
+    const b = parseInt(m[2]);
+    if (a === 10 || a === 127 || a === 0 || (a === 192 && b === 168) ||
+        (a === 172 && b >= 16 && b <= 31) || (a === 169 && b === 254) ||
+        (a === 100 && b >= 64 && b <= 127)) return false;
+  }
+  return true;
+}
+
+/** True only when the URL's HOST is an amazon.* marketplace (not any URL containing "amazon."). */
+function isAmazonHost(raw: string): boolean {
+  try {
+    return /^(?:www\.)?amazon\.[a-z.]+$/i.test(new URL(raw).hostname);
+  } catch {
+    return false;
+  }
+}
+
+/** Hostname of a URL (cache-row marketplace column; the URL itself is the cache key). */
+function hostOf(raw: string): string {
+  try {
+    return new URL(raw).hostname.toLowerCase();
+  } catch {
+    return 'unknown';
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Require an authenticated caller. competitive-analysis-orchestrator forwards
-  // the caller's Authorization header server-to-server, so the same user JWT
-  // satisfies getUser here too.
-  const authHeader = req.headers.get('Authorization');
-  const supabaseClient = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    { global: { headers: { Authorization: authHeader ?? '' } } }
-  );
-  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-  if (authError || !user) {
-    return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-
   try {
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const bearer = authHeader.replace(/^Bearer\s+/i, '');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const body = await req.json().catch(() => ({}));
+
+    // AuthN, two modes. (a) Service-role passthrough (the bulk worker): the bearer is the
+    // service-role key, so the caller is trusted infra — take user_id from the body for
+    // rate-limit attribution. (b) User mode: verify_jwt alone is insufficient (the anon key
+    // is a valid JWT), so getUser() rejects anon and closes unauthenticated credit-abuse.
+    let effectiveUserId: string | null;
+    if (serviceKey && bearer === serviceKey) {
+      effectiveUserId = typeof body?.user_id === 'string' ? body.user_id : null;
+    } else {
+      const authClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      // Pass the bearer explicitly: argless getUser() reads the (absent) local
+      // session on supabase-js 2.39.x instead of the global Authorization header.
+      const { data: { user }, error: authError } = await authClient.auth.getUser(bearer);
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      effectiveUserId = user.id;
+    }
+
     if (!firecrawlApiKey) {
       throw new Error('Missing FIRECRAWL_API_KEY environment variable');
     }
 
-    const { urls, maxReviewsPerUrl = 20 } = await req.json();
+    const { urls, maxReviewsPerUrl: maxReviewsRaw = 20 } = body;
+    // Cap reviews-per-URL to bound response size (caller-controlled; Firecrawl bills per URL).
+    const maxReviewsPerUrl = Math.min(Math.max(1, Number(maxReviewsRaw) || 20), 50);
 
     if (!urls || !Array.isArray(urls) || urls.length === 0) {
       return new Response(
@@ -250,37 +263,71 @@ serve(async (req) => {
       );
     }
 
-    // Cap the number of URLs to prevent excessive API usage
-    const cappedUrls = urls.slice(0, 10);
+    // Cap the number of URLs and reject non-public / internal targets (SSRF/abuse guard).
+    const cappedUrls = urls.slice(0, 10).filter((u: unknown) => typeof u === 'string' && isPublicHttpUrl(u));
+    if (cappedUrls.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'No valid public http(s) URLs provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     console.log(`Review scraper request: ${cappedUrls.length} URLs`);
 
     const results: ScrapeResult[] = [];
+    // Only rate-limit BETWEEN real Firecrawl fetches — cache hits cost nothing, so they
+    // never trigger the 2s delay (key to draining bursts of overlapping catalogs fast).
+    let pendingDelay = false;
 
     for (let i = 0; i < cappedUrls.length; i++) {
       const url = cappedUrls[i];
-      console.log(`Scraping (${i + 1}/${cappedUrls.length}): ${url}`);
+      const cacheKey = { source: 'firecrawl', dataKind: 'reviews', cacheKey: url, marketplace: hostOf(url) };
 
       try {
-        const scraped = await scrapeUrl(url);
+        // Cross-tenant cache: review data is PUBLIC (not tenant-private), so a prior scrape
+        // of this URL within CACHE_TTL.reviews (7d) serves EVERY tenant — no Firecrawl call,
+        // no credit spend. This is the burst/cost lever for overlapping catalogs + re-runs.
+        let reviews = await getCached<ScrapedReview[]>(cacheKey);
 
-        if (!scraped) {
-          results.push({ url, reviews: [], error: 'Failed to scrape URL' });
+        if (reviews) {
+          console.log(`  Cache HIT (${reviews.length}) for ${url}`);
         } else {
-          // Determine parsing strategy based on URL
-          let reviews: ScrapedReview[];
-          if (url.includes('amazon.com')) {
-            reviews = parseAmazonReviews(scraped.markdown, scraped.html, url);
-          } else {
-            reviews = parseReviewsFromMarkdown(scraped.markdown, url);
+          // Gate the FETCH only (cache hits above are free + always served). Hard env
+          // kill-switch first, then the DB-backed per-user + global budget / burst limiter.
+          if (!SCRAPE_ENABLED) {
+            results.push({ url, reviews: [], error: 'review scraping is temporarily disabled' });
+            continue;
           }
+          const quota = await consumeScrapeQuota(effectiveUserId, QUOTA_CAPS);
+          if (!quota.allowed) {
+            console.log(`  Rate limited (${quota.reason}) for ${url}`);
+            results.push({ url, reviews: [], error: `rate limit: ${quota.reason ?? 'scrape quota reached'}` });
+            continue;
+          }
+          if (pendingDelay) {
+            await delay(RATE_LIMIT_MS);
+            pendingDelay = false;
+          }
+          console.log(`Scraping (${i + 1}/${cappedUrls.length}): ${url}`);
+          // scrapeAmazonPage throws (never returns null) on failure → caught below per-URL.
+          const scraped = await scrapeAmazonPage(url, firecrawlApiKey!, { jsonReviews: true, timeoutMs: 45000 });
 
-          results.push({
-            url,
-            reviews: reviews.slice(0, maxReviewsPerUrl),
-          });
-
+          // PRIMARY: clean reviews from Firecrawl's structured json extraction.
+          reviews = reviewsFromJson(scraped.jsonReviews, url);
+          // FALLBACK (json empty): the regex parsers. Use the Amazon HTML parser for any
+          // Amazon marketplace host (.com/.co.uk/.de/…), markdown elsewhere.
+          if (reviews.length === 0) {
+            reviews = isAmazonHost(url)
+              ? parseAmazonReviews(scraped.markdown, scraped.html, url)
+              : parseReviewsFromMarkdown(scraped.markdown, url);
+          }
+          // Cache only non-empty results — never poison the cache with a transient
+          // 0-review/blocked scrape for 7 days.
+          if (reviews.length > 0) await upsertCached(cacheKey, reviews, CACHE_TTL.reviews);
+          pendingDelay = true; // a real fetch happened → space the NEXT fetch
           console.log(`  Found ${reviews.length} reviews from ${url}`);
         }
+
+        results.push({ url, reviews: reviews.slice(0, maxReviewsPerUrl) });
       } catch (scrapeError) {
         console.error(`Error scraping ${url}:`, scrapeError);
         results.push({
@@ -288,11 +335,6 @@ serve(async (req) => {
           reviews: [],
           error: scrapeError instanceof Error ? scrapeError.message : String(scrapeError),
         });
-      }
-
-      // Rate limit: 2-second delay between requests
-      if (i < cappedUrls.length - 1) {
-        await delay(RATE_LIMIT_MS);
       }
     }
 
@@ -310,7 +352,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in review-scraper function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

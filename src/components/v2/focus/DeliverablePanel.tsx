@@ -10,8 +10,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Deliverable, DeliverableMode } from './types';
 import { DELIVERABLE_LABELS } from './types';
 
-const BRAND_BLUE = '#1A3557';
-const BRAND_GOLD = '#C9A84C';
+const BRAND_BLUE = '#111111';
+const BRAND_GOLD = '#D4960A';
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [done, setDone] = useState(false);
@@ -80,7 +80,7 @@ export function DeliverablePanel({
               <h3 className="text-base font-bold" style={{ color: BRAND_BLUE }}>{deliverable.title}</h3>
               <span
                 className="rounded-full border px-2 py-0.5 text-[10px] font-semibold"
-                style={aiGenerated ? { borderColor: BRAND_GOLD, color: BRAND_BLUE, background: '#FDF8EE' } : { borderColor: '#E4E7EC', color: '#64748B' }}
+                style={aiGenerated ? { borderColor: BRAND_GOLD, color: BRAND_BLUE, background: '#FEF5DC' } : { borderColor: '#E4E7EC', color: '#64748B' }}
                 title={aiGenerated ? 'Written by the coach for your brand' : 'A structured starting template — add your steer and produce again for an AI draft'}
               >
                 {aiGenerated ? '✨ AI-written for your brand' : 'Template'}
@@ -88,7 +88,7 @@ export function DeliverablePanel({
             </div>
 
             {deliverable.claimFlags && deliverable.claimFlags.length > 0 && (
-              <Alert style={{ borderColor: BRAND_GOLD, background: '#FDF8EE' }}>
+              <Alert style={{ borderColor: BRAND_GOLD, background: '#FEF5DC' }}>
                 <ShieldAlert className="h-4 w-4" />
                 <AlertDescription>
                   <span className="font-semibold">Confirm before publishing:</span>

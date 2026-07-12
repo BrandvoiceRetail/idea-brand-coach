@@ -70,6 +70,9 @@ interface InterpretationRequest {
     ad_copy?: string;
   };
   fields?: Record<string, unknown>;
+  /** DERIVE MODE: when true, no scores are supplied — the model ASSIGNS 0-100 + confidence
+   *  per pillar from the evidence. Powers the MCP `assess_idea_dimensions` keystone. */
+  derive?: boolean;
 }
 
 /** A parsed model dimension row before grounding enforcement. */
@@ -79,6 +82,9 @@ interface RawDimension {
   what_it_measures?: string;
   brand_read?: string;
   where_it_shows_up?: Array<{ evidence_type?: string; quote_or_observation?: string }>;
+  /** Derive mode only: the model's self-reported confidence in this pillar's read. */
+  confidence?: string;
+  read?: string;
 }
 
 /** Normalise an evidence block into the per-type corpora + a single lowercased haystack. */
@@ -397,6 +403,167 @@ function enforceDimensionGrounding(
   return { dimension, score, what_it_measures, brand_read, where_it_shows_up: grounded, grounding: 'evidence' };
 }
 
+// ── DERIVE MODE ────────────────────────────────────────────────────────────
+// When the caller supplies evidence but NO scores, read the evidence and ASSIGN a
+// 0-100 score + a confidence per pillar. This is the front-half the interpret path
+// never had: it produces the scores the Trust Gap is computed from, grounded in the
+// user's own words, so onboarding stops dead-ending on "give me four numbers".
+
+/** Confidence the model self-reports; floored to 'low' when a read isn't evidence-grounded. */
+type DeriveConfidence = 'high' | 'medium' | 'low';
+
+function buildDeriveSystemPrompt(present: EvidenceType[]): string {
+  const evidenceClause = present.length
+    ? `<evidence-provided>
+The founder has supplied real brand evidence: ${present.join(', ')}. Score each pillar from how well THIS evidence satisfies it, and cite verbatim phrases or precise observations about it. Never invent quotes or cite evidence you were not given.
+</evidence-provided>`
+    : `<no-evidence-provided>
+No listing copy, reviews, or ad copy were supplied. You cannot read a pillar you have no evidence for: set its confidence to "low", say plainly that no evidence was supplied, and do not invent specifics.
+</no-evidence-provided>`;
+
+  return `<persona>
+You are Trevor Bradford, creator of the IDEA Strategic Brand Framework, reading a founder's actual brand evidence and giving a straight, grounded read of where their brand builds trust and where it leaks it. You speak like a coach, not a report generator.
+</persona>
+
+<task>
+You are given the founder's actual listing copy, reviews, and/or ad copy. There are NO pre-set scores. For EACH of the four trust pillars, ASSIGN a score from 0 to 100 reflecting how well their brand, as evidenced, satisfies that pillar, and a CONFIDENCE reflecting how much real evidence you had to judge it. For each pillar also write what it measures, your brand-specific read, and where it shows up in their evidence.
+</task>
+
+<the-four-pillars>
+- Insight: how well the brand understands what really drives the customer and turns that into messaging.
+- Distinctiveness: how much the brand owns a recognisable position and identity instead of blending in.
+- Empathy: whether the brand speaks to what the customer feels, not just what the product is.
+- Authenticity: how genuine and transparent the brand is, whether its communication earns belief.
+</the-four-pillars>
+
+<score-bands-0-100>
+- 0 to 39: weak. This pillar is leaking trust.
+- 40 to 69: mixed. Partly working, real room to improve.
+- 70 to 100: strong. This pillar is building trust.
+</score-bands-0-100>
+
+<confidence>
+- high: strong, direct evidence in the supplied material lets you read this pillar clearly.
+- medium: some evidence plus reasonable inference; a defensible read, not a certain one.
+- low: little or no evidence for this pillar; mostly guesswork. Be honest. Prefer "low" when unsure. Do NOT pad a confident-sounding read on thin evidence.
+</confidence>
+
+<must-cite-evidence>
+Every "where_it_shows_up" entry must point at real supplied evidence: a verbatim quote or a precise observation about it. Never fabricate a quote, bullet, or review. If a pillar has no evidence, say so and set confidence "low".
+</must-cite-evidence>
+
+${evidenceClause}
+
+<voice>
+Plain, direct, warm. Second person. UK English. No asterisks, markdown, headings, bullets, emojis. No em or en dashes; use commas, full stops, or the word and. Short sentences.
+</voice>
+
+<output-contract>
+Respond with ONLY a single JSON object, no commentary, no code fences. Exactly this shape:
+{"dimensions":[{"dimension":"Insight","score":<0-100>,"confidence":"high|medium|low","read":"your 2-3 sentence brand read","where_it_shows_up":[{"evidence_type":"listing_copy","quote_or_observation":"..."}]}, ...four pillars in order Insight, Distinctiveness, Empathy, Authenticity...]}
+Every string value must obey the voice rules.
+</output-contract>`;
+}
+
+function buildDeriveUserMessage(byType: Record<EvidenceType, string>, present: EvidenceType[], fieldsText: string): string {
+  const parts: string[] = [];
+  if (fieldsText) parts.push(`OWNER INTENT AND BRAND CONTEXT (positioning, voice, story):\n${fieldsText}`);
+  if (present.length) {
+    for (const t of present) parts.push(`SUPPLIED ${t.toUpperCase()} (cite this verbatim):\n${byType[t].slice(0, 8000)}`);
+  } else {
+    parts.push('NO listing copy, reviews, or ad copy were supplied.');
+  }
+  parts.push('Assign the four pillar scores (0-100) and confidences now, as the JSON object.');
+  return parts.join('\n\n');
+}
+
+/** Run the derive flow and return { dimensions:[{dimension,score(0-100),confidence,grounding,read,where_it_shows_up}] }. */
+async function handleDerive(body: InterpretationRequest): Promise<Response> {
+  const { byType, haystack, present } = normaliseEvidence(body?.evidence);
+  const hasEvidence = present.length > 0;
+  const fieldsText = formatFields(body?.fields);
+
+  const systemPrompt = buildDeriveSystemPrompt(present);
+  const userMessage = buildDeriveUserMessage(byType, present, fieldsText);
+
+  const response = await fetch(CLAUDE_API_URL, {
+    method: 'POST',
+    headers: {
+      'x-api-key': anthropicApiKey as string,
+      'anthropic-version': '2023-06-01',
+      'anthropic-beta': 'prompt-caching-2024-07-31',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: SONNET_MODEL,
+      max_tokens: 3000,
+      temperature: 0.4,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: userMessage }],
+    }),
+  });
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error('[diagnostic-interpretation-evidence/derive] Anthropic error:', response.status, errorBody);
+    throw new Error(`Anthropic API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const parsed = parseModel(data?.content?.[0]?.text ?? '');
+  if (!parsed || parsed.dimensions.length === 0) {
+    console.error('[diagnostic-interpretation-evidence/derive] unparseable:', (data?.content?.[0]?.text ?? '').slice(0, 400));
+    throw new Error('Derive response was not valid JSON');
+  }
+
+  const labelToDim = new Map<string, Dimension>(DIMENSIONS.map((d) => [DIMENSION_LABELS[d].toLowerCase(), d]));
+  const byDimension = new Map<Dimension, RawDimension>();
+  for (const rd of parsed.dimensions) {
+    const key = typeof rd?.dimension === 'string' ? rd.dimension.trim().toLowerCase() : '';
+    const dim = labelToDim.get(key);
+    if (dim && !byDimension.has(dim)) byDimension.set(dim, rd);
+  }
+  DIMENSIONS.forEach((dim, i) => {
+    if (!byDimension.has(dim) && parsed.dimensions[i]) byDimension.set(dim, parsed.dimensions[i]);
+  });
+
+  const dimensions = DIMENSIONS.map((dim) => {
+    const rd = byDimension.get(dim);
+    const citations = (rd?.where_it_shows_up ?? [])
+      .filter((c) => c && typeof c.quote_or_observation === 'string' && c.quote_or_observation.trim())
+      .map((c) => ({
+        evidence_type: (EVIDENCE_TYPES as readonly string[]).includes(c.evidence_type ?? '') ? c.evidence_type! : 'listing_copy',
+        quote_or_observation: c.quote_or_observation!.trim(),
+      }));
+    // Grounded only when a citation literally traces to the supplied evidence corpus.
+    // This governs CITATION honesty (we never show a fabricated "where it shows up").
+    const grounded = hasEvidence && citations.some((c) => haystack.includes(c.quote_or_observation.toLowerCase().slice(0, 40)));
+    const grounding: 'evidence' | 'inference' = grounded ? 'evidence' : 'inference';
+    // CONFIDENCE is separate from citation-grounding: it answers "did I have evidence to
+    // judge this pillar", not "did this exact quote substring-match". Trust the model's
+    // self-report when ANY evidence was supplied (it was told to be honest and prefer low
+    // when thin); only force low when there is NO evidence at all. This stops a paraphrased
+    // citation from collapsing an evidence-based read into a homework ask.
+    let confidence: DeriveConfidence = ['high', 'medium', 'low'].includes((rd?.confidence ?? '').toLowerCase())
+      ? ((rd!.confidence as string).toLowerCase() as DeriveConfidence)
+      : 'low';
+    if (!hasEvidence) confidence = 'low';
+    const score = Math.max(0, Math.min(100, Math.round(typeof rd?.score === 'number' ? rd.score : 0)));
+    return {
+      dimension: DIMENSION_LABELS[dim],
+      score,
+      confidence,
+      grounding,
+      read: (rd?.read ?? rd?.brand_read ?? '').trim(),
+      where_it_shows_up: grounded ? citations : [{ evidence_type: 'listing_copy', quote_or_observation: NO_EVIDENCE_NOTE }],
+    };
+  });
+
+  console.log(`[diagnostic-interpretation-evidence/derive] evidence=${present.join(',') || 'none'} scores=${dimensions.map((d) => `${d.dimension}:${d.score}/${d.confidence}`).join(' ')}`);
+  return new Response(JSON.stringify({ derived: true, dimensions }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -428,6 +595,11 @@ serve(async (req) => {
     }
 
     const body = (await req.json()) as InterpretationRequest;
+
+    // DERIVE MODE: evidence in, scores out (no scores supplied). Front-half for the Trust Gap.
+    if (body?.derive === true) {
+      return await handleDerive(body);
+    }
 
     // Normalise + validate scores (each clamped 0-25), like the public fn.
     const scores = {} as Record<Dimension, number>;

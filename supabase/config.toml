@@ -40,6 +40,28 @@ enabled = true
 [functions.ai-insight-guidance]
 verify_jwt = false
 
+# Auth is enforced in-function via getAuthedUserId (the PIXII_API_KEY secret
+# never reaches the browser); verify_jwt stays off so the function owns the gate.
+[functions.pixii-generate]
+verify_jwt = false
+
+# Auth is enforced in-function via getAuthedUserId. Palmier is the LOCAL video app;
+# the PALMIER_MCP_URL / PALMIER_ORIGIN secrets (tunnel endpoint + localhost Origin)
+# stay server-side. verify_jwt stays off so the function owns the gate.
+[functions.palmier-generate]
+verify_jwt = false
+
+# Auth is enforced in-function via getAuthedUserId. fal.ai is the CLOUD video
+# provider; the FAL_KEY (+ optional FAL_VIDEO_MODEL) secret stays server-side.
+# verify_jwt stays off so the function owns the gate.
+[functions.fal-video-generate]
+verify_jwt = false
+
+# Brief-driven image generator (Nano Banana Pro via the Gemini API). The function owns
+# the gate (getAuthedUserId); the GEMINI_API_KEY secret stays server-side.
+[functions.gemini-image-generate]
+verify_jwt = false
+
 [functions.buyer-intent-analyzer]
 verify_jwt = false
 
@@ -49,8 +71,12 @@ verify_jwt = false
 [functions.idea-framework-consultant]
 verify_jwt = false
 
+# Document text-extraction. verify_jwt stays TRUE: the platform requires a valid JWT,
+# and the function additionally resolves the caller via auth.getUser() and scopes EVERY
+# uploaded_documents query to that user_id (closes the IDOR — a forged documentId can't
+# read or mutate another tenant's row).
 [functions.document-processor]
-verify_jwt = false
+verify_jwt = true
 
 [functions.save-beta-feedback]
 verify_jwt = false
@@ -60,8 +86,11 @@ verify_jwt = false
 [functions.save-feedback-event]
 verify_jwt = true
 
+# Framework-submission email. verify_jwt stays TRUE: requires a valid session, and the
+# recipient is ALWAYS the authenticated user's own email (never a caller-supplied address,
+# so it cannot be used as an open relay); user-supplied fields are HTML-escaped in-function.
 [functions.send-framework-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.sync-diagnostic-to-embeddings]
 verify_jwt = false
@@ -163,3 +192,46 @@ verify_jwt = false
 # UNVERIFIED per Trevor); a real Titan adapter is a separate, human-gated build.
 [functions.brand-defense-monitor]
 verify_jwt = false
+
+# process-scrape-jobs (bulk review-scrape drainer): verify_jwt=false because the
+# pg_cron safety-net kicks it with a drain-only secret (not a JWT, so the platform's
+# verify_jwt would 401 it). The fn does its OWN auth — service-role bearer |
+# DRAIN_CRON_SECRET | getUser(valid user) — and rejects everyone else (401). The drain
+# work runs service-role INTERNALLY, and a kick only ever triggers a rate-limited drain.
+[functions.process-scrape-jobs]
+verify_jwt = false
+
+# Paid, signed-in-only LLM functions (Claude Sonnet). verify_jwt stays TRUE so the
+# platform rejects anonymous callers before any model call — pinned here explicitly so a
+# redeploy can never drop the gate to --no-verify-jwt and turn these into cost-abuse vectors.
+# Each also resolves the user in-function (parity with run-forensic-analysis).
+[functions.reveal-signature]
+verify_jwt = true
+
+[functions.export-brief]
+verify_jwt = true
+
+[functions.diagnostic-interpretation-evidence]
+verify_jwt = true
+
+# Per-avatar messaging-perception (multi-avatar messaging-perception workbook, Phase 2).
+[functions.analyze-message-perception]
+verify_jwt = true
+
+[functions.create-checkout-session]
+verify_jwt = true
+
+# Stripe calls this server-to-server with no browser JWT; the function verifies the
+# Stripe signature itself, so platform JWT verification stays OFF.
+[functions.stripe-webhook]
+verify_jwt = false
+
+# GDPR data-subject-rights functions (right of access/portability + right to
+# erasure). verify_jwt pinned TRUE: both act ONLY on the caller's own account and
+# must be unreachable anonymously at the platform edge; each also re-derives the
+# user in-function (edge-auth getAuthedUserId) — never from request params.
+[functions.gdpr-export]
+verify_jwt = true
+
+[functions.gdpr-delete-account]
+verify_jwt = true

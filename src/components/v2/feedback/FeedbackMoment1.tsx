@@ -151,7 +151,7 @@ export function FeedbackMoment1({
                 onChange={setScoreFeltRight}
               />
               <FeltRightGroup
-                question="Did the Signature feel right?"
+                question="Did the positioning feel right?"
                 value={signatureFeltRight}
                 onChange={setSignatureFeltRight}
               />

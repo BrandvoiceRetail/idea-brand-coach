@@ -1,11 +1,9 @@
-import { useEffect } from "react";
-import { initPostHog } from "@/lib/posthogClient";
+import { bindAnalyticsToConsent } from "@/lib/posthogClient";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { migrateDiagnosticData } from "@/utils/diagnosticDataMigration";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ClerkAuthProvider } from "@/components/auth/ClerkAuthProvider";
@@ -14,20 +12,22 @@ import { BrandProvider } from "@/contexts/BrandContext";
 import { AvatarProvider } from "@/contexts/AvatarContext";
 import { VersionProvider } from "@/contexts/VersionContext";
 import { ServiceProvider } from "@/services/ServiceProvider";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SystemKBProvider } from "@/contexts/SystemKBContext";
 import { OnboardingTourProvider } from "@/contexts/OnboardingTourContext";
 import { FieldReviewProvider } from "@/contexts/FieldReviewContext";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { AuthGate } from "@/components/AuthGate";
+import { RequireAuth } from "@/components/RequireAuth";
 import { BetaFeedbackWidget } from "@/components/BetaFeedbackWidget";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES, V1_ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import BrandDiagnostic from "./pages/BrandDiagnostic";
-import FreeDiagnostic from "./pages/FreeDiagnostic";
 import ProblemSolverDiagnostic from "./pages/v2/ProblemSolverDiagnostic";
 import DiagnosticResults from "./pages/DiagnosticResults";
 import JourneyBridge from "./components/diagnostic/JourneyBridge";
@@ -61,10 +61,25 @@ import { AdminGate } from "@/components/AdminGate";
 import FocusSurface from "./pages/FocusSurface";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
 import SettingsPage from "./pages/SettingsPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FigmaCallback from "./pages/FigmaCallback";
-// Initialise analytics before the React tree mounts so the auth listener can
-// identify the user as soon as a session arrives. No-op when no key is set.
-initPostHog();
+import OAuthConsent from "./pages/OAuthConsent";
+import { V4ContextProvider } from "@/contexts/V4ContextStore";
+import { V4Layout } from "@/components/v4/V4Layout";
+import V4Onboarding from "./pages/v4/V4Onboarding";
+import V4OnboardingChoice from "./pages/v4/V4OnboardingChoice";
+import V4ConnectorSetup from "./pages/v4/V4ConnectorSetup";
+import V4Diagnose from "./pages/v4/V4Diagnose";
+import V4Analyse from "./pages/v4/V4Analyse";
+import V4Fix from "./pages/v4/V4Fix";
+import V4Remeasure from "./pages/v4/V4Remeasure";
+import V4Defend from "./pages/v4/V4Defend";
+import V5Alpha from "./pages/v5/V5Alpha";
+import { V4_ROUTES } from "@/config/v4";
+// Bind analytics to the consent store before the React tree mounts so the auth
+// listener can identify the user as soon as a session arrives. PostHog starts
+// ONLY with a stored analytics opt-in (GDPR); no key set is still a safe no-op.
+bindAnalyticsToConsent();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,18 +99,15 @@ const queryClient = new QueryClient({
 const AppAuthProvider = isClerkConfigured() ? ClerkAuthProvider : AuthProvider;
 
 const App = () => {
-  // Run data migration on app load
-  useEffect(() => {
-    migrateDiagnosticData();
-  }, []);
-
   return (
     <ErrorBoundary>
+    <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <ServiceProvider>
         <AppAuthProvider>
           <AuthGate>
             <VersionProvider>
+              <V4ContextProvider>
               <AvatarProvider>
               <BrandProvider>
                 <SystemKBProvider>
@@ -108,6 +120,7 @@ const App = () => {
                       <ScrollToTop />
                       <OnboardingTour autoStart={true} />
                       <BetaFeedbackWidget />
+                      <ConsentBanner />
 
                     <Routes>
                 <Route path="/" element={<VersionGate />} />
@@ -116,11 +129,22 @@ const App = () => {
 
                 <Route path="/auth" element={<Auth />} />
 
+                {/* Public privacy notice (GDPR Art. 13/14) — reachable signed-out. */}
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+
+                {/* OAuth 2.1 consent (MCP connector authorization). PUBLIC route — the
+                    page self-handles auth, bouncing to /auth with a return param that
+                    preserves authorization_id; must NOT be wrapped in RequireAuth. */}
+                <Route path="/oauth/consent" element={<OAuthConsent />} />
+
                 <Route path="/start-here" element={<Navigate to="/v1/start-here" replace />} />
 
                 <Route path="/journey" element={<Navigate to="/v1/journey" replace />} />
 
-                <Route path="/diagnostic" element={<Navigate to="/v1/diagnostic" replace />} />
+                {/* Alpha: /v5 is the ONLY diagnostic surface (Trevor walked the old
+                    problem-solver flow via the landing CTAs, 2026-07-08). The legacy
+                    guest entries redirect; the pages stay in the tree for revert. */}
+                <Route path="/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 <Route path="/subscribe" element={<Navigate to="/v1/subscribe" replace />} />
 
@@ -141,24 +165,58 @@ const App = () => {
                 <Route path="/brand-coach" element={<Navigate to="/v1/idea/consultant" replace />} />
 
                 <Route path="/v2/coach" element={
-                  <FeatureGate feature="BRAND_COACH_V2">
-                    <BrandCoachV2 />
-                  </FeatureGate>
+                  <RequireAuth>
+                    <FeatureGate feature="BRAND_COACH_V2">
+                      <ErrorBoundary>
+                        <BrandCoachV2 />
+                      </ErrorBoundary>
+                    </FeatureGate>
+                  </RequireAuth>
                 } />
 
-                <Route path="/v2/funnel" element={<FunnelTracker />} />
+                <Route path="/v2/funnel" element={<RequireAuth><FunnelTracker /></RequireAuth>} />
 
                 {/* Reframed "Fix the Trust Gap" 8-screen Problem-Solver flow (Demo v2).
                     Ports idea-brandcoach-DEMO-v2-trevor-spec.html: free diagnostic →
                     auth-gated forensic run → customer profile + Decision Trigger fix.
-                    /v1/diagnostic still serves the original guest FreeDiagnostic. */}
-                <Route path="/v2/diagnostic" element={<ProblemSolverDiagnostic />} />
+                    Login-gated in-app review flow — the public guest entry point is
+                    /v1/diagnostic (FreeDiagnostic), which stays open. */}
+                <Route path="/v2/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 {/* Review route: the same flow with Movement 1 (Recognition) in front,
                     per Trevor's Revised Entry Experience Brief (IDEA-APP-ENTRY-001 v1.1).
                     Kept separate from /v2 so the live baseline is untouched while Trevor
-                    reviews Movement 1 before Movements 2/3 are built. */}
-                <Route path="/v3/diagnostic" element={<ProblemSolverDiagnostic showRecognition />} />
+                    reviews Movement 1 before Movements 2/3 are built. Login-gated. */}
+                <Route path="/v3/diagnostic" element={<Navigate to="/v5" replace />} />
+
+                {/* /v4 — the new "one and only" surface (app shell + spine + Loop 1).
+                    Old routes stay mounted; VersionGate gates the entry behind
+                    VITE_FORCE_V4 (default on in this worktree). RequireAuth wraps the
+                    whole group so the surface is login-gated (anon → /auth). Nested
+                    under V4Layout so the sidebar + sticky spine stepper + mobile
+                    bottom-nav persist across the onboarding + spine screens. */}
+                <Route path={V4_ROUTES.ROOT} element={<RequireAuth><ErrorBoundary><V4Layout /></ErrorBoundary></RequireAuth>}>
+                  <Route index element={<V4Onboarding />} />
+                  {/* Post-signup fork (CHOICE) + the recommended connector setup guide. */}
+                  <Route path="start" element={<V4OnboardingChoice />} />
+                  <Route path="connect" element={<V4ConnectorSetup />} />
+                  <Route path="diagnose" element={<V4Diagnose />} />
+                  <Route path="analyse" element={<V4Analyse />} />
+                  <Route path="fix" element={<V4Fix />} />
+                  <Route path="remeasure" element={<V4Remeasure />} />
+                  <Route path="defend" element={<V4Defend />} />
+                </Route>
+
+                {/* /v4/tools — standalone trust-signals tool registry (own dark theme,
+                    intentionally outside V4Layout so it reads as a public trust page). */}
+                {/* /v4 retired — the standalone tools page redirects to /v5 too. */}
+                <Route path="/v4/tools" element={<Navigate to="/v5" replace />} />
+
+                {/* /v5 — nav-less Avatar 2.0 build theatre alpha. PUBLIC route:
+                    the page creates an anonymous Supabase session on demand and
+                    converts it at the save step, so it must NOT be wrapped in
+                    RequireAuth. */}
+                <Route path="/v5" element={<ErrorBoundary><V5Alpha /></ErrorBoundary>} />
 
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
@@ -184,11 +242,11 @@ const App = () => {
 
                 <Route path="/value-lens" element={<Navigate to="/v1/copy-generator" replace />} />
 
-                <Route path="/beta" element={<BetaWelcome />} />
+                <Route path="/beta" element={<RequireAuth><BetaWelcome /></RequireAuth>} />
 
-                <Route path="/beta-journey" element={<BetaJourney />} />
+                <Route path="/beta-journey" element={<RequireAuth><BetaJourney /></RequireAuth>} />
 
-                <Route path="/beta-feedback" element={<BetaFeedback />} />
+                <Route path="/beta-feedback" element={<RequireAuth><BetaFeedback /></RequireAuth>} />
 
                 <Route path="/test/offline-sync" element={
                   <Layout>
@@ -197,9 +255,11 @@ const App = () => {
                 } />
 
                 <Route path={ROUTES.FEATURE_FLAG_ADMIN} element={
-                  <Layout>
-                    <FeatureFlagAdmin />
-                  </Layout>
+                  <AdminGate>
+                    <Layout>
+                      <FeatureFlagAdmin />
+                    </Layout>
+                  </AdminGate>
                 } />
 
                 <Route path={ROUTES.COACH_EVALS_ADMIN} element={
@@ -238,83 +298,110 @@ const App = () => {
 
                 {/* V1 Routes - Legacy support */}
                 <Route path="/v1/start-here" element={
-                  <Layout>
-                    <StartHere />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <StartHere />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/journey" element={
-                  <Layout>
-                    <Index />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <Index />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
-                <Route path="/v1/diagnostic" element={<FreeDiagnostic />} />
+                {/* Consolidated (2026-06-29): /v1 uses the one diagnostic engine
+                    (ProblemSolverDiagnostic + Recognition), gated like /v2,/v3 —
+                    the divergent FreeDiagnostic questionnaire is retired. */}
+                <Route path="/v1/diagnostic" element={<Navigate to="/v5" replace />} />
 
-                <Route path="/v1/subscribe" element={<PricingPaywall />} />
+                <Route path="/v1/subscribe" element={<RequireAuth><PricingPaywall /></RequireAuth>} />
 
                 <Route path="/v1/diagnostic/results" element={<DiagnosticResults />} />
 
                 <Route path="/v1/diagnostic/bridge" element={<JourneyBridge />} />
 
                 <Route path="/v1/dashboard" element={
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <Dashboard />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/brand-diagnostic" element={
-                  <Layout>
-                    <BrandDiagnostic />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <BrandDiagnostic />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/idea-diagnostic" element={
-                  <Layout>
-                    <IdeaDiagnostic />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <IdeaDiagnostic />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/idea" element={
-                  <Layout>
-                    <IdeaFramework />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <IdeaFramework />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/idea/consultant" element={
-                  <Layout>
-                    <IdeaFrameworkConsultant />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <IdeaFrameworkConsultant />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/conversations" element={
-                  <Layout>
-                    <ConversationHistory />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <ConversationHistory />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/idea/insight" element={
-                  <Layout>
-                    <IdeaInsight />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <IdeaInsight />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/idea/distinctive" element={
-                  <Layout>
-                    <IdeaDistinctive />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <IdeaDistinctive />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/idea/empathy" element={
-                  <Layout>
-                    <IdeaEmpathy />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <IdeaEmpathy />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/idea/authenticity" element={
-                  <Layout>
-                    <IdeaAuthenticity />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <IdeaAuthenticity />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 {/* P4b §4.5: the V1 avatar builder is superseded by the V2 coach's
@@ -322,27 +409,35 @@ const App = () => {
                 <Route path="/v1/avatar" element={<Navigate to="/v2/coach" replace />} />
 
                 <Route path="/v1/canvas" element={
-                  <Layout>
-                    <BrandCanvas />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <BrandCanvas />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/copy-generator" element={
-                  <Layout>
-                    <BrandCopyGenerator />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <BrandCopyGenerator />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/research-learning" element={
-                  <Layout>
-                    <ResearchLearning />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <ResearchLearning />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="/v1/integrations" element={
-                  <Layout>
-                    <Integrations />
-                  </Layout>
+                  <RequireAuth>
+                    <Layout>
+                      <Integrations />
+                    </Layout>
+                  </RequireAuth>
                 } />
 
                 <Route path="*" element={<NotFound />} />
@@ -355,11 +450,13 @@ const App = () => {
                 </SystemKBProvider>
               </BrandProvider>
               </AvatarProvider>
+              </V4ContextProvider>
             </VersionProvider>
           </AuthGate>
         </AppAuthProvider>
       </ServiceProvider>
     </QueryClientProvider>
+    </ThemeProvider>
     </ErrorBoundary>
   );
 };

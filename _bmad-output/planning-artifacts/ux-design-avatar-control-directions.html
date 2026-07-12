@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Customer Avatar Control — Design Directions (idea-brand-coach /v4)</title>
+<style>
+  :root{
+    --shell:#17181c; --rail:#1f2125; --panel:#26282d; --ink:#e9e6df;
+    --muted:#9b9b9b; --gold:#c9a24b; --gold-soft:rgba(201,162,75,.18);
+    --line:#33353b; --ok:#3ba776;
+  }
+  *{box-sizing:border-box} body{margin:0;background:#0e0f12;color:var(--ink);
+    font:14px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:32px}
+  h1{font-size:20px;margin:0 0 4px} .sub{color:var(--muted);margin:0 0 28px}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card h2{font-size:15px;margin:0 0 2px} .tag{font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em}
+  .rec{outline:2px solid var(--gold)} .rec h2::after{content:" ★ recommended";color:var(--gold);font-size:11px}
+  .pro{color:#bfe3cf;font-size:12.5px;margin:8px 0 0} .con{color:#e8c3b6;font-size:12.5px;margin:2px 0 0}
+  /* mock shell */
+  .mock{margin-top:14px;background:var(--shell);border:1px solid var(--line);border-radius:10px;
+    height:190px;display:flex;overflow:hidden}
+  .rail{width:150px;background:var(--rail);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:8px}
+  .body{flex:1;padding:12px;color:var(--muted);font-size:12px}
+  .nav{font-size:12px;color:var(--muted);padding:5px 6px;border-radius:6px} .nav.active{background:var(--gold-soft);color:var(--ink)}
+  .spacer{flex:1}
+  .chip{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;font-size:12px}
+  .chip .ini{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+  .ini.owner{background:var(--gold);color:#111}                /* account owner = SOLID gold */
+  .ini.cust{background:transparent;border:1.5px solid var(--gold);color:var(--gold)}  /* customer = OUTLINE */
+  .chip.ctx{background:#202227;border:1px solid var(--line)} .chev{margin-left:auto;color:var(--muted)}
+  .label .k{color:var(--muted);font-size:10px;display:block;line-height:1.1}
+  .topbar{height:30px;background:var(--rail);border-bottom:1px solid var(--line);display:flex;align-items:center;
+    gap:8px;padding:0 8px;font-size:11px}
+  .pill{margin:0 auto;background:#202227;border:1px solid var(--line);border-radius:999px;padding:3px 10px;display:flex;gap:6px;align-items:center}
+  .echo{display:inline-flex;gap:6px;align-items:center;background:var(--gold-soft);border:1px solid var(--line);
+    border-radius:999px;padding:2px 8px;font-size:11px;color:var(--ink)}
+  .menu{position:relative;margin-top:8px;background:#202227;border:1px solid var(--line);border-radius:8px;padding:6px;width:170px}
+  .mi{display:flex;align-items:center;gap:6px;padding:4px 6px;font-size:11px;border-radius:5px}
+  .mi.cur{background:var(--gold-soft)} .mi .ck{margin-left:auto;color:var(--gold)}
+  footer{color:var(--muted);font-size:12px;margin-top:26px}
+</style>
+</head>
+<body>
+  <h1>Customer Avatar Control — Design Directions</h1>
+  <p class="sub">v4 dark shell · owner (solid gold) ≠ customer (gold outline) · the switch re-casts audit/metrics over a brand-level piece set</p>
+
+  <div class="grid">
+
+    <!-- A -->
+    <div class="card">
+      <span class="tag">Direction A</span><h2>Sidebar-header chip (Slack/Linear)</h2>
+      <div class="mock">
+        <div class="rail">
+          <div class="chip ctx"><span class="ini cust">M</span><span class="label"><span class="k">Working as</span>Maya</span><span class="chev">▾</span></div>
+          <div class="nav active" style="margin-top:8px">Diagnose</div><div class="nav">Analyse</div><div class="nav">Fix</div>
+          <div class="spacer"></div>
+          <div class="chip"><span class="ini owner">MK</span><span style="color:var(--muted)">support@…</span></div>
+        </div>
+        <div class="body">Funnel — same pieces, judged as Maya</div>
+      </div>
+      <p class="pro">＋ Matches the dominant "workspace switcher" model; max separation (top vs bottom).</p>
+      <p class="con">– Shares the top-of-rail zone with brand/logo.</p>
+    </div>
+
+    <!-- B -->
+    <div class="card">
+      <span class="tag">Direction B</span><h2>Top-bar "lens" pill (Stripe mode)</h2>
+      <div class="mock" style="flex-direction:column">
+        <div class="topbar"><span style="color:var(--muted)">IDEA</span>
+          <span class="pill"><span class="ini cust" style="width:18px;height:18px">M</span>Seeing as Maya ▾</span>
+          <span class="ini owner" style="width:20px;height:20px">MK</span></div>
+        <div style="display:flex;flex:1">
+          <div class="rail" style="height:auto"><div class="nav active">Fix</div><div class="nav">Analyse</div></div>
+          <div class="body">Funnel re-cast for Maya</div>
+        </div>
+      </div>
+      <p class="pro">＋ Strong "lens/mode" framing; great for the re-cast confirm.</p>
+      <p class="con">– v4 is sidebar-rail based; adds a persistent global top bar; center switcher is unconventional.</p>
+    </div>
+
+    <!-- C -->
+    <div class="card">
+      <span class="tag">Direction C</span><h2>Per-stage context bar (today, promoted)</h2>
+      <div class="mock">
+        <div class="rail"><div class="nav active">Fix</div><div class="nav">Analyse</div><div class="spacer"></div>
+          <div class="chip"><span class="ini owner">MK</span></div></div>
+        <div class="body"><div class="chip ctx" style="display:inline-flex"><span class="ini cust">M</span>Funnel — as Maya ▾</div>
+          <div style="margin-top:10px">…funnel…</div></div>
+      </div>
+      <p class="pro">＋ Cheapest; lives where scoping matters; extends FunnelMap's existing selector.</p>
+      <p class="con">– NOT global = the original dead-end. Fails "switch from anywhere." Weakest for our goal.</p>
+    </div>
+
+    <!-- D -->
+    <div class="card rec">
+      <span class="tag">Direction D</span><h2>A + in-stage echo (global chip + reassurance)</h2>
+      <div class="mock">
+        <div class="rail">
+          <div class="chip ctx"><span class="ini cust">M</span><span class="label"><span class="k">Working as</span>Maya</span><span class="chev">▾</span></div>
+          <div class="menu">
+            <div class="mi cur"><span class="ini cust" style="width:16px;height:16px">M</span>Maya<span class="ck">✓</span></div>
+            <div class="mi"><span class="ini cust" style="width:16px;height:16px;opacity:.6">R</span>Rico<span style="margin-left:auto;color:var(--muted)">⋯</span></div>
+            <div class="mi" style="color:var(--gold)">＋ New customer</div>
+          </div>
+        </div>
+        <div class="body"><span class="echo"><span class="ini cust" style="width:14px;height:14px">M</span>seeing as Maya</span>
+          <div style="margin-top:10px">Funnel — same pieces, Maya's verdicts</div></div>
+      </div>
+      <p class="pro">＋ Global discoverability (fixes the dead-end) + in-context reassurance that teaches the lens model. Per-row ⋯ rename/edit; ＋ new.</p>
+      <p class="con">– Two surfaces of one control to keep in sync (minor — same state).</p>
+    </div>
+
+  </div>
+  <footer>Spec: <code>ux-design-avatar-control.md</code> · primitives: shadcn <code>DropdownMenu</code>/<code>Command</code>/<code>Avatar</code> + <code>sonner</code> · reuse v2 <code>AvatarHeaderDropdown</code> logic.</footer>
+</body>
+</html>

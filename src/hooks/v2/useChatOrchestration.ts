@@ -4,8 +4,9 @@
  * Owns chat message processing (useBrandCoachChat), export actions,
  * and the document upload flow.
  *
- * Note: useChat and useChatSessions are called in the composer because
- * their outputs (messages, currentSessionId) are shared with useFieldOrchestration.
+ * Note: the live composition layer is `useBrandCoachV2State`, which calls useChat and
+ * useChatSessions directly and shares their outputs (messages, currentSessionId) across
+ * the coach hooks. This hook owns the message/export/upload slice of that composition.
  */
 
 import { useCallback, useRef } from 'react';

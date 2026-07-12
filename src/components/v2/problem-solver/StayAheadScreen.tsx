@@ -71,14 +71,23 @@ export function StayAheadScreen({ onBack, onContinue }: StayAheadScreenProps): J
               className="rounded-[10px] border p-3"
               style={{ background: PS_COLORS.greenLight, borderColor: '#a6e0bf' }}
             >
-              <div className="text-[22px] font-extrabold" style={{ color: PS_COLORS.navy }}>
-                58 → <span style={{ color: PS_COLORS.green }}>71</span>{' '}
-                <span className="text-[13px] font-bold" style={{ color: PS_COLORS.green }}>
-                  ▲ Trust Gap +13
+              <div className="flex items-baseline gap-2">
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wide"
+                  style={{ color: PS_COLORS.g500 }}
+                >
+                  Example
+                </span>
+                <span className="text-[22px] font-extrabold" style={{ color: PS_COLORS.navy }}>
+                  58 → <span style={{ color: PS_COLORS.green }}>71</span>{' '}
+                  <span className="text-[13px] font-bold" style={{ color: PS_COLORS.green }}>
+                    ▲ +13
+                  </span>
                 </span>
               </div>
               <div className="mt-0.5 text-xs" style={{ color: PS_COLORS.g500 }}>
-                since you shipped the recognition-led hero + warranty
+                Illustrative only — once you ship a fix and re-scan, your <b>real</b> Trust Gap
+                movement shows here, measured from your own before/after scores.
               </div>
             </div>
             <div

@@ -65,7 +65,7 @@ export function AssetUploadDialog({ avatarId, onUploaded, trigger }: AssetUpload
       setSubmitting(false);
       return;
     }
-    toast.message('Uploaded — auditing against your avatar + Signature…');
+    toast.message('Uploaded — auditing against your avatar + positioning…');
     const audited = await service.auditAsset(created.data.id);
     setSubmitting(false);
     if (audited.error) {

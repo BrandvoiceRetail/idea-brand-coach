@@ -455,6 +455,146 @@ export const EVAL_CASES: EvalCase[] = [
     },
     corpusRef: 'edge',
   },
+
+  // ── Creative-plan directors (the Higgsfield ↔ brand-coach bridge) ───────────
+  // These lock TOOL SELECTION: a change to the tool surface / descriptions that stops the
+  // coach reaching for the right creative director on a plain "make me an X" ask is a
+  // behaviour regression these cases catch via the mcpjam / behavioural (A2) tiers.
+  {
+    id: 'infinityvault-video-storyboard',
+    title: 'InfinityVault — asks for a listing video',
+    persona: 'P1',
+    category: 'creative',
+    description:
+      'A plain "make me a listing video" must reach generate_video_storyboard — the scene-by-scene director — not a generic discussion. Grounded in the Recognition trigger the diagnostic already found.',
+    context: {
+      brand: 'InfinityVault',
+      product: 'Premium 216-card trading-card binder (ASIN B0CARD0001, $34)',
+      avatarId: 'avatar_B0CARD0001',
+      fields: [
+        { label: 'Resolved trigger', value: 'Recognition (Empathetic gap) — mirror the felt failure before the spec' },
+        { label: 'Symptom', value: 'Conversion below category average; owner wants a video asset to lift it' },
+      ],
+    },
+    memory: [
+      { kind: 'avatar', note: 'Locked avatar avatar_B0CARD0001 — the collector burned by a cheap binder before.' },
+      { kind: 'brand-fact', note: 'Lifetime warranty confirmed (claim allowed).' },
+    ],
+    uploads: [
+      {
+        name: 'infinityvault-listing.txt',
+        kind: 'listing',
+        description: 'Current listing (title + bullets).',
+        content: 'InfinityVault 216-Pocket Binder — Acid-Free, Side-Loading. Padded hardcover, elastic strap, lifetime warranty.',
+      },
+    ],
+    conversation: [
+      { role: 'user', text: 'I want a video for my binder listing B0CARD0001 — make me a listing video that gets collectors to buy.' },
+      {
+        role: 'coach',
+        text: 'Building your listing-video storyboard scene by scene, leading the hook with the moment your collector recognises themselves — then handing you ready-to-generate prompts.',
+        tools: ['generate_video_storyboard'],
+        skills: ['10', '09', '04', '06'],
+      },
+    ],
+    expected: {
+      tools: ['generate_video_storyboard'],
+      skills: ['10', '09', '04', '06'],
+      oracle: ['artifact', 'skill-faithful'],
+      primaryTrigger: 'Recognition',
+      outcome: 'A scene-by-scene listing-video storyboard plan (hook→empathy→product→proof→trust→close), Recognition-led, ready to hand to Higgsfield.',
+    },
+    corpusRef: 'infinityvault-recognition',
+  },
+  {
+    id: 'infinityvault-aplus-plan',
+    title: 'InfinityVault — asks to plan A+ content',
+    persona: 'P1',
+    category: 'creative',
+    description:
+      'A "plan my A+ content" ask must reach generate_aplus_content_plan (the long-form editorial director), not a listing-bullets rewrite.',
+    context: {
+      brand: 'InfinityVault',
+      product: 'Premium 216-card trading-card binder (ASIN B0CARD0001, $34)',
+      avatarId: 'avatar_B0CARD0001',
+      fields: [
+        { label: 'Brand Registry', value: 'Enrolled — A+ is available' },
+        { label: 'Goal', value: 'A premium A+ page that closes the Empathetic gap' },
+      ],
+    },
+    memory: [
+      { kind: 'avatar', note: 'Locked avatar avatar_B0CARD0001 — the burned collector.' },
+      { kind: 'preference', note: 'Owner is time-poor; wants a done-for-her plan, not theory.' },
+    ],
+    uploads: [
+      {
+        name: 'infinityvault-reviews.txt',
+        kind: 'reviews',
+        description: 'Review excerpts (the felt experience).',
+        content: '"bent my cards the first week" (×6) · "finally one I actually trust" (×4) · "burned by cheap binders before"',
+      },
+    ],
+    conversation: [
+      { role: 'user', text: 'Plan my A+ content for the binder — I want it premium and honest.' },
+      {
+        role: 'coach',
+        text: 'Planning your A+ as one continuous editorial story — product intro → the outcome your collector wants → clarity → use → the emotional close — grounded only in what your reviews and facts support.',
+        tools: ['generate_aplus_content_plan'],
+        skills: ['10', '09', '04', '12'],
+      },
+    ],
+    expected: {
+      tools: ['generate_aplus_content_plan'],
+      skills: ['10', '09', '04', '12'],
+      oracle: ['artifact', 'skill-faithful'],
+      outcome: 'An A+ content plan: 4 editorial concepts × 5 beats as one continuous composition, claim-gated, ready for Higgsfield.',
+    },
+    corpusRef: 'infinityvault-recognition',
+  },
+  {
+    id: 'infinityvault-ugc-ad-teach',
+    title: 'InfinityVault — VA asks to build a UGC ad (teaching register)',
+    persona: 'P2',
+    category: 'creative',
+    description:
+      'The ops VA asks to be walked through a UGC ad. Must reach generate_ugc_ad_plan AND teach the structure (persona cast from the avatar, hook variants, honesty rails) — same tool, taught register.',
+    context: {
+      brand: 'InfinityVault',
+      product: 'Premium 216-card trading-card binder (ASIN B0CARD0001, $34)',
+      fields: [
+        { label: 'Who', value: 'Operations VA producing social creative' },
+        { label: 'Channel', value: 'Meta / TikTok UGC to test against the listing' },
+      ],
+    },
+    memory: [
+      { kind: 'avatar', note: 'Avatar avatar_B0CARD0001 — the burned collector; the persona must match this demographic.' },
+      { kind: 'history', note: 'The VA learns best from structure + a reusable checklist.' },
+    ],
+    uploads: [
+      {
+        name: 'infinityvault-reviews.txt',
+        kind: 'reviews',
+        description: 'Reviews for the presenter script vocabulary.',
+        content: '"I don\'t trust it with my chase cards" · "this one feels different"',
+      },
+    ],
+    conversation: [
+      { role: 'user', text: 'Can you walk me through building a UGC ad for the binder? I need to understand the structure so I can make more.' },
+      {
+        role: 'coach',
+        text: 'Here is the UGC structure and why each beat earns its place: cast the presenter to match your collector, open with the felt problem in their own words, three hook variants to test, then the honest talking points — you never frame the presenter as a real customer. I\'ll build the plan and give you a checklist to reuse.',
+        tools: ['generate_ugc_ad_plan'],
+        skills: ['10', '09', '04'],
+      },
+    ],
+    expected: {
+      tools: ['generate_ugc_ad_plan'],
+      skills: ['10', '09', '04'],
+      oracle: ['artifact', 'skill-faithful', 'persona-adapt'],
+      outcome: 'A UGC ad plan (persona cast from the avatar, 3 hook variants, claim-gated talking points, honesty rails) plus the reusable structure taught to the VA.',
+    },
+    corpusRef: 'infinityvault-recognition',
+  },
 ];
 
 export function getEvalCase(id: string): EvalCase | undefined {

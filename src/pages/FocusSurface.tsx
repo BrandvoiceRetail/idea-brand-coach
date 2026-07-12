@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
-const BRAND_GOLD = '#C9A84C';
+const BRAND_GOLD = '#D4960A';
 
 export default function FocusSurface() {
   const { snapshot, isLive, isLoading, needsDiagnostic } = useBrandSnapshot();
@@ -38,7 +38,7 @@ export default function FocusSurface() {
       </header>
 
       {!isLive && (
-        <Alert className="mb-5" style={{ borderColor: BRAND_GOLD, background: '#FDF8EE' }}>
+        <Alert className="mb-5" style={{ borderColor: BRAND_GOLD, background: '#FEF5DC' }}>
           <FlaskConical className="h-4 w-4" />
           <AlertDescription className="flex flex-wrap items-center gap-2">
             You’re seeing a worked example (InfinityVault). Run your Trust Gap™ to make this your brand.

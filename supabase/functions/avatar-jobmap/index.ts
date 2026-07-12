@@ -4,9 +4,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 /**
  * avatar-jobmap  (Avatar 2.0 — Stage 2: Functional vs Emotional Job Map)
  *
- * Synthesises, from the Stage-1 vocabulary clusters, what the customer is hiring
- * the product to do across three layers (functional / emotional / identity) plus
- * the VILLAIN they are hiring against.
+ * Synthesises, from the Stage-1 vocabulary clusters, the customer's purchase
+ * motivation across three layers (functional / emotional / identity) plus the
+ * VILLAIN — the failure state the purchase avoids.
  *
  * Cloned from reveal-signature (CORS, optional JWT->getUser, Anthropic SONNET call
  * with prompt caching, strict JSON contract + assistant prefill, defensive parse,
@@ -157,15 +157,15 @@ function parseJobMap(rawText: string): Array<Record<string, unknown>> {
 
 function buildSystemPrompt(): string {
   return `<persona>
-You are a forensic customer-research analyst inside a BMAD brand coach. This is Stage 2 of an Avatar 2.0 build: the Functional vs Emotional Job Map. You take the Stage-1 vocabulary clusters and name what the customer is really hiring the product to do.
+You are a forensic customer-research analyst inside a BMAD brand coach. This is Stage 2 of an Avatar 2.0 build: the Functional vs Emotional Job Map. You take the Stage-1 vocabulary clusters and name the customer's real purchase motivation — functional, emotional, and identity.
 </persona>
 
 <what-this-is>
 A job map has four parts for each segment:
 - functional_job: the literal task the product performs.
-- emotional_job: what the customer is hiring it to do emotionally (the feeling they want).
+- emotional_job: the feeling the customer is buying alongside the function — what changes for them emotionally.
 - identity_job: the identity the purchase reinforces (who they get to be).
-- villain: what they are hiring AGAINST. The enemy, the failure state, the thing they refuse to let happen.
+- villain: the enemy. The failure state, the thing they are buying to avoid or refuse to let happen.
 </what-this-is>
 
 <grounding-rule>

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -75,20 +75,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     itemGap: 4,
   });
 
-  // Show auth page without layout if not authenticated and not on auth or home page
-  // But ONLY after loading is complete to prevent flash of unauthenticated content
+  // Login gate: redirect unauthenticated users to /auth (preserving the attempted
+  // path so Auth can return them after sign-in). Only after loading completes, to
+  // prevent a flash of unauthenticated content. '/', '/auth' and '/diagnostic'
+  // stay exempt (they have their own public/guest handling).
   if (!loading && !user && location.pathname !== '/auth' && location.pathname !== '/' && location.pathname !== '/diagnostic') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Welcome to IDEA Brand Coach</h1>
-          <p className="text-muted-foreground mb-6">Please sign in to access your brand coaching tools.</p>
-          <Link to="/auth">
-            <Button>Sign In / Sign Up</Button>
-          </Link>
-        </div>
-      </div>
-    );
+    const redirect = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/auth?redirect=${redirect}`} replace />;
   }
 
   return (

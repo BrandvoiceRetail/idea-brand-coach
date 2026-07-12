@@ -1,3 +1,5 @@
+> ⚠️ This index was last updated 2026-02-28 and reflects the v1→v2 transition. Current product state: **v4 is the prod surface**. Treat per-version sections below as historical unless noted.
+
 # IDEA Brand Coach Documentation
 
 ## Overview

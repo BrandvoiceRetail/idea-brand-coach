@@ -17,14 +17,18 @@
  */
 
 import { categorizeToolUse } from './registry.ts';
+import { stripAiDashes } from './sanitize.ts';
 
 const encoder = new TextEncoder();
 
-/** Emit a client-protocol SSE event. */
+/** Emit a client-protocol SSE event. Coach prose (text_delta) is dash-sanitised first. */
 export function emit(
   controller: ReadableStreamDefaultController,
   data: Record<string, unknown>
 ): void {
+  if (data.type === 'text_delta' && typeof data.delta === 'string') {
+    data = { ...data, delta: stripAiDashes(data.delta) };
+  }
   controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
 }
 

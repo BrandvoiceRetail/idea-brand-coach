@@ -7,14 +7,19 @@
 
 ## What this is
 
-A TypeScript **streamable-HTTP MCP gateway** for idea-brand-coach. Brand-coach is a
-**consumer** of the IV-OS Marketing MCP: it OWNS the generative front and CONSUMES the
-IV-OS asset/test ledger + knowledge reads. Today the host exposes:
+A TypeScript **streamable-HTTP MCP gateway** for idea-brand-coach. Brand-coach OWNS the
+generative front AND its own asset/test ledger: the ledger is now INTERNAL, backed by the
+brand-coach's own Supabase via `NativeLedgerClient` (`service/nativeLedger.ts`), wired in
+`server.ts` (`const ivos = ledgerClient ?? new NativeLedgerClient()`). It is no longer a
+consumer of an external IV-OS MCP. Today the host exposes:
 
 - `health` — liveness + config probe (no secrets).
-- `list_assets`, `get_asset` — the two **STABLE** IV-OS ledger reads, consumed via the
-  IV-OS MCP client adapter (`ivos/client.ts`). These never throw: they return
-  `available:false` when IV-OS is unconfigured/unreachable.
+- `list_assets`, `get_asset` — the two **STABLE** ledger reads, served by `NativeLedgerClient`
+  (the brand-coach's own Supabase). These never throw: they return `available:false` when the
+  ledger is unconfigured/unreachable.
+
+> The "What this is" list below is illustrative — `src/mcp/server.ts` (the `register*Tool`
+> calls) plus `src/mcp/toolManifest.ts` are the AUTHORITATIVE tool surface (40+ tools).
 
 - `list_coach_conversations` / `get_coach_conversation` — **READ, per avatar.** Surface the
   authenticated caller's own Brand-Coach chat threads (`chat_sessions` + `chat_messages`,
@@ -62,6 +67,32 @@ IV-OS asset/test ledger + knowledge reads. Today the host exposes:
   **never** reads/writes the coach current-avatar. `brand_id` is resolved server-side throughout
   (`service/funnelInventory.ts`).
 
+- **Creative-plan directors (the Higgsfield ↔ brand-coach bridge).**
+  `generate_video_storyboard` / `generate_aplus_content_plan` / `generate_main_image_title_plan` /
+  `generate_storefront_messaging_plan` / `generate_ugc_ad_plan` (script-level UGC: avatar-cast
+  persona, trigger-angled hook variants, AI-presenter honesty rails) + the update path
+  `refine_creative_plan` (and the older `generate_listing_image_brief`). Pure Layer-1
+  grounding-directors (no LLM/edge/DB calls): each returns a positioning-aligned plan —
+  scene/beat/section architecture, claim gate, evidence discipline, prompt construction
+  (`IMAGE_PROMPT:` / `VIDEO_PROMPT:` + exact negative prompts) — and the HOST executes on the
+  Higgsfield connector (generate_image / generate_video / edit tools), then logs outputs back
+  via `log_asset` (host-driven, like Windsor ingestion). The shared spine lives in
+  `service/creativeAlignment.ts`: `POSITIONING_SPINE` (trigger / avatar core / signature /
+  trust-gap pillar / verified facts, each with a resolve-tool + honest degrade so new users are
+  never blocked), `POSITIONING_PROPAGATION` (deterministic element-change → per-surface recompose
+  map that `refine_creative_plan` filters; component changes stay surgical — one scene/panel, one
+  job), and `HIGGSFIELD_HANDOFF` (reference-kit discipline, storyboard-image vs per-scene video
+  modes, UGC/unboxing preset routing, edit-tools-before-regen, draft economy, save-back + the
+  performance loop). Tests: `__tests__/creativePlans.test.ts` (propagation-map completeness, honest
+  degrade, guardrail carriage); `__tests__/creativePlansEdge.test.ts` (input/format/trigger edges +
+  refine scope detection + determinism); `__tests__/creativePlanContracts.test.ts` (**app-behavior
+  regression lock** — calls each tool through a real MCP client and pins the `structuredContent`
+  keys the connector/panels consume, the guardrail contract, and the zod input boundary). The
+  eval catalog (`evals/cases/catalog.ts`) also carries `infinityvault-*` creative cases so the
+  mcpjam/behavioural tiers catch a tool-SELECTION regression. **NB:** the guard-echoing
+  `never_contain` list means these tools trip `terminology.leak` telemetry on every call — a known
+  false positive (the denylist names the denied terms), shared with `generate_listing_image_brief`.
+
 The IV-OS **write** tools (`log_asset`/`record_test`/…) and **knowledge** reads
 (canon/product/funnel) are referenced by capability only (`ivos/capabilities.ts`
 → `DEFERRED_IVOS_CAPABILITIES`) and are intentionally **not bound** — pending the
@@ -78,8 +109,17 @@ never bleeds across concurrent requests.
 
 ```bash
 npm run mcp:dev      # tsx watch, boots on MCP_PORT (default 8787), POST /mcp, GET /healthz
-# env: MCP_PORT, IVOS_MCP_URL, IVOS_MCP_TOKEN, SUPABASE_URL, SUPABASE_ANON_KEY
+# env: MCP_PORT, SUPABASE_URL, SUPABASE_ANON_KEY, MCP_OAUTH_REQUIRE_AUTH (OAuth kill-switch)
+# (IVOS_MCP_URL / IVOS_MCP_TOKEN are DEPRECATED — the ledger is internal now)
 ```
+
+## Authentication
+
+The gateway is an OAuth 2.1 resource server. `src/mcp/oauth.ts` serves the RFC 9728
+protected-resource metadata and the 401 challenge that starts a client's OAuth flow;
+the hand-rolled consent page is `src/pages/OAuthConsent.tsx` (`/oauth/consent`). The
+`MCP_OAUTH_REQUIRE_AUTH` env var is the kill-switch (when off, requests are not forced
+through OAuth). Supabase is the authorization server.
 
 ## Acceptance bar (Done-when)
 
@@ -107,14 +147,25 @@ asserts the advertised tool set + handler behavior end-to-end.
 | `contracts/` | Output-engine artifact contracts (single source of truth) — local AGENTS.md |
 | `service/workbook/` | Workbook assemblers + gold-workbook export engine — local AGENTS.md |
 | `evals/` | MCP evals suite — compares skill/tool configurations + scores coach value (`npm run evals`); feeds the `/admin/coach-evals` dashboard — see `evals/README.md` |
+| `evals/image/` | **Output-quality tier** — scores the IMAGE deliverables an E2E session produces (our MCP + Higgsfield in one chat) against a rubric, grounded in the opted-in customer corpus (`evals:image:mcpjam` to drive + assert the pipeline; `evals:image` to vision-judge the produced images) — see `evals/image/README.md` |
 | `skills/` | Skill grounding: `skillLoader` (book corpus) + `appSkills` (App Skill Architecture, IDEA-APP-SKILLS-001) |
 
 ## Guardrails
 
-- **Consume, never duplicate.** No asset-storage / test-storage / brand-canon tools here
-  — call IV-OS. Canonical IV-OS = `ecommerce/ecommerce-brand-business-os` (never the
-  stale clone under `ecommerce-tools/brand-systems/`).
+- **Ledger is internal.** The asset/test ledger is the brand-coach's own Supabase via
+  `NativeLedgerClient` (`service/nativeLedger.ts`) — do NOT re-introduce an external IV-OS
+  MCP dependency. (Historical: this gateway used to consume IV-OS; that boundary was reversed.)
 - **Calculation Parity (Gen-3 lock).** When the owned tools are added next, they must
   wrap the existing Supabase edge fns / TS services **verbatim** (byte-identical output).
 - **Logs are redaction-gated.** Always log via `safeLog` from `logging/redact.ts`.
+- **Tool telemetry is uniform + MF-5-safe.** `instrument.ts` wraps `registerTool` ONCE
+  (`instrumentToolLatency(server)` in `server.ts`, before any `register*Tool`), so EVERY tool
+  emits one `mcp_tool_latency` event per call — no per-tool wiring. Properties: `tool`,
+  `duration_ms`, `ok`, `error_name`, `outcome` (`delivered` | `needs_input` | `error` |
+  `empty` — the bounce signal: a session whose terminal call is not `delivered` is a bounce
+  candidate), `session_id` (best-effort `Mcp-Session-Id`; also promoted to PostHog
+  `$session_id` in `posthog.ts` so events sessionize for funnel/path analysis), `arg_keys`
+  (top-level input key NAMES only, sorted — schema, NOT values, so MF-5 holds), `authenticated`,
+  `country`, `region`. Session anchors `mcp_session_authenticated` / `mcp_auth_challenge` carry
+  `session_id` too. To add a signal, extend the wrapper — never instrument tools individually.
 - Don't bind PROVISIONAL IV-OS tools until D5 lands.

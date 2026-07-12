@@ -1,10 +1,12 @@
 /**
- * S2 — Unlock (founding-member framing).
+ * S6 — Membership ("earn the ask").
  *
- * The demo's paygate. In Alpha, billing is STUBBED — no real payment. The CTA is
- * an auth gate: signed-in users continue to S3 (Upload); signed-out users are
- * routed to /auth?redirect=/v2/diagnostic to create a free account / sign in.
- * The £97 founding-member price is shown as framing only (matches the demo).
+ * Repositioned AFTER the fix (was the pre-value S2 paygate). The customer has
+ * already received the free diagnostic, customer profile, Decision Trigger, and a
+ * fix brief — so this is no longer a wall, it's the upgrade: the free trial lets
+ * them iterate on ONE funnel piece; membership puts their WHOLE funnel on the loop
+ * with ongoing monitoring. Billing is STUBBED in Alpha — `onUnlock` just continues
+ * to the Brand Defence showcase; the £97 price is framing only.
  */
 
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -13,7 +15,7 @@ import { Eyebrow, ScreenHeading, Lede, PSCard, GhostButton } from './primitives'
 
 interface UnlockScreenProps {
   isAuthenticated: boolean;
-  /** Continue to S3 (signed-in) — the shell decides; here we just call onUnlock. */
+  /** Continue to the Brand Defence showcase — the shell decides; we just call onUnlock. */
   onUnlock: () => void;
   onBack: () => void;
 }
@@ -21,21 +23,22 @@ interface UnlockScreenProps {
 const LOOP = ['Diagnose', 'Analyse', 'Fix', 'Re-measure', 'Defend'];
 
 const BENEFITS = [
-  'Your customer profile, built from your actual reviews',
-  'Your primary conversion problem — in plain language',
-  'Your Decision Trigger™ — the one lever to pull first',
-  'A design brief ready to hand to your designer or VA',
-  'All future Beta features as they ship, at no extra cost',
+  'Your whole funnel monitored — every piece, every stage',
+  'Automatic re-measurement as your numbers move',
+  'Brand Defence — know the moment a competitor closes the gap',
+  'Every fix brief, ready to hand to your designer or VA',
+  'All future features as they ship, at no extra cost',
 ];
 
 export function UnlockScreen({ isAuthenticated, onUnlock, onBack }: UnlockScreenProps): JSX.Element {
   return (
     <div>
-      <Eyebrow>Next step</Eyebrow>
-      <ScreenHeading accent="what to fix.">Find out exactly</ScreenHeading>
+      <Eyebrow>Keep going</Eyebrow>
+      <ScreenHeading accent="ahead of the gap.">Keep your whole funnel</ScreenHeading>
       <Lede>
-        The free score shows <b>where</b> the problem is. The full analysis tells you <b>what</b> it is —
-        reads your listing against your own customers&rsquo; reviews, and hands you a brief to act on today.
+        You&rsquo;ve found your gap and your first fix &mdash; <b>free</b>. Your free trial lets you keep
+        iterating on <b>one funnel piece</b>. Become a member to put your <b>whole funnel</b> on the loop and
+        monitor it as the gap moves.
       </Lede>
 
       <PSCard>
@@ -81,7 +84,7 @@ export function UnlockScreen({ isAuthenticated, onUnlock, onBack }: UnlockScreen
         >
           ★ Founding member offer — limited availability
         </div>
-        <h2 className="mb-2.5 text-xl font-extrabold">Upload your listing. Get your fix brief in 15 minutes.</h2>
+        <h2 className="mb-2.5 text-xl font-extrabold">Free trial: one funnel piece to iterate on.</h2>
         <ul className="mb-4 space-y-1.5">
           {BENEFITS.map((b) => (
             <li key={b} className="flex gap-2.5 text-sm" style={{ color: 'rgba(255,255,255,.86)' }}>
@@ -107,7 +110,7 @@ export function UnlockScreen({ isAuthenticated, onUnlock, onBack }: UnlockScreen
           className="flex w-full items-center justify-center gap-2 rounded-[10px] px-5 py-3 text-sm font-extrabold"
           style={{ background: PS_COLORS.gold, color: PS_COLORS.navy }}
         >
-          {isAuthenticated ? 'Claim my founding price' : 'Create a free account to continue'}
+          {isAuthenticated ? 'Start my free trial' : 'Create a free account to start'}
           <ArrowRight className="h-4 w-4" />
         </button>
         <div
@@ -115,15 +118,15 @@ export function UnlockScreen({ isAuthenticated, onUnlock, onBack }: UnlockScreen
           style={{ borderColor: 'rgba(255,255,255,.14)', color: 'rgba(255,255,255,.6)' }}
         >
           {isAuthenticated
-            ? '★ Founding members lock the lowest price we will ever offer. This offer is for a limited time only.'
-            : "★ Alpha: no payment is taken — you'll create a free account and go straight to your analysis."}
+            ? '★ Founding members lock the lowest price we will ever offer. Alpha: no payment is taken — your free trial starts now.'
+            : "★ Alpha: no payment is taken — create a free account and your trial starts now."}
         </div>
       </div>
 
       <div className="mt-4 flex justify-between">
         <GhostButton onClick={onBack}>
           <ArrowLeft className="h-4 w-4" />
-          Back to score
+          Back to my fix
         </GhostButton>
         <span />
       </div>

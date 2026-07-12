@@ -47,9 +47,9 @@ serve(async (req) => {
       .select()
 
     if (error) {
-      console.error('Error saving beta comment:', error)
+      console.error('Error saving beta comment:', error.message)
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: 'Unable to save comment. Please try again.' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -57,7 +57,8 @@ serve(async (req) => {
       )
     }
 
-    console.log('Beta comment saved successfully:', data)
+    // MF-5: don't log the saved row (comment text) — id only.
+    console.log('Beta comment saved successfully:', { id: data?.[0]?.id ?? null })
 
     return new Response(
       JSON.stringify({ success: true, data }),

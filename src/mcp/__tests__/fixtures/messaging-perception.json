@@ -1,0 +1,74 @@
+{
+  "message": "You're not buying a binder — you're buying the certainty your collection survives.",
+  "perceptions": [
+    {
+      "avatar_id": "av-maya",
+      "avatar_name": "Maya",
+      "message": "You're not buying a binder — you're buying the certainty your collection survives.",
+      "dimensions": {
+        "vocabulary_fit": {
+          "verdict": "lands",
+          "evidence": "Maya repeatedly says 'my collection' and 'protect' in her reviews — the message speaks her words."
+        },
+        "job_resonance": {
+          "verdict": "lands",
+          "evidence": "Her emotional job is 'proof I'm a serious collector'; 'certainty your collection survives' hits it directly."
+        },
+        "trigger_hit": {
+          "verdict": "partial",
+          "evidence": "Her named trigger is the 'first chase pull', but the message stays generic about the moment."
+        },
+        "objection_handling": {
+          "verdict": "lands",
+          "evidence": "Pre-empts her 'will it actually keep cards safe?' hesitation with 'survives'."
+        }
+      },
+      "overall_verdict": "partial",
+      "provoked_objections": ["Is the leather genuine or just coated?"],
+      "adjustments": ["Name the 'first chase pull' moment in the hero line — test against Maya's trigger."],
+      "analysable": true
+    },
+    {
+      "avatar_id": "av-rico",
+      "avatar_name": "Rico",
+      "message": "You're not buying a binder — you're buying the certainty your collection survives.",
+      "dimensions": {
+        "vocabulary_fit": {
+          "verdict": "partial",
+          "evidence": "Rico talks about 'clients' inventory', not 'my collection' — the framing is close but off."
+        },
+        "job_resonance": {
+          "verdict": "misses",
+          "evidence": "His functional job is managing collections FOR clients; 'your collection' reads as not-for-him."
+        },
+        "trigger_hit": {
+          "verdict": "partial",
+          "evidence": "His trigger is a client handoff deadline, which the message never touches."
+        },
+        "objection_handling": {
+          "verdict": "lands",
+          "evidence": "'Survives' answers his durability-for-resale concern from review verbatims."
+        }
+      },
+      "overall_verdict": "misses",
+      "provoked_objections": ["Sounds too premium — is this priced for a working VA's budget?"],
+      "adjustments": ["Lead with 'protect the collection you manage for clients' to hit Rico's functional job."],
+      "analysable": true
+    },
+    {
+      "avatar_id": "av-casual",
+      "avatar_name": "Casual Collector",
+      "message": "You're not buying a binder — you're buying the certainty your collection survives.",
+      "dimensions": {
+        "vocabulary_fit": { "verdict": "misses", "evidence": "" },
+        "job_resonance": { "verdict": "misses", "evidence": "" },
+        "trigger_hit": { "verdict": "misses", "evidence": "" },
+        "objection_handling": { "verdict": "misses", "evidence": "" }
+      },
+      "overall_verdict": "misses",
+      "provoked_objections": [],
+      "adjustments": [],
+      "analysable": false
+    }
+  ]
+}

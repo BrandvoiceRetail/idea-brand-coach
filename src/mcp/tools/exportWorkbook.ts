@@ -97,10 +97,14 @@ export async function getCurrentMarketingAudit(): Promise<MarketingAuditRowLite 
 export interface UploadResult {
   ok: boolean;
   path?: string;
+  /** A time-limited signed URL the user can click to download the file (private bucket). */
+  signedUrl?: string;
   note?: string;
 }
 
 const STORAGE_BUCKET = 'workbooks';
+/** Download links live for 7 days — long enough for the user to grab the file. */
+const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export async function uploadWorkbook(objectPath: string, buffer: Buffer): Promise<UploadResult> {
   try {
@@ -114,7 +118,12 @@ export async function uploadWorkbook(objectPath: string, buffer: Buffer): Promis
     if (error || !data) {
       return { ok: false, note: error?.message ?? `Storage bucket '${STORAGE_BUCKET}' unavailable` };
     }
-    return { ok: true, path: data.path };
+    // The bucket is private, so a bare path isn't downloadable — mint a signed URL
+    // (RLS-scoped to the caller) so the user has a clickable download link.
+    const { data: signed } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .createSignedUrl(data.path, SIGNED_URL_TTL_SECONDS);
+    return { ok: true, path: data.path, signedUrl: signed?.signedUrl };
   } catch (err) {
     return { ok: false, note: err instanceof Error ? err.message : 'storage upload degraded' };
   }
@@ -302,16 +311,20 @@ export function registerExportWorkbookTool(server: McpServer, deps?: Partial<Exp
           missing_count: result.missing.length,
           uploaded: !!result.uploaded,
         });
+        const downloadUrl = result.uploaded?.signedUrl ?? null;
         return {
           content: [
             {
               type: 'text' as const,
-              text: `Workbook ${which} exported to ${result.path} (sheets: ${result.sheets.join(', ')}).`,
+              text: downloadUrl
+                ? `Workbook ${which} is ready (sheets: ${result.sheets.join(', ')}).\n\n**Download it here** (link valid 7 days): ${downloadUrl}`
+                : `Workbook ${which} was generated (sheets: ${result.sheets.join(', ')}), but a download link could not be created${result.uploaded?.note ? ` — ${result.uploaded.note}` : ' (upload was not requested)'}. Ask me to export it again with upload enabled.`,
             },
           ],
           structuredContent: {
             ok: true,
             path: result.path,
+            download_url: downloadUrl,
             sheets: result.sheets,
             missing: result.missing,
             ...(result.uploaded ? { uploaded: result.uploaded } : {}),

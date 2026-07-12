@@ -8,8 +8,8 @@ on Supabase (Auth, Postgres, Edge Functions) and a LangChain RAG pipeline. Area-
 in local `AGENTS.md` files (see Child Areas below); this file holds what applies everywhere.
 
 Generic engineering standards (naming, function design, error handling, TDD, refactoring, SOLID) are
-**not restated here** — consult the shared guide via the `mango-tools` MCP server
-(`get_best_practice`, `get_checklist`, `read_guide`).
+**not restated here** — consult the shared guide via the Mango MCP server
+(`guide_read`, `guide_list`, `guide_checklist`).
 
 ## The 3-Layer Operating Model
 
@@ -43,6 +43,16 @@ doing it by hand. 90% accuracy per manual step compounds to ~59% over five steps
 ## Boundaries
 
 ### Always Do
+- **Store and resurface every user input.** Anything a user enters must be (1) persisted to a durable
+  RLS-scoped table the moment it is given (never left in transient component state), and (2) read back
+  at the points where it is useful — the right MCP tool/workflow step, the app UI (load-on-mount +
+  prefill), and the MCP-app panels. A field captured but never resurfaced is a bug even when nothing
+  throws. Full principle, the data register, and the per-field checklist:
+  [`docs/architecture/STORE_AND_RESURFACE.md`](docs/architecture/STORE_AND_RESURFACE.md).
+- **Register every new user-data table in `supabase/functions/_shared/gdprData.ts`** (GDPR
+  export/erasure registry) and redeploy the `gdpr-export`/`gdpr-delete-account` fns in the same
+  change — an unlisted table breaks the right to erasure. Compliance home:
+  [`docs/compliance/GDPR_COMPLIANCE.md`](docs/compliance/GDPR_COMPLIANCE.md).
 - Use the Supabase client from `src/integrations/supabase/client.ts`; type queries with the generated
   `src/integrations/supabase/types.ts` (auto-generated — never hand-edit).
 - Handle Supabase errors gracefully: log details to console, surface a `sonner` toast with a clear,
@@ -63,7 +73,7 @@ doing it by hand. 90% accuracy per manual step compounds to ~59% over five steps
 - Use `any` (use `unknown` + type guards).
 - Hand-edit `src/integrations/supabase/types.ts` (regenerate it).
 - Log sensitive user data.
-- Bypass `useApiFetch`/service-layer patterns with raw `fetch` scattered in components.
+- Make raw `fetch` calls to Supabase Edge Functions from components — go through `supabase.functions.invoke` and the service layer.
 
 ## Chosen Tools
 
@@ -77,7 +87,7 @@ Check here before proposing a new library; run a duplication check first.
 | Forms | React Hook Form + Zod | validation via Zod schemas |
 | State | React Context (`BrandContext`) | avoid prop drilling; check before adding global state |
 | Backend | Supabase (Auth, Postgres, Edge Functions) | client in `src/integrations/supabase/` |
-| AI / RAG | LangChain in `idea-framework-consultant` edge function | Claude-based consultant + embeddings |
+| AI / RAG | Anthropic Messages API in `idea-framework-consultant-claude` edge fn | Direct streaming to Claude Sonnet 4.6; no LangChain |
 | Notifications | `sonner` toasts | user-facing errors only |
 | Testing | Vitest + @testing-library/react | see Testing Protocol |
 
@@ -104,6 +114,12 @@ Conventional Commits (`type(scope): subject`). Branches: `main` (production), `f
 ```
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+**`main` is the single source of truth for BOTH the frontend SPA and the brand-coach MCP gateway**
+(unified 2026-06-28; the old `mcp-oauth` branch now just tracks `main` — do not reintroduce the split).
+Commit MCP changes to `main`, deploy both from `main`. Deploys run **manually from a local machine**
+(CI can't reach the Lightsail box) — full runbook + the `npm run typecheck:mcp` gate are in
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Permission Profiles
 
@@ -174,4 +190,4 @@ The 60+ `.claude/commands/bmad-*` BMAD workflow commands coexist with these shar
 Migrated from the former monolithic `CLAUDE.md` to the `CLAUDE.md → @AGENTS.md` hierarchy
 (originally 2026-05-25 on worktree branches; harvested into the main lineage 2026-06-07).
 Convention reference: `AGENT_INSTRUCTION_HIERARCHY.md` in the shared best-practices guide
-(via `mango-tools` MCP `read_guide`).
+(via the Mango MCP `guide_read`).

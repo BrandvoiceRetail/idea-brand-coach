@@ -80,7 +80,7 @@ async function main(): Promise<void> {
   console.log(`BEFORE: current ${KIND} id=${beforeId} (content ${beforeContent.length} chars)`);
 
   // --- REGENERATE: run S1 on the SAME avatar via the MCP build_avatar_stage tool. ---
-  const built = createServer(cfg);
+  const built = await createServer(cfg);
   const server: McpServer = built.server;
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'r1-proof', version: '0.0.0' });

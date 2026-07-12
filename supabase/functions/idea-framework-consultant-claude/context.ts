@@ -41,6 +41,94 @@ export const AVATAR_SCOPED_CATEGORIES = new Set(['avatar', 'insights']);
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Inline-document budget — keeps freshly-uploaded docs in context without
+ *  blowing the token window. RAG retrieval still handles deep/bulk lookup. */
+const DOC_PER_DOC_CHARS = 4000;
+const DOC_TOTAL_CHARS = 12000;
+
+/** Minimal shape of an uploaded-document record as forwarded from the client
+ *  (`metadata.userDocuments`). Only the fields we read are typed. */
+interface UploadedDocLike {
+  filename?: string;
+  status?: string;
+  extraction_status?: string;
+  extracted_content?: string;
+}
+
+/**
+ * Build a per-user context block from the documents the client forwarded.
+ *
+ * Why this exists: the consultant used to set a "you have access to uploaded
+ * documents" flag from the array LENGTH alone, then rely solely on RAG
+ * retrieval for the actual text. When the user's message didn't semantically
+ * match the doc (e.g. "is that doc ready yet?"), or the doc was still embedding,
+ * retrieval returned nothing — so the model claimed it "only saw a notification"
+ * and asked the user to paste the content. The extracted text is already in the
+ * payload, so inject it directly (bounded), and name still-processing docs so
+ * the model can say "still processing, I'll follow up" instead of asking for a
+ * paste.
+ *
+ * Returns `{ context, hasReady, processingNames }`. `context` is '' when there's
+ * nothing to add. Docs arrive newest-first; we keep that order so the most
+ * recently uploaded content wins the budget.
+ */
+export function buildUploadedDocumentsContext(
+  userDocuments: unknown
+): { context: string; hasReady: boolean; processingNames: string[] } {
+  if (!Array.isArray(userDocuments) || userDocuments.length === 0) {
+    return { context: '', hasReady: false, processingNames: [] };
+  }
+
+  const docs = userDocuments as UploadedDocLike[];
+  const PROCESSING = new Set(['uploading', 'processing', 'indexing']);
+
+  const readySections: string[] = [];
+  const processingNames: string[] = [];
+  let remaining = DOC_TOTAL_CHARS;
+
+  for (const doc of docs) {
+    const name = (doc?.filename || 'document').toString();
+    const content = typeof doc?.extracted_content === 'string'
+      ? doc.extracted_content.trim()
+      : '';
+
+    if (content) {
+      if (remaining <= 0) continue; // budget spent — RAG covers the rest
+      const cap = Math.min(DOC_PER_DOC_CHARS, remaining);
+      const excerpt = content.length > cap
+        ? `${content.slice(0, cap)}\n…[truncated — ask about a specific section for more]`
+        : content;
+      remaining -= excerpt.length;
+      readySections.push(`### ${name}\n${excerpt}`);
+    } else if (
+      PROCESSING.has((doc?.status || '').toString()) ||
+      ['pending', 'extracting'].includes((doc?.extraction_status || '').toString())
+    ) {
+      processingNames.push(name);
+    }
+  }
+
+  const parts: string[] = [];
+  if (readySections.length > 0) {
+    parts.push(
+      `UPLOADED DOCUMENTS (the user's own materials — reference these directly):\n\n${readySections.join('\n\n')}`
+    );
+  }
+  if (processingNames.length > 0) {
+    parts.push(
+      `DOCUMENTS STILL PROCESSING (content NOT yet available): ${processingNames.join(', ')}.\n` +
+      `If the user asks about these, tell them the document is still processing and you'll fold it in ` +
+      `as soon as it's ready. Do NOT ask the user to paste the content.`
+    );
+  }
+
+  return {
+    context: parts.join('\n\n---\n\n'),
+    hasReady: readySections.length > 0,
+    processingNames,
+  };
+}
+
 /** Minimal shape of a KB row this retrieval surface reads. */
 interface KbRow {
   field_identifier: string;

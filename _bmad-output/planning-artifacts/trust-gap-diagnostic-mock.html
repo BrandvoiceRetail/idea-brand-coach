@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDEA Brand Coach — Trust Gap Diagnostic (dark liquid glass)</title>
+<!--
+  PROTOTYPE — visual & interaction language for the Trust Gap diagnostic.
+  Reference: ~/Downloads/dashboard.html (Mango "liquid glass") craft, translated to
+  Trevor's DARK v23 register (blk #111111 · wrm #F5F4F0 · gld #D4960A · gld-lt #FEF5DC).
+  Sequence follows IDEA-APP-ENTRY-001 v1.1: Recognition → Diagnosis → Prescription →
+  the four questions → results (Component 0 first). Copy is illustrative, brief-level.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blk:#111111; --blk-2:#161412; --wrm:#F5F4F0; --gld:#D4960A; --gld-lt:#FEF5DC;
+  --ink:#F5F4F0; --ink-dim:rgba(245,244,240,.85); --ink-faint:rgba(245,244,240,.64);
+  --hair:rgba(245,244,240,.10); --hair-2:rgba(245,244,240,.16);
+  --glass:linear-gradient(155deg,rgba(32,32,35,.64),rgba(11,11,13,.46));
+  --glass-strong:linear-gradient(155deg,rgba(40,40,44,.80),rgba(11,11,13,.58));
+  --radius:22px; --radius-sm:14px; --radius-lg:30px;
+  --font-display:"Inter",system-ui,sans-serif; --font-body:"Inter",system-ui,sans-serif;
+  --maxw:460px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:var(--font-body); color:var(--ink); background:var(--blk);
+  line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; min-height:100vh;
+}
+/* ambient: low gold glow blobs behind everything — the glass has something luminous to refract */
+body::before{
+  content:""; position:fixed; inset:-20vmax; z-index:-2; pointer-events:none;
+  background:
+    radial-gradient(34vmax 34vmax at 16% 4%, rgba(212,150,10,.09), transparent 60%),
+    radial-gradient(38vmax 38vmax at 88% 12%, rgba(212,150,10,.05), transparent 62%),
+    radial-gradient(46vmax 46vmax at 70% 98%, rgba(180,200,230,.04), transparent 62%);
+  filter:saturate(112%);
+}
+body::after{ /* cool top light so the black glass has a crisp reflection */
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(90vmax 60vmax at 50% -18%, rgba(214,224,240,.06), transparent 55%),
+    radial-gradient(120vmax 80vmax at 50% -10%, rgba(212,150,10,.03), transparent 55%);
+}
+/* cinematic recognition backdrop — the chasm behind the glass (Movement 1 only) */
+#cine-bg{position:fixed; top:0; bottom:0; left:50%; transform:translateX(-50%); width:min(100vw,500px); z-index:0; opacity:0; pointer-events:none; transition:opacity .7s ease;
+  background:#0B0B0B url('idea-cliff-hero.jpg') no-repeat center center; background-size:contain;}
+#cine-bg::after{content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(8,8,9,.50) 0%, rgba(8,8,9,.28) 36%, rgba(8,8,9,.9) 100%);}
+body.show-cine #cine-bg{opacity:1}
+h1,h2,h3,.display{font-family:var(--font-display); font-weight:700; letter-spacing:-.02em; line-height:1.1; margin:0}
+p{margin:0 0 1em}
+
+/* ---- dark liquid glass ---- */
+.glass{
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(26px) saturate(150%) contrast(1.04); backdrop-filter:blur(26px) saturate(150%) contrast(1.04);
+  border:1px solid var(--hair);
+  box-shadow:0 18px 50px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.20), inset 0 -1px 0 rgba(0,0,0,.4);
+  border-radius:var(--radius); position:relative; overflow:hidden;
+}
+.glass-strong{
+  background:var(--glass-strong);
+  -webkit-backdrop-filter:blur(38px) saturate(165%) contrast(1.05); backdrop-filter:blur(38px) saturate(165%) contrast(1.05);
+  border:1px solid var(--hair-2);
+  box-shadow:0 26px 70px rgba(0,0,0,.66), 0 0 34px rgba(212,150,10,.06), inset 0 1px 0 rgba(255,255,255,.26), inset 0 -1px 0 rgba(0,0,0,.45);
+  border-radius:var(--radius-lg); position:relative; overflow:hidden;
+}
+/* diagonal specular streak — the crisp "wet glass" tell */
+.sheen::before{
+  content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+  background:linear-gradient(135deg, rgba(255,255,255,.30) 0%, rgba(255,255,255,.07) 12%, rgba(255,255,255,0) 28%);
+  mix-blend-mode:screen;
+}
+/* glossy top reflection — light pooling across the surface */
+.sheen::after{
+  content:""; position:absolute; left:0; right:0; top:0; height:44%; pointer-events:none; border-radius:inherit;
+  background:linear-gradient(to bottom, rgba(255,255,255,.09), rgba(255,255,255,0));
+  mix-blend-mode:screen;
+}
+
+/* stage */
+.stage{max-width:var(--maxw); margin:0 auto; padding:28px 20px 40px; min-height:100vh;
+  display:flex; flex-direction:column; justify-content:center; position:relative; z-index:1}
+.brandline{position:fixed; top:18px; left:0; right:0; text-align:center; z-index:5;
+  font-size:.7rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-faint)}
+
+/* views */
+.view{display:none; animation:viewIn .5s cubic-bezier(.22,.8,.3,1)}
+.view.active{display:block}
+@keyframes viewIn{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+
+.eyebrow{font-size:.72rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--gld); margin-bottom:14px}
+
+/* movement 1 — recognition (the mirror) */
+.mirror{padding:34px 26px}
+.mirror .m-lead{font-family:var(--font-display); font-weight:700; font-size:1.5rem; line-height:1.2; letter-spacing:-.02em; color:var(--ink); margin:0 0 .7em}
+.mirror .m-lead .soft{color:var(--ink-dim)}
+.mirror .m-tail{color:var(--ink-dim); font-size:1rem; margin:0}
+
+/* buttons */
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:.55em; width:100%;
+  font-family:var(--font-body); font-weight:600; font-size:1rem; cursor:pointer;
+  padding:.95em 1.3em; border-radius:999px; border:1px solid transparent;
+  transition:transform .16s cubic-bezier(.22,.8,.3,1), box-shadow .22s, background .2s}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn-gold{background:linear-gradient(135deg,#E7A412,#B97D06); color:#1a1206;
+  box-shadow:0 10px 28px rgba(212,150,10,.34), inset 0 1px 0 rgba(254,245,220,.5)}
+.btn-gold:hover{box-shadow:0 16px 40px rgba(212,150,10,.46)}
+.btn-ghost{background:rgba(245,244,240,.05); color:var(--ink); border-color:var(--hair-2);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px)}
+.btn-ghost:hover{background:rgba(245,244,240,.10)}
+.cta-wrap{margin-top:26px; display:grid; gap:12px}
+.descriptor{margin-top:16px; text-align:center; font-size:.82rem; color:var(--ink-faint); line-height:1.5}
+
+/* nudge appears after a beat on the recognition screen */
+.nudge{margin-top:30px; text-align:center; opacity:0; animation:fadeUp .6s ease forwards; animation-delay:1.5s}
+@keyframes fadeUp{to{opacity:1}}
+.nudge .btn{max-width:280px; margin:0 auto}
+
+/* diagnosis / prescription body */
+.body-card{padding:30px 26px}
+.body-card .lede{font-size:1.04rem; color:var(--ink-dim); margin-bottom:1.1em; line-height:1.65}
+.name-line{font-family:var(--font-display); font-weight:600; font-size:1.5rem; color:var(--ink);
+  border-left:2px solid var(--gld); padding-left:16px; margin:.2em 0 .1em}
+.name-line .gld{color:var(--gld)}
+.cred{margin-top:20px; padding-top:18px; border-top:1px solid var(--hair);
+  font-size:.86rem; color:var(--ink-faint); line-height:1.6}
+
+/* ---- diagnostic (four questions) ---- */
+.dx-head{margin-bottom:18px}
+.dx-sub{font-size:.76rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--gld); margin-bottom:10px}
+.dx-instr{font-family:var(--font-display); font-weight:500; font-size:1.18rem; line-height:1.34; color:var(--ink)}
+/* slim gold progress hairline */
+.prog{height:3px; border-radius:999px; background:rgba(245,244,240,.08); overflow:hidden; margin:18px 0 22px}
+.prog > i{display:block; height:100%; width:25%; border-radius:999px;
+  background:linear-gradient(90deg,#B97D06,#E7A412); box-shadow:0 0 12px rgba(212,150,10,.5);
+  transition:width .5s cubic-bezier(.22,.8,.3,1)}
+.q-card{padding:26px 24px}
+.q-count{font-size:.74rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:8px}
+.q-text{font-family:var(--font-display); font-weight:500; font-size:1.34rem; line-height:1.28; color:var(--ink); margin-bottom:6px}
+.q-hint{font-size:.86rem; color:var(--ink-dim); margin-bottom:20px}
+.scale{display:grid; grid-template-columns:repeat(5,1fr); gap:9px; margin-bottom:14px}
+.scale button{appearance:none; cursor:pointer; font-family:var(--font-display); font-weight:600; font-size:1.15rem;
+  color:var(--ink); padding:.8em 0; border-radius:14px; border:1px solid var(--hair-2);
+  background:rgba(245,244,240,.04); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  transition:transform .14s, background .18s, box-shadow .2s, border-color .18s}
+.scale button:hover{transform:translateY(-3px); background:rgba(212,150,10,.12); border-color:rgba(212,150,10,.4)}
+.scale button.sel{background:linear-gradient(135deg,#E7A412,#B97D06); color:#1a1206; border-color:transparent;
+  box-shadow:0 10px 26px rgba(212,150,10,.4), inset 0 1px 0 rgba(254,245,220,.5)}
+.scale-ends{display:flex; justify-content:space-between; font-size:.74rem; color:var(--ink-faint)}
+
+/* ---- results ---- */
+.r-hero{padding:34px 26px; text-align:left}
+.r-hero .r-eyebrow{font-size:.72rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--gld); margin-bottom:16px}
+/* Component 0 — the hero, large display serif, faint gold glow */
+.r-hero .c0{font-family:var(--font-display); font-weight:700; font-size:1.6rem; line-height:1.22; letter-spacing:-.02em; color:var(--ink);
+  text-shadow:0 0 26px rgba(212,150,10,.12)}
+.r-hero .c0 .gld{color:var(--gld)}
+.r-sub{font-size:.9rem; color:var(--ink-dim); margin-top:16px}
+
+/* score recedes BELOW the finding */
+.score-card{padding:22px 24px; margin-top:16px}
+.score-top{display:flex; align-items:baseline; gap:12px; margin-bottom:18px}
+.score-num{font-family:var(--font-display); font-weight:600; font-size:2.5rem; line-height:1; color:var(--ink)}
+.score-num small{font-size:1.1rem; color:var(--ink-faint); font-weight:500}
+.score-lab{font-size:.74rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint)}
+.pillars{display:grid; gap:11px}
+.pillar{display:grid; grid-template-columns:108px 1fr 36px; align-items:center; gap:10px}
+.pillar .p-name{font-size:.82rem; color:var(--ink-dim)}
+.pillar .p-track{height:8px; border-radius:999px; background:rgba(245,244,240,.07); overflow:hidden}
+.pillar .p-fill{height:100%; border-radius:999px; background:linear-gradient(90deg,#8a6512,#E7A412);
+  width:0; transition:width .9s cubic-bezier(.22,.8,.3,1)}
+.pillar .p-fill.weak{background:linear-gradient(90deg,#7a3b2e,#c4623f)}
+.pillar .p-val{font-size:.8rem; color:var(--ink-faint); text-align:right; font-variant-numeric:tabular-nums}
+
+.upgrade{padding:24px 24px; margin-top:16px}
+.upgrade .u-line{font-size:.96rem; color:var(--ink-dim); margin-bottom:16px; line-height:1.6}
+.upgrade .u-line b{color:var(--ink)}
+
+/* defend loop */
+.loop-card{padding:22px 24px; margin-top:16px}
+.loop{display:flex; align-items:center; justify-content:center; gap:7px; flex-wrap:wrap; margin-bottom:14px}
+.loop .node{font-size:.74rem; font-weight:600; color:var(--ink-dim); padding:.5em .8em; border-radius:999px;
+  background:rgba(245,244,240,.05); border:1px solid var(--hair)}
+.loop .node.now{color:var(--gld); border-color:rgba(212,150,10,.4); background:rgba(212,150,10,.1)}
+.loop .arr{color:var(--ink-faint); font-size:.8rem}
+.loop-note{font-size:.84rem; color:var(--ink-faint); text-align:center; line-height:1.55}
+
+/* footer descriptor + restart */
+.foot{margin-top:26px; text-align:center}
+.foot .restart{appearance:none; background:transparent; border:0; cursor:pointer; color:var(--ink-faint);
+  font-family:var(--font-body); font-size:.8rem; text-decoration:underline; text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--gld); outline-offset:3px; border-radius:8px}
+
+@media (min-width:480px){ .stage{padding-top:40px} }
+</style>
+</head>
+<body class="show-cine">
+<div id="cine-bg"></div>
+<div class="brandline">IDEA Brand Coach</div>
+
+<div class="stage">
+
+  <!-- ============ MOVEMENT 1 — RECOGNITION ============ -->
+  <section class="view active" id="v-recognition">
+    <div class="glass-strong sheen mirror">
+      <p class="m-lead">
+        You have looked at your listing more times than you can count.
+        <span class="soft">You have changed the images, the headline, the bullets. Maybe the price.
+        You have asked the AI tools and used what they gave you.</span>
+      </p>
+      <p class="m-lead">And the number is still wrong.</p>
+      <p class="m-tail">Not dramatically. Persistently, stubbornly below where it should be for the
+        product you have built — and nobody has been able to tell you why.</p>
+    </div>
+    <div class="nudge">
+      <button class="btn btn-ghost" onclick="go('v-diagnosis')">Show me why ↓</button>
+    </div>
+  </section>
+
+  <!-- ============ MOVEMENT 2 — DIAGNOSIS ============ -->
+  <section class="view" id="v-diagnosis">
+    <div class="glass sheen body-card">
+      <p class="lede">The reason the standard fixes do not work is that they address what your customer
+        <em>says</em> about your brand. What decides whether they buy is something else: the quiet check
+        their brain runs in the seconds before deciding — and it is not reading your bullet points.
+        It is asking one question about trust, and something in your brand is failing it.</p>
+      <p class="name-line">That gap has a name. It is a <span class="gld">Trust Gap</span>. And it is measurable.</p>
+    </div>
+    <div class="cta-wrap">
+      <button class="btn btn-gold" onclick="go('v-prescription')">Go on →</button>
+    </div>
+  </section>
+
+  <!-- ============ MOVEMENT 3 — PRESCRIPTION ============ -->
+  <section class="view" id="v-prescription">
+    <div class="glass sheen body-card">
+      <p class="lede">The IDEA Brand Coach finds the gap. It reads the emotional state your customer is in
+        when they land on your listing and runs a check no other tool runs — not what they say, but what
+        their language reveals about the part of the brain making the decision. Then it tells you the one
+        thing to change.</p>
+      <p class="cred">Built on 35 years of commercial brand strategy across hundreds of real brands, and
+        grounded in the published neuroscience of Harvard researchers who have spent their careers on exactly
+        this: why customers almost buy, and then do not.</p>
+    </div>
+    <div class="cta-wrap">
+      <button class="btn btn-gold" onclick="go('v-diagnostic')">Find my Trust Gap</button>
+      <p class="descriptor">The IDEA Brand Coach reads what your customer's brain is deciding about your
+        brand and keeps you one step ahead of the gap.</p>
+    </div>
+  </section>
+
+  <!-- ============ THE FOUR QUESTIONS ============ -->
+  <section class="view" id="v-diagnostic">
+    <div class="dx-head">
+      <div class="dx-sub">Four questions · each looks at a dimension of the gap</div>
+      <div class="dx-instr">Look at your listing as a first-time shopper would. Score what you actually
+        see, not what you intended to show.</div>
+    </div>
+    <div class="prog"><i id="progbar"></i></div>
+    <div class="glass sheen q-card">
+      <div class="q-count" id="qcount">Question 1 of 4</div>
+      <div class="q-text" id="qtext"></div>
+      <div class="q-hint" id="qhint"></div>
+      <div class="scale" id="scale">
+        <button onclick="answer(1)">1</button>
+        <button onclick="answer(2)">2</button>
+        <button onclick="answer(3)">3</button>
+        <button onclick="answer(4)">4</button>
+        <button onclick="answer(5)">5</button>
+      </div>
+      <div class="scale-ends" id="qends"></div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section class="view" id="v-results">
+    <!-- Component 0 — the hero (finding before number, AC#5) -->
+    <div class="glass-strong sheen r-hero">
+      <div class="r-eyebrow">What we can already see</div>
+      <div class="c0">Your buyer arrives carrying doubt from products that promised and let them down —
+        and your listing speaks to the <span class="gld">confident</span> shopper, not the
+        <span class="gld">wary one</span> deciding right now.</div>
+      <div class="r-sub">That is the gap. Here is where it sits.</div>
+    </div>
+
+    <!-- score recedes below the finding -->
+    <div class="glass sheen score-card">
+      <div class="score-top">
+        <div class="score-num">54<small>/100</small></div>
+        <div class="score-lab">Trust&nbsp;Gap<br>Score</div>
+      </div>
+      <div class="pillars">
+        <div class="pillar"><div class="p-name">Insight</div><div class="p-track"><div class="p-fill" data-w="48%"></div></div><div class="p-val">12/25</div></div>
+        <div class="pillar"><div class="p-name">Distinctive</div><div class="p-track"><div class="p-fill" data-w="72%"></div></div><div class="p-val">18/25</div></div>
+        <div class="pillar"><div class="p-name">Empathetic</div><div class="p-track"><div class="p-fill weak" data-w="32%"></div></div><div class="p-val">8/25</div></div>
+        <div class="pillar"><div class="p-name">Authentic</div><div class="p-track"><div class="p-fill" data-w="64%"></div></div><div class="p-val">16/25</div></div>
+      </div>
+    </div>
+
+    <!-- upgrade -->
+    <div class="glass sheen upgrade">
+      <p class="u-line">The score shows you <b>where</b> the gap is. The full analysis shows you what is
+        causing it in <b>your</b> listing, in the language of <b>your</b> customers. That is where the fix
+        comes from.</p>
+      <button class="btn btn-gold" onclick="alert('→ Upload flow (prototype)')">Upload my listing and find the fix</button>
+    </div>
+
+    <!-- defend loop -->
+    <div class="glass sheen loop-card">
+      <div class="loop">
+        <span class="node now">Diagnose</span><span class="arr">→</span>
+        <span class="node">Analyse</span><span class="arr">→</span>
+        <span class="node">Fix</span><span class="arr">→</span>
+        <span class="node">Re-measure</span><span class="arr">→</span>
+        <span class="node">Defend</span>
+      </div>
+      <p class="loop-note">Your Trust Gap Score is the start of the loop, not the end of it.
+        The gap closes. Competitors move. The engine watches both.</p>
+    </div>
+
+    <div class="foot">
+      <button class="restart" onclick="restart()">↺ Replay the prototype</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const views = ['v-recognition','v-diagnosis','v-prescription','v-diagnostic','v-results'];
+function go(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  document.body.classList.toggle('show-cine', id==='v-recognition');
+  window.scrollTo({top:0, behavior:'instant'});
+  if(id==='v-diagnostic'){ qIndex=0; renderQ(); }
+  if(id==='v-results'){ setTimeout(fillPillars, 120); }
+}
+
+/* four questions (illustrative; real wording carries from Fix 1) */
+const QS = [
+  {t:"Does your hero image speak to the emotional moment your buyer is in?",
+   h:"Not how polished it is — whether it meets a wary shopper where they are.",
+   ends:["All specs & polish","Speaks to the moment"]},
+  {t:"Is what makes you different obvious in the first few seconds?",
+   h:"Distinctiveness shown, not explained.",
+   ends:["Looks like the others","Unmistakably yours"]},
+  {t:"Would a sceptical first-time buyer feel understood here?",
+   h:"The doubt they arrive carrying — is it acknowledged?",
+   ends:["Talks at them","Feels seen"]},
+  {t:"Do your claims read as earned, or as marketing?",
+   h:"Trust the brain will actually accept.",
+   ends:["Sounds like a pitch","Reads as true"]},
+];
+let qIndex=0; const answers=[];
+function renderQ(){
+  const q=QS[qIndex];
+  document.getElementById('qcount').textContent='Question '+(qIndex+1)+' of 4';
+  document.getElementById('qtext').textContent=q.t;
+  document.getElementById('qhint').textContent=q.h;
+  document.getElementById('qends').innerHTML='<span>1 · '+q.ends[0]+'</span><span>'+q.ends[1]+' · 5</span>';
+  document.getElementById('progbar').style.width=((qIndex)/4*100+8)+'%';
+  document.querySelectorAll('#scale button').forEach(b=>b.classList.remove('sel'));
+}
+function answer(v){
+  answers[qIndex]=v;
+  const btns=document.querySelectorAll('#scale button'); btns.forEach(b=>b.classList.remove('sel'));
+  btns[v-1].classList.add('sel');
+  document.getElementById('progbar').style.width=((qIndex+1)/4*100)+'%';
+  setTimeout(()=>{ if(qIndex<3){ qIndex++; renderQ(); } else { go('v-results'); } }, 320);
+}
+function fillPillars(){ document.querySelectorAll('.p-fill').forEach(f=>f.style.width=f.dataset.w); }
+function restart(){ qIndex=0; answers.length=0; go('v-recognition'); }
+</script>
+</body>
+</html>

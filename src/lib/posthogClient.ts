@@ -17,6 +17,8 @@
 
 import posthog from 'posthog-js';
 
+import { hasAnalyticsConsent, onConsentChange } from './consent';
+
 /** Every Alpha funnel + error event, snake_case, grouped by journey. */
 export type AlphaEventName =
   | 'beta_welcome_viewed'
@@ -91,6 +93,9 @@ export type AlphaEventName =
   | 'funnel_fix_started'
   | 'funnel_test_recorded'
   | 'funnel_coverage_viewed'
+  // Content generation (Pixii images / Claude copy) per funnel piece.
+  | 'funnel_content_generated'
+  | 'funnel_content_saved'
   // User-perceived chat latency (TTFT + total). PostHog GeoIP gives per-country slicing.
   | 'chat_response_latency'
   // Competitor-Agents — per-touchpoint competitor analysis + Brand Defense.
@@ -107,11 +112,157 @@ export type AlphaEventName =
   // result shape only — never review text, listing copy, or PII.
   | 'forensic_analysis_started'
   | 'forensic_analysis_completed'
+  // Forensic AVATAR build (useForensicAvatarBuild — the 4-stage s1–s4 pipeline,
+  // the primary v2 avatar-creation path). Start / completion / failure. Stage +
+  // booleans only, never extracted content.
+  | 'forensic_build_started'
+  | 'forensic_build_completed'
+  | 'forensic_build_failed'
   // Problem-Solver /v2/diagnostic 8-screen flow — step advance through the
   // Diagnose → Unlock → Upload → Analyse → Customer → Fix → Stay-ahead → In-Claude
   // funnel. Step index + name + self-report score only — never PII or the ASIN value.
   | 'problem_solver_step_viewed'
-  | 'problem_solver_unlock_gated';
+  | 'problem_solver_unlock_gated'
+  // /v4 surface — the Diagnose → Analyse → Fix → Re-measure → Defend spine.
+  // Page-level (stage viewed / gate blocked / advanced) + per-screen funnel
+  // events. Registered here so the compiler guards every emitted name (no casts).
+  // Post-signup onboarding CHOICE screen — which path the user takes from the
+  // fork (connector = primary/recommended, in-app megaprompt = secondary).
+  | 'v4_onboard_choice_viewed'
+  | 'v4_onboard_choice_connector'
+  | 'v4_onboard_choice_in_app'
+  // Connector-setup guide — add the Brand Coach connector in Claude/ChatGPT +
+  // Windsor + the two pasteable prompts. Copy outcomes carry a `target`/`case`
+  // slug only, never the copied text; `done` fires on advance to the funnel.
+  | 'v4_connector_setup_viewed'
+  | 'v4_connector_url_copied'
+  | 'v4_connector_prompt_copied'
+  | 'v4_connector_setup_done'
+  | 'v4_onboarding_stage_viewed'
+  | 'v4_onboarding_read_back_started'
+  // Loop-1 inline gap-fill — the user answers a genuinely-empty context slot.
+  | 'v4_onboarding_gap_answered'
+  | 'v4_onboarding_findings_confirmed'
+  | 'v4_onboarding_findings_edited'
+  | 'v4_onboarding_advanced_to_diagnose'
+  | 'v4_diagnose_run_diagnostic_clicked'
+  | 'v4_diagnose_stage_viewed'
+  // Already-diagnosed recap: a returning/MCP-onboarded user with a saved Trust Gap
+  // is offered "Continue to Fix" instead of restarting the diagnostic.
+  | 'v4_diagnose_already_done'
+  | 'v4_diagnose_skip_to_fix'
+  | 'v4_diagnose_rerun'
+  | 'v4_analyse_stage_viewed'
+  | 'v4_analyse_gate_blocked'
+  | 'v4_analyse_advanced_to_fix'
+  | 'v4_analyse_run_started'
+  | 'v4_analyse_run_completed'
+  | 'v4_analyse_run_failed'
+  | 'v4_analyse_step_completed'
+  | 'v4_avatar_profile_field_edited'
+  | 'v4_avatar_profile_confirmed'
+  | 'v4_decision_trigger_viewed'
+  | 'v4_decision_board_moves_shown'
+  | 'v4_decision_board_move_selected'
+  | 'v4_brief_claim_gate_viewed'
+  | 'v4_brief_claim_confirmed'
+  | 'v4_brief_exported'
+  | 'v4_fix_stage_viewed'
+  | 'v4_fix_gate_blocked'
+  | 'v4_fix_advanced_to_remeasure'
+  // Re-audit an existing piece from a fresh screenshot (per-avatar overlay).
+  | 'v4_piece_reaudit_submitted'
+  | 'v4_piece_reaudit_succeeded'
+  | 'v4_piece_reaudit_failed'
+  // Free-trial gate: a non-member hit the one-piece limit / clicked the upgrade CTA.
+  | 'v4_trial_limit_hit'
+  | 'v4_upgrade_cta_clicked'
+  // Stripe checkout: the user picked a tier and we started a Checkout session.
+  | 'checkout_started'
+  // Loop-3 Fix sub-view navigation (funnel map ↔ piece detail ↔ fix & test ↔
+  // testing & lift). The `view` slug only — no copy/PII.
+  | 'v4_fix_view_changed'
+  | 'v4_fix_drift_banner_shown'
+  | 'v4_fix_test_viewed'
+  | 'v4_fix_rewrite_requested'
+  | 'v4_fix_variant_claim_confirmed'
+  | 'v4_fix_test_opened'
+  | 'v4_fix_coach_opened'
+  // Add-a-piece dialog (Upload screen ①) — open the dialog, submit, and the
+  // grounded add+audit outcome. Counts/IDs/booleans only (touchpoint, stage,
+  // channel, content_mode) — never the pasted copy or the job line.
+  | 'v4_add_piece_opened'
+  | 'v4_add_piece_submitted'
+  | 'v4_add_piece_succeeded'
+  | 'v4_add_piece_failed'
+  | 'v4_funnel_map_viewed'
+  | 'v4_funnel_map_retry'
+  | 'v4_funnel_asset_opened'
+  // Funnel-by-Job map toolbar actions — add a piece and channel-chip filtering.
+  // Counts / channel slug / on-off flag only.
+  | 'v4_funnel_add_piece_clicked'
+  | 'v4_funnel_channel_filtered'
+  // Funnel-by-Job map toolbar scoping controls — avatar / marketplace / range.
+  // ids + slugs only (never names or metric values).
+  | 'v4_funnel_avatar_changed'
+  | 'v4_funnel_marketplace_changed'
+  | 'v4_funnel_range_changed'
+  | 'v4_what_needs_work_viewed'
+  | 'v4_testing_lift_viewed'
+  | 'v4_testing_lift_filtered'
+  | 'v4_testing_lift_exported'
+  // Experiment-lifecycle milestone stamps on a test row (ASSET_CREATED / ASSET_LIVE).
+  // `milestone` slug only — never the test name or any copy.
+  | 'v4_test_lifecycle_advanced'
+  | 'v4_asset_detail_tab_viewed'
+  | 'v4_asset_check_run'
+  | 'v4_asset_verdict_recorded'
+  // Funnel-by-Job piece detail ("did this piece do its job?") — open + the
+  // metric→fix actions. Counts / ids / verdict only, never stored copy or PII.
+  | 'v4_funnel_piece_viewed'
+  | 'v4_funnel_piece_update_stored_clicked'
+  | 'v4_funnel_piece_brief_clicked'
+  | 'v4_funnel_piece_test_clicked'
+  | 'v4_funnel_piece_check_clicked'
+  | 'v4_remeasure_stage_viewed'
+  | 'v4_remeasure_gate_blocked'
+  | 'v4_remeasure_advanced_to_defend'
+  | 'v4_trust_gap_lift_viewed'
+  | 'v4_business_metrics_viewed'
+  // Re-measure experiment before/after lift card — list view + the won/no-lift
+  // verdict stamp. `status`/`stage`/`verdict` slugs + counts only, never copy.
+  | 'v4_experiment_lift_viewed'
+  | 'v4_experiment_result_marked'
+  | 'v4_defend_stage_viewed'
+  | 'v4_defend_gate_blocked'
+  | 'v4_defend_workbook_requested'
+  | 'v4_defend_workbook_result'
+  | 'v4_defend_loop_restarted'
+  | 'v4_defend_drift_watch_viewed'
+  | 'v4_defend_checklist_viewed'
+  | 'v4_defend_competitor_teaser_viewed'
+  // /v5 alpha — the Avatar 2.0 build theatre (ASIN → live build → co-sign →
+  // Trust Gap + Decision Trigger → design brief → save). Counts / booleans /
+  // slugs only — never review text, listing copy, the ASIN value, or PII.
+  | 'v5_entry_viewed'
+  | 'v5_run_started'
+  | 'v5_corpus_ready'
+  | 'v5_corpus_retry'
+  | 'v5_stage_revealed'
+  | 'v5_cosign_confirmed'
+  | 'v5_results_viewed'
+  | 'v5_brief_viewed'
+  | 'v5_brief_shared'
+  | 'v5_saved'
+  | 'v5_coldstart_shown'
+  | 'v5_express_run'
+  // Returning-user home (V5Home) — the signed-in landing that lists the
+  // listings a seller has already analysed. Home viewed + re-open one in
+  // express. Counts / booleans / IDs only, never the ASIN value or PII.
+  | 'v5_home_viewed'
+  | 'v5_home_reopen'
+  // Persisted last-run brief opened instantly from the home screen (no re-run).
+  | 'v5_brief_reopened';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;
@@ -123,17 +274,55 @@ let isInitialized = false;
 /**
  * Initialise PostHog once. No-op (and logs nothing) when the key is unset so
  * the app works without analytics configured.
+ *
+ * CONSENT-GATED (GDPR/ePrivacy): refuses to start without a stored analytics
+ * opt-in — before the visitor decides, no PostHog cookies exist and no events
+ * leave the browser. Wire-up happens via bindAnalyticsToConsent() in App.tsx.
  */
 export function initPostHog(): void {
   const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
-  if (!key || isInitialized) return;
+  if (!key || isInitialized || !hasAnalyticsConsent()) return;
 
   posthog.init(key, {
-    api_host: (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://us.i.posthog.com',
+    // EU host pinned as the CODE default — a worktree build missing .env must
+    // never silently ship US ingestion (GDPR transfer record says EU).
+    api_host: (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://eu.i.posthog.com',
     // Exception autocapture — the Alpha error-monitoring surface (no Sentry).
     capture_exceptions: true,
   });
   isInitialized = true;
+}
+
+/**
+ * Bind analytics to the consent store: start PostHog if consent is already
+ * granted, start/opt-in on a later grant, and opt out + drop identity when
+ * consent is withdrawn. Call once at app boot (replaces a bare initPostHog()).
+ */
+export function bindAnalyticsToConsent(): void {
+  initPostHog();
+  onConsentChange((state) => {
+    if (state.analytics === 'granted') {
+      if (isInitialized) {
+        try {
+          posthog.opt_in_capturing();
+        } catch (err) {
+          console.warn('[posthogClient] opt-in failed:', err);
+        }
+      } else {
+        initPostHog();
+      }
+    } else if (isInitialized) {
+      try {
+        // Stop capture and drop the device's identity/super-properties so a
+        // withdrawal behaves like erasure on this device (Art. 7(3) — as easy
+        // to withdraw as to give).
+        posthog.opt_out_capturing();
+        posthog.reset();
+      } catch (err) {
+        console.warn('[posthogClient] opt-out failed:', err);
+      }
+    }
+  });
 }
 
 export function isPostHogEnabled(): boolean {

@@ -34,7 +34,16 @@ export function captureMcpEvent(
   properties?: Record<string, string | number | boolean | null | undefined>,
 ): void {
   try {
-    getClient()?.capture({ distinctId, event, properties });
+    // When a caller threads a `session_id`, promote it to PostHog's reserved `$session_id`
+    // so these server-side events sessionize — that is what makes funnel / path / bounce
+    // analysis across a session's tool calls work. The plain `session_id` is kept too for
+    // direct querying. No-op when absent (PostHog falls back to per-distinctId grouping).
+    const sessionId = properties?.session_id;
+    const enriched =
+      typeof sessionId === 'string' && sessionId.length > 0
+        ? { ...properties, $session_id: sessionId }
+        : properties;
+    getClient()?.capture({ distinctId, event, properties: enriched });
   } catch {
     // Analytics must never break the product.
   }

@@ -11,22 +11,122 @@ The site is served by **Caddy `file_server` on the mango Lightsail box**
 org level** (the old `deploy-pages.yml` failed on every run because
 `configure-pages` can't create a Pages site), so Pages is not the deploy path.
 
-### How a deploy happens (CI/CD)
+## Serving the branded apex `ideabrandcoach.com`
 
-`.github/workflows/deploy-frontend.yml` runs on **push to `main`** (or manual
-**workflow_dispatch**). It:
+`ideabrandcoach.com` is registered by **Trevor** at Easyspace (DNS via 34SP:
+`ns.34sp.com` / `ns2.34sp.com`); the working app runs on Matthew's
+`ideabrandcoach.icodemybusiness.com` (Lightsail `54.243.53.44`). To serve the app at
+the apex:
 
-1. `npm ci && npm run build` → `dist/`
-2. `cp dist/index.html dist/404.html` — SPA fallback (BrowserRouter deep links).
-3. **rsyncs `dist/` to `ubuntu@54.243.53.44:/opt/ideabrandcoach/`** over SSH, then
-   verifies the live bundle hash matches the build.
+1. **Trevor (DNS at Easyspace/34SP):** add `A  @  → 54.243.53.44` and
+   `A  www → 54.243.53.44` (the apex can't be a CNAME). The root currently returns a
+   404 "Build incomplete" placeholder, so this is non-destructive.
+2. **On the box, once DNS resolves** (`dig +short ideabrandcoach.com` == `54.243.53.44`):
+   add the two hostnames to the EXISTING vhost's address line in `/opt/mango/Caddyfile`
+   (single-file bind-mount — edit in place to preserve the inode). Back it up first:
+   `cp /opt/mango/Caddyfile /opt/mango/Caddyfile.bak.apex`. Change
+   `ideabrandcoach.icodemybusiness.com {` to
+   `ideabrandcoach.icodemybusiness.com, ideabrandcoach.com, www.ideabrandcoach.com {`.
+   Reusing the same block guarantees identical behaviour (SPA rewrite, `/assets/*`
+   immutable + `@spa_html` no-cache, `/mcp*` proxy) with **zero drift**. Reload:
+   `docker exec mango-caddy-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`.
+   Caddy auto-issues Let's Encrypt certs for the new hostnames on first hit (needs the
+   step-1 DNS live, else the HTTP-01 challenge fails — so apply this AFTER DNS propagates).
+3. **Verify:** `curl -sI https://ideabrandcoach.com/welcome` → `200`, and the served
+   `index-*.js` hash matches `dist/`. Optional `www`→apex canonicalisation: instead of
+   adding `www` to the shared line, give it its own block —
+   `www.ideabrandcoach.com { redir https://ideabrandcoach.com{uri} permanent }`.
+4. **App metadata:** once live at the apex, switch the `og:image` / `twitter:image`
+   absolute URLs in `index.html` from `ideabrandcoach.icodemybusiness.com` to
+   `ideabrandcoach.com`.
 
-One-time setup (Settings → Secrets and variables → Actions):
-- Variable **`FRONTEND_AUTODEPLOY` = `true`** — opt-in switch (no-op until set).
-- Secret **`LIGHTSAIL_SSH_KEY`** — private key for `ubuntu@<box>` (shared with `deploy-mcp.yml`).
+## Source of truth: `main` (both the SPA AND the MCP gateway)
 
-Manual fallback (what to run if CI is off): `npm run build` then
-`rsync -az --delete -e "ssh -i ~/.ssh/lightsail-mango.pem" dist/ ubuntu@54.243.53.44:/opt/ideabrandcoach/`.
+As of **2026-06-28, `main` is the single source for both deployables** — the Vite
+SPA *and* the brand-coach MCP gateway. (Previously the MCP lived on a separate
+`mcp-oauth` branch; that fork was reconciled and `mcp-oauth` now tracks `main`.
+**Do not reintroduce the split** — commit MCP changes to `main`. A divergent
+`mcp-oauth` is what once shipped a frontend bundle missing the `/oauth/consent`
+page and 404'd the connector.)
+
+**Whatever is on `main` is what goes live.** Merge intended production code to
+`main` first, then deploy from a checkout of `main`.
+
+## Deploys run MANUALLY from a local machine (CI can't reach the box)
+
+`.github/workflows/deploy-frontend.yml` and `deploy-mcp.yml` exist, but the
+Lightsail box firewalls SSH (port 22) to a known IP, so **GitHub-hosted runners
+cannot reach it** (`ssh: connect … port 22: Connection timed out`) and the
+autodeploy variables (`FRONTEND_AUTODEPLOY`, `MCP_AUTODEPLOY`) are left `false`.
+Until the box accepts the runner (or a self-hosted runner is added), **deploy from
+a local machine that can SSH the box**, with key `~/.ssh/lightsail-mango.pem`.
+
+### Frontend (SPA) — build + rsync
+
+> ⚠️ **Rebuild from the LATEST `main` immediately before you rsync.** `rsync --delete`
+> mirrors your local `dist/` over prod, so a build made from a branch that's behind
+> `main` will silently REVERT whatever landed on `main` since — clobbering other
+> sessions' work (this has happened). Always `git fetch` + fast-forward/merge `main`,
+> rebuild, *then* rsync. If multiple people deploy, coordinate so two rsyncs don't race.
+
+From a `main` checkout:
+
+```bash
+npm run build                 # set VITE_FORCE_V4=true to force /v4; VITE_POSTHOG_* etc. as needed
+cp dist/index.html dist/404.html   # SPA fallback for BrowserRouter deep links
+rsync -az --delete \
+  --exclude='onboard.html' --exclude='onboard-assets/' --exclude='index.html.bak.*' \
+  -e "ssh -i ~/.ssh/lightsail-mango.pem" dist/ ubuntu@54.243.53.44:/opt/ideabrandcoach/
+```
+
+Then **verify over HTTP, not just on disk**: `/` serves the static `landing.html`
+(Caddy front-door rewrite), so check an *app* route (e.g. `/welcome`) and confirm
+the served bundle hash matches `dist/assets/index-*.js`. Rollback: an
+`index.html.bak.*` is kept on the box, or rebuild the prior commit + rsync.
+
+> ✅ **FIXED 2026-06-29 — `index.html` no-cache.** The box Caddyfile
+> (`/opt/mango/Caddyfile`, `ideabrandcoach.icodemybusiness.com` block) now sets
+> `Cache-Control: no-cache` on the SPA entry + all deep routes (`@spa_html` = not
+> `/assets/*`, not `/mcp*`) and `public, max-age=31536000, immutable` on `/assets/*`.
+> So browsers revalidate the entry HTML every load (deploys reach users immediately)
+> while hashed bundles stay long-cached. Edit the Caddyfile IN PLACE (it's a
+> single-file bind-mount → preserves inode), then `docker exec mango-caddy-1 caddy
+> reload --config /etc/caddy/Caddyfile --adapter caddyfile`. Backup kept at
+> `/opt/mango/Caddyfile.bak.sally-cachehdr`. (Pre-fix symptom: a test browser ran a
+> days-old `index-*.js`.)
+
+> ⚠️ **Deploy-race clobber is real (observed 2026-06-29):** two sessions deployed
+> minutes apart; the second built from a tree missing the first's commit and its
+> `rsync --delete` reverted the first's live bundle (the code stayed on `main`, just
+> not served). ALWAYS `git fetch` + ff `main` and **rebuild from the latest tip**
+> immediately before rsync, and re-verify the live bundle contains your change (grep
+> the served `index-*.js` for a string unique to your commit).
+
+> `VITE_FORCE_V4` lives only in the worktree's gitignored `.env`; a clean `main`
+> build WITHOUT it reverts to gate-OFF (`/v4` not forced). Set it in the build env
+> (or a repo var) to keep `/v4` forced across rebuilds.
+
+### MCP gateway — typecheck, build image, ship
+Gate first: **`npm run typecheck:mcp`** (NOT just `tsc --noEmit` — only the MCP
+tsconfig type-checks the MCP test files) + `npm test`. Then, from a `main` checkout:
+
+```bash
+npm run mcp:bundle            # esbuild → dist-mcp/server.mjs
+docker build --platform linux/amd64 -f deploy/mcp/Dockerfile -t brand-coach-mcp:latest .
+docker save brand-coach-mcp:latest | gzip > brand-coach-mcp.tar.gz
+scp -i ~/.ssh/lightsail-mango.pem brand-coach-mcp.tar.gz ubuntu@54.243.53.44:~/brand-coach-mcp/
+ssh -i ~/.ssh/lightsail-mango.pem ubuntu@54.243.53.44 \
+  'cd ~/brand-coach-mcp && docker load -i brand-coach-mcp.tar.gz && docker compose up -d --force-recreate && rm brand-coach-mcp.tar.gz && sleep 4 && curl -fsS http://127.0.0.1:8787/healthz'
+```
+
+Compose project: `/home/ubuntu/brand-coach-mcp`, on docker net `mango_default`
+(Caddy reverse-proxies `…/mcp` → `brand-coach-mcp:8787`). The box keeps
+`brand-coach-mcp.prev.tar.gz` for rollback.
+
+### Supabase migrations
+Apply **additive** migrations to prod via the Supabase MCP `apply_migration` (the
+`SUPABASE_ACCESS_TOKEN` PAT can). Verify the live schema afterwards; regenerate —
+never hand-edit — `src/integrations/supabase/types.ts`.
 
 ## One-time setup (manual, outside this repo)
 

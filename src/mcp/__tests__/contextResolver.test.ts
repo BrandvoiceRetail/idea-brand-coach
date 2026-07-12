@@ -155,6 +155,31 @@ describe('contextResolver.resolve — the six statuses', () => {
     expect(r.source).toBe('user_product_reviews');
   });
 
+  it('listing copy (#3) resolves from user_products when evidence_snapshots is empty', async () => {
+    const stub = install();
+    // Slot 3 residesIn: evidence_snapshots → user_products → ask. evidence_snapshots empty
+    // (default null); the app-scraped listing in user_products must now backfill the slot.
+    stub.on('user_products', 'select', {
+      data: [{ id: 'p1', asin: 'B0CJBN849W', title: 'Diamond Grain Binder', bullets: ['Holds 216 cards'], description: 'Double sided' }],
+      error: null,
+    });
+    const r = await resolveStatus(3);
+    expect(r.status).toBe('filled-evidence');
+    expect(r.source).toBe('user_products');
+  });
+
+  it('brand-level fallback: an avatar-scoped read falls back to avatar_id IS NULL evidence', async () => {
+    const stub = install();
+    // Slot 3, scoped to an avatar. The avatar-scoped evidence read is empty; the brand-level
+    // (avatar_id IS NULL) row — ingested during onboarding before the avatar existed — wins.
+    stub.on('evidence_snapshots', 'select', { data: null, error: null }); // avatar-scoped: empty
+    stub.on('evidence_snapshots', 'select', { data: { listing: { title: 'Brand-level listing' }, created_at: '2026-06-25T00:00:00Z' }, error: null }); // brand-level
+    const [r] = await runWithIdentity(authed, () => resolve([3], { avatarId: 'av-1' }));
+    expect(r.status).toBe('filled-evidence');
+    expect(r.source).toBe('evidence_snapshots');
+    expect(r.value).toEqual({ title: 'Brand-level listing' });
+  });
+
   it('filled-stated: a BUSINESS-FACT fresh in business_facts (within staleness window)', async () => {
     const stub = install();
     // Slot 9 residesIn: business_facts → ask. Fresh updated_at → not stale.

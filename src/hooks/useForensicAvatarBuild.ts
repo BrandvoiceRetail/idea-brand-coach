@@ -18,6 +18,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { avatarScopedKey } from '@/lib/queryKeys';
 import { ForensicBuildService } from '@/services/ForensicBuildService';
+import { captureAlphaEvent } from '@/lib/posthogClient';
 import {
   FORENSIC_STAGES,
   type ForensicStage,
@@ -93,6 +94,9 @@ export function useForensicAvatarBuild(avatarId: string | null): ForensicBuildHo
     setNeedsInput(null);
     setRunError(null);
     setStageStatus({ ...PENDING_STATUS });
+    // Primary v2 avatar-creation path (~60s, 4 edge stages). Telemetry carries the
+    // stopping stage + reason only — never extracted content (MF-5).
+    captureAlphaEvent('forensic_build_started', {});
 
     const setStatus = (stage: ForensicStage, status: StageStatus): void =>
       setStageStatus((prev) => ({ ...prev, [stage]: status }));
@@ -135,6 +139,7 @@ export function useForensicAvatarBuild(avatarId: string | null): ForensicBuildHo
         const r = await service.runStage(stage, avatarId, reviews);
         if (markStop(r)) {
           surfaceStop([r]);
+          captureAlphaEvent('forensic_build_failed', { stage: r.stage, reason: r.status });
           return;
         }
       }
@@ -148,14 +153,18 @@ export function useForensicAvatarBuild(avatarId: string | null): ForensicBuildHo
       const stopped = parallel.map(markStop).some(Boolean);
       if (stopped) {
         surfaceStop(parallel);
+        const stop = parallel.find((r) => r.status === 'failed') ?? parallel.find((r) => r.status === 'needs_input');
+        captureAlphaEvent('forensic_build_failed', { stage: stop?.stage ?? 'unknown', reason: stop?.status ?? 'failed' });
         return;
       }
 
       await service.recordBuildState(avatarId, [...FORENSIC_STAGES], 'built');
+      captureAlphaEvent('forensic_build_completed', { ok: true });
       toast.success('Forensic build complete');
     } catch (error) {
       console.error('[useForensicAvatarBuild] runBuild failed:', error);
       setRunError(error instanceof Error ? error.message : 'Build failed');
+      captureAlphaEvent('forensic_build_failed', { reason: 'error' });
       toast.error('Forensic build failed');
     } finally {
       setIsRunning(false);

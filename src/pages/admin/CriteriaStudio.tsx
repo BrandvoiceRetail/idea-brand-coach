@@ -27,8 +27,8 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
-const BRAND_BLUE = '#1A3557';
-const BRAND_GOLD = '#C9A84C';
+const BRAND_BLUE = '#111111';
+const BRAND_GOLD = '#D4960A';
 const CATEGORIES: CriterionCategory[] = ['framing', 'evidence', 'persona', 'recommendation', 'output', 'safety', 'voice'];
 
 function loadSet(): CriteriaSet {
