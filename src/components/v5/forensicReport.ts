@@ -150,6 +150,8 @@ export interface V5RunSnapshot {
   claims: unknown[]; // ClaimGateItem[]
   listingTitle: string | null;
   finishedAt: string;
+  /** Count of reviews consumed in the build (optional for backward compatibility with old snapshots). */
+  reviewCount?: number;
 }
 
 /** Conservative shape guard for a stored last_run payload. */

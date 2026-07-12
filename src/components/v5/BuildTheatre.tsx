@@ -12,6 +12,7 @@ import { V5Stage } from './V5Chrome';
 import { TheatreBeat } from './TheatreBeat';
 import { StageControls } from './StageControls';
 import { CoSignPanel } from './CoSignPanel';
+import { LowEvidenceBadge } from './LowEvidenceBadge';
 import type { CoSignRead, TheatreBeatData } from './beatModel';
 
 export interface BuildTheatreProps {
@@ -35,6 +36,8 @@ export interface BuildTheatreProps {
   skipArmed: boolean;
   reducedMotion: boolean;
   onNext: () => void;
+  /** Number of reviews used to build the avatar. */
+  reviewCount?: number | null;
 }
 
 const RAIL = ['Vocabulary', 'Motivation', 'Trust signals', 'Objection', 'Decision check'] as const;
@@ -55,6 +58,7 @@ export function BuildTheatre({
   skipArmed,
   reducedMotion,
   onNext,
+  reviewCount,
 }: BuildTheatreProps): JSX.Element {
   const railActive = showCoSign ? RAIL.length - 1 : Math.min(shownBeats, RAIL.length - 1);
   const nextReady = shownBeats < beats.length && beats[shownBeats] != null;
@@ -64,8 +68,19 @@ export function BuildTheatre({
   return (
     <V5Stage wide>
       <div className="mb-1 text-center">
-        <GlassEyebrow>Building your customer, from their own words</GlassEyebrow>
+        <GlassEyebrow>
+          {reviewCount != null
+            ? `Building your customer from ${reviewCount} review${reviewCount === 1 ? '' : 's'}`
+            : 'Building your customer, from their own words'}
+        </GlassEyebrow>
       </div>
+
+      {/* Low-evidence indicator */}
+      {reviewCount != null && (
+        <div className="mb-4 flex justify-center">
+          <LowEvidenceBadge reviewCount={reviewCount} />
+        </div>
+      )}
 
       {/* Progress rail — a filling gold track + per-stage states, not just a
           faint underline (Trevor: "very low key, I almost missed it"). */}

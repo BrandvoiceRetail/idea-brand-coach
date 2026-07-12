@@ -307,6 +307,13 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                alt="IDEA Brand Coach"
+                className="h-12 w-auto"
+              />
+            </div>
             <CardTitle>Set a new password</CardTitle>
             <CardDescription>
               Choose a new password for your account.
@@ -362,6 +369,13 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                alt="IDEA Brand Coach"
+                className="h-12 w-auto"
+              />
+            </div>
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
               We've sent a confirmation link to <span className="font-medium text-foreground">{pendingConfirmEmail}</span>.
@@ -393,6 +407,13 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                alt="IDEA Brand Coach"
+                className="h-12 w-auto"
+              />
+            </div>
             <CardTitle>Account Management</CardTitle>
             <CardDescription>You are already signed in as {user.email}</CardDescription>
           </CardHeader>
@@ -434,6 +455,13 @@ export default function Auth() {
         {showResetPassword ? (
           <Card className="w-full">
             <CardHeader>
+              <div className="flex justify-center mb-4">
+                <img
+                  src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                  alt="IDEA Brand Coach"
+                  className="h-12 w-auto"
+                />
+              </div>
               <CardTitle>Reset Password</CardTitle>
               <CardDescription>
                 Enter your email address and we'll send you a reset link.
@@ -475,6 +503,13 @@ export default function Auth() {
         ) : (
           <Card className="w-full">
             <CardHeader>
+              <div className="flex justify-center mb-4">
+                <img
+                  src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                  alt="IDEA Brand Coach"
+                  className="h-12 w-auto"
+                />
+              </div>
               <CardTitle>Welcome to IDEA Brand Coach</CardTitle>
               <CardDescription>
                 Sign in to your account or create a new one to get started.

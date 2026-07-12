@@ -16,6 +16,8 @@ import { GlassEyebrow, GlassPanel } from '@/components/v2/problem-solver/glass';
 import type { ImportedProduct } from '@/services/interfaces/IProductDataService';
 import { isV5RunSnapshot } from './forensicReport';
 import { V5Stage } from './V5Chrome';
+import { MCP_URL } from '@/config/urls';
+import { Info, RefreshCw, MessageSquare } from 'lucide-react';
 
 export interface V5HomeProps {
   /** The signed-in account's email, for the greeting. Null → a generic welcome. */
@@ -147,6 +149,76 @@ export function V5Home({ email, products, onNewListing, onReopen, onOpenBrief }:
                 </div>
               </div>
             ))}
+          </div>
+        </GlassPanel>
+      )}
+
+      {/* Tool discovery section for signed-in users */}
+      {email && (
+        <GlassPanel className="mt-4 p-6">
+          <div className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.1em] text-gold-warm">
+            What else is here
+          </div>
+          <p className="mb-3.5 text-[13px] leading-relaxed text-muted-foreground">
+            More ways to strengthen your listings and connect with our tools.
+          </p>
+          <div className="space-y-3">
+            {/* Your listings and design briefs */}
+            <div className="flex items-start gap-3">
+              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  Your listings and design briefs
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  Already on this page. Open any brief instantly or rebuild for a fresh read.
+                </div>
+              </div>
+            </div>
+
+            {/* Rebuild for fresh reviews */}
+            <div className="flex items-start gap-3">
+              <RefreshCw className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  Rebuild for a fresh read of the reviews
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  Use the Rebuild button on any listing above to get updated review insights.
+                </div>
+              </div>
+            </div>
+
+            {/* MCP connector */}
+            <div className="flex items-start gap-3">
+              <MessageSquare className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  The Brand Coach in Claude
+                </div>
+                <div className="mt-1 rounded-md bg-foreground/[0.03] px-2.5 py-1.5 font-mono text-xs text-muted-foreground">
+                  {MCP_URL}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Connect this MCP server to Claude for AI-powered brand coaching.
+                </div>
+              </div>
+            </div>
+
+            {/* Feedback widget reminder */}
+            <div className="flex items-start gap-3 rounded-lg border border-purple-200 bg-purple-50 p-3 dark:border-purple-900/30 dark:bg-purple-950/20">
+              <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-purple-600 text-xs font-bold text-white">
+                ?
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  Something feel off?
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  Use the purple feedback widget (bottom left) to let us know.
+                </div>
+              </div>
+            </div>
           </div>
         </GlassPanel>
       )}
