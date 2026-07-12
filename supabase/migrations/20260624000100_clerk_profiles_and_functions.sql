@@ -432,6 +432,85 @@ BEGIN
 END;
 $function$
 
+-- ---------------------------------------------------------------------
+-- STEP 3 (drift catch-up): functions added to main AFTER 2026-06-24 that
+-- reference auth.uid(). Re-enumerate at cutover with:
+--   SELECT p.proname, pg_get_function_identity_arguments(p.oid)
+--   FROM pg_proc p JOIN pg_namespace n ON p.pronamespace=n.oid
+--   WHERE n.nspname='public' AND p.prokind='f'
+--     AND pg_get_functiondef(p.oid) ILIKE '%auth.uid()%';
+-- As of 2026-07-12 the only addition is enforce_trial_piece_limit().
+--
+-- enforce_trial_piece_limit(): trigger enforcing the free-trial one-piece
+-- paywall. TWO Clerk-breakages, one of them a SILENT PAYWALL BYPASS:
+--   (1) `if auth.uid() is null then return new` — under Clerk auth.uid() is
+--       ALWAYS NULL, so the trigger would short-circuit and NEVER enforce
+--       the limit. Rewritten to (auth.jwt()->>'sub').
+--   (2) local `v_owner uuid` reads brands.user_id, which becomes text in
+--       20260624000000 — the SELECT INTO would fail. Retyped v_owner -> text.
+-- Signature is unchanged (no args, returns trigger), so CREATE OR REPLACE
+-- keeps the existing trigger binding; no DROP/re-attach needed.
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.enforce_trial_piece_limit()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare
+  v_brand_id uuid;
+  v_owner text;
+  v_member boolean;
+  v_is_reversion boolean;
+  v_distinct int;
+begin
+  if (auth.jwt()->>'sub') is null then
+    return new;
+  end if;
+
+  v_brand_id := new.brand_id;
+  if v_brand_id is null and new.avatar_id is not null then
+    select brand_id into v_brand_id from public.avatars where id = new.avatar_id;
+  end if;
+  if v_brand_id is null then
+    return new;
+  end if;
+
+  select user_id into v_owner from public.brands where id = v_brand_id;
+  select exists (
+    select 1 from public.user_subscriptions s
+    where s.user_id = coalesce(v_owner, (auth.jwt()->>'sub'))
+      and s.status in ('active', 'trialing')
+  ) into v_member;
+  if v_member then
+    return new;
+  end if;
+
+  select exists (
+    select 1 from public.brand_assets
+    where brand_id = v_brand_id
+      and superseded_by is null
+      and touchpoint_id = new.touchpoint_id
+  ) into v_is_reversion;
+  if v_is_reversion then
+    return new;
+  end if;
+
+  select count(distinct touchpoint_id) into v_distinct
+  from public.brand_assets
+  where brand_id = v_brand_id
+    and superseded_by is null;
+
+  if v_distinct >= 1 then
+    raise exception
+      'trial_piece_limit: your free trial covers one funnel piece; become a member to map your whole funnel'
+      using errcode = 'check_violation';
+  end if;
+
+  return new;
+end;
+$function$;
+
 
 COMMIT;
 

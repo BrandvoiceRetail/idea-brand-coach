@@ -1,6 +1,10 @@
 -- =====================================================================
+-- ⛔ SUPERSEDED — DO NOT APPLY. Rollback for the STALE 2026-06-24 swap.
+--   Use the DOWN-MIGRATION GENERATOR at the bottom of
+--   supabase/migrations/_generators/clerk_native_swap.gen.sql instead.
+-- =====================================================================
 -- 20260624000000_clerk_native_swap_down.sql
--- CLERK NATIVE-AUTH CUTOVER MIGRATION  (ROLLBACK / DOWN)
+-- CLERK NATIVE-AUTH CUTOVER MIGRATION  (ROLLBACK / DOWN)  [ORIGINAL / STALE]
 -- =====================================================================
 -- Reverses 20260624000000_clerk_native_swap.sql:
 --   * user_id text -> uuid  (USING user_id::uuid)

@@ -18,6 +18,34 @@ saved with the Clerk domain).
 - Native-swap DB migration: `supabase/migrations/20260624000000_clerk_native_swap.sql`
   (+ `_down.sql`) — **authored, NOT applied**. Review its HOTSPOTS first (see below).
 
+## ⚠️ The re-key migration is now GENERATED, not static (updated 2026-07-12)
+
+The original static `20260624000000_clerk_native_swap.sql` is **STALE and marked
+SUPERSEDED — do not apply it.** It was authored against the 2026-06-24 schema;
+prod has since drifted materially (verified live 2026-07-12):
+
+| Surface | Static file (2026-06-24) | Live prod (2026-07-12) |
+|---------|--------------------------|------------------------|
+| RLS policies on `auth.uid()` | 121 | **142** |
+| FKs to `auth.users` | 30 | **37** |
+| `user_id`/`id` uuid cols retyped | 34 | **46** |
+| `auth.uid()` column DEFAULTs | 2 | **7** |
+| `auth.uid()` SQL functions | 9 names / 12 overloads | +**`enforce_trial_piece_limit`** (new) |
+
+Because this surface grows with every new user-data table, the swap is now
+produced by a **catalog-driven generator** that always matches prod at cutover:
+
+> **`supabase/migrations/_generators/clerk_native_swap.gen.sql`**
+
+At cutover: run its SELECTs against prod, assemble the emitted sections in the
+documented order into `supabase/migrations/<UTC-ts>_clerk_native_swap.sql`, then
+apply the companion `20260624000100_clerk_profiles_and_functions.sql` (functions +
+`profiles.id`→text) **after** it. The generator is view-safe (drops/recreates
+`user_knowledge_current`), handles the 7 `auth.uid()` DEFAULTs, and re-enumerates
+functions. **Silent-bug note:** `enforce_trial_piece_limit`'s `auth.uid() IS NULL`
+guard would, unrewritten, make the free-trial paywall stop enforcing under Clerk —
+the companion migration's STEP 3 fixes it; re-run its enumeration query at cutover.
+
 ## Pre-cutover review (do once)
 
 1. **Resolve the two migration HOTSPOTS — these BLOCK the swap (read the bottom of
@@ -57,9 +85,11 @@ saved with the Clerk domain).
 
 1. **Config (Supabase dashboard):** confirm Authentication → Third-Party Auth → Clerk
    is enabled with the correct Clerk domain. (Dashboard-only; my token is read-only here.)
-2. **Apply the DB migration** (point of no easy return — down-migration is ready):
-   `supabase db push` / apply `20260624000000_clerk_native_swap.sql` to prod.
-   Immediately smoke-test one RLS read with a Clerk token (see step 4).
+2. **Generate + apply the DB migration** (point of no easy return — down generator ready):
+   - Run `_generators/clerk_native_swap.gen.sql` SELECTs against prod; assemble the
+     emitted sections (in the documented order) into a new timestamped migration.
+   - Apply it, then apply `20260624000100_clerk_profiles_and_functions.sql`.
+   - Immediately smoke-test one RLS read with a Clerk token (see step 4).
 3. **Set frontend env + build from `main`:**
    `VITE_ENABLE_CLERK_AUTH=true`, `VITE_CLERK_PUBLISHABLE_KEY=pk_live_…`,
    then `npm run build`.

@@ -1,6 +1,15 @@
 -- =====================================================================
+-- ⛔ SUPERSEDED — DO NOT APPLY. Kept for reference only.
+--   This hand-authored 2026-06-24 swap is STALE: prod has since gained
+--   ~25 tables/policies/defaults it does not cover (verified 2026-07-12:
+--   142 policies vs 121 here, 37 FKs vs 30, 46 columns vs 34, 7 auth.uid()
+--   DEFAULTs vs 2, plus enforce_trial_piece_limit()). Applying it would
+--   produce a PARTIAL swap that breaks the newer tables.
+--   ➜ Generate the current migration from:
+--       supabase/migrations/_generators/clerk_native_swap.gen.sql
+-- =====================================================================
 -- 20260624000000_clerk_native_swap.sql
--- CLERK NATIVE-AUTH CUTOVER MIGRATION  (FORWARD)
+-- CLERK NATIVE-AUTH CUTOVER MIGRATION  (FORWARD)  [ORIGINAL / STALE]
 -- =====================================================================
 -- WHAT: Switches RLS identity resolution from Supabase Auth (auth.uid(),
 --       a uuid) to Clerk via Supabase native third-party auth, where the
