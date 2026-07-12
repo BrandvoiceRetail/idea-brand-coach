@@ -45,9 +45,9 @@ export default function PrivacyPolicy(): JSX.Element {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Privacy Policy</h1>
         <p className="text-muted-foreground">
-          IDEA Brand Coach — version {CONSENT_POLICY_VERSION}. This notice explains what personal
-          data we process, why, where it goes, and the rights you can exercise yourself inside the
-          app.
+          IDEA Brand Coach — last updated {CONSENT_POLICY_VERSION}. This notice explains what
+          personal data we process, why, where it goes, and the rights you can exercise yourself
+          inside the app.
         </p>
       </header>
 
@@ -141,7 +141,21 @@ export default function PrivacyPolicy(): JSX.Element {
         <p>
           Where a provider is outside the EU/EEA, transfers rely on the EU–US Data Privacy
           Framework or Standard Contractual Clauses in that provider&rsquo;s data-processing
-          agreement.
+          agreement. You can request a copy of the safeguards for any transfer by emailing us.
+        </p>
+      </Section>
+
+      <Section title="Data about other people (Amazon reviews)">
+        <p>
+          When you analyse a listing, we fetch its public Amazon page, which can include
+          reviewer display names and review text — personal data about people who are not our
+          users. We process it only to give you the diagnosis you asked for, on the basis of our
+          and your legitimate interest in analysing public marketplace feedback, and it is deleted
+          when you delete your account. Because this data comes from public listings and not from
+          the reviewers directly, notifying each reviewer would involve disproportionate effort
+          (GDPR Art. 14(5)(b)); any such person may still contact us to access or erase what we hold
+          about them. If you upload this data to us, you are responsible for having a lawful basis
+          to share it.
         </p>
       </Section>
 
@@ -195,8 +209,8 @@ export default function PrivacyPolicy(): JSX.Element {
             <a href="mailto:privacy@ideabrandconsultancy.com" className="underline">
               privacy@ideabrandconsultancy.com
             </a>
-            . You also have the right to complain to your local supervisory authority (for the UK,
-            the ICO).
+            . You also have the right to complain to your data-protection supervisory authority —
+            in the UK the ICO (ico.org.uk), or in the EU the authority in your country of residence.
           </li>
         </ul>
       </Section>

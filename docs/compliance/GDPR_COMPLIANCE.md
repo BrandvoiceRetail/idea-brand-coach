@@ -2,7 +2,8 @@
 
 Status date: 2026-07-08. This folder is the single home for data-protection
 compliance. Companion docs: [ROPA.md](ROPA.md) (processing register + processor
-list), [DATA_RETENTION_POLICY.md](DATA_RETENTION_POLICY.md),
+list), [DPA_REGISTER.md](DPA_REGISTER.md) (Art. 28 processor-DPA checklist),
+[DATA_RETENTION_POLICY.md](DATA_RETENTION_POLICY.md),
 [DSAR_RUNBOOK.md](DSAR_RUNBOOK.md), [BREACH_RUNBOOK.md](BREACH_RUNBOOK.md).
 
 Controller: **Brandvoice Retail Ltd** (IDEA Brand Consultancy) — confirm the
@@ -42,17 +43,32 @@ the version ⇒ stored banner decisions invalidate and users are re-prompted.
 
 ## Open actions (non-code / human)
 
-1. **Confirm controller identity + create the privacy mailbox**
-   (`privacy@ideabrandconsultancy.com`) — the notice and DSAR runbook point at it.
-2. **Verify DPAs/SCCs are in place** with each processor in ROPA.md §Processors
-   (Anthropic, OpenAI, PostHog, Stripe, Resend, Firecrawl, DataForSEO, Google,
-   fal.ai, Pixii, Slack, Supabase, AWS). Most ship a standard DPA — confirm
-   acceptance, keep copies.
-3. **Set optional erasure env secrets** on Supabase functions so external
+1. **Privacy contact address** — the notice/DSAR runbook point at
+   `privacy@ideabrandconsultancy.com`. It must be a monitored inbox that doesn't
+   bounce (Art. 12/13). EITHER repoint the notice at an existing monitored inbox
+   (one-line edit) OR create a `privacy@` forwarder in the **34SP** control panel
+   (that domain's email host). Draft DM sent to Trevor 2026-07-08 to pick one.
+2. **Add controller's registered details to the notice** — Brandvoice Retail
+   Ltd's registered office address + company number belong in the "Who we are"
+   section (Art. 13 identity). Not fabricated in code; supply the facts and I'll
+   add them.
+3. **DPO decision** — confirm no Data Protection Officer is required (Art. 37:
+   likely not — no large-scale monitoring or special-category data at scale) and
+   record that decision, or appoint one and name them in the notice.
+4. **Work the DPA register** — see [DPA_REGISTER.md](DPA_REGISTER.md): Tier-1
+   DPAs (Supabase, Anthropic, OpenAI, PostHog, Stripe) are AUTO/self-serve; then
+   resolve the two **VERIFY** flags — most importantly the **Google Gemini tier**
+   (free/AI-Studio tier CAN train on prompts, which would contradict the notice's
+   "providers don't train on your data"), and the Slack free-vs-paid DPA.
+5. **Set optional erasure env secrets** on Supabase functions so external
    deletion is automatic, not manual: `POSTHOG_PERSONAL_API_KEY`,
    `POSTHOG_PROJECT_ID` (203641), and confirm `STRIPE_SECRET_KEY` is present.
-4. **Legal review of `/privacy` text** (engineering-drafted).
-5. **UK GDPR**: if Brandvoice Retail Ltd is UK-established, ICO registration
+6. **Qualified legal review of `/privacy` text** — engineering has done a
+   self-review against the Art. 13/14 checklist (2026-07-08: added the Art. 14
+   third-party-reviewer-data section, transfer-safeguards-on-request line, EU
+   supervisory-authority reference). A lawyer should still sign off, especially
+   the processor-claim accuracy (item 4) and the registered details (item 2).
+7. **UK GDPR**: if Brandvoice Retail Ltd is UK-established, ICO registration
    (data-protection fee) likely applies; confirm.
 
 ## Known residual risks (tracked, not blocking)
