@@ -230,8 +230,8 @@ function buildAvatarSheet(
   if (artifacts.avatar_s2_jobmap) {
     appendTable(sheet, {
       sectionTitle: 'Stage 2 — Functional vs Emotional Job Map',
-      note: 'Separates what the product DOES from what the customer is HIRING it to do emotionally.',
-      columns: ['Functional job', 'Emotional job', 'Identity job', 'Villain (what they’re hiring against)'],
+      note: 'Separates what the product DOES from what the customer feels when it works.',
+      columns: ['Functional job', 'Emotional job', 'Identity job', 'Villain (the failure state avoided)'],
       rows: artifacts.avatar_s2_jobmap.job_map.map((j) => [
         j.functional_job,
         j.emotional_job,

@@ -19,7 +19,7 @@
 /** One forbidden-string match, with the rule it violated. */
 export interface TierViolation {
   term: string;
-  rule: 'stage-label' | 'buyer-state' | 'neuroanatomy' | 'internal-field';
+  rule: 'stage-label' | 'buyer-state' | 'neuroanatomy' | 'internal-field' | 'forbidden-framework';
 }
 
 /** Patterns that must never appear in USER-FACING output (not in model-facing descriptions). */
@@ -33,6 +33,10 @@ const PATTERNS: Array<{ rule: TierViolation['rule']; re: RegExp }> = [
   { rule: 'neuroanatomy', re: /\b(amygdala|limbic|prefrontal|hemispheres?|Bolte[ -]?Taylor|neuroanatom\w*)\b/gi },
   // Tier C — internal field tokens / the server-only confidence.
   { rule: 'internal-field', re: /\b(dominant_buyer_state|buyer_state|trigger_confidence)\b/g },
+  // Tier C — Bob Moesta's Jobs-To-Be-Done framing, retired per skill 08-purchase-motivation.md.
+  { rule: 'forbidden-framework', re: /\bJTBD\b/g },
+  { rule: 'forbidden-framework', re: /\bjob.?to.?be.?done\b/gi },
+  { rule: 'forbidden-framework', re: /\bhiring\b.{0,20}\b(product|it)\b/gi },
 ];
 
 /** Scan one string for Tier-B/C leaks. Returns every violation found (empty = clean). */

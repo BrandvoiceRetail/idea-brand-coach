@@ -194,13 +194,14 @@ export function V5Home({ email, products, onNewListing, onReopen, onOpenBrief }:
               <MessageSquare className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
               <div>
                 <div className="text-sm font-semibold text-foreground">
-                  The Brand Coach in Claude
+                  Chat with the Brand Coach, 24/7
                 </div>
                 <div className="mt-1 rounded-md bg-foreground/[0.03] px-2.5 py-1.5 font-mono text-xs text-muted-foreground">
                   {MCP_URL}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  Connect this MCP server to Claude for AI-powered brand coaching.
+                  It&apos;s the same coach, always on in Claude — connect this URL once and ask it
+                  anything about your brand, any time.
                 </div>
               </div>
             </div>

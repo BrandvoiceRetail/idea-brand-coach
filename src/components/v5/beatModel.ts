@@ -137,7 +137,7 @@ export function buildBeat(
           ? `The villain in their story: ${villain}. Your listing earns trust by showing, plainly, that this villain has been dealt with.`
           : 'Trust is built by answering the jobs below before any claim is made.',
         panel: {
-          label: 'Trust signals needed',
+          label: 'What builds confidence',
           heading: 'What builds confidence before purchase',
           field: {
             kind: 'list',

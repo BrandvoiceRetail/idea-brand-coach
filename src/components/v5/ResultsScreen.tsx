@@ -155,7 +155,7 @@ export function ResultsScreen({ report, trigger, onSeeBrief }: ResultsScreenProp
         />
         <ProfileCard
           label="What builds trust"
-          heading="Trust signals needed"
+          heading="What earns their trust"
           body={profile.what_builds_trust}
         />
         <ProfileCard
