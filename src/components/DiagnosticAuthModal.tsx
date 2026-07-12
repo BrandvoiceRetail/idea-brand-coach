@@ -9,7 +9,7 @@ import { Sparkles, Loader2, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import { isClerkAuthEnabled } from '@/config/clerkConfig';
+import { isClerkConfigured } from '@/config/clerkConfig';
 import { ClerkAuthSurface } from '@/components/auth/ClerkAuthSurface';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -36,7 +36,9 @@ export function DiagnosticAuthModal({ isOpen, onComplete, diagnosticScore }: Dia
 
   // Clerk mode: the Clerk surface (below) handles auth itself, so close the modal
   // as soon as a session arrives — mirrors the onComplete() the form handlers call.
-  const clerkEnabled = isClerkAuthEnabled();
+  // Gate on isClerkConfigured (flag AND key) to match App.tsx — rendering the Clerk
+  // surface without a mounted ClerkProvider (flag on, key missing) would throw.
+  const clerkEnabled = isClerkConfigured();
   useEffect(() => {
     if (clerkEnabled && isOpen && user) {
       onComplete();

@@ -13,7 +13,7 @@ import { BetaNavigationWidget } from '@/components/BetaNavigationWidget';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { ROUTES } from '@/config/routes';
-import { isClerkAuthEnabled } from '@/config/clerkConfig';
+import { isClerkConfigured } from '@/config/clerkConfig';
 import { ClerkAuthSurface } from '@/components/auth/ClerkAuthSurface';
 import { isV4Forced } from '@/config/v4';
 import { supabase } from '@/integrations/supabase/client';
@@ -305,7 +305,10 @@ export default function Auth() {
   // <SignIn/>/<SignUp/> (Clerk owns password reset + email confirmation in its own
   // flow, so those Supabase-specific branches below are skipped). Signed-in users
   // still fall through to the account-management card.
-  if (isClerkAuthEnabled() && !user) {
+  // Gate on isClerkConfigured() (flag AND key) to match App.tsx's provider mount —
+  // rendering ClerkAuthSurface without a ClerkProvider (flag on, key missing) would
+  // throw. This keeps the documented "missing key degrades gracefully" guarantee.
+  if (isClerkConfigured() && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md">
