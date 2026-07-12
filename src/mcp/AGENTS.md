@@ -84,7 +84,14 @@ consumer of an external IV-OS MCP. Today the host exposes:
   job), and `HIGGSFIELD_HANDOFF` (reference-kit discipline, storyboard-image vs per-scene video
   modes, UGC/unboxing preset routing, edit-tools-before-regen, draft economy, save-back + the
   performance loop). Tests: `__tests__/creativePlans.test.ts` (propagation-map completeness, honest
-  degrade, guardrail carriage).
+  degrade, guardrail carriage); `__tests__/creativePlansEdge.test.ts` (input/format/trigger edges +
+  refine scope detection + determinism); `__tests__/creativePlanContracts.test.ts` (**app-behavior
+  regression lock** — calls each tool through a real MCP client and pins the `structuredContent`
+  keys the connector/panels consume, the guardrail contract, and the zod input boundary). The
+  eval catalog (`evals/cases/catalog.ts`) also carries `infinityvault-*` creative cases so the
+  mcpjam/behavioural tiers catch a tool-SELECTION regression. **NB:** the guard-echoing
+  `never_contain` list means these tools trip `terminology.leak` telemetry on every call — a known
+  false positive (the denylist names the denied terms), shared with `generate_listing_image_brief`.
 
 The IV-OS **write** tools (`log_asset`/`record_test`/…) and **knowledge** reads
 (canon/product/funnel) are referenced by capability only (`ivos/capabilities.ts`
