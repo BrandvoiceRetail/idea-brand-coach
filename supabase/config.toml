@@ -214,6 +214,10 @@ verify_jwt = true
 [functions.diagnostic-interpretation-evidence]
 verify_jwt = true
 
+# Per-avatar messaging-perception (multi-avatar messaging-perception workbook, Phase 2).
+[functions.analyze-message-perception]
+verify_jwt = true
+
 [functions.create-checkout-session]
 verify_jwt = true
 
