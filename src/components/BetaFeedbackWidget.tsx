@@ -39,6 +39,11 @@ export function BetaFeedbackWidget({
   const [feedbackType, setFeedbackType] = useState<"general" | "bug" | "idea">("general");
   const [feedbackText, setFeedbackText] = useState("");
   const [isSending, setIsSending] = useState(false);
+  // Anonymous testers: optional contact email + explicit email-marketing opt-in,
+  // captured on a confirm step between "Send" and the actual submit.
+  const [contactEmail, setContactEmail] = useState("");
+  const [emailOptIn, setEmailOptIn] = useState(false);
+  const [showContactStep, setShowContactStep] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Check if beta feedback widget is enabled
@@ -55,32 +60,43 @@ export function BetaFeedbackWidget({
     return null;
   }
 
-  // Only show for logged-in users
-  if (!user) {
-    return null;
-  }
+  // Screen-specific page reference: /v5 is one route with a phase state machine,
+  // so feedback from every screen used to arrive as a bare "/v5" (Trevor,
+  // 2026-07-08). V5Alpha stamps its phase on document.body; append it here.
+  const v5Phase = document.body.dataset.v5Phase;
+  const pagePath = v5Phase ? `${location.pathname}#${v5Phase}` : location.pathname;
 
-  const handleSendFeedback = async () => {
+  // Signed-out users can submit too (the edge fn accepts anonymous feedback);
+  // a real (non-anonymous-session) account means we already know their email.
+  const isIdentified = !!user && !(user as { is_anonymous?: boolean }).is_anonymous;
+
+  const submitFeedback = async () => {
     if (!feedbackText.trim() || isSending) return;
 
     setIsSending(true);
     const feedbackWithType = `[${feedbackType.toUpperCase()}] ${feedbackText}`;
 
     try {
-      // Save the feedback with page context
+      // Save the feedback with page context (no-op when not in a beta journey)
       await addComment(
-        `${location.pathname}-widget`,
+        `${pagePath}-widget`,
         feedbackWithType
       );
 
-      // Also save to database for persistence
+      // Also save to database for persistence. The edge fn derives the user
+      // from the JWT; email/opt-in only travel for unidentified testers.
       const { error } = await supabase.functions.invoke('save-beta-feedback', {
         body: {
           quickFeedback: feedbackWithType,
-          pageUrl: location.pathname,
+          pageUrl: pagePath,
           feedbackType,
-          userId: user.id,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          ...(isIdentified
+            ? {}
+            : {
+                email: contactEmail.trim() || undefined,
+                emailOptIn: contactEmail.trim() ? emailOptIn : undefined,
+              }),
         }
       });
 
@@ -94,6 +110,9 @@ export function BetaFeedbackWidget({
       // Reset form
       setFeedbackText("");
       setFeedbackType("general");
+      setContactEmail("");
+      setEmailOptIn(false);
+      setShowContactStep(false);
 
       // Minimize after sending
       setTimeout(() => setIsMinimized(true), 1500);
@@ -108,6 +127,16 @@ export function BetaFeedbackWidget({
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handleSendFeedback = async () => {
+    if (!feedbackText.trim() || isSending) return;
+    // Unidentified testers get one optional contact step before the submit.
+    if (!isIdentified && !showContactStep) {
+      setShowContactStep(true);
+      return;
+    }
+    await submitFeedback();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -193,7 +222,7 @@ export function BetaFeedbackWidget({
               <div>
                 <CardTitle className="text-sm">Beta Feedback</CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  Quick feedback on {location.pathname}
+                  Quick feedback on {pagePath}
                 </p>
               </div>
             </div>
@@ -269,15 +298,52 @@ export function BetaFeedbackWidget({
               rows={3}
             />
 
+            {/* Optional contact step for unidentified testers — shown once,
+                between "Send" and the actual submit. Both fields optional. */}
+            {!isIdentified && showContactStep && (
+              <div className="space-y-2 rounded-md border border-border bg-muted/30 p-3">
+                <p className="text-xs font-medium">
+                  Want us to follow up? Leave an email (optional).
+                </p>
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  placeholder="you@example.com (optional)"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  aria-label="Contact email (optional)"
+                />
+                <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={emailOptIn}
+                    onChange={(e) => setEmailOptIn(e.target.checked)}
+                    disabled={!contactEmail.trim()}
+                    className="mt-0.5"
+                    aria-label="Opt in to product emails"
+                  />
+                  <span>
+                    I'm happy to receive occasional product updates by email.
+                  </span>
+                </label>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => navigate('/beta-feedback')}
-                className="text-xs p-0"
-              >
-                Full feedback form →
-              </Button>
+              {isIdentified ? (
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => navigate('/beta-feedback')}
+                  className="text-xs p-0"
+                >
+                  Full feedback form →
+                </Button>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  {showContactStep ? 'Email optional' : 'No account needed'}
+                </span>
+              )}
 
               <Button
                 onClick={handleSendFeedback}
@@ -293,7 +359,7 @@ export function BetaFeedbackWidget({
                 ) : (
                   <>
                     <Send className="w-3 h-3 mr-2" />
-                    Send Feedback
+                    {!isIdentified && showContactStep ? 'Submit feedback' : 'Send Feedback'}
                   </>
                 )}
               </Button>

@@ -67,6 +67,32 @@ consumer of an external IV-OS MCP. Today the host exposes:
   **never** reads/writes the coach current-avatar. `brand_id` is resolved server-side throughout
   (`service/funnelInventory.ts`).
 
+- **Creative-plan directors (the Higgsfield ↔ brand-coach bridge).**
+  `generate_video_storyboard` / `generate_aplus_content_plan` / `generate_main_image_title_plan` /
+  `generate_storefront_messaging_plan` / `generate_ugc_ad_plan` (script-level UGC: avatar-cast
+  persona, trigger-angled hook variants, AI-presenter honesty rails) + the update path
+  `refine_creative_plan` (and the older `generate_listing_image_brief`). Pure Layer-1
+  grounding-directors (no LLM/edge/DB calls): each returns a positioning-aligned plan —
+  scene/beat/section architecture, claim gate, evidence discipline, prompt construction
+  (`IMAGE_PROMPT:` / `VIDEO_PROMPT:` + exact negative prompts) — and the HOST executes on the
+  Higgsfield connector (generate_image / generate_video / edit tools), then logs outputs back
+  via `log_asset` (host-driven, like Windsor ingestion). The shared spine lives in
+  `service/creativeAlignment.ts`: `POSITIONING_SPINE` (trigger / avatar core / signature /
+  trust-gap pillar / verified facts, each with a resolve-tool + honest degrade so new users are
+  never blocked), `POSITIONING_PROPAGATION` (deterministic element-change → per-surface recompose
+  map that `refine_creative_plan` filters; component changes stay surgical — one scene/panel, one
+  job), and `HIGGSFIELD_HANDOFF` (reference-kit discipline, storyboard-image vs per-scene video
+  modes, UGC/unboxing preset routing, edit-tools-before-regen, draft economy, save-back + the
+  performance loop). Tests: `__tests__/creativePlans.test.ts` (propagation-map completeness, honest
+  degrade, guardrail carriage); `__tests__/creativePlansEdge.test.ts` (input/format/trigger edges +
+  refine scope detection + determinism); `__tests__/creativePlanContracts.test.ts` (**app-behavior
+  regression lock** — calls each tool through a real MCP client and pins the `structuredContent`
+  keys the connector/panels consume, the guardrail contract, and the zod input boundary). The
+  eval catalog (`evals/cases/catalog.ts`) also carries `infinityvault-*` creative cases so the
+  mcpjam/behavioural tiers catch a tool-SELECTION regression. **NB:** the guard-echoing
+  `never_contain` list means these tools trip `terminology.leak` telemetry on every call — a known
+  false positive (the denylist names the denied terms), shared with `generate_listing_image_brief`.
+
 The IV-OS **write** tools (`log_asset`/`record_test`/…) and **knowledge** reads
 (canon/product/funnel) are referenced by capability only (`ivos/capabilities.ts`
 → `DEFERRED_IVOS_CAPABILITIES`) and are intentionally **not bound** — pending the
@@ -121,6 +147,7 @@ asserts the advertised tool set + handler behavior end-to-end.
 | `contracts/` | Output-engine artifact contracts (single source of truth) — local AGENTS.md |
 | `service/workbook/` | Workbook assemblers + gold-workbook export engine — local AGENTS.md |
 | `evals/` | MCP evals suite — compares skill/tool configurations + scores coach value (`npm run evals`); feeds the `/admin/coach-evals` dashboard — see `evals/README.md` |
+| `evals/image/` | **Output-quality tier** — scores the IMAGE deliverables an E2E session produces (our MCP + Higgsfield in one chat) against a rubric, grounded in the opted-in customer corpus (`evals:image:mcpjam` to drive + assert the pipeline; `evals:image` to vision-judge the produced images) — see `evals/image/README.md` |
 | `skills/` | Skill grounding: `skillLoader` (book corpus) + `appSkills` (App Skill Architecture, IDEA-APP-SKILLS-001) |
 
 ## Guardrails

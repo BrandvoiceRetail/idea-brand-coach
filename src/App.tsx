@@ -1,4 +1,4 @@
-import { initPostHog } from "@/lib/posthogClient";
+import { bindAnalyticsToConsent } from "@/lib/posthogClient";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +19,7 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 import { AuthGate } from "@/components/AuthGate";
 import { RequireAuth } from "@/components/RequireAuth";
 import { BetaFeedbackWidget } from "@/components/BetaFeedbackWidget";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ROUTES, V1_ROUTES } from "@/config/routes";
 import Index from "./pages/Index";
@@ -58,6 +59,7 @@ import { AdminGate } from "@/components/AdminGate";
 import FocusSurface from "./pages/FocusSurface";
 import TestChapterNavigation from "./pages/TestChapterNavigation";
 import SettingsPage from "./pages/SettingsPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FigmaCallback from "./pages/FigmaCallback";
 import OAuthConsent from "./pages/OAuthConsent";
 import { V4ContextProvider } from "@/contexts/V4ContextStore";
@@ -70,11 +72,12 @@ import V4Analyse from "./pages/v4/V4Analyse";
 import V4Fix from "./pages/v4/V4Fix";
 import V4Remeasure from "./pages/v4/V4Remeasure";
 import V4Defend from "./pages/v4/V4Defend";
-import V4Tools from "./pages/v4/V4Tools";
+import V5Alpha from "./pages/v5/V5Alpha";
 import { V4_ROUTES } from "@/config/v4";
-// Initialise analytics before the React tree mounts so the auth listener can
-// identify the user as soon as a session arrives. No-op when no key is set.
-initPostHog();
+// Bind analytics to the consent store before the React tree mounts so the auth
+// listener can identify the user as soon as a session arrives. PostHog starts
+// ONLY with a stored analytics opt-in (GDPR); no key set is still a safe no-op.
+bindAnalyticsToConsent();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +113,7 @@ const App = () => {
                       <ScrollToTop />
                       <OnboardingTour autoStart={true} />
                       <BetaFeedbackWidget />
+                      <ConsentBanner />
 
                     <Routes>
                 <Route path="/" element={<VersionGate />} />
@@ -117,6 +121,9 @@ const App = () => {
                 <Route path="/welcome" element={<Landing />} />
 
                 <Route path="/auth" element={<Auth />} />
+
+                {/* Public privacy notice (GDPR Art. 13/14) — reachable signed-out. */}
+                <Route path="/privacy" element={<PrivacyPolicy />} />
 
                 {/* OAuth 2.1 consent (MCP connector authorization). PUBLIC route — the
                     page self-handles auth, bouncing to /auth with a return param that
@@ -127,7 +134,10 @@ const App = () => {
 
                 <Route path="/journey" element={<Navigate to="/v1/journey" replace />} />
 
-                <Route path="/diagnostic" element={<Navigate to="/v1/diagnostic" replace />} />
+                {/* Alpha: /v5 is the ONLY diagnostic surface (Trevor walked the old
+                    problem-solver flow via the landing CTAs, 2026-07-08). The legacy
+                    guest entries redirect; the pages stay in the tree for revert. */}
+                <Route path="/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 <Route path="/subscribe" element={<Navigate to="/v1/subscribe" replace />} />
 
@@ -164,13 +174,13 @@ const App = () => {
                     auth-gated forensic run → customer profile + Decision Trigger fix.
                     Login-gated in-app review flow — the public guest entry point is
                     /v1/diagnostic (FreeDiagnostic), which stays open. */}
-                <Route path="/v2/diagnostic" element={<RequireAuth><ErrorBoundary><ProblemSolverDiagnostic /></ErrorBoundary></RequireAuth>} />
+                <Route path="/v2/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 {/* Review route: the same flow with Movement 1 (Recognition) in front,
                     per Trevor's Revised Entry Experience Brief (IDEA-APP-ENTRY-001 v1.1).
                     Kept separate from /v2 so the live baseline is untouched while Trevor
                     reviews Movement 1 before Movements 2/3 are built. Login-gated. */}
-                <Route path="/v3/diagnostic" element={<RequireAuth><ErrorBoundary><ProblemSolverDiagnostic showRecognition /></ErrorBoundary></RequireAuth>} />
+                <Route path="/v3/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 {/* /v4 — the new "one and only" surface (app shell + spine + Loop 1).
                     Old routes stay mounted; VersionGate gates the entry behind
@@ -192,7 +202,14 @@ const App = () => {
 
                 {/* /v4/tools — standalone trust-signals tool registry (own dark theme,
                     intentionally outside V4Layout so it reads as a public trust page). */}
-                <Route path="/v4/tools" element={<V4Tools />} />
+                {/* /v4 retired — the standalone tools page redirects to /v5 too. */}
+                <Route path="/v4/tools" element={<Navigate to="/v5" replace />} />
+
+                {/* /v5 — nav-less Avatar 2.0 build theatre alpha. PUBLIC route:
+                    the page creates an anonymous Supabase session on demand and
+                    converts it at the save step, so it must NOT be wrapped in
+                    RequireAuth. */}
+                <Route path="/v5" element={<ErrorBoundary><V5Alpha /></ErrorBoundary>} />
 
                 <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
 
@@ -292,7 +309,7 @@ const App = () => {
                 {/* Consolidated (2026-06-29): /v1 uses the one diagnostic engine
                     (ProblemSolverDiagnostic + Recognition), gated like /v2,/v3 —
                     the divergent FreeDiagnostic questionnaire is retired. */}
-                <Route path="/v1/diagnostic" element={<RequireAuth><ProblemSolverDiagnostic showRecognition /></RequireAuth>} />
+                <Route path="/v1/diagnostic" element={<Navigate to="/v5" replace />} />
 
                 <Route path="/v1/subscribe" element={<RequireAuth><PricingPaywall /></RequireAuth>} />
 

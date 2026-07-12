@@ -338,7 +338,7 @@ const BrandCoachV2 = (): JSX.Element => {
                   <span className="text-sm font-semibold">Your biggest Trust Gap: {gapLabel}</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Let's build the Signature that closes your {gapLabel} gap. Start the conversation here.
+                  Let's build the positioning that closes your {gapLabel} gap. Start the conversation here.
                 </p>
                 <Button size="sm" onClick={() => handleSendMessage(gapOpenerPrompt(gap))} disabled={isSending || isStreaming}>
                   Work on my {gapLabel} gap

@@ -17,6 +17,8 @@
 
 import posthog from 'posthog-js';
 
+import { hasAnalyticsConsent, onConsentChange } from './consent';
+
 /** Every Alpha funnel + error event, snake_case, grouped by journey. */
 export type AlphaEventName =
   | 'beta_welcome_viewed'
@@ -238,7 +240,29 @@ export type AlphaEventName =
   | 'v4_defend_loop_restarted'
   | 'v4_defend_drift_watch_viewed'
   | 'v4_defend_checklist_viewed'
-  | 'v4_defend_competitor_teaser_viewed';
+  | 'v4_defend_competitor_teaser_viewed'
+  // /v5 alpha — the Avatar 2.0 build theatre (ASIN → live build → co-sign →
+  // Trust Gap + Decision Trigger → design brief → save). Counts / booleans /
+  // slugs only — never review text, listing copy, the ASIN value, or PII.
+  | 'v5_entry_viewed'
+  | 'v5_run_started'
+  | 'v5_corpus_ready'
+  | 'v5_corpus_retry'
+  | 'v5_stage_revealed'
+  | 'v5_cosign_confirmed'
+  | 'v5_results_viewed'
+  | 'v5_brief_viewed'
+  | 'v5_brief_shared'
+  | 'v5_saved'
+  | 'v5_coldstart_shown'
+  | 'v5_express_run'
+  // Returning-user home (V5Home) — the signed-in landing that lists the
+  // listings a seller has already analysed. Home viewed + re-open one in
+  // express. Counts / booleans / IDs only, never the ASIN value or PII.
+  | 'v5_home_viewed'
+  | 'v5_home_reopen'
+  // Persisted last-run brief opened instantly from the home screen (no re-run).
+  | 'v5_brief_reopened';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;
@@ -250,17 +274,55 @@ let isInitialized = false;
 /**
  * Initialise PostHog once. No-op (and logs nothing) when the key is unset so
  * the app works without analytics configured.
+ *
+ * CONSENT-GATED (GDPR/ePrivacy): refuses to start without a stored analytics
+ * opt-in — before the visitor decides, no PostHog cookies exist and no events
+ * leave the browser. Wire-up happens via bindAnalyticsToConsent() in App.tsx.
  */
 export function initPostHog(): void {
   const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
-  if (!key || isInitialized) return;
+  if (!key || isInitialized || !hasAnalyticsConsent()) return;
 
   posthog.init(key, {
-    api_host: (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://us.i.posthog.com',
+    // EU host pinned as the CODE default — a worktree build missing .env must
+    // never silently ship US ingestion (GDPR transfer record says EU).
+    api_host: (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://eu.i.posthog.com',
     // Exception autocapture — the Alpha error-monitoring surface (no Sentry).
     capture_exceptions: true,
   });
   isInitialized = true;
+}
+
+/**
+ * Bind analytics to the consent store: start PostHog if consent is already
+ * granted, start/opt-in on a later grant, and opt out + drop identity when
+ * consent is withdrawn. Call once at app boot (replaces a bare initPostHog()).
+ */
+export function bindAnalyticsToConsent(): void {
+  initPostHog();
+  onConsentChange((state) => {
+    if (state.analytics === 'granted') {
+      if (isInitialized) {
+        try {
+          posthog.opt_in_capturing();
+        } catch (err) {
+          console.warn('[posthogClient] opt-in failed:', err);
+        }
+      } else {
+        initPostHog();
+      }
+    } else if (isInitialized) {
+      try {
+        // Stop capture and drop the device's identity/super-properties so a
+        // withdrawal behaves like erasure on this device (Art. 7(3) — as easy
+        // to withdraw as to give).
+        posthog.opt_out_capturing();
+        posthog.reset();
+      } catch (err) {
+        console.warn('[posthogClient] opt-out failed:', err);
+      }
+    }
+  });
 }
 
 export function isPostHogEnabled(): boolean {

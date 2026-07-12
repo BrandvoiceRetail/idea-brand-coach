@@ -1,42 +1,17 @@
 /**
- * V4Layout — the /v4 app shell: desktop sidebar + sticky spine stepper +
- * routed content + mobile bottom-nav. Wraps the routed stages via <Outlet/>.
+ * V4Layout — RETIRED. /v5 is the canonical logged-in surface (product decision
+ * 2026-07-06: the /v4 spine is no longer accessible). This shell is now a hard
+ * redirect: because every /v4/* spine route renders through this parent route
+ * element, returning <Navigate> here intercepts the whole subtree
+ * (/v4, /v4/start, /v4/connect, /v4/diagnose, /v4/analyse, /v4/fix,
+ * /v4/remeasure, /v4/defend) in one place.
  *
- * Mobile-first: single column with bottom-nav under `md`; sidebar + content
- * at >=768px. Content is width-capped (~1100px) so desktop uses the space without
- * letterboxing. Bottom padding clears the fixed mobile nav only below `md`.
+ * The former shell (sidebar + spine stepper + coach widget + Outlet) and the
+ * stage pages remain in the tree, unrouted, for an easy revert if we bring a
+ * fuller surface back in Gen 2.
  */
-import { Outlet } from 'react-router-dom';
-import { SpineStepper } from './SpineStepper';
-import { V4Sidebar } from './V4Sidebar';
-import { V4BottomNav } from './V4BottomNav';
-import { V4TopBar } from './V4TopBar';
-import { TrevorCoachWidget } from './TrevorCoachWidget';
-import { CoachWidgetProvider } from '@/contexts/CoachWidgetContext';
-import { useV4ContextAutofill } from '@/hooks/useV4ContextAutofill';
+import { Navigate } from 'react-router-dom';
 
 export function V4Layout(): JSX.Element {
-  // Pre-fill the onboarding context from existing Brand Coach data (avatar +
-  // brand) so /v4 doesn't re-ask what the user already gave, and Analyse unblocks.
-  useV4ContextAutofill();
-
-  return (
-    // Provider wraps both the routed page and the widget so any /v4 surface can
-    // open + seed the floating coach instead of routing to the legacy /v2/coach.
-    <CoachWidgetProvider>
-      <div className="flex min-h-screen bg-background text-foreground">
-        <V4Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <V4TopBar />
-          <SpineStepper />
-          <main className="mx-auto w-full max-w-[1100px] flex-1 px-4 pb-24 pt-6 sm:px-6 md:pb-10">
-            <Outlet />
-          </main>
-          <V4BottomNav />
-        </div>
-        {/* Floating, transparent Brand Coach — overlays every /v4 page. */}
-        <TrevorCoachWidget />
-      </div>
-    </CoachWidgetProvider>
-  );
+  return <Navigate to="/v5" replace />;
 }

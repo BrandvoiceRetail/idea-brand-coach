@@ -108,7 +108,7 @@ export default function V4Defend(): JSX.Element {
     openCoach({
       message:
         `Build my multi-avatar messaging-perception workbook for these avatars: ${who}. ` +
-        'Use my Signature as the planned message, and upload it so I can download the .xlsx.',
+        'Use my positioning as the planned message, and upload it so I can download the .xlsx.',
     });
   };
 

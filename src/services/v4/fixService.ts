@@ -526,6 +526,7 @@ export class FixService {
         context: input.context,
         canvas: positioning.canvas,
         signature: positioning.signature,
+        trigger: positioning.trigger,
         s1: positioning.s1,
         s3: positioning.s3,
         s4: positioning.s4,
@@ -559,21 +560,62 @@ export class FixService {
   private async resolvePositioning(avatarId: string): Promise<{
     canvas: unknown;
     signature: unknown;
+    trigger: unknown;
     s1: unknown;
     s3: unknown;
     s4: unknown;
   }> {
-    const [canvas, signature, s1, s3, s4] = await Promise.all([
+    const [canvas, trigger, signature, s1, s3, s4] = await Promise.all([
       this.currentArtifactContent('brand_canvas', avatarId),
+      // The named Decision Trigger is a valid positioning root (Canvas > Trigger,
+      // 2026-07-08): the engine gates on it, so it MUST travel in the body. The
+      // v5 run persists one via run-forensic-analysis; without this the brief
+      // walls for every canvas-less user (Trevor hit this 2026-07-09).
+      this.latestDecisionTrigger(avatarId),
       this.currentSignatureContent(avatarId),
       this.currentArtifactContent('avatar_s1_vocab', avatarId),
       this.currentArtifactContent('avatar_s3_triggers', avatarId),
       this.currentArtifactContent('avatar_s4_objections', avatarId),
     ]);
-    if (canvas == null && signature == null) {
-      return { canvas: null, signature: await this.avatarProfilePositioning(avatarId), s1, s3, s4 };
+    if (canvas == null && signature == null && trigger == null) {
+      // Last-resort degrade: no canvas, no trigger, no signature — synthesise
+      // from the avatar profile so the owner still gets an inference-grounded
+      // brief instead of a wall. (The engine only reads canvas/trigger now, so
+      // the synthesis rides in as the trigger-shaped root.)
+      return { canvas: null, trigger: await this.avatarProfilePositioning(avatarId), signature: null, s1, s3, s4 };
     }
-    return { canvas, signature, s1, s3, s4 };
+    return { canvas, trigger, signature, s1, s3, s4 };
+  }
+
+  /**
+   * Latest persisted Decision Trigger content for the brief root: avatar-scoped
+   * row first, then the brand-level row (avatar_id IS NULL) — newest by
+   * generated_at. Returns null (never throws) so the brief path stays resilient.
+   */
+  private async latestDecisionTrigger(avatarId: string): Promise<unknown> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const pick = async (scoped: boolean): Promise<Record<string, unknown> | null> => {
+        let q = supabase
+          .from('decision_triggers')
+          .select('dominant_type, brand_anchor, evidence_phrases, placement_instruction, why_this_trigger, generated_at')
+          .eq('user_id', user.id)
+          .order('generated_at', { ascending: false })
+          .limit(1);
+        q = scoped ? q.eq('avatar_id', avatarId) : q.is('avatar_id', null);
+        const { data, error } = await q.maybeSingle();
+        if (error) {
+          console.error('[fixService] decision trigger read failed:', error.message);
+          return null;
+        }
+        return data;
+      };
+      return (await pick(true)) ?? (await pick(false));
+    } catch (e) {
+      console.error('[fixService] decision trigger read threw:', e);
+      return null;
+    }
   }
 
   /**
@@ -645,7 +687,7 @@ export class FixService {
       if (!chosen) return errResult(null, 'The chosen option is not in the option set.');
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return errResult(null, 'You must be signed in to save your Signature.');
+      if (!user) return errResult(null, 'You must be signed in to save your positioning.');
 
       const { data, error } = await supabase
         .from('signatures')
@@ -660,10 +702,10 @@ export class FixService {
         })
         .select('id')
         .single();
-      if (error) return errResult(error, 'Could not save your Signature.');
+      if (error) return errResult(error, 'Could not save your positioning.');
       return { status: 'ok', data: { signatureId: data.id } };
     } catch (e) {
-      return errResult(e, 'Could not save your Signature.');
+      return errResult(e, 'Could not save your positioning.');
     }
   }
 

@@ -335,7 +335,7 @@ function ImagePromptTab({
         testId="asset-image-prompt-empty"
         Icon={ImageIcon}
         title="No image prompt yet"
-        body="Generate a ready-to-paste image prompt for this asset, grounded in your avatar and Signature."
+        body="Generate a ready-to-paste image prompt for this asset, grounded in your avatar and positioning."
         cta="Generate image prompt"
         onCta={onGenerate}
       />
@@ -426,7 +426,7 @@ function CheckAssetTab({
         testId="asset-check-empty"
         Icon={ShieldCheck}
         title="Not checked yet"
-        body="Audit this asset against your avatar and Signature to see what's on-brand and what drifts — nothing is scored until you run the check."
+        body="Audit this asset against your avatar and positioning to see what's on-brand and what drifts — nothing is scored until you run the check."
         cta="Check asset"
         onCta={onCheck}
       />
@@ -465,7 +465,7 @@ function CheckAssetTab({
 
         <p className="text-xs text-muted-foreground">
           Checked against{' '}
-          {signatureVersion ? `Signature ${signatureVersion}` : 'your current Signature'}
+          {signatureVersion ? `Positioning ${signatureVersion}` : 'your current positioning'}
           {typeof audit.grounding?.fields_used === 'number'
             ? ` · ${audit.grounding.fields_used} strategy field${
                 audit.grounding.fields_used === 1 ? '' : 's'

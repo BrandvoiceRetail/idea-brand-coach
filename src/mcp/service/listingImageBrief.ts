@@ -243,7 +243,7 @@ export function buildListingImageBrief(input: ListingImageBriefInput): ListingIm
     slots: LISTING_IMAGE_SLOTS,
     execution_routing: {
       photoreal:
-        'Slots marked engine=photoreal (main, lifestyle) are PRODUCT PHOTOGRAPHY. Route them to: real product photography, a photoreal AI image generator (Midjourney / DALL-E / Google Imagen) with photography-grade prompts, or Genrupt (Trevor\'s evaluated workflow). Do NOT use Canva generate-design for these — it produces document/layout graphics, not photoreal product shots (this is the loop to avoid).',
+        'Slots marked engine=photoreal (main, lifestyle) are PRODUCT PHOTOGRAPHY. Route them to: real product photography, a photoreal AI image generator (Higgsfield generate_image / Midjourney / DALL-E / Google Imagen) with photography-grade prompts, or Genrupt (Trevor\'s evaluated workflow). On Higgsfield, upload the real product photo first and cite it as the strict reference. Do NOT use Canva generate-design for these — it produces document/layout graphics, not photoreal product shots (this is the loop to avoid).',
       infographic:
         'Slots marked engine=infographic (benefits, features, comparison, trust) are graphic layouts with text/badges. Canva is the right tool here — give it the per-slot copy + structure. Assemble these from the user\'s real assets where possible.',
       provide_prompts:
@@ -259,6 +259,7 @@ export function buildListingImageBrief(input: ListingImageBriefInput): ListingIm
     claim_gate:
       'Before including any guarantee or specific claim (e.g. "lifetime warranty", a clinical percentage), flag it to the user and ask them to confirm they offer/can substantiate it. Only include it once confirmed.',
     never_contain: [
+      'IMPORTANT: This list governs the ARTIFACT TEXT only (the brief/image copy handed to the designer). Your spoken report to the user MUST still name Trust Gap™ and Decision Trigger™ explicitly.',
       'Framework terminology: IDEA, Trust Gap, Decision Trigger, buyer state, CAPTURE.',
       'Buyer-state names: Assessor, Protector, Expresser, Connector.',
       'Academic/engine internals: neuroanatomy, System 1/2, S1-S4, confidence scores.',
@@ -272,7 +273,7 @@ export function buildListingImageBrief(input: ListingImageBriefInput): ListingIm
       `1) Triage the inputs for "${input.product}" using evidence_discipline (verified facts vs strategy signals vs unsupported). Record only defensible product facts; reject mismatched evidence.`,
       `2) Ground the set in the user's IDEA context: the Decision Trigger${trigger ? ` (${trigger})` : ' (identify it first via identify_decision_trigger if unknown)'}, the Avatar 2.0 emotional core${input.avatarSummary ? '' : ' (pull from get_avatar / the avatar build)'}, and the Trust Gap pillar to close${input.trustGapSummary ? '' : ' (from run_trust_gap)'}.`,
       '3) For EACH slot above, compose a Skill-10 brief: (A) one-line context for the recipient, (B) image/shot direction + emotional register + the trust signal, (C) copy/overlay direction (gallery slots only), (D) where it goes. Lead the lifestyle slot with the empathetic line.',
-      '4) For every photoreal slot, write a ready-to-generate prompt using prompt_construction (the "IMAGE_PROMPT:" marker + the 8-part order + the exact negative prompt). Route photoreal to photography / Midjourney / DALL-E / Genrupt, NOT Canva layout-gen; infographic slots get copy + layout for Canva.',
+      '4) For every photoreal slot, write a ready-to-generate prompt using prompt_construction (the "IMAGE_PROMPT:" marker + the 8-part order + the exact negative prompt). Route photoreal to photography / Higgsfield generate_image / Midjourney / DALL-E / Genrupt, NOT Canva layout-gen; infographic slots get copy + layout for Canva.',
       '5) If the seller is Brand-Registered and wants A+, also produce the aplus_content brief: 4 distinct long-form editorial concepts (continuous, not stacked modules) at the target size.',
       '6) Run the claim gate on any guarantee/claim, then the qa_checklist on the result. Keep all confirmed facts exact; verify actual output dimensions honestly.',
       '7) Save the brief with log_asset (content_type "amazon"), and open the split-test with design_test (hypothesis = this set lifts CTR on the main + CVR on the gallery for this piece). Stamp asset_created → asset_live via update_test_milestone as the real images are produced and go live, then re-measure.',

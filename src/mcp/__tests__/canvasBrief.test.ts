@@ -290,23 +290,47 @@ describe('runGenerateBrief', () => {
       getCurrentArtifact: over.getCurrentArtifact ?? makeGetCurrent(new Map([['brand_canvas', CANVAS_REPLY]])),
       saveArtifact: over.saveArtifact ?? (makeSaveStub([]) as GenerateBriefDeps['saveArtifact']),
       edgeFn: over.edgeFn ?? stubEdgeFn({ 'export-brief': cleanBrief }),
+      getLatestDecisionTrigger: over.getLatestDecisionTrigger ?? (async () => null),
     };
   }
 
-  it('returns needs_input only when NEITHER a Signature nor a Brand Canvas exists', async () => {
+  it('returns needs_input when NEITHER a Brand Canvas nor a Decision Trigger exists', async () => {
     const res = await runGenerateBrief(null, deps({ getCurrentArtifact: makeGetCurrent(new Map()) }));
     expect(res.status).toBe('needs_input');
     if (res.status !== 'needs_input') return;
     expect(res.reason).toBe('no_canvas');
   });
 
-  it('degrades to the Signature when no Brand Canvas exists — persists the brief (kills the homework wall)', async () => {
-    const saved: Array<{ kind: ArtifactKind; content: unknown; opts: SaveArtifactOptions }> = [];
-    // Signature present, NO brand_canvas — the P1 "shippable brief today" path.
+  it('a legacy Signature alone is NOT a root — returns needs_input (dropped from the chain, 2026-07-08)', async () => {
+    // Signature present, NO brand_canvas, NO decision trigger. The old
+    // degrade-to-signature path is retired: the brief asks honestly instead.
     const sigOnly = makeGetCurrent(new Map<ArtifactKind, unknown>([
       ['signature', { options: [{ option: 1, sentence: 'x' }], chosen_option: 1, grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }],
     ]));
-    const res = await runGenerateBrief(null, deps({ getCurrentArtifact: sigOnly, saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'] }));
+    const res = await runGenerateBrief(null, deps({ getCurrentArtifact: sigOnly }));
+    expect(res.status).toBe('needs_input');
+    if (res.status !== 'needs_input') return;
+    expect(res.reason).toBe('no_canvas');
+  });
+
+  it('a Decision Trigger alone IS a root — persists the brief (kills the homework wall)', async () => {
+    const saved: Array<{ kind: ArtifactKind; content: unknown; opts: SaveArtifactOptions }> = [];
+    // Trigger present, NO brand_canvas — the alpha "shippable brief today" path.
+    const res = await runGenerateBrief(null, deps({
+      getCurrentArtifact: makeGetCurrent(new Map()),
+      getLatestDecisionTrigger: async () => ({
+        id: 't-1', user_id: 'u-1', session_id: 's-1', avatar_id: null,
+        content: {
+          dominant_type: 'Recognition',
+          brand_anchor: 'certainty their collection is safe',
+          evidence_phrases: ['finally feels safe'],
+          placement_instruction: 'Lead the hero with the recognition moment.',
+          why_this_trigger: 'Strongest lever in the reviews.',
+        },
+        generated_at: '2026-01-01T00:00:00Z', created_at: '2026-01-01T00:00:00Z',
+      }),
+      saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'],
+    }));
     expect(res.status).toBe('persisted');
     if (res.status !== 'persisted') return;
     expect(saved).toHaveLength(1);
@@ -432,6 +456,7 @@ describe('runGenerateBrief — transient retry (R2)', () => {
       saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'],
       edgeFn: edge,
       sleep: noSleep,
+      getLatestDecisionTrigger: async () => null,
     });
     expect(res.status).toBe('persisted');
     expect(count()).toBe(2);
@@ -448,6 +473,7 @@ describe('runGenerateBrief — transient retry (R2)', () => {
       saveArtifact: makeSaveStub(saved) as GenerateBriefDeps['saveArtifact'],
       edgeFn: edge,
       sleep: noSleep,
+      getLatestDecisionTrigger: async () => null,
     });
     expect(res.status).toBe('needs_input');
     if (res.status !== 'needs_input') return;

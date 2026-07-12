@@ -2,6 +2,11 @@
 
 [mcpjam](https://github.com/MCPJam/inspector) is an interactive inspector + evals platform for MCP servers. It's **optional** — our native suite (`npm run evals`) and behavioural tier (`npm run evals:live`) cover the same cases. mcpjam is useful when you want to drive the **deployed** coach MCP interactively or with mcpjam's multi-model runner.
 
+> **Two suites are generated here.** `mcpjam-suite.generated.json` (this file's runbook) is the
+> BEHAVIOURAL suite from the curated cases. `mcpjam-image-suite.generated.json` is the
+> **image output-quality E2E suite** — it needs BOTH connectors attached (IDEA Brand Coach +
+> Higgsfield) and pairs with a vision-judge scorer; see [`../image/README.md`](../image/README.md).
+
 ## Generate the suite
 
 ```bash

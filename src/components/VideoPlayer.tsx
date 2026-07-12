@@ -26,17 +26,20 @@ export function VideoPlayer({
   const getVimeoUrl = (): string => {
     const baseUrl = `https://player.vimeo.com/video/${videoId}`;
     const params = new URLSearchParams();
-    
+
     if (hash) params.append('h', hash);
     params.append('title', '0');
     params.append('byline', '0');
     params.append('portrait', '0');
-    
+    // GDPR: Do-Not-Track mode — Vimeo skips session tracking cookies.
+    params.append('dnt', '1');
+
     return `${baseUrl}?${params.toString()}`;
   };
 
+  // GDPR: youtube-nocookie.com defers YouTube's tracking cookies until playback.
   const src = platform === "youtube"
-    ? `https://www.youtube.com/embed/${videoId}`
+    ? `https://www.youtube-nocookie.com/embed/${videoId}`
     : getVimeoUrl();
 
   return (

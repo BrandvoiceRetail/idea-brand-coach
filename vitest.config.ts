@@ -8,7 +8,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', '.auto-claude/**', '**/tests/e2e/**'],
+    // .claude/** keeps stale agent-worktree copies of the suite out of test runs
+    // (same reason .auto-claude/** is here).
+    exclude: ['**/node_modules/**', '**/dist/**', '.auto-claude/**', '.claude/**', '**/tests/e2e/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

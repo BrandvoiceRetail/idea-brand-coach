@@ -225,3 +225,13 @@ verify_jwt = true
 # Stripe signature itself, so platform JWT verification stays OFF.
 [functions.stripe-webhook]
 verify_jwt = false
+
+# GDPR data-subject-rights functions (right of access/portability + right to
+# erasure). verify_jwt pinned TRUE: both act ONLY on the caller's own account and
+# must be unreachable anonymously at the platform edge; each also re-derives the
+# user in-function (edge-auth getAuthedUserId) — never from request params.
+[functions.gdpr-export]
+verify_jwt = true
+
+[functions.gdpr-delete-account]
+verify_jwt = true

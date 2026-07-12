@@ -14,6 +14,9 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { ROUTES } from '@/config/routes';
 import { isV4Forced } from '@/config/v4';
+import { supabase } from '@/integrations/supabase/client';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CONSENT_POLICY_VERSION } from '@/lib/consent';
 
 const emailSchema = z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password must be less than 100 characters');
@@ -29,6 +32,9 @@ export default function Auth() {
   const [emailErrors, setEmailErrors] = useState('');
   const [passwordErrors, setPasswordErrors] = useState('');
   const [nameErrors, setNameErrors] = useState('');
+  // GDPR: signup requires explicit acceptance of the privacy notice.
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
+  const [policiesError, setPoliciesError] = useState('');
   // Set after a sign-up that returns no session (email confirmation required) so
   // we show a persistent "check your email" panel instead of routing into the app.
   const [pendingConfirmEmail, setPendingConfirmEmail] = useState<string | null>(null);
@@ -115,10 +121,31 @@ export default function Auth() {
     if (!isEmailValid || !isPasswordValid) return;
 
     setIsLoading(true);
+
+    // If the visitor arrived on an ANONYMOUS session (a guest /v5 run), keep
+    // its token: signing in replaces the session, and without this the run's
+    // data stays stranded under the anon user (task #31). After sign-in the
+    // reparent-anon-run edge fn verifies both identities and moves the rows.
+    let anonToken: string | null = null;
+    try {
+      const { data: { session: preSession } } = await supabase.auth.getSession();
+      if (preSession?.user?.is_anonymous) anonToken = preSession.access_token;
+    } catch { /* no session to carry */ }
+
     const { error } = await signIn(email, password);
 
     if (!error) {
       setIsLoading(false);
+
+      if (anonToken) {
+        // Background carry-over; the app resurfaces the moved rows on load.
+        supabase.functions.invoke('reparent-anon-run', { body: { anonToken } })
+          .then(({ data, error: reparentError }) => {
+            if (reparentError) console.error('❌ Auth: anon run carry-over failed:', reparentError);
+            else console.log('✅ Auth: anon run carried into account:', data?.moved);
+          })
+          .catch((e) => console.error('❌ Auth: anon run carry-over failed:', e));
+      }
 
       // Navigate first
       navigate(redirectUrl);
@@ -148,10 +175,18 @@ export default function Auth() {
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
 
-    if (!isNameValid || !isEmailValid || !isPasswordValid) return;
+    if (!acceptedPolicies) {
+      setPoliciesError('Please agree to the Privacy Policy to create an account.');
+    } else {
+      setPoliciesError('');
+    }
+
+    if (!isNameValid || !isEmailValid || !isPasswordValid || !acceptedPolicies) return;
 
     setIsLoading(true);
-    const { error, needsConfirmation } = await signUp(email, password, fullName);
+    const { error, needsConfirmation } = await signUp(email, password, fullName, {
+      version: CONSENT_POLICY_VERSION,
+    });
 
     if (!error) {
       setIsLoading(false);
@@ -272,6 +307,13 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                alt="IDEA Brand Coach"
+                className="h-12 w-auto"
+              />
+            </div>
             <CardTitle>Set a new password</CardTitle>
             <CardDescription>
               Choose a new password for your account.
@@ -327,6 +369,13 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                alt="IDEA Brand Coach"
+                className="h-12 w-auto"
+              />
+            </div>
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
               We've sent a confirmation link to <span className="font-medium text-foreground">{pendingConfirmEmail}</span>.
@@ -348,12 +397,23 @@ export default function Auth() {
     );
   }
 
-  // Show account management if user is already logged in
-  if (user) {
+  // Show account management if user is already logged in. An ANONYMOUS
+  // session (minted by a guest /v5 run) must NOT count — it has no email and
+  // no credentials, so this branch would be a dead end ("signed in as <blank>"
+  // with no way to reach the sign-in form). Anon visitors fall through to the
+  // real form; signing in replaces the anon session and honours ?redirect=.
+  if (user && !(user as { is_anonymous?: boolean }).is_anonymous) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                alt="IDEA Brand Coach"
+                className="h-12 w-auto"
+              />
+            </div>
             <CardTitle>Account Management</CardTitle>
             <CardDescription>You are already signed in as {user.email}</CardDescription>
           </CardHeader>
@@ -362,7 +422,7 @@ export default function Auth() {
               onClick={() => navigate(ROUTES.APP_ROOT)}
               className="w-full"
             >
-              Go to Dashboard
+              Continue to your listings
             </Button>
             <Button 
               onClick={signOut} 
@@ -395,6 +455,13 @@ export default function Auth() {
         {showResetPassword ? (
           <Card className="w-full">
             <CardHeader>
+              <div className="flex justify-center mb-4">
+                <img
+                  src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                  alt="IDEA Brand Coach"
+                  className="h-12 w-auto"
+                />
+              </div>
               <CardTitle>Reset Password</CardTitle>
               <CardDescription>
                 Enter your email address and we'll send you a reset link.
@@ -436,6 +503,13 @@ export default function Auth() {
         ) : (
           <Card className="w-full">
             <CardHeader>
+              <div className="flex justify-center mb-4">
+                <img
+                  src="/lovable-uploads/717bf765-c54a-4447-9685-6c5a3ee84297.png"
+                  alt="IDEA Brand Coach"
+                  className="h-12 w-auto"
+                />
+              </div>
               <CardTitle>Welcome to IDEA Brand Coach</CardTitle>
               <CardDescription>
                 Sign in to your account or create a new one to get started.
@@ -589,6 +663,27 @@ export default function Auth() {
                       />
                       {passwordErrors && <p className="text-sm text-destructive">{passwordErrors}</p>}
                     </div>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <Checkbox
+                          id="signup-policies"
+                          checked={acceptedPolicies}
+                          onCheckedChange={(checked) => {
+                            setAcceptedPolicies(checked === true);
+                            if (checked === true) setPoliciesError('');
+                          }}
+                          className="mt-0.5"
+                        />
+                        <Label htmlFor="signup-policies" className="text-sm font-normal leading-snug text-muted-foreground">
+                          I agree to the{' '}
+                          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-foreground">
+                            Privacy Policy
+                          </a>{' '}
+                          and to my brand data being processed to provide the coaching service.
+                        </Label>
+                      </div>
+                      {policiesError && <p className="text-sm text-destructive">{policiesError}</p>}
+                    </div>
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? (
                         <>
@@ -638,6 +733,12 @@ export default function Auth() {
                       </svg>
                       Sign up with Google
                     </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      By signing up with Google you agree to the{' '}
+                      <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">
+                        Privacy Policy
+                      </a>.
+                    </p>
                   </form>
                 </TabsContent>
               </Tabs>

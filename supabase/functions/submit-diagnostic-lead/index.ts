@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { clientIp, createRateLimiter } from "../_shared/rateLimit.ts";
+import { APP_URL } from "../_shared/appUrl.ts";
 
 // submit-diagnostic-lead — lead-magnet capture for the free Trust Gap diagnostic.
 //
@@ -23,7 +24,7 @@ const MAX_BODY_BYTES = Number(Deno.env.get("LEAD_MAX_BODY_BYTES") ?? "8192");
 const RATE_LIMIT_MAX = Number(Deno.env.get("LEAD_RATE_LIMIT_MAX") ?? "10"); // requests...
 const RATE_LIMIT_WINDOW_MS = Number(Deno.env.get("LEAD_RATE_LIMIT_WINDOW_MS") ?? "60000"); // ...per window (default 60s)
 const LEAD_FROM_EMAIL = Deno.env.get("LEAD_FROM_EMAIL") ?? "Trevor <noreply@app.ideabrandconsultancy.com>";
-const LEAD_CTA_URL = Deno.env.get("LEAD_CTA_URL") ?? "https://ideabrandcoach.icodemybusiness.com";
+const LEAD_CTA_URL = APP_URL;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 // On-brand palette.

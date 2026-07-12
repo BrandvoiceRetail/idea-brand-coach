@@ -16,6 +16,8 @@ import {
 } from './config.js';
 import type { LedgerClient } from './ivos/capabilities.js';
 import { NativeLedgerClient } from './service/nativeLedger.js';
+import { composeCoachPreamble, tier1GroundingPreamble } from './service/coachInstructions.js';
+import { getServerSupabase, getServiceRoleSupabase } from './supabaseServer.js';
 import { registerOnboard } from './tools/onboard.js';
 import { instrumentToolLatency } from './instrument.js';
 import { registerStructuredFallback } from './structuredFallback.js';
@@ -52,6 +54,12 @@ import { registerGenerateCanvasTool } from './tools/generateCanvas.js';
 import { registerGenerateBriefTool } from './tools/generateBrief.js';
 import { registerGenerateListingImageBriefTool } from './tools/generateListingImageBrief.js';
 import { registerGenerateListingImageTool } from './tools/generateListingImage.js';
+import { registerGenerateVideoStoryboardTool } from './tools/generateVideoStoryboard.js';
+import { registerGenerateAplusContentPlanTool } from './tools/generateAplusContentPlan.js';
+import { registerGenerateMainImageTitlePlanTool } from './tools/generateMainImageTitlePlan.js';
+import { registerGenerateStorefrontMessagingPlanTool } from './tools/generateStorefrontMessagingPlan.js';
+import { registerGenerateUgcAdPlanTool } from './tools/generateUgcAdPlan.js';
+import { registerRefineCreativePlanTool } from './tools/refineCreativePlan.js';
 import { registerGenerateAuditIdeaMapTool } from './tools/generateAuditIdeaMap.js';
 import { registerRunMarketingAuditTool } from './tools/runMarketingAudit.js';
 import { registerExportWorkbookTool } from './tools/exportWorkbook.js';
@@ -100,14 +108,38 @@ export interface BuiltServer {
   edgeFn: EdgeFnClient;
 }
 
-export function createServer(
+export async function createServer(
   config: HostConfig = loadConfig(),
   edgeFn?: EdgeFnClient,
   ledgerClient?: LedgerClient,
-): BuiltServer {
+): Promise<BuiltServer> {
+  // Compose instructions: base SERVER_INSTRUCTIONS + coach_instructions from DB
+  let composedInstructions = SERVER_INSTRUCTIONS;
+
+  // Fetch and append coach_instructions if enabled
+  if (process.env.COACH_INSTRUCTIONS_ENABLED === 'true') {
+    try {
+      // Use service-role client for coach_instructions (bypasses RLS during init)
+      const supabase = getServiceRoleSupabase();
+      const coachPreamble = await composeCoachPreamble(supabase, 'preamble');
+      const tier1Preamble = await tier1GroundingPreamble(supabase);
+
+      if (coachPreamble || tier1Preamble) {
+        composedInstructions = [
+          SERVER_INSTRUCTIONS,
+          tier1Preamble,
+          coachPreamble,
+        ].filter(Boolean).join('\n\n');
+      }
+    } catch (err) {
+      // Fail open: use base instructions if coach_instructions fetch fails
+      console.error('Failed to fetch coach_instructions, using base instructions:', err);
+    }
+  }
+
   const server = new McpServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
-    { instructions: assertServerInstructions(SERVER_INSTRUCTIONS) },
+    { instructions: assertServerInstructions(composedInstructions) },
   );
 
   // Time every tool uniformly (emits mcp_tool_latency per call). Must run before the
@@ -221,6 +253,23 @@ export function createServer(
   // Brief-driven image executor: turns a slot's IMAGE_PROMPT + the real product photo into
   // an actual image via Nano Banana Pro (Gemini 3 Pro Image) through gemini-image-generate.
   registerGenerateListingImageTool(server, edge);
+  // Creative-plan directors (the Higgsfield <-> brand-coach bridge): positioning-aligned
+  // plans for every surface a shopper meets — video storyboard (scene architecture +
+  // storyboard-image/per-scene Higgsfield generate_video modes + UGC/unboxing preset
+  // routing), A+ content (5 addressable beats, one continuous editorial composition),
+  // the main-image+title search-grid pair, storefront messaging (hero/tagline/tiles),
+  // and script-level UGC ads (avatar-cast persona + trigger-angled hook variants +
+  // honesty rails). All share the positioning spine + propagation map (service/creativeAlignment)
+  // and degrade honestly on missing context (new users get a plan, not a wall).
+  // refine_creative_plan is the UPDATE path: component changes stay surgical (one scene,
+  // one job) and positioning changes propagate across every live plan. Directors only —
+  // deterministic, no LLM/edge calls; the host executes on the Higgsfield connector.
+  registerGenerateVideoStoryboardTool(server);
+  registerGenerateAplusContentPlanTool(server);
+  registerGenerateMainImageTitlePlanTool(server);
+  registerGenerateStorefrontMessagingPlanTool(server);
+  registerGenerateUgcAdPlanTool(server);
+  registerRefineCreativePlanTool(server);
   registerGenerateAuditIdeaMapTool(server);
 
   // Marketing-audit engine (Phase 5, manifest §2 sheet B): run_marketing_audit

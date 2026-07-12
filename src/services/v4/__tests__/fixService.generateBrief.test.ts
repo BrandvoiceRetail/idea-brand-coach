@@ -4,9 +4,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  * generateBrief MUST resolve the brand positioning and PASS it to the export-brief
  * engine — the app used to send only {touchpoint_id, avatar_id, context}, so the
  * engine always hit its "create a Signature first" wall and the on-brand rewrite
- * never worked. These tests lock the resolution: a real Signature is forwarded, and
- * when no Signature/Canvas exists the avatar profile is forwarded as a degrade root
- * (so the brief still generates instead of walling).
+ * never worked. These tests lock the resolution: a real Signature is forwarded, the
+ * persisted Decision Trigger is forwarded as `trigger` (the engine's other valid
+ * root — Trevor's 2026-07-09 dead end was this field going missing), and when no
+ * root of any kind exists the avatar profile is forwarded as a trigger-shaped
+ * degrade root (so the brief still generates instead of walling).
  *
  * The supabase client is mocked as a tiny chainable builder whose terminal
  * `maybeSingle()` returns per-table data via `responders`.
@@ -28,7 +30,10 @@ function builder(table: string) {
 }
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: (t: string) => builder(t) },
+  supabase: {
+    from: (t: string) => builder(t),
+    auth: { getUser: async () => ({ data: { user: { id: 'u1' } } }) },
+  },
 }));
 
 import { FixService } from '@/services/v4/fixService';
@@ -73,7 +78,34 @@ describe('FixService.generateBrief — resolves + forwards positioning', () => {
     expect(body.confirmed_claims).toEqual([]);
   });
 
-  it('degrades to the avatar profile when no Signature or Canvas exists', async () => {
+  it('forwards the persisted Decision Trigger as the positioning root', async () => {
+    responders.signatures = () => null;
+    responders.decision_triggers = (f) =>
+      f.avatar_id === 'av1'
+        ? {
+            dominant_type: 'Recognition',
+            brand_anchor: 'seen for the collection, not the clutter',
+            evidence_phrases: ['finally looks organized'],
+            placement_instruction: 'lead bullet 1',
+            why_this_trigger: 'weakest pillar Empathetic',
+            generated_at: '2026-07-09T14:32:00Z',
+          }
+        : null;
+
+    const invoke = vi.fn(async () => ({ data: VALID_BRIEF, error: null }));
+    const svc = new FixService(noFunnel, invoke);
+
+    const res = await svc.generateBrief({ touchpointId: 'amazon_listing_copy', avatarId: 'av1' });
+
+    expect(res.status).toBe('ok');
+    const [, body] = invoke.mock.calls[0] as [string, Record<string, unknown>];
+    const trig = body.trigger as Record<string, unknown>;
+    expect(trig.dominant_type).toBe('Recognition');
+    expect(body.canvas).toBeNull();
+    expect(body.signature).toBeNull();
+  });
+
+  it('degrades to the avatar profile when no Canvas, Trigger, or Signature exists', async () => {
     responders.signatures = () => null;
     responders.avatars = (f) =>
       f.id === 'av1'
@@ -87,10 +119,11 @@ describe('FixService.generateBrief — resolves + forwards positioning', () => {
 
     expect(res.status).toBe('ok');
     const [, body] = invoke.mock.calls[0] as [string, Record<string, unknown>];
-    const sig = body.signature as Record<string, unknown>;
-    expect(sig.source).toBe('avatar_profile');
-    expect(sig.positioning).toBe('gift-buyer white space');
+    const trig = body.trigger as Record<string, unknown>;
+    expect(trig.source).toBe('avatar_profile');
+    expect(trig.positioning).toBe('gift-buyer white space');
     expect(body.canvas).toBeNull();
+    expect(body.signature).toBeNull();
   });
 
   it('passes the engine needs_input through unchanged (honest wall, no fabrication)', async () => {

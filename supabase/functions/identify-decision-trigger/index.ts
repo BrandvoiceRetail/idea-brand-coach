@@ -94,7 +94,7 @@ You are the derivation engine behind the IDEA Brand Coach Decision Trigger modul
 - Momentum and Fear-of-Loss are NOT in the score prior. Choose either as dominant ONLY if the review text strongly and specifically supports it.
 - Choose exactly ONE dominant trigger. (Supporting triggers are out of scope here; do not return one.)
 - evidence_phrases MUST be quoted VERBATIM from the provided reviews or listing. Never paraphrase, never invent. Two to three phrases. If the corpus is thin, return fewer rather than inventing.
-- brand_anchor is one short line in the form 'like Dove, your customer buys ...' using the anchor that matches the chosen dominant trigger (Identity=Apple, Belonging=Patagonia, Permission=Harvard Medical School, Fear-of-Loss=a FOMO/time-sensitivity signal, Recognition=Dove, Momentum=Amazon's Choice). These anchors are fixed - do not substitute.
+- brand_anchor is one short BRAND-FREE line naming what the customer is really buying, in the form 'your customer is not buying [the product or category], they are buying [the deeper thing they actually want]'. The reference brands in the six-triggers section (Apple, Patagonia, Harvard, Dove, Amazon) are your INTERNAL reasoning ONLY and must NEVER appear in this line or anywhere in the output - naming any company or brand confuses the seller and is forbidden. Make the line specific to THIS customer and their evidence.
 - placement_instruction is at most two sentences. Name the specific listing location in plain language (hero image headline, opening bullet point, image stack, A+ section) - do NOT use CAPTURE element names (Context, Attention, Pain, Transform, Uniqueness, Reassurance, Escalate); they are internal and the user has no context for them at this stage.
 - confidence is your own 0.0 to 1.0 certainty in the dominant choice.
 - why_this_trigger is one short plain-language paragraph a seller could read; refer to their evidence and their weak pillar in plain terms, never to scores, stages or models.
@@ -104,7 +104,7 @@ You are the derivation engine behind the IDEA Brand Coach Decision Trigger modul
 
 <output-format>
 Respond with ONLY one JSON object, no code fences, exactly these keys:
-{"dominant_type":"Recognition","brand_anchor":"like Dove, ...","evidence_phrases":["...","..."],"placement_instruction":"...","confidence":0.0,"why_this_trigger":"..."}
+{"dominant_type":"Recognition","brand_anchor":"your customer is not buying storage, they are buying the certainty that a collection they care about is finally safe","evidence_phrases":["...","..."],"placement_instruction":"...","confidence":0.0,"why_this_trigger":"..."}
 </output-format>`;
 
 function normaliseEvidence(raw: unknown): TrustGapEvidence {
@@ -157,6 +157,23 @@ interface DerivedTrigger {
   why_this_trigger: string;
 }
 
+/**
+ * Deterministic backstop for Amendment v1.1: the six reference brands are
+ * internal reasoning ONLY and must never reach the user. The prompt now forbids
+ * them, but a model can still slip; strip the old 'like Dove, ...' lead-in and
+ * any unambiguous anchor name from brand_anchor so the leak cannot recur even
+ * if generation misbehaves. Conservative — only the multi-word / distinctive
+ * anchors are stripped as bare tokens; the lead-in strip catches the exact
+ * 'like <Brand>, ' shape Trevor flagged.
+ */
+function stripAnchorBrands(line: string): string {
+  let out = line.replace(/^\s*like\s+[^,]{1,40},\s*/i, '');
+  for (const brand of ['Harvard Medical School', "Amazon's Choice", 'Patagonia', 'Amazon', 'Harvard', 'Dove', 'Apple']) {
+    out = out.replace(new RegExp(`\\b${brand}\\b`, 'gi'), '').replace(/\s{2,}/g, ' ').replace(/\s+([,.])/g, '$1').trim();
+  }
+  return out.length > 0 ? out.charAt(0).toUpperCase() + out.slice(1) : line;
+}
+
 function parseDerived(text: string): DerivedTrigger | null {
   const s = text.indexOf('{');
   const e = text.lastIndexOf('}');
@@ -168,7 +185,7 @@ function parseDerived(text: string): DerivedTrigger | null {
     const phrases = Array.isArray(p?.evidence_phrases) ? p.evidence_phrases.filter((x: unknown): x is string => typeof x === 'string') : [];
     return {
       dominant_type: p.dominant_type,
-      brand_anchor: p.brand_anchor.trim(),
+      brand_anchor: stripAnchorBrands(p.brand_anchor.trim()),
       evidence_phrases: phrases.slice(0, 3),
       placement_instruction: p.placement_instruction.trim(),
       confidence: typeof p?.confidence === 'number' ? p.confidence : 0.5,

@@ -22,7 +22,7 @@ const cfg: HostConfig = {
 
 /** Connect a client WITHOUT wrapping in runWithIdentity → caller is anonymous. */
 async function connectedClient() {
-  const { server } = createServer(cfg);
+  const { server } = await createServer(cfg);
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
   await Promise.all([server.connect(st), client.connect(ct)]);

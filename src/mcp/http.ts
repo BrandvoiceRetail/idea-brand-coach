@@ -169,7 +169,7 @@ async function handleMcp(
   }
 
   await runWithIdentity(identity, () => runWithRequestMeta(meta, async () => {
-    const { server } = createServer();
+    const { server } = await createServer();
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
     res.on('close', () => {
       void transport.close();

@@ -68,7 +68,7 @@ function stubIvos(writeOk = true) {
 
 async function connectedClient(ivos: IvosLedgerClient) {
   const edge = stubEdgeFn();
-  const { server } = createServer(cfg, edge, ivos);
+  const { server } = await createServer(cfg, edge, ivos);
   // draft_asset is off the default Alpha surface (Trevor 2026-06-25); register it directly
   // here to test the module's auto-record behavior. Goes through the same wrapped registerTool.
   registerDraftAssetTool(server, edge, ivos);

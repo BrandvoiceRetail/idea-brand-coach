@@ -293,9 +293,9 @@ export function buildChecklist(
     },
     {
       key: 'drift',
-      label: 'No assets drifted from your Signature',
+      label: 'No assets drifted from your positioning',
       detail: !hasBaseline
-        ? 'Nothing aligned to a Signature yet — work a fix first and I will watch it for drift.'
+        ? 'Nothing aligned to your positioning yet — work a fix first and I will watch it for drift.'
         : driftCount === 0
           ? 'Every aligned asset still matches your current Signature.'
           : `${driftCount} asset${driftCount === 1 ? '' : 's'} built against an older Signature — re-check ${driftCount === 1 ? 'it' : 'them'} in Fix.`,

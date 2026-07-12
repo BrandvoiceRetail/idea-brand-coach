@@ -36,6 +36,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { createRateLimiter } from "../_shared/rateLimit.ts";
+import { APP_URL } from "../_shared/appUrl.ts";
+import { shouldSkipScrape } from "../_shared/forensicFreshness.ts";
 
 // This endpoint is expensive (1 Firecrawl scrape + ~3 Sonnet calls per run), so
 // throttle per user. Best-effort per-isolate limiter; overridable via env.
@@ -56,6 +58,16 @@ const TRUST_GAP_MAX_REVIEWS = 12;
 const TRUST_GAP_REVIEW_BODY_MAX = 300;
 /** Below this review count the corpus is thin; UI must show a confidence caveat. */
 const THIN_CORPUS_THRESHOLD = 5;
+// The email's honesty note fires well above the scoring-blend bar: the app's
+// LowEvidenceBadge marks anything under 15 reviews provisional (Trevor,
+// 2026-07-09: "built from 5 reviews. Not enough to be trusted"), and the email
+// must tell the same story. Scoring/blending behaviour stays at 5 (methodology
+// changes are frozen pending discussion).
+const LOW_EVIDENCE_EMAIL_THRESHOLD = 15;
+/** Data fresher than this (ms) is reused without re-scraping. */
+// 7 days (Matthew, 2026-07-08) — aligned with review-scraper's 7d cache TTL so
+// freshness semantics match across the scrape cluster. Env-overridable.
+const FRESHNESS_WINDOW_MS = Number(Deno.env.get("FRESHNESS_WINDOW_MS") ?? "604800000");
 
 type Dim = "insight" | "distinctive" | "empathetic" | "authentic";
 const DIMS: Dim[] = ["insight", "distinctive", "empathetic", "authentic"];
@@ -69,8 +81,8 @@ const DIM_LABELS: Record<Dim, string> = {
 // ── Forensic report email (best-effort; sends only when RESEND_API_KEY is set) ──
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FORENSIC_FROM_EMAIL = Deno.env.get("LEAD_FROM_EMAIL") ?? "Trevor <noreply@app.ideabrandconsultancy.com>";
-const FORENSIC_CTA_URL = Deno.env.get("LEAD_CTA_URL") ?? "https://ideabrandcoach.icodemybusiness.com";
-const NAVY = "#1A3557";
+const FORENSIC_CTA_URL = APP_URL;
+const BLACK = "#0B0B0C";
 const GOLD = "#C9A84C";
 
 function escapeHtml(value: string): string {
@@ -183,6 +195,44 @@ function formatTrustGapReview(rating: number | null, body: string): string {
 }
 
 /**
+ * Check if we have fresh product data with usable reviews for this user/asin pair.
+ * Returns true only if:
+ * 1. Data exists and was scraped within the freshness window
+ * 2. Reviews are actually present (non-zero count)
+ *
+ * This prevents using stale data OR fresh data with failed review imports.
+ */
+async function hasRecentData(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  asin: string,
+): Promise<boolean> {
+  // Get product with scraped_at
+  const { data: product } = await admin
+    .from("user_products")
+    .select("id, scraped_at")
+    .eq("user_id", userId)
+    .eq("asin", asin)
+    .single();
+
+  if (!product || !product.scraped_at) return false;
+
+  // Reviews must actually exist before the cache counts as usable — a fresh
+  // scraped_at with zero stored reviews means import stored the listing but
+  // the review insert failed; on any doubt we scrape.
+  const { count } = await admin
+    .from("user_product_reviews")
+    .select("*", { count: "exact", head: true })
+    .eq("product_id", product.id);
+
+  // The decision itself is the unit-tested pure predicate (forensicFreshness).
+  return shouldSkipScrape(
+    { scraped_at: product.scraped_at, review_count: count ?? 0 },
+    FRESHNESS_WINDOW_MS,
+  );
+}
+
+/**
  * Read this user's persisted listing + reviews for the asin (service-role,
  * filtered to user_id + asin) and assemble the shared TrustGapEvidence shape.
  * Returns the evidence plus the raw review count (for the thin-corpus flag).
@@ -252,6 +302,10 @@ You are the forensic scoring engine behind the IDEA Brand Coach Trust Gap diagno
 - Each pillar is an integer 0 to 25. 0-9 weak (leaking trust), 10-17 mixed, 18-25 strong.
 - A listing that merely lists features with no customer-need language is NOT strong on Insight or Empathy however polished it reads.
 - Reviews are the strongest signal: if reviews praise something the copy never claims, that is an Insight/Empathy gap, not a strength.
+- CRITICAL GROUNDING RULE: You have access ONLY to the title, bullets, description, and reviews provided. You CANNOT see A+ content, storefront content, videos, or any other Amazon surfaces. Therefore:
+  - NEVER assert that a feature, module, or content piece is missing from surfaces you cannot read (A+ content, storefront, videos).
+  - When making recommendations about such surfaces, frame them as "I could not access your A+ content, so verify whether..." not as assertions of absence.
+  - Base your scoring and claims ONLY on what is present in the provided corpus.
 </scoring-discipline>
 
 <customer-profile>
@@ -436,43 +490,43 @@ function buildForensicEmailHtml(r: ForensicEmailInput): string {
   const rows = DIMS.map((d) => {
     const pct = Math.round((r.pillars[d] / 25) * 100);
     return `<tr>
-      <td style="padding:9px 0;font-family:Arial,Helvetica,sans-serif;color:${NAVY};width:150px;vertical-align:top;"><strong>${DIM_LABELS[d]}</strong><br/><span style="font-size:12px;color:#6b7280;">${r.pillars[d]} / 25</span></td>
+      <td style="padding:9px 0;font-family:Arial,Helvetica,sans-serif;color:${BLACK};width:150px;vertical-align:top;"><strong>${DIM_LABELS[d]}</strong><br/><span style="font-size:12px;color:#6b7280;">${r.pillars[d]} / 25</span></td>
       <td style="padding:9px 0;vertical-align:middle;"><div style="background:#e9edf2;border-radius:6px;height:14px;width:100%;"><div style="background:${GOLD};border-radius:6px;height:14px;width:${pct}%;"></div></div></td>
     </tr>`;
   }).join("");
   const triggerBlock = r.trigger?.dominantType
     ? `<div style="margin:24px 0 0;padding:18px;border-left:4px solid ${GOLD};background:#fbf8ef;">
          <p style="margin:0 0 6px;font-size:11px;font-weight:bold;letter-spacing:.05em;text-transform:uppercase;color:#9a7b1f;">Your Decision Trigger&#8482;</p>
-         <p style="margin:0 0 8px;font-size:17px;font-weight:bold;color:${NAVY};">${escapeHtml(r.trigger.dominantType)}</p>
-         ${r.trigger.brandAnchor ? `<p style="margin:0 0 8px;font-size:14px;color:${NAVY};">${escapeHtml(r.trigger.brandAnchor)}</p>` : ""}
-         ${r.trigger.whyThisTrigger ? `<p style="margin:0;font-size:14px;line-height:1.5;color:${NAVY};">${escapeHtml(r.trigger.whyThisTrigger)}</p>` : ""}
+         <p style="margin:0 0 8px;font-size:17px;font-weight:bold;color:${BLACK};">${escapeHtml(r.trigger.dominantType)}</p>
+         ${r.trigger.brandAnchor ? `<p style="margin:0 0 8px;font-size:14px;color:${BLACK};">${escapeHtml(r.trigger.brandAnchor)}</p>` : ""}
+         ${r.trigger.whyThisTrigger ? `<p style="margin:0;font-size:14px;line-height:1.5;color:${BLACK};">${escapeHtml(r.trigger.whyThisTrigger)}</p>` : ""}
        </div>`
     : "";
   const thinNote = r.thinCorpus
-    ? `<p style="margin:14px 0 0;font-size:13px;color:#9a3412;background:#fff7ed;border-radius:8px;padding:10px 12px;">Based on ${r.reviewCount} review${r.reviewCount === 1 ? "" : "s"} — a thin sample, so treat this read as directional.</p>`
+    ? `<p style="margin:14px 0 0;font-size:13px;color:#9a3412;background:#fff7ed;border-radius:8px;padding:10px 12px;">This read is based on ${r.reviewCount} review${r.reviewCount === 1 ? "" : "s"}, so treat it as directional.</p>`
     : "";
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f6f9;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:24px 0;"><tr><td align="center">
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f9f9f9;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;padding:24px 0;"><tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
-        <tr><td style="background:${NAVY};padding:28px 32px;">
+        <tr><td style="background:${BLACK};padding:28px 32px;">
           <h1 style="margin:0;color:#fff;font-family:Arial,Helvetica,sans-serif;font-size:22px;">Your Forensic Trust Gap&#8482; Report</h1>
-          <p style="margin:8px 0 0;color:${GOLD};font-family:Arial,Helvetica,sans-serif;font-size:13px;">Read from your listing's real reviews — not a self-assessment</p>
+          <p style="margin:8px 0 0;color:${GOLD};font-family:Arial,Helvetica,sans-serif;font-size:13px;">Read from your listing's real reviews evidence</p>
         </td></tr>
-        <tr><td style="padding:28px 32px;font-family:Arial,Helvetica,sans-serif;color:${NAVY};">
+        <tr><td style="padding:28px 32px;font-family:Arial,Helvetica,sans-serif;color:${BLACK};">
           ${r.listingTitle ? `<p style="margin:0 0 16px;font-size:13px;color:#6b7280;">${escapeHtml(r.listingTitle)}</p>` : ""}
-          <div style="text-align:center;margin:0 0 22px;padding:18px;background:#f4f6f9;border-radius:10px;">
-            <div style="font-size:40px;font-weight:bold;color:${NAVY};">${r.overall}<span style="font-size:18px;color:#6b7280;">/100</span></div>
-            <div style="font-size:13px;color:#6b7280;">Forensic trust score — ${band} · grounded in ${r.reviewCount} real review${r.reviewCount === 1 ? "" : "s"}</div>
+          <div style="text-align:center;margin:0 0 22px;padding:18px;background:#f9f9f9;border-radius:10px;">
+            <div style="font-size:40px;font-weight:bold;color:${BLACK};">${r.overall}<span style="font-size:18px;color:#6b7280;">/100</span></div>
+            <div style="font-size:13px;color:#6b7280;">Forensic trust score · ${band} · grounded in ${r.reviewCount} real review${r.reviewCount === 1 ? "" : "s"}</div>
           </div>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
           <div style="margin:22px 0 0;padding:18px;border-left:4px solid ${GOLD};background:#fbf8ef;">
-            <p style="margin:0 0 6px;font-size:14px;color:${NAVY};"><strong>Your biggest opportunity: ${DIM_LABELS[r.primaryGap]}</strong></p>
-            <p style="margin:0;font-size:14px;line-height:1.5;color:${NAVY};">${DIM_LABELS[r.primaryGap]} is where your listing leaks the most trust right now — the fastest place to win it back. Close this first and the whole brand lifts.</p>
+            <p style="margin:0 0 6px;font-size:14px;color:${BLACK};"><strong>Your biggest opportunity: ${DIM_LABELS[r.primaryGap]}</strong></p>
+            <p style="margin:0;font-size:14px;line-height:1.5;color:${BLACK};">${DIM_LABELS[r.primaryGap]} is where your listing leaks the most trust right now. The fastest place to win it back. Close this first and the whole brand lifts.</p>
           </div>
           ${triggerBlock}
           ${thinNote}
           <div style="text-align:center;margin:28px 0 8px;">
-            <a href="${escapeHtml(FORENSIC_CTA_URL)}/v2/coach" style="display:inline-block;background:${GOLD};color:${NAVY};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:bold;font-size:15px;padding:13px 28px;border-radius:8px;">Fix your ${DIM_LABELS[r.primaryGap]} gap with the coach</a>
+            <a href="${escapeHtml(FORENSIC_CTA_URL)}/v5" style="display:inline-block;background:${GOLD};color:${BLACK};text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:bold;font-size:15px;padding:13px 28px;border-radius:8px;">Open your design brief</a>
           </div>
           <p style="margin:24px 0 0;font-size:13px;color:#6b7280;line-height:1.5;">You ran a forensic analysis in IDEA Brand Coach. Reply any time and the team will help you read your results.</p>
         </td></tr>
@@ -556,25 +610,32 @@ serve(async (req) => {
     // Service-role client for the internal import + the scoped read-back.
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
-    // ── Step 1: import-product-data (internal, forwarding the user's bearer so the
-    //    fn persists under THIS user via its own RLS-scoped client). ──
-    const importRes = await fetch(`${supabaseUrl}/functions/v1/import-product-data`, {
-      method: "POST",
-      headers: { Authorization: authHeader, "Content-Type": "application/json" },
-      body: JSON.stringify({ asins: [asin] }),
-    });
-    if (!importRes.ok) {
-      const detail = await importRes.text();
-      console.error("[run-forensic-analysis] import-product-data failed", importRes.status, detail.slice(0, 300));
-      return jsonResponse({ ok: false, error: "Could not import this listing. Please try again." }, 502);
-    }
-    const importJson = (await importRes.json()) as { results?: Array<{ asin: string; ok: boolean; error?: string }> };
-    const importItem = importJson.results?.find((r) => r.asin?.toUpperCase() === asin);
-    if (!importItem || !importItem.ok) {
-      return jsonResponse(
-        { ok: false, error: importItem?.error ?? "No Amazon listing found for this ASIN. Double-check it and try again." },
-        422,
-      );
+    // ── Step 1: Check for recent data first, only import if stale or missing. ──
+    const hasFreshData = await hasRecentData(admin, userId, asin);
+
+    if (!hasFreshData) {
+      // Data is stale or missing, call import-product-data to refresh
+      const importRes = await fetch(`${supabaseUrl}/functions/v1/import-product-data`, {
+        method: "POST",
+        headers: { Authorization: authHeader, "Content-Type": "application/json" },
+        body: JSON.stringify({ asins: [asin] }),
+      });
+      if (!importRes.ok) {
+        const detail = await importRes.text();
+        console.error("[run-forensic-analysis] import-product-data failed", importRes.status, detail.slice(0, 300));
+        return jsonResponse({ ok: false, error: "Could not import this listing. Please try again." }, 502);
+      }
+      const importJson = (await importRes.json()) as { results?: Array<{ asin: string; ok: boolean; error?: string }> };
+      const importItem = importJson.results?.find((r) => r.asin?.toUpperCase() === asin);
+      if (!importItem || !importItem.ok) {
+        return jsonResponse(
+          { ok: false, error: importItem?.error ?? "No Amazon listing found for this ASIN. Double-check it and try again." },
+          422,
+        );
+      }
+      console.log(`[run-forensic-analysis] fresh scrape for asin=${asin}`);
+    } else {
+      console.log(`[run-forensic-analysis] reusing cached data for asin=${asin}`);
     }
 
     // ── Step 2: read back + build TrustGapEvidence (scoped to user + asin). ──
@@ -680,7 +741,7 @@ serve(async (req) => {
         overall,
         primaryGap,
         reviewCount,
-        thinCorpus,
+        thinCorpus: reviewCount < LOW_EVIDENCE_EMAIL_THRESHOLD,
         listingTitle: evidence.listings[0]?.title,
         trigger: triggerForEmail,
       });

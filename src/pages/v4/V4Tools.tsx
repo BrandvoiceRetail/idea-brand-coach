@@ -19,6 +19,17 @@ import {
   type RegistryTool,
 } from '@/data/toolRegistry.generated';
 
+/**
+ * "Signature" is not part of Trevor's system taxonomy (his 2026-07-06
+ * walkthrough: "drop it before it gets too embedded"). The registry mirrors
+ * the MCP tool descriptions verbatim (internal ids like generate_signature
+ * stay), so normalise the PROSE at the display boundary — the word must not
+ * render as vocabulary on this public glossary page.
+ */
+function displayDescription(description: string): string {
+  return description.replace(/\bSignature\b/g, 'positioning');
+}
+
 function StatusBadge({ status }: { status: RegistryTool['status'] }): JSX.Element {
   if (status === 'Available') {
     return (
@@ -89,7 +100,7 @@ export default function V4Tools(): JSX.Element {
                         </code>
                       </td>
                       <td className="border-b border-background/15 px-3.5 py-3 align-top text-sm text-background/80">
-                        {t.description}
+                        {displayDescription(t.description)}
                       </td>
                       <td className="whitespace-nowrap border-b border-background/15 px-3.5 py-3 align-top text-sm text-background/70">
                         {t.firstShipped}

@@ -27,8 +27,8 @@ export default function JourneyBridge(): JSX.Element {
   const meta = gap ? TRUST_GAP_DIMENSION_META[gap] : null;
   const isAuthenticated = !!user;
 
-  const heading = meta ? `Let's close your ${meta.label} gap` : "Let's build your Signature";
-  const ctaLabel = isAuthenticated ? 'Build my Signature' : 'Create your free account to build your Signature';
+  const heading = meta ? `Let's close your ${meta.label} gap` : "Let's build your positioning";
+  const ctaLabel = isAuthenticated ? 'Build my positioning' : 'Create your free account to build your positioning';
 
   const handleContinue = (): void => {
     navigate(buildDeepDiveDestination(gap, isAuthenticated));
@@ -52,10 +52,10 @@ export default function JourneyBridge(): JSX.Element {
               <p className="text-primary-foreground/90 leading-relaxed mb-2">
                 {meta
                   ? `Your scorecard shows ${meta.label} is where your brand leaks the most trust. ${meta.measures}`
-                  : 'Your scorecard is the start. The recognition moment is your Signature.'}
+                  : 'Your scorecard is the start. The recognition moment is your positioning.'}
               </p>
               <p className="text-primary-foreground/90 leading-relaxed mb-8">
-                The fastest way to close it is to build your <strong>Signature</strong> — the one true
+                The fastest way to close it is to build your <strong>positioning</strong> — the one true
                 thing your customers are really buying. Let's do that now.
               </p>
 

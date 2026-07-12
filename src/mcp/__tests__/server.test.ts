@@ -34,7 +34,7 @@ const cfg: HostConfig = {
 };
 
 async function connectedClient() {
-  const { server } = createServer(cfg);
+  const { server } = await createServer(cfg);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
@@ -60,14 +60,19 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'design_test',
       'export_messaging_workbook',
       'export_workbook',
+      'generate_aplus_content_plan',
       'generate_audit_idea_map',
       'generate_brief',
       'generate_canvas',
       'generate_concepts',
       'generate_listing_image',
       'generate_listing_image_brief',
+      'generate_main_image_title_plan',
       'generate_positioning_moves',
       'generate_signature',
+      'generate_storefront_messaging_plan',
+      'generate_ugc_ad_plan',
+      'generate_video_storyboard',
       'get_asset',
       'get_asset_history',
       'get_avatar',
@@ -105,6 +110,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'recall',
       'record_assessment',
       'record_avatar_build',
+      'refine_creative_plan',
       'remember',
       'run_diagnostic_evidence',
       'run_funnel_audit',
