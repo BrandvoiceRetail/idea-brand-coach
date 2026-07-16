@@ -4,10 +4,15 @@
  * Update HOME_PAGE here to change where all "home" navigations redirect.
  * This single source of truth ensures consistent navigation across the app.
  */
+import { CURRENT_SURFACE } from './surface';
 
 export const ROUTES = {
-  /** The main landing page for authenticated users */
-  HOME_PAGE: '/v1/start-here',
+  /**
+   * Where all "home" navigations land. Points at the current customer surface
+   * (see src/config/surface.ts) — previously the legacy '/v1/start-here', which
+   * dumped users into the deprecated shell.
+   */
+  HOME_PAGE: CURRENT_SURFACE,
 
   /**
    * App root. Resolves through VersionGate to the user's chosen version

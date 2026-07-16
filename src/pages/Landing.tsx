@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
+import { CURRENT_SURFACE } from "@/config/surface";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,10 +26,10 @@ export default function Landing() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to the current customer surface (not the legacy dashboard).
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate(CURRENT_SURFACE);
     }
   }, [user, navigate]);
 

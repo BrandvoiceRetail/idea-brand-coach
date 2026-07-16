@@ -19,38 +19,19 @@ import { FieldReviewProvider } from "@/contexts/FieldReviewContext";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { AuthGate } from "@/components/AuthGate";
-import { RequireAuth } from "@/components/RequireAuth";
+import { RequireInternal } from "@/components/RequireInternal";
 import { BetaFeedbackWidget } from "@/components/BetaFeedbackWidget";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ROUTES, V1_ROUTES } from "@/config/routes";
-import Index from "./pages/Index";
+import { ROUTES } from "@/config/routes";
+import { CURRENT_SURFACE } from "@/config/surface";
 import Landing from "./pages/Landing";
-import Dashboard from "./pages/Dashboard";
-import BrandDiagnostic from "./pages/BrandDiagnostic";
-import ProblemSolverDiagnostic from "./pages/v2/ProblemSolverDiagnostic";
-import DiagnosticResults from "./pages/DiagnosticResults";
-import JourneyBridge from "./components/diagnostic/JourneyBridge";
-import IdeaDiagnostic from "./pages/IdeaDiagnostic";
-import IdeaFramework from "./pages/IdeaFramework";
-import IdeaFrameworkConsultant from "./pages/IdeaFrameworkConsultant";
-import ResearchLearning from "./pages/ResearchLearning";
-import IdeaInsight from "./pages/IdeaInsight";
-import IdeaDistinctive from "./pages/IdeaDistinctive";
-import IdeaEmpathy from "./pages/IdeaEmpathy";
-import IdeaAuthenticity from "./pages/IdeaAuthenticity";
-import BrandCanvas from "./pages/BrandCanvas";
-import BrandCopyGenerator from "./pages/BrandCopyGenerator";
-import ConversationHistory from "./pages/ConversationHistory";
-import Integrations from "./pages/Integrations";
 import Auth from "./pages/Auth";
 import BetaWelcome from "./pages/BetaWelcome";
 import BetaJourney from "./pages/BetaJourney";
 import BetaFeedback from "./pages/BetaFeedback";
 import NotFound from "./pages/NotFound";
 import { TestOfflineSync } from "./pages/TestOfflineSync";
-import { StartHere } from "./pages/StartHere";
-import PricingPaywall from "./pages/PricingPaywall";
 import { BrandCoachV2 } from "./pages/v2/BrandCoachV2";
 import { FunnelTracker } from "./components/v2/funnel/FunnelTracker";
 import FeatureGate from "@/components/FeatureGate";
@@ -122,82 +103,51 @@ const App = () => {
                       <BetaFeedbackWidget />
                       <ConsentBanner />
 
+                    {/*
+                      SURFACE ROUTING — default-deny. Exactly ONE customer surface
+                      (CURRENT_SURFACE). Every path is one of four tiers, enforced by
+                      src/config/surface.ts + src/config/__tests__/surface.test.ts:
+                        • customer — the one surface + public entry
+                        • infra    — auth / legal / settings / callbacks / 404
+                        • internal — auth + allowlist; bounced to the surface for customers
+                        • legacy   — redirects to CURRENT_SURFACE (deleted-on-promotion)
+                      Promoting a new UI = repoint CURRENT_SURFACE + move its routes into the
+                      customer tier + DELETE the old ones. See ADR-APP-VS-MCP-SURFACE (D5).
+                    */}
                     <Routes>
+                {/* ── Customer surface (the one surface) ─────────────────────── */}
                 <Route path="/" element={<VersionGate />} />
-
                 <Route path="/welcome" element={<Landing />} />
+                {/* /v5 — nav-less Avatar 2.0 build theatre. PUBLIC: creates an anonymous
+                    Supabase session on demand and converts it at the save step, so it must
+                    NOT be wrapped in auth. */}
+                <Route path="/v5" element={<ErrorBoundary><V5Alpha /></ErrorBoundary>} />
 
+                {/* ── Infra (public/gated, not a surface) ────────────────────── */}
                 <Route path="/auth" element={<Auth />} />
-
                 {/* Public privacy notice (GDPR Art. 13/14) — reachable signed-out. */}
                 <Route path="/privacy" element={<PrivacyPolicy />} />
-
-                {/* OAuth 2.1 consent (MCP connector authorization). PUBLIC route — the
-                    page self-handles auth, bouncing to /auth with a return param that
-                    preserves authorization_id; must NOT be wrapped in RequireAuth. */}
+                {/* OAuth 2.1 consent (MCP connector authorization). PUBLIC — the page
+                    self-handles auth, bouncing to /auth with a return param; must NOT be gated. */}
                 <Route path="/oauth/consent" element={<OAuthConsent />} />
+                <Route path={ROUTES.SETTINGS} element={<Layout><SettingsPage /></Layout>} />
+                <Route path={`${ROUTES.SETTINGS}/:section`} element={<Layout><SettingsPage /></Layout>} />
+                <Route path={ROUTES.FIGMA_CALLBACK} element={<FigmaCallback />} />
 
-                <Route path="/start-here" element={<Navigate to="/v1/start-here" replace />} />
-
-                <Route path="/journey" element={<Navigate to="/v1/journey" replace />} />
-
-                {/* Alpha: /v5 is the ONLY diagnostic surface (Trevor walked the old
-                    problem-solver flow via the landing CTAs, 2026-07-08). The legacy
-                    guest entries redirect; the pages stay in the tree for revert. */}
-                <Route path="/diagnostic" element={<Navigate to="/v5" replace />} />
-
-                <Route path="/subscribe" element={<Navigate to="/v1/subscribe" replace />} />
-
-                <Route path="/diagnostic/results" element={<Navigate to="/v1/diagnostic/results" replace />} />
-
-                <Route path="/diagnostic/bridge" element={<Navigate to="/v1/diagnostic/bridge" replace />} />
-
-                <Route path="/dashboard" element={<Navigate to="/v1/dashboard" replace />} />
-
-                <Route path="/brand-diagnostic" element={<Navigate to="/v1/brand-diagnostic" replace />} />
-
-                <Route path="/idea-diagnostic" element={<Navigate to="/v1/idea-diagnostic" replace />} />
-
-                <Route path="/idea" element={<Navigate to="/v1/idea" replace />} />
-
-                <Route path="/idea/consultant" element={<Navigate to="/v1/idea/consultant" replace />} />
-
-                <Route path="/brand-coach" element={<Navigate to="/v1/idea/consultant" replace />} />
-
-                <Route path="/v2/coach" element={
-                  <RequireAuth>
-                    <FeatureGate feature="BRAND_COACH_V2">
-                      <ErrorBoundary>
-                        <BrandCoachV2 />
-                      </ErrorBoundary>
-                    </FeatureGate>
-                  </RequireAuth>
+                {/* ── Internal (auth + allowlist; NEVER customer-reachable) ───── */}
+                {/* Admin dashboards keep AdminGate's explicit access-denied notice. */}
+                <Route path={ROUTES.FEATURE_FLAG_ADMIN} element={
+                  <AdminGate><Layout><FeatureFlagAdmin /></Layout></AdminGate>
                 } />
-
-                <Route path="/v2/funnel" element={<RequireAuth><FunnelTracker /></RequireAuth>} />
-
-                {/* Reframed "Fix the Trust Gap" 8-screen Problem-Solver flow (Demo v2).
-                    Ports idea-brandcoach-DEMO-v2-trevor-spec.html: free diagnostic →
-                    auth-gated forensic run → customer profile + Decision Trigger fix.
-                    Login-gated in-app review flow — the public guest entry point is
-                    /v1/diagnostic (FreeDiagnostic), which stays open. */}
-                <Route path="/v2/diagnostic" element={<Navigate to="/v5" replace />} />
-
-                {/* Review route: the same flow with Movement 1 (Recognition) in front,
-                    per Trevor's Revised Entry Experience Brief (IDEA-APP-ENTRY-001 v1.1).
-                    Kept separate from /v2 so the live baseline is untouched while Trevor
-                    reviews Movement 1 before Movements 2/3 are built. Login-gated. */}
-                <Route path="/v3/diagnostic" element={<Navigate to="/v5" replace />} />
-
-                {/* /v4 — the new "one and only" surface (app shell + spine + Loop 1).
-                    Old routes stay mounted; VersionGate gates the entry behind
-                    VITE_FORCE_V4 (default on in this worktree). RequireAuth wraps the
-                    whole group so the surface is login-gated (anon → /auth). Nested
-                    under V4Layout so the sidebar + sticky spine stepper + mobile
-                    bottom-nav persist across the onboarding + spine screens. */}
-                <Route path={V4_ROUTES.ROOT} element={<RequireAuth><ErrorBoundary><V4Layout /></ErrorBoundary></RequireAuth>}>
+                <Route path={ROUTES.COACH_EVALS_ADMIN} element={
+                  <AdminGate><Layout><CoachEvalsAdmin /></Layout></AdminGate>
+                } />
+                {/* /v4 spine — retained for internal use; a customer who deep-links it is
+                    bounced to the surface by RequireInternal. */}
+                <Route path={V4_ROUTES.ROOT} element={
+                  <RequireInternal><ErrorBoundary><V4Layout /></ErrorBoundary></RequireInternal>
+                }>
                   <Route index element={<V4Onboarding />} />
-                  {/* Post-signup fork (CHOICE) + the recommended connector setup guide. */}
                   <Route path="start" element={<V4OnboardingChoice />} />
                   <Route path="connect" element={<V4ConnectorSetup />} />
                   <Route path="diagnose" element={<V4Diagnose />} />
@@ -206,242 +156,81 @@ const App = () => {
                   <Route path="remeasure" element={<V4Remeasure />} />
                   <Route path="defend" element={<V4Defend />} />
                 </Route>
-
-                {/* /v4/tools — standalone trust-signals tool registry (own dark theme,
-                    intentionally outside V4Layout so it reads as a public trust page). */}
-                {/* /v4 retired — the standalone tools page redirects to /v5 too. */}
-                <Route path="/v4/tools" element={<Navigate to="/v5" replace />} />
-
-                {/* /v5 — nav-less Avatar 2.0 build theatre alpha. PUBLIC route:
-                    the page creates an anonymous Supabase session on demand and
-                    converts it at the save step, so it must NOT be wrapped in
-                    RequireAuth. */}
-                <Route path="/v5" element={<ErrorBoundary><V5Alpha /></ErrorBoundary>} />
-
-                <Route path="/conversations" element={<Navigate to="/v1/conversations" replace />} />
-
-                <Route path="/idea/insight" element={<Navigate to="/v1/idea/insight" replace />} />
-
-                <Route path="/idea/distinctive" element={<Navigate to="/v1/idea/distinctive" replace />} />
-
-                <Route path="/idea/empathy" element={<Navigate to="/v1/idea/empathy" replace />} />
-
-                <Route path="/idea/authenticity" element={<Navigate to="/v1/idea/authenticity" replace />} />
-
-                {/* P4b §4.5: /avatar goes straight to the V2 coach (the V1 builder
-                    is gone) — avoids a double hop through /v1/avatar. */}
-                <Route path="/avatar" element={<Navigate to="/v2/coach" replace />} />
-
-                <Route path="/canvas" element={<Navigate to="/v1/canvas" replace />} />
-
-                <Route path="/copy-generator" element={<Navigate to="/v1/copy-generator" replace />} />
-
-                <Route path="/research-learning" element={<Navigate to="/v1/research-learning" replace />} />
-
-                <Route path="/app" element={<Navigate to={ROUTES.HOME_PAGE} replace />} />
-
-                <Route path="/value-lens" element={<Navigate to="/v1/copy-generator" replace />} />
-
-                <Route path="/beta" element={<RequireAuth><BetaWelcome /></RequireAuth>} />
-
-                <Route path="/beta-journey" element={<RequireAuth><BetaJourney /></RequireAuth>} />
-
-                <Route path="/beta-feedback" element={<RequireAuth><BetaFeedback /></RequireAuth>} />
-
-                <Route path="/test/offline-sync" element={
-                  <Layout>
-                    <TestOfflineSync />
-                  </Layout>
+                <Route path="/v2/coach" element={
+                  <RequireInternal>
+                    <FeatureGate feature="BRAND_COACH_V2">
+                      <ErrorBoundary><BrandCoachV2 /></ErrorBoundary>
+                    </FeatureGate>
+                  </RequireInternal>
                 } />
-
-                <Route path={ROUTES.FEATURE_FLAG_ADMIN} element={
-                  <AdminGate>
-                    <Layout>
-                      <FeatureFlagAdmin />
-                    </Layout>
-                  </AdminGate>
-                } />
-
-                <Route path={ROUTES.COACH_EVALS_ADMIN} element={
-                  <AdminGate>
-                    <Layout>
-                      <CoachEvalsAdmin />
-                    </Layout>
-                  </AdminGate>
-                } />
-
+                <Route path="/v2/funnel" element={<RequireInternal><FunnelTracker /></RequireInternal>} />
                 <Route path={ROUTES.FOCUS_SURFACE} element={
-                  <Layout>
-                    <FocusSurface />
-                  </Layout>
+                  <RequireInternal><Layout><FocusSurface /></Layout></RequireInternal>
                 } />
-
-                <Route path={ROUTES.SETTINGS} element={
-                  <Layout>
-                    <SettingsPage />
-                  </Layout>
+                <Route path="/beta" element={<RequireInternal><BetaWelcome /></RequireInternal>} />
+                <Route path="/beta-journey" element={<RequireInternal><BetaJourney /></RequireInternal>} />
+                <Route path="/beta-feedback" element={<RequireInternal><BetaFeedback /></RequireInternal>} />
+                <Route path="/test/offline-sync" element={
+                  <RequireInternal><Layout><TestOfflineSync /></Layout></RequireInternal>
                 } />
-
-                <Route path={`${ROUTES.SETTINGS}/:section`} element={
-                  <Layout>
-                    <SettingsPage />
-                  </Layout>
-                } />
-
-                <Route path={ROUTES.FIGMA_CALLBACK} element={<FigmaCallback />} />
-
                 <Route path="/test/chapter-navigation" element={
-                  <Layout>
-                    <TestChapterNavigation />
-                  </Layout>
+                  <RequireInternal><Layout><TestChapterNavigation /></Layout></RequireInternal>
                 } />
 
-                {/* V1 Routes - Legacy support */}
-                <Route path="/v1/start-here" element={
-                  <RequireAuth>
-                    <Layout>
-                      <StartHere />
-                    </Layout>
-                  </RequireAuth>
-                } />
+                {/* ── Legacy → redirect to the current surface (default-deny) ──── */}
+                {/* Every deprecated path funnels to CURRENT_SURFACE. The old v1/v2/v3
+                    pages are removed from the tree — git history is the archive, not a
+                    live /vN. See ADR-APP-VS-MCP-SURFACE (D5). */}
+                <Route path="/diagnostic" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/diagnostic" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v2/diagnostic" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v3/diagnostic" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v4/tools" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/start-here" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/start-here" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/journey" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/journey" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/subscribe" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/subscribe" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/diagnostic/results" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/diagnostic/results" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/diagnostic/bridge" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/diagnostic/bridge" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/dashboard" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/dashboard" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/brand-diagnostic" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/brand-diagnostic" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/idea-diagnostic" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/idea-diagnostic" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/idea" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/idea" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/idea/consultant" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/idea/consultant" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/brand-coach" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/conversations" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/conversations" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/idea/insight" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/idea/insight" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/idea/distinctive" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/idea/distinctive" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/idea/empathy" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/idea/empathy" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/idea/authenticity" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/idea/authenticity" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/avatar" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/avatar" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/canvas" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/canvas" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/copy-generator" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/copy-generator" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/research-learning" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/research-learning" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/v1/integrations" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/value-lens" element={<Navigate to={CURRENT_SURFACE} replace />} />
+                <Route path="/app" element={<Navigate to={CURRENT_SURFACE} replace />} />
 
-                <Route path="/v1/journey" element={
-                  <RequireAuth>
-                    <Layout>
-                      <Index />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                {/* Consolidated (2026-06-29): /v1 uses the one diagnostic engine
-                    (ProblemSolverDiagnostic + Recognition), gated like /v2,/v3 —
-                    the divergent FreeDiagnostic questionnaire is retired. */}
-                <Route path="/v1/diagnostic" element={<Navigate to="/v5" replace />} />
-
-                <Route path="/v1/subscribe" element={<RequireAuth><PricingPaywall /></RequireAuth>} />
-
-                <Route path="/v1/diagnostic/results" element={<DiagnosticResults />} />
-
-                <Route path="/v1/diagnostic/bridge" element={<JourneyBridge />} />
-
-                <Route path="/v1/dashboard" element={
-                  <RequireAuth>
-                    <Layout>
-                      <Dashboard />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/brand-diagnostic" element={
-                  <RequireAuth>
-                    <Layout>
-                      <BrandDiagnostic />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/idea-diagnostic" element={
-                  <RequireAuth>
-                    <Layout>
-                      <IdeaDiagnostic />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/idea" element={
-                  <RequireAuth>
-                    <Layout>
-                      <IdeaFramework />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/idea/consultant" element={
-                  <RequireAuth>
-                    <Layout>
-                      <IdeaFrameworkConsultant />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/conversations" element={
-                  <RequireAuth>
-                    <Layout>
-                      <ConversationHistory />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/idea/insight" element={
-                  <RequireAuth>
-                    <Layout>
-                      <IdeaInsight />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/idea/distinctive" element={
-                  <RequireAuth>
-                    <Layout>
-                      <IdeaDistinctive />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/idea/empathy" element={
-                  <RequireAuth>
-                    <Layout>
-                      <IdeaEmpathy />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/idea/authenticity" element={
-                  <RequireAuth>
-                    <Layout>
-                      <IdeaAuthenticity />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                {/* P4b §4.5: the V1 avatar builder is superseded by the V2 coach's
-                    multi-avatar header + forensic builder. Redirect to /v2/coach. */}
-                <Route path="/v1/avatar" element={<Navigate to="/v2/coach" replace />} />
-
-                <Route path="/v1/canvas" element={
-                  <RequireAuth>
-                    <Layout>
-                      <BrandCanvas />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/copy-generator" element={
-                  <RequireAuth>
-                    <Layout>
-                      <BrandCopyGenerator />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/research-learning" element={
-                  <RequireAuth>
-                    <Layout>
-                      <ResearchLearning />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
-                <Route path="/v1/integrations" element={
-                  <RequireAuth>
-                    <Layout>
-                      <Integrations />
-                    </Layout>
-                  </RequireAuth>
-                } />
-
+                {/* True 404 for genuinely unknown paths. */}
                 <Route path="*" element={<NotFound />} />
-
                     </Routes>
                   </BrowserRouter>
                       </TooltipProvider>
