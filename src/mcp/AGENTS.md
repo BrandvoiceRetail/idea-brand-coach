@@ -1,5 +1,8 @@
 # Brand-Coach MCP host — testing & guardrails (feature-local)
 
+> **North Star:** IDEA Brand Coach is a **conversion-fix tool** — objective diagnostic (self-score vs SQP intent + review mining), mine Amazon directly, **the in-app UI is the priority surface**. Full direction: [root `AGENTS.md`](../../AGENTS.md).
+
+
 > Scaffold delivered from `brand-coach-mcp-planning/` (build target: "Brand-coach MCP
 > host / gateway"). This folder is the **gateway substrate** only. The owned asset-chain
 > tools (concept → publish-filter → draft → test-design) and the diagnostic wrappers

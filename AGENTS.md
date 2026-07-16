@@ -2,14 +2,36 @@
 
 ## Scope
 
-Universal rules for AI agents working on **IDEA Brand Coach** — a React/TypeScript/Vite app for
-AI-powered brand consulting using the IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic), built
-on Supabase (Auth, Postgres, Edge Functions) and a LangChain RAG pipeline. Area-specific rules live
+Universal rules for AI agents working on **IDEA Brand Coach** — a React/TypeScript/Vite **conversion-fix
+tool** built on the IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic), on
+Supabase (Auth, Postgres, Edge Functions) and a direct-to-Anthropic RAG pipeline. Area-specific rules live
 in local `AGENTS.md` files (see Child Areas below); this file holds what applies everywhere.
 
 Generic engineering standards (naming, function design, error handling, TDD, refactoring, SOLID) are
 **not restated here** — consult the shared guide via the Mango MCP server
 (`guide_read`, `guide_list`, `guide_checklist`).
+
+## North Star (product direction — aligned 2026-07-16)
+
+IDEA Brand Coach is a **conversion-fix tool** — not a brand-strategy tool, and not an image / video /
+PPC generator (that ground is occupied by Pixii, Titan, and others). The job: a seller with traffic but
+not sales has a **trust gap**; we find it and hand them the **fix to their listing**. Everything in
+phase 1 serves that. Driving traffic / PPC generation is out of scope (Titan's domain) — we fix
+conversion, not traffic.
+
+- **Objective diagnostic, not self-report.** The seller's self-scored diagnostic is the *start*, not the
+  answer. Compare it against objective evidence — **SQP buyer-intent tiers** (what people search and why)
+  matched to **review language** (what customers actually say), plus listing / image analysis — and tell
+  them how well they actually understand their own brand. A self-reported score taken at face value is
+  not a robust methodology; the cross-check *is* the product.
+- **Mine Amazon directly; stay independent of Titan.** Reviews and SQP come straight from source, never
+  resold from Titan (platform risk). Our defensible IP is the IDEA framework and methodology, not the data.
+- **Surfaces: the in-app UI is the priority**, with the MCP connector alongside — same coach, same facts.
+  Exactly **one** customer-facing surface (currently `/v5`), enforced by the route manifest; a clear Log In
+  and a central dashboard, no dead ends. See
+  [`docs/architecture/ADR-APP-VS-MCP-SURFACE.md`](docs/architecture/ADR-APP-VS-MCP-SURFACE.md).
+
+Governing strategy: [`docs/FOUNDATIONAL_STRATEGY.md`](docs/FOUNDATIONAL_STRATEGY.md) — this sharpens it.
 
 ## The 3-Layer Operating Model
 

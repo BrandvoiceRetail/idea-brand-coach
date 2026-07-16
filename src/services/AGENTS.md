@@ -1,5 +1,8 @@
 # AGENTS.md — `src/services/`
 
+> **North Star:** IDEA Brand Coach is a **conversion-fix tool** — objective diagnostic (self-score vs SQP intent + review mining), mine Amazon directly, **the in-app UI is the priority surface**. Full direction: [root `AGENTS.md`](../../AGENTS.md).
+
+
 Area rules for the service layer. Root `AGENTS.md` applies; this adds only what's specific here.
 
 ## Pattern: interface-first, orchestrator + specialized services

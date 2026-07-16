@@ -1,5 +1,8 @@
 # supabase/functions — Agent Guide
 
+> **North Star:** IDEA Brand Coach is a **conversion-fix tool** — objective diagnostic (self-score vs SQP intent + review mining), mine Amazon directly, **the in-app UI is the priority surface**. Full direction: [root `AGENTS.md`](../../AGENTS.md).
+
+
 Root `AGENTS.md` applies; this adds only what's specific here. Deno edge
 functions. `_shared/` holds reused modules (`cors.ts`, `chunking.ts`,
 `embeddings.ts`, `edge-auth.ts`, `figma.ts`, `figma-extract.ts`) imported by

@@ -1,5 +1,8 @@
 # src/pages — AGENTS.md
 
+> **North Star:** IDEA Brand Coach is a **conversion-fix tool** — objective diagnostic (self-score vs SQP intent + review mining), mine Amazon directly, **the in-app UI is the priority surface**. Full direction: [root `AGENTS.md`](../../AGENTS.md).
+
+
 Root `AGENTS.md` applies; this adds only what's specific here.
 
 Route components (one default-exported page per file). Subdirs: `v2/` (`BrandCoachV2`), `admin/` (`FeatureFlagAdmin`), `__tests__/` (page tests).
