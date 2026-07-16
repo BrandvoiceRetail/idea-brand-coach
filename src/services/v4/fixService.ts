@@ -74,6 +74,41 @@ import type {
   WorkItem,
 } from '@/types/v4Fix';
 
+/**
+ * How many listing bullets to promote into the brief's confirmed-claims allowlist.
+ * A named cap on what rides into the export-brief LLM prompt (context-budget principle,
+ * docs/architecture/ADR-CONTEXT-BUDGET-LEVER.md — never a bare slice).
+ */
+const MAX_CONFIRMED_CLAIM_BULLETS = 8;
+
+/** A listing fact the brief may state verbatim (matches export-brief's ConfirmedClaim shape). */
+interface ConfirmedClaim {
+  claim: string;
+  source: string;
+}
+
+/**
+ * Best-effort brand name from an Amazon listing title. Amazon titles conventionally
+ * carry the brand in the final pipe segment ("… | by Guyology Labs" / "… | Guyology
+ * Labs"); take the last segment and strip a leading "by ". Null when nothing usable.
+ */
+export function brandNameFromTitle(title: string): string | null {
+  const segments = title.split('|').map((s) => s.trim()).filter(Boolean);
+  if (segments.length < 2) return null;
+  const last = segments[segments.length - 1].replace(/^by\s+/i, '').trim();
+  return last && last.length <= 40 ? last : null;
+}
+
+/** Normalise the jsonb `bullets` column (string[] or {text}[]) to trimmed non-empty strings. */
+export function normalizeBullets(bullets: unknown): string[] {
+  if (!Array.isArray(bullets)) return [];
+  return bullets
+    .map((b) => (typeof b === 'string' ? b : (b as { text?: unknown })?.text))
+    .filter((b): b is string => typeof b === 'string')
+    .map((b) => b.trim())
+    .filter(Boolean);
+}
+
 /** Injectable edge invoker (defaults to the deployed Supabase edge functions). */
 export type EdgeInvoke = (
   fn: string,
@@ -519,7 +554,10 @@ export class FixService {
       // hit its "create a Signature first" wall — that was the "rewrite doesn't
       // work" bug. When no positioning artifact exists yet, `resolvePositioning`
       // degrades to the avatar's own profile so the owner still gets a brief.
-      const positioning = await this.resolvePositioning(input.avatarId);
+      const [positioning, confirmedClaims] = await Promise.all([
+        this.resolvePositioning(input.avatarId),
+        this.resolveConfirmedClaims(),
+      ]);
       const { data, error } = await this.invoke('export-brief', {
         touchpoint_id: input.touchpointId,
         avatar_id: input.avatarId,
@@ -530,7 +568,11 @@ export class FixService {
         s1: positioning.s1,
         s3: positioning.s3,
         s4: positioning.s4,
-        confirmed_claims: [],
+        // Listing-grounded product facts (title, brand, bullets) so the engine states
+        // real claims like "4% AnaGain™" verbatim and leads with the brand name, instead
+        // of the emotion-only degrade the empty list forced (root-caused 2026-07-15 on
+        // ASIN B0D42C2H3T). Parity with the generate_brief MCP tool's slot #6.
+        confirmed_claims: confirmedClaims,
       });
       if (error) return errResult(error, 'Could not reach the brief engine.');
       const rec = asRecord(data);
@@ -542,6 +584,49 @@ export class FixService {
       return { status: 'ok', data: brief };
     } catch (e) {
       return errResult(e, 'Could not reach the brief engine.');
+    }
+  }
+
+  /**
+   * Build the confirmed-claims allowlist from the seller's own scraped listing so the
+   * brief can state real product facts (e.g. "4% AnaGain™") verbatim and lead with the
+   * brand name. Parity with the generate_brief MCP tool, which resolves the same claims
+   * (slot #6) from the scraped listing. The app previously sent `confirmed_claims: []`,
+   * so export-brief was told "nothing confirmed — write emotion-only" and degraded real
+   * facts (the AnaGain™ → "Pea Sprout" substitution + "[Brand Name]" placeholder,
+   * root-caused 2026-07-15 on ASIN B0D42C2H3T). RLS-scoped to the caller; returns [] on
+   * absence so the engine still ships an honest emotion-only brief rather than fabricating.
+   *
+   * SOURCE: newest `user_products` row for the caller — the app's single-listing flow. The
+   * avatar-scoped `evidence_snapshots.listing` (what the MCP resolver walks) is the tighter
+   * source for multi-avatar users; a follow-up can prefer it when the run is avatar-scoped.
+   */
+  private async resolveConfirmedClaims(): Promise<ConfirmedClaim[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('user_products')
+        .select('title, bullets')
+        .eq('user_id', user.id)
+        .order('scraped_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error || !data) return [];
+      const claims: ConfirmedClaim[] = [];
+      const title = typeof data.title === 'string' ? data.title.trim() : '';
+      if (title) {
+        claims.push({ claim: title, source: 'listing title' });
+        const brand = brandNameFromTitle(title);
+        if (brand) claims.push({ claim: `Brand name: ${brand}`, source: 'listing' });
+      }
+      for (const bullet of normalizeBullets(data.bullets).slice(0, MAX_CONFIRMED_CLAIM_BULLETS)) {
+        claims.push({ claim: bullet, source: 'listing bullet' });
+      }
+      return claims;
+    } catch (e) {
+      console.error('[fixService] confirmed-claims resolve threw:', e);
+      return [];
     }
   }
 
