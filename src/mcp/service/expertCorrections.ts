@@ -6,14 +6,15 @@
  * redirects are the loop's highest-value training signal (see
  * `.feature-factory/expert-intelligence-loop/arch.md`).
  *
- * Auth model: the caller must be a designated expert (`profiles.is_admin`). A non-admin caller
- * is a silent no-op — never a write, never a revealed gate (errors.md #1). The write goes through
- * the SERVICE-ROLE client because `expert_corrections` has NO client-write RLS policy (admin-read
- * only, mirrors `feedback_events`). Verbatim text is never logged (MF-5) and both DB ops fail
- * SOFT so a lost correction never breaks the coach turn (errors.md #5).
+ * Auth model: the caller must be a designated EXPERT (the allowlist, see experts.ts — narrower than
+ * is_admin). A non-expert caller is a silent no-op — never a write, never a revealed gate
+ * (errors.md #1). Writes go through the caller's JWT client under the table's admin-insert RLS
+ * policy, so the gateway needs NO service-role key (its security model is RLS-per-JWT). Verbatim
+ * text is never logged (MF-5) and both DB ops fail SOFT so a lost correction never breaks the coach
+ * turn (errors.md #5).
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getServiceRoleSupabase } from '../supabaseServer.js';
+import { getUserSupabase } from '../supabaseUser.js';
 import { safeLog } from '../logging/redact.js';
 import { isExpertEmail } from './experts.js';
 
@@ -38,13 +39,13 @@ export interface CaptureResult {
 
 /**
  * Is this user a designated EXPERT (the training source — Trevor, not merely an admin)? Resolves
- * the caller's email via the service-role client and checks the expert allowlist (see experts.ts).
- * Deliberately narrower than profiles.is_admin. Fails CLOSED (not expert) on any error — the
- * capture gate must never open on a DB hiccup.
+ * the caller's email via their own JWT client (profiles self-read RLS) and checks the expert
+ * allowlist (see experts.ts). Deliberately narrower than profiles.is_admin. Fails CLOSED (not
+ * expert) on any error — the capture gate must never open on a DB hiccup.
  */
 export async function isExpert(
   userId: string,
-  client: SupabaseClient = getServiceRoleSupabase(),
+  client: SupabaseClient = getUserSupabase(),
 ): Promise<boolean> {
   try {
     const { data, error } = await client
@@ -64,13 +65,14 @@ export async function isExpert(
 }
 
 /**
- * Insert one correction (service-role). Returns `{ ok: false, captured: false }` softly on ANY
- * failure — a lost correction must never surface as an error to the coach mid-conversation.
+ * Insert one correction via the caller's JWT client (admin-insert RLS policy: user_id = auth.uid()
+ * AND is_admin). Returns `{ ok: false, captured: false }` softly on ANY failure — a lost correction
+ * must never surface as an error to the coach mid-conversation.
  */
 export async function recordCorrection(
   userId: string,
   input: CorrectionInput,
-  client: SupabaseClient = getServiceRoleSupabase(),
+  client: SupabaseClient = getUserSupabase(),
 ): Promise<CaptureResult> {
   try {
     const { data, error } = await client

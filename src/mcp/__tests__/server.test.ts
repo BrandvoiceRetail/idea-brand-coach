@@ -6,7 +6,6 @@ import { createServer } from '../server.js';
 import type { HostConfig } from '../config.js';
 import { runWithIdentity } from '../context/identity.js';
 import { __setUserSupabaseFactory } from '../supabaseUser.js';
-import { __setServiceRoleSupabase } from '../supabaseServer.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /** Minimal chainable Supabase stub for the funnel read tools. */
@@ -22,8 +21,8 @@ function stubSupabase(rows: unknown[]): SupabaseClient {
   return { from: () => builder } as unknown as SupabaseClient;
 }
 
-/** Service-role stub for capture_correction: profiles.email read + expert_corrections insert. */
-function stubServiceRole(opts: { isExpert: boolean; insertOk?: boolean }): SupabaseClient {
+/** JWT-client stub for capture_correction: profiles.email self-read + expert_corrections insert. */
+function stubUserClient(opts: { isExpert: boolean; insertOk?: boolean }): SupabaseClient {
   return {
     from(table: string) {
       if (table === 'profiles') {
@@ -183,7 +182,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
     });
 
     it('is a silent no-op for a non-expert caller — even an admin (captured:false, not an error)', async () => {
-      __setServiceRoleSupabase(stubServiceRole({ isExpert: false }));
+      __setUserSupabaseFactory(() => stubUserClient({ isExpert: false }));
       try {
         const { client } = await connectedClient();
         const res = await runWithIdentity({ userId: 'u1', token: 't1', authenticated: true }, () =>
@@ -193,12 +192,12 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
         expect(res.isError).toBeFalsy();
         expect(sc.captured).toBe(false);
       } finally {
-        __setServiceRoleSupabase(null);
+        __setUserSupabaseFactory(null);
       }
     });
 
     it('captures for the designated expert caller', async () => {
-      __setServiceRoleSupabase(stubServiceRole({ isExpert: true }));
+      __setUserSupabaseFactory(() => stubUserClient({ isExpert: true }));
       try {
         const { client } = await connectedClient();
         const res = await runWithIdentity({ userId: 'u1', token: 't1', authenticated: true }, () =>
@@ -211,7 +210,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
         expect(sc.captured).toBe(true);
         expect(sc.ok).toBe(true);
       } finally {
-        __setServiceRoleSupabase(null);
+        __setUserSupabaseFactory(null);
       }
     });
   });

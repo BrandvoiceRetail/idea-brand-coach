@@ -48,10 +48,19 @@ CREATE POLICY "Admins can read expert_corrections"
     )
   );
 
--- WRITE: no client INSERT/UPDATE/DELETE policy is defined, so only the service-role key can
--- write (mirrors feedback_events). Both feeders write via service-role:
---   * capture_correction MCP tool — verifies caller profiles.is_admin from JWT, then writes service-role
---   * harvest sweep (scripts/harvest-expert) — service-role batch insert
+-- INSERT (client path): an authenticated admin may insert a row attributed to THEMSELVES. This
+-- keeps the MCP gateway free of the service-role key (its security model is RLS-per-JWT, guardrail
+-- #5) — the capture_correction tool writes via the caller's JWT and further narrows to the expert
+-- allowlist (Trevor). The offline harvest (Feeder 2) runs off-gateway and uses service-role, which
+-- bypasses RLS. No client UPDATE/DELETE policy: status transitions are service-role (the distill).
+CREATE POLICY "Admins can insert own expert_corrections"
+  ON public.expert_corrections
+  FOR INSERT
+  WITH CHECK (
+    user_id = auth.uid()
+    AND EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_admin = true)
+  );
+
 ALTER TABLE public.expert_corrections FORCE ROW LEVEL SECURITY;
 
 GRANT SELECT ON public.expert_corrections TO authenticated;  -- effective rows gated by the RLS policy above
