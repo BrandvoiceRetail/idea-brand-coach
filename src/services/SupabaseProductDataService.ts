@@ -226,7 +226,17 @@ export class SupabaseProductDataService implements IProductDataService {
       .slice(0, TRUST_GAP_MAX_REVIEWS)
       .map((review) => this.formatTrustGapReview(review));
 
-    return { listings, topReviews };
+    // Amazon's full-corpus signals (captured by import-product-data) travel with the
+    // first product; they let interpretation reason about the whole review base, not
+    // just the ~8 verbatim reviews above.
+    const first = products[0];
+    return {
+      listings,
+      topReviews,
+      ...(first?.customersSay ? { customersSay: first.customersSay } : {}),
+      ...(first?.reviewAspects && first.reviewAspects.length > 0 ? { aspects: first.reviewAspects } : {}),
+      ...(first?.starDistribution ? { starDistribution: first.starDistribution } : {}),
+    };
   }
 
   /**
@@ -278,6 +288,9 @@ export class SupabaseProductDataService implements IProductDataService {
     scraped_at: string;
     last_run?: unknown;
     last_run_at?: string | null;
+    customers_say?: string | null;
+    review_aspects?: unknown;
+    star_distribution?: Record<string, number> | null;
   }): ImportedProduct {
     return {
       id: row.id,
@@ -292,6 +305,13 @@ export class SupabaseProductDataService implements IProductDataService {
       scrapedAt: row.scraped_at,
       lastRun: row.last_run ?? null,
       lastRunAt: row.last_run_at ?? null,
+      ...(row.customers_say ? { customersSay: row.customers_say } : {}),
+      ...(Array.isArray(row.review_aspects)
+        ? { reviewAspects: row.review_aspects as Array<{ aspect?: string; sentiment?: string }> }
+        : {}),
+      ...(row.star_distribution && typeof row.star_distribution === 'object'
+        ? { starDistribution: row.star_distribution }
+        : {}),
     };
   }
 

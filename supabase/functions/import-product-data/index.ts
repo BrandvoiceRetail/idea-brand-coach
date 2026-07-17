@@ -28,7 +28,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { isLikelyRealListing, parseAmazonProduct, type ParsedAmazonProduct, type ParsedReview } from "./parse-amazon.ts";
-import { buildAmazonDpUrl, reviewsFromJson, scrapeAmazonPage, type JsonReview } from "../_shared/amazonReviews.ts";
+import { buildAmazonDpUrl, reviewsFromJson, scrapeAmazonPage, type JsonReview, type PageSignals } from "../_shared/amazonReviews.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -92,6 +92,7 @@ async function persistProduct(
   userId: string,
   asin: string,
   product: ParsedAmazonProduct,
+  pageSignals: PageSignals,
 ): Promise<{ productId: string; reviewsSaved: number }> {
   const { data: upserted, error: upsertError } = await supabaseClient
     .from('user_products')
@@ -106,6 +107,9 @@ async function persistProduct(
         bullets: product.bullets,
         description: product.description || null,
         images: product.images,
+        customers_say: pageSignals.customersSay || null,
+        review_aspects: pageSignals.aspects.length > 0 ? pageSignals.aspects : null,
+        star_distribution: pageSignals.starDistribution,
         source_url: buildAmazonDpUrl(asin),
         status: 'completed',
         scraped_at: new Date().toISOString(),
@@ -224,6 +228,7 @@ serve(async (req) => {
       // extraction (throws on failure; caught per-ASIN below).
       const scraped = await scrapeAmazonPage(buildAmazonDpUrl(asin), firecrawlApiKey, {
         jsonReviews: true,
+        pageSignals: true,
         timeoutMs: 30000,
       });
 
@@ -252,6 +257,7 @@ serve(async (req) => {
         userId,
         asin,
         product,
+        scraped.pageSignals,
       );
 
       results.push({

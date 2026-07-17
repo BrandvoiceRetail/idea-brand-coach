@@ -58,12 +58,34 @@ export interface ScrapedReview {
   source: string;
 }
 
+/** A review-aspect highlight from Amazon's on-page reviews module. */
+export interface ReviewAspect {
+  aspect?: string;
+  sentiment?: string;
+}
+
+/**
+ * Page-level review signals Amazon serves logged-out on /dp/ — its "Customers say"
+ * AI summary (synthesised over the FULL corpus, incl. reviews behind the widget),
+ * the aspect sentiments, and the star histogram. Product-level, not per-review.
+ */
+export interface PageSignals {
+  customersSay: string;
+  aspects: ReviewAspect[];
+  starDistribution: Record<string, number> | null;
+}
+
 interface FirecrawlResponse {
   success?: boolean;
   data?: {
     markdown?: string;
     html?: string;
-    json?: { reviews?: JsonReview[] };
+    json?: {
+      reviews?: JsonReview[];
+      customers_say?: string;
+      aspects?: ReviewAspect[];
+      star_distribution?: Record<string, number>;
+    };
   };
   creditsUsed?: number;
 }
@@ -101,6 +123,40 @@ export const REVIEW_JSON_OPTIONS = {
   },
 };
 
+/**
+ * Reviews + page-level signals in ONE extraction (for import-product-data, which
+ * persists the product). Reuses the reviews sub-schema; adds Amazon's "Customers
+ * say" summary, aspect sentiments, and the star histogram. review-scraper does NOT
+ * use this (keeps its request byte-identical) — gated by the `pageSignals` option.
+ */
+export const PAGE_SIGNALS_JSON_OPTIONS = {
+  prompt:
+    REVIEW_JSON_OPTIONS.prompt +
+    " Also extract: customers_say — Amazon's 'Customers say' AI summary paragraph, verbatim " +
+    '(empty string if absent); aspects — the highlighted review aspects, each with its sentiment ' +
+    '(positive/mixed/negative); star_distribution — the percentage of reviews at each star level ' +
+    'as {five,four,three,two,one}.',
+  schema: {
+    type: 'object',
+    properties: {
+      reviews: REVIEW_JSON_OPTIONS.schema.properties.reviews,
+      customers_say: { type: 'string' },
+      aspects: {
+        type: 'array',
+        items: { type: 'object', properties: { aspect: { type: 'string' }, sentiment: { type: 'string' } } },
+      },
+      star_distribution: {
+        type: 'object',
+        properties: {
+          five: { type: 'number' }, four: { type: 'number' }, three: { type: 'number' },
+          two: { type: 'number' }, one: { type: 'number' },
+        },
+      },
+    },
+    required: ['reviews'],
+  },
+};
+
 /** Map Firecrawl's structured json reviews to the ScrapedReview contract. */
 export function reviewsFromJson(jsonReviews: JsonReview[], sourceUrl: string): ScrapedReview[] {
   return jsonReviews
@@ -116,6 +172,18 @@ export function reviewsFromJson(jsonReviews: JsonReview[], sourceUrl: string): S
     }));
 }
 
+/** Extract the page-level signals from Firecrawl's json payload (safe defaults). */
+export function pageSignalsFromJson(
+  json: { customers_say?: string; aspects?: ReviewAspect[]; star_distribution?: Record<string, number> } | undefined,
+): PageSignals {
+  return {
+    customersSay: typeof json?.customers_say === 'string' ? json.customers_say.trim() : '',
+    aspects: Array.isArray(json?.aspects) ? json!.aspects : [],
+    starDistribution:
+      json?.star_distribution && typeof json.star_distribution === 'object' ? json.star_distribution : null,
+  };
+}
+
 /** Strip the Firecrawl key and any bearer tokens from text before it is logged/returned. */
 export function redactSecret(text: string, firecrawlApiKey?: string): string {
   let out = text.replace(/Bearer\s+[\w.-]+/gi, 'Bearer [redacted]');
@@ -126,6 +194,8 @@ export function redactSecret(text: string, firecrawlApiKey?: string): string {
 export interface ScrapeAmazonPageOptions {
   /** Also run Firecrawl's structured review extraction on the same request. */
   jsonReviews?: boolean;
+  /** Also extract page-level signals (Customers-say, aspects, histogram) via the enriched schema. */
+  pageSignals?: boolean;
   /** Firecrawl-side timeout for the page. */
   timeoutMs?: number;
 }
@@ -143,12 +213,13 @@ export async function scrapeAmazonPage(
   url: string,
   firecrawlApiKey: string,
   opts: ScrapeAmazonPageOptions = {},
-): Promise<{ markdown: string; html: string; jsonReviews: JsonReview[] }> {
-  const { jsonReviews = true, timeoutMs = 45000 } = opts;
+): Promise<{ markdown: string; html: string; jsonReviews: JsonReview[]; pageSignals: PageSignals }> {
+  const { jsonReviews = true, pageSignals = false, timeoutMs = 45000 } = opts;
 
+  const jsonOpts = pageSignals ? PAGE_SIGNALS_JSON_OPTIONS : REVIEW_JSON_OPTIONS;
   const formats: unknown[] = ['markdown', 'html'];
   if (jsonReviews) {
-    formats.push({ type: 'json', prompt: REVIEW_JSON_OPTIONS.prompt, schema: REVIEW_JSON_OPTIONS.schema });
+    formats.push({ type: 'json', prompt: jsonOpts.prompt, schema: jsonOpts.schema });
   }
 
   const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
@@ -191,5 +262,6 @@ export async function scrapeAmazonPage(
     markdown: data.markdown,
     html: data.html || '',
     jsonReviews: data.json?.reviews ?? [],
+    pageSignals: pageSignalsFromJson(data.json),
   };
 }

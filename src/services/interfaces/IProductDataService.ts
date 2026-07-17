@@ -42,6 +42,12 @@ export interface ImportedProduct {
    */
   lastRun: unknown | null;
   lastRunAt: string | null;
+  /** Amazon "Customers say" AI summary (synthesised over the FULL review corpus), if captured. */
+  customersSay?: string;
+  /** Review-aspect highlights: [{aspect, sentiment}]. */
+  reviewAspects?: Array<{ aspect?: string; sentiment?: string }>;
+  /** Star-rating histogram {five,four,three,two,one} as percentages. */
+  starDistribution?: Record<string, number> | null;
 }
 
 /**
@@ -96,6 +102,12 @@ export interface TrustGapEvidence {
     description?: string;
   }>;
   topReviews: string[];
+  /** Amazon's "Customers say" AI summary — synthesised over the FULL review corpus. */
+  customersSay?: string;
+  /** Review-aspect highlights: [{aspect, sentiment}]. */
+  aspects?: Array<{ aspect?: string; sentiment?: string }>;
+  /** Star-rating histogram {five,four,three,two,one} as percentages. */
+  starDistribution?: Record<string, number> | null;
 }
 
 export interface IProductDataService {

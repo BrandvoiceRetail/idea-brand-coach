@@ -130,6 +130,12 @@ interface TrustGapListing {
 interface TrustGapEvidence {
   listings: TrustGapListing[];
   topReviews: string[];
+  /** Amazon's "Customers say" AI summary — a synthesis over the FULL review corpus. */
+  customersSay?: string;
+  /** Review-aspect highlights: [{aspect, sentiment}]. */
+  aspects?: Array<{ aspect?: string; sentiment?: string }>;
+  /** Star-rating histogram {five,four,three,two,one} as percentages. */
+  starDistribution?: Record<string, number> | null;
 }
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -250,7 +256,7 @@ async function buildEvidence(
 ): Promise<{ evidence: TrustGapEvidence; reviewCount: number; hasListing: boolean }> {
   const { data: products, error: prodErr } = await admin
     .from("user_products")
-    .select("id, asin, title, bullets, description")
+    .select("id, asin, title, bullets, description, customers_say, review_aspects, star_distribution")
     .eq("user_id", userId)
     .eq("asin", asin);
 
@@ -262,6 +268,9 @@ async function buildEvidence(
     title: string | null;
     bullets: unknown;
     description: string | null;
+    customers_say: string | null;
+    review_aspects: unknown;
+    star_distribution: Record<string, number> | null;
   }>;
   if (rows.length === 0) {
     return { evidence: { listings: [], topReviews: [] }, reviewCount: 0, hasListing: false };
@@ -289,7 +298,22 @@ async function buildEvidence(
     .slice(0, TRUST_GAP_MAX_REVIEWS)
     .map((r) => formatTrustGapReview(typeof r.rating === "number" ? r.rating : null, r.body));
 
-  return { evidence: { listings, topReviews }, reviewCount: reviewRows.length, hasListing: true };
+  const first = rows[0];
+  const evidence: TrustGapEvidence = {
+    listings,
+    topReviews,
+    customersSay: typeof first.customers_say === "string" && first.customers_say.trim()
+      ? first.customers_say.trim()
+      : undefined,
+    aspects: Array.isArray(first.review_aspects)
+      ? (first.review_aspects as Array<{ aspect?: string; sentiment?: string }>)
+      : undefined,
+    starDistribution:
+      first.star_distribution && typeof first.star_distribution === "object"
+        ? first.star_distribution
+        : undefined,
+  };
+  return { evidence, reviewCount: reviewRows.length, hasListing: true };
 }
 
 const SCORING_SYSTEM_PROMPT = `<persona>
@@ -339,8 +363,20 @@ function buildScoringMessage(evidence: TrustGapEvidence, thinCorpus: boolean): s
     })
     .join("\n");
   const reviewsXml = evidence.topReviews.map((r) => `  <review>${r}</review>`).join("\n");
+  // Amazon's own signals over the FULL corpus (incl. reviews not shown above): its
+  // "Customers say" summary, aspect sentiments, and the star histogram. These let the
+  // model reason about the whole review base, not just the ~8 featured verbatim reviews.
+  const customersSayXml = evidence.customersSay
+    ? `<amazon_customers_say note="Amazon's own summary over ALL reviews, incl. ones not shown above">\n  ${evidence.customersSay}\n</amazon_customers_say>\n`
+    : "";
+  const aspectsXml = evidence.aspects && evidence.aspects.length > 0
+    ? `<review_aspects>\n${evidence.aspects.map((a) => `  <aspect sentiment="${a.sentiment ?? ""}">${a.aspect ?? ""}</aspect>`).join("\n")}\n</review_aspects>\n`
+    : "";
+  const distXml = evidence.starDistribution && Object.keys(evidence.starDistribution).length > 0
+    ? `<star_distribution>${Object.entries(evidence.starDistribution).map(([k, v]) => `${k}:${v}%`).join(" ")}</star_distribution>\n`
+    : "";
   const corpusNote = thinCorpus
-    ? "The review corpus is THIN (fewer than 5 reviews). Score conservatively from what is present; do not reach for high scores you cannot ground."
+    ? "The verbatim review corpus is THIN (fewer than 5 reviews shown). Amazon's Customers-say summary and star distribution reflect the full corpus — use them for breadth, but score conservatively on specifics you cannot ground."
     : "";
   return `<listings>
 ${listingXml}
@@ -348,8 +384,8 @@ ${listingXml}
 <reviews>
 ${reviewsXml}
 </reviews>
-${corpusNote}
-Score the four IDEA pillars AND sketch the customer profile now as the JSON object, grounded only in the listing copy and reviews above.`;
+${customersSayXml}${aspectsXml}${distXml}${corpusNote}
+Score the four IDEA pillars AND sketch the customer profile now as the JSON object, grounded only in the listing copy, reviews, and Amazon's own review summary above.`;
 }
 
 /** One Anthropic Sonnet call. Returns the text + status; never throws. */
@@ -476,7 +512,10 @@ function flattenForInterpretation(evidence: TrustGapEvidence): { listing_copy: s
       return [l.title ?? "", bullets, desc].filter((s) => s.trim().length > 0).join("\n");
     })
     .join("\n\n");
-  const reviews = evidence.topReviews.join("\n");
+  const summary = evidence.customersSay
+    ? `\n\nAmazon's own summary of all customer reviews: ${evidence.customersSay}`
+    : "";
+  const reviews = evidence.topReviews.join("\n") + summary;
   return { listing_copy, reviews };
 }
 
