@@ -70,6 +70,7 @@ import { registerGetFunnelAssetsTool } from './tools/getFunnelAssets.js';
 import { registerAuditAssetTool } from './tools/auditAsset.js';
 import { registerGetFunnelCoverageTool } from './tools/getFunnelCoverage.js';
 import { registerSubmitFeedbackTool } from './tools/submitFeedback.js';
+import { registerCaptureCorrectionTool } from './tools/captureCorrection.js';
 import { FeedbackNotifier } from './slack/feedbackNotifier.js';
 import { registerCreateAvatarTool } from './tools/createAvatar.js';
 import { registerUpdateAvatarTool } from './tools/updateAvatar.js';
@@ -215,6 +216,7 @@ export async function createServer(
   registerGetContextStatusTool(server);
   registerProvideContextTool(server);
   registerRememberTool(server);
+  registerCaptureCorrectionTool(server);
   registerRecallTool(server);
   registerIngestEvidenceTool(server, edge);
   registerBulkIngestEvidenceTool(server, edge);

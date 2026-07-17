@@ -20,6 +20,7 @@ export const USER_ID_TABLES: string[] = [
   'chat_sessions',
   'coach_asset_events',   // → coach_assets
   'coach_assets',
+  'expert_corrections',   // Expert Intelligence Loop capture (admin-only; user_id FK CASCADEs, deleted explicitly too)
   'scrape_job_items',     // → scrape_jobs
   'scrape_jobs',
   'avatar_build_state',

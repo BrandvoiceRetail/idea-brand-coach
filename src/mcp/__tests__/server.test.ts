@@ -6,6 +6,7 @@ import { createServer } from '../server.js';
 import type { HostConfig } from '../config.js';
 import { runWithIdentity } from '../context/identity.js';
 import { __setUserSupabaseFactory } from '../supabaseUser.js';
+import { __setServiceRoleSupabase } from '../supabaseServer.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /** Minimal chainable Supabase stub for the funnel read tools. */
@@ -19,6 +20,42 @@ function stubSupabase(rows: unknown[]): SupabaseClient {
   // resolving the builder itself (no .limit/.single) returns the rows too
   (builder as { then?: unknown }).then = (res: (v: unknown) => unknown) => res({ data: rows, error: null });
   return { from: () => builder } as unknown as SupabaseClient;
+}
+
+/** Service-role stub for capture_correction: profiles.is_admin read + expert_corrections insert. */
+function stubServiceRole(opts: { isAdmin: boolean; insertOk?: boolean }): SupabaseClient {
+  return {
+    from(table: string) {
+      if (table === 'profiles') {
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: async () => ({ data: { is_admin: opts.isAdmin }, error: null }) }),
+          }),
+        };
+      }
+      if (table === 'expert_corrections') {
+        return {
+          insert: () => ({
+            select: () => ({
+              single: async () =>
+                opts.insertOk === false
+                  ? { data: null, error: { message: 'fail' } }
+                  : { data: { id: 'ec1' }, error: null },
+            }),
+          }),
+        };
+      }
+      const b: Record<string, unknown> = {};
+      b.select = () => b;
+      b.eq = () => b;
+      b.in = () => b;
+      b.order = () => b;
+      b.single = async () => ({ data: null, error: null });
+      b.maybeSingle = async () => ({ data: null, error: null });
+      (b as { then?: unknown }).then = (r: (v: unknown) => unknown) => r({ data: [], error: null });
+      return b;
+    },
+  } as unknown as SupabaseClient;
 }
 
 const cfg: HostConfig = {
@@ -52,6 +89,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'audit_asset',
       'build_avatar_stage',
       'bulk_ingest_evidence',
+      'capture_correction',
       'compute_trust_gap_lift',
       'create_avatar',
       'create_campaign',
@@ -127,6 +165,50 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'update_test_milestone',
       'upsert_funnel_touchpoint',
     ]);
+  });
+
+  describe('capture_correction (expert-gated)', () => {
+    it('denies an unauthenticated caller', async () => {
+      const { client } = await connectedClient();
+      const res = await client.callTool({
+        name: 'capture_correction',
+        arguments: { coach_claim: 'a', correction: 'b' },
+      });
+      expect(res.isError).toBe(true);
+    });
+
+    it('is a silent no-op for a non-admin caller (captured:false, not an error)', async () => {
+      __setServiceRoleSupabase(stubServiceRole({ isAdmin: false }));
+      try {
+        const { client } = await connectedClient();
+        const res = await runWithIdentity({ userId: 'u1', token: 't1', authenticated: true }, () =>
+          client.callTool({ name: 'capture_correction', arguments: { coach_claim: 'a', correction: 'b' } }),
+        );
+        const sc = res.structuredContent as { ok: boolean; captured: boolean };
+        expect(res.isError).toBeFalsy();
+        expect(sc.captured).toBe(false);
+      } finally {
+        __setServiceRoleSupabase(null);
+      }
+    });
+
+    it('captures for an admin (expert) caller', async () => {
+      __setServiceRoleSupabase(stubServiceRole({ isAdmin: true }));
+      try {
+        const { client } = await connectedClient();
+        const res = await runWithIdentity({ userId: 'u1', token: 't1', authenticated: true }, () =>
+          client.callTool({
+            name: 'capture_correction',
+            arguments: { coach_claim: 'led with features', correction: 'lead with emotion', verbatim: 'no' },
+          }),
+        );
+        const sc = res.structuredContent as { ok: boolean; captured: boolean };
+        expect(sc.captured).toBe(true);
+        expect(sc.ok).toBe(true);
+      } finally {
+        __setServiceRoleSupabase(null);
+      }
+    });
   });
 
   it('health returns status ok and ledgerConfigured=true (native ledger)', async () => {
