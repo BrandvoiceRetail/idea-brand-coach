@@ -17,6 +17,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getServiceRoleSupabase } from '../supabaseServer.js';
 import { safeLog } from '../logging/redact.js';
+import { expertEmails } from './experts.js';
 
 /** Max in-app messages scanned per expert per sweep — bounds an otherwise unbounded read (MCP AGENTS.md). */
 export const HARVEST_MESSAGE_LIMIT = 500;
@@ -153,7 +154,8 @@ export async function harvestExpertChats(
 export function buildHarvestDeps(client: SupabaseClient = getServiceRoleSupabase()): HarvestDeps {
   return {
     async listExpertUserIds() {
-      const { data, error } = await client.from('profiles').select('id').eq('is_admin', true);
+      // Gate on the expert allowlist (Trevor), NOT is_admin — same designation as Feeder 1.
+      const { data, error } = await client.from('profiles').select('id').in('email', expertEmails());
       if (error) throw new Error(`profiles: ${error.message}`);
       return (data ?? []).map((r: { id: string }) => r.id);
     },

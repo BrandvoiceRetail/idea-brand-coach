@@ -40,13 +40,13 @@ function makeClient(opts: {
 
 describe('expertCorrections service', () => {
   describe('isExpert', () => {
-    it('true when profiles.is_admin is true', async () => {
-      const c = makeClient({ profile: { data: { is_admin: true }, error: null } });
+    it('true for an expert email (allowlist)', async () => {
+      const c = makeClient({ profile: { data: { email: 'trevor@brandvoice.co.uk' }, error: null } });
       expect(await isExpert('u1', c)).toBe(true);
     });
 
-    it('false when is_admin is false', async () => {
-      const c = makeClient({ profile: { data: { is_admin: false }, error: null } });
+    it('false for a non-expert email — e.g. an ADMIN who is not the designated expert', async () => {
+      const c = makeClient({ profile: { data: { email: 'matthew@icodemybusiness.com' }, error: null } });
       expect(await isExpert('u1', c)).toBe(false);
     });
 

@@ -15,6 +15,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getServiceRoleSupabase } from '../supabaseServer.js';
 import { safeLog } from '../logging/redact.js';
+import { isExpertEmail } from './experts.js';
 
 export interface CorrectionInput {
   coachClaim: string;
@@ -36,9 +37,10 @@ export interface CaptureResult {
 }
 
 /**
- * Is this user a designated expert? Reads `profiles.is_admin` via the service-role client so it
- * does not depend on a profiles self-read RLS policy. Fails CLOSED (not expert) on any error —
- * the capture gate must never open on a DB hiccup.
+ * Is this user a designated EXPERT (the training source — Trevor, not merely an admin)? Resolves
+ * the caller's email via the service-role client and checks the expert allowlist (see experts.ts).
+ * Deliberately narrower than profiles.is_admin. Fails CLOSED (not expert) on any error — the
+ * capture gate must never open on a DB hiccup.
  */
 export async function isExpert(
   userId: string,
@@ -47,16 +49,16 @@ export async function isExpert(
   try {
     const { data, error } = await client
       .from('profiles')
-      .select('is_admin')
+      .select('email')
       .eq('id', userId)
       .maybeSingle();
     if (error) {
-      safeLog({ level: 'warn', event: 'expert_corrections.is_admin_error' });
+      safeLog({ level: 'warn', event: 'expert_corrections.expert_lookup_error' });
       return false;
     }
-    return data?.is_admin === true;
+    return isExpertEmail((data as { email?: string } | null)?.email);
   } catch {
-    safeLog({ level: 'warn', event: 'expert_corrections.is_admin_exception' });
+    safeLog({ level: 'warn', event: 'expert_corrections.expert_lookup_exception' });
     return false;
   }
 }

@@ -22,14 +22,19 @@ function stubSupabase(rows: unknown[]): SupabaseClient {
   return { from: () => builder } as unknown as SupabaseClient;
 }
 
-/** Service-role stub for capture_correction: profiles.is_admin read + expert_corrections insert. */
-function stubServiceRole(opts: { isAdmin: boolean; insertOk?: boolean }): SupabaseClient {
+/** Service-role stub for capture_correction: profiles.email read + expert_corrections insert. */
+function stubServiceRole(opts: { isExpert: boolean; insertOk?: boolean }): SupabaseClient {
   return {
     from(table: string) {
       if (table === 'profiles') {
         return {
           select: () => ({
-            eq: () => ({ maybeSingle: async () => ({ data: { is_admin: opts.isAdmin }, error: null }) }),
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { email: opts.isExpert ? 'trevor@brandvoice.co.uk' : 'matthew@icodemybusiness.com' },
+                error: null,
+              }),
+            }),
           }),
         };
       }
@@ -177,8 +182,8 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       expect(res.isError).toBe(true);
     });
 
-    it('is a silent no-op for a non-admin caller (captured:false, not an error)', async () => {
-      __setServiceRoleSupabase(stubServiceRole({ isAdmin: false }));
+    it('is a silent no-op for a non-expert caller — even an admin (captured:false, not an error)', async () => {
+      __setServiceRoleSupabase(stubServiceRole({ isExpert: false }));
       try {
         const { client } = await connectedClient();
         const res = await runWithIdentity({ userId: 'u1', token: 't1', authenticated: true }, () =>
@@ -192,8 +197,8 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       }
     });
 
-    it('captures for an admin (expert) caller', async () => {
-      __setServiceRoleSupabase(stubServiceRole({ isAdmin: true }));
+    it('captures for the designated expert caller', async () => {
+      __setServiceRoleSupabase(stubServiceRole({ isExpert: true }));
       try {
         const { client } = await connectedClient();
         const res = await runWithIdentity({ userId: 'u1', token: 't1', authenticated: true }, () =>
