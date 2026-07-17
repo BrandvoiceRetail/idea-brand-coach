@@ -1,8 +1,9 @@
 /**
  * Layer 2 (tool) — `capture_correction` (OWNED, WRITE, expert-gated).
  *
- * Feeder 1 of the Expert Intelligence Loop: when a DESIGNATED EXPERT (`profiles.is_admin`)
- * overrules a claim the coach just made, the coach calls this to record the redirect — the
+ * Feeder 1 of the Expert Intelligence Loop: when a DESIGNATED EXPERT (the allowlist in experts.ts —
+ * deliberately NARROWER than profiles.is_admin: Trevor, not every admin) overrules a claim the coach
+ * just made, the coach calls this to record the redirect — the
  * coach_claim, the expert's correction, and their verbatim words — into `expert_corrections`.
  * Driven by the `global.expert_capture` coach_instruction + a SERVER_INSTRUCTIONS line.
  *

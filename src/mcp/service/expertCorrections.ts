@@ -9,9 +9,10 @@
  * Auth model: the caller must be a designated EXPERT (the allowlist, see experts.ts — narrower than
  * is_admin). A non-expert caller is a silent no-op — never a write, never a revealed gate
  * (errors.md #1). Writes go through the caller's JWT client under the table's admin-insert RLS
- * policy, so the gateway needs NO service-role key (its security model is RLS-per-JWT). Verbatim
- * text is never logged (MF-5) and both DB ops fail SOFT so a lost correction never breaks the coach
- * turn (errors.md #5).
+ * policy, so THIS tool's write path needs no service-role key (the gateway's model is RLS-per-JWT;
+ * it does hold a service-role client only for its own coach_instructions boot read, unrelated to
+ * this tool). Verbatim text is never logged (MF-5) and both DB ops fail SOFT so a lost correction
+ * never breaks the coach turn (errors.md #5).
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getUserSupabase } from '../supabaseUser.js';
