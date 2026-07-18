@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { captureServerException } from "../_shared/posthog.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 /**
@@ -410,6 +411,7 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in export-brief function:', error);
+    captureServerException('export-brief', error, { status_code: 500 });
     return new Response(
       JSON.stringify({ error: 'Unable to compile the Export Brief right now. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { captureServerException } from "../_shared/posthog.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getServiceClient } from "../_shared/edge-auth.ts";
 import { assertCredits, meterAndDebit } from "../_shared/meter.ts";
@@ -331,6 +332,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('[identify-decision-trigger] error:', error);
+    captureServerException('identify-decision-trigger', error, { status_code: 500 });
     return jsonResponse({ error: 'Unable to derive your Decision Trigger right now. Please try again.' }, 500);
   }
 });
