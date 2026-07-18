@@ -33,6 +33,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { captureServerException } from "../_shared/posthog.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { createRateLimiter } from "../_shared/rateLimit.ts";
@@ -817,6 +818,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("[run-forensic-analysis] unexpected error:", error);
+    captureServerException('run-forensic-analysis', error, { status_code: 500 });
     return jsonResponse({ ok: false, error: "Unable to run the forensic analysis right now. Please try again." }, 500);
   }
 });

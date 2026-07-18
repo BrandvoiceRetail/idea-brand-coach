@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { captureServerException } from "../_shared/posthog.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 /**
@@ -725,6 +726,7 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in diagnostic-interpretation-evidence function:', error);
+    captureServerException('diagnostic-interpretation-evidence', error, { status_code: 500 });
     return new Response(
       JSON.stringify({ error: 'Unable to generate your evidence-grounded interpretation right now. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
