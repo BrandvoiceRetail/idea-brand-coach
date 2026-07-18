@@ -72,7 +72,7 @@ a local machine that can SSH the box**, with key `~/.ssh/lightsail-mango.pem`.
 From a `main` checkout:
 
 ```bash
-npm run build                 # set VITE_FORCE_V4=true to force /v4; VITE_POSTHOG_* etc. as needed
+npm run build                 # REQUIRED: VITE_FORCE_V4=true (stale name — it now ships /v5, see note below); VITE_POSTHOG_* etc. as needed
 cp dist/index.html dist/404.html   # SPA fallback for BrowserRouter deep links
 rsync -az --delete \
   --exclude='onboard.html' --exclude='onboard-assets/' --exclude='index.html.bak.*' \
@@ -102,9 +102,15 @@ the served bundle hash matches `dist/assets/index-*.js`. Rollback: an
 > immediately before rsync, and re-verify the live bundle contains your change (grep
 > the served `index-*.js` for a string unique to your commit).
 
-> `VITE_FORCE_V4` lives only in the worktree's gitignored `.env`; a clean `main`
-> build WITHOUT it reverts to gate-OFF (`/v4` not forced). Set it in the build env
-> (or a repo var) to keep `/v4` forced across rebuilds.
+> ⚠️ **`VITE_FORCE_V4` is a stale name — it now ships `/v5`, and it is REQUIRED.**
+> Despite the `V4` in the name, this flag is the switch that sends signed-in users to
+> the single customer surface: `VersionGate.tsx` reads it and routes `/` → `/v5`
+> (`user ? '/v5' : '/welcome'`), matching `CURRENT_SURFACE = '/v5'` in
+> `src/config/surface.ts`. **Build WITHOUT it and the gate reverts to the legacy
+> v1/v2 chooser** — signed-in users land on the wrong (old) surface. It lives only in
+> the worktree's gitignored `.env`, so a clean `main` checkout won't have it: set
+> `VITE_FORCE_V4=true` in the build env (or a repo var) every rebuild. (Rename tracked
+> separately — the behavior, not the name, is what's correct.)
 
 ### MCP gateway — typecheck, build image, ship
 Gate first: **`npm run typecheck:mcp`** (NOT just `tsc --noEmit` — only the MCP
