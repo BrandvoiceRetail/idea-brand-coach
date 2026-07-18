@@ -38,6 +38,16 @@ interface CoachInstruction {
   updated_at: string;
 }
 
+/** Expert Intelligence Loop provenance: the corrections a drafted instruction was distilled from. */
+interface SourceCorrection {
+  id: string;
+  source: string;
+  coach_claim: string;
+  correction: string;
+  status: string;
+  created_at: string;
+}
+
 // Common instruction IDs for quick selection
 const COMMON_INSTRUCTION_IDS = [
   'global.tier_a_terminology',
@@ -64,6 +74,7 @@ export default function CoachInstructionsStudio() {
   const [draftSurface, setDraftSurface] = useState<'preamble' | 'edge-fn' | 'both'>('both');
   const [newInstructionId, setNewInstructionId] = useState('');
   const [tableExists, setTableExists] = useState(true);
+  const [sourceCorrections, setSourceCorrections] = useState<SourceCorrection[]>([]);
 
   // Check if the feature is enabled
   const isEnabled = import.meta.env.VITE_COACH_INSTRUCTIONS_ENABLED === 'true';
@@ -219,11 +230,27 @@ export default function CoachInstructionsStudio() {
     }
   };
 
+  // Expert Intelligence Loop: load the corrections a drafted instruction was distilled from.
+  const loadSourceCorrections = async (instructionId: string) => {
+    const { data, error } = await supabase
+      .from('expert_corrections')
+      .select('id, source, coach_claim, correction, status, created_at')
+      .eq('proposed_instruction_id', instructionId)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Failed to load source corrections:', error);
+      setSourceCorrections([]);
+      return;
+    }
+    setSourceCorrections((data ?? []) as SourceCorrection[]);
+  };
+
   const selectInstruction = (inst: CoachInstruction) => {
     setSelectedInstruction(inst);
     setDraftBody(inst.body);
     setDraftWhenToUse(inst.when_to_use || '');
     setDraftSurface(inst.surface);
+    loadSourceCorrections(inst.instruction_id);
   };
 
   // Group instructions by instruction_id
@@ -455,6 +482,30 @@ export default function CoachInstructionsStudio() {
                   )}
                   <p>Updated: {new Date(selectedInstruction.updated_at).toLocaleString()}</p>
                 </div>
+
+                {sourceCorrections.length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <Label>Source expert corrections ({sourceCorrections.length})</Label>
+                      <p className="text-xs text-muted-foreground">
+                        The expert corrections this instruction was distilled from. Publishing marks them applied.
+                      </p>
+                      <div className="space-y-2">
+                        {sourceCorrections.map((c) => (
+                          <div key={c.id} className="border rounded-md p-2 text-sm space-y-1">
+                            <div className="flex items-center justify-between">
+                              <Badge variant="outline" className="text-xs">{c.source}</Badge>
+                              <Badge variant="secondary" className="text-xs">{c.status}</Badge>
+                            </div>
+                            <p className="text-muted-foreground line-through">{c.coach_claim}</p>
+                            <p>→ {c.correction}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           ) : (

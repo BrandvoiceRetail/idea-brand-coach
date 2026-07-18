@@ -14,6 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_search_terms: {
+        Row: {
+          brand_asset_id: string | null
+          brand_id: string | null
+          campaign_id: string | null
+          clicks: number
+          created_at: string
+          id: string
+          impressions: number
+          match_type: string
+          measured_date: string
+          orders: number
+          sales: number
+          search_term: string
+          source: string
+          spend: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_asset_id?: string | null
+          brand_id?: string | null
+          campaign_id?: string | null
+          clicks?: number
+          created_at?: string
+          id?: string
+          impressions?: number
+          match_type?: string
+          measured_date: string
+          orders?: number
+          sales?: number
+          search_term: string
+          source?: string
+          spend?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          brand_asset_id?: string | null
+          brand_id?: string | null
+          campaign_id?: string | null
+          clicks?: number
+          created_at?: string
+          id?: string
+          impressions?: number
+          match_type?: string
+          measured_date?: string
+          orders?: number
+          sales?: number
+          search_term?: string
+          source?: string
+          spend?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_search_terms_brand_asset_id_fkey"
+            columns: ["brand_asset_id"]
+            isOneToOne: false
+            referencedRelation: "brand_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_search_terms_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_search_terms_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artifacts: {
         Row: {
           avatar_id: string | null
@@ -1791,6 +1870,51 @@ export type Database = {
           },
         ]
       }
+      expert_corrections: {
+        Row: {
+          avatar_id: string | null
+          coach_claim: string
+          correction: string
+          created_at: string
+          id: string
+          proposed_instruction_id: string | null
+          session_id: string | null
+          source: string
+          status: string
+          tool_context: string | null
+          user_id: string
+          verbatim: string | null
+        }
+        Insert: {
+          avatar_id?: string | null
+          coach_claim: string
+          correction: string
+          created_at?: string
+          id?: string
+          proposed_instruction_id?: string | null
+          session_id?: string | null
+          source: string
+          status?: string
+          tool_context?: string | null
+          user_id: string
+          verbatim?: string | null
+        }
+        Update: {
+          avatar_id?: string | null
+          coach_claim?: string
+          correction?: string
+          created_at?: string
+          id?: string
+          proposed_instruction_id?: string | null
+          session_id?: string | null
+          source?: string
+          status?: string
+          tool_context?: string | null
+          user_id?: string
+          verbatim?: string | null
+        }
+        Relationships: []
+      }
       feedback_events: {
         Row: {
           avatar_id: string | null
@@ -3369,3 +3493,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
