@@ -10,11 +10,12 @@
  *      status='drafted' (the Studio provenance link). It NEVER writes status='published'
  *      (errors.md #13 — publish is HUMAN-only in the Studio).
  *
- * What is NOT here (the nightly agent's Layer-2 job): composing the instruction BODY from a
- * cluster, deciding new-vs-existing instruction_id, and routing STRUCTURAL clusters to a PR
- * instead of a draft. This module is the plumbing those decisions execute against.
+ * It also ships a DETERMINISTIC runner (runDistill) so the new→drafted arm has an executable path
+ * today: it composes a structured directive body from the cluster's corrections. A future nightly
+ * AGENT can supersede composeInstructionBody with LLM-authored prose and add structural→PR routing;
+ * until then, this produces reviewable drafts a human refines + publishes in the Studio.
  *
- * Runs off-gateway (the scheduled agent), so it uses a service-role client (bypasses RLS).
+ * Runs off-gateway (the scheduled agent / runner), so it uses a service-role client (bypasses RLS).
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -100,4 +101,90 @@ export async function writeDraftInstruction(
   }
 
   return { instructionId: spec.instructionId, version };
+}
+
+/** Stable instruction_id for a cluster: expert.<slug of tool_context>, or expert.general. */
+export function instructionIdForCluster(cluster: Cluster): string {
+  const slug = cluster.key
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return `expert.${slug || 'general'}`;
+}
+
+/**
+ * Deterministic body composer — turns a cluster of corrections into a coaching directive. No LLM, so
+ * it is testable + reproducible; a future nightly agent can replace this with authored prose. Dedupes
+ * identical corrections and lists them as explicit "do X, not Y" guidance, grounded in the expert's
+ * verbatim words where available.
+ */
+export function composeInstructionBody(cluster: Cluster): string {
+  const seen = new Set<string>();
+  const points: string[] = [];
+  for (const c of cluster.corrections) {
+    const key = `${c.coach_claim}::${c.correction}`.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    points.push(`- Do NOT: ${c.coach_claim.trim()} — instead: ${c.correction.trim()}`);
+  }
+  const scope = cluster.key === 'general' ? 'in general' : `when working on ${cluster.key}`;
+  return [
+    `EXPERT GUIDANCE (${scope}) — distilled from the brand expert's corrections, pending review:`,
+    ...points,
+  ].join('\n');
+}
+
+export interface DistillDeps {
+  /** New (status='new') corrections to distill. */
+  readNewCorrections(): Promise<CorrectionRow[]>;
+  writeDraft(spec: DraftSpec): Promise<DraftResult>;
+}
+
+export interface DistillSummary {
+  newCorrections: number;
+  clusters: number;
+  draftsCreated: number;
+  drafts: Array<{ instructionId: string; version: number; fromCorrections: number }>;
+}
+
+/**
+ * Read new corrections, cluster them, and draft one coach_instruction per cluster. A cluster that
+ * fails to draft is logged-and-skipped (errors.md #15) so a single bad cluster never aborts the run.
+ * NEVER publishes. Returns a summary for the runner to print.
+ */
+export async function runDistill(deps: DistillDeps): Promise<DistillSummary> {
+  const rows = await deps.readNewCorrections();
+  const clusters = clusterCorrections(rows);
+  const drafts: DistillSummary['drafts'] = [];
+  for (const cluster of clusters) {
+    try {
+      const res = await deps.writeDraft({
+        instructionId: instructionIdForCluster(cluster),
+        surface: 'preamble',
+        whenToUse: cluster.key === 'general' ? undefined : `When working on ${cluster.key}.`,
+        body: composeInstructionBody(cluster),
+        correctionIds: cluster.correctionIds,
+      });
+      drafts.push({ ...res, fromCorrections: cluster.correctionIds.length });
+    } catch {
+      // skip this cluster; the rows stay status='new' for the next run
+    }
+  }
+  return { newCorrections: rows.length, clusters: clusters.length, draftsCreated: drafts.length, drafts };
+}
+
+/** Real IO deps over the service-role client. */
+export function buildDistillDeps(client: SupabaseClient): DistillDeps {
+  return {
+    async readNewCorrections() {
+      const { data, error } = await client
+        .from('expert_corrections')
+        .select('id, tool_context, coach_claim, correction, verbatim')
+        .eq('status', 'new')
+        .order('created_at', { ascending: true });
+      if (error) throw new Error(`expert_corrections read: ${error.message}`);
+      return (data ?? []) as CorrectionRow[];
+    },
+    writeDraft: (spec) => writeDraftInstruction(client, spec),
+  };
 }

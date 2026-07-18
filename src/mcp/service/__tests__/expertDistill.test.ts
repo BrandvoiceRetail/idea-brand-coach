@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { clusterCorrections, writeDraftInstruction, type CorrectionRow } from '../expertDistill.js';
+import {
+  clusterCorrections,
+  writeDraftInstruction,
+  instructionIdForCluster,
+  composeInstructionBody,
+  runDistill,
+  type CorrectionRow,
+  type DraftSpec,
+  type DistillDeps,
+} from '../expertDistill.js';
 
 const row = (id: string, tool_context: string | null): CorrectionRow => ({
   id,
@@ -113,5 +122,87 @@ describe('writeDraftInstruction', () => {
     const c = makeClient({ onUpdate: () => (updated = true) });
     await writeDraftInstruction(c, { ...spec, correctionIds: [] });
     expect(updated).toBe(false);
+  });
+});
+
+describe('instructionIdForCluster', () => {
+  it('slugs the tool_context under the expert. namespace', () => {
+    expect(instructionIdForCluster({ key: 'listing copy', correctionIds: [], corrections: [] }))
+      .toBe('expert.listing_copy');
+    expect(instructionIdForCluster({ key: 'generate_brief', correctionIds: [], corrections: [] }))
+      .toBe('expert.generate_brief');
+    expect(instructionIdForCluster({ key: 'general', correctionIds: [], corrections: [] }))
+      .toBe('expert.general');
+  });
+});
+
+describe('composeInstructionBody', () => {
+  const cluster = (key: string, corrections: CorrectionRow[]) => ({
+    key,
+    correctionIds: corrections.map((c) => c.id),
+    corrections,
+  });
+
+  it('lists each correction as do-not/instead guidance, scoped by topic', () => {
+    const body = composeInstructionBody(
+      cluster('listing copy', [
+        { id: 'a', tool_context: 'listing copy', coach_claim: 'led with features', correction: 'lead with emotion', verbatim: null },
+      ]),
+    );
+    expect(body).toContain('when working on listing copy');
+    expect(body).toContain('Do NOT: led with features — instead: lead with emotion');
+  });
+
+  it('dedupes identical corrections', () => {
+    const dup: CorrectionRow = { id: 'a', tool_context: 't', coach_claim: 'x', correction: 'y', verbatim: null };
+    const body = composeInstructionBody(cluster('t', [dup, { ...dup, id: 'b' }]));
+    expect(body.match(/Do NOT: x — instead: y/g)).toHaveLength(1);
+  });
+});
+
+describe('runDistill', () => {
+  function deps(rows: CorrectionRow[], onDraft?: (s: DraftSpec) => void): DistillDeps {
+    return {
+      readNewCorrections: async () => rows,
+      writeDraft: async (spec) => {
+        onDraft?.(spec);
+        return { instructionId: spec.instructionId, version: 1 };
+      },
+    };
+  }
+
+  it('drafts one instruction per cluster and reports the summary', async () => {
+    const specs: DraftSpec[] = [];
+    const rows: CorrectionRow[] = [
+      { id: 'a', tool_context: 'listing copy', coach_claim: 'c1', correction: 'f1', verbatim: null },
+      { id: 'b', tool_context: 'listing copy', coach_claim: 'c2', correction: 'f2', verbatim: null },
+      { id: 'c', tool_context: 'images', coach_claim: 'c3', correction: 'f3', verbatim: null },
+    ];
+    const res = await runDistill(deps(rows, (s) => specs.push(s)));
+    expect(res).toMatchObject({ newCorrections: 3, clusters: 2, draftsCreated: 2 });
+    expect(specs.map((s) => s.instructionId).sort()).toEqual(['expert.images', 'expert.listing_copy']);
+    expect(specs.find((s) => s.instructionId === 'expert.listing_copy')!.correctionIds).toEqual(['a', 'b']);
+  });
+
+  it('skips a cluster whose draft throws, keeping the run going', async () => {
+    const rows: CorrectionRow[] = [
+      { id: 'a', tool_context: 'good', coach_claim: 'c', correction: 'f', verbatim: null },
+      { id: 'b', tool_context: 'bad', coach_claim: 'c', correction: 'f', verbatim: null },
+    ];
+    const d: DistillDeps = {
+      readNewCorrections: async () => rows,
+      writeDraft: async (spec) => {
+        if (spec.instructionId === 'expert.bad') throw new Error('insert failed');
+        return { instructionId: spec.instructionId, version: 1 };
+      },
+    };
+    const res = await runDistill(d);
+    expect(res.clusters).toBe(2);
+    expect(res.draftsCreated).toBe(1);
+  });
+
+  it('is a no-op summary when there are no new corrections', async () => {
+    const res = await runDistill(deps([]));
+    expect(res).toEqual({ newCorrections: 0, clusters: 0, draftsCreated: 0, drafts: [] });
   });
 });

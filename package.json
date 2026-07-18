@@ -25,6 +25,7 @@
     "evals:image": "tsx src/mcp/evals/image/runImage.ts",
     "evals:harvest": "tsx src/mcp/evals/runHarvest.ts",
     "expert:harvest": "tsx scripts/harvest-expert-chats.ts",
+    "expert:distill": "tsx scripts/expert-distill.ts",
     "expert:digest": "tsx scripts/expert-digest.ts",
     "build:panel": "node scripts/build-onboard-panel.mjs",
     "build:tool-registry": "node -e \"require('esbuild').buildSync({entryPoints:['scripts/build-tool-registry.ts'],bundle:false,platform:'node',format:'esm',outfile:'scripts/.tool-registry.mjs'})\" && node scripts/.tool-registry.mjs && node -e \"require('fs').rmSync('scripts/.tool-registry.mjs')\"",
