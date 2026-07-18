@@ -101,7 +101,9 @@ export const CONTEXT_SLOTS = [
     id: 5,
     name: 'Product catalog (SKUs, names, prices)',
     class: 'PRODUCT-TRUTH',
-    residesIn: ['user_products', 'ivos_mcp', 'ask'],
+    // business_facts is where `remember({slot:5})` persists an owner-stated catalog; list it
+    // first so the resolver reads it back (without it, the write is orphaned — never resurfaced).
+    residesIn: ['business_facts', 'user_products', 'ivos_mcp', 'ask'],
     askQuestion:
       'List your SKUs with their product names and prices. Used for diagnostic distinctiveness, the brief, and investment tiering.',
   },
@@ -111,7 +113,8 @@ export const CONTEXT_SLOTS = [
     class: 'PRODUCT-TRUTH',
     // user_products carries the scraped bullets/description (where claims live) alongside
     // evidence_snapshots, so an already-imported listing surfaces its claims here too.
-    residesIn: ['evidence_snapshots', 'user_products', 'ivos_mcp', 'ask'],
+    // business_facts holds owner-stated claims captured via `remember({slot:6})` — read it too.
+    residesIn: ['business_facts', 'evidence_snapshots', 'user_products', 'ivos_mcp', 'ask'],
     askQuestion:
       'Confirm the exact product facts and policies (capacity, materials, compatibility, return/guarantee terms). FABRICATION-GATED: these may never appear in generated copy unconfirmed.',
   },

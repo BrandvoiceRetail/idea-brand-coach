@@ -110,14 +110,13 @@ function toNeedsInput(r: ResolvedSlot): OnboardNeedsInput {
  *  6. otherwise we're ready to run it.
  */
 function decideNextAction(args: {
-  hasPrimary: boolean;
   defined: number;
   hasReviews: boolean;
   hasListing: boolean;
   intakeTaken: boolean;
   funnelWithMetrics: number;
 }): OnboardNextAction {
-  const { hasPrimary, defined, hasReviews, hasListing, intakeTaken, funnelWithMetrics } = args;
+  const { defined, hasReviews, hasListing, intakeTaken, funnelWithMetrics } = args;
   const hasEvidence = hasReviews || hasListing;
 
   // True cold start (nothing on file): lead with the low-friction multiple-choice
@@ -134,7 +133,7 @@ function decideNextAction(args: {
     };
   }
 
-  if (defined === 0 || !hasPrimary) {
+  if (defined === 0) {
     return {
       id: 'define_avatar',
       label: 'Get clear on who you\'re really selling to',
@@ -200,19 +199,34 @@ function decideNextAction(args: {
  * Assemble the unified onboarding state in one pass. Reads run in parallel; the funnel read
  * is allowed to fail soft (a brand with no funnel yet is normal during onboarding).
  */
-export async function assembleOnboardState(deps: OnboardReadDeps): Promise<OnboardState> {
-  const [resolved, avatars, funnel] = await Promise.all([
-    deps.resolve([...ONBOARD_SLOTS], { avatarId: null }),
+export async function assembleOnboardState(
+  deps: OnboardReadDeps,
+  scopeAvatarId: string | null = null,
+): Promise<OnboardState> {
+  // Read avatars + funnel first so we can SCOPE the context resolve to the caller's avatar.
+  // Evidence/context is ingested per-avatar (ingest_evidence/remember take avatar_id) and the
+  // resolver falls back avatar→brand-level, so a brand-level-only resolve (avatarId:null) would
+  // never resurface avatar-scoped evidence — the coach would re-ask for what it already has.
+  const [avatars, funnel] = await Promise.all([
     deps.listAvatars(),
     deps.listFunnel().catch(() => [] as FunnelTouchpoint[]),
   ]);
+
+  const definedAvatars = avatars.filter((a) => !isPlaceholderAvatar(a));
+  // Scope: caller-supplied → the brand primary → the only defined avatar → null (true cold start).
+  const scopeId =
+    scopeAvatarId ??
+    definedAvatars.find((a) => a.is_primary)?.id ??
+    (definedAvatars.length === 1 ? definedAvatars[0].id : null);
+
+  const resolved = await deps.resolve([...ONBOARD_SLOTS], { avatarId: scopeId });
 
   const byId = new Map<SlotId, ResolvedSlot>(resolved.map((r) => [r.slot, r]));
   const hasReviews = satisfied(byId, REVIEWS_SLOT);
   const hasListing = satisfied(byId, LISTING_SLOT);
   const intakeTaken = satisfied(byId, INTAKE_SLOT);
 
-  const defined = avatars.filter((a) => !isPlaceholderAvatar(a)).length;
+  const defined = definedAvatars.length;
   const placeholders = avatars.length - defined;
   const hasPrimary = avatars.some((a) => a.is_primary && !isPlaceholderAvatar(a));
 
@@ -222,7 +236,6 @@ export async function assembleOnboardState(deps: OnboardReadDeps): Promise<Onboa
   const satisfiedCount = resolved.length - needsInput.length;
 
   const nextAction = decideNextAction({
-    hasPrimary,
     defined,
     hasReviews,
     hasListing,

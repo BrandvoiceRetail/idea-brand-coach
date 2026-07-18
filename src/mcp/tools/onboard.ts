@@ -101,10 +101,17 @@ export function registerOnboard(server: McpServer, onboardDeps: OnboardReadDeps 
       description:
         "GUIDE — read onboarding state + the single warm next step (a READ; it does not pull analytics or run the sequence). Reads everything already on file for the brand — context fill-map, customer avatars, listing/review evidence, and funnel pieces — in ONE efficient pass, and returns a single unified state ending on the ONE highest-leverage next action. Recognition-first (Trevor's doctrine): the `summary` opens by reflecting the user's situation, and `nextAction.invite` is the warm, single, conversation-style ask to deliver — relay it to gather the one piece of context that unlocks the most. Never a form, never framework jargon, never fabrication (unfilled inputs come back as needs_input). Use this for any 'where am I / what's my next step' moment, or to guide onboarding one warm step at a time. When the user instead wants to EXECUTE the full onboarding/refresh (pull their analytics, create funnel pieces, ingest metrics, run the Trust Gap), call `run_onboarding`. RLS-scoped; anonymous callers get the cold-start next step." +
         appGroundingPreamble('onboard_status'),
-      inputSchema: {},
+      inputSchema: {
+        avatar_id: z
+          .string()
+          .optional()
+          .describe(
+            'Optional avatar to scope the read to — its ingested evidence/context is resurfaced. Omit to auto-scope to the brand primary / only avatar.',
+          ),
+      },
     },
-    async () => {
-      const state = await assembleOnboardState(onboardDeps);
+    async ({ avatar_id }) => {
+      const state = await assembleOnboardState(onboardDeps, avatar_id ?? null);
       safeLog({
         event: 'tool.onboard_status',
         caller: userTag(getIdentity()),

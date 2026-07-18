@@ -21,6 +21,47 @@ function stubSupabase(rows: unknown[]): SupabaseClient {
   return { from: () => builder } as unknown as SupabaseClient;
 }
 
+/** JWT-client stub for capture_correction: profiles.email self-read + expert_corrections insert. */
+function stubUserClient(opts: { isExpert: boolean; insertOk?: boolean }): SupabaseClient {
+  return {
+    from(table: string) {
+      if (table === 'profiles') {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { email: opts.isExpert ? 'trevor@brandvoice.co.uk' : 'matthew@icodemybusiness.com' },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === 'expert_corrections') {
+        return {
+          insert: () => ({
+            select: () => ({
+              single: async () =>
+                opts.insertOk === false
+                  ? { data: null, error: { message: 'fail' } }
+                  : { data: { id: 'ec1' }, error: null },
+            }),
+          }),
+        };
+      }
+      const b: Record<string, unknown> = {};
+      b.select = () => b;
+      b.eq = () => b;
+      b.in = () => b;
+      b.order = () => b;
+      b.single = async () => ({ data: null, error: null });
+      b.maybeSingle = async () => ({ data: null, error: null });
+      (b as { then?: unknown }).then = (r: (v: unknown) => unknown) => r({ data: [], error: null });
+      return b;
+    },
+  } as unknown as SupabaseClient;
+}
+
 const cfg: HostConfig = {
   port: 0,
   ivosMcpUrl: null,
@@ -52,12 +93,14 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'audit_asset',
       'build_avatar_stage',
       'bulk_ingest_evidence',
+      'capture_correction',
       'compute_trust_gap_lift',
       'create_avatar',
       'create_campaign',
       'create_email_sequence',
       'delete_avatar',
       'design_test',
+      'ensure_brand',
       'export_messaging_workbook',
       'export_workbook',
       'generate_aplus_content_plan',
@@ -127,6 +170,50 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'update_test_milestone',
       'upsert_funnel_touchpoint',
     ]);
+  });
+
+  describe('capture_correction (expert-gated)', () => {
+    it('denies an unauthenticated caller', async () => {
+      const { client } = await connectedClient();
+      const res = await client.callTool({
+        name: 'capture_correction',
+        arguments: { coach_claim: 'a', correction: 'b' },
+      });
+      expect(res.isError).toBe(true);
+    });
+
+    it('is a silent no-op for a non-expert caller — even an admin (captured:false, not an error)', async () => {
+      __setUserSupabaseFactory(() => stubUserClient({ isExpert: false }));
+      try {
+        const { client } = await connectedClient();
+        const res = await runWithIdentity({ userId: 'u1', token: 't1', authenticated: true }, () =>
+          client.callTool({ name: 'capture_correction', arguments: { coach_claim: 'a', correction: 'b' } }),
+        );
+        const sc = res.structuredContent as { ok: boolean; captured: boolean };
+        expect(res.isError).toBeFalsy();
+        expect(sc.captured).toBe(false);
+      } finally {
+        __setUserSupabaseFactory(null);
+      }
+    });
+
+    it('captures for the designated expert caller', async () => {
+      __setUserSupabaseFactory(() => stubUserClient({ isExpert: true }));
+      try {
+        const { client } = await connectedClient();
+        const res = await runWithIdentity({ userId: 'u1', token: 't1', authenticated: true }, () =>
+          client.callTool({
+            name: 'capture_correction',
+            arguments: { coach_claim: 'led with features', correction: 'lead with emotion', verbatim: 'no' },
+          }),
+        );
+        const sc = res.structuredContent as { ok: boolean; captured: boolean };
+        expect(sc.captured).toBe(true);
+        expect(sc.ok).toBe(true);
+      } finally {
+        __setUserSupabaseFactory(null);
+      }
+    });
   });
 
   it('health returns status ok and ledgerConfigured=true (native ledger)', async () => {

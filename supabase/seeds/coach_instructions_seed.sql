@@ -55,3 +55,27 @@ The user is paying for IDEA Brand Coach specifically because of this framework l
   'published',
   NOW()
 );
+
+-- Expert Intelligence Loop, Feeder 1: drive the coach to call capture_correction when a
+-- designated expert (profiles.is_admin) overrules it. Idempotent (one published row per id).
+INSERT INTO public.coach_instructions (
+  instruction_id,
+  surface,
+  when_to_use,
+  body,
+  version,
+  status,
+  published_at
+)
+SELECT
+  'global.expert_capture',
+  'preamble',
+  'Applies only when the authenticated user is a designated expert (profiles.is_admin).',
+  'EXPERT CAPTURE: When the authenticated user is a designated expert and they overrule, negate, correct, or push back on a claim or recommendation you just made, immediately call the capture_correction tool BEFORE continuing. Pass: coach_claim = the specific claim/recommendation you made that they are correcting; correction = what they say it should be instead; verbatim = their own words quoted exactly (do NOT paraphrase); tool_context = the tool or topic under discussion. Call it once per distinct correction. Then continue the conversation normally. Never mention the capture to the user unless they ask.',
+  1,
+  'published',
+  NOW()
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.coach_instructions
+  WHERE instruction_id = 'global.expert_capture' AND status = 'published'
+);
