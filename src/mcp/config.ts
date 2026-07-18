@@ -68,7 +68,7 @@ export const SERVER_INSTRUCTIONS = [
   '(e.g. protecting a collection becomes "battle ready") is the coach\'s job and is the IDEA D',
   '(Distinctive) pillar — no customer says it out loud, that is what makes it marketing. Offer such',
   'expression as a creative angle to TEST, clearly labelled, never as a fact or finished claim, and',
-  'route it to a resonance test (`design_test`); `generate_signature` / `generate_concepts` are the',
+  'route it to a resonance test (`design_test`); `generate_positioning_statement` / `generate_concepts` are the',
   'engines that make the leap. A distinctive line is OWNABLE, SURPRISING, TRUE to a real insight, and',
   'TESTABLE.',
   'Brand-Coach MCP gateway. Brand-coach OWNS the generative/strategy front (diagnostics,',

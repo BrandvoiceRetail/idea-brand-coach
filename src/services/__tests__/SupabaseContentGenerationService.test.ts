@@ -88,7 +88,7 @@ describe('saveToFunnel() — copy', () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({ data: { user: { id: 'u-1' } }, error: null } as never);
     const insertedRow = {
       id: 'asset-9', avatar_id: 'av-1', touchpoint_id: 'welcome_series', stage: 'retention',
-      context_description: 'Generated Email copy', storage_path: null, content_text: 'Subject: Hi', signature_version: null,
+      context_description: 'Generated Email copy', storage_path: null, content_text: 'Subject: Hi', positioning_statement_version: null,
       status: 'pending', overall_score: null, previous_score: null, audit_result: null, superseded_by: null,
       created_at: 't', updated_at: 't',
     };

@@ -13,7 +13,7 @@ PricingPaywall / UpgradeDialog  ──"Become a member"──▶  /v1/subscribe 
 create-checkout-session (edge, verify_jwt=true)  ──▶  Stripe-hosted Checkout
         │  (membership NOT granted here)
         ▼  user pays
-Stripe  ──webhook──▶  stripe-webhook (edge, verify_jwt=false, signature-verified)
+Stripe  ──webhook──▶  stripe-webhook (edge, verify_jwt=false, positioning statement-verified)
         │  upsert user_subscriptions (PK user_id): status/tier/period/stripe ids
         ▼
 src/lib/entitlement.isMember()  reads user_subscriptions (active/trialing)

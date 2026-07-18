@@ -32,7 +32,7 @@ const inputSchema = {
     .string()
     .optional()
     .describe("Short summary of the Avatar 2.0 emotional core + vocabulary + top objection — drives the persona cast and the skeptic flip."),
-  signature: z.string().optional().describe('The chosen Signature (distinctive line), if one exists.'),
+  positioning_statement: z.string().optional().describe('The chosen Positioning Statement (distinctive line), if one exists.'),
   trust_gap_summary: z
     .string()
     .optional()
@@ -57,18 +57,18 @@ export function registerGenerateUgcAdPlanTool(server: McpServer): void {
     {
       title: 'Generate UGC ad plan (script + persona, Higgsfield preset-ready)',
       description:
-        'Generate a script-level UGC AD PLAN — review/talking-head, try-on, unboxing, or problem-solution — grounded in the Decision Trigger, Avatar 2.0, the Signature, and the Trust Gap. Returns the script beat architecture (spoken hook → why-I-got-this → real-time trial → benefit talking points in the avatar\'s vocabulary → the "I thought X, but…" skeptic flip → CTA), the persona spec (CAST from the customer avatar — demographic, register, setting; never a random preset face), 3 trigger-angled hook variants over one body (the hook is the test variable), AI-presenter honesty rails (actor, never framed as a real customer; disclosure + platform/Amazon policy), and the Higgsfield execution route (marketing-studio preset per format, 9:16 ~15s, product + packaging from the reference kit) plus the volume testing loop (ship hook variants → read metrics → scale the winner → refresh on fatigue). You (the coach) compose the final scripts and preset inputs. Works with partial context — missing positioning inputs degrade honestly. Generates plans only, never video, never invented claims.' +
+        'Generate a script-level UGC AD PLAN — review/talking-head, try-on, unboxing, or problem-solution — grounded in the Decision Trigger, Avatar 2.0, the Positioning Statement, and the Trust Gap. Returns the script beat architecture (spoken hook → why-I-got-this → real-time trial → benefit talking points in the avatar\'s vocabulary → the "I thought X, but…" skeptic flip → CTA), the persona spec (CAST from the customer avatar — demographic, register, setting; never a random preset face), 3 trigger-angled hook variants over one body (the hook is the test variable), AI-presenter honesty rails (actor, never framed as a real customer; disclosure + platform/Amazon policy), and the Higgsfield execution route (marketing-studio preset per format, 9:16 ~15s, product + packaging from the reference kit) plus the volume testing loop (ship hook variants → read metrics → scale the winner → refresh on fatigue). You (the coach) compose the final scripts and preset inputs. Works with partial context — missing positioning inputs degrade honestly. Generates plans only, never video, never invented claims.' +
         groundingPreamble('generate_ugc_ad_plan') +
         appGroundingPreamble('generate_ugc_ad_plan'),
       inputSchema,
     },
-    async ({ product, ugc_format, decision_trigger, avatar_summary, signature, trust_gap_summary, verified_facts, platform, brand_asset_id }) => {
+    async ({ product, ugc_format, decision_trigger, avatar_summary, positioning_statement, trust_gap_summary, verified_facts, platform, brand_asset_id }) => {
       const result = buildUgcAdPlan({
         product,
         ugcFormat: ugc_format,
         decisionTrigger: decision_trigger,
         avatarSummary: avatar_summary,
-        signature,
+        positioning_statement,
         trustGapSummary: trust_gap_summary,
         verifiedFacts: verified_facts,
         platform,

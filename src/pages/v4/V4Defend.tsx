@@ -2,7 +2,7 @@
  * V4Defend — the Defend stage (Loop-5, S-17).
  *
  * WHAT: The thin wiring shell that orchestrates the Loop-5 flow inside the /v4
- * shell (sidebar + spine stepper + bottom-nav): the Signature-drift watch
+ * shell (sidebar + spine stepper + bottom-nav): the Positioning Statement-drift watch
  * (DriftWatchCard), the deterministic defend checklist (DefendChecklist), the
  * honest competitive-pressure teaser (CompetitorTeaserCard), and the full-loop
  * workbook export (WorkbookExportCard). ALL data-fetching is owned by
@@ -77,7 +77,7 @@ export default function V4Defend(): JSX.Element {
   } = useDefendRun();
   const { openCoach } = useCoachWidget();
 
-  // Keyed on the avatar SET signature (not a boolean) so switching the active
+  // Keyed on the avatar SET positioning statement (not a boolean) so switching the active
   // customer set while the page stays mounted re-loads for the new set instead of
   // keeping stale data.
   const loadedForRef = useRef<string | null>(null);

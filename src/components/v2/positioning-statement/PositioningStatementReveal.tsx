@@ -1,11 +1,11 @@
 /**
- * SignatureReveal Component
+ * PositioningStatementReveal Component
  *
  * The recognition moment. A self-contained dialog that:
- *  1. (paste)   lets the founder paste customer reviews and hit "Reveal Signature"
- *  2. (loading) calls the reveal-signature edge function
- *  3. (options) shows 3-4 DISTINCT Signature option cards, ALL equal weight
- *  4. (picked)  promotes the chosen Signature to a dominant gold-accent result
+ *  1. (paste)   lets the founder paste customer reviews and hit "Reveal Positioning Statement"
+ *  2. (loading) calls the reveal-positioning-statement edge function
+ *  3. (options) shows 3-4 DISTINCT Positioning Statement option cards, ALL equal weight
+ *  4. (picked)  promotes the chosen Positioning Statement to a dominant gold-accent result
  *               and asks "Did this surprise you?"
  *
  * No option is pre-picked or marked "strongest" — there is no thumb on the scale.
@@ -25,12 +25,12 @@ import {
 } from '@/components/ui/dialog';
 import { Sparkles, Loader2, Info, ArrowLeft, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useSignatureReveal, type SignatureConversationTurn } from '@/hooks/v2/useSignatureReveal';
+import { usePositioningStatementReveal, type PositioningStatementConversationTurn } from '@/hooks/v2/usePositioningStatementReveal';
 import { FeedbackMoment1 } from '@/components/v2/feedback/FeedbackMoment1';
-import { SignatureFeedbackForm } from '@/components/v2/signature/SignatureFeedbackForm';
+import { PositioningStatementFeedbackForm } from '@/components/v2/positioning-statement/PositioningStatementFeedbackForm';
 import { captureAlphaEvent } from '@/lib/posthogClient';
 
-interface SignatureRevealProps {
+interface PositioningStatementRevealProps {
   /** Chat turns used as discovery context (role + content). */
   messages: Array<{ role: string; content: string }>;
   /** Extracted brand/customer field values. */
@@ -47,23 +47,23 @@ interface SignatureRevealProps {
   preloadedReviews?: string;
   /** Number of imported reviews behind {@link preloadedReviews}, for the banner. */
   preloadedReviewCount?: number;
-  /** Called after a picked Signature has been persisted (see useSignatureReveal). */
-  onSignatureSaved?: (saved: import('@/services/interfaces/ISignatureService').SavedSignature) => void;
+  /** Called after a picked Positioning Statement has been persisted (see usePositioningStatementReveal). */
+  onPositioningStatementSaved?: (saved: import('@/services/interfaces/IPositioningStatementService').SavedPositioningStatement) => void;
 }
 
-export function SignatureReveal({
+export function PositioningStatementReveal({
   messages,
   fieldValues,
   sessionId,
   triggerClassName,
   preloadedReviews = '',
   preloadedReviewCount = 0,
-  onSignatureSaved,
-}: SignatureRevealProps): JSX.Element {
+  onPositioningStatementSaved,
+}: PositioningStatementRevealProps): JSX.Element {
   const [open, setOpen] = useState(false);
-  // Moment 1 feedback prompt — opened right after the user PICKS a Signature.
+  // Moment 1 feedback prompt — opened right after the user PICKS a Positioning Statement.
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [pickedSignature, setPickedSignature] = useState('');
+  const [pickedPositioningStatement, setPickedPositioningStatement] = useState('');
   const {
     stage,
     reviews,
@@ -78,11 +78,11 @@ export function SignatureReveal({
     answerSurprise,
     backToOptions,
     reset,
-  } = useSignatureReveal({ initialReviews: preloadedReviews, onSignatureSaved });
+  } = usePositioningStatementReveal({ initialReviews: preloadedReviews, onPositioningStatementSaved });
 
   const hasPreloadedReviews = preloadedReviewCount > 0 && preloadedReviews.trim().length > 0;
 
-  const conversation = useMemo<SignatureConversationTurn[]>(
+  const conversation = useMemo<PositioningStatementConversationTurn[]>(
     () =>
       messages
         .filter((m) => (m.role === 'user' || m.role === 'assistant') && m.content?.trim())
@@ -94,7 +94,7 @@ export function SignatureReveal({
 
   // Funnel: the reveal CTA is permanently visible in the coach header
   useEffect(() => {
-    captureAlphaEvent('signature_reveal_cta_shown', { trigger: 'always_visible' });
+    captureAlphaEvent('positioning_statement_reveal_cta_shown', { trigger: 'always_visible' });
   }, []);
 
   // Funnel: paste field presented (each time the dialog reaches the paste stage)
@@ -110,7 +110,7 @@ export function SignatureReveal({
   };
 
   const handleReveal = (): void => {
-    captureAlphaEvent('signature_reveal_requested');
+    captureAlphaEvent('positioning_statement_reveal_requested');
     reveal({ conversation, fields: fieldValues });
   };
 
@@ -257,8 +257,8 @@ export function SignatureReveal({
                   type="button"
                   onClick={() => {
                     pickOption(index);
-                    // Minimal hook: arm the Moment 1 feedback prompt with the picked Signature.
-                    setPickedSignature(option);
+                    // Minimal hook: arm the Moment 1 feedback prompt with the picked Positioning Statement.
+                    setPickedPositioningStatement(option);
                     setFeedbackOpen(true);
                   }}
                   className={cn(
@@ -277,7 +277,7 @@ export function SignatureReveal({
                 size="sm"
                 onClick={() => {
                   // Abandoned all options without picking — dissatisfaction with the set.
-                  captureAlphaEvent('signature_rerolled', { from: 'options', option_count: options.length });
+                  captureAlphaEvent('positioning_statement_rerolled', { from: 'options', option_count: options.length });
                   reset();
                 }}
                 className="gap-1.5 text-muted-foreground"
@@ -338,9 +338,9 @@ export function SignatureReveal({
 
                   {/* Moment-1 feedback — opens after the surprise answer so the
                       recognition moment lands first */}
-                  <SignatureFeedbackForm
-                    chosenSignature={options[selectedIndex]}
-                    signatureOptions={options}
+                  <PositioningStatementFeedbackForm
+                    chosenPositioningStatement={options[selectedIndex]}
+                    positioningStatementOptions={options}
                     sessionId={sessionId}
                   />
                 </>
@@ -352,7 +352,7 @@ export function SignatureReveal({
                   size="sm"
                   onClick={() => {
                     // Reconsidering after a pick — the first choice didn't fully land.
-                    captureAlphaEvent('signature_reconsidered', {
+                    captureAlphaEvent('positioning_statement_reconsidered', {
                       chosen_index: selectedIndex,
                       option_count: options.length,
                     });
@@ -368,7 +368,7 @@ export function SignatureReveal({
                   size="sm"
                   onClick={() => {
                     // Redo the whole reveal after picking — strongest dissatisfaction signal.
-                    captureAlphaEvent('signature_rerolled', {
+                    captureAlphaEvent('positioning_statement_rerolled', {
                       from: 'picked',
                       chosen_index: selectedIndex,
                       option_count: options.length,
@@ -390,7 +390,7 @@ export function SignatureReveal({
     <FeedbackMoment1
       open={feedbackOpen}
       onClose={() => setFeedbackOpen(false)}
-      chosenSignature={pickedSignature}
+      chosenPositioningStatement={pickedPositioningStatement}
       sessionId={sessionId}
     />
     </>

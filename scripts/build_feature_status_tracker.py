@@ -151,7 +151,7 @@ FEATURES: list[tuple] = [
         'F-003,F-009',
         32,
         0,
-        'AUDIT 2026-05-16: V2 chapter UI delivers progressive disclosure + persistence well, but field schema flattens Gen 3 psychographic dimensions into coarse textareas (F-004.1 60%). 3 of 4 AI modes present; FieldChatButton missing from V2 (F-004.3 35%). Completion gate logic exists but button not mounted in render tree (F-004.5 55%). RECONCILE (2026-05-25): maps into the new 5-stage conversational flow ending in The Signature (F-060); guided dialogue, not a 4-section form [F 144128256 @04:26]. 5-stage structure pending Trevor/Matthew sign-off.',
+        'AUDIT 2026-05-16: V2 chapter UI delivers progressive disclosure + persistence well, but field schema flattens Gen 3 psychographic dimensions into coarse textareas (F-004.1 60%). 3 of 4 AI modes present; FieldChatButton missing from V2 (F-004.3 35%). Completion gate logic exists but button not mounted in render tree (F-004.5 55%). RECONCILE (2026-05-25): maps into the new 5-stage conversational flow ending in The Positioning Statement (F-060); guided dialogue, not a 4-section form [F 144128256 @04:26]. 5-stage structure pending Trevor/Matthew sign-off.',
     ),
     (
         'F-005',
@@ -167,7 +167,7 @@ FEATURES: list[tuple] = [
         'F-004',
         32,
         0,
-        "AUDIT 2026-05-16: V2 chapter map has no dedicated 'Buying Behaviour' chapter — closest is BUYER_INTENT which is conceptually different. V1 AvatarBuilder has the right tab. Data shape exists; UI split V1↔V2. RECONCILE (2026-05-25): maps into the new 5-stage conversational flow ending in The Signature (F-060); guided dialogue, not a 4-section form [F 144128256 @04:26]. 5-stage structure pending Trevor/Matthew sign-off.",
+        "AUDIT 2026-05-16: V2 chapter map has no dedicated 'Buying Behaviour' chapter — closest is BUYER_INTENT which is conceptually different. V1 AvatarBuilder has the right tab. Data shape exists; UI split V1↔V2. RECONCILE (2026-05-25): maps into the new 5-stage conversational flow ending in The Positioning Statement (F-060); guided dialogue, not a 4-section form [F 144128256 @04:26]. 5-stage structure pending Trevor/Matthew sign-off.",
     ),
     (
         'F-006',
@@ -183,7 +183,7 @@ FEATURES: list[tuple] = [
         'F-005',
         36,
         0,
-        'AUDIT 2026-05-16: Emotional fields exist (EMOTIONAL_CONNECTION + CUSTOMER_EXPERIENCE chapters) but Gen 3 Emotional Journey framing absent; Trigger Moment field with elevated visual treatment (F-006.2) is the most prominent miss — zero hits in codebase. RECONCILE (2026-05-25): maps into the new 5-stage conversational flow ending in The Signature (F-060); guided dialogue, not a 4-section form [F 144128256 @04:26]. 5-stage structure pending Trevor/Matthew sign-off.',
+        'AUDIT 2026-05-16: Emotional fields exist (EMOTIONAL_CONNECTION + CUSTOMER_EXPERIENCE chapters) but Gen 3 Emotional Journey framing absent; Trigger Moment field with elevated visual treatment (F-006.2) is the most prominent miss — zero hits in codebase. RECONCILE (2026-05-25): maps into the new 5-stage conversational flow ending in The Positioning Statement (F-060); guided dialogue, not a 4-section form [F 144128256 @04:26]. 5-stage structure pending Trevor/Matthew sign-off.',
     ),
     (
         'F-007',
@@ -199,7 +199,7 @@ FEATURES: list[tuple] = [
         'F-006',
         40,
         0,
-        'AUDIT 2026-05-16: Review intake is URL/ASIN-driven via ReviewAnalyzerModal (scrape model), not Gen 3 paste-raw-reviews model. voice-of-customer-analysis edge function DOES NOT EXIST. V1 analysis is fully mocked. Use/discard phrase cards (F-007.3) ~10%. RECONCILE (2026-05-25): maps into the new 5-stage conversational flow ending in The Signature (F-060); guided dialogue, not a 4-section form [F 144128256 @04:26]. 5-stage structure pending Trevor/Matthew sign-off.',
+        'AUDIT 2026-05-16: Review intake is URL/ASIN-driven via ReviewAnalyzerModal (scrape model), not Gen 3 paste-raw-reviews model. voice-of-customer-analysis edge function DOES NOT EXIST. V1 analysis is fully mocked. Use/discard phrase cards (F-007.3) ~10%. RECONCILE (2026-05-25): maps into the new 5-stage conversational flow ending in The Positioning Statement (F-060); guided dialogue, not a 4-section form [F 144128256 @04:26]. 5-stage structure pending Trevor/Matthew sign-off.',
     ),
     (
         'F-008',
@@ -382,7 +382,7 @@ FEATURES: list[tuple] = [
         "F-019",
         "Pay gate (freemium)",
         "pay_gate",
-        "Freemium model. Free = core tools + The Signature + limited AI; paid (£29/mo; one-off £67 notional/TBD) unlocks AI-heavy features (Review Lab analysis, unlimited prompts/iterations). Stripe + post-payment action menu.",
+        "Freemium model. Free = core tools + The Positioning Statement + limited AI; paid (£29/mo; one-off £67 notional/TBD) unlocks AI-heavy features (Review Lab analysis, unlimited prompts/iterations). Stripe + post-payment action menu.",
         "Beta",
         "P0",
         "not_started",
@@ -1091,7 +1091,7 @@ FEATURES: list[tuple] = [
     ),
     (
         "F-060",
-        "The Signature (Stage-5 output)",
+        "The Positioning Statement (Stage-5 output)",
         "avatar_builder",
         "One-sentence customer truth — e.g. 'My customer isn't buying shampoo; they're buying the feeling of still being in control of how they age.' The output of the research stages.",
         "Alpha",
@@ -1103,7 +1103,7 @@ FEATURES: list[tuple] = [
         "F-004,F-005,F-006,F-007",
         20,
         0,
-        "GEN3 (2026-05-25): THE retention / word-of-mouth moment. MVP must validate this + the Trust Gap™ Score first; everything else is downstream [Analysis 2026-05-17]. A draft Signature may surface earlier at the Draft Canvas (F-003).",
+        "GEN3 (2026-05-25): THE retention / word-of-mouth moment. MVP must validate this + the Trust Gap™ Score first; everything else is downstream [Analysis 2026-05-17]. A draft Positioning Statement may surface earlier at the Draft Canvas (F-003).",
     ),
     (
         "F-061",
@@ -2095,7 +2095,7 @@ PHASE_GATES: list[tuple] = [
     (
         "Alpha",
         "Avatar Builder",
-        "All sections accept input, persist, and surface AI assistance modes. NB reconcile the 4 sections with the new 5-stage conversational flow ending in The Signature (F-060) — pending sign-off.",
+        "All sections accept input, persist, and surface AI assistance modes. NB reconcile the 4 sections with the new 5-stage conversational flow ending in The Positioning Statement (F-060) — pending sign-off.",
         "F-004,F-005,F-006,F-007,F-009",
         "This is the product per Trevor's Respec.",
     ),
@@ -2278,8 +2278,8 @@ PHASE_GATES: list[tuple] = [
     ),
     (
         "Alpha",
-        "The Signature",
-        "Tester produces a one-sentence Signature they recognise as true and had not previously articulated.",
+        "The Positioning Statement",
+        "Tester produces a one-sentence Positioning Statement they recognise as true and had not previously articulated.",
         "F-060",
         "The retention / word-of-mouth moment. Validate alongside the Trust Gap Score, before everything else.",
     ),
@@ -2310,9 +2310,9 @@ RISKS: list[tuple] = [
         "All",
         "Critical",
         "monitoring",
-        "At Alpha exit, the Trust Gap™ Score does NOT resonate (testers don't feel the gap is real/accurate) OR The Signature does NOT surprise testers with its accuracy — i.e. fewer than 2 of {P-011 Diagnostic, P-001 Signature/articulation, P-003 strategy doc} verified PARTIAL+ via tester debriefs; OR <50% of testers can articulate one concrete way the canvas changed how they think about their customer; OR fewer than 60% of shipped features map to ≥1 problem.",
+        "At Alpha exit, the Trust Gap™ Score does NOT resonate (testers don't feel the gap is real/accurate) OR The Positioning Statement does NOT surprise testers with its accuracy — i.e. fewer than 2 of {P-011 Diagnostic, P-001 Positioning Statement/articulation, P-003 strategy doc} verified PARTIAL+ via tester debriefs; OR <50% of testers can articulate one concrete way the canvas changed how they think about their customer; OR fewer than 60% of shipped features map to ≥1 problem.",
         "Matthew",
-        "Problems sheet operationalises tracking. Alpha feedback Moments 1 + 2 measure perceived value directly. If signal is low at Alpha midpoint, narrow scope to deepen 1-2 problems rather than adding features. GEN3 (2026-05-25): Trevor's two MVP-critical problems are the Trust Gap™ Score (P-011) and The Signature (P-001) — test those first [Analysis 2026-05-17]. ~2-3yr defensibility window → ship Alpha fast, don't gold-plate; full strategic frame in the Launch Roadmap Overview.",
+        "Problems sheet operationalises tracking. Alpha feedback Moments 1 + 2 measure perceived value directly. If signal is low at Alpha midpoint, narrow scope to deepen 1-2 problems rather than adding features. GEN3 (2026-05-25): Trevor's two MVP-critical problems are the Trust Gap™ Score (P-011) and The Positioning Statement (P-001) — test those first [Analysis 2026-05-17]. ~2-3yr defensibility window → ship Alpha fast, don't gold-plate; full strategic frame in the Launch Roadmap Overview.",
         "Meta-risk above R-004 (form not conversation) and R-008 (no testimonials). The failure mode where every feature ships on time but the product still doesn't matter to anyone. Operational tool: the Problems sheet — every feature should tag to at least one problem.",
     ),
     (
@@ -2529,7 +2529,7 @@ PROBLEMS: list[tuple] = [
         "Alpha",
         "Yes",
         "F-004,F-005,F-006,F-007,F-008,F-009,F-012,F-022,F-058,F-060",
-        "Core Alpha thesis: Avatar Builder + Forensic Canvas produce a depth of customer understanding generic prompting can't reach. F-022 (Coach mode) extends this in Beta. GEN3 (2026-05-25): = cannot articulate what the customer is actually buying → The Signature (F-060) is the answer; the Decision Trigger (F-058) sharpens it. MVP-critical, validate first. Free tier.",
+        "Core Alpha thesis: Avatar Builder + Forensic Canvas produce a depth of customer understanding generic prompting can't reach. F-022 (Coach mode) extends this in Beta. GEN3 (2026-05-25): = cannot articulate what the customer is actually buying → The Positioning Statement (F-060) is the answer; the Decision Trigger (F-058) sharpens it. MVP-critical, validate first. Free tier.",
     ),
     (
         "P-002",
@@ -2802,14 +2802,14 @@ CHANGE_LOG: list[tuple] = [
     (
         "2026-05-17",
         "Trevor (strategic analysis)",
-        "Strategic analysis: 10 problems; MVP must validate Trust Gap™ + The Signature first; no image generation; 'blue water' vs Pixii",
+        "Strategic analysis: 10 problems; MVP must validate Trust Gap™ + The Positioning Statement first; no image generation; 'blue water' vs Pixii",
         "Area(s): strategy | Source: IDEA App 3 v3 Claude Analysis 17 May 2026.",
     ),
     (
         TODAY.isoformat(),
         "Matthew (via Claude Code)",
         "Folded in Context Delta 2026-05-25 + v2 Launch Roadmap (WhatsApp + Gen 3 Fathom transcripts)",
-        "Added F-057..F-067; freemium reframe (F-019); F-052/R-013 resolved (split dev, 4/23); F-056 → deliberate non-goal; added R-016..R-019; reconciled Avatar Builder 4→5 stages (flagged); added P-011/P-012; sharpened R-001 to the Trust Gap + Signature validation bar; named StoryBrand + Pixii in R-014; added Alpha gates for Trust Gap / Signature / Decision Trigger; seeded the dated decision trail.",
+        "Added F-057..F-067; freemium reframe (F-019); F-052/R-013 resolved (split dev, 4/23); F-056 → deliberate non-goal; added R-016..R-019; reconciled Avatar Builder 4→5 stages (flagged); added P-011/P-012; sharpened R-001 to the Trust Gap + Positioning Statement validation bar; named StoryBrand + Pixii in R-014; added Alpha gates for Trust Gap / Positioning Statement / Decision Trigger; seeded the dated decision trail.",
     ),
 ]
 

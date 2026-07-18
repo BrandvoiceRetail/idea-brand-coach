@@ -49,8 +49,8 @@ describe('creativeAlignment (the shared positioning spine)', () => {
     expect(byKey.get('decision_trigger')?.status).toBe('provided');
     // whitespace-only counts as missing
     expect(byKey.get('avatar_core')?.status).toBe('missing');
-    expect(byKey.get('signature')?.status).toBe('missing');
-    expect(byKey.get('signature')?.note).toContain('generate_signature');
+    expect(byKey.get('positioning_statement')?.status).toBe('missing');
+    expect(byKey.get('positioning_statement')?.note).toContain('generate_positioning_statement');
   });
 
   it('the video handoff carries both execution modes, the reference kit, and preset routing', () => {
@@ -250,8 +250,8 @@ describe('buildCreativePlanRefinement', () => {
   it('dedupes repeated positioning changes', () => {
     const r = buildCreativePlanRefinement({
       planType: 'aplus_content',
-      changeRequest: 'signature changed',
-      positioningChanges: ['signature', 'signature'],
+      changeRequest: 'positioning statement changed',
+      positioningChanges: ['positioning_statement', 'positioning_statement'],
     });
     expect(r.propagation).toHaveLength(1);
   });

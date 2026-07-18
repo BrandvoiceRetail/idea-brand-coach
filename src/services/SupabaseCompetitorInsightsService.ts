@@ -85,7 +85,7 @@ export class SupabaseCompetitorInsightsService implements ICompetitorInsightsSer
           competitorUrls: request.competitorUrls,
           marketplace: request.marketplace,
           avatar_context: request.avatarContext,
-          signature_context: request.signatureContext,
+          positioning_statement_context: request.positioningStatementContext,
           our_asset: request.ourAsset,
           audit_result: request.auditResult,
         },
@@ -166,7 +166,7 @@ export class SupabaseCompetitorInsightsService implements ICompetitorInsightsSer
             competitor_names: request.competitorBrief.competitor_names,
           },
           avatar_context: request.avatarContext,
-          signature_context: request.signatureContext,
+          positioning_statement_context: request.positioningStatementContext,
         },
       });
 

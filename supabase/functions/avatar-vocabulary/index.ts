@@ -9,7 +9,7 @@ import { INTERNAL_PROMPT_AVATAR_CORPUS_CHARS } from "../_shared/contextBudgets.t
  * actually use, clustered by emotion. Each cluster lists verbatim terms, a labeled
  * frequency band (never a fabricated number), and why it matters strategically.
  *
- * Cloned from reveal-signature (CORS, optional JWT->getUser, Anthropic SONNET call
+ * Cloned from reveal-positioning-statement (CORS, optional JWT->getUser, Anthropic SONNET call
  * with prompt caching, strict JSON contract + assistant prefill, defensive parse,
  * evidence-vs-inference branch).
  *
@@ -231,7 +231,7 @@ serve(async (req) => {
   }
 
   try {
-    // Optional auth (parity with reveal-signature; platform verify_jwt also gates).
+    // Optional auth (parity with reveal-positioning-statement; platform verify_jwt also gates).
     const authHeader = req.headers.get('authorization');
     if (authHeader) {
       try {

@@ -18,7 +18,7 @@ export type ApplicabilityTag =
   | 'amazon' | 'shopify' | 'dtc_site' | 'email' | 'organic_social'
   | 'paid_social' | 'packaging' | 'founder' | 'support' | 'loyalty';
 
-/** Field paths the audit scores an asset against (avatar fields + 'signature'). */
+/** Field paths the audit scores an asset against (avatar fields + 'positioning_statement'). */
 export type AuditField = string;
 
 export interface Touchpoint {
@@ -52,31 +52,31 @@ export const STAGES: Stage[] = [
 export const TOUCHPOINTS: Touchpoint[] = [
   // Awareness
   { id: 'paid_social_creative', label: 'Paid social ad creative + copy', stage: 'awareness', appliesWhen: ['paid_social'], p0: true, assetKind: 'image+copy', personalBrand: false, auditAgainst: ['psychographics.fears', 'psychographics.triggers', 'voice_of_customer'] },
-  { id: 'organic_social_profile', label: 'Organic social profile', stage: 'awareness', appliesWhen: ['organic_social'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.values', 'signature'] },
+  { id: 'organic_social_profile', label: 'Organic social profile', stage: 'awareness', appliesWhen: ['organic_social'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.values', 'positioning_statement'] },
   { id: 'influencer_ugc', label: 'Influencer / UGC', stage: 'awareness', appliesWhen: ['organic_social', 'paid_social'], p0: false, assetKind: 'image+copy', personalBrand: false, auditAgainst: ['psychographics.values', 'voice_of_customer'] },
   { id: 'amazon_main_image', label: 'Amazon main image', stage: 'awareness', appliesWhen: ['amazon'], p0: true, assetKind: 'image', personalBrand: false, auditAgainst: ['psychographics.triggers', 'psychographics.desires', 'buying_behavior.decision_factors'] },
   { id: 'seo_content', label: 'SEO / blog content', stage: 'awareness', appliesWhen: ['dtc_site'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.fears', 'demographics.lifestyle'] },
-  { id: 'founder_social', label: 'Founder social (LinkedIn / TikTok)', stage: 'awareness', appliesWhen: ['founder'], p0: false, assetKind: 'copy', personalBrand: true, auditAgainst: ['psychographics.values', 'signature'] },
+  { id: 'founder_social', label: 'Founder social (LinkedIn / TikTok)', stage: 'awareness', appliesWhen: ['founder'], p0: false, assetKind: 'copy', personalBrand: true, auditAgainst: ['psychographics.values', 'positioning_statement'] },
   // Consideration
-  { id: 'amazon_listing_copy', label: 'Amazon listing (title, bullets, A+)', stage: 'consideration', appliesWhen: ['amazon'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['buying_behavior.decision_factors', 'psychographics.desires', 'signature'] },
-  { id: 'amazon_brand_story', label: 'Amazon brand story / A+ module', stage: 'consideration', appliesWhen: ['amazon'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.values', 'signature', 'voice_of_customer'] },
-  { id: 'shopify_pdp', label: 'Shopify product page (PDP)', stage: 'consideration', appliesWhen: ['shopify', 'dtc_site'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['buying_behavior.decision_factors', 'psychographics.desires', 'signature'] },
-  { id: 'brand_store_about', label: 'Brand store / About page', stage: 'consideration', appliesWhen: ['shopify', 'dtc_site'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.values', 'signature', 'voice_of_customer'] },
+  { id: 'amazon_listing_copy', label: 'Amazon listing (title, bullets, A+)', stage: 'consideration', appliesWhen: ['amazon'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['buying_behavior.decision_factors', 'psychographics.desires', 'positioning_statement'] },
+  { id: 'amazon_brand_story', label: 'Amazon brand story / A+ module', stage: 'consideration', appliesWhen: ['amazon'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.values', 'positioning_statement', 'voice_of_customer'] },
+  { id: 'shopify_pdp', label: 'Shopify product page (PDP)', stage: 'consideration', appliesWhen: ['shopify', 'dtc_site'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['buying_behavior.decision_factors', 'psychographics.desires', 'positioning_statement'] },
+  { id: 'brand_store_about', label: 'Brand store / About page', stage: 'consideration', appliesWhen: ['shopify', 'dtc_site'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.values', 'positioning_statement', 'voice_of_customer'] },
   { id: 'displayed_reviews', label: 'Displayed reviews / testimonials', stage: 'consideration', appliesWhen: ['amazon', 'shopify', 'dtc_site'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['voice_of_customer', 'buying_behavior.decision_factors'] },
-  { id: 'founder_content', label: 'Founder content (story, POV)', stage: 'consideration', appliesWhen: ['founder'], p0: false, assetKind: 'copy', personalBrand: true, auditAgainst: ['psychographics.values', 'signature'] },
+  { id: 'founder_content', label: 'Founder content (story, POV)', stage: 'consideration', appliesWhen: ['founder'], p0: false, assetKind: 'copy', personalBrand: true, auditAgainst: ['psychographics.values', 'positioning_statement'] },
   // Purchase decision
   { id: 'cart_checkout_flow', label: 'Cart / checkout flow', stage: 'purchase_decision', appliesWhen: ['shopify', 'dtc_site'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['buying_behavior.price_consciousness', 'psychographics.fears'] },
   { id: 'shipping_returns_policy', label: 'Shipping & returns policy', stage: 'purchase_decision', appliesWhen: ['amazon', 'shopify', 'dtc_site'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.fears', 'buying_behavior.decision_factors'] },
   { id: 'trust_badges_social_proof', label: 'Trust badges / social proof', stage: 'purchase_decision', appliesWhen: ['shopify', 'dtc_site'], p0: true, assetKind: 'image+copy', personalBrand: false, auditAgainst: ['psychographics.fears', 'voice_of_customer'] },
   { id: 'urgency_messaging', label: 'Urgency / scarcity messaging', stage: 'purchase_decision', appliesWhen: ['amazon', 'shopify', 'email'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.triggers', 'buying_behavior.intent'] },
   // Retention
-  { id: 'order_confirmation_email', label: 'Order confirmation email', stage: 'retention', appliesWhen: ['email'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['signature', 'psychographics.desires'] },
-  { id: 'shipping_email', label: 'Shipping / tracking email', stage: 'retention', appliesWhen: ['email'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['signature', 'psychographics.fears'] },
-  { id: 'packaging_unboxing', label: 'Packaging / unboxing', stage: 'retention', appliesWhen: ['packaging'], p0: true, assetKind: 'image+copy', personalBrand: false, auditAgainst: ['psychographics.values', 'psychographics.desires', 'signature'] },
-  { id: 'insert_cards', label: 'Insert / thank-you cards', stage: 'retention', appliesWhen: ['packaging'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.values', 'signature'] },
-  { id: 'welcome_series', label: 'Email welcome series', stage: 'retention', appliesWhen: ['email'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['signature', 'psychographics.values', 'psychographics.desires'] },
+  { id: 'order_confirmation_email', label: 'Order confirmation email', stage: 'retention', appliesWhen: ['email'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['positioning_statement', 'psychographics.desires'] },
+  { id: 'shipping_email', label: 'Shipping / tracking email', stage: 'retention', appliesWhen: ['email'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['positioning_statement', 'psychographics.fears'] },
+  { id: 'packaging_unboxing', label: 'Packaging / unboxing', stage: 'retention', appliesWhen: ['packaging'], p0: true, assetKind: 'image+copy', personalBrand: false, auditAgainst: ['psychographics.values', 'psychographics.desires', 'positioning_statement'] },
+  { id: 'insert_cards', label: 'Insert / thank-you cards', stage: 'retention', appliesWhen: ['packaging'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.values', 'positioning_statement'] },
+  { id: 'welcome_series', label: 'Email welcome series', stage: 'retention', appliesWhen: ['email'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['positioning_statement', 'psychographics.values', 'psychographics.desires'] },
   { id: 'winback_replenishment', label: 'Win-back / replenishment flow', stage: 'retention', appliesWhen: ['email'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['buying_behavior.shopping_style', 'psychographics.triggers'] },
-  { id: 'support_voice', label: 'Support / service voice', stage: 'retention', appliesWhen: ['support'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['signature', 'voice_of_customer'] },
+  { id: 'support_voice', label: 'Support / service voice', stage: 'retention', appliesWhen: ['support'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['positioning_statement', 'voice_of_customer'] },
   // Advocacy
   { id: 'review_request_flow', label: 'Review request flow', stage: 'advocacy', appliesWhen: ['email', 'amazon'], p0: true, assetKind: 'copy', personalBrand: false, auditAgainst: ['voice_of_customer', 'psychographics.desires'] },
   { id: 'referral_program', label: 'Referral program', stage: 'advocacy', appliesWhen: ['email', 'dtc_site'], p0: false, assetKind: 'copy', personalBrand: false, auditAgainst: ['psychographics.values', 'buying_behavior.decision_factors'] },
@@ -116,7 +116,7 @@ export function getApplicableTouchpoints(
   return allTouchpoints(opts.p0Only).filter((t) => t.appliesWhen.some((w) => tags.has(w)));
 }
 
-/** The avatar/Signature field paths the audit should score this touchpoint against. */
+/** The avatar/Positioning Statement field paths the audit should score this touchpoint against. */
 export function getAuditBindings(touchpointId: string): AuditField[] {
   return BY_ID[touchpointId]?.auditAgainst ?? [];
 }

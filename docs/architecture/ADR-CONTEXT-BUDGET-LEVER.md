@@ -37,7 +37,7 @@ need someone to be able to SEE how big they are.
 | `run-forensic-analysis` `buildEvidence()` | 12 rows × 300 chars | row-count + per-item char | internal prompt |
 | `avatar-vocabulary` (S1) | 16,000 chars, inline | char-budget-after-full-read | internal prompt |
 | `avatar-objections` (S4) | 16,000 chars, inline | char-budget-after-full-read | internal prompt |
-| `reveal-signature` | 12,000 chars, inline | char-budget-after-full-read | internal prompt |
+| `reveal-positioning-statement` | 12,000 chars, inline | char-budget-after-full-read | internal prompt |
 | `review-scraper` `maxReviewsPerUrl` | 20 default / 50 ceiling | caller-clamped count | **MCP response** |
 | `amazonReviews.ts` `reviewsFromJson` | 2,000 chars | per-item | either |
 
@@ -92,7 +92,7 @@ importing the other.**
 - **Deno side (built today):** `supabase/functions/_shared/contextBudgets.ts` — six constants,
   migrated from the six pre-existing magic numbers above, zero behavior change. Every current
   Deno consumer (`run-forensic-analysis`, `avatar-vocabulary`, `avatar-objections`,
-  `reveal-signature`, `review-scraper`, `amazonReviews.ts`) now sources its cap from here.
+  `reveal-positioning-statement`, `review-scraper`, `amazonReviews.ts`) now sources its cap from here.
 - **Node/MCP side (not yet created):** `src/mcp/service/contextBudgets.ts`, to be created when
   the first Node-side consumer adopts a dial (none of today's seven newly-found gaps were given
   one in this ADR — see Consequences). Same naming convention, same discipline, separate file.
@@ -180,7 +180,7 @@ _Primary sources: this session's own investigation (Amazon-review click-expansio
 Firecrawl testing, and a follow-up repo-wide sweep, 2026-07-12). Codebase:
 `supabase/functions/_shared/contextBudgets.ts`, `supabase/functions/_shared/amazonReviews.ts`,
 `supabase/functions/run-forensic-analysis/index.ts`, `supabase/functions/avatar-vocabulary/index.ts`,
-`supabase/functions/avatar-objections/index.ts`, `supabase/functions/reveal-signature/index.ts`,
+`supabase/functions/avatar-objections/index.ts`, `supabase/functions/reveal-positioning-statement/index.ts`,
 `supabase/functions/review-scraper/index.ts`, `src/mcp/service/coachConversations.ts`,
 `src/mcp/service/contextResolver.ts`, `src/mcp/service/nativeLedger.ts`, `src/mcp/instrument.ts`,
 `supabase/functions/brand-ai-assistant/index.ts`, `supabase/functions/import-product-data/index.ts`._

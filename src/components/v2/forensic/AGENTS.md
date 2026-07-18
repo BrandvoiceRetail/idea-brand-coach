@@ -26,7 +26,7 @@ Opened from the `AvatarHeaderDropdown` kebab → `onForensicBuild` →
 - `prior` is keyed **BY STAGE ID** (`prior.s1`, `prior.s2`), NOT artifact kind —
   keying by kind makes the edge fns never find the prior and short-circuit to
   `needs_input` (the "Avatar sheet has only S1" symptom).
-- Stage order: s1 → s2 → {s3, s4 in parallel}. S5/signature is D2/R-015 gated and
+- Stage order: s1 → s2 → {s3, s4 in parallel}. S5/positioning statement is D2/R-015 gated and
   intentionally NOT surfaced in the SPA.
 - An edge `{ needs_input: [...] }` HTTP-200 body is a grounding gap (surface it),
   not a transient failure. Retry transient failures max 2 (exp backoff).

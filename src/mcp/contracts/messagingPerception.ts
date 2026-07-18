@@ -9,7 +9,7 @@
  * weakest-link set verdict. See `.claude/skills/multi-avatar-messaging-workbook`.
  *
  * STRUCTURALLY DIFFERENT from the generator contracts (diagnostic / avatar S1–S4 /
- * signature / canvas / brief / audit / marketing): this is a Layer-3 WORKBOOK-ASSEMBLY
+ * positioning statement / canvas / brief / audit / marketing): this is a Layer-3 WORKBOOK-ASSEMBLY
  * perception artifact, not a §4-resolver-driven generator, so —
  *   1. it does NOT carry the §6 grounding envelope (`grounding` + `evidence_refs`):
  *      grounding is held INLINE. `analysable` is the honest "not yet analysable" flag,

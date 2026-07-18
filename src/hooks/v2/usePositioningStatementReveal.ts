@@ -1,26 +1,26 @@
 /**
- * useSignatureReveal Hook
+ * usePositioningStatementReveal Hook
  *
- * Drives the Signature reveal flow (the recognition moment): collects pasted
- * customer reviews, calls the reveal-signature edge function with the
+ * Drives the Positioning Statement reveal flow (the recognition moment): collects pasted
+ * customer reviews, calls the reveal-positioning-statement edge function with the
  * conversation + extracted fields + reviews, and walks through a small state
  * machine: paste -> loading -> options -> picked.
  *
- * The edge function returns 3-4 DISTINCT Signature options in Trevor's voice.
+ * The edge function returns 3-4 DISTINCT Positioning Statement options in Trevor's voice.
  * All options are equal weight — there is deliberately NO pre-picked "primary".
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useServices } from '@/services/ServiceProvider';
-import { SavedSignature } from '@/services/interfaces/ISignatureService';
+import { SavedPositioningStatement } from '@/services/interfaces/IPositioningStatementService';
 import { captureAlphaEvent } from '@/lib/posthogClient';
 
 /** Stage of the reveal flow. */
-export type SignatureStage = 'paste' | 'loading' | 'options' | 'picked';
+export type PositioningStatementStage = 'paste' | 'loading' | 'options' | 'picked';
 
 /** A single chat turn passed to the edge function. */
-export interface SignatureConversationTurn {
+export interface PositioningStatementConversationTurn {
   role: string;
   content: string;
 }
@@ -29,26 +29,26 @@ export interface SignatureConversationTurn {
 export type SurpriseAnswer = 'yes' | 'no' | null;
 
 interface RevealArgs {
-  conversation: SignatureConversationTurn[];
+  conversation: PositioningStatementConversationTurn[];
   fields: Record<string, string | string[]>;
 }
 
 /** Optional configuration for the reveal flow. */
-interface UseSignatureRevealConfig {
+interface UsePositioningStatementRevealConfig {
   /**
    * Reviews to seed the textarea with on mount and on reset (e.g. the seller's
    * imported Amazon reviews). The user can still edit or replace them.
    */
   initialReviews?: string;
   /**
-   * Called after a picked Signature has been persisted, so the page can show
+   * Called after a picked Positioning Statement has been persisted, so the page can show
    * the saved pick outside the dialog without refetching.
    */
-  onSignatureSaved?: (saved: SavedSignature) => void;
+  onPositioningStatementSaved?: (saved: SavedPositioningStatement) => void;
 }
 
-interface UseSignatureRevealReturn {
-  stage: SignatureStage;
+interface UsePositioningStatementRevealReturn {
+  stage: PositioningStatementStage;
   reviews: string;
   setReviews: (value: string) => void;
   options: string[];
@@ -60,7 +60,7 @@ interface UseSignatureRevealReturn {
   reveal: (args: RevealArgs) => Promise<void>;
   pickOption: (index: number) => void;
   answerSurprise: (answer: SurpriseAnswer) => void;
-  /** Return from a picked Signature back to the option list. */
+  /** Return from a picked Positioning Statement back to the option list. */
   backToOptions: () => void;
   /** Reset the whole flow (e.g. when the dialog closes). */
   reset: () => void;
@@ -73,11 +73,11 @@ interface RevealResponse {
   error?: string;
 }
 
-export function useSignatureReveal(
-  { initialReviews = '', onSignatureSaved }: UseSignatureRevealConfig = {},
-): UseSignatureRevealReturn {
-  const { signatureService } = useServices();
-  const [stage, setStage] = useState<SignatureStage>('paste');
+export function usePositioningStatementReveal(
+  { initialReviews = '', onPositioningStatementSaved }: UsePositioningStatementRevealConfig = {},
+): UsePositioningStatementRevealReturn {
+  const { positioningStatementService } = useServices();
+  const [stage, setStage] = useState<PositioningStatementStage>('paste');
   const [reviews, setReviews] = useState(initialReviews);
   const [options, setOptions] = useState<string[]>([]);
   const [isInference, setIsInference] = useState(false);
@@ -105,7 +105,7 @@ export function useSignatureReveal(
 
     try {
       const { data, error: invokeError } = await supabase.functions.invoke<RevealResponse>(
-        'reveal-signature',
+        'reveal-positioning-statement',
         { body: { conversation, fields, reviews } },
       );
 
@@ -126,14 +126,14 @@ export function useSignatureReveal(
       setStage('options');
 
       // Funnel: 3-4 options rendered
-      captureAlphaEvent('signature_options_shown', {
+      captureAlphaEvent('positioning_statement_options_shown', {
         option_count: shownOptions.length,
         used_reviews: Boolean(data?.usedReviews),
         inference: Boolean(data?.inference),
       });
     } catch (err) {
-      console.error('[useSignatureReveal] reveal failed:', err);
-      captureAlphaEvent('llm_call_failed', { which_call: 'signature', error_type: 'invoke_error' });
+      console.error('[usePositioningStatementReveal] reveal failed:', err);
+      captureAlphaEvent('llm_call_failed', { which_call: 'positioning_statement', error_type: 'invoke_error' });
       setError('Trevor could not reveal your positioning right now. Please try again.');
       setStage('paste');
     }
@@ -144,28 +144,28 @@ export function useSignatureReveal(
     setSurprise(null);
     setStage('picked');
 
-    // Funnel: tester selected a Signature (index only — content goes to
+    // Funnel: tester selected a Positioning Statement (index only — content goes to
     // Supabase feedback_events at submission time)
-    captureAlphaEvent('signature_picked', { chosen_index: index });
+    captureAlphaEvent('positioning_statement_picked', { chosen_index: index });
 
     // Persist the pick so it survives reloads and feeds downstream use.
     // Fire-and-forget: a save failure must never break the reveal moment.
-    const signatureText = options[index];
-    if (signatureText) {
-      signatureService
-        .saveSignature({
-          signatureText,
+    const positioningStatementText = options[index];
+    if (positioningStatementText) {
+      positioningStatementService
+        .savePositioningStatement({
+          positioningStatementText,
           allOptions: options,
           chosenIndex: index,
           usedReviews,
           inference: isInference,
         })
-        .then((saved) => onSignatureSaved?.(saved))
+        .then((saved) => onPositioningStatementSaved?.(saved))
         .catch((saveError) => {
-          console.warn('[useSignatureReveal] Failed to persist Signature pick:', saveError);
+          console.warn('[usePositioningStatementReveal] Failed to persist Positioning Statement pick:', saveError);
         });
     }
-  }, [options, usedReviews, isInference, signatureService, onSignatureSaved]);
+  }, [options, usedReviews, isInference, positioningStatementService, onPositioningStatementSaved]);
 
   const answerSurprise = useCallback((answer: SurpriseAnswer): void => {
     setSurprise(answer);

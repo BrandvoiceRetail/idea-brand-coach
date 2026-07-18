@@ -8,7 +8,7 @@
  *    surgical — recompose ONLY the named component, keep everything approved verbatim,
  *    re-run one generation (or a Higgsfield edit tool), reconcile the saved asset.
  *
- *  - POSITIONING change (new trigger / avatar core / signature / trust finding /
+ *  - POSITIONING change (new trigger / avatar core / positioning statement / trust finding /
  *    corrected fact): propagates — the deterministic POSITIONING_PROPAGATION map says
  *    exactly what each surface must recompose, for the plan in hand AND for the user's
  *    OTHER live plans, so one positioning story stays true everywhere.

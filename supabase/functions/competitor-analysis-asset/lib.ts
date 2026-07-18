@@ -298,15 +298,15 @@ export function formatAvatar(avatar: unknown): string {
   return lines.join('\n');
 }
 
-/** Compact a host-supplied Signature context into prompt text. */
-export function formatSignature(signature: unknown): string {
-  if (!signature) return '';
-  if (typeof signature === 'string') return signature.trim();
-  if (typeof signature !== 'object') return '';
-  const s = signature as Record<string, unknown>;
+/** Compact a host-supplied Positioning Statement context into prompt text. */
+export function formatPositioningStatement(positioning_statement: unknown): string {
+  if (!positioning_statement) return '';
+  if (typeof positioning_statement === 'string') return positioning_statement.trim();
+  if (typeof positioning_statement !== 'object') return '';
+  const s = positioning_statement as Record<string, unknown>;
   const lines: string[] = [];
-  if (typeof s.signature === 'string') lines.push(`- Signature: ${s.signature.trim()}`);
-  if (typeof s.statement === 'string') lines.push(`- Signature: ${s.statement.trim()}`);
+  if (typeof s.positioning_statement === 'string') lines.push(`- Positioning Statement: ${s.positioning_statement.trim()}`);
+  if (typeof s.statement === 'string') lines.push(`- Positioning Statement: ${s.statement.trim()}`);
   if (typeof s.position === 'string') lines.push(`- Position: ${s.position.trim()}`);
   if (typeof s.promise === 'string') lines.push(`- Promise: ${s.promise.trim()}`);
   if (typeof s.villain === 'string') lines.push(`- Villain: ${s.villain.trim()}`);
@@ -444,7 +444,7 @@ export function cleanCompetitors(
 
 export function buildSystemPrompt(): string {
   return `<persona>
-You are Trevor, a brand coach inside the IDEA Brand Coach. Your job is the COMPETITIVE Trust Gap read: for a single funnel touchpoint, you score each competitor on the same IDEA dimensions you use to audit this brand's own assets, and find where this brand can win, grounded in the brand's own avatar and Signature.
+You are Trevor, a brand coach inside the IDEA Brand Coach. Your job is the COMPETITIVE Trust Gap read: for a single funnel touchpoint, you score each competitor on the same IDEA dimensions you use to audit this brand's own assets, and find where this brand can win, grounded in the brand's own avatar and Positioning Statement.
 </persona>
 
 <the-four-pillars>
@@ -452,11 +452,11 @@ IDEA dimensions (score each 0-100), read here against the competitor's asset exa
 - ${DIMENSION_LABELS.insight} (insight): does the asset show it understands what really drives this customer?
 - ${DIMENSION_LABELS.distinctive} (distinctive): does it stand out and avoid blending in with the category?
 - ${DIMENSION_LABELS.empathetic} (empathetic): would this customer feel understood by it?
-- ${DIMENSION_LABELS.authentic} (authentic): does it feel genuine and believable, true to the Signature?
+- ${DIMENSION_LABELS.authentic} (authentic): does it feel genuine and believable, true to the Positioning Statement?
 </the-four-pillars>
 
 <scoring>
-Score EACH competitor on all four pillars, each 0 to 100, judging the competitor's asset ONLY against OUR avatar and Signature (same lens as the brand's own audit, so the two are comparable). Do not invent avatar facts. If the competitor's asset contradicts or ignores what OUR avatar wants, score the relevant dimensions low and say why. Base every score ONLY on that competitor's supplied evidence. Then write a short rationale and a gap_to_our_avatar: where this competitor is weak against OUR avatar and Signature, i.e. the opening for us.
+Score EACH competitor on all four pillars, each 0 to 100, judging the competitor's asset ONLY against OUR avatar and Positioning Statement (same lens as the brand's own audit, so the two are comparable). Do not invent avatar facts. If the competitor's asset contradicts or ignores what OUR avatar wants, score the relevant dimensions low and say why. Base every score ONLY on that competitor's supplied evidence. Then write a short rationale and a gap_to_our_avatar: where this competitor is weak against OUR avatar and Positioning Statement, i.e. the opening for us.
 </scoring>
 
 <grounding-rule>
@@ -464,7 +464,7 @@ You are scoring ONLY the competitors supplied in the COMPETITOR EVIDENCE block. 
 </grounding-rule>
 
 <strategic-angle>
-After scoring, write ONE strategic_angle: the single sharpest way this brand can win at this touchpoint given the competitors' collective IDEA weaknesses and our avatar and Signature. Concrete and actionable, not generic.
+After scoring, write ONE strategic_angle: the single sharpest way this brand can win at this touchpoint given the competitors' collective IDEA weaknesses and our avatar and Positioning Statement. Concrete and actionable, not generic.
 </strategic-angle>
 
 <voice-rules>
@@ -485,13 +485,13 @@ export function buildUserMessage(
   touchpointId: string,
   evidence: CompetitorEvidence[],
   avatarText: string,
-  signatureText: string,
+  positioningStatementText: string,
   ourAssetText: string,
 ): string {
   const parts: string[] = [];
   parts.push(`TOUCHPOINT: ${touchpointId} (modality: ${modality})`);
   if (avatarText) parts.push(`OUR AVATAR:\n${avatarText}`);
-  if (signatureText) parts.push(`OUR SIGNATURE:\n${signatureText}`);
+  if (positioningStatementText) parts.push(`OUR POSITIONING STATEMENT:\n${positioningStatementText}`);
   if (ourAssetText) parts.push(ourAssetText);
   const evidenceBlock = evidence
     .map((e) => `--- COMPETITOR (ref: ${e.ref}, kind: ${e.kind})\nname: ${e.name}${e.url ? `\nurl: ${e.url}` : ''}\n${e.text}`)

@@ -260,12 +260,12 @@ All refactoring maintained full backward compatibility:
 
 1. **SupabaseChatService**
    - Public interface unchanged (implements IChatService)
-   - All existing method signatures preserved
+   - All existing method positioning statements preserved
    - Constructor now accepts specialized services (dependency injection)
    - All 7 tests continue to pass without modification
 
 2. **usePersistedField**
-   - All existing function signatures work unchanged
+   - All existing function positioning statements work unchanged
    - Added optional generic type parameters (backward compatible)
    - usePersistedArrayField re-exported from original location
    - All existing imports continue to work

@@ -6,7 +6,7 @@
  * funnel as a small set of sub-views over ONE entity — a funnel piece = an active
  * brand asset = a campaign (decision #1):
  *   • `map`     — the job-first FunnelMap ("is each piece doing its job?") + the
- *                 self-hiding Signature DriftBanner. The default surface.
+ *                 self-hiding Positioning Statement DriftBanner. The default surface.
  *   • `detail`  — FunnelPieceDetail ("did this piece do its job?") for one piece.
  *   • `fix`     — FixTestPanel: name the leak, write an on-brand rewrite, open an
  *                 A/B test against the current copy.
@@ -196,7 +196,7 @@ export default function V4Fix(): JSX.Element {
 
   const brandTags = useMemo(() => DEFAULT_BRAND_TAGS, []);
 
-  // Keyed on the avatar SET signature (not just the focus) so changing which
+  // Keyed on the avatar SET positioning statement (not just the focus) so changing which
   // customers are in the funnel analysis — or switching the focus — re-loads the
   // funnel instead of showing data scoped to the old set.
   const loadedForRef = useRef<string | null>(null);

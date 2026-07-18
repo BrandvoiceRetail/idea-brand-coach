@@ -56,7 +56,7 @@ const VALID_REPLY: Record<string, Record<string, unknown>> = {
       },
     ],
   },
-  'reveal-signature': {
+  'reveal-positioning-statement': {
     options: ["They're not buying a box, they're buying peace of mind.", 'The vault their cards deserve.'],
     usedReviews: true,
     inference: false,
@@ -203,19 +203,19 @@ describe('avatarPipeline — single stages', () => {
     expect(saved).toHaveLength(0);
   });
 
-  it('gates S5 unless allowSignature is set', async () => {
+  it('gates S5 unless allowPositioningStatement is set', async () => {
     const saved: Array<{ kind: ArtifactKind; content: unknown; opts: SaveArtifactOptions }> = [];
-    const gated = await runStage('s5', { allowSignature: false }, {
+    const gated = await runStage('s5', { allowPositioningStatement: false }, {
       resolve: resolveReviewsFilled(),
       getCurrentArtifact: makeGetCurrentStub(new Map()),
       saveArtifact: makeSaveStub(saved),
       edgeFn: stubEdgeFn(),
       sleep: noSleep,
     });
-    expect(gated.status).toBe('signature_gated');
+    expect(gated.status).toBe('positioning_statement_gated');
     expect(saved).toHaveLength(0);
 
-    const allowed = await runStage('s5', { allowSignature: true }, {
+    const allowed = await runStage('s5', { allowPositioningStatement: true }, {
       resolve: resolveReviewsFilled(),
       getCurrentArtifact: makeGetCurrentStub(new Map()),
       saveArtifact: makeSaveStub(saved),
@@ -224,7 +224,7 @@ describe('avatarPipeline — single stages', () => {
     });
     expect(allowed.status).toBe('persisted');
     if (allowed.status !== 'persisted') return;
-    expect(allowed.summary.kind).toBe('signature');
+    expect(allowed.summary.kind).toBe('positioning_statement');
     expect(saved).toHaveLength(1);
   });
 });
@@ -265,7 +265,7 @@ describe('avatarPipeline — full chain', () => {
       },
     } as unknown as EdgeFnClient;
 
-    const result = await runPipeline({ allowSignature: true }, {
+    const result = await runPipeline({ allowPositioningStatement: true }, {
       resolve: resolveReviewsFilled(),
       getCurrentArtifact: getCurrent,
       saveArtifact: save,
@@ -279,7 +279,7 @@ describe('avatarPipeline — full chain', () => {
       'avatar_s2_jobmap',
       'avatar_s3_triggers',
       'avatar_s4_objections',
-      'signature',
+      'positioning_statement',
     ]);
     // Persist called once per stage.
     expect(saved).toHaveLength(5);
@@ -332,7 +332,7 @@ describe('avatarPipeline — full chain', () => {
     expect(saved).toHaveLength(0);
   });
 
-  it('pipeline stops at the S5 gate (S1-S4 persisted) when allowSignature is not set', async () => {
+  it('pipeline stops at the S5 gate (S1-S4 persisted) when allowPositioningStatement is not set', async () => {
     const saved: Array<{ kind: ArtifactKind; content: unknown; opts: SaveArtifactOptions }> = [];
     const priorStore = new Map<ArtifactKind, unknown>();
     const save = (async (kind: ArtifactKind, content: unknown, opts: SaveArtifactOptions): Promise<ArtifactRow> => {
@@ -354,9 +354,9 @@ describe('avatarPipeline — full chain', () => {
       sleep: noSleep,
     });
     expect(result.ok).toBe(true);
-    expect(result.signature_gated).toBeTruthy();
+    expect(result.positioning_statement_gated).toBeTruthy();
     expect(result.stages).toHaveLength(4);
-    expect(saved.map((s) => s.kind)).not.toContain('signature');
+    expect(saved.map((s) => s.kind)).not.toContain('positioning_statement');
   });
 
   it('pipeline short-circuits to needs_input before any stage when reviews are missing', async () => {

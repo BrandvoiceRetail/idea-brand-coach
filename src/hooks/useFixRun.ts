@@ -6,7 +6,7 @@
  * = one campaign (decision #1), so the hook is organised around that single
  * entity: the funnel pieces themselves, one piece's metrics (the "did it do its
  * job?" read), the on-brand rewrite + claim-gate for a fix, the tests ledger, and
- * the Signature-drift list. It also exposes the handlers the Fix screens fire —
+ * the Positioning Statement-drift list. It also exposes the handlers the Fix screens fire —
  * open a piece, generate a rewrite, confirm a claim, open a test, re-check drift.
  *
  * WHY: Pages on /v4 are thin wiring shells (see src/pages/AGENTS.md) — the
@@ -56,7 +56,7 @@ export interface FixRunHook {
   hasAvatar: boolean;
   /** The active avatar id (null when none) — lets the page reload on a switch. */
   avatarId: string | null;
-  /** Signature of the active avatar SET — the page reloads the funnel when it changes. */
+  /** Positioning Statement of the active avatar SET — the page reloads the funnel when it changes. */
   loadKey: string;
   /** The active avatar's display name (for piece labels); null when none. */
   avatarName: string | null;
@@ -69,7 +69,7 @@ export interface FixRunHook {
   /** Honest "no pieces yet" reason; null when there are pieces or an error. */
   piecesNoData: string | null;
 
-  // ── Signature drift (DriftBanner) ──
+  // ── Positioning Statement drift (DriftBanner) ──
   drift: DriftItem[];
 
   // ── Tests ledger (TestingLiftTab) ──
@@ -121,7 +121,7 @@ export function useFixRun(): FixRunHook {
     () => Object.fromEntries((avatars ?? []).map((a) => [a.id, a.name])),
     [avatars],
   );
-  // A stable signature of the active avatar SET — the funnel reloads when the set
+  // A stable positioning statement of the active avatar SET — the funnel reloads when the set
   // changes (not only when the focus avatar changes).
   const loadKey = contextAvatarIds.join(',');
 
@@ -176,7 +176,7 @@ export function useFixRun(): FixRunHook {
   );
 
   /**
-   * Load the funnel in parallel: the pieces (the map), the Signature-drift list,
+   * Load the funnel in parallel: the pieces (the map), the Positioning Statement-drift list,
    * and the tests ledger. Each maps to its own honest state; none is fabricated
    * when the read returns no_data / error.
    */

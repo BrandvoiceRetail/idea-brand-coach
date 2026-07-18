@@ -55,7 +55,7 @@ const WORKBOOK_A_KINDS: readonly ArtifactKind[] = [
   'avatar_s2_jobmap',
   'avatar_s3_triggers',
   'avatar_s4_objections',
-  'signature',
+  'positioning_statement',
   'brand_canvas',
   'export_brief',
   'audit_x_idea',
@@ -221,7 +221,7 @@ export async function runExportWorkbook(
           which: 'A',
           missing,
           note:
-            'No artifacts have been generated yet — run the diagnostic, avatar, signature, ' +
+            'No artifacts have been generated yet — run the diagnostic, avatar, positioning statement, ' +
             'canvas, brief, or audit-map tools first. Workbook A renders whatever is present.',
         };
       }
@@ -280,7 +280,7 @@ export function registerExportWorkbookTool(server: McpServer, deps?: Partial<Exp
     {
       title: 'Export a gold workbook (.xlsx)',
       description:
-        'Terminal output-engine tool: render one of the two Trevor-approved gold .xlsx workbooks from the PERSISTED artifact chain and return a local file path. which:A reads the artifact chain (diagnostic/avatar/signature/canvas/brief/audit-map) and renders the BrandCoach Mockup; which:B reads the current marketing_audits row and renders the Marketing Investment Audit. Assembly reads persisted content only — it never regenerates. If the chain (A) or audit (B) is incomplete it returns needs_input listing the missing artifacts. Requires an authenticated Supabase JWT. Optional upload:true uploads the file to Supabase Storage (never-fail).',
+        'Terminal output-engine tool: render one of the two Trevor-approved gold .xlsx workbooks from the PERSISTED artifact chain and return a local file path. which:A reads the artifact chain (diagnostic/avatar/positioning statement/canvas/brief/audit-map) and renders the BrandCoach Mockup; which:B reads the current marketing_audits row and renders the Marketing Investment Audit. Assembly reads persisted content only — it never regenerates. If the chain (A) or audit (B) is incomplete it returns needs_input listing the missing artifacts. Requires an authenticated Supabase JWT. Optional upload:true uploads the file to Supabase Storage (never-fail).',
       inputSchema,
     },
     async ({ which, avatar_id, out_dir, brand_name, upload }) => {

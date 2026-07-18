@@ -16,14 +16,14 @@ const mockAssets = [
   {
     id: 'asset-1', avatar_id: AVATAR_ID, touchpoint_id: 'amazon_main_image', stage: 'awareness',
     context_description: 'Amazon main image hero', content_text: null, storage_path: null,
-    signature_version: 'sigv1', status: 'misaligned', overall_score: 48, previous_score: 41,
+    positioning_statement_version: 'sigv1', status: 'misaligned', overall_score: 48, previous_score: 41,
     audit_result: { scores: { i: 52, d: 33, e: 55, a: 50 }, rationale: 'Generic studio shot.', fix: 'Lead with the collector trigger, not the product.' },
     superseded_by: null, created_at: '2026-01-02T00:00:00Z', updated_at: '2026-01-02T00:00:00Z',
   },
   {
     id: 'asset-2', avatar_id: AVATAR_ID, touchpoint_id: 'amazon_brand_story', stage: 'consideration',
     context_description: 'A+ brand story', content_text: null, storage_path: null,
-    signature_version: 'sigv1', status: 'aligned', overall_score: 88, previous_score: null,
+    positioning_statement_version: 'sigv1', status: 'aligned', overall_score: 88, previous_score: null,
     audit_result: { scores: { i: 88, d: 85, e: 90, a: 88 }, rationale: 'On-brand.', fix: 'Hold.' },
     superseded_by: null, created_at: '2026-01-02T00:00:00Z', updated_at: '2026-01-02T00:00:00Z',
   },
@@ -37,7 +37,7 @@ async function mockSupabase(page: Page): Promise<void> {
   });
   await page.route('**/rest/v1/brand_assets*', (route) => route.fulfill({ json: mockAssets }));
   await page.route('**/rest/v1/brand_tests*', (route) => route.fulfill({ json: [] }));
-  await page.route('**/rest/v1/signatures*', (route) => route.fulfill({ json: [{ id: 'sigv1', artifact_id: 'sigv1' }] }));
+  await page.route('**/rest/v1/positioning statements*', (route) => route.fulfill({ json: [{ id: 'sigv1', artifact_id: 'sigv1' }] }));
 }
 
 test.describe('Funnel Tracker (mocked data)', () => {

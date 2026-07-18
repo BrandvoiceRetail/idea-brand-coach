@@ -6,7 +6,7 @@ Builds the funnel tracker mocked in [`mockups/`](./mockups/funnel-tracker-mockup
 
 **Ingestion decision (this plan):** assets enter by **screenshot upload + a required short context description** ("Amazon main image — collector deck hero, sells the limited-edition angle"). The description is mandatory — it gives the vision audit the semantic context pixels alone can't, and removes guesswork from touchpoint mapping.
 
-**"Functional" means:** a brand owner can upload a screenshot of a touchpoint, get it scored against their avatar + Signature, see the whole funnel map + what to fix, hand a fix to the coach, and record a before/after lift — end to end, on real data.
+**"Functional" means:** a brand owner can upload a screenshot of a touchpoint, get it scored against their avatar + Positioning Statement, see the whole funnel map + what to fix, hand a fix to the coach, and record a before/after lift — end to end, on real data.
 
 **Architecture note — MCP deferred:** the funnel tracker is built as **app services + edge functions + React UI** (the app's normal Supabase pattern). The MCP tool surface is intentionally *not* built now: `src/mcp/AGENTS.md` declares the gateway "substrate only — do not add owned asset-chain / asset-storage tools here yet," pending the **D5 cross-server write-auth** decision. The MCP surface (`list_touchpoints`, `upsert_brand_asset`, `audit_asset`, …) lands as a later integration once D5 resolves.
 
@@ -16,8 +16,8 @@ Builds the funnel tracker mocked in [`mockups/`](./mockups/funnel-tracker-mockup
 |---|---|---|
 | Storage | private `brand-assets` bucket; `{userId}/funnel/{assetId}.png`; client-side compress | `src/components/chat/ImageUpload.tsx:168` (`storage.from('documents').upload`, imageCompression) |
 | Data | `brand_assets`, `brand_tests`, extend `performance_metrics` | RLS mirrors `performance_metrics` (`migrations/20260301065636…:22`) |
-| Audit engine | edge fn `audit-asset`: vision call (screenshot + description + bound avatar fields + Signature) → IDEA scores, status, rationale, fix | `supabase/functions/reveal-signature/index.ts` (shape); `idea-framework-consultant-claude` (`claude-sonnet-4-6`) |
-| Signature read + versioning | read current Signature; compare version for "stale" | `signatures` table + `artifacts` chain (`src/mcp/tools/persistSignature.ts:66`, `artifactStore.ts:44`) |
+| Audit engine | edge fn `audit-asset`: vision call (screenshot + description + bound avatar fields + Positioning Statement) → IDEA scores, status, rationale, fix | `supabase/functions/reveal-positioning-statement/index.ts` (shape); `idea-framework-consultant-claude` (`claude-sonnet-4-6`) |
+| Positioning Statement read + versioning | read current Positioning Statement; compare version for "stale" | `positioning_statements` table + `artifacts` chain (`src/mcp/tools/persistPositioningStatement.ts:66`, `artifactStore.ts:44`) |
 | Avatar read | bound fields per touchpoint | `avatars` table + `avatar_field_values`; `IAvatarService` / BrandContext |
 | App services | `IBrandFunnelService` → `SupabaseBrandFunnelService` (create / list / audit / coverage / test / roi); taxonomy via `touchpointTaxonomy` loader | service pattern in `src/services/SupabaseBrandService.ts`; `src/services/AGENTS.md` |
 | Frontend | 4 screens under `src/components/v2/funnel/`, route `/v2/funnel` | shadcn Card/Badge/Button/Tabs; `BrandContext` for active brand/avatar |
@@ -32,7 +32,7 @@ Builds the funnel tracker mocked in [`mockups/`](./mockups/funnel-tracker-mockup
 **Objective:** schema, storage, taxonomy loader, types — no UI.
 **Build**
 - Migrations (via `database-migrator`, never ad-hoc DDL):
-  - `brand_assets` — `id, avatar_id FK avatars, touchpoint_id, stage, context_description TEXT NOT NULL (CHECK ≥8 chars), storage_path, signature_version (artifact_id at deploy), status ('pending'|'aligned'|'stale'|'misaligned'|'missing'), overall_score int, audit_result jsonb, superseded_by, created_at, updated_at`.
+  - `brand_assets` — `id, avatar_id FK avatars, touchpoint_id, stage, context_description TEXT NOT NULL (CHECK ≥8 chars), storage_path, positioning_statement_version (artifact_id at deploy), status ('pending'|'aligned'|'stale'|'misaligned'|'missing'), overall_score int, audit_result jsonb, superseded_by, created_at, updated_at`.
   - `brand_tests` — `id, asset_id FK brand_assets, hypothesis, messaging_version_before, messaging_version_after, metric_type, baseline_value numeric, result_value numeric, status ('running'|'won'|'no_lift'), source ('manual'|'warehouse'), deployed_at, measured_at, …`.
   - Extend `performance_metrics` — add nullable `funnel_stage`, `touchpoint_id`, `asset_id`, `deployed_at`.
   - RLS on all three: EXISTS join `avatars.brand_id → brands.user_id = auth.uid()` (mirror `performance_metrics`).
@@ -52,13 +52,13 @@ Builds the funnel tracker mocked in [`mockups/`](./mockups/funnel-tracker-mockup
 **Size:** M (3–4 units).
 
 ## Phase 2 — Audit engine (core capability)
-**Objective:** score an asset against avatar + Signature.
+**Objective:** score an asset against avatar + Positioning Statement.
 **Build**
-- Edge fn `supabase/functions/audit-asset/index.ts` (mirror `reveal-signature`: CORS, JWT auth, Anthropic POST). Input: `{ assetId, touchpointLabel, brandTask, auditAgainst }` (the service supplies the taxonomy bindings so the fn need not duplicate the taxonomy). Loads the asset, current Signature (`signatures` by `avatar_id`) + avatar fields, downloads the screenshot from the private bucket → base64, sends `claude-sonnet-4-6` a vision message (**screenshot + required description + bound avatar fields + Signature + IDEA rubric**) and forces a `report_audit` tool → `{ scores:{i,d,e,a}, rationale, fix }`. Persists `audit_result`/`overall_score`/`status`.
-- **Stale = computed**, not LLM: if `brand_assets.signature_version != current Signature version` → force `status='stale'`.
+- Edge fn `supabase/functions/audit-asset/index.ts` (mirror `reveal-positioning-statement`: CORS, JWT auth, Anthropic POST). Input: `{ assetId, touchpointLabel, brandTask, auditAgainst }` (the service supplies the taxonomy bindings so the fn need not duplicate the taxonomy). Loads the asset, current Positioning Statement (`positioning_statements` by `avatar_id`) + avatar fields, downloads the screenshot from the private bucket → base64, sends `claude-sonnet-4-6` a vision message (**screenshot + required description + bound avatar fields + Positioning Statement + IDEA rubric**) and forces a `report_audit` tool → `{ scores:{i,d,e,a}, rationale, fix }`. Persists `audit_result`/`overall_score`/`status`.
+- **Stale = computed**, not LLM: if `brand_assets.positioning_statement_version != current Positioning Statement version` → force `status='stale'`.
 - Called via `SupabaseBrandFunnelService.auditAsset`; rate-limit + body cap on the edge fn (reuse the public-fn abuse-control pattern from `diagnostic-interpretation`).
 **Capability:** any asset → grounded IDEA score + status + concrete fix.
-**Acceptance / verify:** a deliberately off-brand screenshot returns a low matching dimension + `misaligned` + a specific fix that cites the avatar/Signature; an on-brand one scores high; missing avatar/Signature → a clear "need X" (never fabricates); editing the Signature flips prior assets to `stale`; latency logged.
+**Acceptance / verify:** a deliberately off-brand screenshot returns a low matching dimension + `misaligned` + a specific fix that cites the avatar/Positioning Statement; an on-brand one scores high; missing avatar/Positioning Statement → a clear "need X" (never fabricates); editing the Positioning Statement flips prior assets to `stale`; latency logged.
 **Size:** L (4–5 units) — the hardest, most valuable phase.
 
 ## Phase 3 — Funnel Map + coverage (Screen 1)
@@ -74,15 +74,15 @@ Builds the funnel tracker mocked in [`mockups/`](./mockups/funnel-tracker-mockup
 **Objective:** decide + act.
 **Build**
 - Ranked list (`impact × misalignment`) with the IDEA dimension bars + manual metric display; sort controls.
-- **Fix-with-coach:** seed the coach (`idea-framework-consultant`) with the asset's screenshot context + audit `fix` + Signature → produce revised copy/brief → run existing `publish_filter_check` → create a work item (`brand_asset` next version, `status` in_progress) and open a `brand_test` shell.
+- **Fix-with-coach:** seed the coach (`idea-framework-consultant`) with the asset's screenshot context + audit `fix` + Positioning Statement → produce revised copy/brief → run existing `publish_filter_check` → create a work item (`brand_asset` next version, `status` in_progress) and open a `brand_test` shell.
 **Capability:** "what needs work, backed by metrics" → one click into a guided fix.
-**Acceptance / verify:** ranking is deterministic + explained; Fix produces a revised draft that passes/flags publish-filter; a work item + draft test are created and carry the Signature version.
+**Acceptance / verify:** ranking is deterministic + explained; Fix produces a revised draft that passes/flags publish-filter; a work item + draft test are created and carry the Positioning Statement version.
 **Size:** L (4–5 units).
 
 ## Phase 5 — In Progress board + messaging versions (Screen 3)
 **Objective:** track work in flight.
 **Build**
-- Board (Queued / In progress / In review) reading work-item state; per-card Signature version; Approve → publishes the new asset version, sets prior to superseded, marks the linked test `running`.
+- Board (Queued / In progress / In review) reading work-item state; per-card Positioning Statement version; Approve → publishes the new asset version, sets prior to superseded, marks the linked test `running`.
 **Capability:** "what's being worked on," versioned.
 **Acceptance / verify:** state transitions persist; approve creates the new aligned asset version + flips map; publish-filter gate enforced before approve.
 **Size:** M (3 units).
@@ -122,8 +122,8 @@ Builds the funnel tracker mocked in [`mockups/`](./mockups/funnel-tracker-mockup
 > **LIVE IN PROD 2026-06-16 21:17 PDT** (initial); **gap-fix round 2026-06-17.** Deploy = `rsync dist/ → ubuntu@54.243.53.44:/opt/ideabrandcoach/` (Caddy SPA; Pages is org-disabled). Static deploy ships the worktree build (main-v3 lineage + funnel); frontend not yet git-committed.
 >
 > **Gap-fix round (2026-06-17) — all tiers addressed:**
-> - 🔴 audit now reads real avatar context from `avatar_field_values` (jsonb cols are empty) + Signature avatar-scoped→brand-level fallback (`audit-asset` v2).
-> - 🟠 Signature-change propagation: read-time stale in `getCoverage` + `reauditAll`. Fix-with-coach **rewrite** via new `funnel-rewrite` edge fn (on-brand copy + publish-filter flags). Abuse controls (per-user rate-limit + 5MB image guard). PostHog `funnel_*` events. Vitest taxonomy suite (7/7) + RLS policy verification.
+> - 🔴 audit now reads real avatar context from `avatar_field_values` (jsonb cols are empty) + Positioning Statement avatar-scoped→brand-level fallback (`audit-asset` v2).
+> - 🟠 Positioning Statement-change propagation: read-time stale in `getCoverage` + `reauditAll`. Fix-with-coach **rewrite** via new `funnel-rewrite` edge fn (on-brand copy + publish-filter flags). Abuse controls (per-user rate-limit + 5MB image guard). PostHog `funnel_*` events. Vitest taxonomy suite (7/7) + RLS policy verification.
 > - 🟡 supersede-on-reupload, `updated_at` in all writes, `stage` CHECK, per-avatar channel tags (localStorage + toggle UI).
 > - 🟢 paste-text assets (`content_text`), before/after score diff (`previous_score`). **Deferred:** bulk/folder upload + vision auto-touchpoint detection (heaviest, lowest-criticality); warehouse auto-pull, MCP surface (D5), IV-OS `asset_events` are externally gated.
 
@@ -149,4 +149,4 @@ The backend is **live** and the service layer is typed end-to-end against the re
 
 **Status by phase:** P0 ✅ · P1 ✅ (ingestion + dialog) · P2 ✅ (audit engine deployed) · P3 ✅ (Funnel Map) · P4 🟡 (Needs-Work list + re-run done; **Fix-with-coach flow remaining**) · P5 ✅ (In-Progress basic) · P6 🟡 (lift display done; **test create/close UI remaining**).
 
-**Remaining:** the Fix-with-coach flow (seed `idea-framework-consultant` with asset context + fix + Signature → `publish_filter_check` → work item + draft test); the test create/close UI; optional `ServiceProvider` registration (currently the hook instantiates the service directly); Vitest + RLS-isolation + audit golden-set tests; and live browser QA (login → upload → audit → map) with the shared test account. The core loop — upload → vision audit → map/coverage → needs-work — is functional and deployed.
+**Remaining:** the Fix-with-coach flow (seed `idea-framework-consultant` with asset context + fix + Positioning Statement → `publish_filter_check` → work item + draft test); the test create/close UI; optional `ServiceProvider` registration (currently the hook instantiates the service directly); Vitest + RLS-isolation + audit golden-set tests; and live browser QA (login → upload → audit → map) with the shared test account. The core loop — upload → vision audit → map/coverage → needs-work — is functional and deployed.

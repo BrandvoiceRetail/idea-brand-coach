@@ -77,7 +77,7 @@ SELECT count(*) FROM brands b WHERE NOT EXISTS                                --
   AND EXISTS (SELECT 1 FROM avatars a WHERE a.brand_id=b.id AND a.is_template=false);
 -- per-table brand_id NULL sweep (all 0):
 SELECT 'artifacts' t, count(*) FROM artifacts WHERE brand_id IS NULL
-UNION ALL SELECT 'signatures', count(*) FROM signatures WHERE brand_id IS NULL
+UNION ALL SELECT 'positioning_statements', count(*) FROM positioning statements WHERE brand_id IS NULL
 UNION ALL SELECT 'evidence_snapshots', count(*) FROM evidence_snapshots WHERE brand_id IS NULL
 UNION ALL SELECT 'decision_triggers', count(*) FROM decision_triggers WHERE brand_id IS NULL
 UNION ALL SELECT 'uploaded_documents', count(*) FROM uploaded_documents WHERE brand_id IS NULL
@@ -92,7 +92,7 @@ SELECT count(*) FROM avatars WHERE name='My Avatar' AND is_primary;  -- 2 (the a
 --    coach threads now bound:
 SELECT count(*) FROM chat_sessions WHERE chatbot_type='idea-framework-consultant' AND avatar_id IS NULL;  -- expect 0
 
--- 4. RPC signatures present (overloads added, originals intact)
+-- 4. RPC positioning statements present (overloads added, originals intact)
 SELECT proname, pg_get_function_identity_arguments(oid)
 FROM pg_proc WHERE proname IN
   ('save_artifact_atomic','match_document_chunks','set_current_avatar',
@@ -110,14 +110,14 @@ Re-apply all four files (same order). Expected: **zero deltas, all NOTICEs, all 
 ### Rollback notes
 - **WINDOW 1 only applied:** safe to roll back by `DROP`-ing added columns/indexes/policies and re-adding `brand_assets.avatar_id NOT NULL` (no rows live). RLS policies: recreate the original avatars-join `TO public` set (originals captured in this file's DROP list).
 - **After FILE 4 `SET NOT NULL`:** irreversible without first `ALTER TABLE avatars ALTER COLUMN brand_id DROP NOT NULL`. The auto-created `'My Avatar'` rows and seeded `'My Brand'` rows are real data — deleting them cascades to KB/artifacts brand_id (ON DELETE CASCADE). Prefer PITR restore over manual unwind if FILE 4 must be reverted.
-- All RPCs are `CREATE OR REPLACE` overloads; rollback = `DROP FUNCTION` the new signatures (6-arg/5-arg originals untouched).
+- All RPCs are `CREATE OR REPLACE` overloads; rollback = `DROP FUNCTION` the new positioning statements (6-arg/5-arg originals untouched).
 
 ---
 
 ## (c) What changed vs the design because of live state
 
 1. **Agentic loop + `user_memories` already exist on origin/main** (design's "Phase-6 build a loop" / "defer memory namespacing" premises are obsolete). No edge-function code is in this DB-only Phase-1 deliverable; the consultant work is plumbing into the existing `loop.ts`, scoped to a later phase.
-2. **`match_document_chunks` was already `auth.uid()`-gated on live** (hardened by `20260531000000`). The H-2 "5-arg is unguarded" claim was stale; the 7-arg overload now matches the live secure pattern. Live arg type is bare `vector`, not `vector(1536)` — overload signature matches exactly.
+2. **`match_document_chunks` was already `auth.uid()`-gated on live** (hardened by `20260531000000`). The H-2 "5-arg is unguarded" claim was stale; the 7-arg overload now matches the live secure pattern. Live arg type is bare `vector`, not `vector(1536)` — overload positioning statement matches exactly.
 3. **Existing RPCs already have no PUBLIC grant** (EXECUTE = authenticated/service_role/postgres). M-4's REVOKE block is a confirming no-op on live; new overloads granted to `authenticated, service_role` (not just authenticated) to match the existing functions' shape and not break service-role edge calls.
 4. **Two schema items were already live** — `chat_sessions.avatar_id` and `avatars` UNIQUE(user_id,name) — so they are not recreated.
 5. **`avatar_field_values` has ONE avatars-join policy and no `user_id`** — the design's "reconcile two contested policies, root on user_id" is impossible/unnecessary; File 2 only confirms the single policy (semantic no-op; role normalized to authenticated).

@@ -104,7 +104,7 @@ function oracleDims(body: string): string[] {
 }
 
 /** Actionable deliverables a coaching session can end on (Trevor's governing promise). */
-const ACTIONABLE = /\b(trust gap score|decision trigger|brief|a\/b test|design test|draft|signature|canvas|strategy doc|score|trigger)\b/i;
+const ACTIONABLE = /\b(trust gap score|decision trigger|brief|a\/b test|design test|draft|positioning_statement|canvas|strategy doc|score|trigger)\b/i;
 
 export function loadCorpus(): CorpusFixture[] {
   const dir = findCorpusDir();

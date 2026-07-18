@@ -28,9 +28,9 @@ function recordingFetch(
 }
 
 const SAMPLE: FeedbackInput = {
-  message: 'The signature reveal felt slow on my second run.',
+  message: 'The positioning statement reveal felt slow on my second run.',
   category: 'bug',
-  context: 'after generate_signature',
+  context: 'after generate_positioning_statement',
   caller: 'u_abc123',
 };
 

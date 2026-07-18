@@ -55,7 +55,7 @@ export interface CompetitorEntry {
   url: string | null;
   idea_scores: IdeaScores;
   rationale: string;
-  /** How this competitor compares against our avatar/Signature. */
+  /** How this competitor compares against our avatar/Positioning Statement. */
   gap_to_our_avatar: string;
   /** Evidence anchors; empty/inference-flagged claims must be marked, not invented. */
   evidence_refs: EvidenceRef[];
@@ -176,7 +176,7 @@ export interface CompetitorNeedsInput {
 /**
  * Request to run a competitor analysis for one brand asset / funnel touchpoint.
  * Mirrors the competitor-analysis-asset edge-function request body. The host
- * loads avatar + Signature + the brand's own asset and passes them in
+ * loads avatar + Positioning Statement + the brand's own asset and passes them in
  * (audit-idea-map stateless pattern).
  */
 export interface AnalyzeCompetitorsRequest {
@@ -200,8 +200,8 @@ export interface AnalyzeCompetitorsRequest {
   marketplace?: string;
   /** Host-supplied avatar context (object or pre-formatted string). */
   avatarContext?: unknown;
-  /** Host-supplied Signature context. */
-  signatureContext?: unknown;
+  /** Host-supplied Positioning Statement context. */
+  positioningStatementContext?: unknown;
   /** The brand's own asset content (for the relative gap read). */
   ourAsset?: unknown;
   /** The asset's prior IDEA audit result, if any. */
@@ -253,8 +253,8 @@ export interface DraftCountermeasureRequest {
   competitorBrief: CompetitorBrief;
   /** Host-supplied avatar context. */
   avatarContext?: unknown;
-  /** Host-supplied Signature context. */
-  signatureContext?: unknown;
+  /** Host-supplied Positioning Statement context. */
+  positioningStatementContext?: unknown;
 }
 
 /** Result of a funnel-rewrite run. */

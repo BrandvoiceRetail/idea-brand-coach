@@ -1,15 +1,15 @@
 /**
  * Layer 2 (tool) — `generate_canvas` (OWNED, WRITE, gateWrite — gold Workbook A sheet 5).
  *
- * Compiles the Brand Canvas from the persisted artifact chain: the chosen `signature`
+ * Compiles the Brand Canvas from the persisted artifact chain: the chosen `positioning_statement`
  * artifact + the Avatar 2.0 S1-S4 forensic artifacts + the owner-intent slots (positioning
  * intent #12, voice preferences #13, target-customer beliefs #14). It invokes the
  * `brand-canvas` edge fn verbatim (Calculation Parity), validates the reply against the
  * Phase-0 `brand_canvas` contract, and persists it as a `brand_canvas` artifact (RLS-scoped).
  *
- * Grounding gate (manifest §6 / guardrail #4): without a chosen Signature artifact the tool
+ * Grounding gate (manifest §6 / guardrail #4): without a chosen Positioning Statement artifact the tool
  * NEVER calls the engine — it returns a structured `needs_input` block the calling agent
- * relays (the avatar pipeline / persist_signature fills it). The canvas carries positioning
+ * relays (the avatar pipeline / persist_positioning_statement fills it). The canvas carries positioning
  * and voice only (no PRODUCT-TRUTH claims), so no claim gate runs here; the gate lives in
  * generate_brief.
  *
@@ -88,14 +88,14 @@ const inputSchema = {
   avatar_id: z.string().optional().describe('Avatar scope; omit for the brand-level chain.'),
 };
 
-/** needs_input demand for a missing chosen Signature (the canvas root). */
-function signatureNeedsInput(): NeedsInputItem[] {
+/** needs_input demand for a missing chosen Positioning Statement (the canvas root). */
+function positioningStatementNeedsInput(): NeedsInputItem[] {
   return [
     {
       slot: 1,
       question:
-        'Choose a Signature first: run the Avatar chain through S5 (build_avatar_stage with allow_signature) and persist your pick with persist_signature. The Brand Canvas is built around the chosen Signature.',
-      why: 'The canvas signature line, positioning, promise, and story spine all derive from the chosen Signature artifact.',
+        'Choose a Positioning Statement first: run the Avatar chain through S5 (build_avatar_stage with allow_positioning_statement) and persist your pick with persist_positioning_statement. The Brand Canvas is built around the chosen Positioning Statement.',
+      why: 'The canvas positioning statement line, positioning, promise, and story spine all derive from the chosen Positioning Statement artifact.',
     },
   ];
 }
@@ -109,7 +109,7 @@ function intentValue(value: unknown): string | undefined {
 
 /**
  * Run the canvas generation: resolve the chain + owner-intent, short-circuit to needs_input
- * if the Signature is absent, invoke the engine, validate, and persist. Exported so the test
+ * if the Positioning Statement is absent, invoke the engine, validate, and persist. Exported so the test
  * can drive it with stubs without the MCP transport.
  */
 export async function runGenerateCanvas(
@@ -120,10 +120,10 @@ export async function runGenerateCanvas(
   | { status: 'needs_input'; needs_input: NeedsInputItem[] }
   | { status: 'failed'; note: string }
 > {
-  // 1. The chosen Signature is the canvas root — without it, ask (never run ungrounded).
-  const signatureRow = await deps.getCurrentArtifact('signature', avatarId);
-  if (!signatureRow) {
-    return { status: 'needs_input', needs_input: signatureNeedsInput() };
+  // 1. The chosen Positioning Statement is the canvas root — without it, ask (never run ungrounded).
+  const positioningStatementRow = await deps.getCurrentArtifact('positioning_statement', avatarId);
+  if (!positioningStatementRow) {
+    return { status: 'needs_input', needs_input: positioningStatementNeedsInput() };
   }
 
   // 2. Gather the forensic chain artifacts (best-effort; the engine grounds on what exists).
@@ -146,7 +146,7 @@ export async function runGenerateCanvas(
 
   // 4. Invoke the engine verbatim (bounded retry on transient transport failure).
   const res = await invokeWithRetry(deps, 'brand-canvas', {
-    signature: signatureRow.content,
+    positioning_statement: positioningStatementRow.content,
     s1: s1?.content ?? null,
     s2: s2?.content ?? null,
     s3: s3?.content ?? null,
@@ -158,7 +158,7 @@ export async function runGenerateCanvas(
     return { status: 'failed', note: res.note ?? 'brand-canvas engine returned no data' };
   }
 
-  // The engine may itself return needs_input (e.g. no usable signature text).
+  // The engine may itself return needs_input (e.g. no usable positioning statement text).
   if (Array.isArray((res.data as { needs_input?: unknown }).needs_input)) {
     return { status: 'needs_input', needs_input: (res.data as { needs_input: NeedsInputItem[] }).needs_input };
   }
@@ -168,7 +168,7 @@ export async function runGenerateCanvas(
     (res.data.grounding === 'inference' ? 'inference' : 'evidence') as Grounding;
   const evidenceRefs: EvidenceRef[] = Array.isArray(res.data.evidence_refs)
     ? (res.data.evidence_refs as EvidenceRef[])
-    : [{ kind: 'artifact', ref: 'signature' }];
+    : [{ kind: 'artifact', ref: 'positioning_statement' }];
 
   // 6. Validate against the Phase-0 contract before persisting.
   const candidate = { ...res.data, grounding, evidence_refs: evidenceRefs };
@@ -193,7 +193,7 @@ export function registerGenerateCanvasTool(server: McpServer, deps?: Partial<Gen
     {
       title: 'Generate the Brand Canvas',
       description:
-        'Write tool: compile the Brand Canvas (gold sheet 5) from the chosen Signature + the Avatar 2.0 S1-S4 artifacts + owner-intent slots. Invokes the brand-canvas engine verbatim, validates against the brand_canvas contract, and persists an artifact (RLS-scoped). Returns needs_input when no chosen Signature exists (never runs ungrounded). Requires an authenticated Supabase JWT.',
+        'Write tool: compile the Brand Canvas (gold sheet 5) from the chosen Positioning Statement + the Avatar 2.0 S1-S4 artifacts + owner-intent slots. Invokes the brand-canvas engine verbatim, validates against the brand_canvas contract, and persists an artifact (RLS-scoped). Returns needs_input when no chosen Positioning Statement exists (never runs ungrounded). Requires an authenticated Supabase JWT.',
       inputSchema,
     },
     async ({ avatar_id }) => {

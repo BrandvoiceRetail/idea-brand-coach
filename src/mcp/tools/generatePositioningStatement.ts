@@ -1,14 +1,14 @@
 /**
- * Layer 2 (tool) — `generate_signature` (OWNED, convenience diagnostic).
+ * Layer 2 (tool) — `generate_positioning_statement` (OWNED, convenience diagnostic).
  *
- * VERBATIM wrap of the existing `reveal-signature` edge fn (Calculation Parity):
+ * VERBATIM wrap of the existing `reveal-positioning-statement` edge fn (Calculation Parity):
  * the engine-facing fields ({conversation?, fields?, reviews?}) are passed through
  * untouched and the frozen no-parroting prompt does the synthesis, so MCP output is
  * identical to the in-app reveal. Requires an authenticated Supabase JWT (EdgeFnClient
  * is JWT-gated).
  *
  * The edge fn returns `{ options: string[], usedReviews, inference }`. We map the flat
- * string list into the `signatureContract` row shape (`{option, sentence}[]`, 1-based)
+ * string list into the `positioningStatementContract` row shape (`{option, sentence}[]`, 1-based)
  * and attach a grounding envelope: `usedReviews` ⇒ evidence, else inference (this is
  * exactly the engine's own `inference` discipline, surfaced to the artifact contract).
  *
@@ -17,12 +17,15 @@
  * scope and feed its reviews to the engine. Per the manifest argument this preserves
  * no-parroting (customer review vocabulary ≠ the founder's own words); the OPERATOR
  * must sign off the R-015 reading before the avatar pipeline auto-feeds S5. This tool
- * exposes the seam but is read-only and never persists — persistence is `persist_signature`.
+ * exposes the seam but is read-only and never persists — persistence is `persist_positioning_statement`.
+ *
+ * HISTORY: formerly `generate_signature` wrapping the `reveal-signature` edge fn; renamed to
+ * Positioning Statement in the 2026-07 taxonomy cleanup (the synthesis engine itself is unchanged).
  */
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { EdgeFnClient } from '../edgeFn/client.js';
-import type { SignatureOption } from '../contracts/index.js';
+import type { PositioningStatementOption } from '../contracts/index.js';
 import { getUserSupabase, UnauthenticatedError } from '../supabaseUser.js';
 import { safeLog } from '../logging/redact.js';
 import { getIdentity, userTag } from '../context/identity.js';
@@ -30,7 +33,7 @@ import { captureMcpEvent } from '../posthog.js';
 
 const EVIDENCE_SNAPSHOTS_TABLE = 'evidence_snapshots';
 
-interface RevealSignatureResponse {
+interface RevealPositioningStatementResponse {
   options: string[];
   usedReviews: boolean;
   inference: boolean;
@@ -97,13 +100,13 @@ async function fetchEvidenceReviews(avatarId: string | undefined): Promise<strin
   return extractReviewText((data as { reviews?: unknown }).reviews);
 }
 
-export function registerGenerateSignatureTool(server: McpServer, edgeFn: EdgeFnClient): void {
+export function registerGeneratePositioningStatementTool(server: McpServer, edgeFn: EdgeFnClient): void {
   server.registerTool(
-    'generate_signature',
+    'generate_positioning_statement',
     {
-      title: 'Reveal Signature options',
+      title: 'Reveal Positioning Statement options',
       description:
-        'Convenience diagnostic: reveal 3-4 distinct on-brand Signature options ("My customer isn\'t buying X, they\'re buying Y") via the existing reveal-signature engine, wrapped verbatim (Calculation Parity — the frozen no-parroting prompt is unchanged). Accepts conversation OR fields OR reviews; if all are empty it falls back to the current evidence snapshot for the scope (context-bundle grounding — D2/R-015 reading: customer review vocabulary is not the founder\'s own words; operator must sign off before the avatar pipeline auto-feeds this). Requires an authenticated Supabase JWT. Read-only — persist a chosen option with persist_signature.',
+        'Convenience diagnostic: reveal 3-4 distinct on-brand Positioning Statement options ("My customer isn\'t buying X, they\'re buying Y") via the existing reveal-positioning-statement engine, wrapped verbatim (Calculation Parity — the frozen no-parroting prompt is unchanged). Accepts conversation OR fields OR reviews; if all are empty it falls back to the current evidence snapshot for the scope (context-bundle grounding — D2/R-015 reading: customer review vocabulary is not the founder\'s own words; operator must sign off before the avatar pipeline auto-feeds this). Requires an authenticated Supabase JWT. Read-only — persist a chosen option with persist_positioning_statement.',
       inputSchema,
     },
     async ({ conversation, fields, reviews, avatar_id }) => {
@@ -119,21 +122,21 @@ export function registerGenerateSignatureTool(server: McpServer, edgeFn: EdgeFnC
         usedContextBundle = reviewsForEngine.trim().length > 0;
       }
 
-      const res = await edgeFn.invoke<RevealSignatureResponse>('reveal-signature', {
+      const res = await edgeFn.invoke<RevealPositioningStatementResponse>('reveal-positioning-statement', {
         conversation: conversationProvided ? conversation : [],
         fields: fieldsProvided ? fields : {},
         reviews: reviewsForEngine,
       });
 
       if (!res.ok || !Array.isArray(res.data?.options) || res.data.options.length === 0) {
-        safeLog({ level: 'warn', event: 'tool.generate_signature.unavailable', caller: userTag(getIdentity()) });
+        safeLog({ level: 'warn', event: 'tool.generate_positioning_statement.unavailable', caller: userTag(getIdentity()) });
         return {
-          content: [{ type: 'text' as const, text: `generate_signature unavailable: ${res.note ?? 'empty engine reply'}` }],
+          content: [{ type: 'text' as const, text: `generate_positioning_statement unavailable: ${res.note ?? 'empty engine reply'}` }],
           structuredContent: { ok: false, options: [], note: res.note ?? 'empty engine reply' },
         };
       }
 
-      const options: SignatureOption[] = res.data.options.map((sentence, index) => ({
+      const options: PositioningStatementOption[] = res.data.options.map((sentence, index) => ({
         option: index + 1,
         sentence,
       }));
@@ -141,13 +144,13 @@ export function registerGenerateSignatureTool(server: McpServer, edgeFn: EdgeFnC
       const grounding = usedReviews ? 'evidence' : 'inference';
 
       safeLog({
-        event: 'tool.generate_signature',
+        event: 'tool.generate_positioning_statement',
         caller: userTag(getIdentity()),
         count: options.length,
         usedReviews,
         usedContextBundle,
       });
-      captureMcpEvent(getIdentity().userId ?? 'anon', 'mcp_signature_generated', {
+      captureMcpEvent(getIdentity().userId ?? 'anon', 'mcp_positioning_statement_generated', {
         options_count: options.length,
         grounding,
         used_reviews: usedReviews,

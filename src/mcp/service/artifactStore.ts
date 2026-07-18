@@ -24,25 +24,26 @@
  * invariant (manifest §6 / guardrail #4) is enforced here, not in the schema:
  * `grounding:'evidence'` REQUIRES a non-empty `evidence_refs[]`.
  *
- * `saveSignatureChoice` closes the Alpha "persist chosen Signature" item: it writes a
- * `signatures` row (the options + chosen index) AND a `signature` artifact row, so the
+ * `savePositioningStatementChoice` closes the Alpha "persist chosen Positioning Statement" item: it writes a
+ * `positioning_statements` row (the options + chosen index) AND a `positioning_statement` artifact row, so the
  * chain and the dedicated table stay consistent.
  */
 import {
   CONTRACTS,
   evidenceRefSchema,
   groundingSchema,
-  signatureContract,
+  positioningStatementContract,
   type ArtifactKind,
   type EvidenceRef,
   type Grounding,
-  type SignatureOutput,
+  type PositioningStatementOutput,
 } from '../contracts/index.js';
 import { getUserSupabase } from '../supabaseUser.js';
 import { getIdentity } from '../context/identity.js';
 
 const ARTIFACTS_TABLE = 'artifacts';
-const SIGNATURES_TABLE = 'signatures';
+// Formerly the `signatures` table (renamed 2026-07 when "Signature" → "Positioning Statement").
+const POSITIONING_STATEMENTS_TABLE = 'positioning_statements';
 
 /** Common write metadata carried on every saved artifact. */
 export interface SaveArtifactOptions {
@@ -65,13 +66,13 @@ export interface ArtifactRow {
   created_at: string;
 }
 
-/** A persisted signature-choice row, as read back from the live `signatures` table. */
-export interface SignatureRow {
+/** A persisted positioning statement-choice row, as read back from the live `positioning_statements` table. */
+export interface PositioningStatementRow {
   id: string;
   user_id: string;
   avatar_id: string | null;
-  signature_text: string | null;
-  all_options: SignatureOutput['options'];
+  positioning_statement_text: string | null;
+  all_options: PositioningStatementOutput['options'];
   chosen_index: number | null;
   used_reviews: boolean | null;
   inference: boolean | null;
@@ -117,7 +118,7 @@ function validateArtifact(kind: ArtifactKind, content: unknown, grounding: Groun
 /**
  * The current caller's auth user id, for the NOT-NULL `user_id` column.
  *
- * The live `artifacts`/`signatures` tables declare `user_id NOT NULL` with no
+ * The live `artifacts`/`positioning_statements` tables declare `user_id NOT NULL` with no
  * `DEFAULT auth.uid()`, so inserts must set it explicitly (the RLS INSERT policy
  * `WITH CHECK (auth.uid() = user_id)` then confirms it matches the JWT). An authenticated
  * identity always carries a userId (`resolveIdentity`); this guards the type.
@@ -208,30 +209,30 @@ export async function getChain(avatarId?: string | null): Promise<ArtifactRow[]>
   return (data as ArtifactRow[] | null) ?? [];
 }
 
-/** Input to `saveSignatureChoice`: the full options set + the picked option. */
-export interface SaveSignatureChoiceInput {
-  options: SignatureOutput['options'];
+/** Input to `savePositioningStatementChoice`: the full options set + the picked option. */
+export interface SavePositioningStatementChoiceInput {
+  options: PositioningStatementOutput['options'];
   chosenOption: number;
   grounding: Grounding;
   evidenceRefs: EvidenceRef[];
   avatarId?: string | null;
 }
 
-/** Both rows written by a signature choice: the dedicated row and the chain artifact. */
-export interface SaveSignatureChoiceResult {
-  signature: SignatureRow;
+/** Both rows written by a positioning statement choice: the dedicated row and the chain artifact. */
+export interface SavePositioningStatementChoiceResult {
+  positioning_statement: PositioningStatementRow;
   artifact: ArtifactRow;
 }
 
 /**
- * Persist a chosen Signature (closes the Alpha local-persistence item).
+ * Persist a chosen Positioning Statement (closes the Alpha local-persistence item).
  *
- * Writes BOTH a `signatures` row (options + chosen index, the dedicated store the app
- * reads) and a `signature` artifact (so the chain stays whole for downstream stages).
- * The artifact content is validated against `signatureContract`, with `chosen_option`
+ * Writes BOTH a `positioning_statements` row (options + chosen index, the dedicated store the app
+ * reads) and a `positioning_statement` artifact (so the chain stays whole for downstream stages).
+ * The artifact content is validated against `positioningStatementContract`, with `chosen_option`
  * carried through so re-reads recover the pick.
  */
-export async function saveSignatureChoice(input: SaveSignatureChoiceInput): Promise<SaveSignatureChoiceResult> {
+export async function savePositioningStatementChoice(input: SavePositioningStatementChoiceInput): Promise<SavePositioningStatementChoiceResult> {
   const avatarId = input.avatarId ?? null;
 
   const chosen = input.options.find((o) => o.option === input.chosenOption);
@@ -240,33 +241,33 @@ export async function saveSignatureChoice(input: SaveSignatureChoiceInput): Prom
   }
 
   // Validate the artifact shape up front so a bad payload fails before any write.
-  const artifactContent: SignatureOutput = {
+  const artifactContent: PositioningStatementOutput = {
     options: input.options,
     chosen_option: input.chosenOption,
     grounding: input.grounding,
     evidence_refs: input.evidenceRefs,
   };
-  validateArtifact(signatureContract.kind, artifactContent, input.grounding, input.evidenceRefs);
+  validateArtifact(positioningStatementContract.kind, artifactContent, input.grounding, input.evidenceRefs);
 
-  // Write the chain artifact first so the `signatures` row can carry its `artifact_id` FK.
-  const artifact = await saveArtifact(signatureContract.kind, artifactContent, {
+  // Write the chain artifact first so the `positioning_statements` row can carry its `artifact_id` FK.
+  const artifact = await saveArtifact(positioningStatementContract.kind, artifactContent, {
     grounding: input.grounding,
     evidenceRefs: input.evidenceRefs,
     avatarId,
   });
 
-  // The live `signatures` table stores the choice in dedicated columns (no grounding/
-  // evidence_refs/options): the chosen sentence in `signature_text`, the full set in
+  // The live `positioning_statements` table stores the choice in dedicated columns (no grounding/
+  // evidence_refs/options): the chosen sentence in `positioning_statement_text`, the full set in
   // `all_options`, the 1-based pick in `chosen_index`, and the grounding split across the
   // `used_reviews`/`inference` flags.
   const supabase = getUserSupabase();
   const userId = requireUserId();
   const { data: sigInserted, error: sigError } = await supabase
-    .from(SIGNATURES_TABLE)
+    .from(POSITIONING_STATEMENTS_TABLE)
     .insert({
       user_id: userId,
       avatar_id: avatarId,
-      signature_text: chosen.sentence,
+      positioning_statement_text: chosen.sentence,
       all_options: input.options,
       chosen_index: input.chosenOption,
       used_reviews: input.grounding === 'evidence',
@@ -277,8 +278,8 @@ export async function saveSignatureChoice(input: SaveSignatureChoiceInput): Prom
     .single();
 
   if (sigError || !sigInserted) {
-    throw new ArtifactStoreError(`failed to insert signature: ${sigError?.message ?? 'no row returned'}`, sigError);
+    throw new ArtifactStoreError(`failed to insert positioning statement: ${sigError?.message ?? 'no row returned'}`, sigError);
   }
 
-  return { signature: sigInserted as SignatureRow, artifact };
+  return { positioning_statement: sigInserted as PositioningStatementRow, artifact };
 }

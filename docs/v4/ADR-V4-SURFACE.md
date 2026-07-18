@@ -161,7 +161,7 @@ src/components/v4/
 | Avatar 2.0 portrait | **REUSE builder logic** | `src/components/v2/forensic/ForensicAvatarBuilder.tsx`, `src/contexts/AvatarContext.tsx` |
 | Funnel Map | **REUSE logic** | `src/components/v2/funnel/FunnelTracker.tsx` |
 | Focus / What-Needs-Work ranking | **REUSE engine** | `src/components/v2/focus/{engine.ts,generate.ts,FocusWorkspace.tsx}` |
-| Signature reveal / drift | **REUSE** | `src/components/v2/signature/SignatureReveal.tsx` |
+| Positioning Statement reveal / drift | **REUSE** | `src/components/v2/positioning-statement/PositioningStatementReveal.tsx` |
 | Field edit / review (confirm-or-edit) | **REUSE** | `src/components/ui/field-editor.tsx`, `src/contexts/FieldReviewContext.tsx`, `FieldQueueContext.tsx` |
 | Decision Board (2–3 criteria-scored moves) | **BUILD NET-NEW** | `src/components/v4/decisions/DecisionBoard.tsx` |
 | Context Card "I won't ask twice" | **BUILD NET-NEW** (wire to existing store) | `src/components/v4/onboard/ContextCard.tsx` |
@@ -193,7 +193,7 @@ src/components/v4/
 | S-15 | Asset detail — image-prompt tab | `/v4/asset/:id` | `V4AssetDetail`/ImagePromptTab | `get_asset`, `generate_brief` |
 | S-16 | Asset detail — design-brief tab | `/v4/asset/:id` | DesignBriefTab | `generate_brief`, `log_asset` |
 | S-17 | Asset detail — check-asset tab | `/v4/asset/:id` | CheckAssetTab | `audit_asset`, `record_assessment`, `publish_filter_check` |
-| S-18 | Drift banner on Signature change | (cross-cut) | `SignatureDriftBanner` (reuse `SignatureReveal`) | `generate_signature`, `persist_signature` |
+| S-18 | Drift banner on Positioning Statement change | (cross-cut) | `PositioningStatementDriftBanner` (reuse `PositioningStatementReveal`) | `generate_positioning_statement`, `persist_positioning_statement` |
 | S-19 | Re-measure (Trust Gap lift) | `/v4/analyse` (re-entry) | `RemeasurePanel` | `compute_trust_gap_lift` |
 | S-20 | Defend (Brand Defense teaser) | `/v4/funnel` (section) | `DefendTeaser` (reuse `StayAheadScreen`) | none (Beta teaser) |
 | S-21 | Export workbook | (shell action) | `ExportAction` | `export_workbook` |

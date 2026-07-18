@@ -223,7 +223,7 @@ The response format is nearly identical. The migration is primarily:
 3. **Backfill in batches**: Process 50-100 rows per invocation to stay within edge function timeouts
 4. **Validate**: Compare old and new semantic search results for quality
 5. **Swap columns**: Drop old `embedding` column, rename `embedding_v3` to `embedding`
-6. **Update RPC functions**: Change `vector(1536)` to `vector(1024)` in all function signatures
+6. **Update RPC functions**: Change `vector(1536)` to `vector(1024)` in all function positioning statements
 7. **Rebuild indexes**: `REINDEX INDEX idx_user_knowledge_embedding;`
 
 **Alternative (simpler, riskier):**

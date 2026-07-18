@@ -2,7 +2,7 @@
  * defendService — Layer-3 execution seam for Loop-5 (Defend).
  *
  * WHAT: Thin, typed wrappers behind the Defend screens — `getStatus` (the
- * Signature-drift watch + a deterministic defend checklist derived from real
+ * Positioning Statement-drift watch + a deterministic defend checklist derived from real
  * loop signals) and `exportWorkbook` (the full-loop workbook via the live
  * `export_workbook` engine). Each async method returns a `DefendResult<T>`
  * discriminated `ok | needs_input | error`.
@@ -16,7 +16,7 @@
  *
  * NO FABRICATION:
  *  - Drift is the real Loop-3 `getDrift` read (assets aligned to an OLDER
- *    Signature). Zero drift is a real "done", not a hidden gap.
+ *    Positioning Statement). Zero drift is a real "done", not a hidden gap.
  *  - The checklist `state` is computed from those real reads; the competitor row
  *    is `coming` (competitor reads are deferred in Alpha) — never `done`/
  *    `attention` against invented competitor data.
@@ -48,7 +48,7 @@ export type EdgeInvoke = (
   body: unknown,
 ) => Promise<{ data: unknown; error: unknown }>;
 
-/** Reads the real Signature-drift list for an avatar (defaults to Loop-3 getDrift). */
+/** Reads the real Positioning Statement-drift list for an avatar (defaults to Loop-3 getDrift). */
 export type DriftReader = (avatarId: string | null) => Promise<FixResult<DriftItem[]>>;
 
 /** Reads the real before/after Trust Gap lift (defaults to Loop-4 getTrustGapLift). */
@@ -56,9 +56,9 @@ export type LiftReader = (avatarId: string | null) => Promise<RemeasureResult<Tr
 
 /**
  * Reports whether the avatar has a real baseline to defend — at least one ALIGNED
- * asset. An aligned asset can only exist once it was audited against a Signature,
+ * asset. An aligned asset can only exist once it was audited against a Positioning Statement,
  * so a single aligned piece is concrete proof of BOTH real aligned assets and a
- * Signature; it is NEVER inferred from an empty drift list.
+ * Positioning Statement; it is NEVER inferred from an empty drift list.
  */
 export type BaselineReader = (avatarId: string) => Promise<boolean>;
 
@@ -104,7 +104,7 @@ export class DefendService {
   ) {}
 
   /**
-   * The Defend status: the real Signature-drift watch + whether the lift was
+   * The Defend status: the real Positioning Statement-drift watch + whether the lift was
    * confirmed (a second real diagnostic run exists) + the derived checklist.
    * `needs_input` when there is no avatar; `error` if the drift read fails. The
    * lift read degrading to needs_input/error is folded into `liftConfirmed:
@@ -130,7 +130,7 @@ export class DefendService {
     }
 
     // Is there anything real to defend? Only true once an asset is ALIGNED (which
-    // requires a Signature). A read failure degrades to an honest "nothing yet".
+    // requires a Positioning Statement). A read failure degrades to an honest "nothing yet".
     let hasBaseline = false;
     try {
       hasBaseline = await this.readBaseline(avatarId);
@@ -297,8 +297,8 @@ export function buildChecklist(
       detail: !hasBaseline
         ? 'Nothing aligned to your positioning yet — work a fix first and I will watch it for drift.'
         : driftCount === 0
-          ? 'Every aligned asset still matches your current Signature.'
-          : `${driftCount} asset${driftCount === 1 ? '' : 's'} built against an older Signature — re-check ${driftCount === 1 ? 'it' : 'them'} in Fix.`,
+          ? 'Every aligned asset still matches your current Positioning Statement.'
+          : `${driftCount} asset${driftCount === 1 ? '' : 's'} built against an older Positioning Statement — re-check ${driftCount === 1 ? 'it' : 'them'} in Fix.`,
       state: !hasBaseline ? 'pending' : driftCount === 0 ? 'done' : 'attention',
     },
     {

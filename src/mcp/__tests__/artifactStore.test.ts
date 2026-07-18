@@ -5,7 +5,7 @@ import {
   saveArtifact,
   getCurrentArtifact,
   getChain,
-  saveSignatureChoice,
+  savePositioningStatementChoice,
   ArtifactStoreError,
 } from '../service/artifactStore.js';
 import { __setUserSupabaseFactory, getUserSupabase, UnauthenticatedError } from '../supabaseUser.js';
@@ -146,7 +146,7 @@ afterEach(() => {
 });
 
 // --- Minimal valid artifact contents per kind used below ---
-const validSignature = {
+const validPositioningStatement = {
   options: [
     { option: 1, sentence: 'Built for collectors who refuse to compromise.' },
     { option: 2, sentence: 'The vault your cards deserve.' },
@@ -190,8 +190,8 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
       id: 'art-2',
       user_id: 'user-1',
       avatar_id: null,
-      kind: 'signature' as ArtifactKind,
-      content: validSignature,
+      kind: 'positioning_statement' as ArtifactKind,
+      content: validPositioningStatement,
       grounding: 'inference',
       evidence_refs: [],
       superseded_by: null,
@@ -199,7 +199,7 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
     };
     stub.enqueue('rpc', { data: newRow, error: null });
 
-    const row = await runWithIdentity(authed, () => saveArtifact('signature', validSignature, { grounding: 'inference', evidenceRefs: [] }));
+    const row = await runWithIdentity(authed, () => saveArtifact('positioning_statement', validPositioningStatement, { grounding: 'inference', evidenceRefs: [] }));
 
     expect(row.id).toBe('art-2');
     // Exactly ONE op: the atomic save RPC (no separate insert + supersede that could
@@ -211,8 +211,8 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
     expect(rpc.payload).toEqual({
       p_user_id: 'user-1',
       p_avatar_id: null,
-      p_kind: 'signature',
-      p_content: validSignature,
+      p_kind: 'positioning_statement',
+      p_content: validPositioningStatement,
       p_grounding: 'inference',
       p_evidence_refs: [],
     });
@@ -223,11 +223,11 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
     stub.enqueue('rpc', { data: { id: 'art-9', avatar_id: 'av-1' }, error: null });
 
     await runWithIdentity(authed, () =>
-      saveArtifact('signature', validSignature, { grounding: 'inference', evidenceRefs: [], avatarId: 'av-1' }),
+      saveArtifact('positioning_statement', validPositioningStatement, { grounding: 'inference', evidenceRefs: [], avatarId: 'av-1' }),
     );
 
     expect(stub.ops).toHaveLength(1);
-    expect(stub.ops[0].payload).toMatchObject({ p_avatar_id: 'av-1', p_kind: 'signature' });
+    expect(stub.ops[0].payload).toMatchObject({ p_avatar_id: 'av-1', p_kind: 'positioning_statement' });
   });
 
   it('regeneration on an existing current row succeeds (no duplicate-current failure path)', async () => {
@@ -239,10 +239,10 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
     stub.enqueue('rpc', { data: { id: 'art-v2' }, error: null });
 
     const first = await runWithIdentity(authed, () =>
-      saveArtifact('signature', validSignature, { grounding: 'inference', evidenceRefs: [] }),
+      saveArtifact('positioning_statement', validPositioningStatement, { grounding: 'inference', evidenceRefs: [] }),
     );
     const second = await runWithIdentity(authed, () =>
-      saveArtifact('signature', validSignature, { grounding: 'inference', evidenceRefs: [] }),
+      saveArtifact('positioning_statement', validPositioningStatement, { grounding: 'inference', evidenceRefs: [] }),
     );
 
     expect(first.id).toBe('art-v1');
@@ -257,7 +257,7 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
     const stub = installStub();
     stub.enqueue('rpc', { data: null, error: { message: 'duplicate key value' } });
     await expect(
-      runWithIdentity(authed, () => saveArtifact('signature', validSignature, { grounding: 'inference', evidenceRefs: [] })),
+      runWithIdentity(authed, () => saveArtifact('positioning_statement', validPositioningStatement, { grounding: 'inference', evidenceRefs: [] })),
     ).rejects.toThrow(/duplicate key value/);
   });
 
@@ -265,8 +265,8 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
     const stub = installStub();
     await expect(
       runWithIdentity(authed, () =>
-        // signature requires options[].sentence; this payload is malformed.
-        saveArtifact('signature', { options: [{ option: 1 }], grounding: 'inference', evidence_refs: [] }, { grounding: 'inference', evidenceRefs: [] }),
+        // positioning statement requires options[].sentence; this payload is malformed.
+        saveArtifact('positioning_statement', { options: [{ option: 1 }], grounding: 'inference', evidence_refs: [] }, { grounding: 'inference', evidenceRefs: [] }),
       ),
     ).rejects.toBeInstanceOf(ArtifactStoreError);
     expect(stub.ops).toHaveLength(0); // never reached the DB
@@ -276,7 +276,7 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
     const stub = installStub();
     await expect(
       runWithIdentity(authed, () =>
-        saveArtifact('signature', { ...validSignature, grounding: 'evidence', evidence_refs: [evidenceRef] }, { grounding: 'evidence', evidenceRefs: [] }),
+        saveArtifact('positioning_statement', { ...validPositioningStatement, grounding: 'evidence', evidence_refs: [evidenceRef] }, { grounding: 'evidence', evidenceRefs: [] }),
       ),
     ).rejects.toThrow(/evidence_refs/);
     expect(stub.ops).toHaveLength(0);
@@ -284,11 +284,11 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
 
   it('accepts grounding=evidence when evidence_refs are present', async () => {
     const stub = installStub();
-    const content = { ...validSignature, grounding: 'evidence' as const, evidence_refs: [evidenceRef] };
+    const content = { ...validPositioningStatement, grounding: 'evidence' as const, evidence_refs: [evidenceRef] };
     stub.enqueue('rpc', { data: { id: 'art-e1' }, error: null });
 
     const row = await runWithIdentity(authed, () =>
-      saveArtifact('signature', content, { grounding: 'evidence', evidenceRefs: [evidenceRef] }),
+      saveArtifact('positioning_statement', content, { grounding: 'evidence', evidenceRefs: [evidenceRef] }),
     );
     expect(row.id).toBe('art-e1');
     expect(stub.ops[0].payload).toMatchObject({ p_grounding: 'evidence', p_evidence_refs: [evidenceRef] });
@@ -297,7 +297,7 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
   it('requires an authenticated caller (RLS client unavailable for anon)', async () => {
     installStub();
     await expect(
-      runWithIdentity(anon, () => saveArtifact('signature', validSignature, { grounding: 'inference', evidenceRefs: [] })),
+      runWithIdentity(anon, () => saveArtifact('positioning_statement', validPositioningStatement, { grounding: 'inference', evidenceRefs: [] })),
     ).rejects.toBeInstanceOf(UnauthenticatedError);
   });
 });
@@ -305,11 +305,11 @@ describe('artifactStore.saveArtifact (atomic supersede→insert→repoint RPC)',
 describe('artifactStore reads', () => {
   it('getCurrentArtifact selects the non-superseded row for the kind/scope', async () => {
     const stub = installStub();
-    stub.enqueue('select', { data: { id: 'art-cur', kind: 'signature' }, error: null });
-    const row = await runWithIdentity(authed, () => getCurrentArtifact('signature'));
+    stub.enqueue('select', { data: { id: 'art-cur', kind: 'positioning_statement' }, error: null });
+    const row = await runWithIdentity(authed, () => getCurrentArtifact('positioning_statement'));
     expect(row?.id).toBe('art-cur');
     const op = stub.ops[0];
-    expect(op.filters).toContainEqual({ op: 'eq', col: 'kind', val: 'signature' });
+    expect(op.filters).toContainEqual({ op: 'eq', col: 'kind', val: 'positioning_statement' });
     expect(op.filters).toContainEqual({ op: 'is', col: 'superseded_by', val: null });
     expect(op.filters).toContainEqual({ op: 'is', col: 'avatar_id', val: null });
   });
@@ -331,38 +331,38 @@ describe('artifactStore reads', () => {
   });
 });
 
-describe('artifactStore.saveSignatureChoice', () => {
-  it('writes a signature artifact AND a signatures row (atomic artifact RPC + signatures insert)', async () => {
+describe('artifactStore.savePositioningStatementChoice', () => {
+  it('writes a positioning statement artifact AND a positioning statements row (atomic artifact RPC + positioning statements insert)', async () => {
     const stub = installStub();
-    // Artifact is written FIRST (via the atomic RPC) so the signatures row can carry its
+    // Artifact is written FIRST (via the atomic RPC) so the positioning statements row can carry its
     // artifact_id FK.
-    stub.enqueue('rpc', { data: { id: 'art-sig-1' }, error: null }); // signature artifact (atomic save)
-    stub.enqueue('insert', { data: { id: 'sig-1', chosen_index: 1 }, error: null }); // signatures row
+    stub.enqueue('rpc', { data: { id: 'art-sig-1' }, error: null }); // positioning statement artifact (atomic save)
+    stub.enqueue('insert', { data: { id: 'sig-1', chosen_index: 1 }, error: null }); // positioning statements row
 
     const res = await runWithIdentity(authed, () =>
-      saveSignatureChoice({
-        options: validSignature.options,
+      savePositioningStatementChoice({
+        options: validPositioningStatement.options,
         chosenOption: 1,
         grounding: 'inference',
         evidenceRefs: [],
       }),
     );
 
-    expect(res.signature.id).toBe('sig-1');
+    expect(res.positioning_statement.id).toBe('sig-1');
     expect(res.artifact.id).toBe('art-sig-1');
-    // Artifact first (the chain, via the atomic save RPC), then the dedicated signatures row.
+    // Artifact first (the chain, via the atomic save RPC), then the dedicated positioning statements row.
     expect(stub.ops[0].verb).toBe('rpc');
     expect(stub.ops[0].table).toBe('save_artifact_atomic');
-    expect(stub.ops[0].payload).toMatchObject({ p_kind: 'signature', p_user_id: 'user-1' });
+    expect(stub.ops[0].payload).toMatchObject({ p_kind: 'positioning_statement', p_user_id: 'user-1' });
     // The persisted artifact carries the chosen option through the contract.
     expect((stub.ops[0].payload?.p_content as { chosen_option?: number }).chosen_option).toBe(1);
-    // signatures row uses the LIVE columns and links back to the artifact.
-    expect(stub.ops[1].table).toBe('signatures');
+    // positioning statements row uses the LIVE columns and links back to the artifact.
+    expect(stub.ops[1].table).toBe('positioning_statements');
     expect(stub.ops[1].payload).toMatchObject({
       user_id: 'user-1',
       chosen_index: 1,
-      all_options: validSignature.options,
-      signature_text: validSignature.options[0].sentence,
+      all_options: validPositioningStatement.options,
+      positioning_statement_text: validPositioningStatement.options[0].sentence,
       used_reviews: false,
       inference: true,
       artifact_id: 'art-sig-1',
@@ -373,7 +373,7 @@ describe('artifactStore.saveSignatureChoice', () => {
     const stub = installStub();
     await expect(
       runWithIdentity(authed, () =>
-        saveSignatureChoice({ options: validSignature.options, chosenOption: 99, grounding: 'inference', evidenceRefs: [] }),
+        savePositioningStatementChoice({ options: validPositioningStatement.options, chosenOption: 99, grounding: 'inference', evidenceRefs: [] }),
       ),
     ).rejects.toThrow(/not among/);
     expect(stub.ops).toHaveLength(0);

@@ -199,7 +199,7 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
   {
     name: "build_avatar_stage",
     description:
-      "Run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 triggers, s4 objections) or the full s1\u2192s5 pipeline against the user's resolved customer reviews, and persist the result as an artifact. Call this once the user has shared real review/customer evidence and wants their avatar built out; it WRITES (persists an RLS-scoped artifact per stage) and requires an authenticated Supabase caller. Grounded in the IDEA framework book \"What Captures the Heart Goes in the Cart\" \u2014 Avatar 2.0 forensic method (book skill: framework/01-customer/00-avatar-2.0); apply that method's stage definitions and do not invent guidance beyond it. Generative/forensic: only call with inputs the user explicitly provided (their reviews/avatar scope); never infer, default, or fabricate the inputs \u2014 if the reviews context is missing it returns needs_input, so ask the user for it rather than guessing. The s5 Signature auto-feed is operator-gated: leave allow_signature false unless the user has explicitly signed off that the review vocabulary is the customer's words, not the founder's.",
+      "Run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 triggers, s4 objections) or the full s1\u2192s5 pipeline against the user's resolved customer reviews, and persist the result as an artifact. Call this once the user has shared real review/customer evidence and wants their avatar built out; it WRITES (persists an RLS-scoped artifact per stage) and requires an authenticated Supabase caller. Grounded in the IDEA framework book \"What Captures the Heart Goes in the Cart\" \u2014 Avatar 2.0 forensic method (book skill: framework/01-customer/00-avatar-2.0); apply that method's stage definitions and do not invent guidance beyond it. Generative/forensic: only call with inputs the user explicitly provided (their reviews/avatar scope); never infer, default, or fabricate the inputs \u2014 if the reviews context is missing it returns needs_input, so ask the user for it rather than guessing. The s5 Positioning Statement auto-feed is operator-gated: leave allow_positioning_statement false unless the user has explicitly signed off that the review vocabulary is the customer's words, not the founder's.",
     input_schema: {
       "type": "object",
       "properties": {
@@ -218,9 +218,9 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
           "type": "string",
           "description": "Optional avatar scope; omit for the brand-level chain. Only pass an id the user provided."
         },
-        "allow_signature": {
+        "allow_positioning_statement": {
           "type": "boolean",
-          "description": "D2/R-015 operator sign-off (defaults false). Only set true when the user has explicitly confirmed the review vocabulary is the customer's own words; only then does the pipeline auto-feed evidence into the S5 Signature engine."
+          "description": "D2/R-015 operator sign-off (defaults false). Only set true when the user has explicitly confirmed the review vocabulary is the customer's own words; only then does the pipeline auto-feed evidence into the S5 Positioning Statement engine."
         }
       },
       "required": [
@@ -329,7 +329,7 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
   {
     name: "generate_canvas",
     description:
-      "Write tool: compile the Brand Canvas (gold Workbook A sheet 5) from the user's persisted artifact chain \u2014 the chosen Signature + the Avatar 2.0 S1-S4 forensic artifacts + the owner-intent slots (positioning, voice, target-customer beliefs) \u2014 by invoking the brand-canvas engine verbatim, validating the reply against the brand_canvas contract, and PERSISTING it as a brand_canvas artifact (RLS-scoped; requires an authenticated Supabase JWT). Call this only after the user has run the Avatar chain through S5 and persisted a chosen Signature; it takes no content inputs from you and reads everything from the persisted chain, so never fabricate, infer, or hand-author canvas fields. Returns needs_input (never runs ungrounded) when no chosen Signature exists \u2014 relay that ask to the user rather than guessing. Takes only an optional avatar_id to scope which chain to read; omit it for the brand-level chain.",
+      "Write tool: compile the Brand Canvas (gold Workbook A sheet 5) from the user's persisted artifact chain \u2014 the chosen Positioning Statement + the Avatar 2.0 S1-S4 forensic artifacts + the owner-intent slots (positioning, voice, target-customer beliefs) \u2014 by invoking the brand-canvas engine verbatim, validating the reply against the brand_canvas contract, and PERSISTING it as a brand_canvas artifact (RLS-scoped; requires an authenticated Supabase JWT). Call this only after the user has run the Avatar chain through S5 and persisted a chosen Positioning Statement; it takes no content inputs from you and reads everything from the persisted chain, so never fabricate, infer, or hand-author canvas fields. Returns needs_input (never runs ungrounded) when no chosen Positioning Statement exists \u2014 relay that ask to the user rather than guessing. Takes only an optional avatar_id to scope which chain to read; omit it for the brand-level chain.",
     input_schema: {
       "type": "object",
       "properties": {
@@ -520,7 +520,7 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
   {
     name: 'export_messaging_workbook',
     description:
-      "Write tool: build the multi-AVATAR messaging-perception workbook — for the set of selected avatars and ONE planned strategic message, judge how EACH avatar perceives it across the four IDEA dimensions (vocabulary / jobs-to-be-done / decision trigger / objections), scored ONLY from that avatar's persisted Avatar 2.0 forensics (S1-S4), rolled up to a weakest-link set verdict, and exported as a gold .xlsx (one perception sheet per avatar + a Message×Avatar matrix + a Set-strategy sheet). Call ONLY on the user's explicit request to build the workbook. Pass avatar_ids = the avatar set the user actually selected (never invented; resolve names→ids via list_avatars if needed). Pass message only if the user states the planned message; otherwise omit it and the set's chosen Signature is used. NEVER invent an avatar's words/jobs/objections/trigger or the message — an avatar with no Avatar 2.0 built is reported honestly as 'not yet analysable', never guessed. Set upload:true so the user gets a download link. Every avatar_id must be owned and share one brand.",
+      "Write tool: build the multi-AVATAR messaging-perception workbook — for the set of selected avatars and ONE planned strategic message, judge how EACH avatar perceives it across the four IDEA dimensions (vocabulary / jobs-to-be-done / decision trigger / objections), scored ONLY from that avatar's persisted Avatar 2.0 forensics (S1-S4), rolled up to a weakest-link set verdict, and exported as a gold .xlsx (one perception sheet per avatar + a Message×Avatar matrix + a Set-strategy sheet). Call ONLY on the user's explicit request to build the workbook. Pass avatar_ids = the avatar set the user actually selected (never invented; resolve names→ids via list_avatars if needed). Pass message only if the user states the planned message; otherwise omit it and the set's chosen Positioning Statement is used. NEVER invent an avatar's words/jobs/objections/trigger or the message — an avatar with no Avatar 2.0 built is reported honestly as 'not yet analysable', never guessed. Set upload:true so the user gets a download link. Every avatar_id must be owned and share one brand.",
     input_schema: {
       type: 'object',
       properties: {
@@ -531,7 +531,7 @@ export const MCP_TOOL_DEFS: AnthropicToolDef[] = [
         },
         message: {
           type: 'string',
-          description: "Optional: the planned strategic message to test perception against. Omit to use the set's chosen Signature.",
+          description: "Optional: the planned strategic message to test perception against. Omit to use the set's chosen Positioning Statement.",
         },
         upload: {
           type: 'boolean',

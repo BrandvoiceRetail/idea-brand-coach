@@ -16,12 +16,12 @@ import { ForensicAvatarBuilder } from '@/components/v2/forensic/ForensicAvatarBu
 import { ExportReadinessModal } from '@/components/v2/ExportReadinessModal';
 import { ChatMessageList } from '@/components/v2/ChatMessageList';
 import { ChatInputBar } from '@/components/v2/ChatInputBar';
-import { SignatureReveal } from '@/components/v2/signature/SignatureReveal';
+import { PositioningStatementReveal } from '@/components/v2/positioning-statement/PositioningStatementReveal';
 import { MilestoneOverlay } from '@/components/v2/MilestoneOverlay';
 import { BatchReviewOrchestrator } from '@/components/v2/BatchReviewOrchestrator';
 import { useBrandCoachV2State } from '@/hooks/v2/useBrandCoachV2State';
 import { useServices } from '@/services/ServiceProvider';
-import { SavedSignature } from '@/services/interfaces/ISignatureService';
+import { SavedPositioningStatement } from '@/services/interfaces/IPositioningStatementService';
 
 /**
  * BrandCoachV2 Page — Thin Orchestrator
@@ -31,16 +31,16 @@ import { SavedSignature } from '@/services/interfaces/ISignatureService';
  * This component focuses purely on rendering and composition.
  */
 const BrandCoachV2 = (): JSX.Element => {
-  const { signatureService } = useServices();
-  // The user's saved Signature pick — shown outside the reveal dialog so the
+  const { positioningStatementService } = useServices();
+  // The user's saved Positioning Statement pick — shown outside the reveal dialog so the
   // recognition moment survives reloads (persistence is the Alpha bar).
-  const [savedSignature, setSavedSignature] = React.useState<SavedSignature | null>(null);
+  const [savedPositioningStatement, setSavedPositioningStatement] = React.useState<SavedPositioningStatement | null>(null);
   React.useEffect(() => {
-    signatureService
-      .getLatestSignature()
-      .then(setSavedSignature)
-      .catch((error) => console.warn('[BrandCoachV2] Failed to load saved Signature:', error));
-  }, [signatureService]);
+    positioningStatementService
+      .getLatestPositioningStatement()
+      .then(setSavedPositioningStatement)
+      .catch((error) => console.warn('[BrandCoachV2] Failed to load saved Positioning Statement:', error));
+  }, [positioningStatementService]);
 
   const {
     // State
@@ -279,13 +279,13 @@ const BrandCoachV2 = (): JSX.Element => {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <SignatureReveal
+                <PositioningStatementReveal
                   messages={displayMessages}
                   fieldValues={fieldValues}
                   preloadedReviews={preloadedReviews}
                   preloadedReviewCount={preloadedReviewCount}
                   sessionId={currentSessionId ?? null}
-                  onSignatureSaved={setSavedSignature}
+                  onPositioningStatementSaved={setSavedPositioningStatement}
                 />
                 {pendingCount > 0 && (
                   <Button variant="outline" size="sm" className="text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={handleReviewAcceptAll} title={`Accept all ${pendingCount} pending field(s)`}>
@@ -304,13 +304,13 @@ const BrandCoachV2 = (): JSX.Element => {
               </div>
             </div>
 
-            {savedSignature && (
+            {savedPositioningStatement && (
               <div
                 className="px-4 py-1.5 text-xs italic text-amber-700 bg-amber-500/10 border-b border-amber-500/20 truncate"
-                title={savedSignature.signatureText}
-                data-testid="saved-signature-strip"
+                title={savedPositioningStatement.positioningStatementText}
+                data-testid="saved-positioning statement-strip"
               >
-                Your Signature: {savedSignature.signatureText}
+                Your Positioning Statement: {savedPositioningStatement.positioningStatementText}
               </div>
             )}
 

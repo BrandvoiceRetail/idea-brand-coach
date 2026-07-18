@@ -15,7 +15,7 @@ export type ArtifactKind =
   | 'avatar_s2_jobmap'
   | 'avatar_s3_triggers'
   | 'avatar_s4_objections'
-  | 'signature'
+  | 'positioning_statement'
   | 'brand_canvas'
   | 'export_brief'
   | 'audit_x_idea'

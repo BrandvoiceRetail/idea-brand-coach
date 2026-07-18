@@ -29,14 +29,14 @@ const SATISFIED: ReadonlySet<SlotStatus> = new Set<SlotStatus>(['filled-evidence
 
 /** The two gold workbooks, each a union of the artifact kinds that compose its sheets. */
 const WORKBOOK_KINDS: Record<'workbook_a' | 'workbook_b', readonly ArtifactKind[]> = {
-  // Workbook A: Trust Gap → Avatar S1-S4 + Signature → Canvas → Brief → Audit×IDEA.
+  // Workbook A: Trust Gap → Avatar S1-S4 + Positioning Statement → Canvas → Brief → Audit×IDEA.
   workbook_a: [
     'diagnostic_interpretation',
     'avatar_s1_vocab',
     'avatar_s2_jobmap',
     'avatar_s3_triggers',
     'avatar_s4_objections',
-    'signature',
+    'positioning_statement',
     'brand_canvas',
     'export_brief',
     'audit_x_idea',

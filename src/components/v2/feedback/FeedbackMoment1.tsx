@@ -1,9 +1,9 @@
 /**
  * FeedbackMoment1
  *
- * The Moment 1 feedback prompt — shown after a user picks their Signature. A self-contained
+ * The Moment 1 feedback prompt — shown after a user picks their Positioning Statement. A self-contained
  * dialog with three v3-framed prompts; on submit it writes a `feedback_events` row tagged
- * `moment_1` with payload {chosen_signature, scores, free_text}. Dismissing logs a `skipped`
+ * `moment_1` with payload {chosen_positioning_statement, scores, free_text}. Dismissing logs a `skipped`
  * event. A thank-you state confirms the submit.
  *
  * Non-blocking: a failed write never blocks the flow (see useFeedbackEvent / errors.md).
@@ -30,8 +30,8 @@ interface FeedbackMoment1Props {
   open: boolean;
   /** Called after the user submits or dismisses. The parent should set open=false. */
   onClose: () => void;
-  /** The Signature the user just picked. */
-  chosenSignature: string;
+  /** The Positioning Statement the user just picked. */
+  chosenPositioningStatement: string;
   /** Optional chat session id (null/undefined when unavailable). */
   sessionId?: string | null;
 }
@@ -76,12 +76,12 @@ function FeltRightGroup({
 export function FeedbackMoment1({
   open,
   onClose,
-  chosenSignature,
+  chosenPositioningStatement,
   sessionId,
 }: FeedbackMoment1Props): JSX.Element {
   const { isSubmitting, recordEvent } = useFeedbackEvent();
   const [scoreFeltRight, setScoreFeltRight] = useState<FeltRight | null>(null);
-  const [signatureFeltRight, setSignatureFeltRight] = useState<FeltRight | null>(null);
+  const [positioningStatementFeltRight, setPositioningStatementFeltRight] = useState<FeltRight | null>(null);
   const [freeText, setFreeText] = useState('');
   const [thanked, setThanked] = useState(false);
   // True once the user has either submitted or skipped, so closing never double-writes.
@@ -94,10 +94,10 @@ export function FeedbackMoment1({
       moment: 'moment_1',
       sessionId,
       payload: {
-        chosen_signature: chosenSignature,
+        chosen_positioning_statement: chosenPositioningStatement,
         scores: {
           score_felt_right: scoreFeltRight ?? 'unsure',
-          signature_felt_right: signatureFeltRight ?? 'unsure',
+          positioning_statement_felt_right: positioningStatementFeltRight ?? 'unsure',
         },
         free_text: freeText.trim(),
       },
@@ -112,7 +112,7 @@ export function FeedbackMoment1({
     void recordEvent({
       moment: 'moment_1',
       sessionId,
-      payload: { skipped: true, chosen_signature: chosenSignature },
+      payload: { skipped: true, chosen_positioning_statement: chosenPositioningStatement },
     });
   };
 
@@ -151,9 +151,9 @@ export function FeedbackMoment1({
                 onChange={setScoreFeltRight}
               />
               <FeltRightGroup
-                question="Did the positioning feel right?"
-                value={signatureFeltRight}
-                onChange={setSignatureFeltRight}
+                question="Did the positioning statement feel right?"
+                value={positioningStatementFeltRight}
+                onChange={setPositioningStatementFeltRight}
               />
               <div className="space-y-2">
                 <label htmlFor="feedback-free-text" className="text-sm font-medium">

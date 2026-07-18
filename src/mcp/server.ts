@@ -37,8 +37,8 @@ import { registerGetAssetHistoryTool } from './tools/getAssetHistory.js';
 import { registerLogAssetTool } from './tools/logAsset.js';
 import { registerUpdateAssetStatusTool } from './tools/updateAssetStatus.js';
 import { registerRecordAssessmentTool } from './tools/recordAssessment.js';
-import { registerGenerateSignatureTool } from './tools/generateSignature.js';
-import { registerPersistSignatureTool } from './tools/persistSignature.js';
+import { registerGeneratePositioningStatementTool } from './tools/generatePositioningStatement.js';
+import { registerPersistPositioningStatementTool } from './tools/persistPositioningStatement.js';
 import { registerGetContextStatusTool } from './tools/getContextStatus.js';
 import { registerProvideContextTool } from './tools/provideContext.js';
 import { registerRememberTool } from './tools/remember.js';
@@ -204,11 +204,11 @@ export async function createServer(
   // respectively (see STATUS.xlsx).
   registerRunTrustGapTool(server);
 
-  // Signature output engine: generate_signature wraps the reveal-signature edge fn
-  // (verbatim-wrap), persist_signature writes the chosen option through the
-  // JWT-bound artifactStore (signatures row + signature artifact chain).
-  registerGenerateSignatureTool(server, edge);
-  registerPersistSignatureTool(server);
+  // Positioning Statement output engine: generate_positioning_statement wraps the reveal-positioning-statement edge fn
+  // (verbatim-wrap), persist_positioning_statement writes the chosen option through the
+  // JWT-bound artifactStore (positioning statements row + positioning statement artifact chain).
+  registerGeneratePositioningStatementTool(server, edge);
+  registerPersistPositioningStatementTool(server);
 
   // Output-engine context layer (manifest §4/§5/§6): get_context_status reports the
   // 18-slot fill map + needs_input; provide_context routes owner answers through the
@@ -226,8 +226,8 @@ export async function createServer(
   // Avatar 2.0 forensic engine: build_avatar_stage runs one forensic stage (s1
   // vocabulary -> s2 job map -> s3 triggers -> s4 objections) or the full S1->S5
   // pipeline through avatarPipeline. Each stage grounds in resolved reviews + prior
-  // artifacts and persists an RLS-scoped artifact; the S5 Signature auto-feed is
-  // D2/R-015 gated behind allow_signature. gateWrite identity-gated.
+  // artifacts and persists an RLS-scoped artifact; the S5 Positioning Statement auto-feed is
+  // D2/R-015 gated behind allow_positioning_statement. gateWrite identity-gated.
   registerBuildAvatarStageTool(server);
 
   // Output-engine generators (Phase 4, manifest §2 sheets 3/5/6/7): the
@@ -294,7 +294,7 @@ export async function createServer(
   registerExportWorkbookTool(server);
 
   // Output engine SET variant: export_messaging_workbook renders the multi-avatar
-  // messaging-perception workbook — for ONE planned message (param, else the set Signature),
+  // messaging-perception workbook — for ONE planned message (param, else the set Positioning Statement),
   // how each selected avatar perceives it across the four IDEA dimensions, judged ONLY from
   // that avatar's persisted Avatar 2.0 forensics, rolled up to a weakest-link set verdict.
   // Unlike export_workbook (pure read→render), this tool DOES the AI + persistence (so the

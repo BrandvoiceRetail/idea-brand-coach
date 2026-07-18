@@ -30,7 +30,7 @@ export interface PathStub {
   markdown: string;
 }
 
-/** The signature line — same truth that runs through everything Trevor coaches. */
+/** The positioning statement line — same truth that runs through everything Trevor coaches. */
 const TAGLINE = 'What captures the heart goes in the cart.';
 
 /** MCP Apps (io.modelcontextprotocol/ui) resource URI for the interactive panel. */

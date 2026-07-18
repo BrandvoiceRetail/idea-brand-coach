@@ -23,7 +23,7 @@ export function registerAuditAssetTool(server: McpServer): void {
     {
       title: 'Audit a funnel asset',
       description:
-        'Re-score one funnel asset against the avatar + Signature on the four IDEA dimensions via the audit-asset engine, and return the persisted verdict (status + scores + a concrete fix). Identity-gated; RLS-scoped to the caller; reuses the live edge function (no re-scoring here).',
+        'Re-score one funnel asset against the avatar + Positioning Statement on the four IDEA dimensions via the audit-asset engine, and return the persisted verdict (status + scores + a concrete fix). Identity-gated; RLS-scoped to the caller; reuses the live edge function (no re-scoring here).',
       inputSchema,
     },
     async ({ asset_id }) => {

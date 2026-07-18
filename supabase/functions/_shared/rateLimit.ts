@@ -23,7 +23,7 @@ export function clientIp(req: Request): string {
 
 /**
  * Cheaply read the `sub` (user id) claim from a bearer JWT WITHOUT verifying the
- * signature — used ONLY to bucket the rate limiter per user. Auth is still
+ * positioning statement — used ONLY to bucket the rate limiter per user. Auth is still
  * enforced downstream (supabase.auth.getUser); this is just a cheap, early key.
  * Returns null on any parse failure (caller falls back to IP).
  */

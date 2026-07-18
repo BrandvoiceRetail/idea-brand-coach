@@ -4,7 +4,7 @@
  *
  * Imports Amazon listings via the `import-product-data` edge function and
  * reads back persisted `user_products` / `user_product_reviews` rows for the
- * three downstream consumers (Trust Gap evidence, Signature reveal reviews,
+ * three downstream consumers (Trust Gap evidence, Positioning Statement reveal reviews,
  * coach chat product context).
  */
 
@@ -112,7 +112,7 @@ export class SupabaseProductDataService implements IProductDataService {
   /**
    * Drop duplicate reviews across products. Variant ASINs of the same parent
    * share Amazon's parent-level review corpus, so importing two variants stores
-   * the same reviews twice; without this the Signature prefill and Trust Gap
+   * the same reviews twice; without this the Positioning Statement prefill and Trust Gap
    * evidence repeat themselves. Keyed on the normalised body prefix (same
    * scheme as the scraper-side dedupe); first occurrence wins (newest-first).
    */

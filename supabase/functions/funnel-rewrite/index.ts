@@ -9,12 +9,12 @@ import {
 
 /**
  * funnel-rewrite — the "coach rewrites it for you" step of Fix-with-coach.
- * Given an audited asset, produces revised ON-BRAND copy (per avatar + Signature, applying
+ * Given an audited asset, produces revised ON-BRAND copy (per avatar + Positioning Statement, applying
  * the audit's fix) plus a lightweight publish-filter: flags risky/unverifiable claims.
  * Request: { assetId }  →  { ok, revised, flags: string[] }
  *
  * COMPETITOR-AGENTS P4 (ST-4) — second request shape, no asset round-trip:
- * { touchpoint_id?, current_copy?, competitor_brief?, avatar_context?, signature_context? }
+ * { touchpoint_id?, current_copy?, competitor_brief?, avatar_context?, positioning_statement_context? }
  *   →  { rewrite, angle_note }
  * When `assetId` is absent the request is treated as a stateless countermeasure
  * rewrite: the competitor insight's gap_to_our_avatar + strategic_angle drive the
@@ -88,9 +88,9 @@ serve(async (req) => {
     const { data: asset, error: aErr } = await supabase.from("brand_assets").select("*").eq("id", assetId).single();
     if (aErr || !asset) throw new Error("asset not found");
 
-    let sig = (await supabase.from("signatures").select("signature_text").eq("avatar_id", asset.avatar_id).order("created_at", { ascending: false }).limit(1).maybeSingle()).data;
-    if (!sig) sig = (await supabase.from("signatures").select("signature_text").is("avatar_id", null).order("created_at", { ascending: false }).limit(1).maybeSingle()).data;
-    const signatureText = sig?.signature_text ?? "(no Signature set)";
+    let sig = (await supabase.from("positioning_statements").select("positioning_statement_text").eq("avatar_id", asset.avatar_id).order("created_at", { ascending: false }).limit(1).maybeSingle()).data;
+    if (!sig) sig = (await supabase.from("positioning_statements").select("positioning_statement_text").is("avatar_id", null).order("created_at", { ascending: false }).limit(1).maybeSingle()).data;
+    const positioningStatementText = sig?.positioning_statement_text ?? "(no Positioning Statement set)";
 
     const { data: fv } = await supabase.from("avatar_field_values").select("field_id, field_value").eq("avatar_id", asset.avatar_id);
     const map = {};
@@ -98,7 +98,7 @@ serve(async (req) => {
     const avatarCtx = CORE_FIELDS.map((f) => (map[f] ? `- ${f}: ${String(map[f]).slice(0, 300)}` : "")).filter(Boolean).join("\n") || "(avatar not filled in)";
 
     const fix = asset.audit_result?.fix ?? "Make it on-brand.";
-    const system = `You are Trevor, a brand coach. Rewrite ONE brand asset's copy so it is on-strategy — true to the Signature and the avatar — applying the recommended fix. Keep it the same kind of asset and length. Then run a publish filter: list any claims that are risky, unverifiable, or could mislead (guarantees, superlatives, health/earnings claims). Return via the rewrite tool.`;
+    const system = `You are Trevor, a brand coach. Rewrite ONE brand asset's copy so it is on-strategy — true to the Positioning Statement and the avatar — applying the recommended fix. Keep it the same kind of asset and length. Then run a publish filter: list any claims that are risky, unverifiable, or could mislead (guarantees, superlatives, health/earnings claims). Return via the rewrite tool.`;
     const userText = `TOUCHPOINT: ${asset.touchpoint_id} (stage ${asset.stage})
 WHAT IT IS: ${asset.context_description}
 CURRENT COPY: ${asset.content_text ? String(asset.content_text).slice(0, 3000) : "(screenshot only — infer from the description)"}
@@ -107,8 +107,8 @@ RECOMMENDED FIX: ${fix}
 AVATAR + BRAND STRATEGY:
 ${avatarCtx}
 
-CURRENT SIGNATURE:
-${signatureText}`;
+CURRENT POSITIONING STATEMENT:
+${positioningStatementText}`;
 
     const body = {
       model: SONNET_MODEL, max_tokens: 1200, system,

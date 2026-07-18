@@ -9,7 +9,7 @@
  * so the SPA does not import the MCP/edge `.js` ESM contract modules.
  */
 
-/** The four forensic stages the SPA surfaces (S5/signature is D2/R-015 gated, out of SPA scope). */
+/** The four forensic stages the SPA surfaces (S5/positioning statement is D2/R-015 gated, out of SPA scope). */
 export type ForensicStage = 's1' | 's2' | 's3' | 's4';
 
 /** Ordered stage list for the stepper / pipeline run. */

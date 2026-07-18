@@ -4,8 +4,8 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { registerGenerateSignatureTool } from '../tools/generateSignature.js';
-import { registerPersistSignatureTool } from '../tools/persistSignature.js';
+import { registerGeneratePositioningStatementTool } from '../tools/generatePositioningStatement.js';
+import { registerPersistPositioningStatementTool } from '../tools/persistPositioningStatement.js';
 import { EdgeFnClient, type EdgeFnResult } from '../edgeFn/client.js';
 import { __setUserSupabaseFactory } from '../supabaseUser.js';
 import { runWithIdentity, type Identity } from '../context/identity.js';
@@ -19,7 +19,7 @@ interface RevealResponse {
   inference: boolean;
 }
 
-/** Stub EdgeFnClient returning a canned reveal-signature reply (and recording the body). */
+/** Stub EdgeFnClient returning a canned reveal-positioning-statement reply (and recording the body). */
 function stubEdgeFn(
   reply: RevealResponse | null,
   capture?: (body: unknown) => void,
@@ -27,16 +27,16 @@ function stubEdgeFn(
   return {
     invoke: async <T>(name: string, body: unknown): Promise<EdgeFnResult<T>> => {
       capture?.(body);
-      if (name === 'reveal-signature' && reply) return { ok: true, data: reply as T };
+      if (name === 'reveal-positioning-statement' && reply) return { ok: true, data: reply as T };
       return { ok: false, data: null, note: 'unavailable' };
     },
   } as unknown as EdgeFnClient;
 }
 
-/** Build a fresh server with only the signature tools registered, connect a client. */
+/** Build a fresh server with only the positioning statement tools registered, connect a client. */
 async function connectGenerate(edgeFn: EdgeFnClient): Promise<Client> {
   const server = new McpServer({ name: 'test', version: '0.0.0' });
-  registerGenerateSignatureTool(server, edgeFn);
+  registerGeneratePositioningStatementTool(server, edgeFn);
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
   await Promise.all([server.connect(st), client.connect(ct)]);
@@ -45,7 +45,7 @@ async function connectGenerate(edgeFn: EdgeFnClient): Promise<Client> {
 
 async function connectPersist(): Promise<Client> {
   const server = new McpServer({ name: 'test', version: '0.0.0' });
-  registerPersistSignatureTool(server);
+  registerPersistPositioningStatementTool(server);
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
   await Promise.all([server.connect(st), client.connect(ct)]);
@@ -53,7 +53,7 @@ async function connectPersist(): Promise<Client> {
 }
 
 /** Minimal chainable Supabase stub: insert().select().single() resolves a queued row. */
-function installSignatureStub(): { tables: string[]; payloads: Array<Record<string, unknown>> } {
+function installPositioningStatementStub(): { tables: string[]; payloads: Array<Record<string, unknown>> } {
   const tables: string[] = [];
   const payloads: Array<Record<string, unknown>> = [];
   let inserted = 0;
@@ -87,7 +87,7 @@ function installSignatureStub(): { tables: string[]; payloads: Array<Record<stri
       },
       single() {
         inserted += 1;
-        const id = table === 'signatures' ? 'sig-1' : 'art-1';
+        const id = table === 'positioning_statements' ? 'sig-1' : 'art-1';
         return Promise.resolve({ data: { id, ...payload }, error: null });
       },
       maybeSingle() {
@@ -119,8 +119,8 @@ function installSignatureStub(): { tables: string[]; payloads: Array<Record<stri
 
 afterEach(() => __setUserSupabaseFactory(null));
 
-describe('generate_signature tool', () => {
-  it('wraps reveal-signature and maps options into the contract row shape (evidence grounding)', async () => {
+describe('generate_positioning_statement tool', () => {
+  it('wraps reveal-positioning-statement and maps options into the contract row shape (evidence grounding)', async () => {
     let sentBody: unknown;
     const edge = stubEdgeFn(
       { options: ["Not buying X, they're buying Y.", 'The vault their cards deserve.'], usedReviews: true, inference: false },
@@ -130,7 +130,7 @@ describe('generate_signature tool', () => {
     );
     const client = await connectGenerate(edge);
     const res = await runWithIdentity(authed, () =>
-      client.callTool({ name: 'generate_signature', arguments: { reviews: 'holds my whole PSA set' } }),
+      client.callTool({ name: 'generate_positioning_statement', arguments: { reviews: 'holds my whole PSA set' } }),
     );
     const sc = res.structuredContent as {
       ok: boolean;
@@ -153,7 +153,7 @@ describe('generate_signature tool', () => {
     const edge = stubEdgeFn({ options: ['An on-brand candidate.'], usedReviews: false, inference: true });
     const client = await connectGenerate(edge);
     const res = await runWithIdentity(authed, () =>
-      client.callTool({ name: 'generate_signature', arguments: { fields: { tone: 'confident' } } }),
+      client.callTool({ name: 'generate_positioning_statement', arguments: { fields: { tone: 'confident' } } }),
     );
     const sc = res.structuredContent as { ok: boolean; grounding: string; inference: boolean };
     expect(sc.ok).toBe(true);
@@ -165,7 +165,7 @@ describe('generate_signature tool', () => {
     const edge = stubEdgeFn(null);
     const client = await connectGenerate(edge);
     const res = await runWithIdentity(authed, () =>
-      client.callTool({ name: 'generate_signature', arguments: { reviews: 'x' } }),
+      client.callTool({ name: 'generate_positioning_statement', arguments: { reviews: 'x' } }),
     );
     const sc = res.structuredContent as { ok: boolean; options: unknown[] };
     expect(sc.ok).toBe(false);
@@ -173,7 +173,7 @@ describe('generate_signature tool', () => {
   });
 });
 
-describe('persist_signature tool', () => {
+describe('persist_positioning_statement tool', () => {
   const options = [
     { option: 1, sentence: 'Built for collectors who refuse to compromise.' },
     { option: 2, sentence: 'The vault your cards deserve.' },
@@ -182,7 +182,7 @@ describe('persist_signature tool', () => {
   it('denies anonymous callers before any store write', async () => {
     const client = await connectPersist(); // no stub installed: a leaked write would throw
     const res = await client.callTool({
-      name: 'persist_signature',
+      name: 'persist_positioning_statement',
       arguments: { options, chosen_index: 1 },
     });
     const sc = res.structuredContent as { ok: boolean; note: string };
@@ -191,41 +191,41 @@ describe('persist_signature tool', () => {
     expect(sc.note).toMatch(/unauthenticated/i);
   });
 
-  it('round-trips a chosen option through saveSignatureChoice (signatures + artifact rows)', async () => {
-    const captured = installSignatureStub();
+  it('round-trips a chosen option through savePositioningStatementChoice (positioning statements + artifact rows)', async () => {
+    const captured = installPositioningStatementStub();
     const client = await connectPersist();
     const res = await runWithIdentity(authed, () =>
       client.callTool({
-        name: 'persist_signature',
+        name: 'persist_positioning_statement',
         arguments: { options, chosen_index: 2, used_reviews: true },
       }),
     );
     const sc = res.structuredContent as {
       ok: boolean;
-      signature_id: string;
+      positioning_statement_id: string;
       artifact_id: string;
       chosen_option: number;
       grounding: string;
     };
     expect(sc.ok).toBe(true);
-    expect(sc.signature_id).toBe('sig-1');
+    expect(sc.positioning_statement_id).toBe('sig-1');
     expect(sc.artifact_id).toBe('art-1');
     expect(sc.chosen_option).toBe(2);
     expect(sc.grounding).toBe('evidence');
-    // Both stores written: the dedicated signatures row and the chain artifact.
-    expect(captured.tables).toContain('signatures');
+    // Both stores written: the dedicated positioning statements row and the chain artifact.
+    expect(captured.tables).toContain('positioning_statements');
     expect(captured.tables).toContain('artifacts');
-    // The signatures row uses the live `chosen_index` column (not chosen_option).
+    // The positioning statements row uses the live `chosen_index` column (not chosen_option).
     const sigPayload = captured.payloads.find((p) => p.chosen_index === 2);
     expect(sigPayload).toBeDefined();
   });
 
   it('rejects a chosen_index not present in the options (ArtifactStoreError surfaced)', async () => {
-    installSignatureStub();
+    installPositioningStatementStub();
     const client = await connectPersist();
     const res = await runWithIdentity(authed, () =>
       client.callTool({
-        name: 'persist_signature',
+        name: 'persist_positioning_statement',
         arguments: { options, chosen_index: 99 },
       }),
     );

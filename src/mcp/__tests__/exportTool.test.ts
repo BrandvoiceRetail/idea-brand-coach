@@ -35,7 +35,7 @@ import {
 import type { ArtifactRow } from '../service/artifactStore.js';
 import type {
   ArtifactKind,
-  SignatureOutput,
+  PositioningStatementOutput,
   MarketingAuditOutput,
   RolloutPlanOutput,
 } from '../contracts/index.js';
@@ -45,8 +45,8 @@ const authed: Identity = { userId: 'user-1', token: 'jwt-abc', authenticated: tr
 
 // --- Fixtures -------------------------------------------------------------------------
 
-/** A contract-valid chosen Signature (the simplest single-sheet Workbook A chain). */
-const SIGNATURE_CONTENT: SignatureOutput = {
+/** A contract-valid chosen Positioning Statement (the simplest single-sheet Workbook A chain). */
+const POSITIONING_STATEMENT_CONTENT: PositioningStatementOutput = {
   options: [
     { option: 1, sentence: 'Built for collectors who refuse to compromise.' },
     { option: 2, sentence: 'The vault your cards deserve.' },
@@ -174,22 +174,22 @@ function isXlsxBuffer(buffer: Buffer): boolean {
 // runExportWorkbook — Workbook A
 // ======================================================================================
 describe('runExportWorkbook (Workbook A)', () => {
-  it('renders + writes a valid .xlsx from a signature-only chain', async () => {
+  it('renders + writes a valid .xlsx from a positioning statement-only chain', async () => {
     const cap = makeWriteCapture();
-    const chain = [artifactRow('signature', SIGNATURE_CONTENT)];
+    const chain = [artifactRow('positioning_statement', POSITIONING_STATEMENT_CONTENT)];
     const res = await runExportWorkbook(
       { which: 'A', outDir: '/tmp/test-out' },
       deps({ getChain: makeGetChain(chain), writeFile: cap.writeFile }),
     );
     expect(res.status).toBe('exported');
     if (res.status !== 'exported') return;
-    // The avatar sheet renders from the signature artifact.
+    // The avatar sheet renders from the positioning statement artifact.
     expect(res.sheets).toContain('4. Avatar 2.0 (IV)');
     expect(res.path.endsWith('.xlsx')).toBe(true);
     expect(res.path.startsWith('/tmp/test-out')).toBe(true);
-    // missing lists every Workbook A kind absent from the chain (all but signature).
+    // missing lists every Workbook A kind absent from the chain (all but positioning statement).
     expect(res.missing).toContain('brand_canvas');
-    expect(res.missing).not.toContain('signature');
+    expect(res.missing).not.toContain('positioning_statement');
     // The buffer actually written is a valid xlsx (PK zip magic).
     expect(cap.calls).toHaveLength(1);
     expect(isXlsxBuffer(cap.calls[0].buffer)).toBe(true);
@@ -197,7 +197,7 @@ describe('runExportWorkbook (Workbook A)', () => {
 
   it('weaves a custom brand name into the filename', async () => {
     const cap = makeWriteCapture();
-    const chain = [artifactRow('signature', SIGNATURE_CONTENT)];
+    const chain = [artifactRow('positioning_statement', POSITIONING_STATEMENT_CONTENT)];
     const res = await runExportWorkbook(
       { which: 'A', outDir: '/tmp/test-out', brandName: 'Acme Cards' },
       deps({ getChain: makeGetChain(chain), writeFile: cap.writeFile }),
@@ -224,7 +224,7 @@ describe('runExportWorkbook (Workbook A)', () => {
   it('ensures the out_dir exists (mkdir -p) BEFORE writing the file (R3)', async () => {
     const cap = makeWriteCapture();
     const dirCap = makeEnsureDirCapture();
-    const chain = [artifactRow('signature', SIGNATURE_CONTENT)];
+    const chain = [artifactRow('positioning_statement', POSITIONING_STATEMENT_CONTENT)];
     const res = await runExportWorkbook(
       { which: 'A', outDir: '/tmp/does/not/exist/yet' },
       deps({ getChain: makeGetChain(chain), writeFile: cap.writeFile, ensureDir: dirCap.ensureDir }),
@@ -243,7 +243,7 @@ describe('runExportWorkbook (Workbook A)', () => {
     const base = await mkdtemp(path.join(os.tmpdir(), 'export-r3-'));
     const nested = path.join(base, 'a', 'b', 'c'); // does not exist yet
     try {
-      const chain = [artifactRow('signature', SIGNATURE_CONTENT)];
+      const chain = [artifactRow('positioning_statement', POSITIONING_STATEMENT_CONTENT)];
       const res = await runExportWorkbook(
         { which: 'A', outDir: nested },
         { getChain: makeGetChain(chain) },
@@ -315,7 +315,7 @@ describe('runExportWorkbook (Workbook B)', () => {
 describe('runExportWorkbook upload (never-fail)', () => {
   it('still exports the local file when the storage upload degrades', async () => {
     const cap = makeWriteCapture();
-    const chain = [artifactRow('signature', SIGNATURE_CONTENT)];
+    const chain = [artifactRow('positioning_statement', POSITIONING_STATEMENT_CONTENT)];
     const res = await runWithIdentity(authed, () =>
       runExportWorkbook(
         { which: 'A', upload: true },
@@ -331,7 +331,7 @@ describe('runExportWorkbook upload (never-fail)', () => {
 
   it('records a successful upload path under the caller id', async () => {
     const cap = makeWriteCapture();
-    const chain = [artifactRow('signature', SIGNATURE_CONTENT)];
+    const chain = [artifactRow('positioning_statement', POSITIONING_STATEMENT_CONTENT)];
     const res = await runWithIdentity(authed, () =>
       runExportWorkbook(
         { which: 'A', upload: true },
@@ -347,7 +347,7 @@ describe('runExportWorkbook upload (never-fail)', () => {
   it('does not upload when upload is omitted', async () => {
     let uploadCalled = false;
     const cap = makeWriteCapture();
-    const chain = [artifactRow('signature', SIGNATURE_CONTENT)];
+    const chain = [artifactRow('positioning_statement', POSITIONING_STATEMENT_CONTENT)];
     const res = await runExportWorkbook(
       { which: 'A' },
       deps({
@@ -382,7 +382,7 @@ describe('export_workbook tool surface', () => {
   it('denies anonymous callers before any work (gateWrite)', async () => {
     const cap = makeWriteCapture();
     const client = await connect((s) =>
-      registerExportWorkbookTool(s, deps({ getChain: makeGetChain([artifactRow('signature', SIGNATURE_CONTENT)]), writeFile: cap.writeFile })),
+      registerExportWorkbookTool(s, deps({ getChain: makeGetChain([artifactRow('positioning_statement', POSITIONING_STATEMENT_CONTENT)]), writeFile: cap.writeFile })),
     );
     const res = await client.callTool({ name: 'export_workbook', arguments: { which: 'A' } });
     const sc = res.structuredContent as { ok: boolean; note: string };
@@ -394,7 +394,7 @@ describe('export_workbook tool surface', () => {
 
   it('exports for an authenticated caller and echoes the path + sheets', async () => {
     const cap = makeWriteCapture();
-    const chain = [artifactRow('signature', SIGNATURE_CONTENT)];
+    const chain = [artifactRow('positioning_statement', POSITIONING_STATEMENT_CONTENT)];
     const client = await connect((s) =>
       registerExportWorkbookTool(s, deps({ getChain: makeGetChain(chain), writeFile: cap.writeFile })),
     );

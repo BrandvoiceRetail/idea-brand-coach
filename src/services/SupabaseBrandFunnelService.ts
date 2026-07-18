@@ -47,14 +47,14 @@ function toTest(row: TestRow): BrandTest {
  * Follows the `{ data, error }` convention — never throws across the boundary.
  */
 export class SupabaseBrandFunnelService implements IBrandFunnelService {
-  /** Current Signature version for an avatar: avatar-scoped first, else latest brand-level. */
-  async currentSignatureVersion(avatarId: string): Promise<string | null> {
-    const scoped = await supabase.from('signatures')
+  /** Current Positioning Statement version for an avatar: avatar-scoped first, else latest brand-level. */
+  async currentPositioningStatementVersion(avatarId: string): Promise<string | null> {
+    const scoped = await supabase.from('positioning_statements')
       .select('id, artifact_id').eq('avatar_id', avatarId)
       .order('created_at', { ascending: false }).limit(1).maybeSingle();
     let sig = scoped.data;
     if (!sig) {
-      const brandLevel = await supabase.from('signatures')
+      const brandLevel = await supabase.from('positioning_statements')
         .select('id, artifact_id').is('avatar_id', null)
         .order('created_at', { ascending: false }).limit(1).maybeSingle();
       sig = brandLevel.data;
@@ -385,7 +385,7 @@ export class SupabaseBrandFunnelService implements IBrandFunnelService {
     try {
       const [{ data: assets, error }, currentSig] = await Promise.all([
         this.listAssets(avatarId),
-        this.currentSignatureVersion(avatarId),
+        this.currentPositioningStatementVersion(avatarId),
       ]);
       if (error) throw error;
       const latestByTouchpoint = new Map<string, BrandAsset>();
@@ -401,9 +401,9 @@ export class SupabaseBrandFunnelService implements IBrandFunnelService {
           .filter((t) => applicable.has(t.id))
           .map((t) => {
             const asset = latestByTouchpoint.get(t.id);
-            // Read-time stale: an asset aligned under an older Signature is now stale.
+            // Read-time stale: an asset aligned under an older Positioning Statement is now stale.
             let status: AssetStatus = asset ? asset.status : 'missing';
-            if (asset && status === 'aligned' && asset.signature_version && currentSig && asset.signature_version !== currentSig) {
+            if (asset && status === 'aligned' && asset.positioning_statement_version && currentSig && asset.positioning_statement_version !== currentSig) {
               status = 'stale';
             }
             if (status === 'aligned') counts.aligned++;
@@ -427,9 +427,9 @@ export class SupabaseBrandFunnelService implements IBrandFunnelService {
     }
   }
 
-  /** Latest brand-level Signature version (avatar_id null) — the fallback lens. */
-  private async brandLevelSignatureVersion(): Promise<string | null> {
-    const { data } = await supabase.from('signatures')
+  /** Latest brand-level Positioning Statement version (avatar_id null) — the fallback lens. */
+  private async brandLevelPositioningStatementVersion(): Promise<string | null> {
+    const { data } = await supabase.from('positioning_statements')
       .select('id, artifact_id').is('avatar_id', null)
       .order('created_at', { ascending: false }).limit(1).maybeSingle();
     return data ? (data.artifact_id ?? data.id) : null;
@@ -438,7 +438,7 @@ export class SupabaseBrandFunnelService implements IBrandFunnelService {
   /**
    * BRAND-scoped coverage: the funnel pieces are the brand's (one current row per
    * (brand, touchpoint)); each cell's verdict is the per-avatar overlay (read-time
-   * stale still derives from the piece's own signature_version). The same pieces
+   * stale still derives from the piece's own positioning_statement_version). The same pieces
    * appear for every avatar — only the verdict changes with the lens.
    */
   async getBrandCoverage(
@@ -449,7 +449,7 @@ export class SupabaseBrandFunnelService implements IBrandFunnelService {
     try {
       const [{ data: assets, error }, currentSig] = await Promise.all([
         this.listBrandAssets(brandId, avatarId),
-        avatarId ? this.currentSignatureVersion(avatarId) : this.brandLevelSignatureVersion(),
+        avatarId ? this.currentPositioningStatementVersion(avatarId) : this.brandLevelPositioningStatementVersion(),
       ]);
       if (error) throw error;
       const latestByTouchpoint = new Map<string, BrandAsset>();
@@ -466,7 +466,7 @@ export class SupabaseBrandFunnelService implements IBrandFunnelService {
           .map((t) => {
             const asset = latestByTouchpoint.get(t.id);
             let status: AssetStatus = asset ? asset.status : 'missing';
-            if (asset && status === 'aligned' && asset.signature_version && currentSig && asset.signature_version !== currentSig) {
+            if (asset && status === 'aligned' && asset.positioning_statement_version && currentSig && asset.positioning_statement_version !== currentSig) {
               status = 'stale';
             }
             if (status === 'aligned') counts.aligned++;

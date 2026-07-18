@@ -58,7 +58,7 @@ DONE GATE:
 Build the funnel MCP tools per docs/brand-funnel-builder/MCP_TOOLS_BUILD_PROMPTS.md (the /goal prompt above). Work ONE step per iteration, in this order, and do not advance until the current step is green:
 
   1. src/mcp/tools/getFunnelAssets.ts   (mirror src/mcp/tools/listAssets.ts — read via getUserSupabase)
-  2. src/mcp/tools/auditAsset.ts         (mirror persistSignature.ts — gateWrite + getUserSupabase; invoke the audit-asset edge fn)
+  2. src/mcp/tools/auditAsset.ts         (mirror persistPositioningStatement.ts — gateWrite + getUserSupabase; invoke the audit-asset edge fn)
   3. src/mcp/tools/getFunnelCoverage.ts  (self-contained taxonomy; counts + coverage%)
   4. register all three in src/mcp/server.ts
   5. add cases to src/mcp/__tests__/server.test.ts (advertised + happy path over InMemoryTransport)
@@ -73,6 +73,6 @@ Hard rules: never import app/React code (@/…) into MCP modules; all data acces
 ---
 
 ### Notes
-- Reference tools to copy: `src/mcp/tools/listAssets.ts` (read shape), `src/mcp/tools/persistSignature.ts` (write + `gateWrite` + `getUserSupabase`), `src/mcp/tools/designTest.ts` (owned write). Registration list: `src/mcp/server.ts`. Identity: `src/mcp/context/identity.ts`.
+- Reference tools to copy: `src/mcp/tools/listAssets.ts` (read shape), `src/mcp/tools/persistPositioningStatement.ts` (write + `gateWrite` + `getUserSupabase`), `src/mcp/tools/designTest.ts` (owned write). Registration list: `src/mcp/server.ts`. Identity: `src/mcp/context/identity.ts`.
 - After green, the deploy is a separate gated step (the live MCP host) — run it deliberately, not inside the loop.
 - Optional follow-on tools once the core trio lands: `list_touchpoints`, `record_brand_test` / `close_brand_test`, `apply_rewrite` (calls funnel-rewrite + applyRewrite parity).

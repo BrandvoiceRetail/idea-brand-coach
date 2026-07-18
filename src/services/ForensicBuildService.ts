@@ -6,7 +6,7 @@
  * Supabase client (`supabase.functions.invoke`), persists stage artifacts via
  * the `save_artifact_atomic` RPC (the artifact chain — a re-run supersedes the
  * prior current row), and tracks S1→S4 progress in `avatar_build_state` over
- * RLS. S5/signature is D2/R-015 gated and intentionally NOT surfaced here.
+ * RLS. S5/positioning statement is D2/R-015 gated and intentionally NOT surfaced here.
  *
  * Contract parity with avatarPipeline.ts:
  *   - stage order s1 → s2 → {s3, s4}; each stage feeds `prior` keyed BY STAGE ID

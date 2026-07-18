@@ -86,7 +86,7 @@ named Decision Trigger → scored positioning moves → 7-slot brief with a clai
 gate. Spine CTA "Continue to Fix" unlocks once a move is chosen.
 
 **Loop 3 — Fix.** Five-stage funnel map → impact-ranked "what needs work" → per-asset
-content + IDEA audit verdict → Signature drift banner (self-hides at zero). Scoped to the
+content + IDEA audit verdict → Positioning Statement drift banner (self-hides at zero). Scoped to the
 active avatar.
 
 **Loop 4 — Re-measure.** Trust Gap before→after via the **deterministic** `computeLift`

@@ -20,10 +20,10 @@
  *      guarantee policy, business facts (gold-era numbers), owner intent. Reviews (slot #1)
  *      are already evidence-filled brand-level (user_product_reviews), so we DON'T re-ingest
  *      them into an avatar snapshot — that would create a `conflict` status the pipeline
- *      rejects; the reviews paste is instead fed directly to generate_signature.
+ *      rejects; the reviews paste is instead fed directly to generate_positioning_statement.
  *   3. Re-check get_context_status — assert answered slots flipped (never-ask-twice).
- *   4. Run the artifact chain: avatar pipeline S1→S5 (allow_signature) → persist the chosen
- *      Signature → evidence diagnostic → canvas → brief → audit×IDEA map → marketing audit.
+ *   4. Run the artifact chain: avatar pipeline S1→S5 (allow_positioning_statement) → persist the chosen
+ *      Positioning Statement → evidence diagnostic → canvas → brief → audit×IDEA map → marketing audit.
  *   5. export_workbook A and B → real .xlsx files on disk.
  *
  * ASSERTIONS (the never-ask-twice audit + the fabrication gate):
@@ -286,7 +286,7 @@ async function main(): Promise<void> {
   // (slot #1) are ALREADY filled-evidence brand-level (user_product_reviews); re-ingesting
   // them as an avatar snapshot would make the resolver flag `conflict` (two disagreeing
   // sources) which the avatar pipeline rejects — so we do NOT ingest reviews here. The
-  // reviews paste is fed directly to generate_signature in Round 4.
+  // reviews paste is fed directly to generate_positioning_statement in Round 4.
   if (askedSlots.has(3)) {
     console.log('  ingest_evidence: listing copy (slot #3)');
     const ingest = await call(client, identity, 'ingest_evidence', {
@@ -364,20 +364,20 @@ async function main(): Promise<void> {
   // ----------------------------------------------------------------------------------
   console.log('\n--- Round 4: run the artifact chain ---');
 
-  // Avatar pipeline S1→S5 (allow_signature = D2/R-015 sign-off for the rehearsal).
-  console.log('  build_avatar_stage(pipeline, allow_signature)');
+  // Avatar pipeline S1→S5 (allow_positioning_statement = D2/R-015 sign-off for the rehearsal).
+  console.log('  build_avatar_stage(pipeline, allow_positioning_statement)');
   const pipeline = await call(client, identity, 'build_avatar_stage', {
     stage: 'pipeline',
     avatar_id: avatarId,
-    allow_signature: true,
+    allow_positioning_statement: true,
   });
   recordAsks('build_avatar_stage:pipeline', needsInputOf(pipeline));
   const pipelineStages = (pipeline.stages as unknown[]) ?? [];
-  console.log(`     pipeline ok=${String(pipeline.ok)} stages=${pipelineStages.length} gated=${String(pipeline.signature_gated)}`);
+  console.log(`     pipeline ok=${String(pipeline.ok)} stages=${pipelineStages.length} gated=${String(pipeline.positioning_statement_gated)}`);
   if (pipeline.failed) console.log(`     pipeline failed:`, JSON.stringify(pipeline.failed));
   // SOFT check: the avatar forensic chain exercises the engine and grounds in real reviews
   // (slot #1 = filled-evidence). It is NOT load-bearing for export A — the avatar sheet renders
-  // from the chosen Signature, and canvas/brief/diagnostic/audit-map are the structural sheets.
+  // from the chosen Positioning Statement, and canvas/brief/diagnostic/audit-map are the structural sheets.
   // We assert S1 persisted (the chain started, grounded); deeper stage failures are an edge-fn
   // shape sensitivity recorded as a finding, not a rehearsal-blocking failure.
   assert(pipelineStages.length >= 1, `avatar pipeline grounded + persisted S1+ (${pipelineStages.length} stage(s))`);
@@ -385,20 +385,20 @@ async function main(): Promise<void> {
     console.log(`     NOTE: avatar chain did not complete S1-S5 (edge-fn shape sensitivity); export A does not depend on S2-S4.`);
   }
 
-  // generate_signature (read) → persist_signature (write the chosen pick).
-  console.log('  generate_signature → persist_signature');
-  const sig = await call(client, identity, 'generate_signature', { reviews: IV_REVIEWS_PASTE, avatar_id: avatarId });
+  // generate_positioning_statement (read) → persist_positioning_statement (write the chosen pick).
+  console.log('  generate_positioning_statement → persist_positioning_statement');
+  const sig = await call(client, identity, 'generate_positioning_statement', { reviews: IV_REVIEWS_PASTE, avatar_id: avatarId });
   const sigOptions = (sig.options as Array<{ option: number; sentence: string }>) ?? [];
-  assert(sig.ok === true && sigOptions.length > 0, `generate_signature returned ${sigOptions.length} options`);
+  assert(sig.ok === true && sigOptions.length > 0, `generate_positioning_statement returned ${sigOptions.length} options`);
   if (sigOptions.length > 0) {
-    const persistSig = await call(client, identity, 'persist_signature', {
+    const persistSig = await call(client, identity, 'persist_positioning_statement', {
       options: sigOptions,
       chosen_index: sigOptions[0].option,
       used_reviews: sig.used_reviews === true,
       inference: sig.inference === true,
       avatar_id: avatarId,
     });
-    assert(persistSig.ok === true, `persist_signature stored the chosen Signature (artifact ${String(persistSig.artifact_id)})`);
+    assert(persistSig.ok === true, `persist_positioning_statement stored the chosen Positioning Statement (artifact ${String(persistSig.artifact_id)})`);
   }
 
   // Evidence-grounded diagnostic (intake already exists for QA → no needs_input).

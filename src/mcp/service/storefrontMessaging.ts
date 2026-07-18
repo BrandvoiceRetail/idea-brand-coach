@@ -47,7 +47,7 @@ export const STOREFRONT_SECTIONS: readonly StorefrontSection[] = [
     purpose: 'The brand-level first impression — the one line + one image that says who this brand is for.',
     ideaPillar: 'Distinctive',
     direction:
-      'Photoreal brand-world image (product in its world, or the customer\'s transformed moment) with ONE overlay line — the signature or the empathetic lead, whichever the Decision Trigger favours. Not a product grid, not a collage.',
+      'Photoreal brand-world image (product in its world, or the customer\'s transformed moment) with ONE overlay line — the positioning statement or the empathetic lead, whichever the Decision Trigger favours. Not a product grid, not a collage.',
     execution: 'visual',
     rules:
       'Amazon Store hero: 3000×600 (renders much shorter on mobile — keep the line and any product safe-zone centred). Photoreal → Higgsfield generate_image; use outpaint_image to extend a strong composition to the wide aspect rather than regenerating.',
@@ -58,17 +58,17 @@ export const STOREFRONT_SECTIONS: readonly StorefrontSection[] = [
     purpose: "Why this brand exists — the story that turns a product buyer into a brand customer.",
     ideaPillar: 'Authentic',
     direction:
-      "The empathetic line LEADS ('I see you'), then the founder/mission why, then the signature as the landing line. Real specifics over polish — the same authenticity bar as the A+ emotional close.",
+      "The empathetic line LEADS ('I see you'), then the founder/mission why, then the positioning statement as the landing line. Real specifics over polish — the same authenticity bar as the A+ emotional close.",
     execution: 'copy',
     rules: 'Short paragraphs a shopper actually reads on a phone. Any trust claim (guarantee/credential) is claim-gated.',
   },
   {
     key: 'tagline_system',
     label: 'Tagline system',
-    purpose: 'The signature, productized: the line + its short/long variants used consistently across every surface.',
+    purpose: 'The positioning statement, productized: the line + its short/long variants used consistently across every surface.',
     ideaPillar: 'Distinctive',
     direction:
-      'Derive from the Signature: one master line, one shortened banner form, one extended form for the story block. Same words everywhere — repetition is what makes it ownable.',
+      'Derive from the Positioning Statement: one master line, one shortened banner form, one extended form for the story block. Same words everywhere — repetition is what makes it ownable.',
     execution: 'copy',
     rules: 'No new claims sneak in through a tagline — the claim gate applies to every variant.',
   },
@@ -98,7 +98,7 @@ export interface StorefrontMessagingInput {
   product: string;
   decisionTrigger?: string;
   avatarSummary?: string;
-  signature?: string;
+  positioning_statement?: string;
   trustGapSummary?: string;
   verifiedFacts?: string;
   marketplace?: string;
@@ -125,8 +125,8 @@ export interface StorefrontMessagingResult {
 }
 
 export const STOREFRONT_CONSISTENCY_RULES: readonly string[] = [
-  'One spine everywhere: the storefront expresses the SAME Decision Trigger, avatar core, and signature as the listing set, A+ page, and video — a shopper moving between them should never feel a brand change.',
-  'The tagline system is the connective tissue: the same signature-derived words on the hero, the story block, and (where fitting) the listing gallery and A+ close.',
+  'One spine everywhere: the storefront expresses the SAME Decision Trigger, avatar core, and positioning statement as the listing set, A+ page, and video — a shopper moving between them should never feel a brand change.',
+  'The tagline system is the connective tissue: the same positioning statement-derived words on the hero, the story block, and (where fitting) the listing gallery and A+ close.',
   'Visual identity carries over: the storefront hero and tiles share the palette/lighting register of the listing set — reuse listing main images in the product row verbatim.',
   'When positioning changes, the storefront updates WITH the other surfaces (refine_creative_plan maps the propagation) — a stale storefront quietly contradicts a fresh listing.',
 ];
@@ -139,7 +139,7 @@ export function buildStorefrontMessagingPlan(input: StorefrontMessagingInput): S
   const positioning: PositioningInputs = {
     decisionTrigger: input.decisionTrigger,
     avatarSummary: input.avatarSummary,
-    signature: input.signature,
+    positioning_statement: input.positioning_statement,
     trustGapSummary: input.trustGapSummary,
     verifiedFacts: input.verifiedFacts,
   };
@@ -156,7 +156,7 @@ export function buildStorefrontMessagingPlan(input: StorefrontMessagingInput): S
     adjustment_protocol: [
       'Each section is an independent component: change one section\'s copy or visual without touching the rest — but re-check consistency_rules after any change (the storefront exists to rhyme with the other surfaces).',
       'Visual-section mechanical changes route to Higgsfield edit tools: outpaint_image to reach the 3000×600 hero aspect, upscale_image for resolution, remove_background for tile cutouts — regenerate only when the creative direction changed.',
-      'A tagline change is a SIGNATURE change — route it through refine_creative_plan so every surface using the line updates together.',
+      'A tagline change is a Positioning Statement change — route it through refine_creative_plan so every surface using the line updates together.',
       'After any adjustment, save the updated plan with log_asset (same external_id reconciles the version).',
     ],
     claim_gate:
@@ -166,12 +166,12 @@ export function buildStorefrontMessagingPlan(input: StorefrontMessagingInput): S
     new_user_path: NEW_USER_EASY_PATH,
     instructions: [
       `1) Triage the inputs for "${input.product}" using evidence_discipline. Only verified facts may be stated in storefront copy.`,
-      `2) Ground every section in the positioning spine (see positioning_inputs): the Decision Trigger${trigger ? ` (${trigger})` : ''} picks the hero's lead line, the avatar job map names the category tiles, the signature drives the tagline system. Missing elements degrade honestly — plan anyway and name the sharpening input.`,
+      `2) Ground every section in the positioning spine (see positioning_inputs): the Decision Trigger${trigger ? ` (${trigger})` : ''} picks the hero's lead line, the avatar job map names the category tiles, the positioning statement drives the tagline system. Missing elements degrade honestly — plan anyway and name the sharpening input.`,
       '3) For EACH section, compose: (A) the exact copy (claim-gated), (B) for visual sections, the IMAGE_PROMPT per prompt_construction routed per higgsfield_handoff (real product photo as strict reference; outpaint to the hero aspect).',
       '4) Check the whole plan against consistency_rules — the storefront must rhyme with the listing set, A+ page, and video, sharing the tagline system and visual register.',
       '5) Save the plan with log_asset (content_type "amazon") and wire the measurement: design_test (hypothesis = the aligned storefront lifts brand-level CVR / repeat purchase), update_test_milestone as it goes live.',
       '6) Adjust section-by-section via adjustment_protocol, or refine_creative_plan for positioning changes.',
     ],
-    summary: `Storefront messaging plan (${marketplace}): ${STOREFRONT_SECTIONS.length} sections (${STOREFRONT_SECTIONS.map((s) => s.key).join(' → ')}) expressing ONE positioning spine — hero banner (3000×600, Higgsfield-ready), empathetic-led brand story, signature-derived tagline system, job-mapped category tiles, and a product row that reuses the winning listing pairs.${trigger ? ` Register tuned to the ${trigger} trigger.` : ''} Claim-gated, consistency-checked against every other surface, saved + measured.`,
+    summary: `Storefront messaging plan (${marketplace}): ${STOREFRONT_SECTIONS.length} sections (${STOREFRONT_SECTIONS.map((s) => s.key).join(' → ')}) expressing ONE positioning spine — hero banner (3000×600, Higgsfield-ready), empathetic-led brand story, positioning statement-derived tagline system, job-mapped category tiles, and a product row that reuses the winning listing pairs.${trigger ? ` Register tuned to the ${trigger} trigger.` : ''} Claim-gated, consistency-checked against every other surface, saved + measured.`,
   };
 }

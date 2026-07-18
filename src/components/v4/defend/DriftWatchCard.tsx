@@ -1,12 +1,12 @@
 /**
- * DriftWatchCard (S-17) — Loop-5 Signature-drift monitor.
+ * DriftWatchCard (S-17) — Loop-5 Positioning Statement-drift monitor.
  *
  * WHAT: The "is the brand drifting back open?" watch. Shows a calm all-clear when
- * zero assets have drifted from the current Signature, or names the drifted
+ * zero assets have drifted from the current Positioning Statement, or names the drifted
  * assets (real `DriftItem[]` from Loop-3 `getDrift`) and offers a one-tap jump to
  * Fix to re-check them. Loading / error states are explicit.
  *
- * WHY: Defend is the spine's "hold the gains" leg — a Signature edit silently
+ * WHY: Defend is the spine's "hold the gains" leg — a Positioning Statement edit silently
  * invalidates prior audits, so the brand can quietly drift back to where it
  * started. This card surfaces ONLY real drift the service computed — it never
  * fabricates a count, and shows an honest all-clear at zero drift (it does NOT
@@ -43,7 +43,7 @@ export interface DriftWatchCardProps {
   /** Jump to Fix to re-check the drifted assets. */
   onRecheck?: () => void;
   /**
-   * True when there is a real baseline to defend (>=1 aligned asset + a Signature).
+   * True when there is a real baseline to defend (>=1 aligned asset + a Positioning Statement).
    * When false the all-clear is suppressed for an honest neutral state. Defaults to
    * true so existing callers keep the all-clear behaviour.
    */
@@ -121,7 +121,7 @@ export function DriftWatchCard({
     );
   }
 
-  // Nothing aligned to a Signature yet → an honest neutral state. Zero drift over
+  // Nothing aligned to a Positioning Statement yet → an honest neutral state. Zero drift over
   // zero aligned assets is "nothing to defend yet", never a false all-clear.
   if (!hasBaseline) {
     return (

@@ -31,7 +31,7 @@ export const TOOL_REGISTRY: readonly RegistryGroup[] = [
     "tools": [
       {
         "name": "audit_asset",
-        "description": "Re-score one funnel asset against the avatar + Signature on the four IDEA dimensions via the audit-asset engine, and return the persisted verdict (status + scores + a concrete fix). Identity-gated; RLS-scoped to the caller; reuses the live edge function (no re-scoring here).",
+        "description": "Re-score one funnel asset against the avatar + Positioning Statement on the four IDEA dimensions via the audit-asset engine, and return the persisted verdict (status + scores + a concrete fix). Identity-gated; RLS-scoped to the caller; reuses the live edge function (no re-scoring here).",
         "group": "Diagnose",
         "firstShipped": "2026-06-17",
         "version": "v1.0",
@@ -153,7 +153,7 @@ export const TOOL_REGISTRY: readonly RegistryGroup[] = [
     "tools": [
       {
         "name": "build_avatar_stage",
-        "description": "Write tool: run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 search-intent [trigger moment + what-they-search + labeled volume bands — the Workbook/PPC feed, NOT the hero Decision Trigger; the single named Decision Trigger™ lever is the identify_decision_trigger tool], s4 objections) or the full S1→S5 pipeline. Each stage grounds in resolved reviews (slot #1) + prior artifacts, invokes its edge fn verbatim, validates against its contract, and persists an artifact (RLS-scoped). Returns needs_input when reviews are unresolved (never runs ungrounded). Requires an authenticated Supabase JWT. The S5 signature auto-feed is D2/R-015 gated behind allow_signature.' + groundingPreamble('build_avatar_stage') + appGroundingPreamble('build_avatar_stage'), inputSchema, }, async ({ stage, avatar_id, allow_signature }) => { const { identity, denied } = gateWrite(); if (denied) return denied; const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id); if (avatarDenied) return avatarDenied; const opts = { avatarId: avatar_id ?? null, allowSignature: allow_signature }; if (stage === 'pipeline') { const result = await runPipeline(opts); safeLog({ event: 'tool.build_avatar_stage.pipeline",
+        "description": "Write tool: run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 search-intent [trigger moment + what-they-search + labeled volume bands — the Workbook/PPC feed, NOT the hero Decision Trigger; the single named Decision Trigger™ lever is the identify_decision_trigger tool], s4 objections) or the full S1→S5 pipeline. Each stage grounds in resolved reviews (slot #1) + prior artifacts, invokes its edge fn verbatim, validates against its contract, and persists an artifact (RLS-scoped). Returns needs_input when reviews are unresolved (never runs ungrounded). Requires an authenticated Supabase JWT. The S5 positioning statement auto-feed is D2/R-015 gated behind allow_positioning_statement.' + groundingPreamble('build_avatar_stage') + appGroundingPreamble('build_avatar_stage'), inputSchema, }, async ({ stage, avatar_id, allow_positioning_statement }) => { const { identity, denied } = gateWrite(); if (denied) return denied; const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id); if (avatarDenied) return avatarDenied; const opts = { avatarId: avatar_id ?? null, allowPositioningStatement: allow_positioning_statement }; if (stage === 'pipeline') { const result = await runPipeline(opts); safeLog({ event: 'tool.build_avatar_stage.pipeline",
         "group": "Avatar 2.0",
         "firstShipped": "2026-06-12",
         "version": "v1.5",
@@ -248,7 +248,7 @@ export const TOOL_REGISTRY: readonly RegistryGroup[] = [
       },
       {
         "name": "export_workbook",
-        "description": "Terminal output-engine tool: render one of the two Trevor-approved gold .xlsx workbooks from the PERSISTED artifact chain and return a local file path. which:A reads the artifact chain (diagnostic/avatar/signature/canvas/brief/audit-map) and renders the BrandCoach Mockup; which:B reads the current marketing_audits row and renders the Marketing Investment Audit. Assembly reads persisted content only — it never regenerates. If the chain (A) or audit (B) is incomplete it returns needs_input listing the missing artifacts. Requires an authenticated Supabase JWT. Optional upload:true uploads the file to Supabase Storage (never-fail).",
+        "description": "Terminal output-engine tool: render one of the two Trevor-approved gold .xlsx workbooks from the PERSISTED artifact chain and return a local file path. which:A reads the artifact chain (diagnostic/avatar/positioning statement/canvas/brief/audit-map) and renders the BrandCoach Mockup; which:B reads the current marketing_audits row and renders the Marketing Investment Audit. Assembly reads persisted content only — it never regenerates. If the chain (A) or audit (B) is incomplete it returns needs_input listing the missing artifacts. Requires an authenticated Supabase JWT. Optional upload:true uploads the file to Supabase Storage (never-fail).",
         "group": "Outputs",
         "firstShipped": "2026-06-12",
         "version": "v1.2",
@@ -257,7 +257,7 @@ export const TOOL_REGISTRY: readonly RegistryGroup[] = [
       },
       {
         "name": "generate_brief",
-        "description": "Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas — or, when no canvas exists yet, your chosen Signature (so the owner gets a shippable brief today, not canvas homework) — plus Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'), inputSchema, }, async ({ avatar_id }) => { const { identity, denied } = gateWrite(); if (denied) return denied; const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id); if (avatarDenied) return avatarDenied; const result = await runGenerateBrief(avatar_id ?? null, resolved); safeLog({ event: 'tool.generate_brief",
+        "description": "Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas — or, when no canvas exists yet, your chosen Positioning Statement (so the owner gets a shippable brief today, not canvas homework) — plus Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'), inputSchema, }, async ({ avatar_id }) => { const { identity, denied } = gateWrite(); if (denied) return denied; const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id); if (avatarDenied) return avatarDenied; const result = await runGenerateBrief(avatar_id ?? null, resolved); safeLog({ event: 'tool.generate_brief",
         "group": "Outputs",
         "firstShipped": "2026-06-12",
         "version": "v1.3",
@@ -266,7 +266,7 @@ export const TOOL_REGISTRY: readonly RegistryGroup[] = [
       },
       {
         "name": "generate_canvas",
-        "description": "Write tool: compile the Brand Canvas (gold sheet 5) from the chosen Signature + the Avatar 2.0 S1-S4 artifacts + owner-intent slots. Invokes the brand-canvas engine verbatim, validates against the brand_canvas contract, and persists an artifact (RLS-scoped). Returns needs_input when no chosen Signature exists (never runs ungrounded). Requires an authenticated Supabase JWT.",
+        "description": "Write tool: compile the Brand Canvas (gold sheet 5) from the chosen Positioning Statement + the Avatar 2.0 S1-S4 artifacts + owner-intent slots. Invokes the brand-canvas engine verbatim, validates against the brand_canvas contract, and persists an artifact (RLS-scoped). Returns needs_input when no chosen Positioning Statement exists (never runs ungrounded). Requires an authenticated Supabase JWT.",
         "group": "Outputs",
         "firstShipped": "2026-06-12",
         "version": "v1.1",
@@ -283,8 +283,8 @@ export const TOOL_REGISTRY: readonly RegistryGroup[] = [
         "status": "Available"
       },
       {
-        "name": "generate_signature",
-        "description": "Convenience diagnostic: reveal 3-4 distinct on-brand Signature options (\"My customer isn\\'t buying X, they\\'re buying Y\") via the existing reveal-signature engine, wrapped verbatim (Calculation Parity — the frozen no-parroting prompt is unchanged). Accepts conversation OR fields OR reviews; if all are empty it falls back to the current evidence snapshot for the scope (context-bundle grounding — D2/R-015 reading: customer review vocabulary is not the founder\\'s own words; operator must sign off before the avatar pipeline auto-feeds this). Requires an authenticated Supabase JWT. Read-only — persist a chosen option with persist_signature.",
+        "name": "generate_positioning_statement",
+        "description": "Convenience diagnostic: reveal 3-4 distinct on-brand Positioning Statement options (\"My customer isn\\'t buying X, they\\'re buying Y\") via the existing reveal-positioning-statement engine, wrapped verbatim (Calculation Parity — the frozen no-parroting prompt is unchanged). Accepts conversation OR fields OR reviews; if all are empty it falls back to the current evidence snapshot for the scope (context-bundle grounding — D2/R-015 reading: customer review vocabulary is not the founder\\'s own words; operator must sign off before the avatar pipeline auto-feeds this). Requires an authenticated Supabase JWT. Read-only — persist a chosen option with persist_positioning_statement.",
         "group": "Outputs",
         "firstShipped": "2026-06-12",
         "version": "v1.0",
@@ -292,8 +292,8 @@ export const TOOL_REGISTRY: readonly RegistryGroup[] = [
         "status": "Available"
       },
       {
-        "name": "persist_signature",
-        "description": "Write tool: persist the user\\'s chosen Signature. Writes a signatures row (the dedicated store the app reads) AND a signature artifact (keeping the chain whole), both validated against the Signature contract and RLS-scoped to the caller. Requires an authenticated Supabase JWT. grounding is derived from used_reviews (true ⇒ evidence).",
+        "name": "persist_positioning_statement",
+        "description": "Write tool: persist the user\\'s chosen Positioning Statement. Writes a positioning statements row (the dedicated store the app reads) AND a positioning statement artifact (keeping the chain whole), both validated against the Positioning Statement contract and RLS-scoped to the caller. Requires an authenticated Supabase JWT. grounding is derived from used_reviews (true ⇒ evidence).",
         "group": "Outputs",
         "firstShipped": "2026-06-12",
         "version": "v1.1",

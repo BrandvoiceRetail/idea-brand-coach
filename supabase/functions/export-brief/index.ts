@@ -9,7 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
  * This is the brief that makes any execution tool (Helium 10, Pixii, a freelancer)
  * produce on-brand work.
  *
- * Cloned from reveal-signature / avatar-jobmap (CORS, optional JWT->getUser, Anthropic
+ * Cloned from reveal-positioning-statement / avatar-jobmap (CORS, optional JWT->getUser, Anthropic
  * SONNET with prompt caching, strict JSON contract + value-level assistant prefill,
  * tolerant defensive parse, evidence-vs-inference branch, needs_input on missing input).
  *
@@ -39,7 +39,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const STAGE_REFS = ['s1_vocab', 's2_jobmap', 's3_triggers', 's4_objections', 'signature', 'canvas', 'decision_trigger'];
+const STAGE_REFS = ['s1_vocab', 's2_jobmap', 's3_triggers', 's4_objections', 'positioning_statement', 'canvas', 'decision_trigger'];
 
 interface ConfirmedClaim {
   claim?: string;
@@ -170,7 +170,7 @@ You are a senior Amazon listing strategist inside a BMAD brand coach. You take a
 
 <what-this-is>
 - title_formula: the title template plus a concrete example title. The example_output MUST open with the brand name as its literal first word(s) (Amazon SEO convention, and brand-name search is itself a trust signal for this owner's category), immediately followed by the hero feature. Never lead with a generic category phrase (e.g. "Hair Growth Serum for Men & Women...") with the brand name buried later or omitted.
-- bullets: EXACTLY 5 listing bullets, each with: element (the role, e.g. "BULLET 1 — Lead with Decision Trigger"), brief (the instruction), example_output (the concrete copy), stage_ref (which avatar/canvas stage drove it: one of s1_vocab, s2_jobmap, s3_triggers, s4_objections, signature, canvas), and claims_used (the product facts this bullet asserts, drawn ONLY from the confirmed claims).
+- bullets: EXACTLY 5 listing bullets, each with: element (the role, e.g. "BULLET 1 — Lead with Decision Trigger"), brief (the instruction), example_output (the concrete copy), stage_ref (which avatar/canvas stage drove it: one of s1_vocab, s2_jobmap, s3_triggers, s4_objections, positioning_statement, canvas), and claims_used (the product facts this bullet asserts, drawn ONLY from the confirmed claims).
   - Bullet 1 leads with the decision trigger (the moment the customer is in). stage_ref s3_triggers.
   - Bullet 2 names the villain. stage_ref s2_jobmap.
   - Bullet 3 frames capacity/dignity. stage_ref s1_vocab or canvas.
@@ -208,10 +208,10 @@ If Stage 3 names no single dominant trigger, infer it from the weakest pillar (E
 </trigger-brief-direction>
 
 <decision-trigger-root>
-When the DECISION TRIGGER is supplied as the positioning root (no Brand Canvas or Signature present):
+When the DECISION TRIGGER is supplied as the positioning root (no Brand Canvas or Positioning Statement present):
 - This is a PARTIAL root containing only the emotional lever and verbatim evidence phrases, not full voice/positioning language
 - Use the trigger's dominant_type, brand_anchor (brand-free line, NOT raw internal names), evidence_phrases (verbatim), placement_instruction, and why_this_trigger
-- The brief will be more emotionally focused but less brand-articulated than a Canvas or Signature root
+- The brief will be more emotionally focused but less brand-articulated than a Canvas or Positioning Statement root
 - For elements that would normally cite canvas positioning, adapt using the trigger's emotional angle and evidence
 - Use stage_ref "decision_trigger" for any element that draws from this root
 </decision-trigger-root>
@@ -219,7 +219,7 @@ When the DECISION TRIGGER is supplied as the positioning root (no Brand Canvas o
 <output-contract>
 Respond with ONLY a JSON object, no preamble and no code fences:
 {"title_formula":{"brief":"...","example_output":"...","claims_used":["..."]},"bullets":[{"element":"...","brief":"...","example_output":"...","stage_ref":"s3_triggers","claims_used":["..."]}],"image_brief":[{"slot":"Hero","intent":"...","brief":"..."}],"ppc_keywords":{"tier_a":["..."],"tier_b":["..."],"tier_c":["..."]}}
-bullets MUST have exactly 5 entries; image_brief MUST have exactly 7 entries; each ppc tier at least one. stage_ref must be one of: s1_vocab, s2_jobmap, s3_triggers, s4_objections, signature, canvas, decision_trigger. No markdown inside any string. No trailing commentary outside the JSON.
+bullets MUST have exactly 5 entries; image_brief MUST have exactly 7 entries; each ppc tier at least one. stage_ref must be one of: s1_vocab, s2_jobmap, s3_triggers, s4_objections, positioning_statement, canvas, decision_trigger. No markdown inside any string. No trailing commentary outside the JSON.
 </output-contract>`;
 }
 
@@ -258,8 +258,8 @@ serve(async (req) => {
     const confirmedClaims: ConfirmedClaim[] = Array.isArray(body?.confirmed_claims) ? body.confirmed_claims : [];
 
     // The brief is written against the brand positioning. Priority: Canvas > Decision Trigger.
-    // Signature is NOT a root (dropped from the chain per Matthew, 2026-07-08): with neither
-    // Canvas nor Trigger we ask honestly rather than lean on a legacy signature row.
+    // Positioning Statement is NOT a root (dropped from the chain per Matthew, 2026-07-08): with neither
+    // Canvas nor Trigger we ask honestly rather than lean on a legacy positioning statement row.
     if (canvas == null && trigger == null) {
       return new Response(
         JSON.stringify({
@@ -384,7 +384,7 @@ serve(async (req) => {
       throw new Error('Export Brief output was incomplete (expected 5 bullets, 7 image slots, 3 keyword tiers).');
     }
 
-    // Root ref priority: canvas > trigger (signature is no longer a root).
+    // Root ref priority: canvas > trigger (positioning statement is no longer a root).
     const rootRef = canvas != null ? 'brand_canvas' : 'decision_trigger';
     const evidenceRefs: Array<{ kind: string; ref: string }> = [
       { kind: 'artifact', ref: rootRef },

@@ -53,7 +53,7 @@ export const TITLE_FORMULA: readonly TitleSegment[] = [
     key: 'distinctive_difference',
     label: 'Distinctive difference',
     direction:
-      'The signature-derived angle that separates this from the grid — the one phrase a competitor could not honestly copy. Derived from the Signature; a hypothesis to test, phrased as a defensible fact.',
+      'The positioning statement-derived angle that separates this from the grid — the one phrase a competitor could not honestly copy. Derived from the Positioning Statement; a hypothesis to test, phrased as a defensible fact.',
   },
   {
     key: 'exact_facts',
@@ -90,7 +90,7 @@ export interface MainImageTitleInput {
   product: string;
   decisionTrigger?: string;
   avatarSummary?: string;
-  signature?: string;
+  positioning_statement?: string;
   trustGapSummary?: string;
   verifiedFacts?: string;
   marketplace?: string;
@@ -129,7 +129,7 @@ export function buildMainImageTitlePlan(input: MainImageTitleInput): MainImageTi
   const positioning: PositioningInputs = {
     decisionTrigger: input.decisionTrigger,
     avatarSummary: input.avatarSummary,
-    signature: input.signature,
+    positioning_statement: input.positioning_statement,
     trustGapSummary: input.trustGapSummary,
     verifiedFacts: input.verifiedFacts,
   };
@@ -158,13 +158,13 @@ export function buildMainImageTitlePlan(input: MainImageTitleInput): MainImageTi
     new_user_path: NEW_USER_EASY_PATH,
     instructions: [
       `1) Triage the inputs for "${input.product}" using evidence_discipline; collect the verified facts the title will state (size/count/variant, verbatim).`,
-      `2) Ground the pair in the positioning spine (see positioning_inputs): the Decision Trigger${trigger ? ` (${trigger})` : ''} sets the shared register, the avatar's search vocabulary gives the primary keyword, the signature gives the distinctive difference. Missing elements degrade honestly — plan anyway and name the sharpening input.`,
+      `2) Ground the pair in the positioning spine (see positioning_inputs): the Decision Trigger${trigger ? ` (${trigger})` : ''} sets the shared register, the avatar's search vocabulary gives the primary keyword, the positioning statement gives the distinctive difference. Missing elements degrade honestly — plan anyway and name the sharpening input.`,
       '3) Compose 2-3 TITLE variants with title_formula + title_rules: brand + keyword + difference inside the first ~80 characters, exact facts verbatim, category limit respected.',
       '4) Compose the MAIN IMAGE brief per main_image (pure white background, product only, NO added text/badges — Amazon policy) with the trigger showing through styling/angle/finish only; write the IMAGE_PROMPT per prompt_construction and route photoreal per higgsfield_handoff (real product photo as strict reference).',
       '5) Check the pair against coherence_rules — one story, two carriers — ideally against a screenshot of the live search grid for the primary keyword.',
       '6) Run the claim gate on the title; save the plan with log_asset (content_type "amazon") and wire the split-test per test_plan.',
       '7) Adjust either carrier independently later (a title edit never requires re-shooting the image), or refine_creative_plan for positioning changes.',
     ],
-    summary: `Main image + title plan (${marketplace}): the search-grid pair composed as ONE positioning statement — white-bg policy-clean main image (trigger through styling only) + a title whose first ~80 characters carry brand, the avatar's real keyword, and the signature-derived difference, all facts verbatim.${trigger ? ` Register tuned to the ${trigger} trigger.` : ''} 2-3 variants each, claim-gated, split-tested as the highest-traffic test the listing has.`,
+    summary: `Main image + title plan (${marketplace}): the search-grid pair composed as ONE positioning statement — white-bg policy-clean main image (trigger through styling only) + a title whose first ~80 characters carry brand, the avatar's real keyword, and the positioning statement-derived difference, all facts verbatim.${trigger ? ` Register tuned to the ${trigger} trigger.` : ''} 2-3 variants each, claim-gated, split-tested as the highest-traffic test the listing has.`,
   };
 }

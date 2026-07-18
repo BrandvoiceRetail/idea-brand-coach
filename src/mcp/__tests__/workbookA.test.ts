@@ -10,7 +10,7 @@
  * rows per block) without asserting every prose cell verbatim.
  *
  * The fixture .xlsx layout differs from the runtime contract shape in a few places
- * (interleaved canvas grid, signature options split across columns + rows, header-cell
+ * (interleaved canvas grid, positioning statement options split across columns + rows, header-cell
  * scores). A thin in-test mapper bridges the two — the gold fixture is the source of
  * TRUTH for column/row counts, the contract is the source of truth for SHAPE.
  */
@@ -27,7 +27,7 @@ import type {
   AvatarS2JobmapOutput,
   AvatarS3TriggersOutput,
   AvatarS4ObjectionsOutput,
-  SignatureOutput,
+  PositioningStatementOutput,
   BrandCanvasOutput,
   ExportBriefOutput,
   AuditXIdeaOutput,
@@ -152,13 +152,13 @@ function mapS4(): AvatarS4ObjectionsOutput {
 }
 
 /**
- * Sheet 4 Stage 5 → signature content. Gold stores Option 1 in the table's
+ * Sheet 4 Stage 5 → positioning statement content. Gold stores Option 1 in the table's
  * columns ([col0="Option 1", col1=sentence]) and Options 2..N in the rows.
  */
-function mapSignature(): SignatureOutput {
+function mapPositioningStatement(): PositioningStatementOutput {
   const sheet = sheetByName('4. Avatar 2.0 (IV)');
   const t = sheet.tables.find((tt) => tt.name?.startsWith('Stage 5'))!;
-  const options: SignatureOutput['options'] = [
+  const options: PositioningStatementOutput['options'] = [
     { option: 1, sentence: String(t.columns[1]) },
     ...t.rows.map((r, i) => ({ option: i + 2, sentence: String(r[1]) })),
   ];
@@ -173,9 +173,9 @@ function mapSignature(): SignatureOutput {
 /** Sheet 5 "Brand Canvas (IV)" → brand_canvas content (interleaved grid). */
 function mapCanvas(): BrandCanvasOutput {
   const sheet = sheetByName('5. Brand Canvas (IV)');
-  const t = sheet.tables.find((tt) => tt.name === 'The Signature')!;
+  const t = sheet.tables.find((tt) => tt.name === 'The Positioning Statement')!;
   return {
-    signature: t.note ?? 'The Signature',
+    positioning_statement: t.note ?? 'The Positioning Statement',
     positioning: {
       category: String(t.columns[1]),
       position: 'Position',
@@ -256,7 +256,7 @@ function fullArtifacts(): WorkbookAArtifacts {
     avatar_s2_jobmap: mapS2(),
     avatar_s3_triggers: mapS3(),
     avatar_s4_objections: mapS4(),
-    signature: mapSignature(),
+    positioning_statement: mapPositioningStatement(),
     brand_canvas: mapCanvas(),
     export_brief: mapBrief(),
     audit_x_idea: mapAudit(),
@@ -328,18 +328,18 @@ describe('assembleWorkbookA', () => {
     expect(arts.avatar_s1_vocab!.clusters.length).toBe(goldS1.rows.length); // 6 clusters
     const goldS3 = gold.tables.find((t) => t.name?.startsWith('Stage 3'))!;
     expect(arts.avatar_s3_triggers!.triggers.length).toBe(goldS3.rows.length); // 6 triggers
-    // Signature: gold's Option 1 in columns + the remaining options in rows.
-    expect(arts.signature!.options.length).toBe(4);
+    // Positioning Statement: gold's Option 1 in columns + the remaining options in rows.
+    expect(arts.positioning_statement!.options.length).toBe(4);
     // Chosen marker present on exactly one option row.
     const chosenRows = spine.filter((s) => s.startsWith('Option '));
     expect(chosenRows.length).toBe(4);
   });
 
-  it('Brand Canvas sheet has Signature, Positioning grid, and story-spine blocks', () => {
+  it('Brand Canvas sheet has Positioning Statement, Positioning grid, and story-spine blocks', () => {
     const wb = assembleWorkbookA(fullArtifacts());
     const ws = wb.getWorksheet('5. Brand Canvas (IV)')!;
     const spine = rowSpine(ws);
-    expect(spine).toContain('The Signature');
+    expect(spine).toContain('The Positioning Statement');
     expect(spine).toContain('Positioning');
     expect(spine.some((s) => s.startsWith('Brand story spine'))).toBe(true);
     // The 4 positioning element rows.

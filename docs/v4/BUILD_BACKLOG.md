@@ -93,14 +93,14 @@ Page: `src/pages/v4/V4Fix.tsx`. Screens: `src/components/v4/fix/*`.
   wired: image-prompt / design-brief / check-asset).
 - **Backend:** `generate_brief` ✅, `generate_canvas` ✅, `publish_filter_check` ✅,
   `audit_asset` ✅, `record_assessment` ✅, `get_asset` ✅, `get_asset_history` ✅.
-- **AC:** three working tabs; check-asset audits against avatar + Signature and
+- **AC:** three working tabs; check-asset audits against avatar + Positioning Statement and
   records the verdict; copy is claim-gated.
 - **Effort:** L (4–5d).
 
-### S-15 — Signature drift
+### S-15 — Positioning Statement drift
 - **Files:** `src/components/v4/fix/DriftBanner.tsx`.
-- **Backend:** `persist_signature` ✅, `audit_asset` ✅, `list_assets` ✅.
-- **AC:** on Signature change, flags assets built against the old Signature with a
+- **Backend:** `persist_positioning_statement` ✅, `audit_asset` ✅, `list_assets` ✅.
+- **AC:** on Positioning Statement change, flags assets built against the old Positioning Statement with a
   re-check link; self-hides at 0 drift.
 - **Effort:** S (1–2d).
 

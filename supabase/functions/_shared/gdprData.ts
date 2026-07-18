@@ -45,7 +45,7 @@ export const USER_ID_TABLES: string[] = [
   'figma_connections',
   'idea_framework_submissions',
   'marketing_audits',
-  'signatures',
+  'positioning_statements',
   'uploaded_documents',
   'user_diagnostic_results',
   'user_knowledge_chunks',

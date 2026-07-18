@@ -6,7 +6,7 @@ import {
   parseAnalysis,
   cleanCompetitors,
   formatAvatar,
-  formatSignature,
+  formatPositioningStatement,
   formatOurAsset,
   renderProductEvidence,
   renderUrlEvidence,
@@ -201,9 +201,9 @@ describe('context compaction', () => {
     expect(text).toContain('Positioning statement: the collector vault');
   });
 
-  it('formatSignature renders the Signature fields', () => {
-    const text = formatSignature({ signature: 'The collector\'s vault', villain: 'flimsy binders' });
-    expect(text).toContain('Signature: The collector');
+  it('formatPositioningStatement renders the Positioning Statement fields', () => {
+    const text = formatPositioningStatement({ positioning_statement: 'The collector\'s vault', villain: 'flimsy binders' });
+    expect(text).toContain('Positioning Statement: The collector');
     expect(text).toContain('Villain: flimsy binders');
   });
 

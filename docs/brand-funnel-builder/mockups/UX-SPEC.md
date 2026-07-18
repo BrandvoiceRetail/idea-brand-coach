@@ -6,19 +6,19 @@ Companion to [`funnel-tracker-mockups.html`](./funnel-tracker-mockups.html). Aut
 **Goal:** a brand owner pulls up one dashboard and instantly knows — across their whole funnel — what's on-brand, what's gone stale, what's off-strategy, what's being worked on, and what's being tested, each backed by a metric.
 
 **Principles**
-1. **Alignment over inventory.** The unit isn't "do you have the asset" — it's "does it match your avatar + Signature." Colour encodes alignment, not presence.
+1. **Alignment over inventory.** The unit isn't "do you have the asset" — it's "does it match your avatar + Positioning Statement." Colour encodes alignment, not presence.
 2. **Always say what to fix next.** Every screen surfaces a prioritised action; nothing is a dead-end list.
 3. **Metric-backed.** A flag is only credible next to the number it moves.
 4. **Editorial calm.** Trevor's v11 language — warm, confident, behavioural-science-led — not a noisy SaaS dashboard.
 
 ## 2. Primary persona
-**The founder-brand owner** (Matthew-as-user; Trevor's audience: Amazon / Shopify / DTC). Has refined an avatar + Signature with the coach, now faces ~25 scattered touchpoints and no map. Wants confidence about *where to spend the next hour*, and proof that a messaging change paid off.
+**The founder-brand owner** (Matthew-as-user; Trevor's audience: Amazon / Shopify / DTC). Has refined an avatar + Positioning Statement with the coach, now faces ~25 scattered touchpoints and no map. Wants confidence about *where to spend the next hour*, and proof that a messaging change paid off.
 
 ## 3. Information architecture
-One surface, four tabs (sticky top bar carries brand + active avatar + current Signature):
+One surface, four tabs (sticky top bar carries brand + active avatar + current Positioning Statement):
 - **Funnel Map** — orient: the whole funnel, colour-coded, current-vs-desired coverage.
 - **What Needs Work** — decide: prioritised gaps with IDEA-dimension scores + the metric each moves.
-- **In Progress** — track: queued / drafting / in-review board, Signature version carried forward.
+- **In Progress** — track: queued / drafting / in-review board, Positioning Statement version carried forward.
 - **Testing & Lift** — prove: before/after on a messaging change → did it lift.
 
 Flow: `Map → (pick a gap) → What Needs Work → "Fix with coach" → In Progress → publish → Testing & Lift → Won feeds back to Map.`
@@ -28,7 +28,7 @@ Flow: `Map → (pick a gap) → What Needs Work → "Fix with coach" → In Prog
 |---|---|---|
 | **Funnel Map** | coverage meter w/ target marker; 5 stage columns; touchpoint cards w/ status border + score; summary stat strip | **Empty:** pre-upload → "Upload a folder of assets and the coach maps your funnel." **Loading:** skeleton stage columns during audit. **Error:** audit failed → retry on the affected touchpoints only. |
 | **What Needs Work** | ranked rows; 4 IDEA dimension bars (`dc-*`); metric + delta; "Fix with coach" CTA | **Empty:** all aligned → celebratory "Your funnel is on-brand. Next audit in 14 days." **Partial:** metric unknown → show score only, label "metric not entered." |
-| **In Progress** | 3-column board (Queued / In progress / In review); per-card Signature version; publish-filter status; approve/diff | **Empty:** "Nothing in flight — pick a gap to start." |
+| **In Progress** | 3-column board (Queued / In progress / In review); per-card Positioning Statement version; publish-filter status; approve/diff | **Empty:** "Nothing in flight — pick a gap to start." |
 | **Testing & Lift** | test cards (Won / Running / No-lift); baseline→result; version pins; lift delta | **Running:** interim value + "not significant yet." **No data:** "tracking — enter result when the window closes." |
 
 ## 5. Design-system foundation (reconciled)

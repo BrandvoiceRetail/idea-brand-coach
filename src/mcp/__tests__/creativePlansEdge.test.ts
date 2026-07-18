@@ -44,11 +44,11 @@ describe('reportPositioningInputs — the honest degrade surface', () => {
     }
   });
   it('treats whitespace-only values as missing, real values as provided', () => {
-    const rep = reportPositioningInputs({ decisionTrigger: 'recognition', avatarSummary: '   ', signature: 'x' });
+    const rep = reportPositioningInputs({ decisionTrigger: 'recognition', avatarSummary: '   ', positioning_statement: 'x' });
     const by = new Map(rep.map((r) => [r.element, r.status]));
     expect(by.get('decision_trigger')).toBe('provided');
     expect(by.get('avatar_core')).toBe('missing');
-    expect(by.get('signature')).toBe('provided');
+    expect(by.get('positioning_statement')).toBe('provided');
   });
 });
 
@@ -114,7 +114,7 @@ describe('buildCreativePlanRefinement — scope detector edges', () => {
     const r = buildCreativePlanRefinement({
       planType: 'listing_image_set',
       changeRequest: 'full reposition',
-      positioningChanges: ['decision_trigger', 'avatar_core', 'signature', 'trust_gap_pillar', 'verified_facts'],
+      positioningChanges: ['decision_trigger', 'avatar_core', 'positioning_statement', 'trust_gap_pillar', 'verified_facts'],
     });
     expect(r.change_scope).toBe('positioning');
     expect(r.propagation).toHaveLength(5);
@@ -134,10 +134,10 @@ describe('determinism — pure directors, same input → identical output', () =
   const runs: Array<[string, () => unknown]> = [
     ['video', () => buildVideoStoryboard({ product: 'P', decisionTrigger: 'recognition', durationSeconds: 30 })],
     ['aplus', () => buildAplusPlan({ product: 'P', decisionTrigger: 'identity' })],
-    ['main+title', () => buildMainImageTitlePlan({ product: 'P', signature: 'S' })],
+    ['main+title', () => buildMainImageTitlePlan({ product: 'P', positioning_statement: 'S' })],
     ['storefront', () => buildStorefrontMessagingPlan({ product: 'P', avatarSummary: 'A' })],
     ['ugc', () => buildUgcAdPlan({ product: 'P', ugcFormat: 'unboxing', decisionTrigger: 'momentum' })],
-    ['refine', () => buildCreativePlanRefinement({ planType: 'aplus_content', changeRequest: 'c', positioningChanges: ['signature'] })],
+    ['refine', () => buildCreativePlanRefinement({ planType: 'aplus_content', changeRequest: 'c', positioningChanges: ['positioning_statement'] })],
   ];
   for (const [name, fn] of runs) {
     it(`${name} is deterministic`, () => {

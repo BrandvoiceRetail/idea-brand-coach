@@ -55,13 +55,13 @@ Fresh conversation, no onboarding, say only:
 
 **Pass:**
 - The coach calls `generate_video_storyboard` and produces a usable storyboard plan — it does **not** refuse, does not demand the full pipeline first.
-- The reply names what's missing and the ONE input that would sharpen it most (trigger → avatar → signature → trust gap order), each with the tool that resolves it.
+- The reply names what's missing and the ONE input that would sharpen it most (trigger → avatar → positioning statement → trust gap order), each with the tool that resolves it.
 - No invented facts about the product appear (no fabricated counts/claims).
 
 ## T3 — Positioning-aligned storyboard (full context)
 
 Same conversation: run the quick spine (`identify_decision_trigger` inputs, a one-line avatar,
-`generate_signature` if offered), then re-ask for the storyboard.
+`generate_positioning_statement` if offered), then re-ask for the storyboard.
 
 **Pass:**
 - The hook direction visibly changes to match the identified trigger (e.g. `recognition` → "open inside the customer's moment").
@@ -110,7 +110,7 @@ construction ends with the exact negative prompt (the "avoid separate stacked ba
 
 > "Plan my main image and title together."
 
-**Pass:** title formula = brand + the avatar's real keyword + signature-derived difference within
+**Pass:** title formula = brand + the avatar's real keyword + positioning statement-derived difference within
 the **first ~80 characters**, exact facts verbatim; main image brief = pure white background,
 product only, NO added text/badges; coherence rules ("one story, two carriers"); 2–3 variants each
 and a CTR split test via `design_test`.
@@ -121,7 +121,7 @@ and a CTR split test via `design_test`.
 
 **Pass:** 5 sections (hero 3000×600 → brand story → tagline system → category tiles → featured
 products row); hero routes to Higgsfield `generate_image` with `outpaint_image` for the wide
-aspect; tagline system derives from the Signature; consistency rules demand the SAME spine as the
+aspect; tagline system derives from the Positioning Statement; consistency rules demand the SAME spine as the
 listing/A+/video surfaces.
 
 ## T10 — Refine: component change (surgical)

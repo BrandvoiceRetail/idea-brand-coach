@@ -18,7 +18,7 @@ import {
 
 /** Bridge screen route (bare/guest-accessible, mirrors /v1/diagnostic/results). */
 export const BRIDGE_ROUTE = '/v1/diagnostic/bridge';
-/** Layer 1 chat + Signature surface. */
+/** Layer 1 chat + Positioning Statement surface. */
 export const COACH_ROUTE = '/v2/coach';
 
 /** Validate an untrusted `?gap=` value against the known dimension keys. */
@@ -40,7 +40,7 @@ export function buildCoachPath(gap: TrustGapDimension | null): string {
 }
 
 /**
- * Where "Build my Signature" sends the user from the bridge.
+ * Where "Build my Positioning Statement" sends the user from the bridge.
  * - authed → straight to the coach (with gap)
  * - guest  → the auth gate, with the coach path preserved as an encoded redirect
  *   so they return to the coach (with gap) after creating their free account.

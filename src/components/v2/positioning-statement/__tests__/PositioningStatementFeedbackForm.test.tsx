@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import { SignatureFeedbackForm } from '../SignatureFeedbackForm';
+import { PositioningStatementFeedbackForm } from '../PositioningStatementFeedbackForm';
 import { useAvatarContext } from '@/contexts/AvatarContext';
 import { supabase } from '@/integrations/supabase/client';
 import { captureAlphaEvent, getPostHogDistinctId } from '@/lib/posthogClient';
@@ -16,19 +16,19 @@ vi.mock('@/lib/posthogClient', () => ({
   getPostHogDistinctId: vi.fn(),
 }));
 
-const OPTIONS = ['Signature A', 'Signature B', 'Signature C'];
+const OPTIONS = ['Positioning Statement A', 'Positioning Statement B', 'Positioning Statement C'];
 
 function renderForm(): void {
   render(
-    <SignatureFeedbackForm
-      chosenSignature="Signature B"
-      signatureOptions={OPTIONS}
+    <PositioningStatementFeedbackForm
+      chosenPositioningStatement="Positioning Statement B"
+      positioningStatementOptions={OPTIONS}
       sessionId="session-9"
     />,
   );
 }
 
-describe('SignatureFeedbackForm', () => {
+describe('PositioningStatementFeedbackForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
@@ -50,7 +50,7 @@ describe('SignatureFeedbackForm', () => {
     renderForm();
 
     expect(screen.getByText('Did your Trust Gap score feel right?')).toBeInTheDocument();
-    expect(screen.getByText('Does this Signature feel right?')).toBeInTheDocument();
+    expect(screen.getByText('Does this Positioning Statement feel right?')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/missed, surprised/i)).toBeInTheDocument();
   });
 
@@ -90,11 +90,11 @@ describe('SignatureFeedbackForm', () => {
           posthogDistinctId: 'ph-distinct-1',
           avatarId: 'avatar-1',
           sessionId: 'session-9',
-          chosenSignature: 'Signature B',
-          signatureOptions: OPTIONS,
+          chosenPositioningStatement: 'Positioning Statement B',
+          positioningStatementOptions: OPTIONS,
           scores: { insight: 60, distinctive: 40, empathetic: 80, authentic: 70, overall: 62 },
           q1ScoreFeltRight: 'yes',
-          q2SignatureFeltRight: 'no',
+          q2PositioningStatementFeltRight: 'no',
           q3WhatsOff: 'Too generic',
         },
       });

@@ -49,7 +49,7 @@ Quick reference for what Trevor asked for vs. what's implemented.
 | Prompts stored in Supabase | ❌ | All hardcoded in functions |
 | Admin-only edit permissions | ❌ | No `prompts` table |
 | Logging (taskType, timestamp, tokens) | ❌ | No logging infrastructure |
-| runAI() function signature | ❌ | Not implemented |
+| runAI() function positioning statement | ❌ | Not implemented |
 
 **Status: 0% Complete** - Core architecture requirement not met
 

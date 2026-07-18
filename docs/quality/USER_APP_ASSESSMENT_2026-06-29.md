@@ -23,7 +23,7 @@ vulnerable* code. Verified by reading the live functions via the Supabase API:
 |---|---|---|---|
 | `document-processor` | v91, `verify_jwt:true`, `auth.getUser()` → 401, **every** query `.eq("user_id", user.id)` (comment: "closes the IDOR") | service-role + `verify_jwt:false`, **no auth**, no ownership filter | **P0 IDOR fixed in prod, still in repo** |
 | `send-framework-email` | v73, `verify_jwt:true`, recipient forced to `user.email`, all fields `esc()`-escaped | no auth, caller-supplied recipient, raw HTML interpolation | **open-relay + injection fixed in prod, still in repo** |
-| `reveal-signature` | v11, `verify_jwt:true` (platform-gated) + credit metering (`_shared/meter.ts`) + server PostHog (`_shared/posthog.ts`) | older: no metering, no telemetry, "optional" auth | **prod enhanced, repo behind** |
+| `reveal-positioning-statement` | v11, `verify_jwt:true` (platform-gated) + credit metering (`_shared/meter.ts`) + server PostHog (`_shared/posthog.ts`) | older: no metering, no telemetry, "optional" auth | **prod enhanced, repo behind** |
 
 **Implications**
 1. **Production data is protected** — the guardrail holds in prod. The deployed functions
@@ -74,16 +74,16 @@ Direct checks overturned four assessor claims — recorded so they are not actio
 - **[P2] Document upload has failure-only telemetry** — `src/services/DocumentUploadService.ts:67,78`.
   No `document_upload_started`/success → success rate uncomputable.
 - **[Backend] `_shared/posthog.ts` under-wired in the repo** — imported by only ~2 repo functions,
-  but the **deployed** `reveal-signature` already uses it (another drift signal). The live coach /
+  but the **deployed** `reveal-positioning-statement` already uses it (another drift signal). The live coach /
   diagnostic / forensic paths appear dark in PostHog per the repo; confirm against deployed before
   building new instrumentation. MCP `mcp_tool_latency` coverage is complete and good.
 
 ## 2. Error handling
 
 - **[P1] Single root `ErrorBoundary`** — `src/App.tsx:86` is the only mount. A render crash in the
-  coach, diagnostic, signature, or field-review subtree tears down the whole app. `src/components/AGENTS.md`
+  coach, diagnostic, positioning statement, or field-review subtree tears down the whole app. `src/components/AGENTS.md`
   itself says "wrap risky subtrees." Add per-route boundaries around `BrandCoachV2`,
-  `ProblemSolverDiagnostic`, `ForensicAvatarBuilder`, `SignatureReveal`.
+  `ProblemSolverDiagnostic`, `ForensicAvatarBuilder`, `PositioningStatementReveal`.
 - **[P1] `sessionsError` silently discarded** — `src/hooks/v2/useBrandCoachV2State.ts:283` does not
   destructure the React Query `error`; a sessions-load failure shows an empty sidebar with no toast,
   no recovery, no event.
@@ -183,7 +183,7 @@ machinery (`VersionGate`/`VersionSwitcher`/`VersionContext`).
 - Frontend bundles **only the anon key** (no `service_role` in any `VITE_*`); RLS-scoped client.
 - MCP gateway: `runWithIdentity` + `AsyncLocalStorage` (no cross-request bleed), `claude.ai`-only CORS,
   `gateWrite` + `requireOwnedAvatar` ownership checks, `safeLog`/`redact.ts` strips sensitive keys.
-- Deployed `document-processor`, `send-framework-email`, `reveal-signature` are hardened (verified).
+- Deployed `document-processor`, `send-framework-email`, `reveal-positioning-statement` are hardened (verified).
   `run-forensic-analysis`, `identify-decision-trigger`, Figma/Canva functions, and the public
   `diagnostic-interpretation` (clamped numeric inputs, per-IP rate limit) are sound per the security pass.
 

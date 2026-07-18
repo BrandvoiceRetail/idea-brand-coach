@@ -10,7 +10,7 @@ import { IChatService } from './interfaces/IChatService';
 import { IAuthService } from './interfaces/IAuthService';
 import { IAvatarService } from './interfaces/IAvatarService';
 import { IProductDataService } from './interfaces/IProductDataService';
-import { ISignatureService } from './interfaces/ISignatureService';
+import { IPositioningStatementService } from './interfaces/IPositioningStatementService';
 import { ICompetitorInsightsService } from './interfaces/ICompetitorInsightsService';
 import { ITrustGapSnapshotService } from './interfaces/ITrustGapSnapshotService';
 import { INotificationChannel } from './interfaces/INotificationChannel';
@@ -20,7 +20,7 @@ import { SupabaseChatService } from './SupabaseChatService';
 import { SupabaseAuthService } from './SupabaseAuthService';
 import { SupabaseAvatarService } from './SupabaseAvatarService';
 import { SupabaseProductDataService } from './SupabaseProductDataService';
-import { SupabaseSignatureService } from './SupabaseSignatureService';
+import { SupabasePositioningStatementService } from './SupabasePositioningStatementService';
 import { SupabaseCompetitorInsightsService } from './SupabaseCompetitorInsightsService';
 import { SupabaseTrustGapSnapshotService } from './SupabaseTrustGapSnapshotService';
 import { SupabaseInAppNotificationChannel } from './SupabaseInAppNotificationChannel';
@@ -32,7 +32,7 @@ interface Services {
   authService: IAuthService;
   avatarService: IAvatarService;
   productDataService: IProductDataService;
-  signatureService: ISignatureService;
+  positioningStatementService: IPositioningStatementService;
   competitorInsightsService: ICompetitorInsightsService;
   trustGapSnapshotService: ITrustGapSnapshotService;
   notificationChannel: INotificationChannel;
@@ -61,7 +61,7 @@ export const ServiceProvider: React.FC<ServiceProviderProps> = ({ children }) =>
     authService: new SupabaseAuthService(),
     avatarService: new SupabaseAvatarService(),
     productDataService: new SupabaseProductDataService(),
-    signatureService: new SupabaseSignatureService(),
+    positioningStatementService: new SupabasePositioningStatementService(),
     competitorInsightsService: new SupabaseCompetitorInsightsService(),
     trustGapSnapshotService: new SupabaseTrustGapSnapshotService(),
     notificationChannel: new SupabaseInAppNotificationChannel(),

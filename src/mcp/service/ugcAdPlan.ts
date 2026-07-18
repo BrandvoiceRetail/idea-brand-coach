@@ -171,7 +171,7 @@ export interface UgcAdPlanInput {
   ugcFormat?: string;
   decisionTrigger?: string;
   avatarSummary?: string;
-  signature?: string;
+  positioning_statement?: string;
   trustGapSummary?: string;
   verifiedFacts?: string;
   /** Where the ad will run (meta / tiktok / amazon_listing / …). Optional. */
@@ -213,7 +213,7 @@ export function buildUgcAdPlan(input: UgcAdPlanInput): UgcAdPlanResult {
   const positioning: PositioningInputs = {
     decisionTrigger: input.decisionTrigger,
     avatarSummary: input.avatarSummary,
-    signature: input.signature,
+    positioning_statement: input.positioning_statement,
     trustGapSummary: input.trustGapSummary,
     verifiedFacts: input.verifiedFacts,
   };

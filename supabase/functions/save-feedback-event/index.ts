@@ -18,11 +18,11 @@
 //   posthogDistinctId: string,            // REQUIRED — the join key
 //   avatarId?: string|null,
 //   sessionId?: string|null,
-//   chosenSignature?: string|null,
-//   signatureOptions?: unknown[]|null,
+//   chosenPositioningStatement?: string|null,
+//   positioningStatementOptions?: unknown[]|null,
 //   scores?: object|null,
 //   q1ScoreFeltRight?: 'yes'|'no'|'partial'|null,
-//   q2SignatureFeltRight?: 'yes'|'no'|'partial'|null,
+//   q2PositioningStatementFeltRight?: 'yes'|'no'|'partial'|null,
 //   q3WhatsOff?: string|null,
 //   payload?: object                      // catch-all
 // }
@@ -85,7 +85,7 @@ serve(async (req) => {
     }
 
     const moment = normalizeText(body?.moment, 64) ?? "moment_1";
-    const signatureOptions = Array.isArray(body?.signatureOptions) ? body.signatureOptions : null;
+    const positioningStatementOptions = Array.isArray(body?.positioningStatementOptions) ? body.positioningStatementOptions : null;
     const scores =
       body?.scores && typeof body.scores === "object" && !Array.isArray(body.scores)
         ? body.scores
@@ -96,7 +96,7 @@ serve(async (req) => {
         : null;
 
     // Guard against unbounded jsonb (storage abuse). 10KB is ample.
-    for (const [field, value] of Object.entries({ signatureOptions, scores, payload })) {
+    for (const [field, value] of Object.entries({ positioningStatementOptions, scores, payload })) {
       if (value !== null && JSON.stringify(value).length > 10_000) {
         return jsonResponse({ error: `${field} too large` }, 400);
       }
@@ -116,11 +116,11 @@ serve(async (req) => {
         posthog_distinct_id: posthogDistinctId,
         avatar_id: normalizeText(body?.avatarId, 64),
         session_id: normalizeText(body?.sessionId, 200),
-        chosen_signature: normalizeText(body?.chosenSignature, 2_000),
-        signature_options: signatureOptions,
+        chosen_positioning_statement: normalizeText(body?.chosenPositioningStatement, 2_000),
+        positioning_statement_options: positioningStatementOptions,
         scores,
         q1_score_felt_right: normalizeAnswer(body?.q1ScoreFeltRight),
-        q2_signature_felt_right: normalizeAnswer(body?.q2SignatureFeltRight),
+        q2_positioning_statement_felt_right: normalizeAnswer(body?.q2PositioningStatementFeltRight),
         q3_whats_off: normalizeText(body?.q3WhatsOff, 5_000),
         ...(payload !== null ? { payload } : {}),
       })

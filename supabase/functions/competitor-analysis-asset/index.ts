@@ -18,7 +18,7 @@ import {
   enforceVocGrounding,
   formatAvatar,
   formatOurAsset,
-  formatSignature,
+  formatPositioningStatement,
   parseAnalysis,
   parseVoc,
   renderProductEvidence,
@@ -46,7 +46,7 @@ import { getCached, upsertCached, CACHE_TTL } from "../_shared/asinCache.ts";
  * four-dimension questions, the same persona (Trevor), the same Sonnet 4.6 call,
  * and the same avatar CORE_FIELDS grounding (see lib.AVATAR_CORE_FIELDS /
  * buildSystemPrompt). A competitor read is therefore `audit-asset` pointed at a
- * competitor's asset, plus a gap read vs our avatar/Signature, so a competitor
+ * competitor's asset, plus a gap read vs our avatar/Positioning Statement, so a competitor
  * asset is scored identically to how the brand's own asset is scored. Differences
  * from audit-asset are mechanical, not rubric: this fn scores MANY assets
  * (competitors) per call from fetched evidence rather than one uploaded asset, so
@@ -57,7 +57,7 @@ import { getCached, upsertCached, CACHE_TTL } from "../_shared/asinCache.ts";
  * vitest); this file is the thin Deno edge entry wiring HTTP, auth, DataForSEO
  * and persistence.
  *
- * Context loading mirrors audit-asset: avatar + Signature + the brand's own asset
+ * Context loading mirrors audit-asset: avatar + Positioning Statement + the brand's own asset
  * + its audit_result. The host may pass these in the request body (audit-idea-map
  * STATELESS pattern); when avatar_context is absent and an auth header is present,
  * avatar is loaded server-side from user_knowledge_base onto the SAME field_id
@@ -70,7 +70,7 @@ import { getCached, upsertCached, CACHE_TTL } from "../_shared/asinCache.ts";
  *
  * Request:
  *   { assetId, touchpointId, modality?, competitorUrls?, asin?, category?,
- *     marketplace?, avatarId?, avatar_context?, signature_context?,
+ *     marketplace?, avatarId?, avatar_context?, positioning_statement_context?,
  *     our_asset?, audit_result? }
  * Response:
  *   { competitors: [{ name, url, idea_scores:{i,d,e,a}, rationale,
@@ -125,7 +125,7 @@ interface AnalyzeRequest {
   marketplace?: string;
   avatarId?: string;
   avatar_context?: unknown;
-  signature_context?: unknown;
+  positioning_statement_context?: unknown;
   our_asset?: unknown;
   audit_result?: unknown;
 }
@@ -562,7 +562,7 @@ serve(async (req) => {
     if (!avatarText && supabaseClient && userId) {
       avatarText = await loadAvatarFromKb(supabaseClient, userId);
     }
-    const signatureText = formatSignature(body.signature_context);
+    const positioningStatementText = formatPositioningStatement(body.positioning_statement_context);
     const ourAssetText = formatOurAsset(body.our_asset, body.audit_result);
 
     // ── Evidence gathering (grounding gate) ───────────────────────────────────
@@ -602,7 +602,7 @@ serve(async (req) => {
     for (const e of evidence) evidenceByRef.set(e.ref, e);
 
     const systemPrompt = buildSystemPrompt();
-    const userMessage = buildUserMessage(modality, touchpointId, evidence, avatarText, signatureText, ourAssetText);
+    const userMessage = buildUserMessage(modality, touchpointId, evidence, avatarText, positioningStatementText, ourAssetText);
 
     const response = await fetch(CLAUDE_API_URL, {
       method: 'POST',

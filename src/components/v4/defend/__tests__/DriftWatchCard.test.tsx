@@ -19,7 +19,7 @@ const DRIFTED: DriftWatch = {
       touchpointLabel: 'Main listing image',
       stage: 'consideration',
       builtAgainst: 'sig-1',
-      currentSignature: 'sig-2',
+      currentPositioningStatement: 'sig-2',
     },
     {
       assetId: 'a2',
@@ -27,7 +27,7 @@ const DRIFTED: DriftWatch = {
       touchpointLabel: 'Product title',
       stage: 'purchase_decision',
       builtAgainst: 'sig-1',
-      currentSignature: 'sig-2',
+      currentPositioningStatement: 'sig-2',
     },
   ],
 };

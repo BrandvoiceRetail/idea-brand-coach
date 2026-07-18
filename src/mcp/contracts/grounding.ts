@@ -1,7 +1,7 @@
 /**
  * Layer 0 (contract) — shared grounding primitives every generator output carries.
  *
- * Generalizes reveal-signature's `usedReviews`/`inference` discipline (guardrail #4):
+ * Generalizes reveal-positioning-statement's `usedReviews`/`inference` discipline (guardrail #4):
  * each generated artifact records whether it was produced in `evidence` mode (slots
  * were evidence-filled) or `inference` mode, plus the references it leaned on. The
  * fabrication gate (manifest §6) is expressed by `needs_input`: when a PRODUCT-TRUTH

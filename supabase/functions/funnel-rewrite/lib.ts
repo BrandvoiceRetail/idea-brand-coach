@@ -37,8 +37,8 @@ export interface RewriteInput {
   competitor_brief?: CompetitorBrief;
   /** Host-supplied avatar context (object or pre-formatted string). */
   avatar_context?: unknown;
-  /** Host-supplied Signature context. */
-  signature_context?: unknown;
+  /** Host-supplied Positioning Statement context. */
+  positioning_statement_context?: unknown;
 }
 
 export interface RewriteResult {
@@ -48,7 +48,7 @@ export interface RewriteResult {
   angle_note: string;
 }
 
-/** Format an avatar/Signature context value into model-readable text. */
+/** Format an avatar/Positioning Statement context value into model-readable text. */
 export function formatContext(value: unknown): string {
   if (value == null) return '';
   if (typeof value === 'string') return value.trim();
@@ -90,10 +90,10 @@ export function buildSystemPrompt(): string {
     'You are a senior brand copywriter applying the IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic).',
     '</persona>',
     '<what-to-write>',
-    'Rewrite the supplied asset copy so it directly answers the competitor brief: lead with the strategic angle and exploit the gap competitors leave open, while staying true to the brand avatar and Signature.',
+    'Rewrite the supplied asset copy so it directly answers the competitor brief: lead with the strategic angle and exploit the gap competitors leave open, while staying true to the brand avatar and Positioning Statement.',
     '</what-to-write>',
     '<grounding-rule>',
-    'Anchor every claim to the supplied brand/avatar/Signature context and the competitor brief. Do NOT invent competitor names, prices, statistics, or customer quotes. If the context is thin, write a tighter, honest rewrite rather than padding with fabricated specifics.',
+    'Anchor every claim to the supplied brand/avatar/Positioning Statement context and the competitor brief. Do NOT invent competitor names, prices, statistics, or customer quotes. If the context is thin, write a tighter, honest rewrite rather than padding with fabricated specifics.',
     '</grounding-rule>',
     '<voice-rules>',
     'UK English. No markdown, no asterisks, no em-dashes, no emojis, no hype words. Plain, confident sentences.',
@@ -108,7 +108,7 @@ export function buildSystemPrompt(): string {
 
 export function buildUserMessage(input: RewriteInput): string {
   const avatar = formatContext(input.avatar_context);
-  const signature = formatContext(input.signature_context);
+  const positioning_statement = formatContext(input.positioning_statement_context);
   const briefBlock = buildCompetitorBriefBlock(input.competitor_brief);
   const sections: string[] = [];
 
@@ -126,8 +126,8 @@ export function buildUserMessage(input: RewriteInput): string {
   if (avatar) {
     sections.push('<avatar-context>', avatar, '</avatar-context>');
   }
-  if (signature) {
-    sections.push('<signature-context>', signature, '</signature-context>');
+  if (positioning_statement) {
+    sections.push('<positioning statement-context>', positioning_statement, '</positioning statement-context>');
   }
   sections.push('Produce the rewrite now as the JSON object specified in the output contract.');
   return sections.join('\n');

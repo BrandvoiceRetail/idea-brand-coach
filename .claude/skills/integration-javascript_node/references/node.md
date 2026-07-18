@@ -891,7 +891,7 @@ With the release of V2, the API was kept mostly the same but with some small cha
 
 1.  The minimum PostHog version requirement is 1.38
 2.  The `callback` parameter passed as an optional last argument to most of the methods is no longer supported
-3.  The method signature for `isFeatureEnabled` and `getFeatureFlag` is slightly modified. See the above documentation for each method for more details.
+3.  The method positioning statement for `isFeatureEnabled` and `getFeatureFlag` is slightly modified. See the above documentation for each method for more details.
 4.  For specific changes, [see the CHANGELOG](https://github.com/PostHog/posthog-js/blob/main/packages/node/CHANGELOG.md)
 
 ### Community questions

@@ -3,20 +3,20 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getServiceClient, getAuthedUserId } from "../_shared/edge-auth.ts";
 import { meterAndDebit } from "../_shared/meter.ts";
 import { captureServerException } from "../_shared/posthog.ts";
-import { INTERNAL_PROMPT_SIGNATURE_REVIEW_CHARS } from "../_shared/contextBudgets.ts";
+import { INTERNAL_PROMPT_POSITIONING_STATEMENT_REVIEW_CHARS } from "../_shared/contextBudgets.ts";
 
 /**
- * reveal-signature
+ * reveal-positioning-statement
  *
- * Synthesises 3-4 DISTINCT "Signature" options for the Brand Coach — the
- * recognition moment. A Signature names the deeper truth of what a customer is
+ * Synthesises 3-4 DISTINCT "Positioning Statement" options for the Brand Coach — the
+ * recognition moment. A Positioning Statement names the deeper truth of what a customer is
  * REALLY buying, in Trevor's voice ("My customer isn't buying X. They're buying Y").
  *
  * Cloned from brand-ai-assistant (CORS, JWT->getUser, prompt caching, try/catch).
  * Uses Claude SONNET. Returns JSON: { options: string[], usedReviews, inference }.
  *
  * TOP-LEVEL FAILURE MODE — DO NOT PARROT:
- * The Signature reuses the customer's emotional VOCABULARY but must synthesise a
+ * The Positioning Statement reuses the customer's emotional VOCABULARY but must synthesise a
  * TRUTH they had NOT articulated. If every claim traces verbatim to the user's
  * own words, it has FAILED (that is a summary, not an insight).
  */
@@ -66,23 +66,23 @@ function formatFields(fields: Record<string, unknown> | undefined): string {
 
 /**
  * Build the system prompt. Includes Trevor voice rules, the no-parroting failure
- * mode, the four InfinityVault mockup Signatures as few-shot, and the JSON contract.
+ * mode, the four InfinityVault mockup Positioning Statements as few-shot, and the JSON contract.
  */
 function buildSystemPrompt(hasReviews: boolean): string {
   return `<persona>
-You are Trevor, a BMAD brand coach. You have just guided a founder through a discovery conversation about their customer. Now you reveal the SIGNATURE: the single deeper truth of what their customer is REALLY buying.
+You are Trevor, a BMAD brand coach. You have just guided a founder through a discovery conversation about their customer. Now you reveal the POSITIONING STATEMENT: the single deeper truth of what their customer is REALLY buying.
 </persona>
 
-<what-a-signature-is>
-A Signature is one sentence in the shape: "My customer isn't buying X. They're buying Y."
+<what-a-positioning_statement-is>
+A Positioning Statement is one sentence in the shape: "My customer isn't buying X. They're buying Y."
 - X is the literal product or commodity (a card binder, storage, pages and sleeves).
 - Y is the emotional or identity truth underneath the purchase — the thing they would never say out loud but would recognise instantly as true.
-A Signature is the retention moment. It works ONLY if the founder reads it and thinks: "That is exactly right, and I had never put it that way myself."
-</what-a-signature-is>
+A Positioning Statement is the retention moment. It works ONLY if the founder reads it and thinks: "That is exactly right, and I had never put it that way myself."
+</what-a-positioning_statement-is>
 
 <critical-failure-mode>
 DO NOT rephrase the user's own words back to them. Reuse the customer's emotional VOCABULARY, but synthesise a TRUTH they had NOT articulated.
-If every claim in a Signature traces VERBATIM to what the user wrote or pasted, it has FAILED — that is a summary, not an insight.
+If every claim in a Positioning Statement traces VERBATIM to what the user wrote or pasted, it has FAILED — that is a summary, not an insight.
 
 BAD (parroting): user says "collections getting too big to manage" -> "they're buying a way to manage their growing collection". This just hands their words back. FORBIDDEN.
 GOOD (insight): -> "they're buying the moment a chaotic, overflowing collection finally feels like a collection". The vocabulary is theirs; the truth is new.
@@ -103,7 +103,7 @@ Every option you produce must clear this bar: vocabulary borrowed, truth newly n
 <few-shot-example>
 This is the worked InfinityVault example (premium trading card binders). The customer's own unprompted review vocabulary clustered into: protection / damage anxiety (scratch, dent, ding, slip out), capacity / consolidation (fits everything, one binder, finally, ran out of room), quality / dignity (premium, feels expensive, not cheap), display / pride (show off, proud, take to shows), identity / seriousness (serious collector, real collector), ritual / pleasure (love opening it, satisfying).
 
-From that vocabulary, these four DISTINCT Signatures were synthesised. Notice each borrows the vocabulary but names a truth the customer never stated:
+From that vocabulary, these four DISTINCT Positioning Statements were synthesised. Notice each borrows the vocabulary but names a truth the customer never stated:
 
 1. My customer isn't buying a card binder. They're buying the certainty that everything they've spent years building won't be lost in an instant.
 2. My customer isn't buying storage. They're buying the dignity of being taken seriously as a collector, by themselves and by anyone who flips through.
@@ -119,16 +119,16 @@ Each option must come at a genuinely DIFFERENT emotional angle from the others. 
 
 ${hasReviews
   ? `<reviews-provided>
-The founder has pasted real customer reviews. Mine them for unprompted emotional vocabulary, recurring fears, and the language customers actually use. Borrow that vocabulary. Ground each Signature in what the evidence shows, then name the truth beneath it.
+The founder has pasted real customer reviews. Mine them for unprompted emotional vocabulary, recurring fears, and the language customers actually use. Borrow that vocabulary. Ground each Positioning Statement in what the evidence shows, then name the truth beneath it.
 </reviews-provided>`
   : `<no-reviews-provided>
-No customer reviews were pasted. You are working from the conversation and extracted fields alone, which means these Signatures are INFORMED INFERENCE, not evidence-backed. Keep them plausible and grounded in what was actually discussed. Do not invent specific customer quotes or fabricate review language.
+No customer reviews were pasted. You are working from the conversation and extracted fields alone, which means these Positioning Statements are INFORMED INFERENCE, not evidence-backed. Keep them plausible and grounded in what was actually discussed. Do not invent specific customer quotes or fabricate review language.
 </no-reviews-provided>`}
 
 <output-contract>
 Respond with ONLY a JSON object, no preamble and no code fences:
-{"options": ["<signature 1>", "<signature 2>", "<signature 3>"]}
-Provide 3 or 4 strings. Each string is one Signature in Trevor's voice. No markdown inside the strings. No trailing commentary outside the JSON.
+{"options": ["<positioning statement 1>", "<positioning statement 2>", "<positioning statement 3>"]}
+Provide 3 or 4 strings. Each string is one Positioning Statement in Trevor's voice. No markdown inside the strings. No trailing commentary outside the JSON.
 </output-contract>`;
 }
 
@@ -158,10 +158,10 @@ serve(async (req) => {
         const token = authHeader.replace('Bearer ', '');
         const { data: { user } } = await supabaseClient.auth.getUser(token);
         if (user) {
-          console.log('[reveal-signature] Authenticated user:', user.id);
+          console.log('[reveal-positioning-statement] Authenticated user:', user.id);
         }
       } catch (authErr) {
-        console.log('[reveal-signature] Auth lookup failed (non-fatal):', authErr);
+        console.log('[reveal-positioning-statement] Auth lookup failed (non-fatal):', authErr);
       }
     }
 
@@ -176,7 +176,7 @@ serve(async (req) => {
     const hasReviews = reviewsText.length > 0;
 
     // Cap pasted reviews to keep the request within sane token limits.
-    const reviewsForPrompt = reviewsText.slice(0, INTERNAL_PROMPT_SIGNATURE_REVIEW_CHARS);
+    const reviewsForPrompt = reviewsText.slice(0, INTERNAL_PROMPT_POSITIONING_STATEMENT_REVIEW_CHARS);
 
     const userMessageParts: string[] = [];
     if (fieldsText) {
@@ -191,7 +191,7 @@ serve(async (req) => {
     if (userMessageParts.length === 0) {
       userMessageParts.push('No discovery detail was provided. Decline gracefully.');
     }
-    userMessageParts.push('Now reveal 3 to 4 DISTINCT Signature options. Return ONLY the JSON object.');
+    userMessageParts.push('Now reveal 3 to 4 DISTINCT Positioning Statement options. Return ONLY the JSON object.');
 
     const systemPrompt = buildSystemPrompt(hasReviews);
 
@@ -229,7 +229,7 @@ serve(async (req) => {
       try {
         response = await fetch(CLAUDE_API_URL, { method: 'POST', headers, body: requestBody });
       } catch (fetchError) {
-        console.error(`[reveal-signature] attempt ${attempt} network error:`, fetchError);
+        console.error(`[reveal-positioning-statement] attempt ${attempt} network error:`, fetchError);
         response = null;
       }
 
@@ -239,7 +239,7 @@ serve(async (req) => {
       const errorBody = response ? (await response.text()).slice(0, 300) : '';
       const retryable = !response || response.status === 429 || response.status >= 500;
       console.error(
-        `[reveal-signature] attempt ${attempt} failed | upstream=${upstreamStatus} | retryable=${retryable} | hasReviews=${hasReviews} |`,
+        `[reveal-positioning-statement] attempt ${attempt} failed | upstream=${upstreamStatus} | retryable=${retryable} | hasReviews=${hasReviews} |`,
         errorBody,
       );
       if (!retryable || attempt === 2) {
@@ -256,7 +256,7 @@ serve(async (req) => {
     const rawText = data?.content?.[0]?.text ?? '';
     // Meter the real token usage for this paid op (records always; debits; never throws).
     const meterUserId = await getAuthedUserId(req);
-    if (meterUserId) await meterAndDebit(getServiceClient(), { userId: meterUserId, op: 'reveal_signature', model: SONNET_MODEL, usage: data.usage });
+    if (meterUserId) await meterAndDebit(getServiceClient(), { userId: meterUserId, op: 'reveal_positioning_statement', model: SONNET_MODEL, usage: data.usage });
     // Without the prefill the model returns the full object; fall back to the
     // legacy fragment reconstruction if it ever emits a bare value.
     const unfenced = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
@@ -276,7 +276,7 @@ serve(async (req) => {
           const parsed = JSON.parse(match[0]);
           if (Array.isArray(parsed?.options)) options = parsed.options;
         } catch (innerErr) {
-          console.error('[reveal-signature] JSON salvage failed:', innerErr);
+          console.error('[reveal-positioning-statement] JSON salvage failed:', innerErr);
         }
       }
     }
@@ -289,21 +289,21 @@ serve(async (req) => {
       .slice(0, 4);
 
     if (options.length === 0) {
-      console.error('[reveal-signature] No options parsed from model output:', rawText.slice(0, 500));
-      throw new Error('Could not parse Signature options from model output.');
+      console.error('[reveal-positioning-statement] No options parsed from model output:', rawText.slice(0, 500));
+      throw new Error('Could not parse Positioning Statement options from model output.');
     }
 
-    console.log(`[reveal-signature] Returning ${options.length} options (hasReviews=${hasReviews})`);
+    console.log(`[reveal-positioning-statement] Returning ${options.length} options (hasReviews=${hasReviews})`);
 
     return new Response(
       JSON.stringify({ options, usedReviews: hasReviews, inference: !hasReviews }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in reveal-signature function:', error);
-    captureServerException('reveal-signature', error, { status_code: 500 });
+    console.error('Error in reveal-positioning-statement function:', error);
+    captureServerException('reveal-positioning-statement', error, { status_code: 500 });
     return new Response(
-      JSON.stringify({ error: 'Unable to reveal your Signature right now. Please try again.' }),
+      JSON.stringify({ error: 'Unable to reveal your Positioning Statement right now. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

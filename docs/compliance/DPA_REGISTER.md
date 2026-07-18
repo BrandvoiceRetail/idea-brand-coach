@@ -7,7 +7,7 @@ accepted, and its current status. Work top-down — the highest-personal-data
 processors (Supabase, Anthropic) first.
 
 **Status key**
-- `AUTO` — DPA is incorporated into the standard terms you already accepted; no separate signature needed. Keep a copy for the file.
+- `AUTO` — DPA is incorporated into the standard terms you already accepted; no separate positioning statement needed. Keep a copy for the file.
 - `SELF-SERVE` — a DPA exists; accept/sign it via the link (often a form or an in-dashboard toggle).
 - `REQUEST` — no off-the-shelf DPA surfaced; email the vendor to request one (or assess whether a DPA is required given what we send them).
 - `VERIFY` — a data-use caveat must be confirmed before we can rely on the privacy notice's claims.
@@ -24,7 +24,7 @@ processors (Supabase, Anthropic) first.
 | **Anthropic (Claude API)** | Conversations, brand content, product context, memories | anthropic.com/legal/commercial-terms (+ DPA) | AUTO / SELF-SERVE | Commercial/API terms include the DPA and the "no training on your inputs/outputs" commitment for API traffic. Confirm we're on **Commercial** (not consumer) terms; save the DPA. |
 | **OpenAI (embeddings)** | Brand/diagnostic text (embeddings only) | openai.com/policies/data-processing-addendum | SELF-SERVE | Complete the DPA form under the API-platform account. API data is not used for training by default. |
 | **PostHog (EU)** | Analytics events, IP, device (consent-gated) | posthog.com/dpa | SELF-SERVE | Accept the DPA; confirm EU Cloud residency (we already pin the EU host). |
-| **Stripe** | Email, customer/subscription IDs (card data direct-to-Stripe) | stripe.com/legal/dpa | AUTO | DPA is part of the Stripe Services Agreement — no separate signature. File the reference. |
+| **Stripe** | Email, customer/subscription IDs (card data direct-to-Stripe) | stripe.com/legal/dpa | AUTO | DPA is part of the Stripe Services Agreement — no separate positioning statement. File the reference. |
 
 ## Tier 2 — moderate exposure
 

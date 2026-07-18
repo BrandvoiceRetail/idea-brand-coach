@@ -62,7 +62,7 @@ Safe tasks share three properties: bounded scope · rollback in <30 min · no pr
 | Failing-test → make pass | Make a red test green without changing the test | TDD + protected-path |
 | Test coverage expansion | 60% → 80% on module Y, no behavior change | protected-path + cost-cap |
 | Lint / type fix | Fix mypy/eslint in module Z, no runtime change | protected-path + characterization snapshot |
-| Documentation generation | Docstrings for module W, no signature/behavior change | protected-path + Karpathy #3 (surgical) |
+| Documentation generation | Docstrings for module W, no positioning statement/behavior change | protected-path + Karpathy #3 (surgical) |
 | CI failure investigation (no fix) | Read CI log, propose 1–3 causes w/ file:line; DO NOT apply | design-approval (output is a doc) |
 | Spec / plan generation for review | Draft a spec; operator reviews before code | design-approval |
 | Slack notifier event addition (Path B) | One `CHANNEL_BY_EVENT` row + test, per skill `017` | TDD + protected-path |

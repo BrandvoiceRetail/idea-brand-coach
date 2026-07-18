@@ -207,7 +207,7 @@ Run AFTER §1–§5 so the analyzer hits live tables + live DataForSEO. Use the 
 
 - [ ] Sign in to the QA account (confirm the live project is awake; confirm the signup email if needed via SQL).
 - [ ] Call `competitor-analysis-asset` with `modality: 'marketplace-listing'`, a **real competitor ASIN**
-      (and/or a top-N keyword/category), the QA avatar's `avatar_context` + `signature_context`, and a real
+      (and/or a top-N keyword/category), the QA avatar's `avatar_context` + `positioning_statement_context`, and a real
       `our_asset`. Expect: IDEA `scores` per competitor (each pillar 0–25, overall 0–100), every score/quote
       anchored to a `source_ref`, `grounding: 'evidence'`, populated `evidence_refs`.
 - [ ] **Grounding-gate assertion (mandatory):** confirm NO fabricated competitors, prices, IDEA scores, or

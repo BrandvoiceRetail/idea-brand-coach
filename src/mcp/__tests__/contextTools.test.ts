@@ -153,7 +153,7 @@ describe('get_context_status tool', () => {
     install(); // every queue empty → all slots resolve missing
     const client = await connect(registerGetContextStatusTool);
     const res = await runWithIdentity(authed, () =>
-      client.callTool({ name: 'get_context_status', arguments: { target: 'signature' } }),
+      client.callTool({ name: 'get_context_status', arguments: { target: 'positioning_statement' } }),
     );
     const sc = res.structuredContent as {
       ok: boolean;
@@ -163,7 +163,7 @@ describe('get_context_status tool', () => {
       needs_input: Array<{ slot: number; question: string; why: string; current_guess: unknown; status: string }>;
     };
     expect(sc.ok).toBe(true);
-    // signature requiredContext = [1, 12, 13]; all missing.
+    // positioning statement requiredContext = [1, 12, 13]; all missing.
     expect(sc.fill_map.map((f) => f.slot).sort()).toEqual([1, 12, 13]);
     expect(sc.needs_input.map((n) => n.slot).sort()).toEqual([1, 12, 13]);
     expect(sc.all_filled).toBe(false);
@@ -204,7 +204,7 @@ describe('get_context_status tool', () => {
     );
     const sc = res.structuredContent as { fill_map: Array<{ slot: number }> };
     const slots = sc.fill_map.map((f) => f.slot).sort((a, b) => a - b);
-    // Union across diagnostic + avatar S1-S4 + signature + canvas + brief + audit×idea.
+    // Union across diagnostic + avatar S1-S4 + positioning statement + canvas + brief + audit×idea.
     // Includes the fabrication-gated PRODUCT-TRUTH slots 5 & 6 (from the brief).
     expect(slots).toContain(1);
     expect(slots).toContain(6);

@@ -3,14 +3,14 @@
  * sheet 4). Clones MarkdownExportService's batch/dependsOn/retry shape:
  *
  *   s1 (vocabulary) → s2 (job map) → [s3 (triggers), s4 (objections) in parallel]
- *                                  → s5 (signature, D2/R-015 gated)
+ *                                  → s5 (positioning statement, D2/R-015 gated)
  *
  * Each stage:
  *   1. RESOLVES its grounding inputs — own/competitor reviews (slot #1) via the context
  *      resolver, and any prior-stage artifacts via the artifact store.
  *   2. SHORT-CIRCUITS to `needs_input` when reviews are unresolved. The engine never runs
  *      ungrounded: S1 vocabulary/S4 verbatims MUST trace to a real review (manifest §6).
- *   3. INVOKES the stage's edge fn (cloned from the reveal-signature skeleton) verbatim
+ *   3. INVOKES the stage's edge fn (cloned from the reveal-positioning-statement skeleton) verbatim
  *      via the shared EdgeFnClient, passing `{ reviews, prior }`.
  *   4. VALIDATES the engine reply against the stage's Phase-0 zod contract; a bad shape
  *      is a retryable failure (the model produced an invalid artifact).
@@ -21,11 +21,11 @@
  * Dependencies (resolver / store / edge fn) are injected so the orchestration is unit
  * testable against stubs; they default to the live module functions in production.
  *
- * D2 / R-015: s5 feeds the persisted evidence artifacts into the Signature engine. Per
+ * D2 / R-015: s5 feeds the persisted evidence artifacts into the Positioning Statement engine. Per
  * the manifest argument this preserves no-parroting (customer review vocabulary is not
  * the founder's own words) — the OPERATOR must sign off the R-015 reading before the
  * pipeline auto-feeds S5. `runStage('s5')`/`runPipeline()` therefore require an explicit
- * `allowSignature` flag; without it the chain stops after S4 and reports the gate.
+ * `allowPositioningStatement` flag; without it the chain stops after S4 and reports the gate.
  */
 import {
   CONTRACTS,
@@ -45,7 +45,7 @@ import {
 } from './artifactStore.js';
 import { EdgeFnClient } from '../edgeFn/client.js';
 
-/** The forensic stages this pipeline runs (S5 = signature, gated). */
+/** The forensic stages this pipeline runs (S5 = positioning statement, gated). */
 export type AvatarStage = 's1' | 's2' | 's3' | 's4' | 's5';
 
 /** A stage spec: contract kind, edge fn, and the prior stages it grounds on. */
@@ -58,9 +58,9 @@ interface StageSpec {
 }
 
 /**
- * The four forensic stages + the gated signature stage. Edge-fn names follow the P3-A
+ * The four forensic stages + the gated positioning statement stage. Edge-fn names follow the P3-A
  * ledger interface (avatar-vocabulary / -jobmap / -triggers / -objections); S5 reuses
- * the frozen reveal-signature engine. Order is s1 → s2 → {s3,s4} → s5 — s3 and s4 share
+ * the frozen reveal-positioning-statement engine. Order is s1 → s2 → {s3,s4} → s5 — s3 and s4 share
  * batch 3 (both depend only on s1/s2) and run in parallel in pipeline mode.
  */
 const STAGES: Readonly<Record<AvatarStage, StageSpec>> = {
@@ -68,7 +68,7 @@ const STAGES: Readonly<Record<AvatarStage, StageSpec>> = {
   s2: { stage: 's2', kind: 'avatar_s2_jobmap', edgeFn: 'avatar-jobmap', dependsOn: ['s1'] },
   s3: { stage: 's3', kind: 'avatar_s3_triggers', edgeFn: 'avatar-triggers', dependsOn: ['s1', 's2'] },
   s4: { stage: 's4', kind: 'avatar_s4_objections', edgeFn: 'avatar-objections', dependsOn: ['s1', 's2'] },
-  s5: { stage: 's5', kind: 'signature', edgeFn: 'reveal-signature', dependsOn: ['s1', 's2', 's3', 's4'] },
+  s5: { stage: 's5', kind: 'positioning_statement', edgeFn: 'reveal-positioning-statement', dependsOn: ['s1', 's2', 's3', 's4'] },
 };
 
 /** Slot #1 = own product reviews (verbatim) — the grounding gate for every stage. */
@@ -120,7 +120,7 @@ export interface StageArtifactSummary {
 export type StageResult =
   | { ok: true; status: 'persisted'; summary: StageArtifactSummary }
   | { ok: false; status: 'needs_input'; needs_input: NeedsInputItem[] }
-  | { ok: false; status: 'signature_gated'; note: string }
+  | { ok: false; status: 'positioning_statement_gated'; note: string }
   | { ok: false; status: 'failed'; note: string };
 
 /** Result of running the full chain: per-stage summaries + any short-circuit. */
@@ -129,8 +129,8 @@ export interface PipelineResult {
   stages: StageArtifactSummary[];
   /** Set when the chain stopped early on an unresolved reviews slot. */
   needs_input?: NeedsInputItem[];
-  /** Set when the chain stopped at the S5 signature gate (D2/R-015 not signed off). */
-  signature_gated?: string;
+  /** Set when the chain stopped at the S5 positioning statement gate (D2/R-015 not signed off). */
+  positioning_statement_gated?: string;
   /** Set when a stage failed after retries. */
   failed?: { stage: AvatarStage; note: string };
 }
@@ -138,8 +138,8 @@ export interface PipelineResult {
 /** Options for a stage/pipeline run. */
 export interface RunOptions {
   avatarId?: string | null;
-  /** D2/R-015 operator sign-off: required for the S5 signature stage. */
-  allowSignature?: boolean;
+  /** D2/R-015 operator sign-off: required for the S5 positioning statement stage. */
+  allowPositioningStatement?: boolean;
 }
 
 /** Build the needs_input demand for an unresolved reviews slot (manifest §5 step 4). */
@@ -312,17 +312,17 @@ async function runForensicStage(
 }
 
 /**
- * Run the S5 signature stage (D2/R-015 gated). Feeds the persisted evidence reviews into
- * the reveal-signature engine, maps the flat options into the signature contract shape,
- * and persists. Requires `allowSignature` (operator sign-off); otherwise reports the gate.
+ * Run the S5 positioning statement stage (D2/R-015 gated). Feeds the persisted evidence reviews into
+ * the reveal-positioning-statement engine, maps the flat options into the positioning statement contract shape,
+ * and persists. Requires `allowPositioningStatement` (operator sign-off); otherwise reports the gate.
  */
-async function runSignatureStage(opts: RunOptions, deps: AvatarPipelineDeps): Promise<StageResult> {
-  if (!opts.allowSignature) {
+async function runPositioningStatementStage(opts: RunOptions, deps: AvatarPipelineDeps): Promise<StageResult> {
+  if (!opts.allowPositioningStatement) {
     return {
       ok: false,
-      status: 'signature_gated',
+      status: 'positioning_statement_gated',
       note:
-        'S5 signature auto-feed is D2/R-015 gated — pass allowSignature:true only after the operator signs off that customer review vocabulary is not the founder\'s own words (no-parroting preserved).',
+        'S5 positioning statement auto-feed is D2/R-015 gated — pass allowPositioningStatement:true only after the operator signs off that customer review vocabulary is not the founder\'s own words (no-parroting preserved).',
     };
   }
 
@@ -342,14 +342,14 @@ async function runSignatureStage(opts: RunOptions, deps: AvatarPipelineDeps): Pr
   for (let attempt = 0; attempt <= MAX_STAGE_RETRIES; attempt++) {
     if (attempt > 0) await deps.sleep!(STAGE_RETRY_BASE_MS * 2 ** (attempt - 1));
 
-    const res = await deps.edgeFn.invoke<{ options: unknown }>('reveal-signature', {
+    const res = await deps.edgeFn.invoke<{ options: unknown }>('reveal-positioning-statement', {
       conversation: [],
       fields: {},
       reviews: reviews.text,
     });
     const options = res.ok && res.data ? res.data.options : null;
     if (!Array.isArray(options) || options.length === 0) {
-      lastNote = res.note ?? 'reveal-signature returned no options';
+      lastNote = res.note ?? 'reveal-positioning-statement returned no options';
       continue;
     }
 
@@ -360,7 +360,7 @@ async function runSignatureStage(opts: RunOptions, deps: AvatarPipelineDeps): Pr
     };
     const parsed = CONTRACTS[spec.kind].outputSchema.safeParse(content);
     if (!parsed.success) {
-      lastNote = `signature output failed contract: ${parsed.error.message}`;
+      lastNote = `positioning statement output failed contract: ${parsed.error.message}`;
       continue;
     }
 
@@ -392,7 +392,7 @@ export async function runStage(
   deps?: Partial<AvatarPipelineDeps>,
 ): Promise<StageResult> {
   const resolved = withDefaults(deps);
-  if (stage === 's5') return runSignatureStage(opts, resolved);
+  if (stage === 's5') return runPositioningStatementStage(opts, resolved);
   return runForensicStage(STAGES[stage], opts, resolved);
 }
 
@@ -401,7 +401,7 @@ export async function runStage(
  *
  * Stops on the first short-circuit: an unresolved reviews slot surfaces `needs_input`
  * (the whole chain is grounding-blocked); a stage failure surfaces `failed`; the S5 gate
- * (without `allowSignature`) surfaces `signature_gated` after S1-S4 persist. S3 and S4
+ * (without `allowPositioningStatement`) surfaces `positioning_statement_gated` after S1-S4 persist. S3 and S4
  * run in parallel (both depend only on s1/s2), mirroring the export service's batch shape.
  */
 export async function runPipeline(
@@ -429,10 +429,10 @@ export async function runPipeline(
     if (r.ok) summaries.push(r.summary);
   }
 
-  // S5 signature — D2/R-015 gated. Without sign-off the chain reports the gate and stops.
-  const sig = await runSignatureStage(opts, resolved);
-  if (sig.status === 'signature_gated') {
-    return { ok: true, stages: summaries, signature_gated: sig.note };
+  // S5 positioning statement — D2/R-015 gated. Without sign-off the chain reports the gate and stops.
+  const sig = await runPositioningStatementStage(opts, resolved);
+  if (sig.status === 'positioning_statement_gated') {
+    return { ok: true, stages: summaries, positioning_statement_gated: sig.note };
   }
   if (sig.status === 'needs_input') return { ok: false, stages: summaries, needs_input: sig.needs_input };
   if (sig.status === 'failed') return { ok: false, stages: summaries, failed: { stage: 's5', note: sig.note } };

@@ -97,7 +97,7 @@ export interface AnalyseRunHook {
   // ── Active customer SET (multi-avatar awareness) ──
   /** True when at least one customer is in the active set. */
   hasAvatar: boolean;
-  /** Signature of the active customer SET — presentation re-arms the run on change. */
+  /** Positioning Statement of the active customer SET — presentation re-arms the run on change. */
   loadKey: string;
   /** The active customer set (ids[0] = the focus the build reasons over). */
   avatarIds: string[];
@@ -157,7 +157,7 @@ export function useAnalyseRun(): AnalyseRunHook {
     () => Object.fromEntries((avatars ?? []).map((a) => [a.id, a.name])),
     [avatars],
   );
-  // A stable signature of the active customer SET — the build re-arms when the set
+  // A stable positioning statement of the active customer SET — the build re-arms when the set
   // changes (not only when the focus customer changes).
   const loadKey = contextAvatarIds.join(',');
 
@@ -200,7 +200,7 @@ export function useAnalyseRun(): AnalyseRunHook {
    * Re-arm the build-theatre when the active customer SET changes — a build is for
    * the customer(s) it ran over, so switching the set must not leave a stale avatar
    * / gap / moves / brief on screen for the prior selection. Keyed on `loadKey`
-   * (the set signature), not the focus id alone, so adding or removing a customer
+   * (the set positioning statement), not the focus id alone, so adding or removing a customer
    * also resets. (Initial mount is a no-op over already-initial state.)
    */
   useEffect(() => {

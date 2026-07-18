@@ -3,7 +3,7 @@
  *
  * Handles both change classes a user brings: a COMPONENT change (one scene, one slot,
  * one beat, one section, one title segment — recompose only that, re-run one job) and a
- * POSITIONING change (new trigger/avatar/signature/trust finding/corrected fact — the
+ * POSITIONING change (new trigger/avatar/positioning statement/trust finding/corrected fact — the
  * deterministic propagation map names what recomposes on this plan AND flags the user's
  * other live plans as stale so every surface keeps telling the same story).
  */
@@ -27,7 +27,7 @@ const inputSchema = {
   positioning_changes: z
     .array(z.enum(POSITIONING_ELEMENT_KEYS as unknown as [string, ...string[]]))
     .optional()
-    .describe('Positioning elements that changed (decision_trigger / avatar_core / signature / trust_gap_pillar / verified_facts). Omit for a component-level change.'),
+    .describe('Positioning elements that changed (decision_trigger / avatar_core / positioning statement / trust_gap_pillar / verified_facts). Omit for a component-level change.'),
   asset_id: z.string().optional().describe("The saved plan's ledger asset id, if known."),
 };
 
@@ -37,7 +37,7 @@ export function registerRefineCreativePlanTool(server: McpServer): void {
     {
       title: 'Refine / update a creative plan (component or positioning change)',
       description:
-        'The UPDATE path for every creative plan — listing image set, video storyboard, A+ content, main image + title, storefront messaging, UGC ad. For a COMPONENT change (swap a storyboard scene, reword a gallery line, change a title segment) it returns the surgical protocol: start from the SAVED plan (get_asset), recompose ONLY the named components with continuity anchors intact, claim-gate changed copy, and re-execute one Higgsfield job or edit-tool call (reframe/upscale/outpaint/voice) per component — never regenerate the set. For a POSITIONING change (new Decision Trigger, updated avatar core, new Signature, new Trust Gap finding, corrected fact) it returns the deterministic propagation map: exactly what this plan must recompose AND what each of the user\'s OTHER live plans must update, so one positioning story stays true on every surface. Ends by reconciling the saved version (log_asset with the same external_id) and truing-up any live split-test. Use this whenever a user wants to change ANYTHING about a previously generated plan.' +
+        'The UPDATE path for every creative plan — listing image set, video storyboard, A+ content, main image + title, storefront messaging, UGC ad. For a COMPONENT change (swap a storyboard scene, reword a gallery line, change a title segment) it returns the surgical protocol: start from the SAVED plan (get_asset), recompose ONLY the named components with continuity anchors intact, claim-gate changed copy, and re-execute one Higgsfield job or edit-tool call (reframe/upscale/outpaint/voice) per component — never regenerate the set. For a POSITIONING change (new Decision Trigger, updated avatar core, new Positioning Statement, new Trust Gap finding, corrected fact) it returns the deterministic propagation map: exactly what this plan must recompose AND what each of the user\'s OTHER live plans must update, so one positioning story stays true on every surface. Ends by reconciling the saved version (log_asset with the same external_id) and truing-up any live split-test. Use this whenever a user wants to change ANYTHING about a previously generated plan.' +
         groundingPreamble('refine_creative_plan') +
         appGroundingPreamble('refine_creative_plan'),
       inputSchema,

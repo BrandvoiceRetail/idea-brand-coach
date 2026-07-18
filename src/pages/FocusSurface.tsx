@@ -21,7 +21,7 @@ const BRAND_GOLD = '#D4960A';
 export default function FocusSurface() {
   const { snapshot, isLive, isLoading, needsDiagnostic } = useBrandSnapshot();
 
-  // A stable signature so the workspace remounts (fresh queue/active state) when the snapshot
+  // A stable positioning statement so the workspace remounts (fresh queue/active state) when the snapshot
   // meaningfully changes — e.g. the live diagnostic finishes loading after first paint.
   const sig = `${snapshot.brand}|${snapshot.trustGap?.overall ?? 'none'}|${snapshot.evidence.length}`;
 

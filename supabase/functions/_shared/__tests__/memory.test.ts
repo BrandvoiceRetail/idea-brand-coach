@@ -218,7 +218,7 @@ describe('create', () => {
 describe('str_replace', () => {
   it('replaces a unique occurrence and returns a numbered snippet', async () => {
     const store = createInMemoryStore({
-      '/memories/brand.md': 'Signature: dignity angle\nStatus: exploring',
+      '/memories/brand.md': 'Positioning Statement: dignity angle\nStatus: exploring',
     });
     const { result, isError } = await run(store, {
       command: 'str_replace',

@@ -12,7 +12,7 @@ Consistency contract (a structural drift -> exit 1):
   - identical sheet set + order;
   - identical first-column STRUCTURAL labels per sheet (banners, section headers, table
     header rows, tier tokens, fixed enum labels) — these are the skeleton, not the prose;
-  - same number of vocabulary clusters / signature options / audit-IDEA rows (±1);
+  - same number of vocabulary clusters / positioning statement options / audit-IDEA rows (±1);
   - same matrix tiering (T1/T2/T3 data-row counts, exact) and same rollout phase count (exact).
 
 PROSE cells (the free-text body of a row: a cluster's description, a canvas value, a
@@ -137,7 +137,7 @@ def semantic_counts(label, p1, p2, drift):
 
     if label == "Workbook A":
         # Avatar sheet: count cluster rows (between the 'Cluster' header and the
-        # 'Stage 5' banner) and signature option rows.
+        # 'Stage 5' banner) and positioning statement option rows.
         def cluster_count(labels):
             try:
                 start = labels.index("Cluster") + 1
@@ -162,7 +162,7 @@ def semantic_counts(label, p1, p2, drift):
             return len(labels) - start
 
         tol1("4. Avatar 2.0 (IV)", cluster_count, "vocabulary clusters")
-        tol1("4. Avatar 2.0 (IV)", option_count, "signature options")
+        tol1("4. Avatar 2.0 (IV)", option_count, "positioning statement options")
         tol1("7. Audit × IDEA", audit_row_count, "audit×IDEA investment rows")
 
     if label == "Workbook B":

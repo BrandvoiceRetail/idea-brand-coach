@@ -118,6 +118,6 @@ describe('Calculation parity (gated — wire when engines are importable / host 
   it.todo('TC-CP-3 build_avatar == FieldPersistenceService persist + lock');
   it.todo('TC-CP-4 draft_asset == brand-copy-generator');
   it.todo('TC-CP-5 export_strategy_doc == generate-brand-strategy-section (+ RAG retrieval-overlap)');
-  it.todo('TC-CP-6 generate_signature == reveal-signature (incl. empty-input decline)');
+  it.todo('TC-CP-6 generate_positioning_statement == reveal-positioning-statement (incl. empty-input decline)');
   it.todo('TC-CP-7 run_conversation == buffered callConsultant stream');
 });

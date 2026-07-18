@@ -30,7 +30,7 @@ const piece = (id: string, touchpoint: string, status: BrandAsset['status']): Br
   context_description: 'ctx',
   storage_path: null,
   content_text: 'Title line\nbullet',
-  signature_version: null,
+  positioning_statement_version: null,
   status,
   overall_score: null,
   previous_score: null,

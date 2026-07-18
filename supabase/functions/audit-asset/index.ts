@@ -6,12 +6,12 @@ import { encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
  * audit-asset — Brand Funnel Tracker keystone.
  *
  * Scores ONE brand asset (screenshot and/or pasted copy + the user's required context
- * description) against the REAL avatar + current Signature on the four IDEA dimensions,
+ * description) against the REAL avatar + current Positioning Statement on the four IDEA dimensions,
  * and returns status + a concrete fix.
  *
  * Avatar context is read from `avatar_field_values` (the live store — the avatars jsonb
- * columns are empty). Signature is avatar-scoped first, then the latest brand-level one
- * (avatar_id IS NULL). "Stale" is computed (asset deployed under an older Signature).
+ * columns are empty). Positioning Statement is avatar-scoped first, then the latest brand-level one
+ * (avatar_id IS NULL). "Stale" is computed (asset deployed under an older Positioning Statement).
  *
  * Hardening: per-user in-memory rate limit; image size guard; private-bucket bytes sent
  * inline as base64 (never a public URL).
@@ -35,7 +35,7 @@ const DIMENSIONS = `IDEA dimensions (score each 0-100):
 - Insight (i): does the asset show it understands what really drives this customer?
 - Distinctive (d): does it stand out and avoid blending in with the category?
 - Empathetic (e): would this customer feel understood by it?
-- Authentic (a): does it feel genuine and believable, true to the Signature?`;
+- Authentic (a): does it feel genuine and believable, true to the Positioning Statement?`;
 
 // Binding leaf -> avatar_field_values field_id(s).
 const LEAF_TO_FIELDS: Record<string, string[]> = {
@@ -77,7 +77,7 @@ function mediaTypeFor(path: string | null): string {
 function buildAvatarContext(fieldMap: Record<string, string>, bindings: string[]): { text: string; used: number } {
   const wanted = new Set<string>(CORE_FIELDS);
   for (const path of bindings) {
-    if (path === "signature") continue;
+    if (path === "positioning_statement") continue;
     const leaf = path.includes(".") ? path.split(".")[1] : path;
     for (const f of LEAF_TO_FIELDS[leaf] ?? [leaf]) wanted.add(f);
   }
@@ -116,7 +116,7 @@ serve(async (req: Request) => {
 
     // Extract-only mode: transcribe the marketing copy VISIBLE in the screenshot so
     // the app can pre-fill "Update stored copy" for the user to review. No scoring,
-    // no avatar/signature grounding, no DB write — verbatim transcription only.
+    // no avatar/positioning statement grounding, no DB write — verbatim transcription only.
     if (extractOnly) {
       if (!asset.storage_path) return json({ ok: true, extracted_copy: "" });
       const { data: blob, error: dlErr } = await supabase.storage.from("brand-assets").download(asset.storage_path);
@@ -144,22 +144,22 @@ serve(async (req: Request) => {
       return json({ ok: true, extracted_copy });
     }
 
-    // Signature: avatar-scoped first, else latest brand-level (avatar_id IS NULL). RLS scopes to user.
-    let sig = null as { artifact_id: string | null; id: string; signature_text: string | null } | null;
+    // Positioning Statement: avatar-scoped first, else latest brand-level (avatar_id IS NULL). RLS scopes to user.
+    let sig = null as { artifact_id: string | null; id: string; positioning_statement_text: string | null } | null;
     {
-      const scoped = await supabase.from("signatures")
-        .select("id, signature_text, artifact_id")
+      const scoped = await supabase.from("positioning_statements")
+        .select("id, positioning_statement_text, artifact_id")
         .eq("avatar_id", asset.avatar_id).order("created_at", { ascending: false }).limit(1).maybeSingle();
       sig = scoped.data;
       if (!sig) {
-        const brandLevel = await supabase.from("signatures")
-          .select("id, signature_text, artifact_id")
+        const brandLevel = await supabase.from("positioning_statements")
+          .select("id, positioning_statement_text, artifact_id")
           .is("avatar_id", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
         sig = brandLevel.data;
       }
     }
-    const currentSignatureVersion = sig?.artifact_id ?? sig?.id ?? null;
-    const signatureText = sig?.signature_text ?? "(no Signature set yet)";
+    const currentPositioningStatementVersion = sig?.artifact_id ?? sig?.id ?? null;
+    const positioningStatementText = sig?.positioning_statement_text ?? "(no Positioning Statement set yet)";
 
     // Avatar context from avatar_field_values.
     const { data: fvRows } = await supabase
@@ -190,7 +190,7 @@ serve(async (req: Request) => {
     const system = `You are Trevor, a brand coach, auditing whether ONE brand asset is on-strategy.
 ${DIMENSIONS}
 
-You are given: the asset (a screenshot and/or its copy), the user's short description of what it is, the customer avatar + brand-strategy fields that matter for this touchpoint, and the brand's current Signature. Judge the asset ONLY against these. Do not invent avatar facts. If the asset contradicts or ignores the Signature/avatar, score the relevant dimensions low and say why.
+You are given: the asset (a screenshot and/or its copy), the user's short description of what it is, the customer avatar + brand-strategy fields that matter for this touchpoint, and the brand's current Positioning Statement. Judge the asset ONLY against these. Do not invent avatar facts. If the asset contradicts or ignores the Positioning Statement/avatar, score the relevant dimensions low and say why.
 
 Return your verdict by calling report_audit. The "fix" must be one concrete, on-strategy change to make next (not generic advice).`;
 
@@ -204,8 +204,8 @@ ${asset.content_text ? `\nASSET COPY (pasted):\n${String(asset.content_text).sli
 AVATAR + BRAND STRATEGY:
 ${avatarContext}
 
-CURRENT SIGNATURE:
-${signatureText}`;
+CURRENT POSITIONING STATEMENT:
+${positioningStatementText}`;
 
     const content: unknown[] = [];
     if (imageBlock) content.push(imageBlock);
@@ -254,7 +254,7 @@ ${signatureText}`;
     const auditResult = toolUse.input as { scores: Record<string, number>; rationale: string; fix: string };
     const s = auditResult.scores;
     const overall = Math.round((s.i + s.d + s.e + s.a) / 4);
-    const isStale = !!asset.signature_version && asset.signature_version !== currentSignatureVersion;
+    const isStale = !!asset.positioning_statement_version && asset.positioning_statement_version !== currentPositioningStatementVersion;
     const status = isStale ? "stale" : overall >= 70 ? "aligned" : "misaligned";
 
     const resultWithGrounding = { ...auditResult, grounding: { fields_used: groundingFields } };
@@ -263,7 +263,7 @@ ${signatureText}`;
       overall_score: overall,
       previous_score: asset.overall_score ?? null,   // before/after on re-audit
       audit_result: resultWithGrounding,
-      signature_version: asset.signature_version ?? currentSignatureVersion,
+      positioning_statement_version: asset.positioning_statement_version ?? currentPositioningStatementVersion,
       updated_at: new Date().toISOString(),
     }).eq("id", assetId);
 

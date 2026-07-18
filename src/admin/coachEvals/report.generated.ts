@@ -358,7 +358,7 @@ export const EVAL_REPORT: EvalReport = {
   ],
   "flags": [
     "The master-architecture header states '14 Alpha skills · 6 Beta skills' but the per-skill scope table yields 17 Alpha / 3 Beta (Beta = 11, 13, 14). This manifest follows the granular per-skill table. DISCREPANCY to confirm with Trevor.",
-    "Corpus tool labels not yet skill-grounded (planned/aliased): design_test, draft_asset, generate_signature, publish_filter_check, run_conversation, search_user_kb.",
+    "Corpus tool labels not yet skill-grounded (planned/aliased): design_test, draft_asset, generate_positioning_statement, publish_filter_check, run_conversation, search_user_kb.",
     "App skills awaiting Trevor's detailed doc (content_fidelity ≠ full): 11, 12, 13, 14, 15, 16, 17, 18, 19, 20.",
     "Live LLM tier is gated (BRAND_COACH_MCP_HOST=1 + ANTHROPIC_API_KEY). Deterministic core runs without it."
   ],

@@ -27,7 +27,7 @@ const inputSchema = {
     .string()
     .optional()
     .describe("Short summary of the Avatar 2.0 emotional core + their jobs/use-cases, if the coach has it."),
-  signature: z.string().optional().describe('The chosen Signature (distinctive line) — drives the tagline system.'),
+  positioning_statement: z.string().optional().describe('The chosen Positioning Statement (distinctive line) — drives the tagline system.'),
   trust_gap_summary: z
     .string()
     .optional()
@@ -49,17 +49,17 @@ export function registerGenerateStorefrontMessagingPlanTool(server: McpServer): 
     {
       title: 'Generate storefront messaging plan (brand assets, Higgsfield-ready)',
       description:
-        'Plan the STOREFRONT as one continuous expression of the positioning: the hero banner (3000×600, photoreal — Higgsfield generate_image + outpaint for the wide aspect), the empathetic-led brand story block, the signature-derived tagline system (one master line + variants used identically everywhere), job-mapped category tiles in the avatar\'s vocabulary, and a featured-products row that reuses the winning main-image+title pairs so the storefront visibly rhymes with the listings. Returns per-section direction + IMAGE_PROMPT construction + the Higgsfield handoff + the cross-surface consistency rules (same spine as the listing set, A+ and video — refine_creative_plan keeps them in sync when positioning changes). You (the coach) compose the final claim-gated copy and prompts. Works with partial context — missing positioning inputs degrade honestly. Generates plans only, never images, never invented claims.' +
+        'Plan the STOREFRONT as one continuous expression of the positioning: the hero banner (3000×600, photoreal — Higgsfield generate_image + outpaint for the wide aspect), the empathetic-led brand story block, the positioning statement-derived tagline system (one master line + variants used identically everywhere), job-mapped category tiles in the avatar\'s vocabulary, and a featured-products row that reuses the winning main-image+title pairs so the storefront visibly rhymes with the listings. Returns per-section direction + IMAGE_PROMPT construction + the Higgsfield handoff + the cross-surface consistency rules (same spine as the listing set, A+ and video — refine_creative_plan keeps them in sync when positioning changes). You (the coach) compose the final claim-gated copy and prompts. Works with partial context — missing positioning inputs degrade honestly. Generates plans only, never images, never invented claims.' +
         groundingPreamble('generate_storefront_messaging_plan') +
         appGroundingPreamble('generate_storefront_messaging_plan'),
       inputSchema,
     },
-    async ({ product, decision_trigger, avatar_summary, signature, trust_gap_summary, verified_facts, marketplace, brand_asset_id }) => {
+    async ({ product, decision_trigger, avatar_summary, positioning_statement, trust_gap_summary, verified_facts, marketplace, brand_asset_id }) => {
       const result = buildStorefrontMessagingPlan({
         product,
         decisionTrigger: decision_trigger,
         avatarSummary: avatar_summary,
-        signature,
+        positioning_statement,
         trustGapSummary: trust_gap_summary,
         verifiedFacts: verified_facts,
         marketplace,

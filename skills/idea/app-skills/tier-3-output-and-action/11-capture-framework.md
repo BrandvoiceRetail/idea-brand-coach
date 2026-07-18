@@ -6,7 +6,7 @@ scope: Beta
 user_facing: true
 internal_only: false
 always_in_context: false
-trigger: Beta. Locked feature with a waitlist CTA at Alpha. Requires a completed Avatar and Signature as input.
+trigger: Beta. Locked feature with a waitlist CTA at Alpha. Requires a completed Avatar and Positioning Statement as input.
 depends_on: "09, 04"
 status: summary
 detailed_doc_pending: true
@@ -25,7 +25,7 @@ The seven CAPTURE elements — **C**ontext, **A**ttention, **P**ain, **T**ransfo
 
 ## Scope & status
 - **Beta.** Not in Alpha. At Alpha this appears as a locked feature with a waitlist CTA.
-- **Inputs:** a completed Avatar 2.0 forensic portrait (Skill 04) and the brand Signature; the dominant Decision Trigger (Skill 09) sets the CAPTURE weighting.
+- **Inputs:** a completed Avatar 2.0 forensic portrait (Skill 04) and the brand Positioning Statement; the dominant Decision Trigger (Skill 09) sets the CAPTURE weighting.
 - The master architecture (IDEA-APP-SKILLS-001 v1.0, Tier 3) names the seven elements and the Beta status. **Trevor's authoritative detailed CAPTURE document is still pending.** The element-by-element content below is *drafted from his stated ideas plus the book corpus* (brand voice, the emotional-triggers table, and the Decision Trigger machinery). When the detailed doc lands, reconcile this draft against it — Trevor's spec is the law.
 
 ## 1. What CAPTURE is
@@ -108,7 +108,7 @@ The full sequence is constant; how it is *compressed and laid out* changes with 
 - Tier C engine internals (buyer-state names, S1–S4 labels, academic citations) never appear, here or anywhere user-facing.
 
 ## Coaching Application
-Until the detailed doc lands and Beta ships: treat CAPTURE as the downstream copy engine the Avatar, Signature, and Decision Trigger feed into, and surface it only as a Beta waitlist at Alpha.
+Until the detailed doc lands and Beta ships: treat CAPTURE as the downstream copy engine the Avatar, Positioning Statement, and Decision Trigger feed into, and surface it only as a Beta waitlist at Alpha.
 
 When Beta is live: take the dominant Decision Trigger (Skill 09) and the four Avatar fields (Skill 04); run the **full seven-element sequence**, weighted so the trigger's element leads; pull verbatim customer language for Attention and Uniqueness, the named objection for Pain and Escalate, and the ranked trust signals for Reassurance. Compress the sequence to the channel's attention budget (listing → email → social ad). Deliver **finished copy in the brand's voice** — never the framework, never the weighting, never the element labels in the primary panel. The bar to clear is the book's: does the asset register as aspiration, identity, and belonging — not just a product?
 

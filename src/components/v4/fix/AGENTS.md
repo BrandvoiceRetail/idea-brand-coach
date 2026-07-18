@@ -1,7 +1,7 @@
 # AGENTS.md — `src/components/v4/fix/` (Loop-3 Fix)
 
 The Fix leg of the Diagnose→Analyse→Fix spine. Screens map the funnel, rank what
-to work on, work each asset, and flag Signature drift. Root + `src/components`
+to work on, work each asset, and flag Positioning Statement drift. Root + `src/components`
 AGENTS.md apply; this adds Loop-3 specifics.
 
 ## Components
@@ -11,7 +11,7 @@ AGENTS.md apply; this adds Loop-3 specifics.
 | `FunnelMap.tsx` | S-12 | Five-stage funnel map with per-touchpoint status. |
 | `WhatNeedsWork.tsx` | S-13 | Impact-ranked to-do list (lift basis: metrics or coverage). |
 | `AssetDetailTabs.tsx` | S-14 | One asset's content + IDEA audit verdict. |
-| `DriftBanner.tsx` | S-15 | Signature-drift alert; self-hides at zero drift. |
+| `DriftBanner.tsx` | S-15 | Positioning Statement-drift alert; self-hides at zero drift. |
 | `FixBreadcrumb.tsx` | sub-nav | Funnel drill-down trail (map → piece → Fix); the canonical "up" control. |
 
 ## Sub-navigation (the one stage with 2nd-level hierarchy)

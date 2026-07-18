@@ -58,7 +58,7 @@ const PATH_STEPS: PathStep[] = [
   },
   {
     icon: <Sparkles className="w-5 h-5" />,
-    title: "Your Signature",
+    title: "Your Positioning Statement",
     description: "The one truth of what your customer is REALLY buying — grounded in their own words.",
   },
 ];

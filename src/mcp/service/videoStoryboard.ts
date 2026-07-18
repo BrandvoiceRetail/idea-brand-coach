@@ -151,7 +151,7 @@ export const STORYBOARD_SCENES: readonly StoryboardScene[] = [
     ideaPillar: 'Distinctive',
     direction:
       'End on the product + the distinctive line. Amazon listing video: a confidence close (no off-Amazon CTA, no price/promo). Social: an explicit next step is allowed.',
-    onScreenText: 'The signature/distinctive line, then the channel-appropriate CTA.',
+    onScreenText: 'The positioning statement/distinctive line, then the channel-appropriate CTA.',
     voiceover: 'The closing line — same register as the hook so the film bookends.',
     engineMode: 'image_to_video',
     durationShare: '~10% of runtime.',
@@ -210,7 +210,7 @@ export interface VideoStoryboardInput {
   format?: string;
   decisionTrigger?: string;
   avatarSummary?: string;
-  signature?: string;
+  positioning_statement?: string;
   trustGapSummary?: string;
   verifiedFacts?: string;
   /** Override the format's target duration. */
@@ -331,7 +331,7 @@ export function buildVideoStoryboard(input: VideoStoryboardInput): VideoStoryboa
   const positioning: PositioningInputs = {
     decisionTrigger: input.decisionTrigger,
     avatarSummary: input.avatarSummary,
-    signature: input.signature,
+    positioning_statement: input.positioning_statement,
     trustGapSummary: input.trustGapSummary,
     verifiedFacts: input.verifiedFacts,
   };
@@ -355,7 +355,7 @@ export function buildVideoStoryboard(input: VideoStoryboardInput): VideoStoryboa
       'Mechanical changes skip regeneration entirely: aspect ratio → reframe; resolution → upscale_video; a voiceover line → the voice/dubbing tools; scene order → re-cut the assembly, no new footage.',
       'A changed overlay/VO line that states a fact re-runs the claim gate before render.',
       'After any adjustment, save the updated storyboard with log_asset (same external_id reconciles the version) so the saved plan always matches what is live.',
-      'For positioning changes (new trigger/avatar/signature/trust finding), call refine_creative_plan — it maps exactly which scenes recompose and which stand.',
+      'For positioning changes (new trigger/avatar/positioning statement/trust finding), call refine_creative_plan — it maps exactly which scenes recompose and which stand.',
     ],
     claim_gate:
       'Before any guarantee or specific claim appears on screen or in voiceover, flag it to the user and ask them to confirm they offer/can substantiate it. Only include it once confirmed.',
@@ -365,7 +365,7 @@ export function buildVideoStoryboard(input: VideoStoryboardInput): VideoStoryboa
     new_user_path: NEW_USER_EASY_PATH,
     instructions: [
       `1) Triage the inputs for "${input.product}" using evidence_discipline (verified facts vs strategy signals vs unsupported). Only verified facts may be spoken or shown.`,
-      `2) Ground the film in the positioning spine (see positioning_inputs): the Decision Trigger${trigger ? ` (${trigger})` : ''}, the avatar's felt experience, the signature line, and the Trust Gap pillar this video closes. Missing elements degrade per the report — generate anyway and name the one input that sharpens it most.`,
+      `2) Ground the film in the positioning spine (see positioning_inputs): the Decision Trigger${trigger ? ` (${trigger})` : ''}, the avatar's felt experience, the positioning statement line, and the Trust Gap pillar this video closes. Missing elements degrade per the report — generate anyway and name the one input that sharpens it most.`,
       `3) For EACH scene, compose: (A) one-line context, (B) the shot + motion direction and emotional register, (C) the exact overlay/VO lines (claim-gated), (D) the continuity anchors. Target ~${duration}s total at ${format.aspectRatio}; respect each scene's durationShare.`,
       '4) Pick the execution mode (execution_modes): DEFAULT to storyboard-image mode — build the reference kit per higgsfield_handoff.reference_discipline, compose the ONE multi-panel storyboard image per storyboard_image_spec, then run ONE generate_video job with the storyboard as reference + audio_direction. Use per-scene mode (VIDEO_PROMPTs per prompt_construction) only for fidelity-critical scenes or re-renders; chain segments with the prior clip as video reference for films past the per-job limit. For UGC/unboxing/high-motion ads, skip storyboarding entirely — route via preset_ad_formats. Poll job_status; QA everything against qa_checklist.',
       '5) Generate voiceover separately (voice/audio tools) and marry it in edit — never ask the video model to speak. Audio otherwise per audio_direction.',

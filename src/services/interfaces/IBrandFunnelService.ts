@@ -40,7 +40,7 @@ export interface BrandAsset {
   context_description: string; // REQUIRED — entered by the user at upload
   storage_path: string | null;
   content_text: string | null;
-  signature_version: string | null;
+  positioning_statement_version: string | null;
   status: AssetStatus;
   overall_score: number | null;
   previous_score: number | null;
@@ -155,7 +155,7 @@ export interface IBrandFunnelService {
   getCoverage(avatarId: string, brandTags: ApplicabilityTag[]): Promise<Result<FunnelCoverage>>;
   /**
    * BRAND-scoped coverage: pieces by brand, per-cell verdict from the per-avatar
-   * overlay (read-time stale still derives from the piece's signature_version).
+   * overlay (read-time stale still derives from the piece's positioning_statement_version).
    */
   getBrandCoverage(
     brandId: string,

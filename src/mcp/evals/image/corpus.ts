@@ -47,7 +47,7 @@ export interface OptedInBrandCorpus {
     /** Canonical brand anchor for the trigger (Recognition → Dove). */
     anchor: string;
     avatarCore: string;
-    signature: string;
+    positioning_statement: string;
   };
   /** Aggregate review vocabulary (the pattern, not individual reviewers) that built the avatar. */
   reviewVoice: {
@@ -89,7 +89,7 @@ export const INFINITY_VAULT: OptedInBrandCorpus = {
     anchor: 'Dove (emotional mirroring — acknowledge the felt reality before the proof)',
     avatarCore:
       'The serious collector who has already had cards bent or damaged by a cheap binder — arrives braced for disappointment and needs to feel understood before trusting a new one.',
-    signature: 'The binder serious collectors trust with the cards they can\'t replace.',
+    positioning_statement: 'The binder serious collectors trust with the cards they can\'t replace.',
   },
   reviewVoice: {
     phrases: [

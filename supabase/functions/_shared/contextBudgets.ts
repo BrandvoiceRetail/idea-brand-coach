@@ -71,9 +71,9 @@ export const INTERNAL_PROMPT_TRUST_GAP_REVIEW_BODY_CHARS = 300;
 // diverge is documented here.
 export const INTERNAL_PROMPT_AVATAR_CORPUS_CHARS = 16_000;
 
-// ── reveal-signature ────────────────────────────────────────────────────────
-// Char-budget on pasted/resolved reviews feeding Signature synthesis.
-export const INTERNAL_PROMPT_SIGNATURE_REVIEW_CHARS = 12_000;
+// ── reveal-positioning-statement ────────────────────────────────────────────────────────
+// Char-budget on pasted/resolved reviews feeding Positioning Statement synthesis.
+export const INTERNAL_PROMPT_POSITIONING_STATEMENT_REVIEW_CHARS = 12_000;
 
 // ── review-scraper ──────────────────────────────────────────────────────────
 // The ONE MCP-RESPONSE-facing cap in this chain today: review-scraper's result

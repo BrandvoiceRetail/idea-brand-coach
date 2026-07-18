@@ -21,7 +21,7 @@ Full functional test plan for the feature at **`/v2/funnel`**, with each screen 
 | Route `/v2/funnel` | Navigate | Renders the tracker (avatar selected) **or** the empty state | "I land on my funnel, not an error" | Heading *"Your funnel, mapped"* OR *"Select or create an avatar"* visible; no uncaught JS errors |
 | No avatar | Navigate with no avatar | Empty state with guidance | "Tell me what to do next" | *"Select or create an avatar to map its funnel."* shown |
 | Header — avatar name eyebrow | — | Shows `Brand Funnel · <avatar name>` | "I know whose funnel this is" | Avatar name rendered |
-| **Re-audit all** button | Click | Re-audits every asset against the current Signature; disabled while working / when 0 assets | "Re-check everything after I changed my messaging" | Disabled at 0 assets; shows *Working…* during; coverage refreshes after |
+| **Re-audit all** button | Click | Re-audits every asset against the current Positioning Statement; disabled while working / when 0 assets | "Re-check everything after I changed my messaging" | Disabled at 0 assets; shows *Working…* during; coverage refreshes after |
 | **Upload asset** button | Click | Opens the upload dialog | "Add a piece of my funnel" | Dialog opens |
 | **Channels** toggle row | Toggle a chip | Adds/removes that channel; persists per-avatar (localStorage) | "Hide channels I don't use so the map fits my brand" | Toggling changes applicable touchpoints; survives reload |
 

@@ -10,9 +10,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
  * INVERTS that into a must-cite-evidence rule: every `where_it_shows_up` citation must
  * quote or directly describe the supplied evidence (listing copy / reviews / ad copy).
  *
- * Cloned from the reveal-signature / diagnostic-interpretation skeleton (CORS, optional
+ * Cloned from the reveal-positioning-statement / diagnostic-interpretation skeleton (CORS, optional
  * JWT->getUser, Anthropic SONNET with prompt caching, strict JSON contract, defensive parse,
- * evidence-vs-inference branch). NOTE: unlike reveal-signature this fn does NOT use an
+ * evidence-vs-inference branch). NOTE: unlike reveal-positioning-statement this fn does NOT use an
  * assistant value-level prefill — the nested per-dimension citation shape made Sonnet drop the
  * array's opening brace on resumption and 500 ~67-80% of calls; see parseModel / the messages
  * array for the root cause and the no-prefill fix.
@@ -577,7 +577,7 @@ serve(async (req) => {
   }
 
   try {
-    // Optional auth (parity with reveal-signature; platform verify_jwt also gates).
+    // Optional auth (parity with reveal-positioning-statement; platform verify_jwt also gates).
     const authHeader = req.headers.get('authorization');
     if (authHeader) {
       try {
@@ -649,7 +649,7 @@ serve(async (req) => {
         // failing the parse ~67-80% of live calls. Letting it emit a complete object from
         // scratch yields valid JSON every time (verified with a live A/B capture). The richly
         // nested per-dimension citation shape here is too complex for safe mid-structure
-        // resumption, unlike reveal-signature's flat `{options:[...]}` where prefill is fine.
+        // resumption, unlike reveal-positioning-statement's flat `{options:[...]}` where prefill is fine.
         messages: [{ role: 'user', content: userMessage }],
       }),
     });

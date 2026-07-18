@@ -33,7 +33,7 @@ const inputSchema = {
     .string()
     .optional()
     .describe("Short summary of the Avatar 2.0 emotional core (the felt experience), if the coach has it."),
-  signature: z.string().optional().describe('The chosen Signature (distinctive line), if one exists.'),
+  positioning_statement: z.string().optional().describe('The chosen Positioning Statement (distinctive line), if one exists.'),
   trust_gap_summary: z
     .string()
     .optional()
@@ -56,7 +56,7 @@ export function registerGenerateVideoStoryboardTool(server: McpServer): void {
     {
       title: 'Generate video storyboard plan (Higgsfield-ready)',
       description:
-        'Generate a positioning-aligned, scene-by-scene VIDEO STORYBOARD plan — Amazon listing video, social short, or brand-story film — grounded in the Decision Trigger, Avatar 2.0, the Signature, and the Trust Gap. Returns the scene architecture + per-scene direction (shot, motion, overlay/VO rules, IDEA pillar) + TWO Higgsfield execution modes: storyboard-image mode (the fast default — build the reference kit from the real product photo, compose ONE multi-panel storyboard image with embedded beat captions, run ONE generate_video job with it as reference for a full multi-shot film) and per-scene mode (precision image-to-video, one job per scene) — plus VIDEO_PROMPT construction with the exact negative prompt, marketing-studio preset routing for UGC/unboxing/high-motion ads (persona matched to the customer avatar), and audio direction (diegetic-only, no generated text). You (the coach) compose the briefs and ready-to-paste prompts. Built for easy adjustment: fix one storyboard panel via image edit or re-render one scene — never regenerate the set; aspect/resolution/voice changes route to Higgsfield edit tools. Works with partial context — missing positioning inputs degrade honestly and the plan names the one input that sharpens it. Amazon channel rules baked in (no price/promo/off-Amazon CTA; sound-off first). Generates storyboard plans only, never video, never invented claims.' +
+        'Generate a positioning-aligned, scene-by-scene VIDEO STORYBOARD plan — Amazon listing video, social short, or brand-story film — grounded in the Decision Trigger, Avatar 2.0, the Positioning Statement, and the Trust Gap. Returns the scene architecture + per-scene direction (shot, motion, overlay/VO rules, IDEA pillar) + TWO Higgsfield execution modes: storyboard-image mode (the fast default — build the reference kit from the real product photo, compose ONE multi-panel storyboard image with embedded beat captions, run ONE generate_video job with it as reference for a full multi-shot film) and per-scene mode (precision image-to-video, one job per scene) — plus VIDEO_PROMPT construction with the exact negative prompt, marketing-studio preset routing for UGC/unboxing/high-motion ads (persona matched to the customer avatar), and audio direction (diegetic-only, no generated text). You (the coach) compose the briefs and ready-to-paste prompts. Built for easy adjustment: fix one storyboard panel via image edit or re-render one scene — never regenerate the set; aspect/resolution/voice changes route to Higgsfield edit tools. Works with partial context — missing positioning inputs degrade honestly and the plan names the one input that sharpens it. Amazon channel rules baked in (no price/promo/off-Amazon CTA; sound-off first). Generates storyboard plans only, never video, never invented claims.' +
         groundingPreamble('generate_video_storyboard') +
         appGroundingPreamble('generate_video_storyboard'),
       inputSchema,
@@ -66,7 +66,7 @@ export function registerGenerateVideoStoryboardTool(server: McpServer): void {
       format,
       decision_trigger,
       avatar_summary,
-      signature,
+      positioning_statement,
       trust_gap_summary,
       verified_facts,
       duration_seconds,
@@ -78,7 +78,7 @@ export function registerGenerateVideoStoryboardTool(server: McpServer): void {
         format,
         decisionTrigger: decision_trigger,
         avatarSummary: avatar_summary,
-        signature,
+        positioning_statement,
         trustGapSummary: trust_gap_summary,
         verifiedFacts: verified_facts,
         durationSeconds: duration_seconds,

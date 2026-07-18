@@ -1,9 +1,9 @@
 /**
- * SignatureFeedbackForm — the Moment-1 Alpha feedback capture.
+ * PositioningStatementFeedbackForm — the Moment-1 Alpha feedback capture.
  *
- * Rendered inside the SignatureReveal dialog after the tester answers the
+ * Rendered inside the PositioningStatementReveal dialog after the tester answers the
  * "did this surprise you?" prompt. Asks the two hypothesis questions (did the
- * Trust Gap score feel right, did the Signature feel right) plus a free-text
+ * Trust Gap score feel right, did the Positioning Statement feel right) plus a free-text
  * "what's off", and writes the row to Supabase `feedback_events` via the
  * save-feedback-event edge function.
  *
@@ -22,11 +22,11 @@ import { captureAlphaEvent, getPostHogDistinctId } from '@/lib/posthogClient';
 
 type FeltRightAnswer = 'yes' | 'partial' | 'no';
 
-interface SignatureFeedbackFormProps {
-  /** The Signature the tester picked. */
-  chosenSignature: string;
+interface PositioningStatementFeedbackFormProps {
+  /** The Positioning Statement the tester picked. */
+  chosenPositioningStatement: string;
   /** All options that were shown (what they chose among). */
-  signatureOptions: string[];
+  positioningStatementOptions: string[];
   /** Chat session id, when available. */
   sessionId?: string | null;
 }
@@ -82,15 +82,15 @@ function AnswerRow({
   );
 }
 
-export function SignatureFeedbackForm({
-  chosenSignature,
-  signatureOptions,
+export function PositioningStatementFeedbackForm({
+  chosenPositioningStatement,
+  positioningStatementOptions,
   sessionId,
-}: SignatureFeedbackFormProps): JSX.Element {
+}: PositioningStatementFeedbackFormProps): JSX.Element {
   const { currentAvatar } = useAvatarContext();
 
   const [q1ScoreFeltRight, setQ1ScoreFeltRight] = useState<FeltRightAnswer | null>(null);
-  const [q2SignatureFeltRight, setQ2SignatureFeltRight] = useState<FeltRightAnswer | null>(null);
+  const [q2PositioningStatementFeltRight, setQ2PositioningStatementFeltRight] = useState<FeltRightAnswer | null>(null);
   const [q3WhatsOff, setQ3WhatsOff] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -106,7 +106,7 @@ export function SignatureFeedbackForm({
     if (isSubmitted) captureAlphaEvent('thank_you_viewed');
   }, [isSubmitted]);
 
-  const canSubmit = q1ScoreFeltRight !== null && q2SignatureFeltRight !== null && !isSubmitting;
+  const canSubmit = q1ScoreFeltRight !== null && q2PositioningStatementFeltRight !== null && !isSubmitting;
 
   const handleSubmit = async (): Promise<void> => {
     if (!canSubmit) return;
@@ -122,11 +122,11 @@ export function SignatureFeedbackForm({
           posthogDistinctId: getPostHogDistinctId(),
           avatarId: currentAvatar?.id ?? null,
           sessionId: sessionId ?? null,
-          chosenSignature,
-          signatureOptions,
+          chosenPositioningStatement,
+          positioningStatementOptions,
           scores: readDiagnosticScores(),
           q1ScoreFeltRight,
-          q2SignatureFeltRight,
+          q2PositioningStatementFeltRight,
           q3WhatsOff: q3WhatsOff.trim() || null,
         },
       });
@@ -136,11 +136,11 @@ export function SignatureFeedbackForm({
       // Enums only — the free text lives in Supabase, not PostHog
       captureAlphaEvent('feedback_submitted', {
         q1: q1ScoreFeltRight,
-        q2: q2SignatureFeltRight,
+        q2: q2PositioningStatementFeltRight,
       });
       setIsSubmitted(true);
     } catch (err) {
-      console.error('[SignatureFeedbackForm] submit failed:', err);
+      console.error('[PositioningStatementFeedbackForm] submit failed:', err);
       setError('Could not save your feedback right now. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -150,7 +150,7 @@ export function SignatureFeedbackForm({
   if (isSubmitted) {
     return (
       <div className="rounded-md border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm text-amber-800">
-        Thank you — this is exactly what makes the Alpha useful. Your Signature is
+        Thank you — this is exactly what makes the Alpha useful. Your Positioning Statement is
         yours to keep.
       </div>
     );
@@ -170,9 +170,9 @@ export function SignatureFeedbackForm({
       />
 
       <AnswerRow
-        question="Does this Signature feel right?"
-        value={q2SignatureFeltRight}
-        onChange={setQ2SignatureFeltRight}
+        question="Does this Positioning Statement feel right?"
+        value={q2PositioningStatementFeltRight}
+        onChange={setQ2PositioningStatementFeltRight}
       />
 
       <div className="space-y-2">

@@ -19,7 +19,7 @@ describe('useFeedbackEvent', () => {
       res = await result.current.recordEvent({
         moment: 'moment_1',
         sessionId: 'sess-9',
-        payload: { chosen_signature: 'X', scores: { score_felt_right: 'yes' }, free_text: 'good' },
+        payload: { chosen_positioning_statement: 'X', scores: { score_felt_right: 'yes' }, free_text: 'good' },
       });
     });
 
@@ -28,7 +28,7 @@ describe('useFeedbackEvent', () => {
         moment: 'moment_1',
         posthogDistinctId: expect.stringMatching(/.+/),
         sessionId: 'sess-9',
-        payload: { chosen_signature: 'X', scores: { score_felt_right: 'yes' }, free_text: 'good' },
+        payload: { chosen_positioning_statement: 'X', scores: { score_felt_right: 'yes' }, free_text: 'good' },
       },
     });
     expect(res).toEqual({ ok: true, id: 'evt-1' });

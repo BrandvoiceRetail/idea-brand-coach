@@ -15,7 +15,7 @@ const ITEMS: DriftItem[] = [
     touchpointLabel: 'Product page',
     stage: 'consideration',
     builtAgainst: 'v1',
-    currentSignature: 'v2',
+    currentPositioningStatement: 'v2',
   },
   {
     assetId: 'asset-2',
@@ -23,7 +23,7 @@ const ITEMS: DriftItem[] = [
     touchpointLabel: 'Email welcome',
     stage: 'awareness',
     builtAgainst: 'v1',
-    currentSignature: 'v2',
+    currentPositioningStatement: 'v2',
   },
 ];
 

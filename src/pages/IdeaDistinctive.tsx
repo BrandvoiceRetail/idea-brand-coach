@@ -173,7 +173,7 @@ export default function IdeaDistinctive() {
                         <li>• Visual identity</li>
                         <li>• Brand personality</li>
                         <li>• Tone of voice</li>
-                        <li>• Signature experiences</li>
+                        <li>• Positioning Statement experiences</li>
                       </ul>
                     </CardContent>
                   </Card>

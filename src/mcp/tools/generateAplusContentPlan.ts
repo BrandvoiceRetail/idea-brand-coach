@@ -27,7 +27,7 @@ const inputSchema = {
     .string()
     .optional()
     .describe("Short summary of the Avatar 2.0 emotional core (the felt experience), if the coach has it."),
-  signature: z.string().optional().describe('The chosen Signature (distinctive line), if one exists.'),
+  positioning_statement: z.string().optional().describe('The chosen Positioning Statement (distinctive line), if one exists.'),
   trust_gap_summary: z
     .string()
     .optional()
@@ -49,17 +49,17 @@ export function registerGenerateAplusContentPlanTool(server: McpServer): void {
     {
       title: 'Generate A+ Content plan (long-form editorial, Higgsfield-ready)',
       description:
-        'Generate the full A+ (brand-story) CONTENT PLAN for a Brand-Registered Amazon listing: 4 distinct long-form editorial concepts, each running 5 addressable narrative beats (product intro → strongest benefit → product clarity → use case → emotional close) as ONE continuous composition at 1472x3008 — never stacked template modules. Grounded in the Decision Trigger, Avatar 2.0, the Signature, and the Trust Gap; returns per-beat direction + mobile legibility rules + IMAGE_PROMPT production-prompt construction with the exact negative prompt + the Higgsfield generate_image handoff (real product photo as strict reference; outpaint/upscale for mechanical changes) — you (the coach) then compose each concept\'s brief and ready-to-paste prompt. Built for easy adjustment: each beat is an independent component, and positioning changes route through refine_creative_plan. Works with partial context — missing inputs degrade honestly. Generates plans only, never images, never invented claims.' +
+        'Generate the full A+ (brand-story) CONTENT PLAN for a Brand-Registered Amazon listing: 4 distinct long-form editorial concepts, each running 5 addressable narrative beats (product intro → strongest benefit → product clarity → use case → emotional close) as ONE continuous composition at 1472x3008 — never stacked template modules. Grounded in the Decision Trigger, Avatar 2.0, the Positioning Statement, and the Trust Gap; returns per-beat direction + mobile legibility rules + IMAGE_PROMPT production-prompt construction with the exact negative prompt + the Higgsfield generate_image handoff (real product photo as strict reference; outpaint/upscale for mechanical changes) — you (the coach) then compose each concept\'s brief and ready-to-paste prompt. Built for easy adjustment: each beat is an independent component, and positioning changes route through refine_creative_plan. Works with partial context — missing inputs degrade honestly. Generates plans only, never images, never invented claims.' +
         groundingPreamble('generate_aplus_content_plan') +
         appGroundingPreamble('generate_aplus_content_plan'),
       inputSchema,
     },
-    async ({ product, decision_trigger, avatar_summary, signature, trust_gap_summary, verified_facts, marketplace, brand_asset_id }) => {
+    async ({ product, decision_trigger, avatar_summary, positioning_statement, trust_gap_summary, verified_facts, marketplace, brand_asset_id }) => {
       const result = buildAplusPlan({
         product,
         decisionTrigger: decision_trigger,
         avatarSummary: avatar_summary,
-        signature,
+        positioning_statement,
         trustGapSummary: trust_gap_summary,
         verifiedFacts: verified_facts,
         marketplace,

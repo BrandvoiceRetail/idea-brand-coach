@@ -171,7 +171,7 @@ export interface BrandCoachV2State {
   isReviewOpen: boolean;
   alwaysAccept: boolean;
 
-  /** Imported reviews prefilled into the Signature reveal textarea. */
+  /** Imported reviews prefilled into the Positioning Statement reveal textarea. */
   preloadedReviews: string;
   /** Number of imported reviews behind {@link preloadedReviews}. */
   preloadedReviewCount: number;
@@ -454,7 +454,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
       });
   }, [user, chatService, productDataService]);
 
-  // Preload the seller's imported reviews into the Signature reveal textarea.
+  // Preload the seller's imported reviews into the Positioning Statement reveal textarea.
   // Fire-and-forget; failures simply leave the textarea empty (paste fallback).
   useEffect(() => {
     if (!user) return;
@@ -464,7 +464,7 @@ export function useBrandCoachV2State(): BrandCoachV2State & BrandCoachV2Actions 
         setPreloadedReviewCount(reviews.length);
       })
       .catch((error) => {
-        console.warn('[BrandCoachV2] Failed to preload Signature reviews:', error);
+        console.warn('[BrandCoachV2] Failed to preload Positioning Statement reviews:', error);
       });
   }, [user, productDataService]);
 

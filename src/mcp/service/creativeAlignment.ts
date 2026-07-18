@@ -30,7 +30,7 @@ export type CreativePlanType = (typeof CREATIVE_PLAN_TYPES)[number];
 export const POSITIONING_ELEMENT_KEYS = [
   'decision_trigger',
   'avatar_core',
-  'signature',
+  'positioning_statement',
   'trust_gap_pillar',
   'verified_facts',
 ] as const;
@@ -49,7 +49,7 @@ export interface PositioningElement {
 
 /**
  * The four-plus-one positioning spine. Order matters: it is the resolve order a NEW user
- * walks (trigger → avatar → signature → trust gap), with verified facts as the standing
+ * walks (trigger → avatar → positioning statement → trust gap), with verified facts as the standing
  * evidence floor under all of them.
  */
 export const POSITIONING_SPINE: readonly PositioningElement[] = [
@@ -68,10 +68,10 @@ export const POSITIONING_SPINE: readonly PositioningElement[] = [
     whenMissing: 'Ask for one sentence about who buys and why it matters to them; use it verbatim as the interim core.',
   },
   {
-    key: 'signature',
-    label: 'Signature (distinctive line)',
+    key: 'positioning_statement',
+    label: 'Positioning Statement (distinctive line)',
     whatItIs: 'The ownable one-liner that separates this brand from the field — the line taglines, comparison slots and hero overlays derive from.',
-    resolveWith: 'generate_signature (persist with persist_signature)',
+    resolveWith: 'generate_positioning_statement (persist with persist_positioning_statement)',
     whenMissing: 'Use the strongest verified differentiator as a working line and mark it interim — never invent an unsupported claim to fill the slot.',
   },
   {
@@ -114,12 +114,12 @@ export const POSITIONING_PROPAGATION: Record<PositioningElementKey, Record<Creat
     storefront_messaging: 'Recompose the brand-story block and re-map category tiles to the new avatar\'s jobs.',
     ugc_ad: "Re-cast the persona (demographic/register/setting) and re-ground the talking points + skeptic flip in the new avatar's vocabulary and top objection.",
   },
-  signature: {
-    listing_image_set: 'Recompose the comparison slot (the ownable why-this-one line) and any hero overlay derived from the old signature.',
-    video_storyboard: 'Swap the signature line wherever it appears as overlay/VO (typically hook or close); footage direction stands.',
-    aplus_content: 'Re-thread the distinctive motif and any signature-derived headline across the beats.',
-    main_image_title: 'Rewrite the distinctive-difference segment of the title from the new signature.',
-    storefront_messaging: 'Regenerate the tagline system and the store-hero overlay line from the new signature.',
+  positioning_statement: {
+    listing_image_set: 'Recompose the comparison slot (the ownable why-this-one line) and any hero overlay derived from the old positioning statement.',
+    video_storyboard: 'Swap the positioning statement line wherever it appears as overlay/VO (typically hook or close); footage direction stands.',
+    aplus_content: 'Re-thread the distinctive motif and any positioning statement-derived headline across the beats.',
+    main_image_title: 'Rewrite the distinctive-difference segment of the title from the new positioning statement.',
+    storefront_messaging: 'Regenerate the tagline system and the store-hero overlay line from the new positioning statement.',
     ugc_ad: 'Swap the distinctive line where the script lands it (usually the close); the rest of the script stands.',
   },
   trust_gap_pillar: {
@@ -189,7 +189,7 @@ export const EXACT_VIDEO_NEGATIVE_PROMPT =
  */
 export const NEW_USER_EASY_PATH: readonly string[] = [
   '1) get_context_status — see what the user has already given (never re-ask for it).',
-  '2) Fill only the missing spine elements, one at a time, smallest first: identify_decision_trigger → a one-line avatar core (or get_avatar) → generate_signature → run_trust_gap. Any ONE of these improves the plan; none of them blocks it.',
+  '2) Fill only the missing spine elements, one at a time, smallest first: identify_decision_trigger → a one-line avatar core (or get_avatar) → generate_positioning_statement → run_trust_gap. Any ONE of these improves the plan; none of them blocks it.',
   '3) Generate the plan with whatever is known — the plan names which missing input would sharpen it most.',
   '4) Confirm claims through the claim gate (only user-confirmed facts appear in copy).',
   '5) Compose the final briefs/prompts per the plan and hand them to Higgsfield (see the handoff).',
@@ -217,7 +217,7 @@ export interface PositioningInputReport {
 export interface PositioningInputs {
   decisionTrigger?: string | null;
   avatarSummary?: string | null;
-  signature?: string | null;
+  positioning_statement?: string | null;
   trustGapSummary?: string | null;
   verifiedFacts?: string | null;
 }
@@ -230,7 +230,7 @@ export function reportPositioningInputs(inputs: PositioningInputs): PositioningI
   const provided: Record<PositioningElementKey, string | null | undefined> = {
     decision_trigger: inputs.decisionTrigger,
     avatar_core: inputs.avatarSummary,
-    signature: inputs.signature,
+    positioning_statement: inputs.positioning_statement,
     trust_gap_pillar: inputs.trustGapSummary,
     verified_facts: inputs.verifiedFacts,
   };

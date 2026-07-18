@@ -15,7 +15,7 @@ listing fields AND the embedded reviews, and persists them to `user_products` +
 historical ~8-review preview.
 
 Downstream, the imported data feeds: (a) Trust Gap interpretation evidence,
-(b) Signature reveal preloaded reviews, (c) coach chat product context.
+(b) Positioning Statement reveal preloaded reviews, (c) coach chat product context.
 
 ## Contract
 

@@ -9,7 +9,7 @@ Four presentational cards, driven by `useDefendRun` (→ `src/services/v4/defend
 
 | Component | Shows | Source of truth |
 |-----------|-------|-----------------|
-| `DriftWatchCard` | Whether any aligned asset drifted from the current Signature; all-clear at zero | **real** Loop-3 `getDrift` read (`fixService`) |
+| `DriftWatchCard` | Whether any aligned asset drifted from the current Positioning Statement; all-clear at zero | **real** Loop-3 `getDrift` read (`fixService`) |
 | `DefendChecklist` | "Are my gains safe?" status rows (done / attention / pending / coming) | **deterministic** `buildChecklist(driftCount, liftConfirmed)` from real reads |
 | `CompetitorTeaserCard` | Honest "coming" teaser for competitive monitoring | nothing — competitor reads are **deferred in Alpha** (no fabricated feed) |
 | `WorkbookExportCard` | One-tap full-loop workbook export | the live `export_workbook` engine via `export-workbook` edge invoke |

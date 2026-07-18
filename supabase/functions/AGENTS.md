@@ -41,7 +41,7 @@ others — not a deployable function.
 | generate-session-title | Chat session titles (Claude Haiku) |
 | idea-framework-consultant-claude | Main RAG consultant — Claude Messages API, streaming, tools, prompt caching |
 | marketing-audit | Workbook B — Investment Matrix + Recommended Phasing |
-| reveal-signature | Synthesizes 3-4 Signature options (Claude Sonnet) |
+| reveal-positioning-statement | Synthesizes 3-4 Positioning Statement options (Claude Sonnet) |
 | review-scraper | Scrapes review URLs via Firecrawl |
 | run-forensic-analysis | Signed-in forensic Trust Gap (Claude Sonnet, evidence-grounded) |
 | identify-decision-trigger | Derives the named Decision Trigger |

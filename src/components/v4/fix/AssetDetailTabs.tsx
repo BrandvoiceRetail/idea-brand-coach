@@ -4,7 +4,7 @@
  * WHAT: One funnel asset opened into three tabs — `image-prompt` (a ready-to-
  * paste generation prompt), `design-brief` (the 7-slot brief with claim-gated
  * copy, via the canonical MoveBriefClaimGate surface), and `check-asset` (audit
- * the asset against the avatar + Signature, then record an on-brand / off-brand
+ * the asset against the avatar + Positioning Statement, then record an on-brand / off-brand
  * verdict through a handler).
  *
  * WHY: This is where the Diagnose→Analyse→Fix spine does the per-touchpoint work
@@ -99,7 +99,7 @@ export interface AssetDetailTabsProps {
   auditLoading?: boolean;
   /** Hard error from the audit engine (null = none). */
   auditError?: string | null;
-  /** Run (or re-run) the audit against the avatar + Signature. */
+  /** Run (or re-run) the audit against the avatar + Positioning Statement. */
   onCheckAsset?: () => void;
   /** Record the on-brand / off-brand verdict (record_assessment). */
   onRecordVerdict?: (audit: AuditResult, verdict: AssetVerdict) => void;
@@ -248,7 +248,7 @@ export function AssetDetailTabs({
         >
           <CheckAssetTab
             audit={resolvedAudit}
-            signatureVersion={asset.signatureVersion}
+            positioningStatementVersion={asset.positioningStatementVersion}
             isLoading={auditLoading}
             error={auditError}
             onCheck={handleCheck}
@@ -384,14 +384,14 @@ function ImagePromptTab({
 
 function CheckAssetTab({
   audit,
-  signatureVersion,
+  positioningStatementVersion,
   isLoading,
   error,
   onCheck,
   onRecordVerdict,
 }: {
   audit: AuditResult | null;
-  signatureVersion: string | null;
+  positioningStatementVersion: string | null;
   isLoading: boolean;
   error: string | null;
   onCheck: () => void;
@@ -465,7 +465,7 @@ function CheckAssetTab({
 
         <p className="text-xs text-muted-foreground">
           Checked against{' '}
-          {signatureVersion ? `Positioning ${signatureVersion}` : 'your current positioning'}
+          {positioningStatementVersion ? `Positioning ${positioningStatementVersion}` : 'your current positioning'}
           {typeof audit.grounding?.fields_used === 'number'
             ? ` · ${audit.grounding.fields_used} strategy field${
                 audit.grounding.fields_used === 1 ? '' : 's'

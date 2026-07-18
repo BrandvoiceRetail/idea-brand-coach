@@ -8,7 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
  * search, the feeling at that moment, the terms they actually type, and a LABELED
  * search-volume BAND. The band is never a fabricated number.
  *
- * Cloned from reveal-signature (CORS, optional JWT->getUser, Anthropic SONNET call
+ * Cloned from reveal-positioning-statement (CORS, optional JWT->getUser, Anthropic SONNET call
  * with prompt caching, strict JSON contract + assistant prefill, defensive parse,
  * evidence-vs-inference branch).
  *

@@ -8,7 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
  * motivation across three layers (functional / emotional / identity) plus the
  * VILLAIN — the failure state the purchase avoids.
  *
- * Cloned from reveal-signature (CORS, optional JWT->getUser, Anthropic SONNET call
+ * Cloned from reveal-positioning-statement (CORS, optional JWT->getUser, Anthropic SONNET call
  * with prompt caching, strict JSON contract + assistant prefill, defensive parse,
  * evidence-vs-inference branch).
  *

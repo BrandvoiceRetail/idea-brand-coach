@@ -131,8 +131,8 @@ export function capabilitiesFor(touchpointId: string): PieceCapability[] {
     const isEmail = tp.appliesWhen.includes('email');
     caps.push(
       isEmail
-        ? { provider: 'claude', capability: 'email_copy', outputKind: 'copy', label: 'Email copy', hint: 'On-brand email written to your avatar + Signature' }
-        : { provider: 'claude', capability: 'generic_copy', outputKind: 'copy', label: 'On-brand copy', hint: 'Copy written to your avatar + Signature' },
+        ? { provider: 'claude', capability: 'email_copy', outputKind: 'copy', label: 'Email copy', hint: 'On-brand email written to your avatar + Positioning Statement' }
+        : { provider: 'claude', capability: 'generic_copy', outputKind: 'copy', label: 'On-brand copy', hint: 'Copy written to your avatar + Positioning Statement' },
     );
   }
 

@@ -47,9 +47,9 @@ interface TouchpointCompetitorAgentPanelProps {
   modality?: CompetitorModality;
   /** Discovery hint for the marketplace-listing modality. */
   category?: string;
-  /** Optional avatar/Signature context the host can pass through. */
+  /** Optional avatar/Positioning Statement context the host can pass through. */
   avatarContext?: unknown;
-  signatureContext?: unknown;
+  positioningStatementContext?: unknown;
   /** The asset's current copy — seeds the A/B test baseline (Variant A). */
   currentCopy?: string;
   /** Channel hint for the recorded test's default primary metric. */
@@ -134,7 +134,7 @@ export function TouchpointCompetitorAgentPanel({
   modality = 'marketplace-listing',
   category,
   avatarContext,
-  signatureContext,
+  positioningStatementContext,
   currentCopy,
   channel,
   onDraftCountermeasure,
@@ -157,7 +157,7 @@ export function TouchpointCompetitorAgentPanel({
       avatarId,
       category,
       avatarContext,
-      signatureContext,
+      positioningStatementContext,
     });
   };
 
@@ -281,7 +281,7 @@ export function TouchpointCompetitorAgentPanel({
         competitiveInsightId={analysis?.insightId ?? null}
         currentCopy={currentCopy}
         avatarContext={avatarContext}
-        signatureContext={signatureContext}
+        positioningStatementContext={positioningStatementContext}
         channel={channel}
       />
     </Card>

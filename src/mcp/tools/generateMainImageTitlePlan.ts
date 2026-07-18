@@ -26,7 +26,7 @@ const inputSchema = {
     .string()
     .optional()
     .describe("Short summary of the Avatar 2.0 emotional core + their search vocabulary, if the coach has it."),
-  signature: z.string().optional().describe('The chosen Signature (distinctive line), if one exists.'),
+  positioning_statement: z.string().optional().describe('The chosen Positioning Statement (distinctive line), if one exists.'),
   trust_gap_summary: z
     .string()
     .optional()
@@ -48,17 +48,17 @@ export function registerGenerateMainImageTitlePlanTool(server: McpServer): void 
     {
       title: 'Generate main image + title plan (the search-grid pair)',
       description:
-        'Plan the MAIN IMAGE and the TITLE as one coherent positioning statement — the search-grid pair that wins or loses the click together. Returns the title formula (brand + the avatar\'s real keyword + the signature-derived distinctive difference inside the first ~80 mobile-visible characters + exact facts verbatim) with Amazon style-guide rules, the policy-clean main-image brief (pure white background, product only, NO added text/badges; the Decision Trigger shows through styling/angle/finish only), the coherence rules that make the pair tell ONE story, IMAGE_PROMPT construction with the exact negative prompt + the Higgsfield generate_image handoff, and the split-test plan (the main image is the highest-traffic test a listing has). You (the coach) compose 2-3 claim-gated variants of each. Works with partial context — missing positioning inputs degrade honestly. Generates plans only, never images, never invented claims.' +
+        'Plan the MAIN IMAGE and the TITLE as one coherent positioning statement — the search-grid pair that wins or loses the click together. Returns the title formula (brand + the avatar\'s real keyword + the positioning statement-derived distinctive difference inside the first ~80 mobile-visible characters + exact facts verbatim) with Amazon style-guide rules, the policy-clean main-image brief (pure white background, product only, NO added text/badges; the Decision Trigger shows through styling/angle/finish only), the coherence rules that make the pair tell ONE story, IMAGE_PROMPT construction with the exact negative prompt + the Higgsfield generate_image handoff, and the split-test plan (the main image is the highest-traffic test a listing has). You (the coach) compose 2-3 claim-gated variants of each. Works with partial context — missing positioning inputs degrade honestly. Generates plans only, never images, never invented claims.' +
         groundingPreamble('generate_main_image_title_plan') +
         appGroundingPreamble('generate_main_image_title_plan'),
       inputSchema,
     },
-    async ({ product, decision_trigger, avatar_summary, signature, trust_gap_summary, verified_facts, marketplace, brand_asset_id }) => {
+    async ({ product, decision_trigger, avatar_summary, positioning_statement, trust_gap_summary, verified_facts, marketplace, brand_asset_id }) => {
       const result = buildMainImageTitlePlan({
         product,
         decisionTrigger: decision_trigger,
         avatarSummary: avatar_summary,
-        signature,
+        positioning_statement,
         trustGapSummary: trust_gap_summary,
         verifiedFacts: verified_facts,
         marketplace,

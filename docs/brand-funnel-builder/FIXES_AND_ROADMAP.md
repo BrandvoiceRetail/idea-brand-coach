@@ -8,7 +8,7 @@ Synthesised from the test run ([`TEST_PLAN.md`](./TEST_PLAN.md)) + the build/gap
 - **P0 #2 failed state + retry** — `failed` status (migration); the service marks an asset `failed` on audit error instead of leaving it silently `pending`; In-Progress shows failed assets with a **Retry**.
 - **P0 #3 empty-state CTA** — "Create an avatar" button on the empty funnel.
 - **P1 #4 apply-rewrite** — `applyRewrite()` saves the coach's revised copy as a new asset version (supersedes prior) and **auto re-audits**; FixDialog now has *"Apply rewrite → new version + re-audit."* This closes the loop.
-- **P1 #6 stale prompt** — banner when N touchpoints have drifted since the Signature changed, with one-click Re-audit-all.
+- **P1 #6 stale prompt** — banner when N touchpoints have drifted since the Positioning Statement changed, with one-click Re-audit-all.
 - **P2 #10 loading skeletons** on the map.
 
 **Deferred (documented, not built — larger or lower-value):** P1 #5 coach deep-link seeding (needs coach-component work), P1 #7 full In-Progress board state machine, P2 #8 channel first-run picker, **P2 #9 bulk upload + auto-touchpoint detection (L)**, P2 #11 coverage trend (needs snapshots), P2 #12 configurable threshold, P2 #13 image cache.
@@ -34,7 +34,7 @@ UI is **functionally correct** across every screen + control (live: auth + rende
 |---|---|---|---|---|
 | 4 | **Rewrite isn't applied.** "Generate on-brand rewrite" shows revised copy but there's no *Apply* — the user copies it by hand; the asset isn't re-versioned or re-scored. | The loop breaks at the most satisfying moment. | **Apply rewrite** → creates a new asset version (`content_text` + supersede prior) and auto re-audits → the map flips to aligned. | M |
 | 5 | **Coach deep-link is inert.** `Open coach to rewrite` passes `?fixAsset=<id>` but `/v2/coach` ignores it. | Promises a coaching hand-off that doesn't happen. | Have the coach read the param and seed the conversation with the asset + audit context. | M |
-| 6 | **Signature-change re-flag is manual.** "Re-audit all" exists, but nothing prompts it after the Signature changes. | The "refine messaging → see what's now off" loop only fires if the user remembers to click. | On Signature save, banner: *"Your Signature changed — N touchpoints may have drifted. Re-audit?"* | S |
+| 6 | **Positioning Statement-change re-flag is manual.** "Re-audit all" exists, but nothing prompts it after the Positioning Statement changes. | The "refine messaging → see what's now off" loop only fires if the user remembers to click. | On Positioning Statement save, banner: *"Your Positioning Statement changed — N touchpoints may have drifted. Re-audit?"* | S |
 | 7 | **In-Progress board is thin.** Just a pending list; no queued/in-progress/in-review work states (the mockup's board). | "What's being worked on" doesn't reflect real work. | Wire a small work-item state machine (uses `superseded_by` + a status). | M |
 
 ## P2 — Friction & polish
@@ -55,7 +55,7 @@ UI is **functionally correct** across every screen + control (live: auth + rende
 1. **Apply-rewrite + auto re-audit** (P1 #4) — the highest-delight single change; closes the loop.
 2. **Avatar-grounding gate + confidence badge** (P0 #1) — makes every verdict trustworthy.
 3. **Bulk upload + auto-touchpoint detection** — removes the biggest friction; the original P0 vision.
-4. **Signature-change auto-sweep + prompt** — delivers the "messaging propagation" promise hands-free.
+4. **Positioning Statement-change auto-sweep + prompt** — delivers the "messaging propagation" promise hands-free.
 5. **Coverage trend over time** — turns a snapshot into a story of improvement (great for the ROI narrative).
 6. **Warehouse metric auto-pull** — when IV-OS ingestion lands, replace manual baseline/result (the metrics seam).
 7. **MCP surface** (audit from Claude chat) — once the D5 write-auth decision lands.

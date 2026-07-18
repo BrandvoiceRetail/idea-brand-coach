@@ -584,7 +584,7 @@ export type Database = {
           id: string
           overall_score: number | null
           previous_score: number | null
-          signature_version: string | null
+          positioning_statement_version: string | null
           stage: string
           status: string
           storage_path: string | null
@@ -602,7 +602,7 @@ export type Database = {
           id?: string
           overall_score?: number | null
           previous_score?: number | null
-          signature_version?: string | null
+          positioning_statement_version?: string | null
           stage: string
           status?: string
           storage_path?: string | null
@@ -620,7 +620,7 @@ export type Database = {
           id?: string
           overall_score?: number | null
           previous_score?: number | null
-          signature_version?: string | null
+          positioning_statement_version?: string | null
           stage?: string
           status?: string
           storage_path?: string | null
@@ -1918,50 +1918,50 @@ export type Database = {
       feedback_events: {
         Row: {
           avatar_id: string | null
-          chosen_signature: string | null
+          chosen_positioning_statement: string | null
           created_at: string
           id: string
           moment: string
           payload: Json
           posthog_distinct_id: string
           q1_score_felt_right: string | null
-          q2_signature_felt_right: string | null
+          q2_positioning_statement_felt_right: string | null
           q3_whats_off: string | null
           scores: Json | null
           session_id: string | null
-          signature_options: Json | null
+          positioning_statement_options: Json | null
           user_id: string | null
         }
         Insert: {
           avatar_id?: string | null
-          chosen_signature?: string | null
+          chosen_positioning_statement?: string | null
           created_at?: string
           id?: string
           moment?: string
           payload?: Json
           posthog_distinct_id: string
           q1_score_felt_right?: string | null
-          q2_signature_felt_right?: string | null
+          q2_positioning_statement_felt_right?: string | null
           q3_whats_off?: string | null
           scores?: Json | null
           session_id?: string | null
-          signature_options?: Json | null
+          positioning_statement_options?: Json | null
           user_id?: string | null
         }
         Update: {
           avatar_id?: string | null
-          chosen_signature?: string | null
+          chosen_positioning_statement?: string | null
           created_at?: string
           id?: string
           moment?: string
           payload?: Json
           posthog_distinct_id?: string
           q1_score_felt_right?: string | null
-          q2_signature_felt_right?: string | null
+          q2_positioning_statement_felt_right?: string | null
           q3_whats_off?: string | null
           scores?: Json | null
           session_id?: string | null
-          signature_options?: Json | null
+          positioning_statement_options?: Json | null
           user_id?: string | null
         }
         Relationships: []
@@ -2425,7 +2425,7 @@ export type Database = {
         }
         Relationships: []
       }
-      signatures: {
+      positioning_statements: {
         Row: {
           all_options: Json | null
           artifact_id: string | null
@@ -2436,7 +2436,7 @@ export type Database = {
           id: string
           inference: boolean | null
           posthog_distinct_id: string | null
-          signature_text: string | null
+          positioning_statement_text: string | null
           used_reviews: boolean | null
           user_id: string
         }
@@ -2450,7 +2450,7 @@ export type Database = {
           id?: string
           inference?: boolean | null
           posthog_distinct_id?: string | null
-          signature_text?: string | null
+          positioning_statement_text?: string | null
           used_reviews?: boolean | null
           user_id: string
         }
@@ -2464,20 +2464,20 @@ export type Database = {
           id?: string
           inference?: boolean | null
           posthog_distinct_id?: string | null
-          signature_text?: string | null
+          positioning_statement_text?: string | null
           used_reviews?: boolean | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "signatures_artifact_id_fkey"
+            foreignKeyName: "positioning_statements_artifact_id_fkey"
             columns: ["artifact_id"]
             isOneToOne: false
             referencedRelation: "artifacts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "signatures_brand_id_fkey"
+            foreignKeyName: "positioning_statements_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"

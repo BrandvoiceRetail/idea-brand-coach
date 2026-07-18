@@ -29,7 +29,7 @@
               "Pulls the exact vocabulary collectors use about your product and category. Identifies the emotional job the binder is hired to do — which is almost certainly NOT 'storage'. Likely closer to 'proof that I'm a serious collector', 'protection of something irreplaceable', or 'order from chaos.' That distinction changes every listing word."
             ],
             [
-              "The Signature",
+              "The Positioning Statement",
               "One sentence: what they're actually buying",
               "Forces a specific articulation. For InfinityVault this might be something like: 'My customer isn't buying a binder. They're buying the certainty that everything they've spent years building won't be lost in an instant.' Every piece of copy after that point gets measured against this sentence."
             ],
@@ -52,7 +52,7 @@
         },
         {
           "name": "The compounding effect on the marketing audit",
-          "note": "Every Tier 1 move from the marketing audit becomes 2–3x more effective with IDEA inputs feeding it:\n\n• Listing copy refresh — without Avatar 2.0, you write better-than-current copy. With it, you write copy that names the customer's exact emotional job in their own words.\n• A+ Content overhaul — without the Brand Canvas, A+ is a prettier version of the same generic story. With it, the A+ modules sequence the customer's emotional journey, not just feature-bullet lists.\n• Photography reshoot — without the Signature, you shoot product-on-white plus a lifestyle scene. With it, you shoot specifically against the Decision Trigger: the moment of the chase pull, the binder full of someone's collection.\n• PPC restructure — without forensic vocabulary, you bid on category keywords. With it, you bid on the exact phrases collectors use when they're in trigger mode.\n• Influencer briefs — without the Signature, creators describe your product. With it, they tell their audience what their audience is actually feeling. Different content. Different response.\n\nThe marketing audit was about doing the right things. IDEA is about saying the right things while doing them. The two compound, they don't substitute.",
+          "note": "Every Tier 1 move from the marketing audit becomes 2–3x more effective with IDEA inputs feeding it:\n\n• Listing copy refresh — without Avatar 2.0, you write better-than-current copy. With it, you write copy that names the customer's exact emotional job in their own words.\n• A+ Content overhaul — without the Brand Canvas, A+ is a prettier version of the same generic story. With it, the A+ modules sequence the customer's emotional journey, not just feature-bullet lists.\n• Photography reshoot — without the Positioning Statement, you shoot product-on-white plus a lifestyle scene. With it, you shoot specifically against the Decision Trigger: the moment of the chase pull, the binder full of someone's collection.\n• PPC restructure — without forensic vocabulary, you bid on category keywords. With it, you bid on the exact phrases collectors use when they're in trigger mode.\n• Influencer briefs — without the Positioning Statement, creators describe your product. With it, they tell their audience what their audience is actually feeling. Different content. Different response.\n\nThe marketing audit was about doing the right things. IDEA is about saying the right things while doing them. The two compound, they don't substitute.",
           "columns": [],
           "rows": []
         }
@@ -89,13 +89,13 @@
               "Stage 2",
               "Avatar 2.0™ — Forensic Research",
               "45–90 min across 5 sub-stages",
-              "Five guided research stages, each producing a specific output that feeds the next. Stage 2.5 culminates in The Signature. This is the RETENTION moment. The user finishes with one sentence they recognise as true and had never previously articulated."
+              "Five guided research stages, each producing a specific output that feeds the next. Stage 2.5 culminates in The Positioning Statement. This is the RETENTION moment. The user finishes with one sentence they recognise as true and had never previously articulated."
             ],
             [
               "Stage 3",
               "Brand Canvas",
               "Auto-generated, 15 min refinement",
-              "Synthesises Avatar 2.0 outputs into a single one-page document: positioning, voice attributes, vocabulary bank, story spine, Decision Trigger, Signature. Editable. Becomes the seller's source of truth."
+              "Synthesises Avatar 2.0 outputs into a single one-page document: positioning, voice attributes, vocabulary bank, story spine, Decision Trigger, Positioning Statement. Editable. Becomes the seller's source of truth."
             ],
             [
               "Stage 4",
@@ -107,7 +107,7 @@
               "Stage 5",
               "Coach — Ongoing Conversation",
               "Continuous",
-              "Chat interface with persistent memory of the seller's Canvas, Diagnostic, and Avatar. The seller asks 'should I launch a second product?' or 'how do I respond to this negative review?' The Coach answers IN BRAND — with reference to their specific Avatar and Signature, not generic advice."
+              "Chat interface with persistent memory of the seller's Canvas, Diagnostic, and Avatar. The seller asks 'should I launch a second product?' or 'how do I respond to this negative review?' The Coach answers IN BRAND — with reference to their specific Avatar and Positioning Statement, not generic advice."
             ]
           ]
         },
@@ -122,7 +122,7 @@
           "rows": [
             [
               "Free",
-              "Stage 0 + Trust Gap™ Diagnostic + first 3 of 5 Avatar 2.0 stages → ending with The Signature",
+              "Stage 0 + Trust Gap™ Diagnostic + first 3 of 5 Avatar 2.0 stages → ending with The Positioning Statement",
               "Lets the user feel both moments of magic: the score that names their gap, and the sentence that surprises them. Free tier ends exactly where they've just had a 'this is real' moment — perfect conversion trigger."
             ],
             [
@@ -356,7 +356,7 @@
           ]
         },
         {
-          "name": "Stage 5 — The Signature (the retention moment)",
+          "name": "Stage 5 — The Positioning Statement (the retention moment)",
           "note": "App synthesises everything above into one sentence. The user picks the version that lands hardest. If they recognise it as true and had never said it themselves — the app has earned the subscription.",
           "columns": [
             "Option 1",
@@ -385,7 +385,7 @@
       "header_note": "The one-page document the app generates from Avatar 2.0. The source of truth for every piece of content downstream.",
       "tables": [
         {
-          "name": "The Signature",
+          "name": "The Positioning Statement",
           "note": "My customer isn't buying a card binder. They're buying the certainty that everything they've spent years building won't be lost in an instant.",
           "columns": [
             "Category",
@@ -549,7 +549,7 @@
             [
               "Listing copy + backend SEO refresh",
               "Better-written version of current copy. Generic category phrasing improved.",
-              "Copy written against the Signature, using forensic vocabulary clusters. Tier A trigger keywords in backend.",
+              "Copy written against the Positioning Statement, using forensic vocabulary clusters. Tier A trigger keywords in backend.",
               "2–3x conversion lift on the refresh"
             ],
             [
@@ -561,7 +561,7 @@
             [
               "PPC restructure",
               "Better ACoS on category keywords through bid discipline.",
-              "Tier A trigger-state keywords added — high-intent, low-competition. Sponsored Brands Video uses Signature as hook.",
+              "Tier A trigger-state keywords added — high-intent, low-competition. Sponsored Brands Video uses Positioning Statement as hook.",
               "Same budget, ~30–50% better ROAS"
             ],
             [
@@ -585,7 +585,7 @@
             [
               "Sponsored Brands Video",
               "Product-led 15s video. Standard.",
-              "Video opens on the Decision Trigger. Names the collector's state. Resolves to the product. Driven by the Signature.",
+              "Video opens on the Decision Trigger. Names the collector's state. Resolves to the product. Driven by the Positioning Statement.",
               "Lower ACoS, higher click-through"
             ],
             [
@@ -603,7 +603,7 @@
           ]
         },
         {
-          "name": "The honest read: you don't NEED IDEA to execute the marketing audit. You can do all of it without running the framework on yourself.\n\nBut the audit estimates assumed you'd execute on whatever positioning InfinityVault already has. If you ran IDEA first — even just the free-tier Diagnostic and the first three Avatar 2.0 stages ending in the Signature — the same execution work would produce materially better results because the raw material feeding it would be sharper.\n\nThis is also the answer to your original product question: anyone using your app should see this exact compounding effect on their own marketing investments. That's the story. Not 'better strategy', but 'every dollar you spend on marketing works harder.' That's a more concrete sale than abstract brand work.",
+          "name": "The honest read: you don't NEED IDEA to execute the marketing audit. You can do all of it without running the framework on yourself.\n\nBut the audit estimates assumed you'd execute on whatever positioning InfinityVault already has. If you ran IDEA first — even just the free-tier Diagnostic and the first three Avatar 2.0 stages ending in the Positioning Statement — the same execution work would produce materially better results because the raw material feeding it would be sharper.\n\nThis is also the answer to your original product question: anyone using your app should see this exact compounding effect on their own marketing investments. That's the story. Not 'better strategy', but 'every dollar you spend on marketing works harder.' That's a more concrete sale than abstract brand work.",
           "note": null,
           "columns": [],
           "rows": []

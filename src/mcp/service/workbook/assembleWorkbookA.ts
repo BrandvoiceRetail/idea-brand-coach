@@ -12,7 +12,7 @@
  * content, so this assembler does NOT render them — it renders the five
  * artifact-driven sheets that mirror the gold layout:
  *   - "3. Diagnostic (IV)"      ← `diagnostic_interpretation`
- *   - "4. Avatar 2.0 (IV)"      ← `avatar_s1_vocab` … `avatar_s4_objections` + `signature`
+ *   - "4. Avatar 2.0 (IV)"      ← `avatar_s1_vocab` … `avatar_s4_objections` + `positioning_statement`
  *   - "5. Brand Canvas (IV)"    ← `brand_canvas`
  *   - "6. Export Brief"         ← `export_brief`
  *   - "7. Audit × IDEA"         ← `audit_x_idea`
@@ -35,7 +35,7 @@ import type {
   avatarS2JobmapContract,
   avatarS3TriggersContract,
   avatarS4ObjectionsContract,
-  signatureContract,
+  positioningStatementContract,
   brandCanvasContract,
   exportBriefContract,
   auditXIdeaContract,
@@ -57,7 +57,7 @@ type S1Content = ContractOutput<typeof avatarS1VocabContract>;
 type S2Content = ContractOutput<typeof avatarS2JobmapContract>;
 type S3Content = ContractOutput<typeof avatarS3TriggersContract>;
 type S4Content = ContractOutput<typeof avatarS4ObjectionsContract>;
-type SignatureContent = ContractOutput<typeof signatureContract>;
+type PositioningStatementContent = ContractOutput<typeof positioningStatementContract>;
 type CanvasContent = ContractOutput<typeof brandCanvasContract>;
 type BriefContent = ContractOutput<typeof exportBriefContract>;
 type AuditContent = ContractOutput<typeof auditXIdeaContract>;
@@ -85,7 +85,7 @@ export interface WorkbookAArtifacts {
   avatar_s2_jobmap?: S2Content;
   avatar_s3_triggers?: S3Content;
   avatar_s4_objections?: S4Content;
-  signature?: SignatureContent;
+  positioning_statement?: PositioningStatementContent;
   brand_canvas?: CanvasContent;
   export_brief?: BriefContent;
   audit_x_idea?: AuditContent;
@@ -198,7 +198,7 @@ function buildDiagnosticSheet(wb: ExcelJS.Workbook, content: DiagnosticContent, 
 }
 
 // ---------------------------------------------------------------------------
-// Sheet 4 — Avatar 2.0 (S1–S4 blocks + Signature)
+// Sheet 4 — Avatar 2.0 (S1–S4 blocks + Positioning Statement)
 // ---------------------------------------------------------------------------
 function buildAvatarSheet(
   wb: ExcelJS.Workbook,
@@ -267,12 +267,12 @@ function buildAvatarSheet(
     });
   }
 
-  if (artifacts.signature) {
-    const sig = artifacts.signature;
+  if (artifacts.positioning_statement) {
+    const sig = artifacts.positioning_statement;
     appendTable(sheet, {
-      sectionTitle: 'Stage 5 — The Signature (the retention moment)',
+      sectionTitle: 'Stage 5 — The Positioning Statement (the retention moment)',
       note: 'Synthesises everything above into one sentence. The user picks the version that lands hardest.',
-      columns: ['Option', 'Signature', 'Chosen'],
+      columns: ['Option', 'Positioning Statement', 'Chosen'],
       rows: sig.options.map((opt) => [
         `Option ${opt.option}`,
         opt.sentence,
@@ -294,10 +294,10 @@ function buildCanvasSheet(wb: ExcelJS.Workbook, content: CanvasContent, brandNam
     'The one-page document generated from Avatar 2.0. The source of truth for every piece of content downstream.',
   );
 
-  // The Signature line as a banner-with-note (mirrors the gold canvas top block).
+  // The Positioning Statement line as a banner-with-note (mirrors the gold canvas top block).
   appendTable(sheet, {
-    sectionTitle: 'The Signature',
-    note: content.signature,
+    sectionTitle: 'The Positioning Statement',
+    note: content.positioning_statement,
     columns: ['Category', 'Voice attributes'],
     rows: [[content.positioning.category, content.voice.voice_attributes]],
   });
@@ -420,7 +420,7 @@ export function assembleWorkbookA(
     artifacts.avatar_s2_jobmap ||
     artifacts.avatar_s3_triggers ||
     artifacts.avatar_s4_objections ||
-    artifacts.signature;
+    artifacts.positioning_statement;
   if (hasAvatar) {
     buildAvatarSheet(wb, artifacts, brandName);
   }
@@ -454,7 +454,7 @@ export function projectWorkbookAArtifacts(
     avatar_s2_jobmap: chain.avatar_s2_jobmap as S2Content | undefined,
     avatar_s3_triggers: chain.avatar_s3_triggers as S3Content | undefined,
     avatar_s4_objections: chain.avatar_s4_objections as S4Content | undefined,
-    signature: chain.signature as SignatureContent | undefined,
+    positioning_statement: chain.positioning_statement as PositioningStatementContent | undefined,
     brand_canvas: chain.brand_canvas as CanvasContent | undefined,
     export_brief: chain.export_brief as BriefContent | undefined,
     audit_x_idea: chain.audit_x_idea as AuditContent | undefined,

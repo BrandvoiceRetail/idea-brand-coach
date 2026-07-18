@@ -69,7 +69,7 @@ describe('funnel-rewrite lib', () => {
         current_copy: 'Sleep better tonight.',
         competitor_brief: { strategic_angle: 'Ritual over dosage.' },
         avatar_context: { voice: 'warm' },
-        signature_context: 'Calm, never clinical.',
+        positioning_statement_context: 'Calm, never clinical.',
       };
       const msg = buildUserMessage(input);
       expect(msg).toContain('amazon_listing_copy');

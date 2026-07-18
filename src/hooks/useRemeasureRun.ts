@@ -42,7 +42,7 @@ export interface RemeasureRunHook {
   hasAvatar: boolean;
   /** The focus avatar id (null when none) — lets the page reload on a switch. */
   avatarId: string | null;
-  /** Signature of the active avatar SET — the page reloads the lift when it changes. */
+  /** Positioning Statement of the active avatar SET — the page reloads the lift when it changes. */
   loadKey: string;
 
   // ── Trust Gap lift (TrustGapLiftCard) ──
@@ -77,7 +77,7 @@ export function useRemeasureRun(): RemeasureRunHook {
     () => Object.fromEntries((avatars ?? []).map((a) => [a.id, a.name])),
     [avatars],
   );
-  // A stable signature of the active avatar SET — the lift reloads when the set
+  // A stable positioning statement of the active avatar SET — the lift reloads when the set
   // changes (not only when the focus avatar changes).
   const loadKey = contextAvatarIds.join(',');
 

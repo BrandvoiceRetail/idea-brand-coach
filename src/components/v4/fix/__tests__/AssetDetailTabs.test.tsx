@@ -36,7 +36,7 @@ function makeAsset(overrides: Partial<AssetDetail> = {}): AssetDetail {
     overallScore: 75,
     previousScore: null,
     audit: null,
-    signatureVersion: 'v2',
+    positioningStatementVersion: 'v2',
     updatedAt: '2026-06-26T00:00:00.000Z',
     ...overrides,
   };
@@ -139,7 +139,7 @@ describe('AssetDetailTabs', () => {
         asset={makeAsset()}
         imagePrompt="A studio shot."
         grounded={[
-          { label: 'Signature', present: true },
+          { label: 'Positioning Statement', present: true },
           { label: 'Core message', present: false, note: 'unclear — output may drift' },
         ]}
       />,
@@ -147,7 +147,7 @@ describe('AssetDetailTabs', () => {
     const strip = screen.getByTestId('v4-grounded-strip');
     expect(strip).toHaveTextContent(/Grounded in/i);
     expect(strip).toHaveTextContent(/Positioning/);
-    expect(strip).not.toHaveTextContent(/Signature/);
+    expect(strip).not.toHaveTextContent(/Positioning Statement/);
     expect(strip).toHaveTextContent(/may drift/i);
   });
 

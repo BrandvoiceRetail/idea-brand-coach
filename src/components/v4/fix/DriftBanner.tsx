@@ -1,13 +1,13 @@
 /**
- * DriftBanner (S-15) — Loop-3 Signature-drift alert.
+ * DriftBanner (S-15) — Loop-3 Positioning Statement-drift alert.
  *
- * WHAT: When the brand's Signature changes, any funnel asset that was last
- * aligned to an OLDER Signature is now out of date. This banner names how many
+ * WHAT: When the brand's Positioning Statement changes, any funnel asset that was last
+ * aligned to an OLDER Positioning Statement is now out of date. This banner names how many
  * assets drifted and offers a one-tap re-check. It SELF-HIDES when nothing has
  * drifted (zero items → renders null), so it never nags without cause.
  *
  * WHY: The Fix leg of the Diagnose→Analyse→Fix spine keeps the funnel true to
- * the current Signature. A Signature edit silently invalidates prior audits;
+ * the current Positioning Statement. A Positioning Statement edit silently invalidates prior audits;
  * without a prompt the user wouldn't know their "aligned" assets are now stale.
  * The banner shows ONLY real drift the service computed (DriftItem[]) — it never
  * fabricates a count, and renders nothing when there's no drift.
@@ -20,9 +20,9 @@ import { captureAlphaEvent } from '@/lib/posthogClient';
 import type { DriftItem } from '@/types/v4Fix';
 
 export interface DriftBannerProps {
-  /** Assets that drifted from the current Signature. Empty → banner self-hides. */
+  /** Assets that drifted from the current Positioning Statement. Empty → banner self-hides. */
   driftItems: DriftItem[];
-  /** Start a re-check of the drifted assets against the current Signature. */
+  /** Start a re-check of the drifted assets against the current Positioning Statement. */
   onRecheck: () => void;
 }
 

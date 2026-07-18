@@ -24,7 +24,7 @@ export const stageRefSchema = z.enum([
   's2_jobmap',
   's3_triggers',
   's4_objections',
-  'signature',
+  'positioning_statement',
   'canvas',
   'decision_trigger',
 ]);

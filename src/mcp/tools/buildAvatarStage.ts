@@ -3,7 +3,7 @@
  *
  * Runs one forensic stage or the full S1→S5 chain through `avatarPipeline`. Each stage
  * grounds in the resolved reviews slot (#1) + prior-stage artifacts, invokes its edge fn
- * (avatar-vocabulary / -jobmap / -triggers / -objections; S5 = reveal-signature),
+ * (avatar-vocabulary / -jobmap / -triggers / -objections; S5 = reveal-positioning-statement),
  * validates against the Phase-0 contract, and persists via the JWT-bound artifact store.
  *
  * Grounding gate (manifest §6 / guardrail #4): if the reviews slot is unresolved the
@@ -13,8 +13,8 @@
  * Identity-gated (gateWrite, D5): a write runs only for an authenticated caller; the
  * artifact store's RLS-bound client then scopes every row to `auth.uid()`.
  *
- * D2 / R-015: the S5 signature auto-feed is operator-gated. `stage:'s4'` or `'pipeline'`
- * stops before S5 unless `allow_signature:true` is passed (the explicit sign-off that
+ * D2 / R-015: the S5 positioning statement auto-feed is operator-gated. `stage:'s4'` or `'pipeline'`
+ * stops before S5 unless `allow_positioning_statement:true` is passed (the explicit sign-off that
  * customer review vocabulary is not the founder's own words — no-parroting preserved).
  */
 import { z } from 'zod';
@@ -37,11 +37,11 @@ const inputSchema = {
       "Which to run: a single forensic stage 's1'|'s2'|'s3'|'s4', or 'pipeline' for the full S1→S5 chain.",
     ),
   avatar_id: z.string().optional().describe('Avatar scope; omit for the brand-level chain.'),
-  allow_signature: z
+  allow_positioning_statement: z
     .boolean()
     .default(false)
     .describe(
-      'D2/R-015 operator sign-off. Only with this true does the pipeline auto-feed evidence into the S5 Signature engine.',
+      'D2/R-015 operator sign-off. Only with this true does the pipeline auto-feed evidence into the S5 Positioning Statement engine.',
     ),
 };
 
@@ -51,17 +51,17 @@ export function registerBuildAvatarStageTool(server: McpServer): void {
     {
       title: 'Build an Avatar 2.0 forensic stage',
       description:
-        'Write tool: run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 search-intent [trigger moment + what-they-search + labeled volume bands — the Workbook/PPC feed, NOT the hero Decision Trigger; the single named Decision Trigger™ lever is the identify_decision_trigger tool], s4 objections) or the full S1→S5 pipeline. Each stage grounds in resolved reviews (slot #1) + prior artifacts, invokes its edge fn verbatim, validates against its contract, and persists an artifact (RLS-scoped). Returns needs_input when reviews are unresolved (never runs ungrounded). Requires an authenticated Supabase JWT. The S5 signature auto-feed is D2/R-015 gated behind allow_signature.' + groundingPreamble('build_avatar_stage') + appGroundingPreamble('build_avatar_stage'),
+        'Write tool: run one Avatar 2.0 forensic stage (s1 vocabulary, s2 job map, s3 search-intent [trigger moment + what-they-search + labeled volume bands — the Workbook/PPC feed, NOT the hero Decision Trigger; the single named Decision Trigger™ lever is the identify_decision_trigger tool], s4 objections) or the full S1→S5 pipeline. Each stage grounds in resolved reviews (slot #1) + prior artifacts, invokes its edge fn verbatim, validates against its contract, and persists an artifact (RLS-scoped). Returns needs_input when reviews are unresolved (never runs ungrounded). Requires an authenticated Supabase JWT. The S5 positioning statement auto-feed is D2/R-015 gated behind allow_positioning_statement.' + groundingPreamble('build_avatar_stage') + appGroundingPreamble('build_avatar_stage'),
       inputSchema,
     },
-    async ({ stage, avatar_id, allow_signature }) => {
+    async ({ stage, avatar_id, allow_positioning_statement }) => {
       const { identity, denied } = gateWrite();
       if (denied) return denied;
 
       const { denied: avatarDenied } = await requireOwnedAvatar(avatar_id);
       if (avatarDenied) return avatarDenied;
 
-      const opts = { avatarId: avatar_id ?? null, allowSignature: allow_signature };
+      const opts = { avatarId: avatar_id ?? null, allowPositioningStatement: allow_positioning_statement };
 
       if (stage === 'pipeline') {
         const result = await runPipeline(opts);
@@ -71,12 +71,12 @@ export function registerBuildAvatarStageTool(server: McpServer): void {
           stages: result.stages.length,
           ok: result.ok,
           needs_input: result.needs_input ? result.needs_input.length : 0,
-          signature_gated: !!result.signature_gated,
+          positioning_statement_gated: !!result.positioning_statement_gated,
         });
         if (result.ok && result.stages.length > 0) {
           captureMcpEvent(identity.userId as string, 'mcp_avatar_pipeline_completed', {
             stages_count: result.stages.length,
-            signature_gated: !!result.signature_gated,
+            positioning_statement_gated: !!result.positioning_statement_gated,
           });
         }
         // Previously dark: pipeline short-circuits (blocked / failed) emitted no event.
@@ -96,9 +96,9 @@ export function registerBuildAvatarStageTool(server: McpServer): void {
           ? `Pipeline blocked: ${result.needs_input.length} context slot(s) need input (chain stopped after ${result.stages.length} stage(s)).`
           : result.failed
             ? `Pipeline failed at ${result.failed.stage}: ${result.failed.note} (${result.stages.length} stage(s) persisted).`
-            : result.signature_gated
-              ? `Pipeline persisted ${result.stages.length} stage(s); S5 Signature is gated (D2/R-015).`
-              : `Pipeline persisted ${result.stages.length} stage(s) including the Signature.`;
+            : result.positioning_statement_gated
+              ? `Pipeline persisted ${result.stages.length} stage(s); S5 Positioning Statement is gated (D2/R-015).`
+              : `Pipeline persisted ${result.stages.length} stage(s) including the Positioning Statement.`;
         return {
           content: [{ type: 'text' as const, text: summaryText }],
           structuredContent: {
@@ -106,7 +106,7 @@ export function registerBuildAvatarStageTool(server: McpServer): void {
             mode: 'pipeline',
             stages: result.stages,
             needs_input: result.needs_input,
-            signature_gated: result.signature_gated,
+            positioning_statement_gated: result.positioning_statement_gated,
             failed: result.failed,
           },
         };

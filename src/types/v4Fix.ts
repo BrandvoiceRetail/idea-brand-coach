@@ -3,12 +3,12 @@
  *
  * WHAT: The single contract the Fix screens (FunnelMap, WhatNeedsWork,
  * AssetDetailTabs, DriftBanner) and the `fixService` seam all import — funnel
- * map → impact-ranked work → asset detail/audit → Signature drift. Defining it
+ * map → impact-ranked work → asset detail/audit → Positioning Statement drift. Defining it
  * once keeps the screens and the integrator from drifting on field names.
  *
  * WHY: Loop-3 is the Diagnose→Analyse→Fix spine's "do the work" leg — map the
  * five-stage funnel, rank what would move the numbers most, work each asset, and
- * flag what drifted when the Signature changed. Like Loop-1/Loop-2, EVERY value
+ * flag what drifted when the Positioning Statement changed. Like Loop-1/Loop-2, EVERY value
  * here is grounded: statuses come from the real coverage read, scores come from
  * the real audit engine, and a lift number is only ever shown when REAL campaign
  * metrics back it — never fabricated. The service returns `needs_input` or
@@ -139,16 +139,16 @@ export interface AssetDetail {
   previousScore: number | null;
   /** The IDEA per-dimension audit verdict; null until checked. */
   audit: AuditResult | null;
-  /** The Signature version this asset was last aligned to. */
-  signatureVersion: string | null;
+  /** The Positioning Statement version this asset was last aligned to. */
+  positioningStatementVersion: string | null;
   updatedAt: string;
 }
 
-// ── Signature drift (S-15) ────────────────────────────────────────────────────
+// ── Positioning Statement drift (S-15) ────────────────────────────────────────────────────
 
 /**
- * One asset that drifted when the Signature changed — it was aligned to an older
- * Signature and now needs a re-check. The DriftBanner self-hides at zero items.
+ * One asset that drifted when the Positioning Statement changed — it was aligned to an older
+ * Positioning Statement and now needs a re-check. The DriftBanner self-hides at zero items.
  */
 export interface DriftItem {
   assetId: string;
@@ -156,10 +156,10 @@ export interface DriftItem {
   /** Everyday touchpoint label (Tier-A). */
   touchpointLabel: string;
   stage: StageId;
-  /** The Signature version the asset was aligned to. */
+  /** The Positioning Statement version the asset was aligned to. */
   builtAgainst: string | null;
-  /** The current Signature version it now drifts from. */
-  currentSignature: string | null;
+  /** The current Positioning Statement version it now drifts from. */
+  currentPositioningStatement: string | null;
 }
 
 // ── Service result discriminant (no-fabrication seam) ─────────────────────────

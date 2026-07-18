@@ -9,7 +9,7 @@
  * `user_product_reviews`. This service is the client-side gateway to that
  * data, exposing it for three downstream consumers:
  *   (a) Trust Gap interpretation evidence
- *   (b) Signature reveal preloaded reviews
+ *   (b) Positioning Statement reveal preloaded reviews
  *   (c) coach chat product context
  */
 

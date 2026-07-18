@@ -179,10 +179,10 @@ export type GenerateBriefResult =
  * persist. Exported so the test can drive it with stubs without the MCP transport.
  */
 export async function runGenerateBrief(avatarId: string | null, deps: GenerateBriefDeps): Promise<GenerateBriefResult> {
-  // 1. The brief root priority: Brand Canvas > Decision Trigger. Signature is
+  // 1. The brief root priority: Brand Canvas > Decision Trigger. Positioning Statement is
   //    NOT a root (dropped from the chain per Matthew, 2026-07-08 — "drop
-  //    Signature from alpha"): with neither Canvas nor Trigger we ask honestly
-  //    rather than fall back to a legacy signature row.
+  //    Positioning Statement from alpha"): with neither Canvas nor Trigger we ask honestly
+  //    rather than fall back to a legacy positioning statement row.
   const canvasRow = await deps.getCurrentArtifact('brand_canvas', avatarId);
 
   // Only fetch the decision trigger when no Canvas exists — conditional to
@@ -266,7 +266,7 @@ export function registerGenerateBriefTool(server: McpServer, deps?: Partial<Gene
     {
       title: 'Generate the Export Brief',
       description:
-        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas — or, when no canvas exists yet, your chosen Signature (so the owner gets a shippable brief today, not canvas homework) — plus Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). CONNECTOR (conversational) mode: address the brief TO THE DESIGNER OR VA so the owner can paste-and-forward it without rewriting (not a note back to the owner); open with "Here is a brief you can send directly to your designer or VA. It does not require any additional explanation from you." — plain commercial language only, no framework terms or buyer-state names. If the owner asks for ONE component (image brief, a headline, a single bullet, or the placement line), produce ONLY that component — one component done precisely beats a full brief done approximately. A compliance net flags warranty/guarantee, health/medical, and unverifiable-superlative phrasing (returned as needs_confirmation in structuredContent) so the owner confirms each claim before forwarding. Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'),
+        'Write tool: compile the Export Brief (gold sheet 6 — title formula, 5 bullets, 7-slot image brief, PPC tiers) from the Brand Canvas — or, when no canvas exists yet, your chosen Positioning Statement (so the owner gets a shippable brief today, not canvas homework) — plus Avatar S1/S3/S4 + the product-claims slot (#6). The product-claims slot MUST be owner-confirmed (filled-evidence/filled-stated) or the tool returns needs_input. After generation a deterministic claim gate re-scans the copy: any PRODUCT-TRUTH/policy claim (capacity, compatibility, guarantee) not in the confirmed allowlist BLOCKS persistence and is surfaced as a confirmation question (the gold 30-DAY GUARANTEE hazard). CONNECTOR (conversational) mode: address the brief TO THE DESIGNER OR VA so the owner can paste-and-forward it without rewriting (not a note back to the owner); open with "Here is a brief you can send directly to your designer or VA. It does not require any additional explanation from you." — plain commercial language only, no framework terms or buyer-state names. If the owner asks for ONE component (image brief, a headline, a single bullet, or the placement line), produce ONLY that component — one component done precisely beats a full brief done approximately. A compliance net flags warranty/guarantee, health/medical, and unverifiable-superlative phrasing (returned as needs_confirmation in structuredContent) so the owner confirms each claim before forwarding. Requires an authenticated Supabase JWT.' + appGroundingPreamble('generate_brief'),
       inputSchema,
     },
     async ({ avatar_id }) => {

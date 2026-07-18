@@ -57,7 +57,7 @@ One brand per user (security root stays `auth.uid() = user_id`; `brand_id`/`avat
 |---|---|
 | Coach **conversation** (`chat_sessions.avatar_id` thread) | Uploaded brand docs + brand KB (`scope='brand'`) |
 | Avatar **profile/fields** (`avatar_field_values`) | **Funnel** / `brand_assets` inventory (locked #7) |
-| Strategy **artifacts** (`artifacts`/`signatures`/`evidence_snapshots` where `avatar_id=current`) | Brand strategy / canvas / copy / visual-identity KB |
+| Strategy **artifacts** (`artifacts`/`positioning_statements`/`evidence_snapshots` where `avatar_id=current`) | Brand strategy / canvas / copy / visual-identity KB |
 | Recalled **memory** — KB rows `scope='avatar'` (categories `avatar`, `insights`) | Brand **baseline** Trust Gap (`avatar_id IS NULL`) |
 | Per-avatar **diagnostic overlay** | Founder/coaching memory (no avatar tier this effort) |
 
@@ -120,7 +120,7 @@ supabase/migrations/
 ```
 
 > **Migration-drift reconciliation (data-integrity F4, arch-review C2/M4, product-fit #8).** The repo has a contradictory lineage (`20260301065445` adds `avatars.brand_id ON DELETE SET NULL`; `20260306`/`20260317` fight over `avatar_field_values` RLS; `20260301065636 performance_metrics` joins through `avatars.brand_id`). **Live has none of it.** Therefore:
-> - **Do NOT validate via `create_branch` repo-replay** — it reproduces the brand-keyed avatars table, the opposite of live. Author/test as a **delta from a live schema snapshot** (`list_tables` + `pg_policies` + RPC signatures).
+> - **Do NOT validate via `create_branch` repo-replay** — it reproduces the brand-keyed avatars table, the opposite of live. Author/test as a **delta from a live schema snapshot** (`list_tables` + `pg_policies` + RPC positioning statements).
 > - The schema file **explicitly reconciles the FK** (drop+re-add with the intended `ON DELETE`), so it is correct whether `brand_id` pre-exists (branch) or not (live).
 > - Reconcile (don't blind-`db reset`) the stale repo migrations before any branch work.
 
@@ -167,7 +167,7 @@ ALTER TABLE public.user_knowledge_chunks
 
 -- brand_id denormalized onto avatar-keyed tables (single-key scoping). F11: kept (one brand/user; trigger guards consistency).
 DO $$ DECLARE t text; BEGIN
-  FOREACH t IN ARRAY ARRAY['artifacts','signatures','evidence_snapshots','uploaded_documents','chat_sessions','decision_triggers'] LOOP
+  FOREACH t IN ARRAY ARRAY['artifacts','positioning_statements','evidence_snapshots','uploaded_documents','chat_sessions','decision_triggers'] LOOP
     EXECUTE format('ALTER TABLE public.%I ADD COLUMN IF NOT EXISTS brand_id uuid REFERENCES public.brands(id) ON DELETE CASCADE', t);
     EXECUTE format('CREATE INDEX IF NOT EXISTS idx_%I_brand_id ON public.%I(brand_id)', t, t);
   END LOOP; END $$;
@@ -219,7 +219,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
--- attach as BEFORE INSERT OR UPDATE on artifacts/signatures/evidence_snapshots/decision_triggers
+-- attach as BEFORE INSERT OR UPDATE on artifacts/positioning statements/evidence_snapshots/decision_triggers
 ```
 
 ### 3.2 `…_rls.sql`
@@ -281,7 +281,7 @@ UPDATE public.user_knowledge_chunks c SET brand_id=b.id, scope='brand', avatar_i
   FROM public.brands b WHERE b.user_id=c.user_id AND c.brand_id IS NULL;  -- 0 rows live
 
 -- 5. per-avatar tables: brand_id from row's avatar else user's brand (avatar_id never cleared)
---    repeat for artifacts/signatures/evidence_snapshots/uploaded_documents/decision_triggers
+--    repeat for artifacts/positioning statements/evidence_snapshots/uploaded_documents/decision_triggers
 UPDATE public.artifacts t SET brand_id=COALESCE(av.brand_id,b.id)
   FROM public.brands b LEFT JOIN public.avatars av ON av.id=t.avatar_id
   WHERE b.user_id=t.user_id AND t.brand_id IS NULL;
@@ -335,7 +335,7 @@ Then **regenerate `src/integrations/supabase/types.ts`** via `mcp__supabase__gen
 - **The conversational path requires a tool-calling loop that does not exist (arch C1, product-fit #1).** Two options for the operator (O-1):
   - **(A) Minimal, recommended for this effort:** lifecycle tools live in the **MCP host** (`src/mcp`), which already has tool-calling. The in-app coach exposes avatar lifecycle via the **SPA UI + the existing avatar edge functions**; the *conversational* "agent creates/switches avatar mid-chat" is delivered through the **MCP host when accessed via an MCP client (Claude Desktop)**, where the loop already works (per project memory: MCP Apps panels render in Desktop). The consultant edge fn (the SPA's chat) does **not** gain a tool loop in this effort.
   - **(B) Full:** build a native tool-calling loop in `idea-framework-consultant-claude` (multi-turn, MCP dispatch, directive rebind). Substantial; scoped as **Phase 6 (optional/deferred)**.
-- **MCP lifecycle tools (4 new, `src/mcp/`):** `create_avatar` (gateWrite; mints `avatars` row, stamps `brand_id` from caller's brand resolved server-side — never caller-supplied; optional `set_current:true`), `list_avatars`, `get_avatar`, `set_current_avatar` (gateWrite; calls `set_current_avatar` RPC). Plus `record_avatar_build`. **Shared `requireOwnedAvatar(avatarId)` helper** (`src/mcp/service/avatarOwnership.ts`) called by **every** tool accepting `avatar_id` (security C-1) — retrofitted to existing `ingest_evidence`/`build_avatar_stage`/`persist_signature`/`provide_context`/`get_context_status` too.
+- **MCP lifecycle tools (4 new, `src/mcp/`):** `create_avatar` (gateWrite; mints `avatars` row, stamps `brand_id` from caller's brand resolved server-side — never caller-supplied; optional `set_current:true`), `list_avatars`, `get_avatar`, `set_current_avatar` (gateWrite; calls `set_current_avatar` RPC). Plus `record_avatar_build`. **Shared `requireOwnedAvatar(avatarId)` helper** (`src/mcp/service/avatarOwnership.ts`) called by **every** tool accepting `avatar_id` (security C-1) — retrofitted to existing `ingest_evidence`/`build_avatar_stage`/`persist_positioning_statement`/`provide_context`/`get_context_status` too.
 - **`SupabaseAvatarService.create()` must stamp `brand_id`** server-side (product-fit #11) or the NOT NULL constraint rejects SPA-created avatars.
 - **No tool-name collisions (arch M1):** `list_coach_conversations`/`get_coach_conversation` already exist and are conversation-listing, not avatar-listing — new `list_avatars`/`get_avatar` are distinct. Forensic + conversation tools are already registered; only **lifecycle** tools are net-new (host 26→~31).
 

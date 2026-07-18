@@ -72,7 +72,7 @@ function mirrored(handler: ToolHandler): ToolHandler {
  * Monkey-patch `server.registerTool` so each subsequently-registered tool's handler has
  * its result run through {@link mirrorStructuredContent}. Call once after `new McpServer`
  * and before the register*Tool() calls (alongside instrumentToolLatency). The cast is
- * confined to this seam; tool modules keep their real typed signature and are untouched.
+ * confined to this seam; tool modules keep their real typed positioning statement and are untouched.
  */
 export function registerStructuredFallback(server: McpServer): void {
   const original = server.registerTool.bind(server) as (...args: unknown[]) => unknown;

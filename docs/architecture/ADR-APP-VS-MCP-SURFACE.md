@@ -35,7 +35,7 @@ Grouped by layer. Each is an independent cause; they compound.
 6. **`/v5` claim confirmations are never persisted** — `handleConfirmClaim` only flips React state.
 
 **Positioning root**
-7. **Degradation ladder** — `resolvePositioning` walks canvas → prior decision-trigger → signature → avatar-profile depending on what happens to exist, so the brief's root drifts between runs.
+7. **Degradation ladder** — `resolvePositioning` walks canvas → prior decision-trigger → positioning statement → avatar-profile depending on what happens to exist, so the brief's root drifts between runs.
 
 **Model & params**
 8. **Model tier** — connector reasons on a user-selected, more capable host model; app edge fns are pinned (and `diagnostic-interpretation` runs on **Haiku** — a different quality tier for "the same" score).
@@ -75,7 +75,7 @@ Reproduced from the serum's stored run (ASIN `B0D42C2H3T`, `user_products.last_r
 New table `canonical_facts`: small, human-approved, versioned. Keyed `user_id` (+ `product_id → user_products`, optional `brand_id → brands`), `is_current`/`version` pattern (mirrors `business_facts`). Holds approved facts, **approved AND forbidden claims**, SKUs, verified ingredient names/concentrations. Both the app edge fns and the MCP resolve slot #6 (and the brief allowlist) from this store first. Must be registered in `gdprData.ts` `USER_ID_TABLES` (before `user_products`) and the `gdpr-export`/`gdpr-delete-account` fns redeployed in the same change.
 
 ### D3 — Unify the brief request contract + run the same claim gate on the app path
-`fixService.generateBrief` (and the `/v5` path) must send the same `{canvas, signature, confirmed_claims}` payload the MCP sends and run the same deterministic `scanBrief` gate on the output. Close the two persistence gaps: (a) point slot #6 at `canonical_facts`/`business_facts` instead of `[]`/scraped bullets; (b) persist `/v5` claim confirmations. Net: the *set of assertable facts* is identical across surfaces, and neither can ship an ungated product-truth claim.
+`fixService.generateBrief` (and the `/v5` path) must send the same `{canvas, positioning statement, confirmed_claims}` payload the MCP sends and run the same deterministic `scanBrief` gate on the output. Close the two persistence gaps: (a) point slot #6 at `canonical_facts`/`business_facts` instead of `[]`/scraped bullets; (b) persist `/v5` claim confirmations. Net: the *set of assertable facts* is identical across surfaces, and neither can ship an ungated product-truth claim.
 
 ### D4 — Reduce nondeterminism where it is not wanted
 Pin the canonical corpus read (don't let `chooseReviews` silently change the review set under a cached run), and treat factual fields (title, claims, ingredients) as canonical-facts-driven rather than re-improvised per call. Copy-level wording drift from temperature is acceptable; **fact drift is not.**

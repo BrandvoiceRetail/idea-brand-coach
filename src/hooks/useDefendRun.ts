@@ -3,7 +3,7 @@
  *
  * WHAT: Owns ALL Loop-5 data-fetching through the `defendService` seam, scoped to
  * the active avatar (`AvatarContext`). Exposes the per-section state the Defend
- * screens render — the Signature-drift watch + the derived defend checklist —
+ * screens render — the Positioning Statement-drift watch + the derived defend checklist —
  * plus the workbook-export action and its in-flight/result state.
  *
  * WHY: Pages on /v4 are thin wiring shells (see src/pages/AGENTS.md) — the
@@ -37,7 +37,7 @@ export interface DefendRunHook {
   avatarId: string | null;
   /** The focus avatar's display name (for the focus-only export note); null when none. */
   avatarName: string | null;
-  /** Signature of the active avatar SET — the page reloads Defend when it changes. */
+  /** Positioning Statement of the active avatar SET — the page reloads Defend when it changes. */
   loadKey: string;
 
   // ── Status (drift watch + checklist) ──
@@ -63,7 +63,7 @@ export function useDefendRun(): DefendRunHook {
     () => Object.fromEntries((avatars ?? []).map((a) => [a.id, a.name])),
     [avatars],
   );
-  // A stable signature of the active avatar SET — Defend reloads when the set
+  // A stable positioning statement of the active avatar SET — Defend reloads when the set
   // changes (not only when the focus avatar changes).
   const loadKey = contextAvatarIds.join(',');
 

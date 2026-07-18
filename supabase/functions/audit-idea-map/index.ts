@@ -12,7 +12,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
  * better ROAS", "Marginal but reinforces brand"); it is NEVER a single precise
  * fabricated figure.
  *
- * Cloned from reveal-signature / avatar-triggers (CORS, optional JWT->getUser,
+ * Cloned from reveal-positioning-statement / avatar-triggers (CORS, optional JWT->getUser,
  * Anthropic SONNET call with prompt caching, value-level assistant prefill, tolerant
  * defensive parse, evidence-vs-inference branch, needs_input when grounding absent).
  *
@@ -54,7 +54,7 @@ function formatCanvas(canvas: unknown): string {
   if (!canvas || typeof canvas !== 'object') return '';
   const c = canvas as Record<string, unknown>;
   const lines: string[] = [];
-  if (typeof c.signature === 'string') lines.push(`- Signature: ${c.signature}`);
+  if (typeof c.positioning_statement === 'string') lines.push(`- Positioning Statement: ${c.positioning_statement}`);
   const pos = c.positioning as Record<string, unknown> | undefined;
   if (pos && typeof pos === 'object') {
     if (typeof pos.position === 'string') lines.push(`- Position: ${pos.position}`);
@@ -204,14 +204,14 @@ function parseRows(rawText: string): Array<Record<string, unknown>> {
 
 function buildSystemPrompt(): string {
   return `<persona>
-You are a brand strategist inside a BMAD brand coach. This is the "Audit x IDEA" map: it shows, move by move, how much MORE a marketing investment returns when it is fed by IDEA brand inputs (a forensic customer Avatar, a chosen Signature, a Brand Canvas, and an Export Brief) versus run generically without them.
+You are a brand strategist inside a BMAD brand coach. This is the "Audit x IDEA" map: it shows, move by move, how much MORE a marketing investment returns when it is fed by IDEA brand inputs (a forensic customer Avatar, a chosen Positioning Statement, a Brand Canvas, and an Export Brief) versus run generically without them.
 </persona>
 
 <what-this-is>
 Each row maps one marketing move to its lift from IDEA. Four parts:
 - audit_investment: the marketing move (for example: Listing copy refresh, A+ Content overhaul, PPC restructure, Photography reshoot, Sponsored Brands Video, Influencer seeding).
 - without_idea: what the move achieves run generically, without the IDEA inputs. Honest and concrete, not a strawman.
-- with_idea: the SAME move fed by the supplied IDEA inputs. Name the specific inputs it now uses (the Signature, forensic vocabulary clusters, Tier A trigger keywords, the villain, the identity payoff). This must reference the actual canvas/brief supplied, not generic advice.
+- with_idea: the SAME move fed by the supplied IDEA inputs. Name the specific inputs it now uses (the Positioning Statement, forensic vocabulary clusters, Tier A trigger keywords, the villain, the identity payoff). This must reference the actual canvas/brief supplied, not generic advice.
 - estimated_lift: a LABELED lift band. NEVER a single precise number.
 </what-this-is>
 
@@ -231,7 +231,7 @@ Derive every with_idea cell ONLY from the supplied Brand Canvas, Export Brief, a
 
 <few-shot-example>
 For a premium trading card binder brand (illustrative shape only):
-{"audit_investment":"PPC restructure","without_idea":"Better ACoS on category keywords through bid discipline.","with_idea":"Tier A trigger-state keywords added, high-intent and low-competition. Sponsored Brands Video uses the Signature as the hook.","estimated_lift":"Same budget, ~30-50% better ROAS"}
+{"audit_investment":"PPC restructure","without_idea":"Better ACoS on category keywords through bid discipline.","with_idea":"Tier A trigger-state keywords added, high-intent and low-competition. Sponsored Brands Video uses the Positioning Statement as the hook.","estimated_lift":"Same budget, ~30-50% better ROAS"}
 </few-shot-example>
 
 <output-contract>
@@ -299,7 +299,7 @@ serve(async (req) => {
           needs_input: [{
             slot: 1,
             question: 'Build the Brand Canvas and Export Brief first. The Audit x IDEA map shows how IDEA inputs (canvas, brief, avatar evidence) upgrade each marketing move, so it needs those artifacts to exist.',
-            why: 'Every with_idea cell and its lift estimate must reference the actual Signature, vocabulary clusters, and Tier A keywords from the canvas/brief. Without them the mapping has nothing to upgrade.',
+            why: 'Every with_idea cell and its lift estimate must reference the actual Positioning Statement, vocabulary clusters, and Tier A keywords from the canvas/brief. Without them the mapping has nothing to upgrade.',
           }],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

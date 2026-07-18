@@ -25,7 +25,7 @@ export const FORENSIC_TOOLS: ReadonlySet<string> = new Set([
   'generate_brief',
   'generate_canvas',
   'generate_concepts',
-  'generate_signature',
+  'generate_positioning_statement',
   'generate_audit_idea_map',
   'run_marketing_audit',
   'run_funnel_audit',

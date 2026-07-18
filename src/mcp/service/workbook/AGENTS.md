@@ -10,7 +10,7 @@ end-to-end audit see `brand-coach-mcp-planning/E2E_GAP_REPORT.md`.
 Turns the **persisted IDEA artifact chain** into the two Trevor-approved gold .xlsx outputs:
 
 - **Workbook A** — `IDEA BrandCoach InfinityVault Mockup.xlsx`: Trust Gap diagnostic → Avatar
-  2.0 (S1-S4 + Signature) → Brand Canvas → Export Brief → Audit×IDEA.
+  2.0 (S1-S4 + Positioning Statement) → Brand Canvas → Export Brief → Audit×IDEA.
 - **Workbook B** — `InfinityVault Marketing Investment Audit.xlsx`: tiered investment matrix +
   90-day rollout phasing.
 

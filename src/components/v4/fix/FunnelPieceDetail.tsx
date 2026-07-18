@@ -124,7 +124,7 @@ export interface FunnelPieceDetailProps {
   onGetBrief?: () => void;
   /** Open a test (set the job-metric baseline). */
   onOpenTest?: () => void;
-  /** Check an uploaded asset against the avatar + Signature. */
+  /** Check an uploaded asset against the avatar + Positioning Statement. */
   onCheckAsset?: () => void;
   /** Back to the funnel map. */
   onBack?: () => void;

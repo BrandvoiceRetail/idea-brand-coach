@@ -17,7 +17,7 @@
  *       /tmp/rehearsal-output-engine). The structure must be stable:
  *         - identical sheet set + order;
  *         - identical section/banner labels (first-column structural rows);
- *         - same number of vocabulary clusters / signature options / audit-IDEA rows (±1);
+ *         - same number of vocabulary clusters / positioning statement options / audit-IDEA rows (±1);
  *         - same matrix tiering (T1/T2/T3 row counts) and same rollout phase count;
  *       PROSE may vary (the LLM legs are non-deterministic); STRUCTURE may not.
  *
@@ -57,7 +57,7 @@ const RUN2_DIR = '/tmp/rehearsal-consistency';
 const WB_A_NAME = 'InfinityVault-BrandCoach-Mockup.xlsx';
 const WB_B_NAME = 'InfinityVault-Marketing-Investment-Audit.xlsx';
 
-/** Reviews paste for the S5 Signature read (same as P7-A; reviews are brand-level evidence). */
+/** Reviews paste for the S5 Positioning Statement read (same as P7-A; reviews are brand-level evidence). */
 const IV_REVIEWS_PASTE = [
   '5 stars. These vault cases are exactly what serious collectors need. The build quality is premium and my cards finally feel protected. By Marcus',
   '5 stars. I was worried about side-loading but it works perfectly — no more bent corners pulling cards out the top. Holds my whole Pokemon set. By Dana',
@@ -110,8 +110,8 @@ async function resolveSameAvatar(
     console.log(`Using REHEARSAL_AVATAR_ID override: ${override}`);
     return override;
   }
-  // Workbook A needs (at least) a signature + canvas + diagnostic; B needs marketing_audit.
-  // The newest avatar that has all of {signature, brand_canvas, marketing_audit} current is
+  // Workbook A needs (at least) a positioning statement + canvas + diagnostic; B needs marketing_audit.
+  // The newest avatar that has all of {positioning statement, brand_canvas, marketing_audit} current is
   // the one the last full P7-A run populated.
   const { data, error } = await adminLikeClient
     .from('artifacts')
@@ -131,13 +131,13 @@ async function resolveSameAvatar(
     if (r.created_at > entry.latest) entry.latest = r.created_at;
     byAvatar.set(r.avatar_id, entry);
   }
-  const REQUIRED = ['signature', 'brand_canvas', 'marketing_audit'];
+  const REQUIRED = ['positioning_statement', 'brand_canvas', 'marketing_audit'];
   const candidates = [...byAvatar.entries()]
     .filter(([, e]) => REQUIRED.every((k) => e.kinds.has(k)))
     .sort((a, b) => (a[1].latest < b[1].latest ? 1 : -1));
   if (candidates.length === 0) {
     throw new Error(
-      'no QA-owned avatar has a complete prior chain (signature + canvas + marketing_audit). ' +
+      'no QA-owned avatar has a complete prior chain (positioning statement + canvas + marketing_audit). ' +
         'Run scripts/rehearsal-output-engine.ts first, or set REHEARSAL_AVATAR_ID.',
     );
   }
@@ -147,7 +147,7 @@ async function resolveSameAvatar(
 }
 
 /**
- * The signature of the regeneration defect (P7-B finding): saveArtifact is
+ * The positioning statement of the regeneration defect (P7-B finding): saveArtifact is
  * insert-THEN-supersede, so re-saving a kind that already has a current row transiently
  * creates a 2nd `superseded_by IS NULL` row and the partial unique index
  * `uq_artifacts_current_per_kind` rejects the INSERT. This is DETERMINISTIC, not transient,
@@ -298,14 +298,14 @@ async function main(): Promise<void> {
     return false;
   };
 
-  // S5 Signature: read + persist a fresh pick (would supersede the prior current signature).
-  console.log('  generate_signature → persist_signature');
-  const sig = await call(client, identity, 'generate_signature', { reviews: IV_REVIEWS_PASTE, avatar_id: avatarId });
+  // S5 Positioning Statement: read + persist a fresh pick (would supersede the prior current positioning statement).
+  console.log('  generate_positioning_statement → persist_positioning_statement');
+  const sig = await call(client, identity, 'generate_positioning_statement', { reviews: IV_REVIEWS_PASTE, avatar_id: avatarId });
   const sigOptions = (sig.options as Array<{ option: number; sentence: string }>) ?? [];
-  assert(sig.ok === true && sigOptions.length > 0, `generate_signature returned ${sigOptions.length} options (LLM leg)`);
+  assert(sig.ok === true && sigOptions.length > 0, `generate_positioning_statement returned ${sigOptions.length} options (LLM leg)`);
   let regenChainOk = true;
   if (sigOptions.length > 0) {
-    const persistSig = await call(client, identity, 'persist_signature', {
+    const persistSig = await call(client, identity, 'persist_positioning_statement', {
       options: sigOptions,
       chosen_index: sigOptions[0].option,
       used_reviews: sig.used_reviews === true,
@@ -314,8 +314,8 @@ async function main(): Promise<void> {
     });
     if (persistSig.ok !== true) {
       regenChainOk = false;
-      if (!noteDefect('persist_signature', persistSig)) {
-        assert(false, `persist_signature stored the chosen Signature (note ${String(persistSig.note)})`);
+      if (!noteDefect('persist_positioning_statement', persistSig)) {
+        assert(false, `persist_positioning_statement stored the chosen Positioning Statement (note ${String(persistSig.note)})`);
       }
     }
   }

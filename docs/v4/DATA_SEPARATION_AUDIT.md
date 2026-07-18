@@ -11,7 +11,7 @@ through an ownership join (`avatars.user_id` / `brands.user_id`). The client ser
 on RLS (filter by `avatar_id`/`id`, no client-side `user_id` filter) — the verified policies make a
 foreign id return **empty**, not another user's data. No HIGH/MEDIUM live isolation defect found.
 The only findings are a same-device localStorage `guest` bucket (LOW) and schema/repo drift for the
-analytics + signatures tables (INFO — RLS is correct in prod, just not reproducible from this repo).
+analytics + positioning statements tables (INFO — RLS is correct in prod, just not reproducible from this repo).
 
 ## (a) RLS — verified on LIVE prod
 
@@ -22,7 +22,7 @@ analytics + signatures tables (INFO — RLS is correct in prod, just not reprodu
 | `brand_assets` | on | SELECT/UPD/DEL via `brands.user_id` OR `avatars.user_id`; INSERT WITH CHECK requires owned brand **and** owned avatar | OK |
 | `brand_tests` | on | via `brand_assets → avatars.user_id` (all four cmds) | OK |
 | `brand_asset_audits` | on | `auth.uid() = user_id`; INS/UPD WITH CHECK re-verifies avatar+brand ownership | OK |
-| `signatures` | on | `auth.uid() = user_id` (SELECT/INS/UPD) | OK |
+| `positioning_statements` | on | `auth.uid() = user_id` (SELECT/INS/UPD) | OK |
 | `artifacts` | on | `auth.uid() = user_id` | OK |
 | `avatar_field_values` | on | `avatar_id IN (avatars WHERE user_id = auth.uid())` | OK |
 | `diagnostic_submissions` | on | `auth.uid() = user_id`; UPD WITH CHECK validates brand_id/avatar_id ownership | OK |
@@ -68,7 +68,7 @@ None found. Every audited read is RLS-gated; the unauth diagnostic path writes t
   on auth-state change, or drop guest persistence and migrate guest answers into the user bucket on
   login.
 - **F2 (INFO) — schema/repo drift.** `campaigns`, `campaign_metrics`, `email_sequences`,
-  `email_steps`, and the `signatures` CREATE+RLS exist and are correctly owner-scoped **in prod** but
+  `email_steps`, and the `positioning_statements` CREATE+RLS exist and are correctly owner-scoped **in prod** but
   are **not in this worktree's migrations** (referenced only). Live isolation is fine; the gap is
   reproducibility — a fresh DB from these migrations would lack them. *Fix:* backfill the migration
   files to match prod (consistent with the project's known MCP-applied drift pattern).

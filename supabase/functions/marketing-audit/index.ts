@@ -19,7 +19,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
  * host additionally re-asserts (numbers-in == numbers-out) post-parse and discards any
  * prose that reintroduces a contradictory dollar figure.
  *
- * Cloned from reveal-signature / brand-canvas (CORS, optional JWT->getUser, Anthropic
+ * Cloned from reveal-positioning-statement / brand-canvas (CORS, optional JWT->getUser, Anthropic
  * SONNET with prompt caching, strict JSON contract + value-level assistant prefill,
  * tolerant defensive parse). On any failure it returns the inputs' verbatim prose so the
  * audit still renders (the deterministic numbers stand on their own).
@@ -205,7 +205,7 @@ serve(async (req) => {
   let rows: AuditRow[] = [];
   let phases: AuditPhase[] = [];
   try {
-    // Optional auth (parity with reveal-signature; platform verify_jwt also gates).
+    // Optional auth (parity with reveal-positioning-statement; platform verify_jwt also gates).
     const authHeader = req.headers.get('authorization');
     if (authHeader) {
       try {

@@ -12,7 +12,7 @@ describe('GroundedStrip', () => {
     render(
       <GroundedStrip
         fields={[
-          { label: 'Signature', present: true },
+          { label: 'Positioning Statement', present: true },
           { label: 'Avatar', present: true },
         ]}
       />,
@@ -20,10 +20,10 @@ describe('GroundedStrip', () => {
     const strip = screen.getByTestId('v4-grounded-strip');
     expect(strip).toHaveAttribute('data-grounded', 'fields');
     expect(strip).toHaveTextContent(/Grounded in/i);
-    // Fixture label 'Signature' must render as 'Positioning' — the word is not
+    // Fixture label 'Positioning Statement' must render as 'Positioning' — the word is not
     // part of Trevor's taxonomy and is normalised at the display boundary.
     expect(strip).toHaveTextContent(/Positioning/);
-    expect(strip).not.toHaveTextContent(/Signature/);
+    expect(strip).not.toHaveTextContent(/Positioning Statement/);
     expect(strip).toHaveTextContent(/Avatar/);
   });
 

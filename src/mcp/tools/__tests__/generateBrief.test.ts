@@ -125,7 +125,7 @@ describe('generateBrief with Decision Trigger', () => {
       expect(result.status).toBe('persisted');
     });
 
-    it('does not send a signature field and never fetches the signature artifact (dropped from the root chain)', async () => {
+    it('does not send a positioning statement field and never fetches the positioning statement artifact (dropped from the root chain)', async () => {
       deps.getCurrentArtifact = vi.fn()
         .mockResolvedValueOnce(null) // no canvas
         .mockResolvedValueOnce(null) // s1
@@ -135,12 +135,12 @@ describe('generateBrief with Decision Trigger', () => {
 
       await runGenerateBrief('avatar-1', deps);
 
-      // Signature is no longer a positioning root (Matthew, 2026-07-08):
-      // the artifact is never fetched and the engine body carries no signature key.
+      // Positioning Statement is no longer a positioning root (Matthew, 2026-07-08):
+      // the artifact is never fetched and the engine body carries no positioning statement key.
       const artifactKinds = (deps.getCurrentArtifact as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0]);
-      expect(artifactKinds).not.toContain('signature');
+      expect(artifactKinds).not.toContain('positioning_statement');
       const body = (deps.edgeFn.invoke as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
-      expect('signature' in body).toBe(false);
+      expect('positioning_statement' in body).toBe(false);
     });
 
     it('should return needs_input when no positioning root exists', async () => {

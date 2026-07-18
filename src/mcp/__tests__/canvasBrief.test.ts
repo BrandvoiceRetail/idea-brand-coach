@@ -18,7 +18,7 @@ const authed: Identity = { userId: 'user-1', token: 'jwt-abc', authenticated: tr
 
 /** A contract-valid Brand Canvas the brand-canvas engine would return. */
 const CANVAS_REPLY: Record<string, unknown> = {
-  signature: "My customer isn't buying a binder. They're buying certainty their collection is safe.",
+  positioning_statement: "My customer isn't buying a binder. They're buying certainty their collection is safe.",
   positioning: {
     category: 'Premium trading card binders and accessories',
     position: 'The binder serious collectors choose when their collection has outgrown the gaming aisle.',
@@ -234,7 +234,7 @@ describe('runGenerateCanvas', () => {
     };
   }
 
-  it('returns needs_input when no chosen Signature exists (never runs ungrounded)', async () => {
+  it('returns needs_input when no chosen Positioning Statement exists (never runs ungrounded)', async () => {
     const saved: Array<{ kind: ArtifactKind; content: unknown; opts: SaveArtifactOptions }> = [];
     let invoked = false;
     const edge = { invoke: async () => { invoked = true; return { ok: true, data: CANVAS_REPLY }; } } as unknown as EdgeFnClient;
@@ -246,10 +246,10 @@ describe('runGenerateCanvas', () => {
     expect(saved).toHaveLength(0);
   });
 
-  it('persists a brand_canvas artifact when the Signature exists', async () => {
+  it('persists a brand_canvas artifact when the Positioning Statement exists', async () => {
     const saved: Array<{ kind: ArtifactKind; content: unknown; opts: SaveArtifactOptions }> = [];
     const store = new Map<ArtifactKind, unknown>([
-      ['signature', { options: [{ option: 1, sentence: 'x' }], chosen_option: 1, grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }],
+      ['positioning_statement', { options: [{ option: 1, sentence: 'x' }], chosen_option: 1, grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }],
       ['avatar_s1_vocab', { clusters: [] }],
     ]);
     const res = await runGenerateCanvas(null, deps({ getCurrentArtifact: makeGetCurrent(store), saveArtifact: makeSaveStub(saved) }));
@@ -263,10 +263,10 @@ describe('runGenerateCanvas', () => {
   });
 
   it('fails when the engine output violates the contract', async () => {
-    const store = new Map<ArtifactKind, unknown>([['signature', { options: [{ option: 1, sentence: 'x' }], grounding: 'inference', evidence_refs: [] }]]);
+    const store = new Map<ArtifactKind, unknown>([['positioning_statement', { options: [{ option: 1, sentence: 'x' }], grounding: 'inference', evidence_refs: [] }]]);
     const res = await runGenerateCanvas(null, deps({
       getCurrentArtifact: makeGetCurrent(store),
-      edgeFn: stubEdgeFn({ 'brand-canvas': { signature: 'only this', grounding: 'evidence', evidence_refs: [{ kind: 'artifact', ref: 'x' }] } }),
+      edgeFn: stubEdgeFn({ 'brand-canvas': { positioning_statement: 'only this', grounding: 'evidence', evidence_refs: [{ kind: 'artifact', ref: 'x' }] } }),
     }));
     expect(res.status).toBe('failed');
     if (res.status !== 'failed') return;
@@ -301,11 +301,11 @@ describe('runGenerateBrief', () => {
     expect(res.reason).toBe('no_canvas');
   });
 
-  it('a legacy Signature alone is NOT a root — returns needs_input (dropped from the chain, 2026-07-08)', async () => {
-    // Signature present, NO brand_canvas, NO decision trigger. The old
-    // degrade-to-signature path is retired: the brief asks honestly instead.
+  it('a legacy Positioning Statement alone is NOT a root — returns needs_input (dropped from the chain, 2026-07-08)', async () => {
+    // Positioning Statement present, NO brand_canvas, NO decision trigger. The old
+    // degrade-to-positioning statement path is retired: the brief asks honestly instead.
     const sigOnly = makeGetCurrent(new Map<ArtifactKind, unknown>([
-      ['signature', { options: [{ option: 1, sentence: 'x' }], chosen_option: 1, grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }],
+      ['positioning_statement', { options: [{ option: 1, sentence: 'x' }], chosen_option: 1, grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }],
     ]));
     const res = await runGenerateBrief(null, deps({ getCurrentArtifact: sigOnly }));
     expect(res.status).toBe('needs_input');
@@ -392,8 +392,8 @@ describe('runGenerateBrief', () => {
 // R2 — bounded transient retry on the canvas/brief edge-fn legs.
 // ======================================================================================
 describe('runGenerateCanvas — transient retry (R2)', () => {
-  const signatureStore = new Map<ArtifactKind, unknown>([
-    ['signature', { options: [{ option: 1, sentence: 'x' }], chosen_option: 1, grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }],
+  const positioningStatementStore = new Map<ArtifactKind, unknown>([
+    ['positioning_statement', { options: [{ option: 1, sentence: 'x' }], chosen_option: 1, grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }],
     ['avatar_s1_vocab', { clusters: [] }],
   ]);
 
@@ -402,7 +402,7 @@ describe('runGenerateCanvas — transient retry (R2)', () => {
     const { edge, count } = makeSeqEdgeFn([transientFail, { ok: true, data: CANVAS_REPLY }]);
     const res = await runGenerateCanvas(null, {
       resolve: makeResolve({}),
-      getCurrentArtifact: makeGetCurrent(signatureStore),
+      getCurrentArtifact: makeGetCurrent(positioningStatementStore),
       saveArtifact: makeSaveStub(saved),
       edgeFn: edge,
       sleep: noSleep,
@@ -414,10 +414,10 @@ describe('runGenerateCanvas — transient retry (R2)', () => {
 
   it('does NOT retry a needs_input body (correct refusal, ok:true)', async () => {
     const saved: Array<{ kind: ArtifactKind; content: unknown; opts: SaveArtifactOptions }> = [];
-    const { edge, count } = makeSeqEdgeFn([{ ok: true, data: { needs_input: [{ slot: 1, question: 'no signature text', why: 'x' }] } }]);
+    const { edge, count } = makeSeqEdgeFn([{ ok: true, data: { needs_input: [{ slot: 1, question: 'no positioning statement text', why: 'x' }] } }]);
     const res = await runGenerateCanvas(null, {
       resolve: makeResolve({}),
-      getCurrentArtifact: makeGetCurrent(signatureStore),
+      getCurrentArtifact: makeGetCurrent(positioningStatementStore),
       saveArtifact: makeSaveStub(saved),
       edgeFn: edge,
       sleep: noSleep,
@@ -431,7 +431,7 @@ describe('runGenerateCanvas — transient retry (R2)', () => {
     const { edge, count } = makeSeqEdgeFn([transientFail]);
     const res = await runGenerateCanvas(null, {
       resolve: makeResolve({}),
-      getCurrentArtifact: makeGetCurrent(signatureStore),
+      getCurrentArtifact: makeGetCurrent(positioningStatementStore),
       saveArtifact: makeSaveStub([]),
       edgeFn: edge,
       sleep: noSleep,
@@ -499,7 +499,7 @@ describe('generate_canvas / generate_brief tool surface', () => {
   it('generate_canvas denies anonymous callers before any work', async () => {
     const client = await connect((s) =>
       registerGenerateCanvasTool(s, {
-        getCurrentArtifact: makeGetCurrent(new Map([['signature', { options: [{ option: 1, sentence: 'x' }], grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }]])),
+        getCurrentArtifact: makeGetCurrent(new Map([['positioning_statement', { options: [{ option: 1, sentence: 'x' }], grounding: 'evidence', evidence_refs: [{ kind: 'review', ref: 'r' }] }]])),
         resolve: makeResolve({}),
         saveArtifact: makeSaveStub([]),
         edgeFn: stubEdgeFn({ 'brand-canvas': CANVAS_REPLY }),

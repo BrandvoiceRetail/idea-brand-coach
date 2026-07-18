@@ -12,7 +12,7 @@ const DRIFT: DriftItem = {
   touchpointLabel: 'Product detail page',
   stage: 'consideration',
   builtAgainst: 'v1',
-  currentSignature: 'v2',
+  currentPositioningStatement: 'v2',
 };
 
 const DRIFT2: DriftItem = {
@@ -21,7 +21,7 @@ const DRIFT2: DriftItem = {
   touchpointLabel: 'Main listing image',
   stage: 'consideration',
   builtAgainst: 'v1',
-  currentSignature: 'v2',
+  currentPositioningStatement: 'v2',
 };
 
 const LIFT: TrustGapLift = {

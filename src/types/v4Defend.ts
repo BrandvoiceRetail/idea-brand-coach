@@ -3,7 +3,7 @@
  *
  * WHAT: The single contract the Defend screens (DriftWatchCard, DefendChecklist,
  * CompetitorTeaserCard, WorkbookExportCard) and the `defendService` seam import —
- * a Signature-drift watch (real `DriftItem[]` reused from Loop-3 Fix), a
+ * a Positioning Statement-drift watch (real `DriftItem[]` reused from Loop-3 Fix), a
  * deterministic defend checklist derived from real loop signals, and the
  * full-loop workbook export result.
  *
@@ -14,7 +14,7 @@
  *
  * NO FABRICATION: every value is grounded.
  *  - Drift is the real `getDrift` read from Loop-3 (assets aligned to an older
- *    Signature) — never a made-up count.
+ *    Positioning Statement) — never a made-up count.
  *  - The checklist `state` is computed from real reads (drift count, whether a
  *    second diagnostic run exists to confirm the lift); the competitor item is
  *    honestly `coming` because competitor reads are deferred in Alpha — it is
@@ -56,9 +56,9 @@ export interface DefendChecklistItem {
   state: ChecklistState;
 }
 
-/** The Signature-drift watch surfaced on Defend. */
+/** The Positioning Statement-drift watch surfaced on Defend. */
 export interface DriftWatch {
-  /** Assets aligned to an older Signature (real `getDrift` read). */
+  /** Assets aligned to an older Positioning Statement (real `getDrift` read). */
   items: DriftItem[];
   /** Convenience count (= items.length). */
   count: number;
@@ -66,7 +66,7 @@ export interface DriftWatch {
 
 /**
  * One customer's Defend posture, derived deterministically from real reads:
- * - `drifted` — at least one asset drifted from that customer's Signature.
+ * - `drifted` — at least one asset drifted from that customer's Positioning Statement.
  * - `holding` — has a baseline and zero drift (holding steady).
  * - `none`    — no baseline yet (nothing to defend for that customer).
  * A subset/peer of the single-avatar drift-watch states, named for the strip.
@@ -101,7 +101,7 @@ export interface DefendStatus {
   liftConfirmed: boolean;
   /**
    * True when there is something real to defend: at least one ALIGNED asset
-   * (which can only exist once it was audited against a Signature). When false,
+   * (which can only exist once it was audited against a Positioning Statement). When false,
    * zero drift is "nothing to defend yet" — the screens show an honest neutral
    * state, never a false all-clear.
    */

@@ -3,7 +3,7 @@
  *
  * WHAT: Thin, typed wrappers around the deployed edge functions and owner-scoped
  * Supabase reads that power the Fix loop — getFunnelMap, getWorkItems,
- * getAssetDetail, checkAsset, generateBrief, persistSignature, getDrift — each
+ * getAssetDetail, checkAsset, generateBrief, persistPositioningStatement, getDrift — each
  * returning a `FixResult<T>` discriminated `ok | needs_input | error`.
  *
  * WHY: This is the single seam the Fix screens (FunnelMap, WhatNeedsWork,
@@ -123,17 +123,17 @@ export type EdgeInvoke = (
  */
 export type MetricsReader = (avatarId: string) => Promise<Map<string, number>>;
 
-/** One Signature option as produced by the Signature engine. */
-export interface SignatureOption {
+/** One Positioning Statement option as produced by the Positioning Statement engine. */
+export interface PositioningStatementOption {
   /** 1-based option number as rendered ("Option 1".."Option 4"). */
   option: number;
-  /** The candidate Signature sentence. */
+  /** The candidate Positioning Statement sentence. */
   sentence: string;
 }
 
-/** Input to persistSignature — the option set + the user's pick. */
-export interface PersistSignatureInput {
-  options: SignatureOption[];
+/** Input to persistPositioningStatement — the option set + the user's pick. */
+export interface PersistPositioningStatementInput {
+  options: PositioningStatementOption[];
   /** 1-based option the user chose (must match an option). */
   chosenIndex: number;
   /** Avatar scope; omit/null for the brand-level chain. */
@@ -208,7 +208,7 @@ const SEVERITY: Readonly<Record<TouchpointStatus, number>> = {
 const REASON: Readonly<Record<TouchpointStatus, string>> = {
   missing: 'No asset here yet — this stage of the journey is silent.',
   misaligned: "On-page but off-strategy — it's working against the brand.",
-  stale: "Built against an older Signature — it's drifted.",
+  stale: "Built against an older Positioning Statement — it's drifted.",
   aligned: 'On-brand and aligned.',
 };
 
@@ -507,7 +507,7 @@ export class FixService {
   }
 
   /**
-   * S-14 — run the real audit engine against the avatar + Signature and return
+   * S-14 — run the real audit engine against the avatar + Positioning Statement and return
    * the asset with its fresh verdict. Surfaces a failed audit as `error`, never
    * a silent / fabricated pass.
    */
@@ -531,7 +531,7 @@ export class FixService {
       overallScore: a.overall_score,
       previousScore: a.previous_score,
       audit: a.audit_result,
-      signatureVersion: a.signature_version,
+      positioningStatementVersion: a.positioning_statement_version,
       updatedAt: a.updated_at,
     };
   }
@@ -549,9 +549,9 @@ export class FixService {
   }): Promise<FixResult<BriefSlots>> {
     try {
       // The engine writes the brief from your positioning. Resolve it the way the
-      // generate_brief MCP tool does (Brand Canvas → else your chosen Signature)
+      // generate_brief MCP tool does (Brand Canvas → else your chosen Positioning Statement)
       // and PASS it in the body. The app previously sent none, so the engine always
-      // hit its "create a Signature first" wall — that was the "rewrite doesn't
+      // hit its "create a Positioning Statement first" wall — that was the "rewrite doesn't
       // work" bug. When no positioning artifact exists yet, `resolvePositioning`
       // degrades to the avatar's own profile so the owner still gets a brief.
       const [positioning, confirmedClaims] = await Promise.all([
@@ -563,7 +563,7 @@ export class FixService {
         avatar_id: input.avatarId,
         context: input.context,
         canvas: positioning.canvas,
-        signature: positioning.signature,
+        positioning_statement: positioning.positioning_statement,
         trigger: positioning.trigger,
         s1: positioning.s1,
         s3: positioning.s3,
@@ -634,42 +634,42 @@ export class FixService {
    * Resolve the positioning the Export Brief is written against, mirroring the
    * generate_brief MCP tool's root so the in-app rewrite has the same source:
    *   • canvas    — current `brand_canvas` artifact (avatar scope, else brand-level)
-   *   • signature — the chosen Signature from the app's `signatures` table (where the
+   *   • positioning statement — the chosen Positioning Statement from the app's `positioning_statements` table (where the
    *                 in-app reveal persists), avatar scope first then brand-level
    *   • s1/s3/s4  — supporting forensic artifacts (best-effort, enrich the brief)
-   * DEGRADE: when NEITHER a canvas nor a signature exists yet, synthesise a
+   * DEGRADE: when NEITHER a canvas nor a positioning statement exists yet, synthesise a
    * positioning block from the avatar's own profile so the engine writes an
-   * (inference-grounded) brief today instead of walling on canvas/signature
+   * (inference-grounded) brief today instead of walling on canvas/positioning statement
    * homework. All reads are RLS-scoped to the caller.
    */
   private async resolvePositioning(avatarId: string): Promise<{
     canvas: unknown;
-    signature: unknown;
+    positioning_statement: unknown;
     trigger: unknown;
     s1: unknown;
     s3: unknown;
     s4: unknown;
   }> {
-    const [canvas, trigger, signature, s1, s3, s4] = await Promise.all([
+    const [canvas, trigger, positioning_statement, s1, s3, s4] = await Promise.all([
       this.currentArtifactContent('brand_canvas', avatarId),
       // The named Decision Trigger is a valid positioning root (Canvas > Trigger,
       // 2026-07-08): the engine gates on it, so it MUST travel in the body. The
       // v5 run persists one via run-forensic-analysis; without this the brief
       // walls for every canvas-less user (Trevor hit this 2026-07-09).
       this.latestDecisionTrigger(avatarId),
-      this.currentSignatureContent(avatarId),
+      this.currentPositioningStatementContent(avatarId),
       this.currentArtifactContent('avatar_s1_vocab', avatarId),
       this.currentArtifactContent('avatar_s3_triggers', avatarId),
       this.currentArtifactContent('avatar_s4_objections', avatarId),
     ]);
-    if (canvas == null && signature == null && trigger == null) {
-      // Last-resort degrade: no canvas, no trigger, no signature — synthesise
+    if (canvas == null && positioning_statement == null && trigger == null) {
+      // Last-resort degrade: no canvas, no trigger, no positioning statement — synthesise
       // from the avatar profile so the owner still gets an inference-grounded
       // brief instead of a wall. (The engine only reads canvas/trigger now, so
       // the synthesis rides in as the trigger-shaped root.)
-      return { canvas: null, trigger: await this.avatarProfilePositioning(avatarId), signature: null, s1, s3, s4 };
+      return { canvas: null, trigger: await this.avatarProfilePositioning(avatarId), positioning_statement: null, s1, s3, s4 };
     }
-    return { canvas, trigger, signature, s1, s3, s4 };
+    return { canvas, trigger, positioning_statement, s1, s3, s4 };
   }
 
   /**
@@ -722,25 +722,25 @@ export class FixService {
   }
 
   /**
-   * The chosen Signature for the brief root, read from the app's `signatures`
+   * The chosen Positioning Statement for the brief root, read from the app's `positioning_statements`
    * table (where the in-app reveal persists, not the artifact chain): avatar scope
    * first, else brand-level. Returns the engine-rendered shape, or null when none.
    */
-  private async currentSignatureContent(avatarId: string): Promise<unknown> {
+  private async currentPositioningStatementContent(avatarId: string): Promise<unknown> {
     const read = async (scoped: boolean) => {
-      const base = supabase.from('signatures').select('signature_text, all_options');
+      const base = supabase.from('positioning_statements').select('positioning_statement_text, all_options');
       const q = scoped ? base.eq('avatar_id', avatarId) : base.is('avatar_id', null);
       const { data } = await q.order('created_at', { ascending: false }).limit(1).maybeSingle();
       return data ?? null;
     };
     const row = (await read(true)) ?? (await read(false));
-    if (!row || !row.signature_text) return null;
-    return { signature: row.signature_text, options: row.all_options ?? [] };
+    if (!row || !row.positioning_statement_text) return null;
+    return { positioning_statement: row.positioning_statement_text, options: row.all_options ?? [] };
   }
 
   /**
    * Degrade root: the avatar's own profile as an INFERENCE positioning block when
-   * no Signature/Canvas exists yet — so the brief writes from the real avatar
+   * no Positioning Statement/Canvas exists yet — so the brief writes from the real avatar
    * description instead of walling. Null only when the avatar can't be read.
    */
   private async avatarProfilePositioning(avatarId: string): Promise<unknown> {
@@ -752,7 +752,7 @@ export class FixService {
     if (!data) return null;
     return {
       source: 'avatar_profile',
-      note: 'No Signature or Brand Canvas exists yet — this is the avatar profile used as positioning context (treat as inference; assert no product facts).',
+      note: 'No Positioning Statement or Brand Canvas exists yet — this is the avatar profile used as positioning context (treat as inference; assert no product facts).',
       avatar: data.name,
       positioning: data.description ?? null,
       psychographics: data.psychographics ?? null,
@@ -761,13 +761,13 @@ export class FixService {
   }
 
   /**
-   * S-15 — persist the user's chosen Signature (RLS write). Mirrors the
-   * `persist_signature` MCP tool's signatures-row write: validates the pick is in
+   * S-15 — persist the user's chosen Positioning Statement (RLS write). Mirrors the
+   * `persist_positioning_statement` MCP tool's positioning statements-row write: validates the pick is in
    * range, then inserts the option set + choice scoped to the caller.
    */
-  async persistSignature(input: PersistSignatureInput): Promise<FixResult<{ signatureId: string }>> {
+  async persistPositioningStatement(input: PersistPositioningStatementInput): Promise<FixResult<{ positioningStatementId: string }>> {
     try {
-      if (input.options.length === 0) return errResult(null, 'No Signature options to persist.');
+      if (input.options.length === 0) return errResult(null, 'No Positioning Statement options to persist.');
       const chosen = input.options.find((o) => o.option === input.chosenIndex);
       if (!chosen) return errResult(null, 'The chosen option is not in the option set.');
 
@@ -775,28 +775,28 @@ export class FixService {
       if (!user) return errResult(null, 'You must be signed in to save your positioning.');
 
       const { data, error } = await supabase
-        .from('signatures')
+        .from('positioning_statements')
         .insert({
           user_id: user.id,
           avatar_id: input.avatarId ?? null,
           all_options: input.options as unknown as Json,
           chosen_index: input.chosenIndex,
-          signature_text: chosen.sentence,
+          positioning_statement_text: chosen.sentence,
           used_reviews: input.usedReviews ?? false,
           inference: !(input.usedReviews ?? false),
         })
         .select('id')
         .single();
       if (error) return errResult(error, 'Could not save your positioning.');
-      return { status: 'ok', data: { signatureId: data.id } };
+      return { status: 'ok', data: { positioningStatementId: data.id } };
     } catch (e) {
       return errResult(e, 'Could not save your positioning.');
     }
   }
 
   /**
-   * S-15 — find assets that drifted from the current Signature. An asset drifts
-   * when it was aligned under an older Signature than the one now live. Returns
+   * S-15 — find assets that drifted from the current Positioning Statement. An asset drifts
+   * when it was aligned under an older Positioning Statement than the one now live. Returns
    * an empty list at zero drift (the DriftBanner self-hides). `needs_input` when
    * there is no avatar.
    */
@@ -806,7 +806,7 @@ export class FixService {
     if (!brandId) return errResult(null, 'Could not resolve your brand for drift.');
     const [{ data: assets, error }, current] = await Promise.all([
       this.funnel.listBrandAssets(brandId, avatarId),
-      this.currentSignatureVersion(avatarId),
+      this.currentPositioningStatementVersion(avatarId),
     ]);
     if (error) return errResult(error, 'Could not read your assets for drift.');
     if (!current) return { status: 'ok', data: [] };
@@ -815,8 +815,8 @@ export class FixService {
       .filter(
         (a) =>
           a.status === 'aligned' &&
-          a.signature_version != null &&
-          a.signature_version !== current,
+          a.positioning_statement_version != null &&
+          a.positioning_statement_version !== current,
       )
       .map(
         (a): DriftItem => ({
@@ -824,8 +824,8 @@ export class FixService {
           touchpointId: a.touchpoint_id,
           touchpointLabel: getTouchpoint(a.touchpoint_id)?.label ?? a.touchpoint_id,
           stage: a.stage as StageId,
-          builtAgainst: a.signature_version,
-          currentSignature: current,
+          builtAgainst: a.positioning_statement_version,
+          currentPositioningStatement: current,
         }),
       );
     return { status: 'ok', data: drifted };
@@ -834,7 +834,7 @@ export class FixService {
   /**
    * Drift across a SET of avatars (multi-avatar funnel analysis): a piece that
    * drifted for ANY selected customer is surfaced once. Each avatar carries its own
-   * current Signature, so drift is computed per avatar and unioned by piece id. A
+   * current Positioning Statement, so drift is computed per avatar and unioned by piece id. A
    * single-id set delegates to `getDrift`. Best-effort: a per-avatar read that fails
    * is skipped rather than failing the whole banner.
    */
@@ -853,10 +853,10 @@ export class FixService {
     return { status: 'ok', data: [...byAsset.values()] };
   }
 
-  /** Current Signature version for an avatar: avatar-scoped first, else brand-level. */
-  private async currentSignatureVersion(avatarId: string): Promise<string | null> {
+  /** Current Positioning Statement version for an avatar: avatar-scoped first, else brand-level. */
+  private async currentPositioningStatementVersion(avatarId: string): Promise<string | null> {
     const scoped = await supabase
-      .from('signatures')
+      .from('positioning_statements')
       .select('id, artifact_id')
       .eq('avatar_id', avatarId)
       .order('created_at', { ascending: false })
@@ -865,7 +865,7 @@ export class FixService {
     let sig = scoped.data;
     if (!sig) {
       const brandLevel = await supabase
-        .from('signatures')
+        .from('positioning_statements')
         .select('id, artifact_id')
         .is('avatar_id', null)
         .order('created_at', { ascending: false })
@@ -1352,9 +1352,9 @@ export const generateBrief = (input: {
   avatarId: string;
   context?: string;
 }): Promise<FixResult<BriefSlots>> => fixService.generateBrief(input);
-export const persistSignature = (
-  input: PersistSignatureInput,
-): Promise<FixResult<{ signatureId: string }>> => fixService.persistSignature(input);
+export const persistPositioningStatement = (
+  input: PersistPositioningStatementInput,
+): Promise<FixResult<{ positioningStatementId: string }>> => fixService.persistPositioningStatement(input);
 export const getDrift = (avatarId: string | null): Promise<FixResult<DriftItem[]>> =>
   fixService.getDrift(avatarId);
 export const getFunnelPieces = (avatarId: string | null): Promise<DataResult<FunnelPiece[]>> =>

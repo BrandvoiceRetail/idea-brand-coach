@@ -55,7 +55,7 @@ interface DraftCountermeasureDialogProps {
   currentCopy?: string;
   /** Optional context passed through to the rewrite. */
   avatarContext?: unknown;
-  signatureContext?: unknown;
+  positioningStatementContext?: unknown;
   /** Channel hint for the test's default primary metric. */
   channel?: string;
 }
@@ -71,7 +71,7 @@ export function DraftCountermeasureDialog({
   competitiveInsightId,
   currentCopy,
   avatarContext,
-  signatureContext,
+  positioningStatementContext,
   channel,
 }: DraftCountermeasureDialogProps): React.ReactElement {
   const { draftCountermeasure, recordTest, isDrafting, isRecordingTest } = useCompetitorInsights();
@@ -88,7 +88,7 @@ export function DraftCountermeasureDialog({
       currentCopy,
       competitorBrief,
       avatarContext,
-      signatureContext,
+      positioningStatementContext,
     });
     if (result) {
       setRewrite(result.rewrite);

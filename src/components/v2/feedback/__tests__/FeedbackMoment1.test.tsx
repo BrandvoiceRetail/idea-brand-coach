@@ -17,29 +17,29 @@ beforeEach(() => {
   });
 });
 
-const SIGNATURE = "They aren't buying a binder, they're buying the feeling of a finished collection.";
+const POSITIONING_STATEMENT = "They aren't buying a binder, they're buying the feeling of a finished collection.";
 
 describe('FeedbackMoment1', () => {
   it('renders nothing when closed', () => {
-    render(<FeedbackMoment1 open={false} onClose={vi.fn()} chosenSignature={SIGNATURE} />);
+    render(<FeedbackMoment1 open={false} onClose={vi.fn()} chosenPositioningStatement={POSITIONING_STATEMENT} />);
     expect(screen.queryByText(/did the score feel right/i)).not.toBeInTheDocument();
   });
 
   it('shows the three v3-framed prompts when open', () => {
-    render(<FeedbackMoment1 open onClose={vi.fn()} chosenSignature={SIGNATURE} />);
+    render(<FeedbackMoment1 open onClose={vi.fn()} chosenPositioningStatement={POSITIONING_STATEMENT} />);
     expect(screen.getByText(/did the score feel right/i)).toBeInTheDocument();
-    expect(screen.getByText(/did the signature feel right/i)).toBeInTheDocument();
+    expect(screen.getByText(/did the positioning statement feel right/i)).toBeInTheDocument();
     expect(screen.getByText(/what'?s off/i)).toBeInTheDocument();
     // v3 framing, NOT the older "Draft Canvas" wording
     expect(screen.queryByText(/draft canvas/i)).not.toBeInTheDocument();
   });
 
-  it('submits a moment_1 event with chosen_signature, scores and free_text, then thanks', async () => {
+  it('submits a moment_1 event with chosen_positioning_statement, scores and free_text, then thanks', async () => {
     const onClose = vi.fn();
-    render(<FeedbackMoment1 open onClose={onClose} chosenSignature={SIGNATURE} sessionId="sess-9" />);
+    render(<FeedbackMoment1 open onClose={onClose} chosenPositioningStatement={POSITIONING_STATEMENT} sessionId="sess-9" />);
 
     fireEvent.click(within(screen.getByRole('group', { name: /did the score feel right/i })).getByRole('button', { name: /^yes$/i }));
-    fireEvent.click(within(screen.getByRole('group', { name: /did the signature feel right/i })).getByRole('button', { name: /^no$/i }));
+    fireEvent.click(within(screen.getByRole('group', { name: /did the positioning statement feel right/i })).getByRole('button', { name: /^no$/i }));
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'score felt high' } });
 
     fireEvent.click(screen.getByRole('button', { name: /submit|send feedback/i }));
@@ -49,8 +49,8 @@ describe('FeedbackMoment1', () => {
       moment: 'moment_1',
       sessionId: 'sess-9',
       payload: {
-        chosen_signature: SIGNATURE,
-        scores: { score_felt_right: 'yes', signature_felt_right: 'no' },
+        chosen_positioning_statement: POSITIONING_STATEMENT,
+        scores: { score_felt_right: 'yes', positioning_statement_felt_right: 'no' },
         free_text: 'score felt high',
       },
     });
@@ -60,7 +60,7 @@ describe('FeedbackMoment1', () => {
 
   it('logs a skipped event when dismissed without submitting', async () => {
     const onClose = vi.fn();
-    render(<FeedbackMoment1 open onClose={onClose} chosenSignature={SIGNATURE} />);
+    render(<FeedbackMoment1 open onClose={onClose} chosenPositioningStatement={POSITIONING_STATEMENT} />);
 
     fireEvent.click(screen.getByRole('button', { name: /skip|not now|dismiss/i }));
 
@@ -68,7 +68,7 @@ describe('FeedbackMoment1', () => {
     expect(recordEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         moment: 'moment_1',
-        payload: expect.objectContaining({ skipped: true, chosen_signature: SIGNATURE }),
+        payload: expect.objectContaining({ skipped: true, chosen_positioning_statement: POSITIONING_STATEMENT }),
       }),
     );
     await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -76,7 +76,7 @@ describe('FeedbackMoment1', () => {
 
   it('does NOT log a skip after a successful submit when the dialog then closes', async () => {
     const onClose = vi.fn();
-    render(<FeedbackMoment1 open onClose={onClose} chosenSignature={SIGNATURE} />);
+    render(<FeedbackMoment1 open onClose={onClose} chosenPositioningStatement={POSITIONING_STATEMENT} />);
     fireEvent.click(screen.getByRole('button', { name: /submit|send feedback/i }));
     await waitFor(() => expect(recordEvent).toHaveBeenCalledTimes(1));
 

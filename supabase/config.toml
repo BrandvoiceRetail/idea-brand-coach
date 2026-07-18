@@ -205,7 +205,7 @@ verify_jwt = false
 # platform rejects anonymous callers before any model call — pinned here explicitly so a
 # redeploy can never drop the gate to --no-verify-jwt and turn these into cost-abuse vectors.
 # Each also resolves the user in-function (parity with run-forensic-analysis).
-[functions.reveal-signature]
+[functions.reveal-positioning-statement]
 verify_jwt = true
 
 [functions.export-brief]
@@ -222,7 +222,7 @@ verify_jwt = true
 verify_jwt = true
 
 # Stripe calls this server-to-server with no browser JWT; the function verifies the
-# Stripe signature itself, so platform JWT verification stays OFF.
+# Stripe positioning statement itself, so platform JWT verification stays OFF.
 [functions.stripe-webhook]
 verify_jwt = false
 

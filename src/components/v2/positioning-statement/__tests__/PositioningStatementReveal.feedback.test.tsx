@@ -1,15 +1,15 @@
 /**
- * Integration test for the Moment 1 trigger wiring: picking a Signature option must open
- * the self-contained FeedbackMoment1 modal with the chosen Signature. useSignatureReveal is
+ * Integration test for the Moment 1 trigger wiring: picking a Positioning Statement option must open
+ * the self-contained FeedbackMoment1 modal with the chosen Positioning Statement. usePositioningStatementReveal is
  * mocked to land directly on the 'options' stage; useFeedbackEvent is mocked (no real write).
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SignatureReveal } from '../SignatureReveal';
-import { useSignatureReveal } from '@/hooks/v2/useSignatureReveal';
+import { PositioningStatementReveal } from '../PositioningStatementReveal';
+import { usePositioningStatementReveal } from '@/hooks/v2/usePositioningStatementReveal';
 import { useFeedbackEvent } from '@/hooks/v2/useFeedbackEvent';
 
-vi.mock('@/hooks/v2/useSignatureReveal');
+vi.mock('@/hooks/v2/usePositioningStatementReveal');
 vi.mock('@/hooks/v2/useFeedbackEvent');
 
 const OPTIONS = [
@@ -24,7 +24,7 @@ beforeEach(() => {
     error: null,
     recordEvent: vi.fn().mockResolvedValue({ ok: true, id: 'evt' }),
   });
-  vi.mocked(useSignatureReveal).mockReturnValue({
+  vi.mocked(usePositioningStatementReveal).mockReturnValue({
     stage: 'options',
     reviews: '',
     setReviews: vi.fn(),
@@ -41,11 +41,11 @@ beforeEach(() => {
   });
 });
 
-describe('SignatureReveal → Moment 1 feedback trigger', () => {
+describe('PositioningStatementReveal → Moment 1 feedback trigger', () => {
   it('opens the FeedbackMoment1 modal after the user picks an option', () => {
-    render(<SignatureReveal messages={[]} fieldValues={{}} />);
+    render(<PositioningStatementReveal messages={[]} fieldValues={{}} />);
 
-    // open the Signature dialog (lands on the mocked 'options' stage)
+    // open the Positioning Statement dialog (lands on the mocked 'options' stage)
     fireEvent.click(screen.getByRole('button', { name: /reveal positioning/i }));
     // feedback prompt not shown yet
     expect(screen.queryByText(/did the score feel right/i)).not.toBeInTheDocument();
@@ -55,7 +55,7 @@ describe('SignatureReveal → Moment 1 feedback trigger', () => {
 
     // the self-contained feedback modal is now open with its three prompts
     expect(screen.getByText(/did the score feel right/i)).toBeInTheDocument();
-    expect(screen.getByText(/did the positioning feel right/i)).toBeInTheDocument();
+    expect(screen.getByText(/did the positioning statement feel right/i)).toBeInTheDocument();
     expect(screen.getByText(/what'?s off/i)).toBeInTheDocument();
   });
 });

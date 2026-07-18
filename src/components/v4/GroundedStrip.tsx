@@ -2,7 +2,7 @@
  * GroundedStrip — the "🔒 Grounded in…" provenance row.
  *
  * WHAT: A compact, props-driven strip that names which brand fields
- * (Signature / avatar / positioning …) actually powered a generated output, each
+ * (Positioning Statement / avatar / positioning …) actually powered a generated output, each
  * marked present (✓) or missing (⚠ "output may drift"). Mirrors the desktop
  * mockup's `.grounded` strip so every generated surface can show its provenance.
  *
@@ -28,13 +28,13 @@ export interface GroundedField {
 }
 
 /**
- * "Signature" is not part of Trevor's system taxonomy (IDEA-APP-SKILLS-001; his
+ * "Positioning Statement" is not part of Trevor's system taxonomy (IDEA-APP-SKILLS-001; his
  * 2026-07-06 walkthrough: "drop it before it gets too embedded"). Field labels
  * can arrive from backend payloads, so normalise at the display boundary — the
  * word must never render regardless of what the data layer still calls it.
  */
 function displayLabel(label: string): string {
-  return label === 'Signature' ? 'Positioning' : label;
+  return label === 'Positioning Statement' ? 'Positioning' : label;
 }
 
 export interface GroundedStripProps {

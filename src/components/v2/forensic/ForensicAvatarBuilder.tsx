@@ -5,7 +5,7 @@
  * useForensicAvatarBuild → ForensicBuildService → supabase.functions.invoke),
  * NEVER /mcp. Flow: evidence intake (paste verbatim reviews) → readiness gate →
  * run stages with per-stage progress → review the read-only artifacts → approve.
- * S5/signature is D2/R-015 gated and intentionally not part of this flow.
+ * S5/positioning statement is D2/R-015 gated and intentionally not part of this flow.
  *
  * Parent owns open state + which avatar (avatarId); this component is otherwise
  * self-contained against the hook. Presentational composition only.

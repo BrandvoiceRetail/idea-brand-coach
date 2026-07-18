@@ -4,24 +4,24 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 /**
  * brand-canvas  (gold Workbook A, sheet 5 "Brand Canvas")
  *
- * Synthesises the one-page Brand Canvas from the chosen Signature + the Avatar 2.0
+ * Synthesises the one-page Brand Canvas from the chosen Positioning Statement + the Avatar 2.0
  * S1-S4 forensic artifacts + owner-intent (positioning intent, voice preferences,
  * brand story). The canvas is the source of truth every downstream copy artifact
  * (the Export Brief) is written against.
  *
- * Cloned from reveal-signature / avatar-jobmap (CORS, optional JWT->getUser, Anthropic
+ * Cloned from reveal-positioning-statement / avatar-jobmap (CORS, optional JWT->getUser, Anthropic
  * SONNET with prompt caching, strict JSON contract + value-level assistant prefill,
  * tolerant defensive parse, evidence-vs-inference branch, needs_input on missing input).
  *
  * Output contract (Phase-0 `brand_canvas`):
- *   { signature, positioning:{category,position,promise,villain,identity_payoff},
+ *   { positioning statement, positioning:{category,position,promise,villain,identity_payoff},
  *     voice:{voice_attributes,tone_dos,tone_donts,words_we_use[],words_we_dont[]},
  *     story_spine, grounding:'evidence'|'inference', evidence_refs:[{kind,ref}] }
  *
- * GROUNDING: the canvas is SYNTHESIS over the chosen Signature + S1-S4. When those
+ * GROUNDING: the canvas is SYNTHESIS over the chosen Positioning Statement + S1-S4. When those
  * artifacts are supplied (the chain has run on evidence) the canvas is grounding='evidence'
- * and cites the chain artifacts. Without a Signature it returns needs_input (the canvas
- * is built around the Signature line). The voice/positioning are FREE creative synthesis
+ * and cites the chain artifacts. Without a Positioning Statement it returns needs_input (the canvas
+ * is built around the Positioning Statement line). The voice/positioning are FREE creative synthesis
  * grounded in the customer vocabulary; no PRODUCT-TRUTH claims live in the canvas (those
  * are gated downstream in the Export Brief), so there is no substring grounding gate here.
  */
@@ -35,11 +35,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-/** Render the chosen Signature (string or {options, chosen_option} artifact) into a line. */
-function formatSignature(signature: unknown): string {
-  if (typeof signature === 'string') return signature.trim();
-  if (signature && typeof signature === 'object') {
-    const sig = signature as { options?: unknown; chosen_option?: number };
+/** Render the chosen Positioning Statement (string or {options, chosen_option} artifact) into a line. */
+function formatPositioningStatement(positioning_statement: unknown): string {
+  if (typeof positioning_statement === 'string') return positioning_statement.trim();
+  if (positioning_statement && typeof positioning_statement === 'object') {
+    const sig = positioning_statement as { options?: unknown; chosen_option?: number };
     if (Array.isArray(sig.options)) {
       const opts = sig.options as Array<{ option?: number; sentence?: string }>;
       const chosen = typeof sig.chosen_option === 'number'
@@ -78,25 +78,25 @@ function formatOwnerIntent(intent: Record<string, unknown> | undefined): string 
 
 /**
  * Tolerant parse of the canvas object. The assistant turn is prefilled value-level
- * (`{"signature":`), so the model emits the rest of the object; reconstruct the wrapper
+ * (`{"positioning_statement":`), so the model emits the rest of the object; reconstruct the wrapper
  * and repair the residual truncation/trailing-brace quirks, with a brace-scan fallback.
- * Never throws; returns null when nothing parses into an object with a signature.
+ * Never throws; returns null when nothing parses into an object with a positioning statement.
  */
 function parseCanvas(rawText: string): Record<string, unknown> | null {
   const candidates: string[] = [
     // Without the prefill (Sonnet 4.6 rejects it) the model returns the full
     // object — try the raw text (fences stripped) before the fragment repairs.
     rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''),
-    `{"signature":${rawText}`,
+    `{"positioning_statement":${rawText}`,
   ];
   const lastBrace = rawText.lastIndexOf('}');
   if (lastBrace !== -1) {
-    candidates.push(`{"signature":${rawText.slice(0, lastBrace + 1)}`);
+    candidates.push(`{"positioning_statement":${rawText.slice(0, lastBrace + 1)}`);
   }
   for (const candidate of candidates) {
     try {
       const parsed = JSON.parse(candidate);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && 'signature' in parsed) {
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && 'positioning_statement' in parsed) {
         return parsed as Record<string, unknown>;
       }
     } catch {
@@ -104,10 +104,10 @@ function parseCanvas(rawText: string): Record<string, unknown> | null {
     }
   }
   // Fallback: brace-scan the largest complete object (string-aware).
-  for (const obj of extractBalancedObjects(`{"signature":${rawText}`)) {
+  for (const obj of extractBalancedObjects(`{"positioning_statement":${rawText}`)) {
     try {
       const parsed = JSON.parse(obj);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && 'signature' in parsed) {
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && 'positioning_statement' in parsed) {
         return parsed as Record<string, unknown>;
       }
     } catch {
@@ -162,12 +162,12 @@ function asStrArray(v: unknown): string[] {
 
 function buildSystemPrompt(): string {
   return `<persona>
-You are a brand strategist inside a BMAD brand coach. You take a completed Avatar 2.0 forensic build (vocabulary clusters, job map, decision triggers, objections) and a chosen Signature, and you compile the one-page Brand Canvas. The canvas is the source of truth every downstream piece of content is written against.
+You are a brand strategist inside a BMAD brand coach. You take a completed Avatar 2.0 forensic build (vocabulary clusters, job map, decision triggers, objections) and a chosen Positioning Statement, and you compile the one-page Brand Canvas. The canvas is the source of truth every downstream piece of content is written against.
 </persona>
 
 <what-this-is>
-The Brand Canvas has two panes plus a Signature line and a story spine.
-- The Signature line: the chosen "My customer isn't buying X, they're buying Y" sentence, carried through verbatim as the spine of everything.
+The Brand Canvas has two panes plus a Positioning Statement line and a story spine.
+- The Positioning Statement line: the chosen "My customer isn't buying X, they're buying Y" sentence, carried through verbatim as the spine of everything.
 - Positioning pane:
   - category: the literal product category.
   - position: the one sentence that says who this is for and when they reach for it.
@@ -184,7 +184,7 @@ The Brand Canvas has two panes plus a Signature line and a story spine.
 </what-this-is>
 
 <grounding-rule>
-Build the canvas ONLY from the supplied Signature, forensic artifacts, and owner intent. The promise must answer the objections; the villain must be the job-map villain; words_we_use must be drawn from the S1 vocabulary clusters. Do NOT invent product facts (capacity numbers, materials, compatibility, guarantees) here. The canvas is positioning and voice, not product claims. If owner voice/story preferences are supplied, honour them.
+Build the canvas ONLY from the supplied Positioning Statement, forensic artifacts, and owner intent. The promise must answer the objections; the villain must be the job-map villain; words_we_use must be drawn from the S1 vocabulary clusters. Do NOT invent product facts (capacity numbers, materials, compatibility, guarantees) here. The canvas is positioning and voice, not product claims. If owner voice/story preferences are supplied, honour them.
 </grounding-rule>
 
 <voice-rules>
@@ -196,12 +196,12 @@ Build the canvas ONLY from the supplied Signature, forensic artifacts, and owner
 
 <few-shot-example>
 For premium trading card binders (illustrative shape only, do not copy these words unless the inputs support them):
-{"signature":"My customer isn't buying a binder. They're buying the certainty that everything they've built won't be lost in an instant.","positioning":{"category":"Premium trading card binders and accessories","position":"The binder serious collectors choose when their collection has outgrown anything from the gaming aisle.","promise":"No dimples. No slips. No second-guessing whether your grail card is safe.","villain":"The cheap big-box binder that dimples corners and the false economy that buys it.","identity_payoff":"From 'I'm not sure my cards are safe' to 'My collection is exactly where it should be.'"},"voice":{"voice_attributes":"Confident without bragging. Knows the hobby. Speaks collector-to-collector, not seller-to-buyer.","tone_dos":"Specific, warm, evidence-led. Name the situation, acknowledge the feeling, point to construction.","tone_donts":"Hype, fake scarcity, vague superlatives, influencer exclamation marks.","words_we_use":["collection","grail","chase","slab","sleeve","dignity","finally","serious","protect"],"words_we_dont":["cheap","basic","kids","simple","just","starter"]},"story_spine":"InfinityVault started because the binder a serious collection deserves did not exist on Amazon. We build for the collector whose hobby has outgrown the gaming aisle."}
+{"positioning_statement":"My customer isn't buying a binder. They're buying the certainty that everything they've built won't be lost in an instant.","positioning":{"category":"Premium trading card binders and accessories","position":"The binder serious collectors choose when their collection has outgrown anything from the gaming aisle.","promise":"No dimples. No slips. No second-guessing whether your grail card is safe.","villain":"The cheap big-box binder that dimples corners and the false economy that buys it.","identity_payoff":"From 'I'm not sure my cards are safe' to 'My collection is exactly where it should be.'"},"voice":{"voice_attributes":"Confident without bragging. Knows the hobby. Speaks collector-to-collector, not seller-to-buyer.","tone_dos":"Specific, warm, evidence-led. Name the situation, acknowledge the feeling, point to construction.","tone_donts":"Hype, fake scarcity, vague superlatives, influencer exclamation marks.","words_we_use":["collection","grail","chase","slab","sleeve","dignity","finally","serious","protect"],"words_we_dont":["cheap","basic","kids","simple","just","starter"]},"story_spine":"InfinityVault started because the binder a serious collection deserves did not exist on Amazon. We build for the collector whose hobby has outgrown the gaming aisle."}
 </few-shot-example>
 
 <output-contract>
 Respond with ONLY a JSON object, no preamble and no code fences:
-{"signature":"...","positioning":{"category":"...","position":"...","promise":"...","villain":"...","identity_payoff":"..."},"voice":{"voice_attributes":"...","tone_dos":"...","tone_donts":"...","words_we_use":["..."],"words_we_dont":["..."]},"story_spine":"..."}
+{"positioning_statement":"...","positioning":{"category":"...","position":"...","promise":"...","villain":"...","identity_payoff":"..."},"voice":{"voice_attributes":"...","tone_dos":"...","tone_donts":"...","words_we_use":["..."],"words_we_dont":["..."]},"story_spine":"..."}
 Every field must be present and non-empty. words_we_use and words_we_dont must each have at least one entry. No markdown inside any string. No trailing commentary outside the JSON.
 </output-contract>`;
 }
@@ -219,7 +219,7 @@ serve(async (req) => {
   }
 
   try {
-    // Optional auth (parity with reveal-signature; platform verify_jwt also gates).
+    // Optional auth (parity with reveal-positioning-statement; platform verify_jwt also gates).
     const authHeader = req.headers.get('authorization');
     if (authHeader) {
       try {
@@ -237,16 +237,16 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const signatureText = formatSignature(body?.signature);
+    const positioningStatementText = formatPositioningStatement(body?.positioning_statement);
 
-    // The canvas is built around the chosen Signature; without it, ask.
-    if (!signatureText) {
+    // The canvas is built around the chosen Positioning Statement; without it, ask.
+    if (!positioningStatementText) {
       return new Response(
         JSON.stringify({
           needs_input: [{
             slot: 1,
-            question: 'Choose a Signature first (run the Avatar chain through S5 and pick one), or supply the chosen Signature sentence. The Brand Canvas is built around the Signature line.',
-            why: 'The canvas positioning, promise, and story spine all derive from the chosen Signature.',
+            question: 'Choose a Positioning Statement first (run the Avatar chain through S5 and pick one), or supply the chosen Positioning Statement sentence. The Brand Canvas is built around the Positioning Statement line.',
+            why: 'The canvas positioning, promise, and story spine all derive from the chosen Positioning Statement.',
           }],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -259,7 +259,7 @@ serve(async (req) => {
     const s4Block = formatArtifact('STAGE 4 OBJECTIONS', body?.s4 ?? body?.prior?.s4);
     const intentBlock = formatOwnerIntent(body?.owner_intent);
 
-    const userParts: string[] = [`THE CHOSEN SIGNATURE (the spine of the canvas):\n${signatureText}`];
+    const userParts: string[] = [`THE CHOSEN POSITIONING STATEMENT (the spine of the canvas):\n${positioningStatementText}`];
     for (const block of [s1Block, s2Block, s3Block, s4Block]) {
       if (block) userParts.push(block);
     }
@@ -307,7 +307,7 @@ serve(async (req) => {
     const positioning = (parsed.positioning ?? {}) as Record<string, unknown>;
     const voice = (parsed.voice ?? {}) as Record<string, unknown>;
     const cleaned = {
-      signature: asStr(parsed.signature) || signatureText,
+      positioning_statement: asStr(parsed.positioning_statement) || positioningStatementText,
       positioning: {
         category: asStr(positioning.category),
         position: asStr(positioning.position),
@@ -333,19 +333,19 @@ serve(async (req) => {
       cleaned.voice.tone_donts &&
       cleaned.voice.words_we_use.length > 0 &&
       cleaned.voice.words_we_dont.length > 0;
-    if (!cleaned.signature || !cleaned.story_spine || !positioningOk || !voiceOk) {
+    if (!cleaned.positioning_statement || !cleaned.story_spine || !positioningOk || !voiceOk) {
       console.error('[brand-canvas] Canvas missing required fields after cleaning.');
       throw new Error('Brand Canvas output was incomplete.');
     }
 
     // EVIDENCE when the forensic chain grounded it; INFERENCE when working from the
-    // Signature alone. evidence_refs cite whichever chain artifacts were supplied.
+    // Positioning Statement alone. evidence_refs cite whichever chain artifacts were supplied.
     const evidenceRefs: Array<{ kind: string; ref: string }> = [];
     if (body?.s1 ?? body?.prior?.s1) evidenceRefs.push({ kind: 'artifact', ref: 'avatar_s1_vocab' });
     if (body?.s2 ?? body?.prior?.s2) evidenceRefs.push({ kind: 'artifact', ref: 'avatar_s2_jobmap' });
     if (body?.s4 ?? body?.prior?.s4) evidenceRefs.push({ kind: 'artifact', ref: 'avatar_s4_objections' });
-    if (evidenceRefs.length === 0) evidenceRefs.push({ kind: 'artifact', ref: 'signature' });
-    const grounding = evidenceRefs.some((r) => r.ref !== 'signature') ? 'evidence' : 'inference';
+    if (evidenceRefs.length === 0) evidenceRefs.push({ kind: 'artifact', ref: 'positioning_statement' });
+    const grounding = evidenceRefs.some((r) => r.ref !== 'positioning_statement') ? 'evidence' : 'inference';
 
     const result = { ...cleaned, grounding, evidence_refs: evidenceRefs };
     console.log(`[brand-canvas] Returning canvas (grounding=${grounding}, refs=${evidenceRefs.length}).`);

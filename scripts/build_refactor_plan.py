@@ -110,7 +110,7 @@ abstractions = [
      "Converge the v2 field hooks onto the knowledge-base repository; manual-edit lock in EXACTLY one place. Freeze v1 sync code in place.",
      "Trust foundation. Alpha gate + QA require 'manual edits never silently overwritten'. Highest correctness risk."),
     ("3", "Typed LLM edge-function client (shared)", "ACCEPT",
-     "23 edge functions, ~12 LLM-calling (brand-ai-assistant, reveal-signature, diagnostic-interpretation, brand-copy-generator, "
+     "23 edge functions, ~12 LLM-calling (brand-ai-assistant, reveal-positioning-statement, diagnostic-interpretation, brand-copy-generator, "
      "ai-insight-guidance, contextual-help, buyer-intent-analyzer, generate-brand-strategy-section...). No shared typed client; quota "
      "errors hide in HTTP-200 SSE bodies (memory: feedback_sse_stream_capture). Backend is shared by v1 AND v2.",
      "One typed client: invoke + SSE parse + quota/error-envelope detection + retry/timeout. All current + future generators are instances.",
@@ -148,7 +148,7 @@ hdr(ws, 1, cols, widths=[8, 9, 26, 38, 42, 11, 8, 12, 10, 18, 18, 20, 12])
 backlog = [
     ("RF-01", "P0", "Typed LLM edge-fn client (abstraction #3)",
      "12+ shared LLM edge fns each hand-roll invoke/SSE/error handling; quota errors hide in HTTP-200 bodies -> silent failures users hit.",
-     "NEW src/services/llm/EdgeFunctionClient.ts; supabase/functions/_shared; wraps brand-ai-assistant, reveal-signature, diagnostic-interpretation +9",
+     "NEW src/services/llm/EdgeFunctionClient.ts; supabase/functions/_shared; wraps brand-ai-assistant, reveal-positioning-statement, diagnostic-interpretation +9",
      "3-4 (thin)/6-8 (full)", "Med", "High (12+ fns)", "High",
      "F-020/021/055/063", "Next sprint (06-01)", "Thin slice 3-4h", "not_started"),
     ("RF-02", "P0", "reportError sink + Result<T> propagation (abstraction #4)",
@@ -211,12 +211,12 @@ kv_sheet(ws, "Observability Plan — identify -> log -> fix, fast (v2 + shared b
     ("Layer 3 — reportError sink", "Single src/lib/observability/reportError.ts(error, context): structured console + a ring buffer in a dev overlay. "
         "Sentry-ready interface (swap transport, not call sites). RF-02."),
     ("Layer 4 — ErrorBoundary wiring", "Existing ErrorBoundary calls reportError and shows a recoverable fallback. Add route-level boundaries around "
-        "the diagnostic, signature, and /v2/coach flows so one feature crash never blanks the app."),
+        "the diagnostic, positioning statement, and /v2/coach flows so one feature crash never blanks the app."),
     ("Layer 5 — Supabase reachability", "Free-tier auto-pause -> NXDOMAIN/timeouts/INACTIVE (memory: project_supabase_pauses). Add a boot health ping "
         "+ a user-facing 'service paused' banner instead of a silent failure."),
     ("Sentry-ready seam", "Do NOT install Sentry this cycle (T10/F-017 deferred). Build the seam so adopting Sentry at Beta is a one-file transport swap. "
         "Console + dev overlay suffices for the alpha friend-tester cohort."),
-    ("Definition of done", "Walk diagnostic->signature->feedback with Supabase PAUSED and with a forced edge-fn quota error. Both yield a clear recoverable "
+    ("Definition of done", "Walk diagnostic->positioning statement->feedback with Supabase PAUSED and with a forced edge-fn quota error. Both yield a clear recoverable "
         "error AND reportError captures cause + route + payload shape."),
 ])
 
@@ -226,7 +226,7 @@ hdr(ws, 1, ["Sprint / window", "Mode", "Refactor budget (<=30%)", "Scheduled ite
     widths=[26, 22, 22, 40, 56])
 seq = [
     ("Sprint v3 — wk 2026-05-25", "SHIP (frozen)", "0h (frozen)", "(none)",
-     "Ship-week: Trust Gap + Signature on critical path T8->T3->T4->T5->T9. Refactoring here = scope creep per the plan."),
+     "Ship-week: Trust Gap + Positioning Statement on critical path T8->T3->T4->T5->T9. Refactoring here = scope creep per the plan."),
     ("Sprint +1 — wk 2026-06-01", "Conditional A/B/C", "<=6h (30%)", "RF-02 (2-3h) + RF-01 thin slice (3-4h)",
      "Observability first: it's an Alpha gate AND helps Branch-B diagnose WHY a v2 output failed. Confirm v2-canonical direction in planning (no v1 action)."),
     ("Sprint +2 — wk 2026-06-08", "Build", "<=6h (30%)", "RF-04 finish v2 coach extraction (3-5h) + RF-07 incremental (1h)",
@@ -262,7 +262,7 @@ v1rows = [
      "Active tester funnel; FeedbackMoment primitive (RF-06) builds on it.",
      "None. Fold into v2 onboarding at Beta."),
     ("/v1/canvas (Brand Canvas)", "KEEP", "Sprint Fri-QA: 'Existing /brand-canvas still works — no regressions.'",
-     "Still referenced as a working surface; Signature->Canvas bridge is planned (Branch-A T-A2).",
+     "Still referenced as a working surface; Positioning Statement->Canvas bridge is planned (Branch-A T-A2).",
      "Re-implement as v2 Canvas when the bridge ships; then retire v1 canvas."),
     ("/v1/idea/* (insight, distinctive, empathy, authenticity, consultant)", "FREEZE", "Reachable only via /v1/* legacy redirects; not linked from VersionGate or /v2/coach.",
      "Superseded by the v2 coach experience. Not current/planned functionality.",

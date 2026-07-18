@@ -4,7 +4,7 @@
  *
  * Proves every gold-workbook section maps and parses into its artifact contract.
  * Where the gold .xlsx layout differs from the runtime schema (interleaved canvas
- * grid, signature options split across columns + rows, header-cell scores), the
+ * grid, positioning statement options split across columns + rows, header-cell scores), the
  * mapping lives in a thin in-test mapper — the gold fixture is the source of TRUTH
  * for columns, the contract is the source of truth for SHAPE.
  *
@@ -24,7 +24,7 @@ import {
   avatarS2JobmapContract,
   avatarS3TriggersContract,
   avatarS4ObjectionsContract,
-  signatureContract,
+  positioningStatementContract,
   brandCanvasContract,
   exportBriefContract,
   auditXIdeaContract,
@@ -222,7 +222,7 @@ describe('avatar stages ← A sheet 4', () => {
     expect(parsed.objections[0].verbatim_signal).toContain('dimpling');
   });
 
-  it('S5 signature options parse (options split across the table name + rows)', () => {
+  it('S5 positioning statement options parse (options split across the table name + rows)', () => {
     const t = stageTable('Stage 5');
     // Gold quirk: Option 1 lives in the columns row; Options 2..N live in rows.
     const optionFromColumns = { option: 1, sentence: str(t.columns[1]) };
@@ -231,7 +231,7 @@ describe('avatar stages ← A sheet 4', () => {
       sentence: str(r[1]),
     }));
     const options = [optionFromColumns, ...optionsFromRows];
-    const parsed = signatureContract.outputSchema.parse({ options, ...groundingStub });
+    const parsed = positioningStatementContract.outputSchema.parse({ options, ...groundingStub });
     expect(parsed.options).toHaveLength(4);
     expect(parsed.options[0].option).toBe(1);
     expect(parsed.options[0].sentence).toContain("isn't buying a card binder");
@@ -242,13 +242,13 @@ describe('avatar stages ← A sheet 4', () => {
 // Workbook A — sheet 5: brand_canvas (interleaved 2-pane grid)
 // ===========================================================================
 describe('brand_canvas ← A sheet 5', () => {
-  it('normalizes the interleaved positioning/voice grid + signature + story into the contract', () => {
+  it('normalizes the interleaved positioning/voice grid + positioning statement + story into the contract', () => {
     const s = sheet(wbA, '5. Brand Canvas (IV)');
     const canvasTable = s.tables[0];
     const storyTable = s.tables[1];
 
-    // The Signature line lives in the canvas table's `note`.
-    const signature = str(canvasTable.note);
+    // The Positioning Statement line lives in the canvas table's `note`.
+    const positioning_statement = str(canvasTable.note);
     // The grid interleaves: columns = [Category, <cat val>, Voice attributes, <voice val>];
     // rows alternate left=positioning label/value, right=voice label/value.
     // columns row carries Category + Voice attributes; data rows carry the rest.
@@ -268,7 +268,7 @@ describe('brand_canvas ← A sheet 5', () => {
     }
 
     const mapped = {
-      signature,
+      positioning_statement,
       positioning: {
         category: left.get('Category') ?? '',
         position: left.get('Position') ?? '',
@@ -288,7 +288,7 @@ describe('brand_canvas ← A sheet 5', () => {
     };
 
     const parsed = brandCanvasContract.outputSchema.parse(mapped);
-    expect(parsed.signature).toContain('certainty that everything');
+    expect(parsed.positioning_statement).toContain('certainty that everything');
     expect(parsed.positioning.category).toContain('Premium trading card binders');
     expect(parsed.positioning.villain).toContain('cheap big-box binder');
     expect(parsed.voice.words_we_use.length).toBeGreaterThan(3);

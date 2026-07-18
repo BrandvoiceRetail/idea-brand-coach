@@ -12,7 +12,7 @@ In that session the coach mined the reviews correctly (they cluster on *protecti
 
 ## Root cause
 
-The coach is governed by a blanket no-invention rule (in the MCP `SERVER_INSTRUCTIONS` POSTURE and the consultant prompt): *"NEVER generate before the user has shared real context… do not infer, default, or invent inputs… never fabricate."* That rule is correct for **facts** and necessary (it stops fabricated ratings/claims). But read literally it also forbids inventing **expression** — which is exactly the creative leap the Distinctive pillar requires. The coach had the creative DNA only inside one tool (`reveal-signature`'s "vocabulary borrowed, truth newly named"); it was never a general coach behaviour.
+The coach is governed by a blanket no-invention rule (in the MCP `SERVER_INSTRUCTIONS` POSTURE and the consultant prompt): *"NEVER generate before the user has shared real context… do not infer, default, or invent inputs… never fabricate."* That rule is correct for **facts** and necessary (it stops fabricated ratings/claims). But read literally it also forbids inventing **expression** — which is exactly the creative leap the Distinctive pillar requires. The coach had the creative DNA only inside one tool (`reveal-positioning-statement`'s "vocabulary borrowed, truth newly named"); it was never a general coach behaviour.
 
 ## The principle: a FACT / EXPRESSION firewall
 
@@ -33,7 +33,7 @@ A distinctive expression earns its place only when it is **OWNABLE · SURPRISING
 
 ## Craft layer (from the writing-style guide)
 
-The leap is landed in sharp human language (no AI filler: leverage, unlock, seamless, transformative, supercharge…). **One deliberate carve-out:** the Signature device "they aren't buying X, they're buying Y" is a load-bearing binary contrast and is exempt from the no-binary-contrast rule — it just must not become a verbal tic elsewhere.
+The leap is landed in sharp human language (no AI filler: leverage, unlock, seamless, transformative, supercharge…). **One deliberate carve-out:** the Positioning Statement device "they aren't buying X, they're buying Y" is a load-bearing binary contrast and is exempt from the no-binary-contrast rule — it just must not become a verbal tic elsewhere.
 
 ## Verification
 

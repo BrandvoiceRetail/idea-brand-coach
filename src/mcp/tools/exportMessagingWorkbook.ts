@@ -8,7 +8,7 @@
  * Unlike `export_workbook` (pure read → render over an already-complete chain), this tool DOES
  * the AI + persistence so the assembler can stay pure: for each avatar it reads the persisted
  * S1–S4 forensics (`getChain`), resolves the ONE message (the `message` param, else the set's
- * Signature `chosen_option` sentence), reuses an existing `messaging_perception` artifact when
+ * Positioning Statement `chosen_option` sentence), reuses an existing `messaging_perception` artifact when
  * one is already on file FOR THIS MESSAGE, and otherwise INVOKES the `analyze-message-perception`
  * edge fn (the perception engine, auth + credit-gated) and PERSISTS the validated content as a
  * fresh `messaging_perception` artifact (avatar-scoped). Then it calls the PURE assembler
@@ -42,7 +42,7 @@ import {
 import { getAvatar as getAvatarLive } from '../service/avatarLifecycle.js';
 import { EdgeFnClient } from '../edgeFn/client.js';
 import {
-  signatureOutputSchema,
+  positioningStatementOutputSchema,
   safeParseMessagingPerception,
   notAnalysablePerception,
   weakestVerdict,
@@ -65,7 +65,7 @@ const FORENSIC_KINDS = {
   s4_objections: 'avatar_s4_objections',
 } as const satisfies Record<string, ArtifactKind>;
 
-const SIGNATURE_KIND: ArtifactKind = 'signature';
+const POSITIONING_STATEMENT_KIND: ArtifactKind = 'positioning_statement';
 const PERCEPTION_KIND: ArtifactKind = 'messaging_perception';
 
 /** Injectable collaborators (default to the live module fns) so the tool is unit-testable. */
@@ -103,11 +103,11 @@ function pickContent(chain: ArtifactRow[], kind: ArtifactKind): unknown | undefi
 }
 
 /**
- * The chosen Signature sentence from a persisted `signature` artifact, or `null`. Prefers the
+ * The chosen Positioning Statement sentence from a persisted `positioning_statement` artifact, or `null`. Prefers the
  * `chosen_option` the user picked; falls back to the first option when none is chosen yet.
  */
-function signatureSentence(content: unknown): string | null {
-  const parsed = signatureOutputSchema.safeParse(content);
+function positioningStatementSentence(content: unknown): string | null {
+  const parsed = positioningStatementOutputSchema.safeParse(content);
   if (!parsed.success) return null;
   const sig = parsed.data;
   const chosen = sig.chosen_option != null ? sig.options.find((o) => o.option === sig.chosen_option) : undefined;
@@ -163,11 +163,11 @@ export async function runExportMessagingWorkbook(
       nameByAvatar.set(id, avatar?.name ?? 'Avatar');
     }
 
-    // 2. Resolve the ONE planned message: the param, else the set's Signature sentence.
+    // 2. Resolve the ONE planned message: the param, else the set's Positioning Statement sentence.
     let message = input.message?.trim() ?? '';
     if (!message) {
       for (const id of input.avatarIds) {
-        const sentence = signatureSentence(pickContent(chainByAvatar.get(id) ?? [], SIGNATURE_KIND));
+        const sentence = positioningStatementSentence(pickContent(chainByAvatar.get(id) ?? [], POSITIONING_STATEMENT_KIND));
         if (sentence) {
           message = sentence;
           break;
@@ -178,9 +178,9 @@ export async function runExportMessagingWorkbook(
       return {
         status: 'needs_input',
         note:
-          'No planned message provided and no Signature on file for the set — pass `message` ' +
-          '(the one strategic line to test), or generate and persist a Signature first ' +
-          '(generate_signature → persist_signature).',
+          'No planned message provided and no Positioning Statement on file for the set — pass `message` ' +
+          '(the one strategic line to test), or generate and persist a Positioning Statement first ' +
+          '(generate_positioning_statement → persist_positioning_statement).',
       };
     }
 
@@ -280,7 +280,7 @@ const inputSchema = {
   message: z
     .string()
     .optional()
-    .describe('The ONE planned strategic message to test across the set. If omitted, the set Signature (chosen option) is used.'),
+    .describe('The ONE planned strategic message to test across the set. If omitted, the set Positioning Statement (chosen option) is used.'),
   out_dir: z.string().optional().describe('Directory to write the .xlsx into; defaults to the OS temp dir.'),
   brand_name: z.string().optional().describe('Brand name woven into the workbook titles + the filename; defaults to InfinityVault.'),
   upload: z.boolean().default(false).describe('Also upload the file to Supabase Storage (never-fail; a missing bucket annotates the result but does not fail the export).'),
@@ -292,7 +292,7 @@ export function registerExportMessagingWorkbookTool(server: McpServer, deps?: Pa
     {
       title: 'Export the multi-avatar messaging workbook (.xlsx)',
       description:
-        'Render the multi-avatar messaging-perception workbook: for ONE planned message, how each selected avatar perceives it across the four IDEA dimensions (vocabulary / jobs / trigger / objections), judged ONLY from that avatar\'s own Avatar 2.0 forensics, rolled up to a weakest-link set verdict. Pass avatar_ids (the active set) and optionally the message (else the set Signature is used). For each avatar it reuses an on-file perception for this message, else derives one via the perception engine and persists it; an avatar with no forensics appears honestly as "not yet analysable", never a guessed score. Requires an authenticated Supabase JWT; every avatar_id must be owned. Optional upload:true uploads the file to Supabase Storage (never-fail).',
+        'Render the multi-avatar messaging-perception workbook: for ONE planned message, how each selected avatar perceives it across the four IDEA dimensions (vocabulary / jobs / trigger / objections), judged ONLY from that avatar\'s own Avatar 2.0 forensics, rolled up to a weakest-link set verdict. Pass avatar_ids (the active set) and optionally the message (else the set Positioning Statement is used). For each avatar it reuses an on-file perception for this message, else derives one via the perception engine and persists it; an avatar with no forensics appears honestly as "not yet analysable", never a guessed score. Requires an authenticated Supabase JWT; every avatar_id must be owned. Optional upload:true uploads the file to Supabase Storage (never-fail).',
       inputSchema,
     },
     async ({ avatar_ids, message, out_dir, brand_name, upload }) => {

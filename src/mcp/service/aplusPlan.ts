@@ -87,8 +87,8 @@ export const APLUS_BEATS: readonly AplusBeat[] = [
     purpose: 'Land the story — the brand feeling the customer keeps after scrolling.',
     ideaPillar: 'Authentic',
     direction:
-      'The mission/feeling beat: close the page on why this brand, with the signature line. Real specifics over generic sincerity.',
-    copyRule: 'The signature/brand line. Any trust claim (guarantee/credential) is claim-gated.',
+      'The mission/feeling beat: close the page on why this brand, with the positioning statement line. Real specifics over generic sincerity.',
+    copyRule: 'The positioning statement/brand line. Any trust claim (guarantee/credential) is claim-gated.',
   },
 ];
 
@@ -96,7 +96,7 @@ export interface AplusPlanInput {
   product: string;
   decisionTrigger?: string;
   avatarSummary?: string;
-  signature?: string;
+  positioning_statement?: string;
   trustGapSummary?: string;
   verifiedFacts?: string;
   marketplace?: string;
@@ -141,7 +141,7 @@ export function buildAplusPlan(input: AplusPlanInput): AplusPlanResult {
   const positioning: PositioningInputs = {
     decisionTrigger: input.decisionTrigger,
     avatarSummary: input.avatarSummary,
-    signature: input.signature,
+    positioning_statement: input.positioning_statement,
     trustGapSummary: input.trustGapSummary,
     verifiedFacts: input.verifiedFacts,
   };
@@ -163,7 +163,7 @@ export function buildAplusPlan(input: AplusPlanInput): AplusPlanResult {
       'A copy-only change (a line, a fact) re-runs the claim gate on the changed line, then updates the prompt\'s exact-copy section — nothing else moves.',
       'Resolution/extension changes route to Higgsfield edit tools (upscale_image, outpaint_image), not regeneration.',
       'After any adjustment, save the updated plan with log_asset (same external_id reconciles the version).',
-      'For positioning changes (new trigger/avatar/signature/trust finding), call refine_creative_plan — it maps which beats recompose and which stand.',
+      'For positioning changes (new trigger/avatar/positioning statement/trust finding), call refine_creative_plan — it maps which beats recompose and which stand.',
     ],
     claim_gate:
       'Before including any guarantee or specific claim on the page, flag it to the user and ask them to confirm they offer/can substantiate it. Only include it once confirmed.',
@@ -173,7 +173,7 @@ export function buildAplusPlan(input: AplusPlanInput): AplusPlanResult {
     new_user_path: NEW_USER_EASY_PATH,
     instructions: [
       `1) Triage the inputs for "${input.product}" using evidence_discipline. Only verified facts may appear as on-image copy.`,
-      `2) Ground the page in the positioning spine (see positioning_inputs): the Decision Trigger${trigger ? ` (${trigger})` : ''} sets the register, the avatar core leads the strongest-benefit and use-case beats, the signature closes, and the Trust Gap pillar decides which beat carries the page. Missing elements degrade honestly — generate anyway and name the sharpening input.`,
+      `2) Ground the page in the positioning spine (see positioning_inputs): the Decision Trigger${trigger ? ` (${trigger})` : ''} sets the register, the avatar core leads the strongest-benefit and use-case beats, the positioning statement closes, and the Trust Gap pillar decides which beat carries the page. Missing elements degrade honestly — generate anyway and name the sharpening input.`,
       '3) Produce 4 distinct CONCEPTS per the format (materially different territory/composition/motif), 2 versions each — each concept runs the 5 beats top-to-bottom as ONE continuous composition (target 1472x3008), never stacked template modules.',
       '4) For each concept, write the ready-to-generate prompt with prompt_construction (the "IMAGE_PROMPT:" marker + the 8-part order + the exact negative prompt) and route per higgsfield_handoff: real product photo as strict reference → Higgsfield generate_image; extend/upscale with outpaint_image/upscale_image as needed; QA against qa_checklist and mobile_rules.',
       '5) Run the claim gate on every stated claim; verify actual output dimensions honestly.',

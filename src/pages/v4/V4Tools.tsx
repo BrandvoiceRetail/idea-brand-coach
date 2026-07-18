@@ -20,14 +20,14 @@ import {
 } from '@/data/toolRegistry.generated';
 
 /**
- * "Signature" is not part of Trevor's system taxonomy (his 2026-07-06
+ * "Positioning Statement" is not part of Trevor's system taxonomy (his 2026-07-06
  * walkthrough: "drop it before it gets too embedded"). The registry mirrors
- * the MCP tool descriptions verbatim (internal ids like generate_signature
+ * the MCP tool descriptions verbatim (internal ids like generate_positioning_statement
  * stay), so normalise the PROSE at the display boundary — the word must not
  * render as vocabulary on this public glossary page.
  */
 function displayDescription(description: string): string {
-  return description.replace(/\bSignature\b/g, 'positioning');
+  return description.replace(/\bPositioningStatement\b/g, 'positioning');
 }
 
 function StatusBadge({ status }: { status: RegistryTool['status'] }): JSX.Element {

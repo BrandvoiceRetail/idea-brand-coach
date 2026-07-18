@@ -156,10 +156,10 @@ export function buildTrustGap(scores: TrustGapInputScores): TrustGapResult {
 }
 
 /**
- * Stable signature for a score set, used to cache an interpretation so navigating
+ * Stable positioning statement for a score set, used to cache an interpretation so navigating
  * back to the results page does not re-bill the model for identical scores.
  */
-export function trustGapSignature(scores: TrustGapInputScores): string {
+export function trustGapPositioningStatement(scores: TrustGapInputScores): string {
   const result = buildTrustGap(scores);
   const dims = result.dimensions.map((d) => `${d.key}:${d.score}`).join('|');
   return `v1|overall:${result.overall}|${dims}`;

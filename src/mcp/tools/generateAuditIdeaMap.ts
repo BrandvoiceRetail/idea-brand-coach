@@ -43,7 +43,7 @@ import { requireOwnedAvatar } from '../service/avatarOwnership.js';
 import { safeLog } from '../logging/redact.js';
 import { userTag } from '../context/identity.js';
 
-/** The edge fn that synthesises the map (cloned from the reveal-signature skeleton). */
+/** The edge fn that synthesises the map (cloned from the reveal-positioning-statement skeleton). */
 const AUDIT_IDEA_EDGE_FN = 'audit-idea-map';
 /** The kind this tool persists. */
 const KIND: ArtifactKind = 'audit_x_idea';
@@ -116,7 +116,7 @@ function chainNeedsInput(missing: string[]): NeedsInputItem[] {
     {
       slot: 1,
       question: `Build the ${missing.join(' and ')} first. The Audit × IDEA map shows how IDEA inputs upgrade each marketing move, so it needs those artifacts to exist.`,
-      why: 'Every with_idea cell and its lift estimate must reference the actual Signature, vocabulary clusters, and keywords from the canvas/brief. Without them the mapping has nothing to upgrade.',
+      why: 'Every with_idea cell and its lift estimate must reference the actual Positioning Statement, vocabulary clusters, and keywords from the canvas/brief. Without them the mapping has nothing to upgrade.',
     },
   ];
 }

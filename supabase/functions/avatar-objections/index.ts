@@ -9,7 +9,7 @@ import { INTERNAL_PROMPT_AVATAR_CORPUS_CHARS } from "../_shared/contextBudgets.t
  * each anchored by a VERBATIM customer quote, plus what resolves it in copy / image
  * / A+.
  *
- * Cloned from reveal-signature (CORS, optional JWT->getUser, Anthropic SONNET call
+ * Cloned from reveal-positioning-statement (CORS, optional JWT->getUser, Anthropic SONNET call
  * with prompt caching, strict JSON contract + assistant prefill, defensive parse,
  * evidence-vs-inference branch).
  *

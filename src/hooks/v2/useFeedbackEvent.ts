@@ -7,7 +7,7 @@
  *
  * Non-blocking by design: a failed write NEVER throws into the UI — recordEvent
  * resolves `{ ok: false }` and sets `error`, so a feedback prompt can never break
- * the Signature flow. See .feature-factory/feedback-loop/errors.md.
+ * the Positioning Statement flow. See .feature-factory/feedback-loop/errors.md.
  */
 
 import { useCallback, useState } from 'react';
@@ -17,7 +17,7 @@ import { getPostHogDistinctId } from '@/lib/distinctId';
 export interface RecordEventArgs {
   /** Event moment tag, e.g. 'moment_1'. */
   moment: string;
-  /** Arbitrary JSON payload (e.g. {chosen_signature, scores, free_text} or {skipped:true}). */
+  /** Arbitrary JSON payload (e.g. {chosen_positioning_statement, scores, free_text} or {skipped:true}). */
   payload: Record<string, unknown>;
   /** Optional chat session id; null when unavailable. */
   sessionId?: string | null;

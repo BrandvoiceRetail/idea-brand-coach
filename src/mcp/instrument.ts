@@ -98,7 +98,7 @@ function timed(tool: string, handler: ToolHandler): ToolHandler {
  * Monkey-patch `server.registerTool` so each subsequently-registered tool's handler is
  * wrapped with latency capture. Call immediately after `new McpServer(...)` and BEFORE
  * the register*Tool() calls. The cast is confined to this seam; tool modules keep the
- * real typed signature and are untouched.
+ * real typed positioning statement and are untouched.
  */
 export function instrumentToolLatency(server: McpServer): void {
   const original = server.registerTool.bind(server) as (...args: unknown[]) => unknown;

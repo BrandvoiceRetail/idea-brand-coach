@@ -7,7 +7,7 @@ Area rules for React components. Root `AGENTS.md` applies; this adds only what's
 | Area | Focus |
 |------|-------|
 | `diagnostic/` | Trust Gap scorecard + journey bridge (F-059) — local AGENTS.md |
-| `v2/signature/` | Signature reveal engine, end-to-end testing — local AGENTS.md |
+| `v2/positioning-statement/` | Positioning Statement reveal engine, end-to-end testing — local AGENTS.md |
 
 ## Pattern: composition over large components
 

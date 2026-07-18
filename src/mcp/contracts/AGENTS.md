@@ -21,7 +21,7 @@ ids the resolver must fill for that generator to run in evidence mode.
 | `slots.ts` | The **18 master context slots** (`CONTEXT_SLOTS`), verbatim from manifest §4: `id`, `class` (the §1 trust taxonomy), `residesIn` (resolution order, ends at `ask`), `askQuestion`. `SlotId` literal union, `getSlot(id)`. |
 | `grounding.ts` | `groundingSchema` (`evidence`\|`inference`), `evidenceRefSchema`, `groundingEnvelope` (mixed into every generator outputSchema), `needsInputItemSchema` (the clarification block). |
 | `index.ts` | Barrel + `CONTRACTS` registry keyed by `ArtifactKind`. |
-| `<kind>.ts` | One per artifact kind (diagnosticInterpretation, avatarS1-S4, signature, brandCanvas, exportBrief, auditXIdea, marketingAudit, rolloutPlan). |
+| `<kind>.ts` | One per artifact kind (diagnosticInterpretation, avatarS1-S4, positioning statement, brandCanvas, exportBrief, auditXIdea, marketingAudit, rolloutPlan). |
 
 ## CRITICAL invariants (do NOT break)
 

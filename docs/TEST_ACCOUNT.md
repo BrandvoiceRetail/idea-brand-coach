@@ -18,7 +18,7 @@ this account as privileged. If the account is ever compromised, rotate it (see
 | Email | `signatureqa20260526@gmail.com` |
 | Password | `Sig-QA-Test-2026!` |
 | Supabase user id | `1e8d7602-c19d-4d5d-9dea-1f7ecf8d3d11` |
-| Display name | Signature QA |
+| Display name | Positioning Statement QA |
 
 ## Environment
 

@@ -1,13 +1,13 @@
 /**
  * Contract — `brand_canvas` (gold Workbook A, sheet 5 "Brand Canvas").
  *
- * §2 sheet 5: SYNTHESIS over the chosen Signature + S1–S4 artifacts + voice
+ * §2 sheet 5: SYNTHESIS over the chosen Positioning Statement + S1–S4 artifacts + voice
  * preferences (OWNER-INTENT #13) + brand story/origin (OWNER-INTENT, KB canvas/insights).
  *
  * The gold renders the canvas as an interleaved 2-pane grid (Positioning block on
  * the left, Voice block on the right); the contract normalizes it into the two
- * semantic blocks plus the Signature line and the brand-story spine, capturing every
- * gold cell: signature; category; position; promise; villain; identity_payoff;
+ * semantic blocks plus the Positioning Statement line and the brand-story spine, capturing every
+ * gold cell: positioning statement; category; position; promise; villain; identity_payoff;
  * voice_attributes; tone_dos; tone_donts; words_we_use; words_we_dont; story_spine.
  */
 import { z } from 'zod';
@@ -45,8 +45,8 @@ export const voiceBlockSchema = z.object({
 export type VoiceBlock = z.infer<typeof voiceBlockSchema>;
 
 export const brandCanvasOutputSchema = z.object({
-  /** "The Signature" line at the top of the canvas. */
-  signature: z.string().min(1),
+  /** "The Positioning Statement" line at the top of the canvas. */
+  positioning_statement: z.string().min(1),
   positioning: positioningBlockSchema,
   voice: voiceBlockSchema,
   /** "Brand story spine (for A+ content, About section, ad lead-ins)". */
@@ -58,7 +58,7 @@ export type BrandCanvasOutput = z.infer<typeof brandCanvasOutputSchema>;
 const kind = 'brand_canvas' as const;
 
 /**
- * §2 sheet 5: chosen Signature artifact (#1 evidence root) + positioning intent (#12)
+ * §2 sheet 5: chosen Positioning Statement artifact (#1 evidence root) + positioning intent (#12)
  * + voice preferences & brand story (#13) + target-customer beliefs (#14).
  */
 const requiredContext = [1, 12, 13, 14] as const;

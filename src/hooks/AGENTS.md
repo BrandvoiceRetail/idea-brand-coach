@@ -2,7 +2,7 @@
 
 Root `AGENTS.md` applies; this adds only what's specific here.
 
-Reusable React hooks. `v2/` holds Brand Coach V2 hooks (orchestration, extraction queue, signature reveal, etc.); tests in `__tests__/` (and `v2/__tests__/`).
+Reusable React hooks. `v2/` holds Brand Coach V2 hooks (orchestration, extraction queue, positioning statement reveal, etc.); tests in `__tests__/` (and `v2/__tests__/`).
 
 ## Conventions
 

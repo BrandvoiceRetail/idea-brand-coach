@@ -15,7 +15,7 @@ export * from './avatarS1Vocab.js';
 export * from './avatarS2Jobmap.js';
 export * from './avatarS3Triggers.js';
 export * from './avatarS4Objections.js';
-export * from './signature.js';
+export * from './positioningStatement.js';
 export * from './brandCanvas.js';
 export * from './exportBrief.js';
 export * from './auditXIdea.js';
@@ -29,7 +29,7 @@ import { avatarS1VocabContract } from './avatarS1Vocab.js';
 import { avatarS2JobmapContract } from './avatarS2Jobmap.js';
 import { avatarS3TriggersContract } from './avatarS3Triggers.js';
 import { avatarS4ObjectionsContract } from './avatarS4Objections.js';
-import { signatureContract } from './signature.js';
+import { positioningStatementContract } from './positioningStatement.js';
 import { brandCanvasContract } from './brandCanvas.js';
 import { exportBriefContract } from './exportBrief.js';
 import { auditXIdeaContract } from './auditXIdea.js';
@@ -44,7 +44,7 @@ export const CONTRACTS: Readonly<Record<ArtifactKind, ArtifactContract>> = {
   avatar_s2_jobmap: avatarS2JobmapContract,
   avatar_s3_triggers: avatarS3TriggersContract,
   avatar_s4_objections: avatarS4ObjectionsContract,
-  signature: signatureContract,
+  positioning_statement: positioningStatementContract,
   brand_canvas: brandCanvasContract,
   export_brief: exportBriefContract,
   audit_x_idea: auditXIdeaContract,

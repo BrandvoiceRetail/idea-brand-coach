@@ -181,8 +181,8 @@ auto-pause behaviour and the email-confirmation gotcha.
 Folders that own a non-trivial feature carry an `AGENTS.md` with that feature's testing steps,
 acceptance bar, sample data, and guardrails. When you build or modify a feature,
 add or update its folder `AGENTS.md`. Example:
-[`src/components/v2/signature/AGENTS.md`](src/components/v2/signature/AGENTS.md)
-covers how to test the Signature reveal engine end-to-end.
+[`src/components/v2/positioning-statement/AGENTS.md`](src/components/v2/positioning-statement/AGENTS.md)
+covers how to test the Positioning Statement reveal engine end-to-end.
 
 ## Child Areas
 
@@ -190,7 +190,7 @@ covers how to test the Signature reveal engine end-to-end.
 |------|-------|
 | `src/components/` | Component composition, shadcn-ui usage — local AGENTS.md |
 | `src/components/diagnostic/` | Trust Gap scorecard + journey bridge — local AGENTS.md |
-| `src/components/v2/signature/` | Signature reveal engine, end-to-end testing — local AGENTS.md |
+| `src/components/v2/positioning-statement/` | Positioning Statement reveal engine, end-to-end testing — local AGENTS.md |
 | `src/services/` | Service-extraction & orchestration patterns — local AGENTS.md |
 | `src/mcp/` | Brand-coach MCP gateway (host, tools, guardrails) — local AGENTS.md |
 | `src/mcp/contracts/` | Output-engine artifact contracts (single source of truth) — local AGENTS.md |

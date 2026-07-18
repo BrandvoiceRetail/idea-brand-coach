@@ -6,7 +6,7 @@
 > Scaffold delivered from `brand-coach-mcp-planning/` (build target: "Brand-coach MCP
 > host / gateway"). This folder is the **gateway substrate** only. The owned asset-chain
 > tools (concept → publish-filter → draft → test-design) and the diagnostic wrappers
-> (Trust Gap, Signature, avatar, KB) are **future initiatives — do not add them here yet.**
+> (Trust Gap, Positioning Statement, avatar, KB) are **future initiatives — do not add them here yet.**
 
 ## What this is
 
@@ -52,7 +52,7 @@ consumer of an external IV-OS MCP. Today the host exposes:
   per-call authorization seam: an RLS-bound `avatars` read that returns the avatar's `brand_id` or a
   ready-to-return `CallToolResult` denial (gateWrite-shaped `{ denied, brandId }`). It is retrofitted
   into **every** write tool that accepts `avatar_id` (build_avatar_stage, provide_context,
-  ingest_evidence, persist_signature, run_diagnostic_evidence, generate_canvas, generate_brief,
+  ingest_evidence, persist_positioning_statement, run_diagnostic_evidence, generate_canvas, generate_brief,
   generate_audit_idea_map, run_marketing_audit, export_workbook, record_avatar_build, run_funnel_audit,
   get_funnel_audit) — called right after `gateWrite()`, before any avatar-scoped work. RLS already
   scopes `avatars` to `auth.uid()`; this converts a foreign `avatar_id` from a silent brand-level write
@@ -60,7 +60,7 @@ consumer of an external IV-OS MCP. Today the host exposes:
   that takes `avatar_id`) also gates with `requireOwnedAvatar` so a foreign avatar_id is refused rather
   than silently degrading to a brand-level fill-map — no `gateWrite` there since RLS already handles the
   anon case. The gate **never throws**: a DB error during the check returns a generic denial (no raw
-  Postgres message), keeping the five non-try-wrapped retrofit sites MF-5-safe. `generate_signature`
+  Postgres message), keeping the five non-try-wrapped retrofit sites MF-5-safe. `generate_positioning_statement`
   is left RLS-only by design (a non-gated read).
 
 - **Funnel engine (Phase 2, §4.4).** `list_funnel_inventory` / `upsert_funnel_touchpoint` (BRAND-LEVEL,
@@ -80,7 +80,7 @@ consumer of an external IV-OS MCP. Today the host exposes:
   (`IMAGE_PROMPT:` / `VIDEO_PROMPT:` + exact negative prompts) — and the HOST executes on the
   Higgsfield connector (generate_image / generate_video / edit tools), then logs outputs back
   via `log_asset` (host-driven, like Windsor ingestion). The shared spine lives in
-  `service/creativeAlignment.ts`: `POSITIONING_SPINE` (trigger / avatar core / signature /
+  `service/creativeAlignment.ts`: `POSITIONING_SPINE` (trigger / avatar core / positioning statement /
   trust-gap pillar / verified facts, each with a resolve-tool + honest degrade so new users are
   never blocked), `POSITIONING_PROPAGATION` (deterministic element-change → per-surface recompose
   map that `refine_creative_plan` filters; component changes stay surgical — one scene/panel, one

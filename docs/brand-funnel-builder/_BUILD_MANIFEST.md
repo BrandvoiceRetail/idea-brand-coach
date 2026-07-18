@@ -48,7 +48,7 @@ The plan (§2 "Current state") asserts the funnel tracker is "BUILT/live on this
 - **Output object (audit-idea-map synthesis fn):** `{ rows: [...], grounding: 'evidence'|'inference', evidence_refs: [{kind,ref}] }`. **The competitor analyzer adopts this `grounding` + `evidence_refs` envelope** — it is exactly the grounding gate the plan §3 mandates.
 - **Proposed `competitor-analysis-asset` contract (new, modeled on the above):**
   ```
-  Request:  { touchpoint_id, modality, our_asset?, competitor_evidence: [...], avatar_context, signature_context }
+  Request:  { touchpoint_id, modality, our_asset?, competitor_evidence: [...], avatar_context, positioning_statement_context }
   Response: { competitors: [{ name, source_ref, scores: {insight,distinctive,empathetic,authentic} /25,
                               overall /100, rationale, strategic_angle }],
               grounding: 'evidence'|'inference', evidence_refs: [{kind, ref}],
@@ -67,9 +67,9 @@ The plan (§2 "Current state") asserts the funnel tracker is "BUILT/live on this
 - `const SONNET_MODEL = 'claude-sonnet-4-6';` · `CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages'` · header `x-api-key` + `anthropic-version:'2023-06-01'`.
 - `max_tokens` ~3000–3072, `temperature` 0.5–0.6. On `!response.ok` log `[fn] Anthropic API error: <status> <body>` and throw. Retire gpt-4o (only the deprecated monolith still uses it).
 
-### 1d. How avatar + Signature context is loaded
+### 1d. How avatar + Positioning Statement context is loaded
 - **No `audit-asset` avatar-loader exists to copy.** The closest patterns: `audit-idea-map` accepts `canvas`/`brief`/`investments` **in the request body** (host pre-loads, fn stays stateless); `ai-insight-guidance` reads Avatar 2.0 from `user_knowledge_base` server-side.
-- **Decision for this build:** follow the `audit-idea-map` stateless pattern — the **service/host loads avatar + Signature and passes them in the request body** (`avatar_context`, `signature_context`). This keeps the edge fn pure and matches the existing IDEA fns. The avatar/Signature binding **field names must come from `src/types/avatar.ts` at implementation time** (MEMORY warns the plan/thread field names are STALE; `signature`/`audit_against` are NOT currently present in `avatar.ts`, reinforcing that the binding layer is unbuilt).
+- **Decision for this build:** follow the `audit-idea-map` stateless pattern — the **service/host loads avatar + Positioning Statement and passes them in the request body** (`avatar_context`, `positioning_statement_context`). This keeps the edge fn pure and matches the existing IDEA fns. The avatar/Positioning Statement binding **field names must come from `src/types/avatar.ts` at implementation time** (MEMORY warns the plan/thread field names are STALE; `positioning_statement`/`audit_against` are NOT currently present in `avatar.ts`, reinforcing that the binding layer is unbuilt).
 
 ---
 
@@ -87,7 +87,7 @@ The plan (§2 "Current state") asserts the funnel tracker is "BUILT/live on this
 | **reviews/social-proof** | `review-scraper` (Firecrawl) → `competitor_reviews` | Amazon reviews, DTC reviews/testimonials, Q&A, ratings widgets, trust badges, UGC proof |
 | **program/community** | user-upload / URL-fetch | Subscribe & Save / subscription, loyalty/rewards, referral, community/membership, warranty/guarantee program |
 
-Each profile = `(modality framework) × (touchpoint bindings from taxonomy) × (avatar + Signature)` → IDEA Trust-Gap score per competitor (plan §3).
+Each profile = `(modality framework) × (touchpoint bindings from taxonomy) × (avatar + Positioning Statement)` → IDEA Trust-Gap score per competitor (plan §3).
 
 ---
 

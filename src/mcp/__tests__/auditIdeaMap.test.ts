@@ -21,7 +21,7 @@ const VALID_REPLY = {
     {
       audit_investment: 'PPC restructure',
       without_idea: 'Better ACoS on category keywords through bid discipline.',
-      with_idea: 'Tier A trigger-state keywords added, high-intent and low-competition. SBV uses the Signature as the hook.',
+      with_idea: 'Tier A trigger-state keywords added, high-intent and low-competition. SBV uses the Positioning Statement as the hook.',
       estimated_lift: 'Same budget, ~30-50% better ROAS',
     },
     {
@@ -37,7 +37,7 @@ const VALID_REPLY = {
 
 /** A persisted brand_canvas artifact (the upstream chain input). */
 const CANVAS_CONTENT = {
-  signature: "They're not buying a binder, they're buying peace of mind.",
+  positioning_statement: "They're not buying a binder, they're buying peace of mind.",
   positioning: {
     category: 'Premium trading card binders',
     position: 'The vault serious collectors trust',

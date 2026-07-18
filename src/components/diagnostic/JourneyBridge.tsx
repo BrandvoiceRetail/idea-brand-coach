@@ -2,9 +2,9 @@
  * Journey Bridge (F-059).
  *
  * The narrative hand-off between the Trust Gap™ scorecard and the Layer 1 coach:
- * "here's your gap → now let's build the Signature that closes it." It also acts
+ * "here's your gap → now let's build the Positioning Statement that closes it." It also acts
  * as the intentional sign-up gate (arch.md D3) — guests are invited to create a
- * free account to build their Signature, rather than being abruptly bounced to
+ * free account to build their Positioning Statement, rather than being abruptly bounced to
  * /auth. The primary gap arrives via `?gap=` and is carried onward to /v2/coach.
  */
 

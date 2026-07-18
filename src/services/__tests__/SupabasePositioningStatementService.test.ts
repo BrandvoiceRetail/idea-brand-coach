@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SupabaseSignatureService } from '../SupabaseSignatureService';
+import { SupabasePositioningStatementService } from '../SupabasePositioningStatementService';
 import { supabase } from '@/integrations/supabase/client';
 
 const AUTH_USER = { id: 'user-123' };
 
-function signatureRow(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+function positioningStatementRow(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     id: 'sig-1',
     user_id: AUTH_USER.id,
     avatar_id: null,
-    signature_text: "They're buying the moment their collection finally feels like a collection",
+    positioning_statement_text: "They're buying the moment their collection finally feels like a collection",
     all_options: ['Option A', 'Option B', 'Option C'],
     chosen_index: 1,
     used_reviews: true,
@@ -20,11 +20,11 @@ function signatureRow(overrides: Record<string, unknown> = {}): Record<string, u
   };
 }
 
-describe('SupabaseSignatureService', () => {
-  let service: SupabaseSignatureService;
+describe('SupabasePositioningStatementService', () => {
+  let service: SupabasePositioningStatementService;
 
   beforeEach(() => {
-    service = new SupabaseSignatureService();
+    service = new SupabasePositioningStatementService();
     vi.clearAllMocks();
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: AUTH_USER as never },
@@ -32,24 +32,24 @@ describe('SupabaseSignatureService', () => {
     } as never);
   });
 
-  describe('saveSignature', () => {
+  describe('savePositioningStatement', () => {
     it('inserts the pick with the auth user id and maps the returned row', async () => {
       const insertMock = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: signatureRow(), error: null }),
+          single: vi.fn().mockResolvedValue({ data: positioningStatementRow(), error: null }),
         }),
       });
       vi.mocked(supabase.from).mockReturnValue({ insert: insertMock } as never);
 
-      const saved = await service.saveSignature({
-        signatureText: "They're buying the moment their collection finally feels like a collection",
+      const saved = await service.savePositioningStatement({
+        positioningStatementText: "They're buying the moment their collection finally feels like a collection",
         allOptions: ['Option A', 'Option B', 'Option C'],
         chosenIndex: 1,
         usedReviews: true,
         inference: false,
       });
 
-      expect(supabase.from).toHaveBeenCalledWith('signatures');
+      expect(supabase.from).toHaveBeenCalledWith('positioning_statements');
       expect(insertMock).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: AUTH_USER.id,
@@ -58,7 +58,7 @@ describe('SupabaseSignatureService', () => {
           inference: false,
         }),
       );
-      expect(saved.signatureText).toContain('finally feels like a collection');
+      expect(saved.positioningStatementText).toContain('finally feels like a collection');
       expect(saved.allOptions).toHaveLength(3);
       expect(saved.chosenIndex).toBe(1);
     });
@@ -70,8 +70,8 @@ describe('SupabaseSignatureService', () => {
       } as never);
 
       await expect(
-        service.saveSignature({
-          signatureText: 'x',
+        service.savePositioningStatement({
+          positioningStatementText: 'x',
           allOptions: ['x'],
           chosenIndex: 0,
           usedReviews: false,
@@ -81,9 +81,9 @@ describe('SupabaseSignatureService', () => {
     });
   });
 
-  describe('getLatestSignature', () => {
-    it('returns the newest signature for the user', async () => {
-      const limitMock = vi.fn().mockResolvedValue({ data: [signatureRow()], error: null });
+  describe('getLatestPositioningStatement', () => {
+    it('returns the newest positioning statement for the user', async () => {
+      const limitMock = vi.fn().mockResolvedValue({ data: [positioningStatementRow()], error: null });
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -92,14 +92,14 @@ describe('SupabaseSignatureService', () => {
         }),
       } as never);
 
-      const latest = await service.getLatestSignature();
+      const latest = await service.getLatestPositioningStatement();
 
       expect(latest).not.toBeNull();
       expect(latest!.id).toBe('sig-1');
       expect(latest!.usedReviews).toBe(true);
     });
 
-    it('returns null when the user has no saved signature', async () => {
+    it('returns null when the user has no saved positioning statement', async () => {
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -110,7 +110,7 @@ describe('SupabaseSignatureService', () => {
         }),
       } as never);
 
-      expect(await service.getLatestSignature()).toBeNull();
+      expect(await service.getLatestPositioningStatement()).toBeNull();
     });
 
     it('returns null for signed-out users without querying', async () => {
@@ -119,7 +119,7 @@ describe('SupabaseSignatureService', () => {
         error: null,
       } as never);
 
-      expect(await service.getLatestSignature()).toBeNull();
+      expect(await service.getLatestPositioningStatement()).toBeNull();
       expect(supabase.from).not.toHaveBeenCalled();
     });
   });

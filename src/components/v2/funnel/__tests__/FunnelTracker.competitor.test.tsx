@@ -71,7 +71,7 @@ function asset(overrides: Partial<BrandAsset> = {}): BrandAsset {
     context_description: 'listing copy',
     storage_path: null,
     content_text: 'Current listing copy.',
-    signature_version: null,
+    positioning_statement_version: null,
     status: 'misaligned',
     overall_score: 40,
     previous_score: null,
