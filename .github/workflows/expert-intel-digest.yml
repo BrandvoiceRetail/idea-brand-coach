@@ -1,0 +1,45 @@
+# Expert Intelligence Loop — weekly digest.
+#
+# Summarizes the corrections that became LIVE coaching updates in the past week (status='applied',
+# published) and posts it to the team Slack channel where Trevor reads it. Runs AFTER the weekly
+# human publish step. Reports only APPLIED changes; skips an empty week. Never mutates the loop —
+# read + notify only.
+#
+# OPT-IN: stays a no-op until you set repo variable EXPERT_INTEL_ENABLED=true AND add
+# SUPABASE_SERVICE_ROLE_KEY. For delivery, also add SLACK_BOT_TOKEN (+ SLACK_FEEDBACK_CHANNEL_ID
+# if not the default #idea-brand-coach); without the Slack token it composes but reports sent:false.
+name: expert-intel-digest
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # 09:00 UTC Monday (after the weekly publish)
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Look-back window in days'
+        required: false
+        default: '7'
+
+concurrency:
+  group: expert-intel-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    if: ${{ vars.EXPERT_INTEL_ENABLED == 'true' }}
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://ecdrxtbclxfpkknasmrw.supabase.co' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_FEEDBACK_CHANNEL_ID: ${{ secrets.SLACK_FEEDBACK_CHANNEL_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Send weekly digest to Trevor (skips an empty week)
+        run: npm run expert:digest -- --days ${{ github.event.inputs.days || '7' }}
