@@ -100,6 +100,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'create_email_sequence',
       'delete_avatar',
       'design_test',
+      'ensure_brand',
       'export_messaging_workbook',
       'export_workbook',
       'generate_aplus_content_plan',

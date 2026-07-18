@@ -102,6 +102,7 @@ import { registerGetSequencePerformanceTool } from './tools/getSequencePerforman
 import { registerUpdateTestMilestoneTool } from './tools/updateTestMilestone.js';
 import { registerGetExperimentLiftTool } from './tools/getExperimentLift.js';
 import { registerRunOnboardingTool } from './tools/runOnboarding.js';
+import { registerEnsureBrandTool } from './tools/ensureBrand.js';
 
 export interface BuiltServer {
   server: McpServer;
@@ -324,6 +325,11 @@ export async function createServer(
   // content sent and is never logged (MF-5). Degrades gracefully to a clear error when the
   // Slack token/channel is unconfigured/unreachable — never throws.
   registerSubmitFeedbackTool(server, new FeedbackNotifier(config));
+
+  // Brand bootstrap: ensure_brand creates the caller's brand row if missing (idempotent, brand-row
+  // only) so a connector-first caller — who signed up for the app (auth) but never triggered the SPA's
+  // lazy default-brand create — can get past "no brand found". Must precede the brand-scoped writes.
+  registerEnsureBrandTool(server);
 
   // Multi-avatar lifecycle (P2): create/list/get avatars; switch the current avatar or the
   // multi-select context set; pin primary; record forensic build state. Each mutating tool is
