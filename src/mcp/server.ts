@@ -17,7 +17,8 @@ import {
 import type { LedgerClient } from './ivos/capabilities.js';
 import { NativeLedgerClient } from './service/nativeLedger.js';
 import { composeCoachPreamble, tier1GroundingPreamble } from './service/coachInstructions.js';
-import { getServerSupabase, getServiceRoleSupabase } from './supabaseServer.js';
+import { getServerSupabase } from './supabaseServer.js';
+import { getUserSupabase } from './supabaseUser.js';
 import { registerOnboard } from './tools/onboard.js';
 import { instrumentToolLatency } from './instrument.js';
 import { registerStructuredFallback } from './structuredFallback.js';
@@ -121,8 +122,12 @@ export async function createServer(
   // Fetch and append coach_instructions if enabled
   if (process.env.COACH_INSTRUCTIONS_ENABLED === 'true') {
     try {
-      // Use service-role client for coach_instructions (bypasses RLS during init)
-      const supabase = getServiceRoleSupabase();
+      // Read coach_instructions with the CALLER's JWT (guardrail #5: gateway holds no
+      // service-role key). The "Published instructions are public to authenticated users"
+      // RLS policy (migration 20260707211007) already lets any authenticated caller SELECT
+      // published rows. Anonymous callers throw UnauthenticatedError here → caught below →
+      // fail open to base instructions (same as before, no preamble for anon).
+      const supabase = getUserSupabase();
       const coachPreamble = await composeCoachPreamble(supabase, 'preamble');
       const tier1Preamble = await tier1GroundingPreamble(supabase);
 
