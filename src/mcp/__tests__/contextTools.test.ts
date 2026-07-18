@@ -404,8 +404,10 @@ describe('remember tool', () => {
 describe('recall tool', () => {
   it('loads the filled slots as a readable summary, excluding framework slots', async () => {
     const stub = install();
-    // One BUSINESS-FACT read resolves (first business_facts read wins the queued row); the
-    // rest of the stores are empty. Framework slots (17/18) always fill but recall excludes them.
+    // One slot resolves from business_facts (the first business_facts reader wins the single
+    // queued row). Slot 5 (product catalog, PRODUCT-TRUTH) now lists business_facts first in its
+    // residesIn, so it wins — proving remember({slot:5}) is resurfaced. The rest of the stores are
+    // empty. Framework slots (17/18) always fill but recall excludes them.
     stub.on('business_facts', 'select', {
       data: { structured_data: { registry: 'brand registered' }, content: null, updated_at: new Date().toISOString() },
       error: null,
@@ -418,7 +420,7 @@ describe('recall tool', () => {
       missing: number;
     };
     expect(sc.ok).toBe(true);
-    expect(sc.known.some((k) => k.class === 'BUSINESS-FACT' && k.status === 'filled-stated')).toBe(true);
+    expect(sc.known.some((k) => k.slot === 5 && k.class === 'PRODUCT-TRUTH' && k.status === 'filled-stated')).toBe(true);
     expect(sc.known.some((k) => k.slot === 17 || k.slot === 18)).toBe(false); // framework excluded
   });
 
