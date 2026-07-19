@@ -505,7 +505,7 @@ Generate a comprehensive Brand Strategy Document using this step-by-step process
 
 5. **Craft the brand story** - Develop the heritage narrative, founder journey, and multiple story versions for different contexts.
 
-6. **Define strategic positioning** - Create the positioning_statement, value proposition, key differentiators, and competitive white space analysis.
+6. **Define strategic positioning** - Create the positioning statement, value proposition, key differentiators, and competitive white space analysis.
 
 7. **Establish brand principles** - Define the behavioural guidelines that govern how the brand operates and makes decisions.
 

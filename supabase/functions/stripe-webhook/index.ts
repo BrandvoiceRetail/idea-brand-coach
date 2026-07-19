@@ -2,7 +2,7 @@
  * stripe-webhook — the ONLY writer of user_subscriptions.
  *
  * Stripe calls this (no browser JWT → verify_jwt=false) on checkout + subscription
- * lifecycle events. It verifies the Stripe positioning statement, then upserts the user's
+ * lifecycle events. It verifies the Stripe signature, then upserts the user's
  * subscription row (PK = user_id, one row per user) via the service role. That row
  * is what src/lib/entitlement.ts reads to decide membership (status in
  * active/trialing) and what the DB trial-limit trigger checks — so membership is
@@ -49,18 +49,18 @@ serve(async (req) => {
     httpClient: Stripe.createFetchHttpClient(),
   });
 
-  // Verify the Stripe positioning statement over the RAW body (Deno needs the async + SubtleCrypto variant).
-  const sig = req.headers.get('stripe-positioning statement');
+  // Verify the Stripe signature over the RAW body (Deno needs the async + SubtleCrypto variant).
+  const sig = req.headers.get('stripe-signature');
   const raw = await req.text();
   let event: Stripe.Event;
   try {
-    if (!sig) throw new Error('missing positioning statement');
+    if (!sig) throw new Error('missing signature');
     event = await stripe.webhooks.constructEventAsync(
       raw, sig, webhookSecret, undefined, Stripe.createSubtleCryptoProvider(),
     );
   } catch (err) {
-    console.error('[stripe-webhook] positioning statement verification failed:', err instanceof Error ? err.message : err);
-    return new Response(JSON.stringify({ error: 'Invalid positioning statement' }), { status: 400 });
+    console.error('[stripe-webhook] signature verification failed:', err instanceof Error ? err.message : err);
+    return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 400 });
   }
 
   const service = getServiceClient();
