@@ -2,6 +2,13 @@
 
 Feature-local context for the consultant edge function. Root `AGENTS.md` applies.
 
+> **Coach Surface Parity.** `prompt.ts`'s persona/posture/framework text is governed by
+> [`ADR-COACH-SURFACE-PARITY`](../../../docs/v2/architecture/adr/ADR-COACH-SURFACE-PARITY.md).
+> This is the **persona-faithful** surface (full system-prompt control); the connector
+> (`src/mcp` `SERVER_INSTRUCTIONS`) only *steers* the host Claude model. Shared steering
+> (posture, IDEA definition, Trevor persona) lives in the **Coach Charter** — edit it there,
+> not directly in `prompt.ts`, or the two surfaces drift.
+
 ## What this function is
 
 The Layer-1 coach chat. Raw `fetch` to the Anthropic Messages API (`claude-sonnet-4-6`),

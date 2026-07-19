@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { captureServerException } from "../_shared/posthog.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { INTERNAL_PROMPT_AVATAR_CORPUS_CHARS } from "../_shared/contextBudgets.ts";
 
@@ -359,6 +360,7 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in avatar-vocabulary function:', error);
+    captureServerException('avatar-vocabulary', error, { status_code: 500 });
     return new Response(
       JSON.stringify({ error: 'Unable to run vocabulary forensics right now. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

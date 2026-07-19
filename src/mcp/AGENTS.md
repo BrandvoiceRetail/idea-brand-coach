@@ -160,6 +160,13 @@ asserts the advertised tool set + handler behavior end-to-end.
   MCP dependency. (Historical: this gateway used to consume IV-OS; that boundary was reversed.)
 - **Calculation Parity (Gen-3 lock).** When the owned tools are added next, they must
   wrap the existing Supabase edge fns / TS services **verbatim** (byte-identical output).
+- **Coach Surface Parity.** `SERVER_INSTRUCTIONS` (`config.ts`) is the connector's steering;
+  its posture/persona/framework text is governed by
+  [`ADR-COACH-SURFACE-PARITY`](../../docs/v2/architecture/adr/ADR-COACH-SURFACE-PARITY.md).
+  The source of truth for shared steering is the **Coach Charter** — edit that, not
+  `SERVER_INSTRUCTIONS` directly, or this surface drifts from the in-app coach (`prompt.ts`).
+  Adding a tool here without exposing it to the chat loop (`idea-framework-consultant-claude`)
+  also breaks parity — the drift guard treats tool-set asymmetry as a failure.
 - **Logs are redaction-gated.** Always log via `safeLog` from `logging/redact.ts`.
 - **Tool telemetry is uniform + MF-5-safe.** `instrument.ts` wraps `registerTool` ONCE
   (`instrumentToolLatency(server)` in `server.ts`, before any `register*Tool`), so EVERY tool

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { captureServerException } from "../_shared/posthog.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 /**
@@ -330,6 +331,7 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in avatar-triggers function:', error);
+    captureServerException('avatar-triggers', error, { status_code: 500 });
     return new Response(
       JSON.stringify({ error: 'Unable to find decision triggers right now. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
