@@ -84,7 +84,7 @@ compute** — it accepts an optional `avatar_id` echoed in its text output for a
 | Import CTA | `src/components/diagnostic/ProductImportCta.tsx` | Inline card (NOT a modal). States: idle → importing → done → error. Multi-ASIN textarea parsed via `parseAsinInput`. |
 | Page / wiring | `src/pages/DiagnosticResults.tsx` | Loads scores from `localStorage` (guest) or DB (authed, via `useDiagnostic`); holds `importedProducts` + `evidence`; loads products on mount (authed), rebuilds evidence on import, passes `evidence` + `evidenceKey` into the scorecard. Route `/v1/diagnostic/results`. |
 | Interpretation hook | `src/hooks/useTrustGapInterpretation.ts` | Calls `diagnostic-interpretation` edge fn with scores in the body (no DB read → guest-safe). Folds `evidenceKey` into the cache positioning statement; sends `evidence` in the body; exposes `evidencePresent`. |
-| Deterministic model | `src/lib/trustGap.ts` | `buildTrustGap`, bands, dimension meta, `trustGapPositioningStatement`. |
+| Deterministic model | `src/lib/trustGap.ts` | `buildTrustGap`, bands, dimension meta, `trustGapSignature`. |
 | Routing helpers | `src/lib/journeyBridge.ts` | `buildBridgePath`, `parseGapParam`, `buildDeepDiveDestination` (authed → coach; guest → `/auth?redirect=`). Framework-free, unit-tested. |
 | Product-data service | `useServices().productDataService` (Lane D) | `importProducts`, `getProducts`, `buildTrustGapEvidence` — see `src/services/interfaces/IProductDataService.ts`. |
 | Analytics | `src/lib/posthogClient.ts` | `captureAlphaEvent`; no-ops without `VITE_POSTHOG_KEY`. Scores/IDs only — never free text. |

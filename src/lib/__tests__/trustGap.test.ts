@@ -3,7 +3,7 @@ import {
   buildTrustGap,
   rescaleDimension,
   getTrustGapBand,
-  trustGapPositioningStatement,
+  trustGapSignature,
   TRUST_GAP_DIMENSIONS,
   TRUST_GAP_DIMENSION_META,
   type TrustGapInputScores,
@@ -131,10 +131,10 @@ describe('trustGap', () => {
     });
   });
 
-  describe('trustGapPositioningStatement', () => {
+  describe('trustGapSignature', () => {
     it('is stable for identical scores and differs when scores change', () => {
-      expect(trustGapPositioningStatement(mixedScores)).toBe(trustGapPositioningStatement({ ...mixedScores }));
-      expect(trustGapPositioningStatement(mixedScores)).not.toBe(trustGapPositioningStatement(highScores));
+      expect(trustGapSignature(mixedScores)).toBe(trustGapSignature({ ...mixedScores }));
+      expect(trustGapSignature(mixedScores)).not.toBe(trustGapSignature(highScores));
     });
   });
 });
