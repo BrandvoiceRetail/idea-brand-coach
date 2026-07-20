@@ -1,11 +1,11 @@
 /**
- * /v4 surface configuration — the single source of truth for the new
- * "one and only" user-facing experience.
+ * /v4 route namespace + spine configuration.
  *
- * - `V4_FORCE_FLAG` / `isV4Forced()` gate whether VersionGate routes ALL users
- *   into /v4. FAIL-SAFE default OFF; the all-users flip is opt-in via
- *   `VITE_FORCE_V4=true` (this worktree sets it in its gitignored .env). Old
- *   routes stay mounted; only the entry point is repointed.
+ * NOTE: the surface force-flag that used to live here (`isV4Forced()` /
+ * `VITE_FORCE_V4`) has been RETIRED in favour of the version-agnostic release
+ * stage in `src/config/releaseStage.ts` (`isPreGa()` — pre-GA forces the single
+ * customer surface). This file now owns only the `/v4` route namespace and spine.
+ *
  * - `V4_SPINE` is the canonical Diagnose → Analyse → Fix → Re-measure → Defend
  *   spine rendered by the sticky stepper, the desktop sidebar, and the mobile
  *   bottom-nav. One definition, three surfaces — no drift.
@@ -41,20 +41,6 @@ export const V4_ROUTES = {
 } as const;
 
 export type V4RouteKey = keyof typeof V4_ROUTES;
-
-/** Vite env flag — FAIL-SAFE default OFF: the all-users flip is opt-in via VITE_FORCE_V4=true. */
-export const V4_FORCE_FLAG = 'VITE_FORCE_V4' as const;
-
-/**
- * Whether to force every authed/guest user into /v4. Defaults to OFF so merging to main can
- * never silently flip prod — the irreversible all-users switch is an explicit
- * `VITE_FORCE_V4=true` in the target env (this worktree sets it in its gitignored .env).
- */
-export function isV4Forced(): boolean {
-  const raw = import.meta.env.VITE_FORCE_V4 as string | undefined;
-  if (raw === undefined || raw === '') return false;
-  return raw === 'true' || raw === '1';
-}
 
 /** A single stage of the brand-systems spine. */
 export interface SpineStage {

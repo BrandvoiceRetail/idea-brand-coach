@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useBetaMode } from "@/hooks/useBetaMode";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { CURRENT_STAGE } from "@/config/releaseStage";
 
 interface BetaFeedbackWidgetProps {
   /** Position of the widget */
@@ -48,7 +49,7 @@ export function BetaFeedbackWidget({
 
   // Check if beta feedback widget is enabled
   const isBetaFeedbackEnabled = import.meta.env.VITE_ENABLE_BETA_FEEDBACK === 'true' ||
-                                 import.meta.env.VITE_DEPLOYMENT_PHASE === 'P0';
+                                 CURRENT_STAGE === 'alpha';
 
   // Don't show if beta feedback is disabled
   if (!isBetaFeedbackEnabled) {

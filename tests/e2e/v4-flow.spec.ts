@@ -44,16 +44,13 @@ async function pasteMegaprompt(page: Page): Promise<void> {
 }
 
 test.describe('/v4 surface — Loop 1', () => {
-  test('Landing "/" force-redirects every user into /v4 (VITE_FORCE_V4 default on)', async ({
+  test('Landing "/" force-redirects an authed user into the single surface (pre-GA default)', async ({
     page,
   }) => {
     const errors = trackPageErrors(page);
     await page.goto('/');
-    // VersionGate -> isV4Forced() -> navigate(/v4, replace). Onboarding heading renders.
-    await expect(page).toHaveURL(/\/v4\/?$/);
-    await expect(
-      page.getByRole('heading', { name: /tell me about your brand/i }),
-    ).toBeVisible();
+    // VersionGate -> isPreGa() -> navigate(CURRENT_SURFACE='/v5', replace) for an authed user.
+    await expect(page).toHaveURL(/\/v5\/?$/);
     expect(errors, `uncaught page errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
