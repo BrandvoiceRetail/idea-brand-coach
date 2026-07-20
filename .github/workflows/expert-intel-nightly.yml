@@ -1,0 +1,42 @@
+# Expert Intelligence Loop — nightly harvest + distill.
+#
+# Feeds the loop: (1) harvest in-app coach chats (chat_messages) for expert redirects,
+# (2) distill status='new' expert_corrections into DRAFT coach_instructions (never publishes —
+# a human reviews + publishes weekly in the Coach Instructions Studio).
+#
+# Runs OFF the gateway with a SERVICE-ROLE key (reads admin-gated expert_corrections) — this is
+# the legitimate home for that key: GitHub Secrets, never on the box. Reaches Supabase's public
+# API only (not the firewalled Lightsail box), so CI can run it.
+#
+# OPT-IN: stays a no-op until you set repo variable EXPERT_INTEL_ENABLED=true AND add the
+# SUPABASE_SERVICE_ROLE_KEY secret. Prevents red runs before setup is done.
+name: expert-intel-nightly
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 06:00 UTC daily
+  workflow_dispatch: {} # manual trigger for testing
+
+concurrency:
+  group: expert-intel-nightly
+  cancel-in-progress: false
+
+jobs:
+  harvest-and-distill:
+    runs-on: ubuntu-latest
+    if: ${{ vars.EXPERT_INTEL_ENABLED == 'true' }}
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://ecdrxtbclxfpkknasmrw.supabase.co' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Harvest in-app coach chats (feeder-2)
+        run: npm run expert:harvest
+      - name: Distill new corrections into drafts (never publishes)
+        run: npm run expert:distill
