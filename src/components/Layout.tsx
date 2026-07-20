@@ -22,7 +22,8 @@ import {
   Settings,
 } from "lucide-react";
 import { BetaNavigationWidget } from "@/components/BetaNavigationWidget";
-import { getNavigationFeatures, getCurrentPhase } from "@/config/features";
+import { getNavigationFeatures } from "@/config/features";
+import { CURRENT_STAGE } from "@/config/releaseStage";
 import { usePriorityNav } from "@/hooks/usePriorityNav";
 import { ROUTES } from "@/config/routes";
 import { useOnboardingTourContext } from "@/contexts/OnboardingTourContext";
@@ -42,10 +43,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navContainerRef = useRef<HTMLDivElement>(null);
   const { resetTour, startTour } = useOnboardingTourContext();
 
-  // Get all navigation items based on current deployment phase
+  // Get all navigation items based on the current release stage
   const allNavItems = useMemo(() => {
-    const currentPhase = getCurrentPhase();
-    const features = getNavigationFeatures(currentPhase);
+    const features = getNavigationFeatures(CURRENT_STAGE);
 
     const items: NavItem[] = [];
 
@@ -57,8 +57,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         openInNewTab: feature.openInNewTab,
       });
 
-      // Insert Home after the first feature (Brand Diagnostic) - only for P1+
-      if (index === 0 && currentPhase !== 'P0') {
+      // Insert Home after the first feature (Brand Diagnostic) - only for beta+
+      if (index === 0 && CURRENT_STAGE !== 'alpha') {
         items.push({ name: "Home", href: "/", icon: HomeIcon });
       }
     });

@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ROUTES } from '@/config/routes';
 import { isClerkConfigured } from '@/config/clerkConfig';
 import { ClerkAuthSurface } from '@/components/auth/ClerkAuthSurface';
-import { isV4Forced } from '@/config/v4';
+import { isPreGa } from '@/config/releaseStage';
 import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CONSENT_POLICY_VERSION } from '@/lib/consent';
@@ -55,12 +55,12 @@ export default function Auth() {
   const isPasswordReset = searchParams.get('mode') === 'reset' || isRecovering;
 
   // Get redirect URL from query params.
-  // When the /v4 surface is forced, post-auth ALWAYS resolves through `/` so
-  // VersionGate can fork first-run users into the onboarding CHOICE screen
+  // While pre-GA (the single-surface stage), post-auth ALWAYS resolves through
+  // `/` so VersionGate can fork first-run users into the onboarding CHOICE screen
   // (connector vs in-app). We must NOT shortcut diagnostic-completing users to
   // `/subscribe` here — that bypasses the connector recommendation entirely.
-  // Outside v4, keep the legacy diagnostic → subscribe shortcut.
-  const defaultRedirect = isV4Forced()
+  // Only at GA does the legacy diagnostic → subscribe shortcut apply.
+  const defaultRedirect = isPreGa()
     ? '/'
     : localStorage.getItem('diagnosticData')
       ? '/subscribe'

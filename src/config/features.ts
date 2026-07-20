@@ -34,8 +34,7 @@ import {
   FlaskConical,
   Plug,
 } from 'lucide-react';
-
-export type DeploymentPhase = 'P0' | 'P1' | 'P2';
+import { CURRENT_STAGE, isStageAtLeast, type ReleaseStage } from './releaseStage';
 
 export interface Feature {
   /** Unique feature identifier */
@@ -50,8 +49,8 @@ export interface Feature {
   /** Full description for coming soon pages */
   fullDescription: string;
 
-  /** Minimum phase required to enable this feature */
-  phase: DeploymentPhase;
+  /** Minimum release stage required to enable this feature */
+  stage: ReleaseStage;
 
   /** Route path */
   route: string;
@@ -84,7 +83,7 @@ export interface Feature {
  */
 export const FEATURES: Record<string, Feature> = {
   // ========================================
-  // P0 Features - Beta Launch
+  // Alpha features — live now (the current stage)
   // ========================================
 
   BRAND_DIAGNOSTIC: {
@@ -92,7 +91,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Brand Diagnostic',
     shortDescription: '6-question IDEA framework assessment',
     fullDescription: 'Complete a comprehensive 6-question diagnostic to assess your brand across the IDEA framework (Insight-Driven, Distinctive, Empathetic, Authentic). Get instant insights and personalized recommendations.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/diagnostic',
     icon: FileCheck,
     statusMessage: 'Available Now',
@@ -107,7 +106,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Start Here',
     shortDescription: 'Introduction and training videos',
     fullDescription: 'Watch introduction videos and training tutorials to learn how to use IDEA Brand Coach and build your brand strategy.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/start-here',
     icon: PlayCircle,
     statusMessage: 'Available Now',
@@ -122,7 +121,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Journey',
     shortDescription: 'Strategic Brand Building Journey',
     fullDescription: 'Follow the step-by-step IDEA framework process to build an emotionally resonant brand that converts.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/journey',
     icon: Target,
     statusMessage: 'Available Now',
@@ -137,7 +136,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Avatar',
     shortDescription: 'Define your ideal customer persona',
     fullDescription: 'Build detailed customer personas with demographics, psychographics, pain points, and motivations. Use AI to generate insights and validate assumptions.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/avatar',
     icon: Users,
     statusMessage: 'Available Now',
@@ -152,7 +151,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Insight',
     shortDescription: 'Deep customer insights and interactive learning',
     fullDescription: 'Dive deep into customer insights with interactive modules covering buyer intent research, emotional triggers, and the IDEA framework.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/idea/insight',
     icon: Sparkles,
     statusMessage: 'Available Now',
@@ -167,7 +166,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Coach',
     shortDescription: 'AI-powered brand consulting with RAG',
     fullDescription: 'Chat with our AI brand consultant powered by Claude and RAG technology. Get personalized advice based on your brand diagnostic results and uploaded documents.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/idea/consultant',
     icon: MessageSquare,
     statusMessage: 'Available Now',
@@ -182,7 +181,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Brand Canvas',
     shortDescription: 'Visual brand strategy builder',
     fullDescription: 'Create and visualize your complete brand strategy on an interactive canvas. Export to PDF for presentations and stakeholder alignment.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/canvas',
     icon: Palette,
     statusMessage: 'Available Now',
@@ -197,7 +196,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Brand Copy Generator',
     shortDescription: 'AI-powered brand copywriting',
     fullDescription: 'Generate compelling brand copy, taglines, and messaging using AI trained on your brand voice and positioning.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/copy-generator',
     icon: FileText,
     statusMessage: 'Available Now',
@@ -212,7 +211,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Funnel',
     shortDescription: 'Track brand assets across the customer funnel',
     fullDescription: 'Map every brand asset across the customer journey, audit each against your avatar and strategy, and see coverage gaps stage by stage.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/v2/funnel',
     icon: TrendingUp,
     statusMessage: 'Available Now',
@@ -227,7 +226,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Dashboard',
     shortDescription: 'Your brand coaching dashboard',
     fullDescription: 'Access all your brand coaching tools, view your progress, and manage your brand strategy from one central location.',
-    phase: 'P1',
+    stage: 'beta',
     route: '/dashboard',
     icon: BarChart,
     statusMessage: 'Coming Soon',
@@ -242,7 +241,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Document Upload',
     shortDescription: 'Upload brand documents for personalized insights',
     fullDescription: 'Upload your brand documents, presentations, and research to build your personalized knowledge base. The AI consultant will reference these in conversations.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/documents',
     icon: FileText,
     statusMessage: 'Available Now',
@@ -257,7 +256,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Conversations',
     shortDescription: 'View all AI chat conversations',
     fullDescription: 'Review your conversation history with the Brand Coach and field-level AI chats. All insights and recommendations are saved and organized.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/conversations',
     icon: Clock,
     statusMessage: 'Available Now',
@@ -272,7 +271,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Integrations',
     shortDescription: 'Connect Canva and other tools',
     fullDescription: 'Connect your favourite tools — like Canva — to bring brand assets into the Brand Coach and keep your brand visuals consistent.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/v1/integrations',
     icon: Plug,
     statusMessage: 'Available Now',
@@ -287,7 +286,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Beta Test',
     shortDescription: 'Beta testing journey and feedback',
     fullDescription: 'Follow a guided beta testing journey and provide feedback to help us improve IDEA Brand Coach.',
-    phase: 'P0',
+    stage: 'alpha',
     route: '/beta',
     icon: FlaskConical,
     statusMessage: 'Available Now',
@@ -299,7 +298,7 @@ export const FEATURES: Record<string, Feature> = {
   },
 
   // ========================================
-  // P1 Features - Enhanced Collaboration
+  // Beta features - Enhanced Collaboration
   // ========================================
 
   IDEA_FRAMEWORK: {
@@ -307,7 +306,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'IDEA Framework',
     shortDescription: 'Learn the IDEA Strategic Brand Framework',
     fullDescription: 'Deep dive into the IDEA Strategic Brand Framework™ - a practical, step-by-step process to build trust, stand out in crowded markets, and turn hesitant browsers into loyal buyers.',
-    phase: 'P1',
+    stage: 'beta',
     route: '/idea',
     icon: BookOpen,
     statusMessage: 'Coming Soon',
@@ -322,7 +321,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Framework Submissions',
     shortDescription: 'Track your IDEA framework progress',
     fullDescription: 'View all your completed framework assessments, track progress over time, and see how your brand strategy evolves.',
-    phase: 'P1',
+    stage: 'beta',
     route: '/submissions',
     icon: Target,
     statusMessage: 'Coming Soon',
@@ -337,7 +336,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Team Collaboration',
     shortDescription: 'Invite team members to collaborate',
     fullDescription: 'Invite team members to collaborate on brand strategy. Share insights, documents, and consultant conversations with controlled access.',
-    phase: 'P1',
+    stage: 'beta',
     route: '/team',
     icon: Users,
     statusMessage: 'Coming Soon',
@@ -352,7 +351,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Brand Coach V2',
     shortDescription: 'Enhanced two-panel coaching interface',
     fullDescription: 'Experience the next generation of brand coaching with an enhanced two-panel responsive interface. Improved layout and user experience for more effective brand strategy sessions.',
-    phase: 'P1',
+    stage: 'beta',
     route: '/v2/coach',
     icon: Brain,
     statusMessage: 'Coming Soon',
@@ -363,7 +362,7 @@ export const FEATURES: Record<string, Feature> = {
   },
 
   // ========================================
-  // P2 Features - Advanced Analytics
+  // GA features - Advanced Analytics
   // ========================================
 
   BRAND_ANALYTICS: {
@@ -371,7 +370,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Brand Analytics',
     shortDescription: 'Track brand performance metrics',
     fullDescription: 'Comprehensive analytics dashboard tracking your brand health scores, consultation patterns, and strategic progress over time.',
-    phase: 'P2',
+    stage: 'ga',
     route: '/analytics',
     icon: BarChart,
     statusMessage: 'Coming in 2026',
@@ -386,7 +385,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Competitive Analysis',
     shortDescription: 'AI-powered competitor insights',
     fullDescription: 'Automatically analyze your competitors using AI. Track their positioning, messaging, and identify opportunities for differentiation.',
-    phase: 'P2',
+    stage: 'ga',
     route: '/competitive-analysis',
     icon: TrendingUp,
     statusMessage: 'Coming in 2026',
@@ -401,7 +400,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'Insights Library',
     shortDescription: 'Curated brand strategy resources',
     fullDescription: 'Access a curated library of brand strategy frameworks, case studies, and best practices. AI-powered recommendations based on your brand profile.',
-    phase: 'P2',
+    stage: 'ga',
     route: '/library',
     icon: BookOpen,
     statusMessage: 'Coming in 2026',
@@ -416,7 +415,7 @@ export const FEATURES: Record<string, Feature> = {
     name: 'AI Workshop Facilitator',
     shortDescription: 'Guided brand strategy workshops',
     fullDescription: 'Run interactive brand strategy workshops guided by AI. Perfect for team alignment sessions and strategic planning meetings.',
-    phase: 'P2',
+    stage: 'ga',
     route: '/workshop',
     icon: Sparkles,
     statusMessage: 'Coming in 2026',
@@ -437,27 +436,17 @@ export function getFeature(id: FeatureId): Feature {
 }
 
 /**
- * Get all features for a specific phase (including all previous phases)
+ * Get all features enabled at a given release stage (this stage + earlier).
  */
-export function getFeaturesForPhase(phase: DeploymentPhase): Feature[] {
-  const phaseHierarchy: Record<DeploymentPhase, DeploymentPhase[]> = {
-    'P0': ['P0'],
-    'P1': ['P0', 'P1'],
-    'P2': ['P0', 'P1', 'P2'],
-  };
-
-  const enabledPhases = phaseHierarchy[phase];
-
-  return Object.values(FEATURES).filter(feature =>
-    enabledPhases.includes(feature.phase)
-  );
+export function getFeaturesForStage(stage: ReleaseStage): Feature[] {
+  return Object.values(FEATURES).filter(feature => isStageAtLeast(stage, feature.stage));
 }
 
 /**
- * Get features that should appear in navigation for current phase
+ * Get features that should appear in navigation for the current release stage
  */
-export function getNavigationFeatures(currentPhase: DeploymentPhase): Feature[] {
-  const features = getFeaturesForPhase(currentPhase).filter(feature => feature.showInNav);
+export function getNavigationFeatures(currentStage: ReleaseStage): Feature[] {
+  const features = getFeaturesForStage(currentStage).filter(feature => feature.showInNav);
 
   // Define the desired navigation order: Start Here → Coach → Avatar → Insight
   const navigationOrder = [
@@ -500,24 +489,24 @@ export function getNavigationFeatures(currentPhase: DeploymentPhase): Feature[] 
 }
 
 /**
- * Check if feature is enabled in current phase
+ * Check if feature is enabled at the current release stage
  */
-export function isFeatureAvailable(featureId: FeatureId, currentPhase: DeploymentPhase): boolean {
+export function isFeatureAvailable(featureId: FeatureId, currentStage: ReleaseStage): boolean {
   const feature = FEATURES[featureId];
-  const enabledFeatures = getFeaturesForPhase(currentPhase);
+  const enabledFeatures = getFeaturesForStage(currentStage);
   return enabledFeatures.includes(feature);
 }
 
 /**
  * Get display status for a feature (for UI badges, buttons, etc.)
  */
-export function getFeatureStatus(featureId: FeatureId, currentPhase: DeploymentPhase): {
+export function getFeatureStatus(featureId: FeatureId, currentStage: ReleaseStage): {
   available: boolean;
   statusMessage: string;
   estimatedRelease: string;
 } {
   const feature = FEATURES[featureId];
-  const available = isFeatureAvailable(featureId, currentPhase);
+  const available = isFeatureAvailable(featureId, currentStage);
 
   return {
     available,
@@ -531,18 +520,17 @@ export function getFeatureStatus(featureId: FeatureId, currentPhase: DeploymentP
  */
 export function getFeaturesByCategory(
   category: Feature['category'],
-  currentPhase: DeploymentPhase
+  currentStage: ReleaseStage
 ): Feature[] {
-  return getFeaturesForPhase(currentPhase).filter(f => f.category === category);
+  return getFeaturesForStage(currentStage).filter(f => f.category === category);
 }
 
 /**
  * Hook for React components to get feature info
  */
 export function useFeatureConfig(featureId: FeatureId) {
-  const currentPhase = (import.meta.env.VITE_DEPLOYMENT_PHASE || 'P0') as DeploymentPhase;
   const feature = FEATURES[featureId];
-  const status = getFeatureStatus(featureId, currentPhase);
+  const status = getFeatureStatus(featureId, CURRENT_STAGE);
 
   return {
     ...feature,
@@ -550,18 +538,11 @@ export function useFeatureConfig(featureId: FeatureId) {
   };
 }
 
-/**
- * Get current deployment phase from environment
- */
-export function getCurrentPhase(): DeploymentPhase {
-  return (import.meta.env.VITE_DEPLOYMENT_PHASE || 'P0') as DeploymentPhase;
-}
-
 // ========================================
 // Launch-gated boolean flags
 // ========================================
 //
-// The FEATURES registry above is PHASE-gated (P0/P1/P2). A few in-flight
+// The FEATURES registry above is STAGE-gated (alpha/beta/ga). A few in-flight
 // surfaces need a simple on/off launch gate that is independent of phase — they
 // stay OFF in every environment until launch, then flip via a build-time env var.
 // Those live here as boolean accessors (NOT registry entries).
@@ -620,12 +601,11 @@ export function isVideoGenerationEnabled(): boolean {
 
 // Development helper
 if (import.meta.env.DEV) {
-  const currentPhase = getCurrentPhase();
-  const enabled = getFeaturesForPhase(currentPhase);
-  const inNav = getNavigationFeatures(currentPhase);
+  const enabled = getFeaturesForStage(CURRENT_STAGE);
+  const inNav = getNavigationFeatures(CURRENT_STAGE);
 
   console.log('[Feature Registry]', {
-    phase: currentPhase,
+    stage: CURRENT_STAGE,
     totalFeatures: Object.keys(FEATURES).length,
     enabledFeatures: enabled.length,
     navFeatures: inNav.length,

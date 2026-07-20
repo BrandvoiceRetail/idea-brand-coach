@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { FEATURES, getCurrentPhase, type DeploymentPhase, type Feature } from "@/config/features";
+import { FEATURES, type Feature } from "@/config/features";
+import { CURRENT_STAGE, isStageAtLeast, type ReleaseStage } from "@/config/releaseStage";
 import { useAllFeatureFlags, updateFeatureFlagEnabled, updateFeatureFlagPercentage } from "@/hooks/useFeatureFlag";
 import { CheckCircle, XCircle, Clock, Settings } from "lucide-react";
 
@@ -17,18 +18,18 @@ import { CheckCircle, XCircle, Clock, Settings } from "lucide-react";
  * - Dynamic feature flags (from useFeatureFlag.ts)
  */
 export default function FeatureFlagAdmin() {
-  const currentPhase = getCurrentPhase();
+  const currentStage = CURRENT_STAGE;
   const dynamicFlags = useAllFeatureFlags();
 
-  // Group phase-based features by phase
-  const featuresByPhase = {
-    P0: [] as Feature[],
-    P1: [] as Feature[],
-    P2: [] as Feature[],
+  // Group stage-based features by stage
+  const featuresByStage = {
+    alpha: [] as Feature[],
+    beta: [] as Feature[],
+    ga: [] as Feature[],
   };
 
   Object.values(FEATURES).forEach((feature) => {
-    featuresByPhase[feature.phase].push(feature);
+    featuresByStage[feature.stage].push(feature);
   });
 
   return (
@@ -46,47 +47,47 @@ export default function FeatureFlagAdmin() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
-            Current Deployment Phase
+            Current Release Stage
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
             <Badge variant="default" className="text-lg px-4 py-2">
-              {currentPhase}
+              {currentStage}
             </Badge>
             <span className="text-muted-foreground">
-              {currentPhase === 'P0' && 'Beta Launch - Core features only'}
-              {currentPhase === 'P1' && 'Enhanced Collaboration - Core + Collaboration features'}
-              {currentPhase === 'P2' && 'Advanced Analytics - All features enabled'}
+              {currentStage === 'alpha' && 'Alpha - Core features only'}
+              {currentStage === 'beta' && 'Beta - Core + Collaboration features'}
+              {currentStage === 'ga' && 'GA - All features enabled'}
             </span>
           </div>
         </CardContent>
       </Card>
 
       {/* Feature Flags Tabs */}
-      <Tabs defaultValue="phase-based" className="space-y-4">
+      <Tabs defaultValue="stage-based" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="phase-based">Phase-Based Features</TabsTrigger>
+          <TabsTrigger value="stage-based">Stage-Based Features</TabsTrigger>
           <TabsTrigger value="dynamic">Dynamic Feature Flags</TabsTrigger>
         </TabsList>
 
-        {/* Phase-Based Features Tab */}
-        <TabsContent value="phase-based" className="space-y-4">
+        {/* Stage-Based Features Tab */}
+        <TabsContent value="stage-based" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Phase-Based Features</CardTitle>
+              <CardTitle>Stage-Based Features</CardTitle>
               <CardDescription>
-                Features controlled by deployment phase (P0, P1, P2)
+                Features controlled by release stage (alpha, beta, ga)
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {/* P0 Features */}
+                {/* Alpha Features */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-lg font-semibold">P0 - Beta Launch</h3>
-                    <Badge variant={currentPhase === 'P0' || currentPhase === 'P1' || currentPhase === 'P2' ? 'default' : 'secondary'}>
-                      {featuresByPhase.P0.length} features
+                    <h3 className="text-lg font-semibold">Alpha - Live now</h3>
+                    <Badge variant={isStageAtLeast(currentStage, 'alpha') ? 'default' : 'secondary'}>
+                      {featuresByStage.alpha.length} features
                     </Badge>
                   </div>
                   <Table>
@@ -101,12 +102,12 @@ export default function FeatureFlagAdmin() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {featuresByPhase.P0.map((feature) => (
+                      {featuresByStage.alpha.map((feature) => (
                         <TableRow key={feature.id}>
                           <TableCell>
                             <FeatureStatusBadge
-                              phase={feature.phase}
-                              currentPhase={currentPhase}
+                              stage={feature.stage}
+                              currentStage={currentStage}
                             />
                           </TableCell>
                           <TableCell>
@@ -145,12 +146,12 @@ export default function FeatureFlagAdmin() {
                   </Table>
                 </div>
 
-                {/* P1 Features */}
+                {/* Beta Features */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-lg font-semibold">P1 - Enhanced Collaboration</h3>
-                    <Badge variant={currentPhase === 'P1' || currentPhase === 'P2' ? 'default' : 'secondary'}>
-                      {featuresByPhase.P1.length} features
+                    <h3 className="text-lg font-semibold">Beta - Enhanced Collaboration</h3>
+                    <Badge variant={isStageAtLeast(currentStage, 'beta') ? 'default' : 'secondary'}>
+                      {featuresByStage.beta.length} features
                     </Badge>
                   </div>
                   <Table>
@@ -165,12 +166,12 @@ export default function FeatureFlagAdmin() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {featuresByPhase.P1.map((feature) => (
+                      {featuresByStage.beta.map((feature) => (
                         <TableRow key={feature.id}>
                           <TableCell>
                             <FeatureStatusBadge
-                              phase={feature.phase}
-                              currentPhase={currentPhase}
+                              stage={feature.stage}
+                              currentStage={currentStage}
                             />
                           </TableCell>
                           <TableCell>
@@ -209,12 +210,12 @@ export default function FeatureFlagAdmin() {
                   </Table>
                 </div>
 
-                {/* P2 Features */}
+                {/* GA Features */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-lg font-semibold">P2 - Advanced Analytics</h3>
-                    <Badge variant={currentPhase === 'P2' ? 'default' : 'secondary'}>
-                      {featuresByPhase.P2.length} features
+                    <h3 className="text-lg font-semibold">GA - Advanced Analytics</h3>
+                    <Badge variant={isStageAtLeast(currentStage, 'ga') ? 'default' : 'secondary'}>
+                      {featuresByStage.ga.length} features
                     </Badge>
                   </div>
                   <Table>
@@ -229,12 +230,12 @@ export default function FeatureFlagAdmin() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {featuresByPhase.P2.map((feature) => (
+                      {featuresByStage.ga.map((feature) => (
                         <TableRow key={feature.id}>
                           <TableCell>
                             <FeatureStatusBadge
-                              phase={feature.phase}
-                              currentPhase={currentPhase}
+                              stage={feature.stage}
+                              currentStage={currentStage}
                             />
                           </TableCell>
                           <TableCell>
@@ -406,22 +407,16 @@ export default function FeatureFlagAdmin() {
 }
 
 /**
- * Status badge component for phase-based features
+ * Status badge component for release-stage features
  */
 function FeatureStatusBadge({
-  phase,
-  currentPhase
+  stage,
+  currentStage
 }: {
-  phase: DeploymentPhase;
-  currentPhase: DeploymentPhase;
+  stage: ReleaseStage;
+  currentStage: ReleaseStage;
 }): JSX.Element {
-  const phaseOrder: Record<DeploymentPhase, number> = {
-    'P0': 0,
-    'P1': 1,
-    'P2': 2,
-  };
-
-  const isEnabled = phaseOrder[phase] <= phaseOrder[currentPhase];
+  const isEnabled = isStageAtLeast(currentStage, stage);
 
   if (isEnabled) {
     return (

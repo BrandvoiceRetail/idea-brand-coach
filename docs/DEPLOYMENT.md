@@ -84,7 +84,7 @@ bit us 2026-07-19 when the beta-feedback widget shipped disabled). The steps:
 From a `main` checkout:
 
 ```bash
-npm run build                 # set VITE_FORCE_V4=true to force /v4; VITE_POSTHOG_* etc. as needed
+npm run build                 # VITE_RELEASE_STAGE=alpha (also the default) forces the single surface; VITE_POSTHOG_* etc. as needed
 cp dist/index.html dist/404.html   # SPA fallback for BrowserRouter deep links
 rsync -az --delete \
   --exclude='onboard.html' --exclude='onboard-assets/' --exclude='index.html.bak.*' \
@@ -114,9 +114,13 @@ the served bundle hash matches `dist/assets/index-*.js`. Rollback: an
 > immediately before rsync, and re-verify the live bundle contains your change (grep
 > the served `index-*.js` for a string unique to your commit).
 
-> `VITE_FORCE_V4` lives only in the worktree's gitignored `.env`; a clean `main`
-> build WITHOUT it reverts to gate-OFF (`/v4` not forced). Set it in the build env
-> (or a repo var) to keep `/v4` forced across rebuilds.
+> **Release stage — `VITE_RELEASE_STAGE` (`alpha`|`beta`|`ga`).** The single flag that
+> drives both the surface gate and feature gating (it replaced the stale `VITE_FORCE_V4`
+> and `VITE_DEPLOYMENT_PHASE`). It **fails forward**: unset/invalid resolves to `alpha`,
+> so a clean `main` build with no `.env` correctly forces the single customer surface +
+> alpha features — no more "forgot the flag → shipped the legacy chooser" footgun. Prod
+> builds with `VITE_RELEASE_STAGE=alpha`; set a later stage only to unlock beta/GA
+> features. Source of truth: `src/config/releaseStage.ts`.
 
 ### MCP gateway — typecheck, build image, ship
 Gate first: **`npm run typecheck:mcp`** (NOT just `tsc --noEmit` — only the MCP

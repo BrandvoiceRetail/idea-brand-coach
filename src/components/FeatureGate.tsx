@@ -11,7 +11,8 @@
  */
 
 import { ReactNode } from 'react';
-import { FEATURES, isFeatureAvailable, type Feature, type FeatureId, type DeploymentPhase } from '@/config/features';
+import { FEATURES, isFeatureAvailable, type Feature, type FeatureId } from '@/config/features';
+import { CURRENT_STAGE } from '@/config/releaseStage';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import ComingSoon from './ComingSoon';
 
@@ -52,11 +53,10 @@ export default function FeatureGate({
       return <>{children}</>;
     }
   } else {
-    // Fall back to phase-based check if no dynamic flag exists
-    const currentPhase = (import.meta.env.VITE_DEPLOYMENT_PHASE || 'P0') as DeploymentPhase;
-    const phaseEnabled = isFeatureAvailable(feature, currentPhase);
+    // Fall back to the release-stage check if no dynamic flag exists
+    const stageEnabled = isFeatureAvailable(feature, CURRENT_STAGE);
 
-    if (phaseEnabled) {
+    if (stageEnabled) {
       return <>{children}</>;
     }
   }

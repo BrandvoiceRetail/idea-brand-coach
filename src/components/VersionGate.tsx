@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useVersionContext } from '@/contexts/VersionContext';
 import { V2_ROUTES } from '@/config/routes';
-import { isV4Forced } from '@/config/v4';
+import { isPreGa } from '@/config/releaseStage';
+import { CURRENT_SURFACE } from '@/config/surface';
 
 function getUserFirstName(user: { email?: string } | null): string {
   if (!user) return '';
@@ -20,17 +21,17 @@ export function VersionGate(): JSX.Element | null {
   const { user } = useAuth();
   const { currentVersion, setVersion, isNewUser, hasSeenIntroduction } = useVersionContext();
   const [shouldRender, setShouldRender] = useState(false);
-  const forceV4 = isV4Forced();
+  // Pre-GA (alpha/beta) the app forces everyone into the single customer surface;
+  // GA lets the legacy v1/v2 chooser below run. See src/config/releaseStage.ts.
+  const forceSingleSurface = isPreGa();
 
   useEffect(() => {
-    // Force-flag: when VITE_FORCE_V4=true (set in this worktree's .env), the
-    // front-door repoints to the /v4 surface. Guests go to the public landing
-    // (in-app routes are login-gated by RequireAuth); authed first-run users get
-    // the post-signup onboarding CHOICE, returning users go straight to /v4.
-    if (forceV4) {
-      // /v5 is the canonical logged-in surface (2026-07-06). Guests still see
-      // the public landing; a signed-in user lands straight on the v5 flow.
-      navigate(user ? '/v5' : '/welcome', { replace: true });
+    // While pre-GA, the front-door repoints to the one customer surface
+    // (CURRENT_SURFACE from surface.ts — do not hardcode the version). Guests go
+    // to the public landing (in-app routes are login-gated by RequireAuth); a
+    // signed-in user lands straight on the current surface.
+    if (forceSingleSurface) {
+      navigate(user ? CURRENT_SURFACE : '/welcome', { replace: true });
       return;
     }
 
@@ -44,7 +45,7 @@ export function VersionGate(): JSX.Element | null {
     } else {
       setShouldRender(true);
     }
-  }, [forceV4, user, currentVersion, hasSeenIntroduction, isNewUser, navigate]);
+  }, [forceSingleSurface, user, currentVersion, hasSeenIntroduction, isNewUser, navigate]);
 
   if (!shouldRender) return null;
 
