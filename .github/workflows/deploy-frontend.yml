@@ -1,20 +1,12 @@
-name: Deploy frontend
+name: Deploy frontend (SUPERSEDED — do not use)
 
-# Builds the Vite SPA and rsyncs it to the Lightsail box that actually serves
-# ideabrandcoach.icodemybusiness.com (Caddy file_server). Replaces the old
-# deploy-pages.yml, which could never work — GitHub Pages is disabled at the org
-# level, so configure-pages failed on every run.
-#
-# ONE-TIME SETUP (repo Settings → Secrets and variables → Actions):
-#   Variable FRONTEND_AUTODEPLOY = true   — opt-in switch (no-op until set).
-#   Secret   LIGHTSAIL_SSH_KEY            — private key for ubuntu@<box> (shared with deploy-mcp).
-#   (optional) Variable FRONTEND_DEPLOY_HOST (default 54.243.53.44),
-#              FRONTEND_DEPLOY_USER (default ubuntu),
-#              FRONTEND_DEPLOY_PATH (default /opt/ideabrandcoach).
+# ⚠️ SUPERSEDED 2026-07-19 by .github/workflows/deploy.yml (self-hosted runner on the box).
+# This GitHub-hosted workflow can NEVER deploy: the Lightsail box firewalls inbound SSH
+# (port 22) to one IP, so ubuntu-latest runners time out reaching it. Kept only so its
+# history/secrets docs aren't lost; the push trigger is removed so it stops emitting
+# "skipped" runs on every merge to main. Safe to `git rm` this file entirely.
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:

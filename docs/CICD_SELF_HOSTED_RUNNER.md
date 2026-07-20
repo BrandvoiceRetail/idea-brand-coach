@@ -107,11 +107,30 @@ initial release dir.)
 - The runner executes any workflow on `main` with box access — keep `main` protected and
   limit who can merge.
 
+## Edge functions + DB migrations (added 2026-07-19)
+
+`deploy.yml` now also **deploys changed edge functions** (a `supabase functions deploy` step,
+path-filtered on `supabase/functions/**`; a `_shared/` change redeploys all). `migrate.yml`
+**applies DB migrations behind a manual-approval gate**. To enable them:
+
+1. **Runner needs the Supabase CLI:** `curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar xz -C ~/.local/bin` (or `brew`/`npm i -g supabase`), then confirm `supabase --version` in the runner's PATH.
+2. **Secrets** (repo → Settings → Secrets and variables → Actions):
+   - `SUPABASE_ACCESS_TOKEN` — personal access token (management API; used by both steps).
+   - `SUPABASE_DB_PASSWORD` — the project DB password (`supabase db push` in `migrate.yml`).
+3. **Environment** `production-db` (repo → Settings → Environments): add yourself as a
+   **Required reviewer** — this is the approval gate that makes migrations pause for a human.
+4. **⚠️ Before trusting the edge-fn step:** reconcile EVERY function repo-from-deployed
+   (some deployed fns were hand-hardened; the repo can lag). A stale repo version would
+   regress that hardening on the next automated deploy. 4 were verified 2026-07-19
+   (reveal / save-feedback / gdpr×2); sweep the rest first.
+
+**Ordering note:** for a coordinated schema+code change, approve the `migrate.yml` run FIRST
+so the schema lands before the renamed code — see the header comment in `migrate.yml`.
+
 ## Follow-ups (from the deploy-cleanup review)
 
 - Bring the **Caddyfile into the repo** (`deploy/caddy/Caddyfile`) and let the workflow
   reload it on change — today it's hand-edited on the box and drifts.
-- **Reconcile edge functions** repo-from-deployed, then add a `supabase functions deploy`
-  step (guarded by a path filter) so emails/backend also deploy from `main`.
+- Delete the superseded `deploy-frontend.yml` / `deploy-mcp.yml` (now inert manual-dispatch stubs).
 - One `docs/CONFIG.md` table of every secret/env and where it lives (the URL constants in
   `src/config/urls.ts` + `supabase/functions/_shared/appUrl.ts` are the first rows).
