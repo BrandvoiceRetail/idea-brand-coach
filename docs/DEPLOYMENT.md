@@ -52,14 +52,26 @@ page and 404'd the connector.)
 **Whatever is on `main` is what goes live.** Merge intended production code to
 `main` first, then deploy from a checkout of `main`.
 
-## Deploys run MANUALLY from a local machine (CI can't reach the box)
+## Deploys: push to `main` (auto) — manual is the fallback
 
-`.github/workflows/deploy-frontend.yml` and `deploy-mcp.yml` exist, but the
-Lightsail box firewalls SSH (port 22) to a known IP, so **GitHub-hosted runners
-cannot reach it** (`ssh: connect … port 22: Connection timed out`) and the
-autodeploy variables (`FRONTEND_AUTODEPLOY`, `MCP_AUTODEPLOY`) are left `false`.
-Until the box accepts the runner (or a self-hosted runner is added), **deploy from
-a local machine that can SSH the box**, with key `~/.ssh/lightsail-mango.pem`.
+**Primary path — auto-deploy on merge to `main`.** `.github/workflows/deploy.yml` runs on a
+**self-hosted GitHub Actions runner on the Lightsail box** (the box firewalls inbound SSH, so
+GitHub-hosted runners can't reach it — the runner instead polls GitHub *outbound* and deploys
+locally). One run builds the SPA from main's tip, rsyncs it, rebuilds the MCP container if its
+inputs changed, deploys changed Supabase edge functions, and smoke-checks the live bundle +
+`/healthz`. DB migrations are a **separate, manually-approved** workflow (`.github/workflows/migrate.yml`,
+gated by the `production-db` Environment) so a schema change can't auto-mutate prod without a human OK.
+
+One-time activation (register the runner + provide the box-side build env) is in
+[`docs/CICD_SELF_HOSTED_RUNNER.md`](CICD_SELF_HOSTED_RUNNER.md). **Until the runner is registered,
+`deploy.yml` just queues** — fall back to the manual steps below. The old GitHub-hosted
+`deploy-frontend.yml` / `deploy-mcp.yml` are **superseded** (they can't reach the box) and now
+run manual-dispatch only; `git rm` them when convenient.
+
+**Fallback — manual deploy from a local machine that can SSH the box** (key
+`~/.ssh/lightsail-mango.pem`), e.g. when the runner is down. ⚠️ Build with the COMPLETE
+`.env` (the canonical `VITE_*` set — a partial env silently ships a degraded bundle; this
+bit us 2026-07-19 when the beta-feedback widget shipped disabled). The steps:
 
 ### Frontend (SPA) — build + rsync
 

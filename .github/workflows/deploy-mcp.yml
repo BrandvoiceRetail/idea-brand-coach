@@ -1,26 +1,11 @@
-name: Deploy MCP gateway
+name: Deploy MCP gateway (SUPERSEDED — do not use)
 
-# Builds the brand-coach MCP gateway image and ships it to the Lightsail box
-# (the `brand-coach-mcp` container in ~ubuntu/brand-coach-mcp), so the gateway
-# updates on merge to main like the frontend does — no more hand-deploys.
-# Mirrors the manual runbook in deploy/mcp/README.md.
-#
-# ONE-TIME SETUP (repo Settings → Secrets and variables → Actions):
-#   Secret  LIGHTSAIL_SSH_KEY  — the PRIVATE key for ubuntu@<box> (contents of
-#                                ~/.ssh/lightsail-mango.pem, full PEM incl. header/footer).
-#   (optional) Variable MCP_DEPLOY_HOST  — defaults to 54.243.53.44
-#   (optional) Variable MCP_DEPLOY_USER  — defaults to ubuntu
-#
-# Path-filtered: only runs when gateway code changes, so frontend-only merges skip it.
+# ⚠️ SUPERSEDED 2026-07-19 by .github/workflows/deploy.yml (self-hosted runner on the box,
+# which rebuilds the MCP container in the same run). This GitHub-hosted workflow can NEVER
+# deploy: the box firewalls inbound SSH (port 22), so ubuntu-latest runners time out. The
+# push trigger is removed so it stops emitting "skipped" runs. Safe to `git rm` this file.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/mcp/**'
-      - 'deploy/mcp/**'
-      - 'scripts/build-mcp.mjs'
-      - 'tsconfig.mcp.json'
   workflow_dispatch:
 
 concurrency:
