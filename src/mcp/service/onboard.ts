@@ -136,7 +136,7 @@ export function buildOnboardPanelHtml(): string {
     '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
     '<title>IDEA Brand Coach</title>',
     '<style>',
-    ':root{--blk:#111111;--wht:#fff;--wrm:#F5F4F0;--gld:#D4960A;--gld-lt:#FEF5DC;--ink:#1c1c1c;--mut:#5f5d57;--line:rgba(17,17,17,.12)}',
+    ':root{--blk:#111111;--wht:#fff;--wrm:#F5F4F0;--gld:#FFB627;--gld-lt:#FEF5DC;--ink:#1c1c1c;--mut:#5f5d57;--line:rgba(17,17,17,.12)}',
     '*{box-sizing:border-box;margin:0;padding:0}',
     'body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--wrm);color:var(--ink);line-height:1.5;padding:24px;-webkit-font-smoothing:antialiased}',
     '.card{max-width:620px;margin:0 auto;background:var(--wht);border:1px solid var(--line);border-radius:14px;overflow:hidden}',

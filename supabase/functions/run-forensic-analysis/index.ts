@@ -804,6 +804,10 @@ serve(async (req) => {
       asin,
       reviews_analyzed: reviewCount,
       thin_corpus: thinCorpus,
+      // Amazon's "Customers say" summary is synthesised over the FULL review
+      // corpus, so a read backed by it is broader than reviews_analyzed implies.
+      // The UI needs this to avoid understating its own evidence base.
+      corpus_summary_used: Boolean(evidence.customersSay),
       forensic_scores: forensicScores,
       primary_gap: primaryGap,
       interpretation,

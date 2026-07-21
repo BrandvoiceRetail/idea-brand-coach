@@ -51,6 +51,12 @@ export interface V5ForensicReport {
   asin: string;
   reviews_analyzed: number;
   thin_corpus: boolean;
+  /**
+   * Amazon's "Customers say" summary (synthesised over the FULL review corpus)
+   * backed this read. Optional: responses from before the enrichment shipped,
+   * and listings where Amazon serves no summary, omit it.
+   */
+  corpus_summary_used?: boolean;
   forensic_scores: V5ForensicScores;
   primary_gap: PillarKey;
   interpretation: V5Interpretation | null;

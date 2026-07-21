@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import type { FocusItem } from './types';
 
 const BRAND_BLUE = '#111111';
-const BRAND_GOLD = '#D4960A';
+const BRAND_GOLD = '#FFB627';
 
 export function FocusCard({ focus, position, total }: { focus: FocusItem; position: number; total: number }) {
   return (
