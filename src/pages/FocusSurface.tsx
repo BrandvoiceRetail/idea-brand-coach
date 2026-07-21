@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
-const BRAND_GOLD = '#D4960A';
+const BRAND_GOLD = '#FFB627';
 
 export default function FocusSurface() {
   const { snapshot, isLive, isLoading, needsDiagnostic } = useBrandSnapshot();

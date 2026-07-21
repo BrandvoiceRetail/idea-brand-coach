@@ -28,7 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const BRAND_BLUE = '#111111';
-const BRAND_GOLD = '#D4960A';
+const BRAND_GOLD = '#FFB627';
 const CATEGORIES: CriterionCategory[] = ['framing', 'evidence', 'persona', 'recommendation', 'output', 'safety', 'voice'];
 
 function loadSet(): CriteriaSet {

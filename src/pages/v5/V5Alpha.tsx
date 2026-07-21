@@ -742,6 +742,14 @@ export default function V5Alpha(): JSX.Element {
           paused={paused}
           onTogglePause={() => setPaused((p) => !p)}
           onSkip={() => {
+            // Which beat they abandoned the pacing on is the signal: skipping at
+            // beat 1 means the theatre isn't wanted, at beat 4 means it's too long.
+            captureAlphaEvent('v5_skip_ahead', {
+              beat_index: shownBeats,
+              beats_total: BEAT_ORDER.length,
+              reduced_motion: reducedMotion,
+              express,
+            });
             setSkipAll(true);
             setPaused(false);
           }}
@@ -793,6 +801,7 @@ export default function V5Alpha(): JSX.Element {
           designerContext={designerFrames.context}
           placement={designerFrames.placement}
           reviewCount={reviewCount ?? report?.reviews_analyzed ?? null}
+          corpusSummaryUsed={report?.corpus_summary_used ?? false}
           onConfirmClaim={handleConfirmClaim}
           onExport={handleExportBrief}
           onCopy={() => void handleCopyBrief()}

@@ -40,6 +40,8 @@ export interface V5BriefScreenProps {
   placement: string | null;
   /** Number of reviews used to build the avatar (null if unknown/pasted voice). */
   reviewCount?: number | null;
+  /** Amazon's full-corpus summary also backed the read behind this brief. */
+  corpusSummaryUsed?: boolean;
   onConfirmClaim: (claim: ClaimGateItem, index: number) => void;
   onExport: () => void;
   /** Copies the full brief text so it pastes straight into an email or message. */
@@ -60,6 +62,7 @@ export function V5BriefScreen({
   designerContext,
   placement,
   reviewCount,
+  corpusSummaryUsed = false,
   onConfirmClaim,
   onExport,
   onCopy,
@@ -78,7 +81,11 @@ export function V5BriefScreen({
         </p>
         {reviewCount != null && (
           <div className="mt-3 flex justify-center">
-            <LowEvidenceBadge reviewCount={reviewCount} variant="compact" />
+            <LowEvidenceBadge
+              reviewCount={reviewCount}
+              corpusSummaryUsed={corpusSummaryUsed}
+              variant="compact"
+            />
           </div>
         )}
       </div>

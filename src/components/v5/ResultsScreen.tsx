@@ -79,7 +79,11 @@ export function ResultsScreen({ report, trigger, onSeeBrief }: ResultsScreenProp
           {report.reviews_analyzed === 1 ? '' : 's'}. Not a demographic. Not a template.
         </p>
         <div className="mt-3 flex justify-center">
-          <LowEvidenceBadge reviewCount={report.reviews_analyzed} variant="compact" />
+          <LowEvidenceBadge
+            reviewCount={report.reviews_analyzed}
+            corpusSummaryUsed={report.corpus_summary_used ?? false}
+            variant="compact"
+          />
         </div>
       </div>
 

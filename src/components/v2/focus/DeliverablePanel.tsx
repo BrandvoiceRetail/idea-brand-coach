@@ -11,7 +11,7 @@ import type { Deliverable, DeliverableMode } from './types';
 import { DELIVERABLE_LABELS } from './types';
 
 const BRAND_BLUE = '#111111';
-const BRAND_GOLD = '#D4960A';
+const BRAND_GOLD = '#FFB627';
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [done, setDone] = useState(false);

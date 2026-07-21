@@ -11,6 +11,12 @@ export const LOW_EVIDENCE_THRESHOLD = 15;
 
 export interface LowEvidenceBadgeProps {
   reviewCount: number;
+  /**
+   * Amazon's own summary over the FULL review corpus also backed this read.
+   * When true the badge must not imply the read rests only on `reviewCount`
+   * quotes — it counts verbatim quotes we could pull, not the evidence base.
+   */
+  corpusSummaryUsed?: boolean;
   /** Optional click handler to add more customer voice. */
   onAddVoice?: () => void;
   /** Whether to show full text or compact version. */
@@ -19,13 +25,19 @@ export interface LowEvidenceBadgeProps {
 
 export function LowEvidenceBadge({
   reviewCount,
+  corpusSummaryUsed = false,
   onAddVoice,
   variant = 'full',
 }: LowEvidenceBadgeProps): JSX.Element | null {
   if (reviewCount >= LOW_EVIDENCE_THRESHOLD) return null;
 
-  const fullText = `Built from only ${reviewCount} review${reviewCount === 1 ? '' : 's'}. Treat this read as provisional until more customer voice lands.`;
-  const compactText = `Only ${reviewCount} review${reviewCount === 1 ? '' : 's'}. Provisional read.`;
+  const quotes = `${reviewCount} full review${reviewCount === 1 ? '' : 's'}`;
+  const fullText = corpusSummaryUsed
+    ? `Quoting ${quotes}, plus Amazon's summary of all customer reviews. Verbatim quotes are limited; the read behind them is not.`
+    : `Built from only ${reviewCount} review${reviewCount === 1 ? '' : 's'}. Treat this read as provisional until more customer voice lands.`;
+  const compactText = corpusSummaryUsed
+    ? `${quotes} quoted, plus Amazon's all-review summary.`
+    : `Only ${reviewCount} review${reviewCount === 1 ? '' : 's'}. Provisional read.`;
 
   return (
     <div className="inline-flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs text-amber-600 dark:bg-amber-400/10 dark:text-amber-400">

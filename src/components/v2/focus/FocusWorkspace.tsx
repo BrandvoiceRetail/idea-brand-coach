@@ -14,7 +14,7 @@ import type { BrandSnapshot, Deliverable, DeliverableMode, FocusItem, Pillar } f
 import { Button } from '@/components/ui/button';
 
 const BRAND_BLUE = '#111111';
-const BRAND_GOLD = '#D4960A';
+const BRAND_GOLD = '#FFB627';
 const PILLARS: Pillar[] = ['insight', 'distinctive', 'empathetic', 'authentic'];
 const PILLAR_SHORT: Record<Pillar, string> = { insight: 'I', distinctive: 'D', empathetic: 'E', authentic: 'A' };
 

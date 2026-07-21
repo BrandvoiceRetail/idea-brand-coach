@@ -36,7 +36,7 @@ import CoachInstructionsStudio from './CoachInstructionsStudio';
 import McpTelemetry from './McpTelemetry';
 
 const BRAND_BLUE = '#111111';
-const BRAND_GOLD = '#D4960A';
+const BRAND_GOLD = '#FFB627';
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 

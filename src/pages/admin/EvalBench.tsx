@@ -17,11 +17,11 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 const BRAND_BLUE = '#111111';
-const BRAND_GOLD = '#D4960A';
+const BRAND_GOLD = '#FFB627';
 
 function personaBadge(p: Persona) {
   if (p === 'P1') return { label: 'P1 · Brand owner', cls: 'bg-[#111111] text-white' };
-  if (p === 'P2') return { label: 'P2 · Ops VA', cls: 'bg-[#D4960A] text-[#111111]' };
+  if (p === 'P2') return { label: 'P2 · Ops VA', cls: 'bg-[#FFB627] text-[#111111]' };
   return { label: 'Edge · Safety', cls: 'bg-red-100 text-red-800 border border-red-300' };
 }
 
@@ -44,7 +44,7 @@ export default function EvalBench() {
             <button
               key={c.id}
               onClick={() => setActiveId(c.id)}
-              className={`w-full rounded-lg border p-3 text-left transition ${on ? 'border-[#D4960A] bg-amber-50' : 'hover:bg-muted/50'}`}
+              className={`w-full rounded-lg border p-3 text-left transition ${on ? 'border-[#FFB627] bg-amber-50' : 'hover:bg-muted/50'}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-semibold" style={{ color: BRAND_BLUE }}>{c.title}</span>
