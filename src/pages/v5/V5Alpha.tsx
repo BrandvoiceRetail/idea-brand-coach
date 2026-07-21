@@ -728,7 +728,7 @@ export default function V5Alpha(): JSX.Element {
         />
       )}
 
-      {phase === 'building' && (
+      {(phase === 'building' || phase === 'diagnosing') && (
         <BuildTheatre
           beats={beats}
           shownBeats={shownBeats}
@@ -756,35 +756,11 @@ export default function V5Alpha(): JSX.Element {
           skipArmed={skipAll || express}
           reducedMotion={reducedMotion}
           onNext={revealNext}
-          reviewCount={reviewCount}
+          diagnosing={phase === 'diagnosing'}
+          diagnoseError={diagnoseError}
+          onRetryDiagnostic={() => void runDiagnostic()}
+          onSkipToBrief={goBrief}
         />
-      )}
-
-      {phase === 'diagnosing' && (
-        <V5Stage className="text-center">
-          <GlassEyebrow>Avatar 2.0 · complete</GlassEyebrow>
-          <h1 className="font-display text-2xl font-extrabold text-foreground sm:text-3xl">
-            Your customer profile is built.
-          </h1>
-          {diagnoseError ? (
-            <div className="mx-auto mt-6 max-w-[440px] rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-left">
-              <p className="mb-3 text-sm leading-relaxed text-destructive">{diagnoseError}</p>
-              <div className="flex gap-2.5">
-                <Button type="button" variant="outline" className="rounded-xl" onClick={() => void runDiagnostic()}>
-                  Try again
-                </Button>
-                <Button type="button" variant="ghost" className="rounded-xl text-muted-foreground" onClick={goBrief}>
-                  Skip to the brief
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-6 flex items-center justify-center gap-2.5 text-sm text-muted-foreground" role="status">
-              <Loader2 className="h-4 w-4 animate-spin text-gold-warm" />
-              Now reading your Trust Gap™ and your Decision Trigger™. This takes about a minute.
-            </div>
-          )}
-        </V5Stage>
       )}
 
       {phase === 'results' && report && (
@@ -800,8 +776,6 @@ export default function V5Alpha(): JSX.Element {
           needsInput={briefNeedsInput}
           designerContext={designerFrames.context}
           placement={designerFrames.placement}
-          reviewCount={reviewCount ?? report?.reviews_analyzed ?? null}
-          corpusSummaryUsed={report?.corpus_summary_used ?? false}
           onConfirmClaim={handleConfirmClaim}
           onExport={handleExportBrief}
           onCopy={() => void handleCopyBrief()}

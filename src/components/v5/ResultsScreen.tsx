@@ -14,7 +14,6 @@ import {
   type PillarRow,
 } from '@/components/v2/problem-solver/glass';
 import { V5Stage } from './V5Chrome';
-import { LowEvidenceBadge } from './LowEvidenceBadge';
 import {
   findingText,
   normalizeProfile,
@@ -75,16 +74,8 @@ export function ResultsScreen({ report, trigger, onSeeBrief }: ResultsScreenProp
           Your customer, and what they need from you
         </h1>
         <p className="mt-2 text-[15px] text-muted-foreground">
-          Built from {report.reviews_analyzed} of your customers&apos; own review
-          {report.reviews_analyzed === 1 ? '' : 's'}. Not a demographic. Not a template.
+          Built from what your customers actually say about your product.
         </p>
-        <div className="mt-3 flex justify-center">
-          <LowEvidenceBadge
-            reviewCount={report.reviews_analyzed}
-            corpusSummaryUsed={report.corpus_summary_used ?? false}
-            variant="compact"
-          />
-        </div>
       </div>
 
       {/* ── The finding FIRST ── */}
@@ -99,10 +90,13 @@ export function ResultsScreen({ report, trigger, onSeeBrief }: ResultsScreenProp
 
       {/* ── Trust Gap score beneath the finding, never above it ── */}
       <ScorePillars score={report.forensic_scores.overall} pillars={pillars} />
+      {/* The ONE evidence caveat in the whole flow. Sits under the score because
+          that is where a reader calibrates how much to trust it. Deliberately
+          carries no review count: the number was being repeated three times over
+          and reads as us auditing ourselves rather than helping the seller. */}
       {report.thin_corpus && (
         <p className="mt-2.5 text-xs leading-relaxed text-amber-500/90">
-          Based on {report.reviews_analyzed} review{report.reviews_analyzed === 1 ? '' : 's'}, a
-          thin sample. Treat this read as directional; more reviews sharpen it.
+          A thin sample so far. Treat this read as directional; more customer voice sharpens it.
         </p>
       )}
 
