@@ -12,7 +12,6 @@ import { V5Stage } from './V5Chrome';
 import { TheatreBeat } from './TheatreBeat';
 import { StageControls } from './StageControls';
 import { CoSignPanel } from './CoSignPanel';
-import { LowEvidenceBadge } from './LowEvidenceBadge';
 import type { CoSignRead, TheatreBeatData } from './beatModel';
 
 export interface BuildTheatreProps {
@@ -36,8 +35,17 @@ export interface BuildTheatreProps {
   skipArmed: boolean;
   reducedMotion: boolean;
   onNext: () => void;
-  /** Number of reviews used to build the avatar. */
-  reviewCount?: number | null;
+  /**
+   * The forensic read is running AFTER co-sign. The theatre stays mounted so the
+   * seller can keep reading what was just built — replacing it with a bare
+   * spinner destroyed ~60s of content they were mid-way through and left no way
+   * back to it (only condensed one-liners survive on the results screen).
+   */
+  diagnosing?: boolean;
+  /** Forensic-run failure, surfaced in place rather than on a separate screen. */
+  diagnoseError?: string | null;
+  onRetryDiagnostic?: () => void;
+  onSkipToBrief?: () => void;
 }
 
 const RAIL = ['Vocabulary', 'Motivation', 'Trust signals', 'Objection', 'Decision check'] as const;
@@ -58,7 +66,10 @@ export function BuildTheatre({
   skipArmed,
   reducedMotion,
   onNext,
-  reviewCount,
+  diagnosing = false,
+  diagnoseError = null,
+  onRetryDiagnostic,
+  onSkipToBrief,
 }: BuildTheatreProps): JSX.Element {
   const railActive = showCoSign ? RAIL.length - 1 : Math.min(shownBeats, RAIL.length - 1);
   const nextReady = shownBeats < beats.length && beats[shownBeats] != null;
@@ -67,20 +78,13 @@ export function BuildTheatre({
 
   return (
     <V5Stage wide>
-      <div className="mb-1 text-center">
+      <div className="mb-4 text-center">
         <GlassEyebrow>
-          {reviewCount != null
-            ? `Building your customer from ${reviewCount} review${reviewCount === 1 ? '' : 's'}`
-            : 'Building your customer, from their own words'}
+          {diagnosing
+            ? 'Your customer profile is built'
+            : 'Building your customer, from what they actually say'}
         </GlassEyebrow>
       </div>
-
-      {/* Low-evidence indicator */}
-      {reviewCount != null && (
-        <div className="mb-4 flex justify-center">
-          <LowEvidenceBadge reviewCount={reviewCount} />
-        </div>
-      )}
 
       {/* Progress rail — a filling gold track + per-stage states, not just a
           faint underline (Trevor: "very low key, I almost missed it"). */}
@@ -153,10 +157,43 @@ export function BuildTheatre({
         </div>
       )}
 
-      {/* Co-sign */}
-      {showCoSign && <CoSignPanel read={coSignRead} onAnswer={onCoSign} disabled={coSignDisabled} />}
+      {/* Co-sign — replaced by the forensic-run status once answered. */}
+      {showCoSign && !diagnosing && (
+        <CoSignPanel read={coSignRead} onAnswer={onCoSign} disabled={coSignDisabled} />
+      )}
 
-      {!runError && !showCoSign && !skipArmed && (
+      {/* Forensic run, in place: the built profile above stays readable. */}
+      {diagnosing &&
+        (diagnoseError ? (
+          <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+            <p className="mb-3 text-sm leading-relaxed text-destructive">{diagnoseError}</p>
+            <div className="flex gap-2.5">
+              {onRetryDiagnostic && (
+                <Button type="button" variant="outline" className="rounded-xl" onClick={onRetryDiagnostic}>
+                  Try again
+                </Button>
+              )}
+              {onSkipToBrief && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-xl text-muted-foreground"
+                  onClick={onSkipToBrief}
+                >
+                  Skip to the brief
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5 text-sm text-muted-foreground" role="status">
+            <Loader2 className="h-4 w-4 animate-spin text-gold-warm" />
+            Reading your Trust Gap™ and your Decision Trigger™. This takes about a minute — the
+            profile above stays here while I work.
+          </div>
+        ))}
+
+      {!runError && !showCoSign && !skipArmed && !diagnosing && (
         <StageControls
           paused={paused}
           onTogglePause={onTogglePause}
