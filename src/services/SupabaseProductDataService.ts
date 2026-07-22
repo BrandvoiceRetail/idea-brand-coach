@@ -275,6 +275,23 @@ export class SupabaseProductDataService implements IProductDataService {
     if (error) throw error;
   }
 
+  /**
+   * Delete a listing (every variant row of the asin) for the authenticated
+   * user. `user_product_reviews` rows cascade-delete via their FK, so this one
+   * statement fully removes the listing and its imported reviews. RLS scopes
+   * the delete to the caller.
+   */
+  async deleteProduct(asin: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase
+      .from('user_products')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('asin', asin);
+    if (error) throw error;
+  }
+
   private mapProduct(row: {
     id: string;
     asin: string;

@@ -347,4 +347,44 @@ describe('SupabaseProductDataService', () => {
       expect(evidence.topReviews[0].startsWith('★5 — ')).toBe(true);
     });
   });
+
+  describe('deleteProduct', () => {
+    type FromMock = ReturnType<typeof supabase.from>;
+
+    it('deletes the listing scoped to the caller and asin', async () => {
+      const eqAsin = vi.fn().mockResolvedValue({ error: null });
+      const eqUser = vi.fn().mockReturnValue({ eq: eqAsin });
+      const del = vi.fn().mockReturnValue({ eq: eqUser });
+      vi.mocked(supabase.from).mockReturnValue({ delete: del } as unknown as FromMock);
+
+      await service.deleteProduct('B000000001');
+
+      expect(supabase.from).toHaveBeenCalledWith('user_products');
+      expect(del).toHaveBeenCalledTimes(1);
+      expect(eqUser).toHaveBeenCalledWith('user_id', AUTH_USER.id);
+      expect(eqAsin).toHaveBeenCalledWith('asin', 'B000000001');
+    });
+
+    it('is a no-op when there is no authenticated user', async () => {
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: null },
+        error: null,
+      });
+      const del = vi.fn();
+      vi.mocked(supabase.from).mockReturnValue({ delete: del } as unknown as FromMock);
+
+      await service.deleteProduct('B000000001');
+
+      expect(del).not.toHaveBeenCalled();
+    });
+
+    it('throws when the delete errors', async () => {
+      const eqAsin = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
+      const eqUser = vi.fn().mockReturnValue({ eq: eqAsin });
+      const del = vi.fn().mockReturnValue({ eq: eqUser });
+      vi.mocked(supabase.from).mockReturnValue({ delete: del } as unknown as FromMock);
+
+      await expect(service.deleteProduct('B000000001')).rejects.toEqual({ message: 'boom' });
+    });
+  });
 });

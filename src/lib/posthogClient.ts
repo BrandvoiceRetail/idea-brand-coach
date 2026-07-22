@@ -262,7 +262,10 @@ export type AlphaEventName =
   | 'v5_home_viewed'
   | 'v5_home_reopen'
   // Persisted last-run brief opened instantly from the home screen (no re-run).
-  | 'v5_brief_reopened';
+  | 'v5_brief_reopened'
+  // A listing removed from the account via the home screen. Boolean/count only
+  // (whether it had a saved brief) — never the ASIN value.
+  | 'v5_listing_deleted';
 
 /** Counts, booleans, IDs, scores only — never free text or PII. */
 export type AlphaEventProps = Record<string, string | number | boolean | null | undefined>;
