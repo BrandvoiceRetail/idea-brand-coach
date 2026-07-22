@@ -44,6 +44,36 @@ interface ReviewObject {
   reviewer?: string;
 }
 
+/**
+ * Fold a string to a canonical form for the verbatim-grounding substring check.
+ * The model quotes reviews "verbatim" but routinely normalises typographic
+ * punctuation (curly quotes/apostrophes → straight, en/em dash → hyphen,
+ * ellipsis char → "..."), decodes HTML entities, and collapses whitespace — so a
+ * genuinely-grounded quote byte-mismatches the scraped corpus and gets false-
+ * rejected. Applying the SAME fold to BOTH the corpus (haystack) and the model's
+ * quote compares like with like. This only removes representation mismatches; it
+ * can never let a fabricated quote pass, because the words must still be present.
+ */
+function normaliseForMatch(s: string): string {
+  return s
+    .toLowerCase()
+    // HTML entities that survive scraping
+    .replace(/&amp;/g, '&')
+    .replace(/&(?:quot|ldquo|rdquo|#34);/g, '"')
+    .replace(/&(?:apos|lsquo|rsquo|#39|#x27);/g, "'")
+    .replace(/&(?:ndash|mdash|#8211|#8212);/g, '-')
+    .replace(/&(?:hellip|#8230);/g, '...')
+    .replace(/&(?:nbsp|#160);/g, ' ')
+    // typographic punctuation → ASCII
+    .replace(/[‘’‚‛′]/g, "'")
+    .replace(/[“”„‟″]/g, '"')
+    .replace(/[–—―−]/g, '-')
+    .replace(/…/g, '...')
+    // collapse every whitespace run (newlines between reviews, nbsp, etc.)
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function normaliseReviews(reviews: unknown): { corpus: string; haystack: string } {
   let corpus = '';
   if (typeof reviews === 'string') {
@@ -61,7 +91,7 @@ function normaliseReviews(reviews: unknown): { corpus: string; haystack: string 
       .filter((s) => typeof s === 'string' && s.trim())
       .join('\n\n');
   }
-  return { corpus: corpus.trim(), haystack: corpus.toLowerCase() };
+  return { corpus: corpus.trim(), haystack: normaliseForMatch(corpus) };
 }
 
 interface S1Cluster {
@@ -315,7 +345,7 @@ serve(async (req) => {
       .filter((o) => {
         if (!o.hesitation || !o.resolution || !o.verbatim_signal) return false;
         total += 1;
-        if (haystack.includes(o.verbatim_signal.toLowerCase())) return true;
+        if (haystack.includes(normaliseForMatch(o.verbatim_signal))) return true;
         dropped += 1;
         return false;
       });
