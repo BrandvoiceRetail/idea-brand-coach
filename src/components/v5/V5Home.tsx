@@ -12,12 +12,23 @@
  * snapshots existed only offer Rebuild.
  */
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { GlassEyebrow, GlassPanel } from '@/components/v2/problem-solver/glass';
 import type { ImportedProduct } from '@/services/interfaces/IProductDataService';
 import { isV5RunSnapshot } from './forensicReport';
 import { V5Stage } from './V5Chrome';
 import { MCP_URL } from '@/config/urls';
-import { Info, RefreshCw, MessageSquare } from 'lucide-react';
+import { Info, RefreshCw, MessageSquare, Trash2 } from 'lucide-react';
 
 export interface V5HomeProps {
   /** The signed-in account's email, for the greeting. Null → a generic welcome. */
@@ -30,6 +41,8 @@ export interface V5HomeProps {
   onReopen: (asin: string, title: string | null) => void;
   /** Open a listing's persisted last brief instantly (no engine re-run). */
   onOpenBrief: (product: ImportedProduct) => void;
+  /** Remove a listing (and its imported reviews) from the account. */
+  onDelete: (product: ImportedProduct) => void;
 }
 
 /** Derive a friendly first name from an email local-part; null when we can't. */
@@ -54,7 +67,7 @@ function listingMeta(product: ImportedProduct): string {
   return parts.join(' · ');
 }
 
-export function V5Home({ email, products, onNewListing, onReopen, onOpenBrief }: V5HomeProps): JSX.Element {
+export function V5Home({ email, products, onNewListing, onReopen, onOpenBrief, onDelete }: V5HomeProps): JSX.Element {
   const name = friendlyName(email);
 
   return (
@@ -146,6 +159,38 @@ export function V5Home({ email, products, onNewListing, onReopen, onOpenBrief }:
                       Rebuild →
                     </Button>
                   )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Delete ${product.title || product.asin}`}
+                        className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this listing?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This removes “{product.title || product.asin}” and its imported reviews
+                          from your account. Any design brief you generated for it is deleted too.
+                          You can always analyse the listing again later. This can&apos;t be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => onDelete(product)}
+                        >
+                          Delete listing
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             ))}

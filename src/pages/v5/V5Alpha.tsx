@@ -680,6 +680,32 @@ export default function V5Alpha(): JSX.Element {
     [resetRunState],
   );
 
+  // Remove a listing (and its imported reviews, via FK cascade) from the
+  // account. Optimistically drop it from the list, then reconcile from the
+  // server; on error, restore and toast. Deleting the last listing returns the
+  // user to the entry screen so they never sit on an empty "your listings" home.
+  const handleHomeDelete = useCallback(
+    async (product: ImportedProduct): Promise<void> => {
+      const previous = products;
+      const next = previous.filter((p) => p.id !== product.id);
+      setProducts(next);
+      // Boolean only — the event taxonomy forbids sending the ASIN value.
+      captureAlphaEvent('v5_listing_deleted', { had_saved_brief: isV5RunSnapshot(product.lastRun) });
+      try {
+        await productService.deleteProduct(product.asin);
+        const stored = await productService.getProducts();
+        setProducts(stored);
+        if (stored.length === 0) setPhase('entry');
+        toast.success('Listing deleted.');
+      } catch (err) {
+        console.error('[V5Alpha] delete listing failed:', err);
+        setProducts(previous);
+        toast.error('I could not delete that listing right now. Please try again.');
+      }
+    },
+    [products, productService],
+  );
+
   // ── Retry the build with the same corpus ────────────────────────────────────
   const retryBuild = useCallback((): void => {
     if (!reviewsString) return;
@@ -701,6 +727,7 @@ export default function V5Alpha(): JSX.Element {
           onNewListing={() => setPhase('entry')}
           onReopen={handleHomeReopen}
           onOpenBrief={handleOpenBrief}
+          onDelete={handleHomeDelete}
         />
       )}
 

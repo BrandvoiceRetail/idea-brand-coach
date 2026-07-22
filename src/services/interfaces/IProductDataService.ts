@@ -131,6 +131,17 @@ export interface IProductDataService {
   getProducts(): Promise<ImportedProduct[]>;
 
   /**
+   * Delete one imported listing (every variant row of the given asin) for the
+   * authenticated user. The `user_product_reviews` rows for that listing are
+   * removed automatically by the `ON DELETE CASCADE` foreign key. Scoped to the
+   * caller by RLS; deleting an asin the user does not own is a silent no-op.
+   *
+   * @param asin - The listing's ASIN to delete
+   * @returns Promise resolving once the listing is removed
+   */
+  deleteProduct(asin: string): Promise<void>;
+
+  /**
    * Get all reviews across the authenticated user's imported products.
    *
    * @returns Promise resolving to every imported review
