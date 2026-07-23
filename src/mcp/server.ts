@@ -33,6 +33,7 @@ import { registerPublishFilterCheckTool } from './tools/publishFilterCheck.js';
 // import { registerDraftAssetTool } from './tools/draftAsset.js'; // OFF Alpha surface (Trevor 2026-06-25); re-enable in Beta
 import { registerDesignTestTool } from './tools/designTest.js';
 import { registerRunTrustGapTool } from './tools/runTrustGap.js';
+import { registerMineReviewsTool } from './tools/mineReviews.js';
 import { registerGetAssetHistoryTool } from './tools/getAssetHistory.js';
 import { registerLogAssetTool } from './tools/logAsset.js';
 import { registerUpdateAssetStatusTool } from './tools/updateAssetStatus.js';
@@ -203,6 +204,7 @@ export async function createServer(
   // run_diagnostic / search_user_kb / build_avatar stay blocked on C1 / MF-1 / MF-2
   // respectively (see STATUS.xlsx).
   registerRunTrustGapTool(server);
+  registerMineReviewsTool(server);
 
   // Positioning Statement output engine: generate_positioning_statement wraps the reveal-positioning-statement edge fn
   // (verbatim-wrap), persist_positioning_statement writes the chosen option through the

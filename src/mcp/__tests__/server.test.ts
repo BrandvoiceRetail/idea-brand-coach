@@ -144,6 +144,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'list_funnel_inventory',
       'list_sequences',
       'log_asset',
+      'mine_reviews',
       'onboard_choose',
       'onboard_panel',
       'onboard_status',
