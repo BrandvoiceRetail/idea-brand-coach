@@ -34,6 +34,7 @@ import { registerPublishFilterCheckTool } from './tools/publishFilterCheck.js';
 import { registerDesignTestTool } from './tools/designTest.js';
 import { registerRunTrustGapTool } from './tools/runTrustGap.js';
 import { registerMineReviewsTool } from './tools/mineReviews.js';
+import { registerListEvidenceTool } from './tools/listEvidence.js';
 import { registerGetAssetHistoryTool } from './tools/getAssetHistory.js';
 import { registerLogAssetTool } from './tools/logAsset.js';
 import { registerUpdateAssetStatusTool } from './tools/updateAssetStatus.js';
@@ -205,6 +206,7 @@ export async function createServer(
   // respectively (see STATUS.xlsx).
   registerRunTrustGapTool(server);
   registerMineReviewsTool(server);
+  registerListEvidenceTool(server);
 
   // Positioning Statement output engine: generate_positioning_statement wraps the reveal-positioning-statement edge fn
   // (verbatim-wrap), persist_positioning_statement writes the chosen option through the

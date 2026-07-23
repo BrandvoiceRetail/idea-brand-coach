@@ -141,6 +141,7 @@ describe('brand-coach MCP server (end-to-end via in-memory transport)', () => {
       'list_avatars',
       'list_campaigns',
       'list_coach_conversations',
+      'list_evidence',
       'list_funnel_inventory',
       'list_sequences',
       'log_asset',

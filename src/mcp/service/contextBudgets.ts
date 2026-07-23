@@ -21,3 +21,11 @@
 //     A Tier-0 /dp sample is ~20-50; a Tier-1 full corpus could be thousands — cap the per-call read.
 export const MCP_RESPONSE_MINE_REVIEWS_MAX_KEYWORDS = 12;
 export const MCP_RESPONSE_MINE_REVIEWS_MAX_INPUT_REVIEWS = 500;
+
+// ── list_evidence (paginated review-quote read-back) ────────────────────────
+// Returns the caller's stored review quotes straight into the connector's context, so the page
+// size is a hard ceiling (a caller asking for more is clamped). SNAPSHOT_SCAN bounds how many
+// evidence_snapshots rows we flatten per call, so "total" is a bounded-scan total, not unbounded.
+export const MCP_RESPONSE_LIST_EVIDENCE_DEFAULT_LIMIT = 25;
+export const MCP_RESPONSE_LIST_EVIDENCE_MAX_LIMIT = 100;
+export const MCP_RESPONSE_LIST_EVIDENCE_SNAPSHOT_SCAN = 200;
