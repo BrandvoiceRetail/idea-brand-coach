@@ -6,6 +6,7 @@
  * notes, never invented copy. Brand anchors are stripped before this renders.
  */
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Component0Hero,
   GlassEyebrow,
@@ -15,6 +16,7 @@ import {
 } from '@/components/v2/problem-solver/glass';
 import { V5Stage } from './V5Chrome';
 import {
+  evidenceByDimension,
   findingText,
   normalizeProfile,
   type PillarKey,
@@ -55,6 +57,10 @@ function ProfileCard({ label, heading, body }: { label: string; heading: string;
 
 export function ResultsScreen({ report, trigger, onSeeBrief }: ResultsScreenProps): JSX.Element {
   const finding = findingText(report);
+  // Per-pillar citations the engine already computed and the app used to drop. Kept out of the
+  // main flow (PR #51 deliberately reduced evidence-count noise) and offered on demand instead.
+  const evidence = evidenceByDimension(report);
+  const evidenceCount = evidence.reduce((n, d) => n + d.citations.length, 0);
   const pillars: PillarRow[] = PILLAR_ORDER.map(({ key, name }) => {
     const score = report.forensic_scores[key];
     return {
@@ -162,6 +168,50 @@ export function ResultsScreen({ report, trigger, onSeeBrief }: ResultsScreenProp
           body={profile.what_stops_them}
         />
       </div>
+
+      {/* ── See all the evidence (collapsed by default; the full per-pillar citations
+          the engine computes, so a sceptical seller can check the read against their
+          own reviews). Answers "give the user access to all the review quotes". ── */}
+      {evidence.length > 0 && (
+        <Collapsible className="mt-4">
+          <CollapsibleTrigger className="group flex w-full items-center justify-between rounded-xl bg-foreground/[0.04] px-4 py-3 text-left text-[13px] font-bold text-muted-foreground transition hover:bg-foreground/[0.07]">
+            <span>See all the evidence behind this read</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground/70 group-data-[state=open]:hidden">
+              {evidenceCount} quote{evidenceCount === 1 ? '' : 's'} ↓
+            </span>
+            <span className="hidden text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground/70 group-data-[state=open]:inline">
+              Hide ↑
+            </span>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4 px-1 pt-4">
+            {evidence.map((dim) => (
+              <div key={dim.dimension}>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wide text-foreground/80">
+                    {dim.dimension}
+                  </span>
+                  <span
+                    className={
+                      dim.grounding === 'evidence'
+                        ? 'rounded-full bg-gold-warm/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold-warm'
+                        : 'rounded-full bg-foreground/[0.06] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70'
+                    }
+                  >
+                    {dim.grounding === 'evidence' ? 'Grounded in evidence' : 'Inference'}
+                  </span>
+                </div>
+                <div className="space-y-1 border-l-2 border-gold-warm/30 pl-3.5">
+                  {dim.citations.map((c, i) => (
+                    <p key={i} className="font-mono text-[13px] leading-relaxed text-foreground/70">
+                      &ldquo;{c.quote_or_observation}&rdquo;
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       <div className="mt-8 text-center">
         <Button

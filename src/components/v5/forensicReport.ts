@@ -28,15 +28,62 @@ export interface V5ForensicScores {
   overall: number;
 }
 
+/**
+ * One verbatim citation backing a pillar read — a quote from the listing/reviews/ad copy, or a
+ * precise observation about it. The edge engine (diagnostic-interpretation-evidence) enforces that
+ * these are grounded; we simply surface them instead of dropping them at the client boundary.
+ */
+export interface V5Citation {
+  evidence_type?: string;
+  quote_or_observation: string;
+}
+
 export interface V5InterpretationDimension {
   dimension: string;
   brand_read?: string;
   grounding?: 'evidence' | 'inference';
+  /** 1-3 per-pillar citations the engine computes; the app previously dropped these. */
+  where_it_shows_up?: Array<{ evidence_type?: string; quote_or_observation?: string }>;
 }
 
 export interface V5Interpretation {
   dimensions?: V5InterpretationDimension[];
   primaryGapSummary?: string;
+}
+
+/** One pillar's evidence block, for the "See all the evidence" disclosure. */
+export interface V5DimensionEvidence {
+  dimension: string;
+  grounding: 'evidence' | 'inference';
+  citations: V5Citation[];
+}
+
+/** Validated citations for one dimension — only entries carrying a non-empty quote/observation. */
+export function dimensionCitations(dim: V5InterpretationDimension): V5Citation[] {
+  const raw = Array.isArray(dim.where_it_shows_up) ? dim.where_it_shows_up : [];
+  return raw
+    .filter((c): c is { evidence_type?: string; quote_or_observation: string } =>
+      typeof c?.quote_or_observation === 'string' && c.quote_or_observation.trim().length > 0)
+    .map((c) => ({
+      evidence_type: typeof c.evidence_type === 'string' ? c.evidence_type : undefined,
+      quote_or_observation: c.quote_or_observation.trim(),
+    }));
+}
+
+/**
+ * Every pillar's grounded evidence, in pillar order — the data behind the "See all the evidence"
+ * expand. Dimensions with no citations are omitted so the disclosure never shows empty rows.
+ * `grounding` defaults to 'inference' (the honest fallback) when the engine did not label it.
+ */
+export function evidenceByDimension(report: V5ForensicReport): V5DimensionEvidence[] {
+  const dims = Array.isArray(report.interpretation?.dimensions) ? report.interpretation!.dimensions : [];
+  return dims
+    .map((d) => ({
+      dimension: typeof d.dimension === 'string' ? d.dimension : '',
+      grounding: d.grounding === 'evidence' ? ('evidence' as const) : ('inference' as const),
+      citations: dimensionCitations(d),
+    }))
+    .filter((d) => d.dimension.length > 0 && d.citations.length > 0);
 }
 
 export interface V5CustomerProfile {
