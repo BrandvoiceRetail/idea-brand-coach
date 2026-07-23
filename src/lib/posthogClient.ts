@@ -263,6 +263,10 @@ export type AlphaEventName =
   | 'v5_home_reopen'
   // Persisted last-run brief opened instantly from the home screen (no re-run).
   | 'v5_brief_reopened'
+  // Design brief generated in the background while the user reads the results,
+  // before they click through — so it opens instantly. Distinct from
+  // 'v5_brief_viewed' (the actual view) so a prefetch is never counted as a view.
+  | 'v5_brief_prefetched'
   // A listing removed from the account via the home screen. Boolean/count only
   // (whether it had a saved brief) — never the ASIN value.
   | 'v5_listing_deleted';

@@ -67,6 +67,9 @@ const FIRST_BEAT_DELAY_MS = 500;
 // before the next beat lands. Skip/pause controls remain the escape hatch.
 const BEAT_DELAY_MS = 7200;
 const POST_FETCH_PAUSE_MS = 900;
+// Dwell before prefetching the brief on the results screen, so a user who
+// instantly bounces off results never triggers the (paid) brief LLM call.
+const BRIEF_PREFETCH_DWELL_MS = 1800;
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
@@ -117,6 +120,11 @@ export default function V5Alpha(): JSX.Element {
   // to 'entry' (e.g. "Read another listing") are deliberate and must not bounce
   // the user back to home.
   const homeDecidedRef = useRef(false);
+  // True when a FRESHLY-GENERATED brief is loaded but not yet counted as viewed.
+  // Set by loadBrief (fresh gen), consumed by the view effect when the brief
+  // screen actually renders. A reopen (snapshot) never sets it, so reopens keep
+  // firing only 'v5_brief_reopened', not 'v5_brief_viewed'. Reset per run.
+  const freshBriefAwaitingViewRef = useRef(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -212,6 +220,7 @@ export default function V5Alpha(): JSX.Element {
     setReviewCount(null);
     setReviewsString(null);
     setFetchStep(0);
+    freshBriefAwaitingViewRef.current = false;
   }, []);
 
   // ── The full ASIN run (entry + express + competitor paths) ─────────────────
@@ -439,7 +448,7 @@ export default function V5Alpha(): JSX.Element {
   );
 
   // ── Brief ────────────────────────────────────────────────────────────────────
-  const loadBrief = useCallback(async (): Promise<void> => {
+  const loadBrief = useCallback(async (opts?: { prefetch?: boolean }): Promise<void> => {
     if (!avatarId) return;
     setBriefLoading(true);
     setBriefError(null);
@@ -449,10 +458,17 @@ export default function V5Alpha(): JSX.Element {
       if (res.status === 'ok') {
         setBrief(res.data);
         setClaims(res.data.claimGate);
-        captureAlphaEvent('v5_brief_viewed', {
-          claim_count: res.data.claimGate.length,
-          bullet_count: res.data.bullets.length,
-        });
+        // Mark this fresh brief as awaiting a view count; the view effect fires
+        // 'v5_brief_viewed' when the brief screen actually renders — never here —
+        // so a background prefetch is not counted as a view. A prefetch records
+        // its own event instead.
+        freshBriefAwaitingViewRef.current = true;
+        if (opts?.prefetch) {
+          captureAlphaEvent('v5_brief_prefetched', {
+            claim_count: res.data.claimGate.length,
+            bullet_count: res.data.bullets.length,
+          });
+        }
         // Persist the completed run per-listing (latest only) so the brief is
         // instantly available on any future visit — no engine re-run.
         if (asin && report) {
@@ -492,8 +508,36 @@ export default function V5Alpha(): JSX.Element {
 
   const goBrief = useCallback((): void => {
     setPhase('brief');
-    if (!brief && !briefLoading) void loadBrief();
-  }, [brief, briefLoading, loadBrief]);
+    // If a background prefetch already produced the brief, is still in flight, or
+    // resolved to needs_input, just show it — don't fire a second generateBrief.
+    // A prefetch ERROR is retried here: the click is intentful, so a transient
+    // failure gets a fresh attempt rather than a stale error screen.
+    if (!brief && !briefLoading && !briefNeedsInput) void loadBrief();
+  }, [brief, briefLoading, briefNeedsInput, loadBrief]);
+
+  // 'v5_brief_viewed' = the user actually saw a freshly-generated brief. Fires
+  // once per run when the brief screen renders with a fresh brief, however it
+  // loaded (CTA, prefetch, or the click-mid-prefetch race) — so a background
+  // prefetch is never miscounted as a view, and a snapshot reopen is not either.
+  useEffect(() => {
+    if (phase === 'brief' && brief && freshBriefAwaitingViewRef.current) {
+      freshBriefAwaitingViewRef.current = false;
+      captureAlphaEvent('v5_brief_viewed', {
+        claim_count: claims.length,
+        bullet_count: brief.bullets.length,
+      });
+    }
+  }, [phase, brief, claims.length]);
+
+  // Prefetch the design brief in the background while the user reads the results,
+  // after a short dwell so instant-bouncers don't trigger the LLM call. By the
+  // time they click "See my design brief" it is already loaded and opens instantly.
+  useEffect(() => {
+    if (phase !== 'results' || !avatarId || !report) return;
+    if (brief || briefLoading || briefError || briefNeedsInput) return;
+    const timer = setTimeout(() => void loadBrief({ prefetch: true }), BRIEF_PREFETCH_DWELL_MS);
+    return () => clearTimeout(timer);
+  }, [phase, avatarId, report, brief, briefLoading, briefError, briefNeedsInput, loadBrief]);
 
   const handleConfirmClaim = useCallback((_claim: ClaimGateItem, index: number): void => {
     setClaims((prev) =>
